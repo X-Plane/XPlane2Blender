@@ -508,6 +508,30 @@ class MyMesh:
         self.faces=[]
         self.verts=[]
 
+#------------------------------------------------------------------------
+#------------------------------------------------------------------------
+# Ondrej: Checks if an object has the panel texture assigned
+#------------------------------------------------------------------------
+#------------------------------------------------------------------------
+def hasPanelTexture(object):
+    objType = object.getType()
+
+    if objType == 'Mesh':
+        mesh=object.getData(mesh=True)
+
+        if mesh.faceUV:
+            for face in mesh.faces:
+                if (face.mode&Mesh.FaceModes.TEX) and face.image:
+                    if 'panel.' in face.image.name.lower():
+                        return True
+                    else:
+                        return False
+
+        else:
+            return False
+
+    else:
+        return False
 
 #
 # X-Plane renders polygons in scenery files mostly in the order that it finds

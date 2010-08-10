@@ -386,6 +386,8 @@ class Prim:
         self.group=group
         self.layer=object.Layer		# This is the set of layers we belong to.
         self.layer_now=-1			# This is the one layer we pay attention to now for sorting or state update.
+        self.hasPanelTexture = hasPanelTexture(object) #Ondrej: This stores if the object uses the panel.png.
+        self.name = object.name #Ondrej: This stores the object name.
 
 	#----------------------------------------------------------------------------------------------------------------
 	# STATE PRIORITIZATION
@@ -397,7 +399,7 @@ class Prim:
 	# can read this as saying: the exporter wil sort first by LOD, then by surface.  Thus the surface may be changed many
 	# times as it must be reset inside each LOD.
 	#
-	# So: to see other optimizations, simpyl change the order of this loop.  A few interesting notes:
+	# So: to see other optimizations, simply change the order of this loop.  A few interesting notes:
 	# - Primitive type of line/light (self.style) is state, so we can force consoldiation by primitive type.  This might
 	#   pay off in some cases - testing is needed!
 	# - Animation (by index) is state, so we can choose to prioritize other change over animation.  The exporter will
@@ -447,8 +449,8 @@ class OBJexport8:
     #------------------------------------------------------------------------
     def __init__(self, filename):
         #--- public you can change these ---
-        self.verbose=0	# level of verbosity in console 0-none, 1-some, 2-most
-        self.debug=0	# extra debug info in console
+        self.verbose=2	# level of verbosity in console 0-none, 1-some, 2-most
+        self.debug=1	# extra debug info in console
 
         #--- class private don't touch ---
         self.file=None
@@ -516,7 +518,7 @@ class OBJexport8:
             self.groups=[]
 
         #
-        # When we have a mesh on an armiture, it might be that the same mesh is used multiple times.  This lets us
+        # When we have a mesh on an armature, it might be that the same mesh is used multiple times.  This lets us
         # look for duplicates and reuse them.
         #
         self.animcands=[]	# indices into tris of candidates for reuse
@@ -532,6 +534,9 @@ class OBJexport8:
         Window.WaitCursor(1)
         Window.DrawProgressBar(0, 'Examining textures')
         self.texture=getTexture(self,theObjects,False,8)
+
+        if self.verbose:
+            print 'Texture\t"%s"' % self.texture
 
         #clock=time.clock()	# Processor time
         frame=Blender.Get('curframe')
@@ -558,7 +563,7 @@ class OBJexport8:
         else:
             Draw.PupMenu("Exported %s primitives%%t|OK" % self.nprim)
 
-    #------------------------------------------------------------------------
+	#------------------------------------------------------------------------
     def writeHeader (self):
         if 'blender.app' in Blender.sys.progname:
             systype='A'
@@ -1311,6 +1316,8 @@ class OBJexport8:
             npoly=prim.flags&(Prim.NPOLY)
             panel=prim.flags&(Prim.PANEL)
             alpha=prim.flags&(Prim.ALPHA)
+            #Ondrej: Store hasPanelTexture Flag
+            hasPanelTexture=prim.hasPanelTexture
 
         # Write in sort order for readability
         if layer!=self.layer:
@@ -1358,8 +1365,8 @@ class OBJexport8:
                     self.anim=self.anim.anim
                     self.flush_prim()
                     #Mike Format the manipulator output
-                    if oldm.manipulator != None:
-                        self.file.write("%sATTR_no_cockpit\n" % oldm.ins())
+                    #if oldm.manipulator != None:
+                    #    self.file.write("%sATTR_no_cockpit\n" % oldm.ins())
 
                     self.file.write("%sANIM_end\n" % self.anim.ins())
         else:
@@ -1395,13 +1402,22 @@ class OBJexport8:
         if panel!=None:
             if self.panel and not panel:
                 self.flush_prim()
-                self.file.write("%sATTR_no_cockpit\n" % self.anim.ins())
+                if hasPanelTexture:
+                    self.file.write("%sATTR_cockpit\n" % self.anim.ins())
+                else:
+                    self.file.write("%sATTR_no_cockpit\n" % self.anim.ins())
             elif region!=self.region:
                 self.flush_prim()
-                self.file.write("%sATTR_cockpit_region\t%d\n" % (self.anim.ins(), region))
+                if hasPanelTexture:
+                    self.file.write("%sATTR_cockpit\t%d\n" % (self.anim.ins(), region))
+                else:
+                    self.file.write("%sATTR_cockpit_region\t%d\n" % (self.anim.ins(), region))
             elif panel and not self.panel:
                 self.flush_prim()
-                self.file.write("%sATTR_cockpit\n" % self.anim.ins())
+                if hasPanelTexture:
+                    self.file.write("%sATTR_cockpit\n" % self.anim.ins())
+                else:
+                    self.file.write("%sATTR_no_cockpit\n" % self.anim.ins())
             self.panel=panel
             self.region=region
 
@@ -1410,9 +1426,23 @@ class OBJexport8:
             self.file.write("%sANIM_begin\n" % self.anim.ins())
             self.anim=i
 
+            #Ondrej: output hasPanelTexture Flag
+            if self.verbose:
+                print 'Mesh "%s" hasPanelTexture = %s' % (prim.name,hasPanelTexture)
+
             #Mike Format the manipulator output
-            if self.anim.manipulator != None:
-                self.file.write("%sATTR_cockpit_region\n" % self.anim.ins())
+            #if self.anim.manipulator != None:
+                #Ondrej: Set cockpit Attribute depending on Texture used in uv-face
+                #if hasPanelTexture:
+				#    self.file.write("%sATTR_cockpit\n" % self.anim.ins())
+                #else:
+                #    self.file.write("%sATTR_cockpit_region\n" % self.anim.ins())
+                    
+            #Ondrej: Set cockpit Attribute depending on Texture used in uv-face
+            #elif hasPanelTexture:
+            #    self.file.write("%sATTR_cockpit\n" % self.anim.ins())
+            #else:
+            #    self.file.write("%sATTR_cockpit_region\n" % self.anim.ins())
 
             for (sh, d, v1, v2) in self.anim.showhide:
                 self.file.write("%sANIM_%s\t%s %s\t%s\n" % (
