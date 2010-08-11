@@ -1365,8 +1365,8 @@ class OBJexport8:
                     self.anim=self.anim.anim
                     self.flush_prim()
                     #Mike Format the manipulator output
-                    #if oldm.manipulator != None:
-                    #    self.file.write("%sATTR_no_cockpit\n" % oldm.ins())
+                    if oldm.manipulator != None:
+                        self.file.write("%sATTR_no_cockpit\n" % oldm.ins())
 
                     self.file.write("%sANIM_end\n" % self.anim.ins())
         else:
@@ -1424,6 +1424,10 @@ class OBJexport8:
         for i in newa[len(olda):]:
             self.flush_prim()
             self.file.write("%sANIM_begin\n" % self.anim.ins())
+            #Ondrej: add comment with Object name for easier debugging of obj-files
+            if(self.debug):
+                self.file.write("%s#%s\n" % (self.anim.ins(),prim.name))
+                
             self.anim=i
 
             #Ondrej: output hasPanelTexture Flag
@@ -1433,16 +1437,16 @@ class OBJexport8:
             #Mike Format the manipulator output
             #if self.anim.manipulator != None:
                 #Ondrej: Set cockpit Attribute depending on Texture used in uv-face
-                #if hasPanelTexture:
-				#    self.file.write("%sATTR_cockpit\n" % self.anim.ins())
-                #else:
-                #    self.file.write("%sATTR_cockpit_region\n" % self.anim.ins())
+                if hasPanelTexture:
+				    self.file.write("%sATTR_cockpit\n" % self.anim.ins())
+                else:
+                    self.file.write("%sATTR_cockpit_region\n" % self.anim.ins())
                     
             #Ondrej: Set cockpit Attribute depending on Texture used in uv-face
-            #elif hasPanelTexture:
-            #    self.file.write("%sATTR_cockpit\n" % self.anim.ins())
-            #else:
-            #    self.file.write("%sATTR_cockpit_region\n" % self.anim.ins())
+            elif hasPanelTexture:
+                self.file.write("%sATTR_cockpit\n" % self.anim.ins())
+            else:
+                self.file.write("%sATTR_no_cockpit\n" % self.anim.ins())
 
             for (sh, d, v1, v2) in self.anim.showhide:
                 self.file.write("%sANIM_%s\t%s %s\t%s\n" % (
