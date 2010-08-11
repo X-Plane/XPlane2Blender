@@ -1435,7 +1435,7 @@ class OBJexport8:
                 print 'Mesh "%s" hasPanelTexture = %s' % (prim.name,hasPanelTexture)
 
             #Mike Format the manipulator output
-            #if self.anim.manipulator != None:
+            if self.anim.manipulator != None:
                 #Ondrej: Set cockpit Attribute depending on Texture used in uv-face
                 if hasPanelTexture:
 				    self.file.write("%sATTR_cockpit\n" % self.anim.ins())
