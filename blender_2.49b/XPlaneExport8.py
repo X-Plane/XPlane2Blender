@@ -1424,6 +1424,7 @@ class OBJexport8:
         for i in newa[len(olda):]:
             self.flush_prim()
             self.file.write("%sANIM_begin\n" % self.anim.ins())
+
             #Ondrej: add comment with Object name for easier debugging of obj-files
             if(self.debug):
                 self.file.write("%s#%s\n" % (self.anim.ins(),prim.name))
