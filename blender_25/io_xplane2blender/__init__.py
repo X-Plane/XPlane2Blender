@@ -29,12 +29,12 @@ bl_addon_info = {
 import bpy
 
 def register():
-	from io_blender2xplane import xplane_ui
+	from io_xplane2blender import xplane_ui
 	#add_xplane_properties()
 	bpy.types.register(xplane_ui.OBJECT_PT_xplane)
 
 def unregister():
-	from io_blender2xplane import xplane_ui
+	from io_xplane2blender import xplane_ui
 	bpy.types.unregister(xplane_ui.OBJECT_PT_xplane)
 
 if __name__ == "__main__":
