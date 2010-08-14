@@ -8,7 +8,7 @@ Tooltip: 'Import an X-Plane airplane (.acf) or weapon (.wpn)'
 __author__ = "Jonathan Harris"
 __email__ = "Jonathan Harris, Jonathan Harris <x-plane:marginal*org*uk>"
 __url__ = "XPlane2Blender, http://marginal.org.uk/x-planescenery/"
-__version__ = "3.09"
+__version__ = "3.10"
 __bpydoc__ = """\
 This script imports X-Plane v7 and v8 airplanes and weapons into Blender,
 so that they can be exported as X-Plane scenery objects.

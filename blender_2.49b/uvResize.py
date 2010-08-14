@@ -8,7 +8,7 @@ Tooltip: 'Adjust UV assignments to enlarged bitmap'
 __author__ = "Jonathan Harris"
 __email__ = "Jonathan Harris, Jonathan Harris <x-plane:marginal*org*uk>"
 __url__ = "XPlane2Blender, http://marginal.org.uk/x-planescenery/"
-__version__ = "3.09"
+__version__ = "3.10"
 __bpydoc__ = """\
 This script fixes up selected meshes' texture assignments after increasing
 the size of the image.

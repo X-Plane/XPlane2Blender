@@ -9,7 +9,7 @@ __author__ = "Jonathan Harris"
 __email__ = "Jonathan Harris, Jonathan Harris <x-plane:marginal*org*uk>"
 __url__ = ["XPlane2Blender, http://marginal.org.uk/x-planescenery/",
            "X-IvAp, http://www.ivao.aero/softdev/X-IvAp/"]
-__version__ = "3.09"
+__version__ = "3.10"
 __bpydoc__ = """\
 This script exports scenery created in Blender to X-Plane CSL .obj
 format for use with XSquawkbox and X-IvAp.
