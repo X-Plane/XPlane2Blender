@@ -1259,15 +1259,15 @@ class OBJexport8:
         if self.tri_offset != -1:
             self.file.write("%sTRIS\t%d %d\n" %
                 (self.tri_ins,self.tri_offset,self.tri_count))
+
         if self.line_offset != -1:
             self.file.write("%sLINES\t%d %d\n" %
                 (self.line_ins,self.line_offset,self.line_count))
-
+        
         self.tri_offset=-1
         self.tri_count=-1
         self.line_offset=-1
         self.line_count=-1
-
 
     def accum_tri(self,ins,offset, count):
         if (self.tri_offset+self.tri_count) != offset or self.line_offset != -1:
@@ -1341,6 +1341,7 @@ class OBJexport8:
             if self.layermask==1:
                 self.file.write("\n")
             else:
+                self.debugName(prim,self.anim.ins())
                 self.file.write("\nATTR_LOD\t%d %d\n" % (
                     self.lod[layer/2], self.lod[layer/2+1]))
             self.layer=layer
@@ -1377,15 +1378,18 @@ class OBJexport8:
             if group==None:
                 self.file.write("%s####No_group\n" % self.anim.ins())
             else:
+                self.debugName(prim,self.anim.ins())
                 self.file.write("%s####_group\t%s\n" %(self.anim.ins(),group.name))
             self.group=group
 
         if npoly!=None:
             if self.npoly and not npoly:
                 self.flush_prim()
+                self.debugName(prim,self.anim.ins())
                 self.file.write("%sATTR_poly_os\t2\n" % self.anim.ins())
             elif npoly and not self.npoly:
                 self.flush_prim()
+                self.debugName(prim,self.anim.ins())
                 self.file.write("%sATTR_poly_os\t0\n" % self.anim.ins())
             self.npoly=npoly
 
@@ -1396,24 +1400,28 @@ class OBJexport8:
                 self.file.write("%s####_no_alpha\n" % self.anim.ins())
             elif alpha and not self.alpha:
                 self.flush_prim()
+                self.debugName(prim,self.anim.ins())
                 self.file.write("%s####_alpha\n" % self.anim.ins())
             self.alpha=alpha
 
         if panel!=None:
             if self.panel and not panel:
                 self.flush_prim()
+                self.debugName(prim,self.anim.ins())
                 if hasPanelTexture:
                     self.file.write("%sATTR_cockpit\n" % self.anim.ins())
                 else:
                     self.file.write("%sATTR_no_cockpit\n" % self.anim.ins())
             elif region!=self.region:
                 self.flush_prim()
+                self.debugName(prim,self.anim.ins())
                 if hasPanelTexture:
                     self.file.write("%sATTR_cockpit\t%d\n" % (self.anim.ins(), region))
                 else:
                     self.file.write("%sATTR_cockpit_region\t%d\n" % (self.anim.ins(), region))
             elif panel and not self.panel:
                 self.flush_prim()
+                self.debugName(prim,self.anim.ins())
                 if hasPanelTexture:
                     self.file.write("%sATTR_cockpit\n" % self.anim.ins())
                 else:
@@ -1423,17 +1431,10 @@ class OBJexport8:
 
         for i in newa[len(olda):]:
             self.flush_prim()
+            self.debugName(prim,self.anim.ins())
             self.file.write("%sANIM_begin\n" % self.anim.ins())
 
-            #Ondrej: add comment with Object name for easier debugging of obj-files
-            if(self.debug):
-                self.file.write("%s#%s\n" % (self.anim.ins(),prim.name))
-                
             self.anim=i
-
-            #Ondrej: output hasPanelTexture Flag
-            if self.verbose:
-                print 'Mesh "%s" hasPanelTexture = %s' % (prim.name,hasPanelTexture)
 
             #Mike Format the manipulator output
             if self.anim.manipulator != None:
@@ -1527,18 +1528,22 @@ class OBJexport8:
                 # diffuse, emission, shiny
                 if self.mat[0]!=mat[0]:
                     self.flush_prim()
+                    self.debugName(prim,self.anim.ins())
                     self.file.write("%sATTR_diffuse_rgb\t%6.3f %6.3f %6.3f\n" % (self.anim.ins(), mat[0][0], mat[0][1], mat[0][2]))
                 if self.mat[1]!=mat[1]:
                     self.flush_prim()
+                    self.debugName(prim,self.anim.ins())
                     self.file.write("%sATTR_emission_rgb\t%6.3f %6.3f %6.3f\n" % (self.anim.ins(), mat[1][0], mat[1][1], mat[1][2]))
                 if self.mat[2]!=mat[2]:
                     self.flush_prim()
+                    self.debugName(prim,self.anim.ins())
                     self.file.write("%sATTR_shiny_rat\t%6.3f\n" % (self.anim.ins(), mat[2]))
             self.mat=mat
 
         if twoside!=None:
             if self.twoside and not twoside:
                 self.flush_prim()
+                self.debugName(prim,self.anim.ins())
                 self.file.write("%sATTR_cull\n" % self.anim.ins())
             elif twoside and not self.twoside:
                 self.flush_prim()
@@ -1548,6 +1553,7 @@ class OBJexport8:
         if hardness!=None:
             if self.hardness and not hardness:
                 self.flush_prim()
+                self.debugName(prim,self.anim.ins())
                 self.file.write("%sATTR_no_hard\n" % self.anim.ins())
                 self.surface=None
             elif self.hardness!=hardness or self.surface!=surface:
@@ -1558,16 +1564,20 @@ class OBJexport8:
                 if hardness:
                     if surface:
                         self.flush_prim()
+                        self.debugName(prim,self.anim.ins())
                         self.file.write("%sATTR_hard\t%s\n" % (self.anim.ins(), surface))
                     else:
                         self.flush_prim()
+                        self.debugName(prim,self.anim.ins())
                         self.file.write("%sATTR_hard\n" % self.anim.ins())
                 if hardness==Prim.DECK:
                     if surface:
                         self.flush_prim()
+                        self.debugName(prim,self.anim.ins())
                         self.file.write("%sATTR_hard_deck\t%s\n" % (self.anim.ins(), surface))
                     else:
                         self.flush_prim()
+                        self.debugName(prim,self.anim.ins())
                         self.file.write("%sATTR_hard_deck\n" % self.anim.ins())
                 self.surface=surface
             self.hardness=hardness
@@ -1603,6 +1613,11 @@ class OBJexport8:
 
         return manipulator_str
 
+    #Ondrej: add comment with Object name for easier debugging of obj-files
+    def debugName(self,prim,ins):
+        if(self.debug):
+            #print "%s offset: %d count: %d" % (prim.name,offset,count)
+            self.file.write("%s# %s\n" % (ins,prim.name))
 
 
 #------------------------------------------------------------------------
