@@ -388,6 +388,9 @@ class Prim:
         self.layer_now=-1			# This is the one layer we pay attention to now for sorting or state update.
         self.hasPanelTexture = hasPanelTexture(object) #Ondrej: This stores if the object uses the panel.png.
         self.name = object.name #Ondrej: This stores the object name.
+        self.properties = object.getAllProperties() #Ondrej: This stores all game properties of the object.
+        self.object = object #Ondrej: This stores the blender object
+        #self.writtenProperties = [] #Ondrej: This stores all game properties of the object that have been written to the file.
 
 	#----------------------------------------------------------------------------------------------------------------
 	# STATE PRIORITIZATION
@@ -467,7 +470,8 @@ class OBJexport8:
         self.nprim=0		# Number of X-Plane primitives exported
         self.log=[]
         self.v9=False		# Used v9 features
-
+        self.writtenProperties = {} #Ondrej: This stores all game properties of the object that have been written to the file.
+        
         #
         # Attribute tracking variables.  This is the last state that we wrote into the OBJ file.
         # UpdateAttr compares these to what it needs and writes only the changes.
@@ -1316,8 +1320,8 @@ class OBJexport8:
             npoly=prim.flags&(Prim.NPOLY)
             panel=prim.flags&(Prim.PANEL)
             alpha=prim.flags&(Prim.ALPHA)
-            #Ondrej: Store hasPanelTexture Flag
-            hasPanelTexture=prim.hasPanelTexture
+            hasPanelTexture=prim.hasPanelTexture #Ondrej: Store hasPanelTexture Flag
+            properties=prim.properties #Ondrej: Store properties
 
         # Write in sort order for readability
         if layer!=self.layer:
@@ -1582,6 +1586,11 @@ class OBJexport8:
                 self.surface=surface
             self.hardness=hardness
 
+        #Ondrej: process custom game properties attached to the object
+        if properties!=None:
+            self.processProperties(prim)
+            
+    
     #------------------------------------------------------------------------
     def formatManipulator(self, manipulator):
         """ Return a string representing a manipular structure.
@@ -1613,11 +1622,56 @@ class OBJexport8:
 
         return manipulator_str
 
+    #------------------------------------------------------------------------
     #Ondrej: add comment with Object name for easier debugging of obj-files
     def debugName(self,prim,ins):
         if(self.debug):
             #print "%s offset: %d count: %d" % (prim.name,offset,count)
             self.file.write("%s# %s\n" % (ins,prim.name))
+
+    #------------------------------------------------------------------------
+    #Ondrej: this will process custom game properties and write corresponding commands
+    def processProperties(self,prim):
+        if len(prim.properties)>0:
+            for prop in prim.properties:
+                propName = prop.getName();
+                if(propName not in self.writtenProperties or self.writtenProperties[propName]!=prim.name):
+                    if (propName == 'ATTR_light_level' and prop.getType() == 'STRING'):
+                        dataref = prop.getData()
+                        v1 = 0;
+                        v2 = 1;
+                        v1Prop = None;
+                        v2Prop = None;
+                        try:
+                            v1Prop = prim.object.getProperty('ATTR_light_level_v1')
+                        except:
+                            pass
+
+                        try:
+                            v2Prop = prim.object.getProperty('ATTR_light_level_v2')
+                        except:
+                            pass
+                        
+                        if v1Prop!=None:
+                            v1 = v1Prop.getData()
+                        if v2Prop!=None:
+                            v2 = v2Prop.getData()
+
+                        # write the command for this property
+                        self.flush_prim();
+                        self.debugName(prim,self.anim.ins())
+                        self.file.write("%s%s %6.3f %6.3f %s\n" % (self.anim.ins(),propName,v1,v2,dataref))
+                        self.writtenProperties[propName] = prim.name
+
+        # check if we switched prim and if so reset all written Properties
+        for propName in self.writtenProperties:
+            if self.writtenProperties[propName]!=None and self.writtenProperties[propName] != prim.name:
+                # write the reseter for this property
+                if propName == 'ATTR_light_level':
+                    self.flush_prim();
+                    self.file.write("%sATTR_light_level_reset\n" % self.anim.ins())
+
+                self.writtenProperties[propName] = None
 
 
 #------------------------------------------------------------------------
