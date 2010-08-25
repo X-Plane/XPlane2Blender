@@ -1310,6 +1310,7 @@ class OBJexport8:
         npoly=None
         panel=None
         alpha=None
+        properties=None
 
         if prim.style=='Tri':
             region=prim.region
