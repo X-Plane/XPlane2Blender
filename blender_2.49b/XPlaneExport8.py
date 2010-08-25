@@ -1636,43 +1636,55 @@ class OBJexport8:
             for prop in prim.properties:
                 propName = prop.getName();
                 if(propName not in self.writtenProperties or self.writtenProperties[propName]!=prim.name):
-                    if (propName == 'ATTR_light_level' and prop.getType() == 'STRING'):
-                        dataref = prop.getData()
-                        v1 = 0;
-                        v2 = 1;
-                        v1Prop = None;
-                        v2Prop = None;
-                        try:
-                            v1Prop = prim.object.getProperty('ATTR_light_level_v1')
-                        except:
-                            pass
-
-                        try:
-                            v2Prop = prim.object.getProperty('ATTR_light_level_v2')
-                        except:
-                            pass
-                        
-                        if v1Prop!=None:
-                            v1 = v1Prop.getData()
-                        if v2Prop!=None:
-                            v2 = v2Prop.getData()
-
-                        # write the command for this property
-                        self.flush_prim();
-                        self.debugName(prim,self.anim.ins())
-                        self.file.write("%s%s %6.3f %6.3f %s\n" % (self.anim.ins(),propName,v1,v2,dataref))
-                        self.writtenProperties[propName] = prim.name
+                    if prop.getType() == 'STRING':
+                        if propName == 'ATTR_light_level':
+                            self.writePropLightLevel(prop,prim)
 
         # check if we switched prim and if so reset all written Properties
         for propName in self.writtenProperties:
             if self.writtenProperties[propName]!=None and self.writtenProperties[propName] != prim.name:
                 # write the reseter for this property
                 if propName == 'ATTR_light_level':
-                    self.flush_prim();
-                    self.file.write("%sATTR_light_level_reset\n" % self.anim.ins())
+                    self.resetPropLightLevel()
 
                 self.writtenProperties[propName] = None
+                
 
+    #------------------------------------------------------------------------
+    def writePropLightLevel(self,prop,prim):
+        propName = "ATTR_light_level"
+        dataref = prop.getData()
+        v1 = 0;
+        v2 = 1;
+        v1Prop = None;
+        v2Prop = None;
+        try:
+            v1Prop = prim.object.getProperty('ATTR_light_level_v1')
+        except:
+            pass
+
+        try:
+            v2Prop = prim.object.getProperty('ATTR_light_level_v2')
+        except:
+            pass
+
+        if v1Prop!=None:
+            v1 = v1Prop.getData()
+        if v2Prop!=None:
+            v2 = v2Prop.getData()
+
+        # write the command for this property
+        self.flush_prim();
+        self.debugName(prim,self.anim.ins())
+        self.file.write("%s%s %6.3f %6.3f %s\n" % (self.anim.ins(),propName,v1,v2,dataref))
+        self.writtenProperties[propName] = prim.name
+
+
+    def resetPropLightLevel(self):
+        self.flush_prim();
+        self.file.write("%sATTR_light_level_reset\n" % self.anim.ins())
+        
+    #------------------------------------------------------------------------
 
 #------------------------------------------------------------------------
 class Anim:
