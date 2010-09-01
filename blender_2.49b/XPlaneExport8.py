@@ -452,8 +452,8 @@ class OBJexport8:
     #------------------------------------------------------------------------
     def __init__(self, filename):
         #--- public you can change these ---
-        self.verbose=2	# level of verbosity in console 0-none, 1-some, 2-most
-        self.debug=1	# extra debug info in console
+        self.verbose=0	# level of verbosity in console 0-none, 1-some, 2-most
+        self.debug=0	# extra debug info in console
 
         #--- class private don't touch ---
         self.file=None
