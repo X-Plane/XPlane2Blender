@@ -453,7 +453,7 @@ class OBJexport8:
     def __init__(self, filename):
         #--- public you can change these ---
         self.verbose=0	# level of verbosity in console 0-none, 1-some, 2-most
-        self.debug=0	# extra debug info in console
+        self.debug=0,	# extra debug info in console
 
         #--- class private don't touch ---
         self.file=None
@@ -1321,7 +1321,7 @@ class OBJexport8:
             npoly=prim.flags&(Prim.NPOLY)
             panel=prim.flags&(Prim.PANEL)
             alpha=prim.flags&(Prim.ALPHA)
-            hasPanelTexture=prim.hasPanelTexture #Ondrej: Store hasPanelTexture Flag
+            hasPanelTexture=(prim.hasPanelTexture and self.iscockpit) #Ondrej: Store hasPanelTexture Flag
             properties=prim.properties #Ondrej: Store properties
 
         # Write in sort order for readability
@@ -1415,21 +1415,21 @@ class OBJexport8:
                 self.debugName(prim,self.anim.ins())
                 if hasPanelTexture:
                     self.file.write("%sATTR_cockpit\n" % self.anim.ins())
-                else:
+                elif self.iscockpit:
                     self.file.write("%sATTR_no_cockpit\n" % self.anim.ins())
             elif region!=self.region:
                 self.flush_prim()
                 self.debugName(prim,self.anim.ins())
                 if hasPanelTexture:
                     self.file.write("%sATTR_cockpit\t%d\n" % (self.anim.ins(), region))
-                else:
+                elif self.iscockpit:
                     self.file.write("%sATTR_cockpit_region\t%d\n" % (self.anim.ins(), region))
             elif panel and not self.panel:
                 self.flush_prim()
                 self.debugName(prim,self.anim.ins())
                 if hasPanelTexture:
                     self.file.write("%sATTR_cockpit\n" % self.anim.ins())
-                else:
+                elif self.iscockpit:
                     self.file.write("%sATTR_no_cockpit\n" % self.anim.ins())
             self.panel=panel
             self.region=region
@@ -1452,7 +1452,7 @@ class OBJexport8:
             #Ondrej: Set cockpit Attribute depending on Texture used in uv-face
             elif hasPanelTexture:
                 self.file.write("%sATTR_cockpit\n" % self.anim.ins())
-            else:
+            elif self.iscockpit:
                 self.file.write("%sATTR_no_cockpit\n" % self.anim.ins())
 
             for (sh, d, v1, v2) in self.anim.showhide:
