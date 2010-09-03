@@ -26,6 +26,14 @@ h5 { font-family: Arial,Helvetica,sans-serif; }
 </table>
 <hr>
 <h2>Scenery &amp; Cockpit import/export scripts for Blender</h2>
+<h3>Preface</h3>
+<p>This is the final version of Xplane2Blender v 3.10.  It's been tested and works with Blender 2.49 on Mac, Windows, and Linux.<br/>
+Development of this script is no longer done by Marginal, but collectively and in an Open-Source manner. So please file requests and issues at the project website.
+</p>
+<p>
+Besides the work that's been happening on the Blender 2.49 version of this script, there's some exciting developments happening for the Blender 2.53+ version of this script.  The goal is, to develop a new, more efficient workflow for X-Plane .obj creation making full use of Blender 2.5's new amazing capabilities.  The project is currently hosted on <a href="http://wiki.github.com/der-On/XPlane2Blender/">GitHub</a>, where you can follow the most recent development, feature suggestions, implementations, Wiki, and other good stuff.
+</p>
+
 <h3>Overview</h3>
 <p><a href="http://www.blender.org/">Blender</a>
 is an open source 3D object editor for Windows, Mac and
@@ -70,6 +78,26 @@ Or <a target="_blank" href="http://www.blender3d.org/Download/">download</a> the
     </tr>
   </tbody>
 </table>
+
+<h3>Changes for 3.10 Final</h3>
+</p>The two major changes since Beta 3 are:
+<ul>
+    <li>support for ATTR_light_level (this allows you to assign an object in Blender with the ability to independently "turn on" the LIT texture, based on a given dataref.)</li>
+    <li>Fixed the multiple texture bug that was still present in Beta 4.  This applies ONLY to the cockpit .obj, since it's the only one to support 2 textures.  Now the script correctly interprets which of the textures is assigned to which animated mesh in Blender, and exports it accordingly.</li>
+</ul>
+<h4>ATTR_light_level</h4>
+<p>
+The way you use ATTR_light_level is outlined in detail on the obj8 spec website.  That site describes what the resulting .obj file would look like in a text editor.  This script allows you to store that information in Blender, so that it can be saved as part of your aircraft's source files.
+</p>
+<p>
+What this feature does is it allows you to swap the daytime and nighttime (LIT) textures on a per-mesh basis, triggered by a dataref of your choice.  This allows you to, for example, build 3D buttons that "light up" when their particular dataref is triggered.
+</p>
+<p>
+Here's how you would do it in Blender.  Let's say we're dealing with a 3D "fuel pump" button that's supposed to light up when the fuel pump is on.  First, you'd have to have a daytime and LIT version of the texture.  Without ANY CHANGES, this button's behavior would be such, that when X-Plane goes from day-mode to night-mode, this button's texture would swap from daytime to LIT texture.  However, you can override this, and cause the texture swap to take place when the dataref for the fuel pump is called up.  With the button selected (pink) in Blender, call up the "Game Logic" button (F4 keyboard shortcut).  Click on "Add Property" and type "ATTR_light_level" (no quotes) into the space labeled "Name:"  Then select "String" from the drop-down menu directly to the left of this blank.  Now enter the dataref for the fuel pump into the blank space to the right.  (in this case, it would be "sim/cockpit/engine/fuel_pump_on").
+</p>
+<p>
+You can now save this .blend file, and the lighting information you've entered for this button should be grabbed by the new exporter.
+</p>
 <h3>Tutorials</h3>
 <p>This document is a reference and assumes familiarity
 with Blender. You may find it easier to get started using the following
