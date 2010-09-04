@@ -1,1155 +1,1528 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-  <meta name="description" content="X-Plane import/export scripts for Blender 3D">
-  <meta name="keywords" content="X-Plane, simulator, scenery, Blender, Blender3D">
-  <title>XPlane2Blender</title>
-  <meta name="author" content="Jonathan Harris">
-  <style type="text/css">
-.banner { font-family: Arial,Helvetica,sans-serif; background-color: lightskyblue; text-align: left; height: 32px; }
-.dnl { font-family: Arial,Helvetica,sans-serif; font-size: small; background-color: lightskyblue; }
-samp { font-family: Arial,Helvetica,sans-serif; }
-h2 { font-family: Arial,Helvetica,sans-serif; }
-h3 { font-family: Arial,Helvetica,sans-serif; }
-h4 { font-family: Arial,Helvetica,sans-serif; }
-h5 { font-family: Arial,Helvetica,sans-serif; }
-  </style>
-</head>
-<body>
-<table style="width: 100%;" border="0" cellpadding="2">
-  <tbody>
-    <tr>
-      <td class="banner">Marginal&nbsp;&rarr; <a href="http://marginal.org.uk/x-planescenery/">X-Plane&nbsp;Scenery</a>&nbsp;&rarr; <a href="http://marginal.org.uk/x-planescenery/tools.html">Tools</a>&nbsp;&rarr; XPlane2Blender</td>
-    </tr>
-  </tbody>
-</table>
-<hr>
-<h2>Scenery &amp; Cockpit import/export scripts for Blender</h2>
-<h3>Preface</h3>
-<p>This is the final version of Xplane2Blender v 3.10.  It's been tested and works with Blender 2.49 on Mac, Windows, and Linux.<br/>
-Development of this script is no longer done by Marginal, but collectively and in an Open-Source manner. So please file requests and issues at the project website.
-</p>
-<p>
-Besides the work that's been happening on the Blender 2.49 version of this script, there's some exciting developments happening for the Blender 2.53+ version of this script.  The goal is, to develop a new, more efficient workflow for X-Plane .obj creation making full use of Blender 2.5's new amazing capabilities.  The project is currently hosted on <a href="http://wiki.github.com/der-On/XPlane2Blender/">GitHub</a>, where you can follow the most recent development, feature suggestions, implementations, Wiki, and other good stuff.
-</p>
-
-<h3>Overview</h3>
-<p><a href="http://www.blender.org/">Blender</a>
-is an open source 3D object editor for Windows, Mac and
-UNIX.</p>
-<p>These Blender scripts export models created in Blender
-to X-Plane v7, v8, v9 or CSL <code>.obj</code> format.</p>
-<p>The scripts also import existing X-Plane v6, v7, v8, v9 and CSL
-<code>.obj</code> files and X-Plane v7, v8 and v9 <code>.acf</code>
-airplanes into Blender.</p>
-
-<h3>Requirements</h3>
-<p>Runs on Windows 2000 or later, Mac OS 10.3.9 or later, and Linux.</p>
-<p>Requires Blender 2.45 or later:</p>
-<table style="width: 100%; text-align: left;" border="0" cellpadding="2" cellspacing="2">
-  <tbody>
-    <tr>
-      <td style="vertical-align: top; text-align: center;">Windows:</td>
-      <td style="vertical-align: top;"><a target="_blank" href="http://www.blender3d.org/Download/">Download</a> and run the "Installer" build of Blender.<br>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top; text-align: center;">Mac OS<br>10.5:</td>
-      <td><a target="_blank" href="http://www.blender3d.org/Download/">Download</a> the "Python 2.5" build of Blender for Intel or PPC.<br>
-To install, copy the Blender application out of the disk image <i>eg</i> to your <code>/Applications</code> folder.<br>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top; text-align: center;">Mac OS<br>10.3&nbsp;&amp;&nbsp;10.4:</td>
-      <td><a target="_blank" href="http://www.blender3d.org/Download/">Download</a> the default "Python 2.3" build of Blender for Intel or PPC,
-unless you have installed Python 2.5.<br>
-To install, copy the Blender application out of the disk image <i>eg</i> to your <code>/Applications</code> folder.<br>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top; text-align: center;">Linux: </td>
-      <td style="vertical-align: top;">Most distros come with Blender, so you can install it via your package manager (<i>eg</i> Synaptic, YaST, YUM).<br>
-Or <a target="_blank" href="http://www.blender3d.org/Download/">download</a> the build that corresponds to the version of Python that is installed on your system.<br>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>Changes for 3.10 Final</h3>
-</p>The two major changes since Beta 3 are:
-<ul>
-    <li>support for ATTR_light_level (this allows you to assign an object in Blender with the ability to independently "turn on" the LIT texture, based on a given dataref.)</li>
-    <li>Fixed the multiple texture bug that was still present in Beta 4.  This applies ONLY to the cockpit .obj, since it's the only one to support 2 textures.  Now the script correctly interprets which of the textures is assigned to which animated mesh in Blender, and exports it accordingly.</li>
-</ul>
-<h4>ATTR_light_level</h4>
-<p>
-The way you use ATTR_light_level is outlined in detail on the obj8 spec website.  That site describes what the resulting .obj file would look like in a text editor.  This script allows you to store that information in Blender, so that it can be saved as part of your aircraft's source files.
-</p>
-<p>
-What this feature does is it allows you to swap the daytime and nighttime (LIT) textures on a per-mesh basis, triggered by a dataref of your choice.  This allows you to, for example, build 3D buttons that "light up" when their particular dataref is triggered.
-</p>
-<p>
-Here's how you would do it in Blender.  Let's say we're dealing with a 3D "fuel pump" button that's supposed to light up when the fuel pump is on.  First, you'd have to have a daytime and LIT version of the texture.  Without ANY CHANGES, this button's behavior would be such, that when X-Plane goes from day-mode to night-mode, this button's texture would swap from daytime to LIT texture.  However, you can override this, and cause the texture swap to take place when the dataref for the fuel pump is called up.  With the button selected (pink) in Blender, call up the "Game Logic" button (F4 keyboard shortcut).  Click on "Add Property" and type "ATTR_light_level" (no quotes) into the space labeled "Name:"  Then select "String" from the drop-down menu directly to the left of this blank.  Now enter the dataref for the fuel pump into the blank space to the right.  (in this case, it would be "sim/cockpit/engine/fuel_pump_on").
-</p>
-<p>
-You can now save this .blend file, and the lighting information you've entered for this button should be grabbed by the new exporter.
-</p>
-<h3>Tutorials</h3>
-<p>This document is a reference and assumes familiarity
-with Blender. You may find it easier to get started using the following
-tutorials, and come back to this document later:</p>
-<ul>
-  <li><a target="_blank" href="http://marginal.org.uk/x-planescenery/tutorials.html">Using Blender to create X-Plane scenery</a></li>
-  <li><a target="_blank" href="http://en.wikibooks.org/wiki/Blender_3D/Noob_to_Pro">Blender3D: Noob to Pro</a></li>
-  <li><a target="_blank" href="http://wiki.blender.org/index.php/Manual">The Blender Manual</a></li>
-</ul>
-
-<h3>Installation</h3>
-<p>Run Blender to check that it is installed correctly. If the Blender window appears "blurry" turn off anti-aliasing in your video card's OpenGL settings and re-start Blender.</p>
-<p>Now close Blender.</p>
-<table style="text-align: left; width: 100%;" border="0" cellpadding="2" cellspacing="2">
-  <tbody>
-    <tr>
-      <td style="vertical-align: top; text-align: center;">Windows<br>Vista:<br>
-      </td>
-      <td style="vertical-align: top;">Extract the
-contents of the zip file to a new (temporary) folder.<br>
-Right-click on the file <code>install.cmd</code> and choose <samp>Run as administrator</samp>.<br>
-      <small>(This installs the scripts in the
-folder<code> %HOME%\blender\scripts </code>if it exists,
-otherwise in the copy of Blender that is associated with <code>.blend</code>
-files).</small><br>
-      <br>
-      </td>
-    <tr>
-      <td style="vertical-align: top; text-align: center;">Windows<br>2000/XP:<br>
-      </td>
-      <td style="vertical-align: top;">Extract the
-contents of the zip file to a new (temporary) folder.<br>
-Double-click on the file <code>install.cmd</code>.<br>
-      <small>(This installs the scripts in the
-folder<code> %HOME%\blender\scripts </code>if it exists,
-otherwise in the copy of Blender that is associated with <code>.blend</code>
-files).</small><br>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top; text-align: center;">Mac
-OS: </td>
-      <td>Double-click on the file <code>install.command</code>.<br>
-      <small>(This installs the scripts in the
-folder<code> ~/.blender/scripts </code>if it exists,
-otherwise in all copies of Blender that the Finder knows about).</small><br>
-      <br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top; text-align: center;">Linux:</td>
-      <td>Start a shell window, and type:<br>
-      <div style="margin-left: 40px;"><code>mkdir&nbsp;-p&nbsp;~/.blender/scripts</code></div>
-Extract the contents of the zip file to this folder.</td>
-    </tr>
-  </tbody>
-</table>
-<p>(Re)start Blender. This file can now be viewed by choosing
-<samp>Help&nbsp;&rarr; X-Plane</samp> in Blender.</p>
-<p>You can now delete the temporary folder.</p>
-
-<h3>Importing objects</h3>
-<p>First, move the 3D Cursor to where you want the imported object
-to be placed. Usually you'll want the object to be placed at the origin so
-just press <samp style="font-weight: bold;">Shift&nbsp;C</samp>
-to centre the 3D Cursor at the origin.</p>
-<p>Choose <samp>File&nbsp;&rarr; Import&nbsp;&rarr; X-Plane Object</samp>,
-select a <code>.obj</code> file and press <samp>Import&nbsp;OBJ</samp>.</p>
-<p>The scenery is imported at the 3D Cursor position.</p>
-<p>You can import multiple <code>.obj</code> files and re-export them as a
-single file. But note that the X-Plane <code>.obj</code>
-file format only supports the use of one texture file, so you'll have
-to create a single larger file containing all required textures - see
-<a href="#resize">below</a>.
-Or you can have Blender create this single file automatically by selecting all
-the objects and, in a <samp>UV/Image Editor</samp> window, choosing
-<samp>Image&nbsp;&rarr; Consolidate&nbsp;into&nbsp;one&nbsp;image</samp>.</p>
-
-<h3>Importing planes</h3>
-<p>First, move the 3D Cursor to where you want the imported plane or weapon
-to be placed. Usually you'll want it to be placed at the origin so
-just press <samp style="font-weight: bold;">Shift&nbsp;C</samp>
-to centre the 3D Cursor at the origin.</p>
-<p>Choose
-<samp>File&nbsp;&rarr; Import&nbsp;&rarr; X-Plane&nbsp;Plane&nbsp;or&nbsp;Weapon</samp>
-and choose whether to import the plane or weapon so that the "reference point"
-is located at the 3D Cursor (for making cockpit & misc objects) or so that the
-"centre of gravity" is located at the 3D Cursor (for making CSLs and static
-scenery).</p>
-<p>Then select a <code>.acf</code> or <code>.wpn</code> file and press
-<samp>Import&nbsp;ACF&nbsp;or&nbsp;WPN</samp>.</p>
-<p>The script creates up to three versions of the plane or weapon in
-Blender, one in each of layers 1, 2 and 3. The versions in layers 2 and
-3 use approximately
-<small><sup>1</sup></small>/<small><sub>10</sub><sup>th</sup></small> and
-<small><sup>1</sup></small>/<small><sub>100</sub><sup>th</sup></small>
-of the number of faces compared to the version in layer 1.
-See <a href="#Level_Of_Detail">Level of Detail</a> below for an
-explanation of why it does this.</p>
-<p>Imported planes need some tweaking before you can export them
-as scenery or as a CSL object; see <a href="#Tweaking_planes">Tweaking
-planes</a> below.</p>
-
-<h3>Exporting objects</h3>
-<p>First, choose <samp>File&nbsp;&rarr; Save As&#8230;</samp> and save the
-<code>.blend</code> file in the aircraft or scenery folder where you want
-the <code>.obj</code> file to end up. Then choose:
-<dl>
-  <dd><samp>File&nbsp;&rarr; Export&nbsp;&rarr; X-Plane&nbsp;CSL&nbsp;Object</samp> or</dd>
-  <dd><samp>File&nbsp;&rarr; Export&nbsp;&rarr; X-Plane&nbsp;v7&nbsp;Object</samp> or</dd>
-  <dd><samp>File&nbsp;&rarr; Export&nbsp;&rarr; X-Plane&nbsp;v8/v9&nbsp;Object</samp></dd>
-</dl>
-<p>The object is exported in the same folder and with the same name
-as the current Blender file, but with a <code>.obj</code> extension. 
-Blender may display some informational messages - click on one of these
-messages to see which object(s) the message refers to.</p>
-<p>If there is an error then the scripts will attempt to identify and
-highlight the offending Blender object(s).</p>
-<p><samp><b>csl: </b></samp>These objects are intended for use with
-multi-user plugins such as
-<a href="http://www.xsquawkbox.net/xsb/">XSquawkBox</a> or
-<a href="http://www.ivao.aero/softdev/X-IvAp/">X-IvAp</a>.<br>
-<samp><b>v8: </b></samp>These objects are supported by X-Plane versions 8.20 and later.<br>
-<samp><b>v9: </b></samp>These objects are supported by X-Plane versions 9.00 and later.</p>
-
-<h3>Creating X-Plane scenery</h3>
-<ul>
-  <li>Find and open the<code> Custom&nbsp;Scenery </code>folder
-inside of your <code>X-Plane</code> installation.</li>
-  <li>Create a subfolder with the name of the scenery package that you're making.</li>
-  <li>Save your Blender file in this subfolder folder with a descriptive name, <i>eg</i>:
-    <div style="margin-left: 40px;"><code>X-Plane/Custom&nbsp;Scenery/EGLL/house.blend</code></div>
-The X-Plane <code>.obj</code> file will be exported to the same place, <i>ie</i>:
-    <div style="margin-left: 40px;"><code>X-Plane/Custom&nbsp;Scenery/EGLL/house.obj</code></div>
-  </li>
-</ul>
-<h4><a name="Tweaking_planes"></a>Tweaking planes</h4>
-<p>Imported planes need to be positioned correctly on the ground for
-use as static scenery (don't do this if you're making a CSL or cockpit
-object):</p>
-<ul>
-  <li>Select layers 1-3, select all objects and position the
-plane so that its undercarriage is sitting directly on the ground
-(represented by the <i>x</i>/y axes).</li>
-  <li>You may also need to rotate the plane slightly so that all
-wheels are level; press <samp style="font-weight: bold;">r</samp>
-and move the mouse to <u>r</u>otate the plane so that its
-undercarriage is sitting directly on the ground.
-Click to set the plane's position.</li>
-</ul>
-<p>The primary file for textures is named
-<code><i>airplane</i>_paint</code>.
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>XPlane2Blender</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.2  (Unix)">
+	<META NAME="AUTHOR" CONTENT="Jonathan Harris">
+	<META NAME="CREATED" CONTENT="0;0">
+	<META NAME="CHANGEDBY" CONTENT="Elizabeth ">
+	<META NAME="CHANGED" CONTENT="20100903;23135300">
+	<META NAME="DESCRIPTION" CONTENT="X-Plane import/export scripts for Blender 3D">
+	<META NAME="KEYWORDS" CONTENT="X-Plane, simulator, scenery, Blender, Blender3D">
+	<STYLE TYPE="text/css">
+	<!--
+		H2 { font-family: "Arial", "Helvetica", sans-serif }
+		H3 { font-family: "Arial", "Helvetica", sans-serif }
+		H4 { font-family: "Arial", "Helvetica", sans-serif }
+		H5 { font-family: "Arial", "Helvetica", sans-serif }
+		SAMP { font-family: "Arial", "Helvetica", sans-serif }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-CA" DIR="LTR">
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 STYLE="page-break-before: always">
+	<TR>
+		<TD BGCOLOR="#87cefa">
+			<P ALIGN=LEFT><FONT FACE="Arial, Helvetica, sans-serif">http://wiki.github.com/der-On/XPlane2Blender/</FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<HR>
+<H2>Scenery &amp; Cockpit import/export scripts for Blender</H2>
+<H3>Preface</H3>
+<P>This is the final version of Xplane2Blender v 3.10. It's been
+tested and works with Blender 2.49 on Mac, Windows, and Linux.
+Development of this script is no longer done by Marginal, but
+collectively and in an Open-Source manner. So please file requests
+and issues at the <A HREF="http://wiki.github.com/der-On/XPlane2Blender/">project
+website.</A> 
+</P>
+<P>Besides the work that's been happening on the Blender 2.49 version
+of this script, there's some exciting developments happening for the
+Blender 2.53+ version of this script. The goal is, to develop a new,
+more efficient workflow for X-Plane .obj creation making full use of
+Blender 2.5's new amazing capabilities. The project is currently
+hosted on <A HREF="http://wiki.github.com/der-On/XPlane2Blender/">GitHub</A>,
+where you can follow the most recent development, feature
+suggestions, implementations, Wiki, and other good stuff. 
+</P>
+<H3>Overview</H3>
+<P><A HREF="http://www.blender.org/">Blender</A> is an open source 3D
+object editor for Windows, Mac and UNIX.</P>
+<P>These Blender scripts export models created in Blender to X-Plane
+v7, v8, v9 or CSL <CODE>.obj</CODE> format.</P>
+<P>The scripts also import existing X-Plane v6, v7, v8, v9 and CSL
+<CODE>.obj</CODE> files and X-Plane v7, v8 and v9 <CODE>.acf</CODE>
+airplanes into Blender.</P>
+<H3>Requirements</H3>
+<P>Runs on Windows 2000 or later, Mac OS 10.3.9 or later, and Linux.</P>
+<P>Requires Blender 2.45 or later:</P>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2>
+	<TR>
+		<TD>
+			<P ALIGN=CENTER>Windows:</P>
+		</TD>
+		<TD>
+			<P><A HREF="http://www.blender3d.org/Download/" TARGET="_blank">Download</A>
+			and run the &quot;Installer&quot; build of Blender.</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P ALIGN=CENTER>Mac OS<BR>10.5:</P>
+		</TD>
+		<TD>
+			<P><A HREF="http://www.blender3d.org/Download/" TARGET="_blank">Download</A>
+			the &quot;Python 2.5&quot; build of Blender for Intel or PPC.<BR>To
+			install, copy the Blender application out of the disk image <I>eg</I>
+			to your <CODE>/Applications</CODE> folder.</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P ALIGN=CENTER>Mac OS<BR>10.3&nbsp;&amp;&nbsp;10.4:</P>
+		</TD>
+		<TD>
+			<P><A HREF="http://www.blender3d.org/Download/" TARGET="_blank">Download</A>
+			the default &quot;Python 2.3&quot; build of Blender for Intel or
+			PPC, unless you have installed Python 2.5.<BR>To install, copy the
+			Blender application out of the disk image <I>eg</I> to your
+			<CODE>/Applications</CODE> folder.</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P ALIGN=CENTER>Linux: 
+			</P>
+		</TD>
+		<TD>
+			<P>Most distros come with Blender, so you can install it via your
+			package manager (<I>eg</I> Synaptic, YaST, YUM).<BR>Or <A HREF="http://www.blender3d.org/Download/" TARGET="_blank">download</A>
+			the build that corresponds to the version of Python that is
+			installed on your system.</P>
+		</TD>
+	</TR>
+</TABLE>
+<H3>Changes for 3.10 Final</H3>
+<P>The two major changes since Beta 3 are: 
+</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">support for ATTR_light_level (this
+	allows you to assign an object in Blender with the ability to
+	independently &quot;turn on&quot; the LIT texture, based on a given
+	dataref.) 
+	</P>
+	<LI><P>Fixed the multiple texture bug that was still present in Beta
+	4. This applies ONLY to the cockpit .obj, since it's the only one to
+	support 2 textures. Now the script correctly interprets which of the
+	textures is assigned to which animated mesh in Blender, and exports
+	it accordingly. 
+	</P>
+</UL>
+<H4>ATTR_light_level</H4>
+<P>The way you use ATTR_light_level is outlined in detail on the obj8
+spec website. That site describes what the resulting .obj file would
+look like in a text editor. This script allows you to store that
+information in Blender, so that it can be saved as part of your
+aircraft's source files. 
+</P>
+<P>What this feature does is it allows you to swap the daytime and
+nighttime (LIT) textures on a per-mesh basis, triggered by a dataref
+of your choice. This allows you to, for example, build 3D buttons
+that &quot;light up&quot; when their particular dataref is triggered.
+</P>
+<P>Here's how you would do it in Blender. Let's say we're dealing
+with a 3D &quot;fuel pump&quot; button that's supposed to light up
+when the fuel pump is on. First, you'd have to have a daytime and LIT
+version of the texture. Without ANY CHANGES, this button's behavior
+would be such, that when X-Plane goes from day-mode to night-mode,
+this button's texture would swap from daytime to LIT texture.
+However, you can override this, and cause the texture swap to take
+place when the dataref for the fuel pump is called up. With the
+button selected (pink) in Blender, call up the &quot;Game Logic&quot;
+button (F4 keyboard shortcut). Click on &quot;Add Property&quot; and
+type &quot;ATTR_light_level&quot; (no quotes) into the space labeled
+&quot;Name:&quot; Then select &quot;String&quot; from the drop-down
+menu directly to the left of this blank. Now enter the dataref for
+the fuel pump into the blank space to the right. (in this case, it
+would be &quot;sim/cockpit/engine/fuel_pump_on&quot;). 
+</P>
+<P>You can now save this .blend file, and the lighting information
+you've entered for this button should be grabbed by the new exporter.
+</P>
+<H3>Tutorials</H3>
+<P>This document is a reference and assumes familiarity with Blender.
+ There is a detailed series of video tutorials on YouTube that aim to
+provide developers with the background and techniques needed to make
+basic planes, and to continue making detailed planes using this
+script and Blender.  The <A HREF="http://www.youtube.com/watch?v=Os7O-uPhIHk&amp;feature=PlayList&amp;p=83BC4217746786FF&amp;index=0&amp;playnext=1">first
+14 tutorials</A> are aimed at familiarizing you with PlaneMaker.  
+</P>
+<P>The <A HREF="http://www.youtube.com/watch?v=VPTsK3WLTxI&amp;feature=PlayList&amp;p=DB0F4B925CF9169C&amp;index=0&amp;playnext=1">following
+tutorials</A> showcase how to create and animate detailed .obj files
+that you can append to your .acf file, and even allow you to replace
+PlaneMaker components, which are low-res, low-polygon parts, with
+highly detailed, intricately textured .obj files.</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="http://marginal.org.uk/x-planescenery/tutorials.html" TARGET="_blank">Using
+	Blender to create X-Plane scenery</A> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm"><A HREF="http://en.wikibooks.org/wiki/Blender_3D/Noob_to_Pro" TARGET="_blank">Blender3D:
+	Noob to Pro</A> 
+	</P>
+	<LI><P><A HREF="http://wiki.blender.org/index.php/Manual" TARGET="_blank">The
+	Blender Manual</A> 
+	</P>
+</UL>
+<P><BR><BR>
+</P>
+<H3>Installation</H3>
+<P>Run Blender to check that it is installed correctly. If the
+Blender window appears &quot;blurry&quot; turn off anti-aliasing in
+your video card's OpenGL settings and re-start Blender.</P>
+<P>Now close Blender.</P>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2>
+	<TR>
+		<TD>
+			<P ALIGN=CENTER>Windows<BR>Vista:</P>
+		</TD>
+		<TD>
+			<P>Extract the contents of the zip file to a new (temporary)
+			folder.<BR>Right-click on the file <CODE>install.cmd</CODE> and
+			choose <SAMP>Run as administrator</SAMP>.<BR><FONT SIZE=2>(This
+			installs the scripts in the folder</FONT><CODE><FONT SIZE=2>
+			%HOME%\blender\scripts </FONT></CODE><FONT SIZE=2>if it exists,
+			otherwise in the copy of Blender that is associated with </FONT><CODE><FONT SIZE=2>.blend</FONT></CODE><FONT SIZE=2>
+			files).</FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P ALIGN=CENTER>Windows<BR>2000/XP:</P>
+		</TD>
+		<TD>
+			<P>Extract the contents of the zip file to a new (temporary)
+			folder.<BR>Double-click on the file <CODE>install.cmd</CODE>.<BR><FONT SIZE=2>(This
+			installs the scripts in the folder</FONT><CODE><FONT SIZE=2>
+			%HOME%\blender\scripts </FONT></CODE><FONT SIZE=2>if it exists,
+			otherwise in the copy of Blender that is associated with </FONT><CODE><FONT SIZE=2>.blend</FONT></CODE><FONT SIZE=2>
+			files).</FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P ALIGN=CENTER>Mac OS: 
+			</P>
+		</TD>
+		<TD>
+			<P>Double-click on the file <CODE>install.command</CODE>.<BR><FONT SIZE=2>(This
+			installs the scripts in the folder</FONT><CODE><FONT SIZE=2>
+			~/.blender/scripts </FONT></CODE><FONT SIZE=2>if it exists,
+			otherwise in all copies of Blender that the Finder knows about).</FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD>
+			<P ALIGN=CENTER>Linux:</P>
+		</TD>
+		<TD>
+			<P STYLE="margin-bottom: 0cm">Start a shell window, and type:</P>
+			<P STYLE="margin-left: 0.93cm; margin-bottom: 0cm"><CODE>mkdir&nbsp;-p&nbsp;~/.blender/scripts</CODE></P>
+			<P>Extract the contents of the zip file to this folder.</P>
+		</TD>
+	</TR>
+</TABLE>
+<P>(Re)start Blender. This file can now be viewed by choosing <SAMP>Help&nbsp;→
+X-Plane</SAMP> in Blender.</P>
+<P>You can now delete the temporary folder.</P>
+<P><BR><BR>
+</P>
+<P>If the above mentioned installation of the scripts does not work,
+you can still open these Python-scripts in Blender's text-editor
+window, and run each script by pressing “Alt+P.”  This method can
+also save time.  If, for instance, you keep the Python-script in one
+of Blender's text-editor windows, it is easier to call it up via the
+“Alt+P” key command, than by browsing to the appropriate plug-in
+via the pop-up menus in the Python window.  
+</P>
+<P>The two most commonly used Python scripts once development is in
+full swing, are the “XplaneAnimObject.py” and the
+“XplaneExport8.py.”  I've found that keeping these scripts in a
+small window in your Blender project makes animating and exporting
+X-Plane .obj's faster and easier.</P>
+<H3>Importing objects</H3>
+<P>First, move the 3D Cursor to where you want the imported object to
+be placed. Usually you'll want the object to be placed at the origin
+so just press <SAMP><B>Shift&nbsp;C</B></SAMP> to centre the 3D
+Cursor at the origin.</P>
+<P>Choose <SAMP>File&nbsp;→ Import&nbsp;→ X-Plane Object</SAMP>,
+select a <CODE>.obj</CODE> file and press <SAMP>Import&nbsp;OBJ</SAMP>.</P>
+<P>The scenery is imported at the 3D Cursor position.</P>
+<P>You can import multiple <CODE>.obj</CODE> files and re-export them
+as a single file. But note that the X-Plane <CODE>.obj</CODE> file
+format only supports the use of one texture file, so you'll have to
+create a single larger file containing all required textures - see
+<A HREF="#resize">below</A>. Or you can have Blender create this
+single file automatically by selecting all the objects and, in a
+<SAMP>UV/Image Editor</SAMP> window, choosing <SAMP>Image&nbsp;→
+Consolidate&nbsp;into&nbsp;one&nbsp;image</SAMP>.</P>
+<H3>Importing planes</H3>
+<P>First, move the 3D Cursor to where you want the imported plane or
+weapon to be placed. Usually you'll want it to be placed at the
+origin so just press <SAMP><B>Shift&nbsp;C</B></SAMP> to centre the
+3D Cursor at the origin.</P>
+<P>Choose <SAMP>File&nbsp;→ Import&nbsp;→ X-Plane&nbsp;Plane&nbsp;or&nbsp;Weapon</SAMP>
+and choose whether to import the plane or weapon so that the
+&quot;reference point&quot; is located at the 3D Cursor (for making
+cockpit &amp; misc objects) or so that the &quot;centre of gravity&quot;
+is located at the 3D Cursor (for making CSLs and static scenery).</P>
+<P>Then select a <CODE>.acf</CODE> or <CODE>.wpn</CODE> file and
+press <SAMP>Import&nbsp;ACF&nbsp;or&nbsp;WPN</SAMP>.</P>
+<P>The script creates up to three versions of the plane or weapon in
+Blender, one in each of layers 1, 2 and 3. The versions in layers 2
+and 3 use approximately <SUP><FONT SIZE=2>1</FONT></SUP>/<SUB><FONT SIZE=2>10</FONT></SUB><SUP><FONT SIZE=2>th</FONT></SUP>
+and <SUP><FONT SIZE=2>1</FONT></SUP>/<SUB><FONT SIZE=2>100</FONT></SUB><SUP><FONT SIZE=2>th</FONT></SUP>
+of the number of faces compared to the version in layer 1. See <A HREF="#Level_Of_Detail">Level
+of Detail</A> below for an explanation of why it does this.</P>
+<P>Imported planes need some tweaking before you can export them as
+scenery or as a CSL object; see <A HREF="#Tweaking_planes">Tweaking
+planes</A> below.</P>
+<H3>Exporting objects</H3>
+<P>First, choose <SAMP>File&nbsp;→ Save As…</SAMP> and save the
+<CODE>.blend</CODE> file in the aircraft or scenery folder where you
+want the <CODE>.obj</CODE> file to end up. Then choose: 
+</P>
+<DL>
+	<DD><SAMP>File&nbsp;→ Export&nbsp;→ X-Plane&nbsp;CSL&nbsp;Object</SAMP>
+	or 
+	</DD><DD>
+	<SAMP>File&nbsp;→ Export&nbsp;→ X-Plane&nbsp;v7&nbsp;Object</SAMP>
+	or 
+	</DD><DD STYLE="margin-bottom: 0.5cm">
+	<SAMP>File&nbsp;→ Export&nbsp;→ X-Plane&nbsp;v8/v9&nbsp;Object</SAMP>
+		</DD></DL>
+<P>
+The object is exported in the same folder and with the same name as
+the current Blender file, but with a <CODE>.obj</CODE> extension.
+Blender may display some informational messages - click on one of
+these messages to see which object(s) the message refers to.</P>
+<P>If there is an error then the scripts will attempt to identify and
+highlight the offending Blender object(s).</P>
+<P><SAMP><B>csl: </B></SAMP>These objects are intended for use with
+multi-user plugins such as <A HREF="http://www.xsquawkbox.net/xsb/">XSquawkBox</A>
+or <A HREF="http://www.ivao.aero/softdev/X-IvAp/">X-IvAp</A>.<BR><SAMP><B>v8:
+</B></SAMP>These objects are supported by X-Plane versions 8.20 and
+later.<BR><SAMP><B>v9: </B></SAMP>These objects are supported by
+X-Plane versions 9.00 and later.</P>
+<H3>Creating X-Plane scenery</H3>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Find and open the<CODE>
+	Custom&nbsp;Scenery </CODE>folder inside of your <CODE>X-Plane</CODE>
+	installation. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Create a subfolder with the name
+	of the scenery package that you're making. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Save your Blender file in this
+	subfolder folder with a descriptive name, <I>eg</I>: 
+	</P>
+	<P STYLE="margin-bottom: 0cm"><CODE>X-Plane/Custom&nbsp;Scenery/EGLL/house.blend</CODE></P>
+	<P STYLE="margin-bottom: 0cm">The X-Plane <CODE>.obj</CODE> file
+	will be exported to the same place, <I>ie</I>: 
+	</P>
+	<P><CODE>X-Plane/Custom&nbsp;Scenery/EGLL/house.obj</CODE></P>
+</UL>
+<H4><A NAME="Tweaking_planes"></A>Tweaking planes</H4>
+<P>Imported planes need to be positioned correctly on the ground for
+use as static scenery (don't do this if you're making a CSL or
+cockpit object):</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Select layers 1-3, select all
+	objects and position the plane so that its undercarriage is sitting
+	directly on the ground (represented by the <I>x</I>/y axes). 
+	</P>
+	<LI><P>You may also need to rotate the plane slightly so that all
+	wheels are level; press <SAMP><B>r</B></SAMP> and move the mouse to
+	<U>r</U>otate the plane so that its undercarriage is sitting
+	directly on the ground. Click to set the plane's position. 
+	</P>
+</UL>
+<P>The primary file for textures is named <CODE><I>airplane</I></CODE><CODE>_paint</CODE>.
 Most planes also use textures from a secondary file named
-<code><i>airplane</i>_paint2</code>. Objects that use textures from
-the secondary file are imported with "<code>*</code>" after their
-name to make them easier to identify in Blender's <samp>Outliner</samp>
-window.</p>
-<p>The X-Plane <code>.obj</code> scenery file formats only support the use
-of a single file for textures, up to 1024x1024 pixels in size.
-If your plane only has a few simple objects that use textures from
-<code><i>airplane</i>_paint2</code> then you should re-texture these objects
-to use <code><i>airplane</i>_paint</code>, following the same procedure
-described below for weapons and misc objects. If that is not feasible
-you can use this procedure to make the plane use textures from a single
-file:</p>
-<ul>
-  <li>Save your Blender model.</li>
-  <li>In an image editor application, resize <code><i>airplane</i>_paint</code>
-and <code><i>airplane</i>_paint2</code> to 512x512. <small>(You don't need to
-save these resized versions)</small>.</li>
-  <li>Create a new bitmap file 1024 pixels wide and 512 pixels high.</li>
-  <li>Paste the resized <code><i>airplane</i>_paint</code> into the left half of this bitmap.</li>
-  <li>Paste the resized <code><i>airplane</i>_paint2</code> into the right half of this bitmap.</li>
-  <li>Save the bitmap file in the same folder and with the same name as your <code>.blend</code> file. If you're making a CSL object then you must save in PNG format.</li>
-  <li>If your plane uses night-time textures then repeat this procedure for the <code>_LIT</code> bitmap files.</li>
-  <li>In a Blender <samp>UV/Image Editor</samp> window choose
-<samp>Image&nbsp;&rarr; Merge&nbsp;_paint&nbsp;and&nbsp;_paint2</samp>.
-</ul>      
-<p>If your imported plane uses weapons or misc objects then each of
-these will use an additional bitmap file. Weapons are imported
-with their names starting with "<code>W<i>nn</i></code>" and objects
-with their names starting with "<code>O<i>nn</i></code>". Also note
-that reduced-LOD versions of weapons and misc objects may be present in
-layers 2 and 3.</p>
-<p>Open an <samp>Outliner</samp> window and choose
-<samp>View&nbsp;&rarr; Show&nbsp;Outliner</samp>. For each mesh that has a
-name starting with "<code>W<i>nn</i></code>" or "<code>O<i>nn</i></code>" or
-ending with "<code>*</code>", either:</p>
-<ul>
-  <li>Delete the mesh, or</li>
-  <li>Copy the required textures to an unused area in
-the primary bitmap file and use the <samp>UV/Image Editor</samp>
-window to map the new copy of the textures to the mesh's faces.</li>
-</ul>
-<p>Consider performance issues when the plane is rendered in
-X-Plane. Ask yourself the following questions:</p>
-<ul>
-  <li>Most important: Do you really need fully detailed 1024x1024
-textures for your plane? Video memory is used up by terrain and
-object geometry and textures. Once you run out of video memory the GPU
-has to fall back to main memory, and this <u>really</u> slows things
-down. One 1024x1024 texture uses 4MB of video memory. Some people are
-running X-Plane on computers with only 32MB of video memory, so one
-1024x1024 texture at "extreme res" in X-Plane uses
-<small><sup>1</sup></small>/<small><sub>8</sub><sup>th</sup></small>
-of their video memory. Consider resizing the texture file in an image
-editor program to half or even quarter size.
-Use <samp>Image&nbsp;&rarr; Replace</samp> to use the new texture file.</li>
-  <li>Does the model have hidden faces? Some versions of X-Plane
-don't handle hidden faces in v7 scenery objects very well and they also
-a cause a small performance hit. Look for things like wings or misc
-bodies that are partially or wholly buried in the fuselage and delete
-any wholly hidden faces before exporting.</li>
-  <li>Do you really need all that detail? Consider deleting
-details like flap tracks, antennae etc before exporting. This
-especially goes for the lower <a href="XPlane2Blender.html#Level_Of_Detail">Level of Detail</a>
-versions of the plane in layers 2 and 3 which are only viewed in
-X-Plane from &gt;1000m and &gt;4000m respectively.</li>
-</ul>
-
-<h3>Creating 3D cockpits</h3>
-<p>X-Plane 3D cockpits are just normal v7, v8 or v9 scenery objects except
-that cockpits can't contain multiple <a href="#Level_Of_Detail">Levels
-of Detail</a>, so only objects in Blender layer 1 are exported.
-If you want to keep objects in your Blender scene for reference but
-which you don't want to export - eg the plane fuselage - then put them
-in layer 4 or greater before exporting.</p>
-<p>Choose <samp>File&nbsp;&rarr; Save As</samp> and save
-the blender file in the same folder as your plane's <code>.acf</code>
-file with the name <code><i>airplane</i>_cockpit.blend</code>,
-<code><i>airplane</i>_cockpit_INN.blend</code> or
-<code><i>airplane</i>_cockpit_OUT.blend</code>
-(where <code><i>airplane</i></code> is the name of your plane's <code>.acf</code> file):</p>
-<ul>
-  <li>X-Plane displays <code><i>airplane</i>_cockpit.obj</code> in both internal and external views.</li>
-  <li>X-Plane displays <code><i>airplane</i>_cockpit_INN.obj</code> only in internal views.</li>
-  <li>X-Plane displays <code><i>airplane</i>_cockpit_OUT.obj</code> only in external views.<br>
-If you create an <code><i>airplane</i>_cockpit_INN.obj</code> and/or <code><i>airplane</i>_cockpit_OUT.obj</code> then you should not create <code><i>airplane</i>_cockpit.obj</code>.</li>
-</ul>
-<p>You will usually want to import your plane into Blender to
-act as a reference and/or starting point for your cockpit. Delete any
-plane parts that you don't need in creating your cockpit - you only
-need to keep the fuselage itself plus any relevant Misc Bodies. After
-import, your cockpit uses the same texture file as your plane, ie <code><i>airplane</i>_paint</code>.
-Choose <samp>Image&nbsp;&rarr; Replace</samp> in a
-<samp>UV/Image Editor</samp> window to use a different texture file, which
-can be named anything you like (but no spaces) and which should live in
-the same folder as your plane's <code>.acf</code> file.</p>
-<p>To make your 3D cockpit appear in X-Plane,
-on the <samp>Standard&nbsp;&rarr; Viewpoint&nbsp;&rarr; View</samp> screen in PlaneMaker, check the
-<small><samp>show cockpit object in: INSIDE views, exact forwards</samp></small> option. To hide the 2D cockpit altogether, also check the
-<small><samp>show cockpit object in: PANEL views, exact forwards</samp></small>
-option; hiding the 2D cockpit means that you no longer have to leave a large
-part of the Panel Texture transparent to represent the windscreen, which gives
-you more room on the Panel Texture for instruments.</p>
-
-<h4>Cockpit instruments</h4>
-<p>To construct moving cockpit instruments paint the
-<code>&#8230;/cockpit/-PANELS-/Panel.png</code> texture in an image editor
-application and place instuments in PlaneMaker as as you would for a 2D panel
-<small>(but bear in mind that only the top 768 lines of the Panel Texture
-can be used in the 3D cockpit in X-Plane versions prior to 8.20)</small>.
-The Panel Texture can by 1024&times;<i>any size</i> in X-Plane v8, and
-any size up to 2048&times;2048 in X-Plane v9.
+<CODE><I>airplane</I></CODE><CODE>_paint2</CODE>. Objects that use
+textures from the secondary file are imported with &quot;<CODE>*</CODE>&quot;
+after their name to make them easier to identify in Blender's
+<SAMP>Outliner</SAMP> window.</P>
+<P>The X-Plane <CODE>.obj</CODE> scenery file formats only support
+the use of a single file for textures, up to 1024x1024 pixels in
+size. If your plane only has a few simple objects that use textures
+from <CODE><I>airplane</I></CODE><CODE>_paint2</CODE> then you should
+re-texture these objects to use <CODE><I>airplane</I></CODE><CODE>_paint</CODE>,
+following the same procedure described below for weapons and misc
+objects. If that is not feasible you can use this procedure to make
+the plane use textures from a single file:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Save your Blender model. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">In an image editor application,
+	resize <CODE><I>airplane</I></CODE><CODE>_paint</CODE> and
+	<CODE><I>airplane</I></CODE><CODE>_paint2</CODE> to 512x512. <FONT SIZE=2>(You
+	don't need to save these resized versions)</FONT>. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Create a new bitmap file 1024
+	pixels wide and 512 pixels high. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Paste the resized <CODE><I>airplane</I></CODE><CODE>_paint</CODE>
+	into the left half of this bitmap. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Paste the resized <CODE><I>airplane</I></CODE><CODE>_paint2</CODE>
+	into the right half of this bitmap. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Save the bitmap file in the same
+	folder and with the same name as your <CODE>.blend</CODE> file. If
+	you're making a CSL object then you must save in PNG format. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">If your plane uses night-time
+	textures then repeat this procedure for the <CODE>_LIT</CODE> bitmap
+	files. 
+	</P>
+	<LI><P>In a Blender <SAMP>UV/Image Editor</SAMP> window choose
+	<SAMP>Image&nbsp;→ Merge&nbsp;_paint&nbsp;and&nbsp;_paint2</SAMP>.
+		</P>
+</UL>
+<P>If your imported plane uses weapons or misc objects then each of
+these will use an additional bitmap file. Weapons are imported with
+their names starting with &quot;<CODE>W</CODE><CODE><I>nn</I></CODE>&quot;
+and objects with their names starting with &quot;<CODE>O</CODE><CODE><I>nn</I></CODE>&quot;.
+Also note that reduced-LOD versions of weapons and misc objects may
+be present in layers 2 and 3.</P>
+<P>Open an <SAMP>Outliner</SAMP> window and choose <SAMP>View&nbsp;→
+Show&nbsp;Outliner</SAMP>. For each mesh that has a name starting
+with &quot;<CODE>W</CODE><CODE><I>nn</I></CODE>&quot; or &quot;<CODE>O</CODE><CODE><I>nn</I></CODE>&quot;
+or ending with &quot;<CODE>*</CODE>&quot;, either:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Delete the mesh, or 
+	</P>
+	<LI><P>Copy the required textures to an unused area in the primary
+	bitmap file and use the <SAMP>UV/Image Editor</SAMP> window to map
+	the new copy of the textures to the mesh's faces. 
+	</P>
+</UL>
+<P>Consider performance issues when the plane is rendered in X-Plane.
+Ask yourself the following questions:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Most important: Do you really need
+	fully detailed 1024x1024 textures for your plane? Video memory is
+	used up by terrain and object geometry and textures. Once you run
+	out of video memory the GPU has to fall back to main memory, and
+	this <U>really</U> slows things down. One 1024x1024 texture uses 4MB
+	of video memory. Some people are running X-Plane on computers with
+	only 32MB of video memory, so one 1024x1024 texture at &quot;extreme
+	res&quot; in X-Plane uses <SUP><FONT SIZE=2>1</FONT></SUP>/<SUB><FONT SIZE=2>8</FONT></SUB><SUP><FONT SIZE=2>th</FONT></SUP>
+	of their video memory. Consider resizing the texture file in an
+	image editor program to half or even quarter size. Use <SAMP>Image&nbsp;→
+	Replace</SAMP> to use the new texture file. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Does the model have hidden faces?
+	Some versions of X-Plane don't handle hidden faces in v7 scenery
+	objects very well and they also a cause a small performance hit.
+	Look for things like wings or misc bodies that are partially or
+	wholly buried in the fuselage and delete any wholly hidden faces
+	before exporting. 
+	</P>
+	<LI><P>Do you really need all that detail? Consider deleting details
+	like flap tracks, antennae etc before exporting. This especially
+	goes for the lower <A HREF="#Level_Of_Detail">Level of Detail</A>
+	versions of the plane in layers 2 and 3 which are only viewed in
+	X-Plane from &gt;1000m and &gt;4000m respectively. 
+	</P>
+</UL>
+<H3>Creating 3D cockpits</H3>
+<P>X-Plane 3D cockpits are just normal v7, v8 or v9 scenery objects
+except that cockpits can't contain multiple <A HREF="#Level_Of_Detail">Levels
+of Detail</A>, so only objects in Blender layer 1 are exported. If
+you want to keep objects in your Blender scene for reference but
+which you don't want to export - eg the plane fuselage - then put
+them in layer 4 or greater before exporting.</P>
+<P>Choose <SAMP>File&nbsp;→ Save As</SAMP> and save the blender
+file in the same folder as your plane's <CODE>.acf</CODE> file with
+the name <CODE><I>airplane</I></CODE><CODE>_cockpit.blend</CODE>,
+<CODE><I>airplane</I></CODE><CODE>_cockpit_INN.blend</CODE> or
+<CODE><I>airplane</I></CODE><CODE>_cockpit_OUT.blend</CODE> (where
+<CODE><I>airplane</I></CODE> is the name of your plane's <CODE>.acf</CODE>
+file):</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">X-Plane displays
+	<CODE><I>airplane</I></CODE><CODE>_cockpit.obj</CODE> in both
+	internal and external views. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">X-Plane displays
+	<CODE><I>airplane</I></CODE><CODE>_cockpit_INN.obj</CODE> only in
+	internal views. 
+	</P>
+	<LI><P>X-Plane displays <CODE><I>airplane</I></CODE><CODE>_cockpit_OUT.obj</CODE>
+	only in external views.<BR>If you create an <CODE><I>airplane</I></CODE><CODE>_cockpit_INN.obj</CODE>
+	and/or <CODE><I>airplane</I></CODE><CODE>_cockpit_OUT.obj</CODE>
+	then you should not create <CODE><I>airplane</I></CODE><CODE>_cockpit.obj</CODE>.
+		</P>
+</UL>
+<P>You will usually want to import your plane into Blender to act as
+a reference and/or starting point for your cockpit. Delete any plane
+parts that you don't need in creating your cockpit - you only need to
+keep the fuselage itself plus any relevant Misc Bodies. After import,
+your cockpit uses the same texture file as your plane, ie
+<CODE><I>airplane</I></CODE><CODE>_paint</CODE>. Choose <SAMP>Image&nbsp;→
+Replace</SAMP> in a <SAMP>UV/Image Editor</SAMP> window to use a
+different texture file, which can be named anything you like (but no
+spaces) and which should live in the same folder as your plane's <CODE>.acf</CODE>
+file.</P>
+<P>To make your 3D cockpit appear in X-Plane, on the <SAMP>Standard&nbsp;→
+Viewpoint&nbsp;→ View</SAMP> screen in PlaneMaker, check the <SAMP><FONT SIZE=2>show
+cockpit object in: INSIDE views, exact forwards</FONT></SAMP> option.
+To hide the 2D cockpit altogether, also check the <SAMP><FONT SIZE=2>show
+cockpit object in: PANEL views, exact forwards</FONT></SAMP> option;
+hiding the 2D cockpit means that you no longer have to leave a large
+part of the Panel Texture transparent to represent the windscreen,
+which gives you more room on the Panel Texture for instruments.</P>
+<H4>Cockpit instruments</H4>
+<P>To construct moving cockpit instruments paint the
+<CODE>…/cockpit/-PANELS-/Panel.png</CODE> texture in an image
+editor application and place instuments in PlaneMaker as as you would
+for a 2D panel <FONT SIZE=2>(but bear in mind that only the top 768
+lines of the Panel Texture can be used in the 3D cockpit in X-Plane
+versions prior to 8.20)</FONT>. The Panel Texture can by 1024×<I>any
+size</I> in X-Plane v8, and any size up to 2048×2048 in X-Plane v9.
 Normally you can only use a single file to texture your X-Plane
 objects. But when constructing a 3D cockpit you can additionally use
-this <code>&#8230;/cockpit/-PANELS-/Panel.png</code> file - the instruments
-that X-Plane draws on the 2D panel will also appear in your 3D model.</p>
-<p>The <code>&#8230;/cockpit/-PANELS-/Panel.png</code> texture doesn't
-contain any instruments when you load it into Blender (unless you've painted
-them on yourself). This makes it hard to tell in Blender where X-Plane will
-draw the instruments. So it's easier if you use a screenshot of the panel
-with the instruments drawn on it, instead of the real Panel Texture.
-If your display is larger than your Panel Texture, then this is simple:</p>
-<ul>
-  <li>Run PlaneMaker.</li>
-  <li>Choose <samp>Background&nbsp;&rarr; Rendering Options</samp> and set the size to be equal to the size of your Panel Texture.
-  <li>Restart PlaneMaker</li>
-  <li>Choose <samp>Standard&nbsp;&rarr; Panel</samp></li>
-  <li>Take a screenshot: Press <samp>Alt  PrintScreen</samp> (PC) or <samp>Command Shift 3</samp> (Mac).</li>
-  <li>Paste (PC) or load (Mac) the screenshot into an image editor application.</li>
-  <li>Crop the window borders etc from the screenshot so that the image is
-exactly the same size as your Panel Texture.</li>
-  <li>Save the screenshot as <code>ScreenshotPanel.png</code> (or any
-filename ending in <code>*panel.*</code>) in the same folder as your
-plane's <code>.acf</code> file.</li>
-  <li>Use the <code>ScreenshotPanel.png</code> texture on those faces
-that you want to display moving cockpit instruments in X-Plane.</li>
-  <li>The screenshot file does not need to be distributed with your
-finished plane.</li>
-</ul>
-<p>If your Panel Texture is larger than your display then you cannot take
-a screenshot of the whole panel. In this case you'll need to take multiple
-screenshots of the panel in PlaneMaker and stich them together in 
-an image editing application.</p>
-<p>If you later want to resize your Panel Texture then use the procedure
-described <a href="#resize">below</a>.</p>
-<p>Note that X-Plane versions prior to 8.20 only display the 3D
+this <CODE>…/cockpit/-PANELS-/Panel.png</CODE> file - the
+instruments that X-Plane draws on the 2D panel will also appear in
+your 3D model.</P>
+<P>The <CODE>…/cockpit/-PANELS-/Panel.png</CODE> texture doesn't
+contain any instruments when you load it into Blender (unless you've
+painted them on yourself). This makes it hard to tell in Blender
+where X-Plane will draw the instruments. So it's easier if you use a
+screenshot of the panel with the instruments drawn on it, instead of
+the real Panel Texture. If your display is larger than your Panel
+Texture, then this is simple:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Run PlaneMaker. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>Background&nbsp;→
+	Rendering Options</SAMP> and set the size to be equal to the size of
+	your Panel Texture. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Restart PlaneMaker 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>Standard&nbsp;→
+	Panel</SAMP> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Take a screenshot: Press <SAMP>Alt
+	PrintScreen</SAMP> (PC) or <SAMP>Command Shift 3</SAMP> (Mac). 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Paste (PC) or load (Mac) the
+	screenshot into an image editor application. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Crop the window borders etc from
+	the screenshot so that the image is exactly the same size as your
+	Panel Texture. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Save the screenshot as
+	<CODE>ScreenshotPanel.png</CODE> (or any filename ending in
+	<CODE>*panel.*</CODE>) in the same folder as your plane's <CODE>.acf</CODE>
+	file. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Use the <CODE>ScreenshotPanel.png</CODE>
+	texture on those faces that you want to display moving cockpit
+	instruments in X-Plane. 
+	</P>
+	<LI><P>The screenshot file does not need to be distributed with your
+	finished plane. 
+	</P>
+</UL>
+<P>If your Panel Texture is larger than your display then you cannot
+take a screenshot of the whole panel. In this case you'll need to
+take multiple screenshots of the panel in PlaneMaker and stich them
+together in an image editing application.</P>
+<P>If you later want to resize your Panel Texture then use the
+procedure described <A HREF="#resize">below</A>.</P>
+<P>Note that X-Plane versions prior to 8.20 only display the 3D
 cockpit when running at the default 1024x768 resolution. You may want
 to mention this in the Readme with your plane if your plane is
-intended to work in X-Plane versions prior to 8.20.</p>
-
-<h4><font size="+1">v9: </font>Cockpit Panel Regions</h4>
-<p>The cockpit Panel Texture uses a lot of video memory, much of which
-is wasted when the 3D cockpit is being displayed:</p>
-<ul>
-  <li>X-Plane has to round up the height and width of your Panel Texture to be
-powers of two. <i>eg</i> if your Panel Texture is 1600&times;1200 pixels then
-X-Plane rounds this up to 2048&times;2048 pixels, which requires 16MB of
-video memory. More if you also supply a LIT Panel Texture.</li>
-  <li>Typically up to half of your Panel Texture represents your plane's
-windscreen, which is fully transparent. You can't make use of this part of the
-texture in any useful way in a 3D cockpit, so the memory that it consumes is
-wasted.
-<small>(Note: You can construct a tinted windscreen in your 3D cockpit quite
-cheaply by using a small semi-transparent part of the non-panel
-texture).</small></li>
-  <li>The Panel Texture contains an alpha channel for transparency. The alpha
-channel accounts for &frac14; of the memory that the texture consumes.
-But often your only need for transparency in the Panel Texture is to represent
-the 2D windscreen, which is of no use in a 3D cockpit, so the memory that the
-alpha channel consumes is wasted.</p>
-</ul>
-<p>A "Panel Region" is a new texture which is cut out from your Panel Texture:</p>
-<ul>
-  <li>You can create up to 4 Panel Regions (which can overlap).</li>
-  <li>The height and width of a Panel Region texture must be a power of two
-<i>eg</i> 128, 256, 512, 1024 or 2048, but it doesn't have to be square.</li>
-  <li>Panel Region textures are opaque - they don't contain an alpha channel.</li>
-</ul>
-<p>When you use Panel Regions instead of the Panel Texture to texture your 3D
-cockpit, X-Plane discards the Panel Texture's alpha channel and also discards
-all areas of the Panel Texture other than the pieces that you cut out to make
-the Panel Regions.
-This reduces video memory requirements and improves performance.</p>
-
-<h5>Creating a Panel Region</h5>
-<ul>
-  <li>In the <samp>UV/Image Editor</samp> window, select your Panel Texture
-from the pop-up menu.</li>
-  <li>Choose <samp>Image&nbsp;&rarr; X-Plane&nbsp;panel&nbsp;regions&nbsp;&rarr; Create&nbsp;new&nbsp;region</samp></li>
-  <li>Enter the co-ordinates in your Panel Texture where you want the
-bottom-left pixel of the new Panel Region to start,
-and the width and height of the new Panel Region.</li>
-</ul>
-<p>Any faces that you've textured using the Panel Texture which are
-contained inside the new Panel Region are transferred over to use the new
-Panel Region.</p>
-<p>Any areas that are fully transparent in the Panel Texture are coloured
-sky blue in the new Panel Region. You'll get undefined (<i>ie</i> weird)
-results in X-Plane if you use these sky blue areas to texture your faces.</p>
-<p><small>(Note: When you create a Panel Region, Blender also creates a hidden
-object named "PanellRegionHandler" to store accounting information. Don't
-mess with this object).</small></p>
-
-<h5>Deleting a Panel Region</h5>
-<ul>
-  <li>In the <samp>UV/Image Editor</samp> window, select your Panel Region
-from the pop-up menu.</li>
-  <li>Choose <samp>Image&nbsp;&rarr; X-Plane&nbsp;panel&nbsp;regions&nbsp;&rarr; Delete&nbsp;this&nbsp;region</samp></li>
-</ul>
-<p>Any faces that you've textured using this Panel Region are transferred
-back to using the Panel Texture.</p>
-<p>The deleted Panel Region will remain in the <samp>UV/Image Editor</samp>
-window's pop-up menu for a while until Blender figures out that it can remove
-it. But the deleted Panel Region won't count towards your maximum of four
-Panel Regions.</p>
-
-<h5>Re-loading the Panel Regions</h5>
-<p>The Panel Regions aren't automatically updated when you edit your Panel
-Texture in an image editor application and then reload it in Blender,
-or when you reload your <code>.blend</code> file.</p>
-<ul>
-  <li>In the <samp>UV/Image Editor</samp> window, select your Panel Texture
-from the pop-up menu.</li>
-  <li>Choose <samp>Image&nbsp;&rarr; X-Plane&nbsp;panel&nbsp;regions&nbsp;&rarr; Reload&nbsp;all&nbsp;regions</samp></li>
-</ul>
-<br>
-
-<h3>Using Blender to create X-Plane objects</h3>
-<p>Only Lamps and Meshes are exported to X-Plane.
-You can use other Blender object types, <i>eg</i> Curves and Surfaces,
-to construct your scenery as long as you convert them to meshes before
-exporting to X-Plane.</p>
-<h4><a name="lamps">Lamps</a></h4>
-<ul>
-  <li>Only Lamp objects of type "Lamp" are exported to X-Plane. Lamp objects
-of types "Area", "Spot", "Semi" and "Hemi" are ignored (and so can be
-used to illuminate your model in Blender).</li>
-  <li><samp style="font-weight: bold;">v8/v9: </samp>Lamp objects with certain words in their names have special behaviours when exported to an X-Plane v8 or v9 object:
-    <dl>
-      <dd><code>Lamp</code> - Normal (legacy) light. The colour is determined by the <samp>R</samp>,<samp>G</samp>,<samp>B</samp> sliders on the <samp>Lamp</samp> panel (<samp style="font-weight: bold;">F5</samp>).</dd>
-      <dd><code>Flash</code> - Flashing (legacy) light. The colour is determined by the <samp>R</samp>,<samp>G</samp>,<samp>B</samp> sliders on the <samp>Lamp</samp> panel (<samp style="font-weight: bold;">F5</samp>).</dd>
-      <dd><code>Traffic</code>, <code>smoke_black</code>, <code>smoke_white</code>  -
-As for X-Plane v7 objects; see below. (R,G,B settings are ignored).</dd>
-      <dd><i>other</i> -
-X-Plane pre-defined "named" or "custom" light. (Supported by X-Plane 8.50 and later. R,G,B settings are ignored). The name of the X-Plane light is taken from the value of a <a href="#properties">property</a> named <code>name</code> if this exists, otherwise from the name of the lamp object.</dd>
-    </dl></li>
-  <li><samp style="font-weight: bold;">v7: </samp>Lamp objects with certain words in their names have special behaviours when exported to an X-Plane v7 object:
-    <dl>
-      <dd><code>Flash</code> - Flashing light. The colour is determined by the <samp>R</samp>,<samp>G</samp>,<samp>B</samp> sliders on the <samp>Lamp</samp> panel (<samp style="font-weight: bold;">F5</samp>).</dd>
-      <dd><code>airplane_beacon</code> - Red pulsing anti-collision light. (R,G,B settings are ignored).</dd>
-      <dd><code>airplane_strobe</code> - White strobe light. (R,G,B settings are ignored).</dd>
-      <dd><code>Traffic</code> - Cycles red, orange, green. (R,G,B settings are ignored).</dd>
-      <dd><code>smoke_black</code> or <code>smoke_white</code> - Not really a light; emits smoke. The size of the smoke puffs is determined by the Energy slider on the <samp>Lamp</samp> panel (<samp style="font-weight: bold;">F5</samp>) (R,G,B settings are ignored).</dd>
-      <dd><i>other</i> - Normal light. The colour is determined by the <samp>R</samp>,<samp>G</samp>,<samp>B</samp> sliders on the <samp>Lamp</samp> panel (<samp style="font-weight: bold;">F5</samp>).</dd>
-    </dl></li>
-  <li><samp style="font-weight: bold;">csl: </samp>Lamp objects with certain names have special behaviours when exported to
-an X-Plane CSL object. The XSquawkBox documentation strongly recommends
-that you use these special lights:
-    <dl>
-      <dd><code>airplane_landing</code> - White landing light. (R,G,B settings are ignored).</dd>
-      <dd><code>airplane_taxi</code> - White taxi light. (R,G,B settings are ignored).</dd>
-      <dd><code>airplane_nav_left</code> - Red navigation/position light. (R,G,B settings are ignored).</dd>
-      <dd><code>airplane_nav_right</code> - Green navigation/position light. (R,G,B settings are ignored).</dd>
-      <dd><code>airplane_beacon</code> - Red pulsing anti-collision light, on when engines are running. (R,G,B settings are ignored).</dd>
-      <dd><code>airplane_strobe</code> - White strobe light. (R,G,B settings are ignored).</dd>
-      <dd><i>other</i> - Normal light. The colour is determined by the <samp>R</samp>,<samp>G</samp>,<samp>B</samp> sliders on the <samp>Lamp</samp> panel (<samp style="font-weight: bold;">F5</samp>).</dd>
-    </dl>
-  </li>
-  <li><samp style="font-weight: bold;">v8/v9: </samp>Custom lights
-(supported by X-Plane 8.50 and later) are created using the vertices from a
-Mesh object:<br>
-In the <samp>Material buttons</samp> panels
-(<samp style="font-weight: bold;">F5</samp>) add a new material to the mesh,
-then press the <samp>Halo</samp> button on the <samp>Links and Pipeline</samp>
-panel. You should use just one material.
-    <ul>
-      <li>The <samp>Halo</samp> button and the
-<samp>R</samp>,<samp>G</samp>,<samp>B</samp>,<samp>A</samp> sliders on the
-<samp>Material</samp> panel control the light's R,G,B and A values.
-Alternatively you can create <a href="#properties">properties</a> named
-<code>R</code>, <code>G</code>, <code>B</code> and/or <code>A</code> to
-set these values.</li>
-      <li>The <samp>HaloSize</samp> control on the <samp>Shaders</samp> panel
-controls the light's S value.<br>
-Also press the <samp>HaloTex</samp> button on this panel to make Blender render the light correctly.</li>
-    </ul>
-In the <samp>Texture buttons</samp> panels
-(<samp style="font-weight: bold;">F6</samp>) add a new texture to the
-material, and change the <samp>Texture&nbsp;Type</samp> to <code>Image</code>.
-You should use just one texture.
-    <ul>
-      <li>On the <samp>Image</samp> panel load the texture file that contains
-the light that you want to use.</li>
-      <li>On the <samp>Map Image</samp> panel press the <samp>UseAlpha</samp> button.<br>
-Use the <samp>MinX</samp>, <samp>MinX</samp>, <samp>MaxX</samp>, <samp>MaxY</samp> settings to select a subset of the texture.</li>
-    </ul>
-To drive the custom light using a dataref add a String <a href="#properties">property</a> named <code>name</code>.
-  </li>
-</ul>
-<h4><a name="Meshes"></a>Meshes</h4>
-<ul>
-  <li>Create faces with 3 or 4 edges (called "<code>tri</code>"s
-and "<code>quad</code>"s in X-Plane).</li>
-  <li>In the <samp>Link and Materials</samp> Editing panel (<samp style="font-weight: bold;">F9</samp>):
-    <ul>
-      <li><samp>Set Smooth</samp> and <samp>Set Solid</samp> control whether
-to smooth edges of faces in a mesh.
-This is useful when using multiple faces to simulate a curved surface.
-Go to "Object Mode", select the mesh and press <samp>Set Smooth</samp>.
-The effect is only visible in Blender <samp>3D View</samp>
-windows when the <samp>Viewport Shading</samp> button is
-set to <samp>Solid</samp> or <samp>Shaded</samp>.<br>
-      <samp style="font-weight: bold;">v7: </samp>Only faces that
-are part of a <a href="#strips">Strip</a> will be smoothed when displayed
-in X-Plane.</li>
-    </ul>
-  </li>
-  <li>In the <samp>Texture Face</samp> Editing panel (<samp style="font-weight: bold;">F9</samp>) available in <samp>UV Face Select</samp> mode:
-    <ul>
-      <li><samp>Tex</samp> button controls whether the face has a texture:<br>
-In an image editor application create one texture file that is like a
-"<a href="http://en.wikipedia.org/wiki/Collage" target="_blank">collage</a>"
-of all of the textures that you need in your model. 
-The height and width of the texture file must be a power of two <i>eg</i>
-128, 256, 512, 1024 or 2048 (X-Plane v9 only),
-but it doesn't have to be square.
-(See <code>&#8230;/Custom&nbsp;Scenery/KSBD&nbsp;Demo&nbsp;Area/KSBD_example.png</code> for an example).<br>
-Save the texture file in 32bit or 24bit PNG format (<i>ie</i> with or
-without an "Alpha" channel) in the aircraft or scenery folder where you
-want the X-Plane <code>.obj</code> file to end up.<br>
-Use the <samp>UV/Image Editor</samp> window to control mapping of the textures
-to the face.</li>
-      <li><samp>Tiles</samp> button controls whether
-the face is rendered with "polygon offsetting" (<code>ATTR_poly_os</code>)
-in X-Plane. Press this button for faces that lie flat on the ground to prevent
-Z-buffer thrashing in X-Plane. Don't press this button for other faces.
-For best results with X-Plane versions prior to 8.50 you should ensure that
-objects that use polygon offsetting are listed first in your <code>.env</code>
-or <code>.dsf</code> scenery file.<br>
-      <samp style="font-weight: bold;">v7: </samp>"polygon offsetting" does not produce reliable results in X-Plane versions prior to 8.20.<br>
-      <samp style="font-weight: bold;">csl: </samp>This button has no effect when exporting CSL objects.</li>
-      <li><samp>Collision</samp> button indicates that the face is <u>not</u>
-"hard" (ie not "landable on") in X-Plane.
-Making faces hard is very expensive, so this button should normally be pressed.
-Unpress this button only for things like helicopter landing pads.<br>
-<small>(Note: The meaning of this button was changed in v1.50.
-Use <a href="http://marginal.org.uk/x-planescenery/collide.txt">this</a>
-script to turn the Collision button back on for all faces).</small><br>
-      <samp style="font-weight: bold;">v9: </samp>You can control whether it is
-possible to fly under this hard face; add a Bool
-<a href="#properties">property</a> named <code>deck</code> and give it the
-value <code>True</code>.
-You can't fly under hard faces in X-Plane v8.<br>
-      <samp style="font-weight: bold;">v8/v9: </samp>You can specify
-the surface type; add a String <a href="#properties">property</a>
-named <code>surface</code> and give it the value<code> water</code>, <code>concrete</code>, <code>asphalt</code>, <code>grass</code>, <code>dirt</code>, <code>gravel</code>, <code>lakebed</code>, <code>snow</code>, <code>shoulder</code> or <code>blastpad</code>.
-The surface type is ignored by X-Plane versions prior to 8.50.<br>
-      <samp style="font-weight: bold;">v7: </samp>Only faces with
-4 edges (ie "<code>quads</code>") are exported as "hard".<br>
-      <samp style="font-weight: bold;">v7: </samp>X-Plane
-versions prior to 8.20 have a bug where <code>.obj</code>
-files that contain hard faces must be placed in WorldMaker with an
-"object heading" of 0. Otherwise the "hard" part of the surface ends
-up in the wrong place.<br>
-      <samp style="font-weight: bold;">csl: </samp>This button has no effect when exporting CSL objects.</li>
-      <li><samp>Twoside</samp> button controls whether one or both sides
-of the face are displayed. Unless you have a lot of double-sided faces it
-is cheaper to avoid this button and to use two single-sided faces
-back-to-back instead.</li>
-      <li><samp>Alpha</samp> button is a hint to Blender and to X-Plane that
-the face is transparent or translucent. Use this for outwards-facing
-transparent or translucent faces to instruct X-Plane to draw these
-faces last so that you can see other faces through them.
-Don't press this button for opaque (normal) faces.
-See <a href="#order">drawing order</a> for more fine-grained control
-over drawing order.</li>
-    </ul>
-  </li>
-  <li><samp style="font-weight: bold;">v8/v9: </samp>In the
-<samp>Material buttons</samp> panels 
-(<samp style="font-weight: bold;">F5</samp>) you can change the way that
-the mesh reacts to light by specifying a material. Changing between materials
-in X-Plane is expensive so you should ensure that you only use a few materials
-in your model.
-Press <samp>Add New</samp> to create a new material, or choose an existing
-material (if any) from the drop-down list. You should use just one material.<br>
-Only a few of Blender's many material buttons affect X-Plane:
-    <ul>
-      <li><samp>Col</samp> button and the
-<samp>R</samp>,<samp>G</samp>,<samp>B</samp> sliders on the
-<samp>Material</samp> panel control the diffuse colour of the faces.
-X-Plane combines the colours that are specified by the texture (if any) with
-this setting.
-The default X-Plane setting is <code>1</code>, <code>1</code>, <code>1</code>
-(white). However the default setting of a new material in Blender is
-<code>0.8</code>, <code>0.8</code>, <code>0.8</code>.<br>
-You should set this to <code>1</code>, <code>1</code>, <code>1</code> - control the diffuse colour of the faces by editing the texture file instead.</li>
-      <li><samp>Spec</samp> slider on the <samp>Shaders</samp> panel
-controls the specularity (shininess) of the faces.
-The default X-Plane setting is 0 (matt).
-However the default setting of a new material in Blender is 0.5.</li>
-      <li><samp>Emit</samp> slider on the <samp>Shaders</samp> panel
-controls the emissive brightness of the faces. Emissive faces give off
-light so the effects of this setting are most obvious at night.
-It is usually cheaper and easy to use <code>_LIT</code> textures to control
-night-time brightness instead of using this setting.
-However using this setting allows you to create faces that also give off light
-during the daytime, <i>eg</i> on overcast days,
-which <code>_LIT</code> textures do not.
-The default X-Plane and Blender setting is 0 (not emissive).</li>
-      <li><samp>Mir</samp> button and the
-<samp>R</samp>,<samp>G</samp>,<samp>B</samp> sliders on the
-<samp>Material</samp> panel control the emissive colour of the faces.</li>
-    </ul>
-  </li>      
-</ul>
-<p>Use <a href="http://marginal.org.uk/x-planescenery/normalise.txt">this</a>
-script if you need to reset all faces in the scene to standard settings
-<small>(<i>ie</i> no polygon offsetting, not hard,
-single sided, not transparent)</small>.</p>
-<p>You can add "modifiers" in the <samp>Modifiers</samp> panel to change
-the way that the Mesh appers. Some useful modifiers when modelling
-for X-Plane are:</p>
-<ul>
-  <li><samp>EdgeSplit</samp> - automatically sharpen edges between mesh faces
-<small>(this only has an effect if you've used the <samp>Set Smooth</samp> button)</small></li>
-  <li><samp>Subsurf</samp> - produce a more detailed version of the mesh by subdividing faces</li>
-  <li><samp>Curve</samp> - bend the mesh along a curved path</li>
-</ul>
-
-<h4>Lines</h4>
-<p>Blender doesn't support Lines directly. Use a mesh with one
-4-edged face instead. The pair of vertices at each end of the "line"
-must be within 0.1 units of each other. The face must be the only face
-in its mesh and must not have a texture assigned to it.</p>
-<p>Assign a material to the face and use the
-<samp>Col</samp> button and the <samp>R</samp>,<samp>G</samp>,<samp>B</samp>
-sliders on the <samp>Material</samp> panel to control
-the colour of the line.
-Faces not linked to a material will be exported coloured grey.</p>
-
-<h4><a name="animation"><font size="+1">v8/v9: </font>Animation</a></h4>
-<p>You can make lamps, meshes and lines animate in X-Plane
-according to the value of any of the simulator datarefs
-listed <a href="http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html">here</a>
-that have type "int", "float" or "double".</p>
-
-<h5><a name="basic_animation">Basic animation</a></h5>
-<p>Create an "Armature" object. Make the lamps and/or meshes that you want
-to animate the children of the armature's "bone":</p>
-<ul>
-  <li>Click on the lamps and/or meshes (the "children")</li>
-  <li>Shift-click on the armature</li>
-  <li><b>Choose <samp>Pose Mode</samp> from the Mode menu in the <samp>3D View</samp> window's toolbar</b></li>
-  <li>Click on the bone (the "parent")</li>
-  <li>Press <samp><b>Ctrl&nbsp;P</b></samp>
-and select <samp>Bone</samp> from the popup menu</li>
-</ul>
-<p>Once you have assigned a parent bone to your lamps/meshes, you can
-specify the simulator
-<a href="http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html">dataref</a>
-that will drive the animation:</p>
-<ul>
-  <li>Choose <samp>Object Mode</samp> from the Mode menu in the <samp>3D View</samp> window's toolbar</li>
-  <li>Select the child lamp or mesh</li>
-  <li>From the <samp>3D View</samp> window's menubar choose
-<samp>Object&nbsp;&rarr; Scripts&nbsp;&rarr; X-Plane&nbsp;Animation</samp></li>
-  <li>In the <samp>Parent Bone</samp> panel, use the pop-up menu to select the
-<a href="http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html">dataref</a><br>
-<small>(or you can type in just the "leaf" name of the dataref into the text
-field, or the full name of a custom dataref)</small>
-  <li>Some datarefs require you to specify a "Part number";<br>
-<i>eg</i> the dataref <code>sim/flightmodel/engine/ENGN_thro</code>
-represents the engine throttle settings, so you need to specify which engine
-you're referring to. Specify a "Part number" of <code>0</code> for the first
-engine, <code>1</code> for the second engine etc</li>
-  <li>Press the <samp>Apply</samp> button</samp>
-</ul>
-<p>Use frames to represent the desired position of the lamps/meshes
-at various dataref values - X-Plane will
-<a href="http://en.wikipedia.org/wiki/Linear_interpolation">interpolate</a>
-linearly between the positions:</p>
-<ul>
-  <li>In the Animation Frame field, in the <samp>Buttons</samp>
-window's menubar, select frame 1</li>
-  <li>Click on the armature</li>
-  <li>Choose <samp>Pose Mode</samp> from the Mode menu in the <samp>3D View</samp> window's toolbar</li>
-  <li>Click on a bone</li>
-  <li>Move and/or rotate the bone<li>
-  <li>Press <samp><b>i</b></samp> and specify a <samp>LocRot</samp> key (<i>ie</i> location and rotation)</li>
-  <li>Repeat for any other bones in the armature</li>
-  <li>Select animation frame 2 and repeat</li>
-</ul>
-<p><small>(Note: X-Plane's animation syntax is quite simple;
-so don't use IPOcurves, Vertex Groups, Deformations, Shape Keys or any other
-advanced Blender animation techniques since these will be ignored by the
-exporter - only the positions specified by keys in the first <i>n</i> frames
-are significant to X-Plane.)</small></p>
-<p><samp><b>v8: </b></samp>X-Plane v8 only supports two frames,
-so if you want your <code>.obj</code> file to work in X-Plane v8 then you
-should insert "LocRot" keys only in frames 1 and 2.
-If you insert keys in frame 3 and above then your animation will
-not work at all in X-Plane v8.
-Use the <samp>Delete</samp> button in the X-Plane Animation
-dialog to delete any keys from additional frames.</p>
-<p><samp><b>v9: </b></samp>You can add "LocRot" keys in as many frames
-as you like. If you skip a frame then Blender and X-Plane will use the
-pose from the previous frame.</p>
-<p>The X-Plane&nbsp;Animation dialog renames the parent bone to the "leaf"
-name of the dataref.
-So pressing the <samp>Draw&nbsp;Names</samp> button in the
-<samp>Armature</samp> panel can be helpful to see what's going on when you
-have lots of animations.</p>
-<p>Use the <samp>Action Editor</samp> window to get an overview of which
-bones in the selected armature have keys inserted into which frames.</p>
-
-<h5>Controlling animation response to dataref values</h5>
-<p>By default, X-Plane will display the meshes in the frame 1 position
-when the dataref has a value of 0, and in the last frame position
-when the dataref has a value of 1. You can change these values:</p>
-<ul>
-  <li>Choose <samp>Object Mode</samp> from the Mode menu in the <samp>3D View</samp> window's toolbar</li>
-  <li>Select the child lamp or mesh</li>
-  <li>From the <samp>3D View</samp> window's menubar choose
-<samp>Object&nbsp;&rarr; Scripts&nbsp;&rarr; X-Plane&nbsp;Animation</samp></li>
-  <li>Specify in the <samp>Frame #<i>n</i></samp> fields
-the dataref values that correspend to each frame;<br>
-<i>eg</i> the yoke pitch dataref <code>yolk_pitch_ratio</code>
-takes values between -1 (forward) and +1 (back) in X-Plane. So, to make
-X-Plane display the position in frame 1 when the yoke is pushed fully
-forward specify <code>-1</code> in the <samp>Frame #1</samp> field</li>
-  <li>Press the <samp>Apply</samp> button</samp>
-</ul>
-<p><samp><b>v9: </b></samp>X-Plane will
-<a href="http://en.wikipedia.org/wiki/Extrapolation">extrapolate</a>
-your animation when the dataref has a value outside of the range
-that you specified in the <samp>Frame #<i>n</i></samp> fields.
-You can stop the extrapolation and "clamp" your animation's position by
-repeating the poses and <samp>Frame #<i>n</i></samp> values in the first
-two and/or the last two frames.
-Or you can cause your animation to loop back to frame 1 when the dataref
-value exceeds a certain number by specifying this number in the
-<samp>Loop</samp> field.</p>
-
-<h5>Using multiple datarefs</h5>
-<p>You can animate your lamps/meshes using multiple bones, each bone
-representing a different dataref:</p>
-<ul>
-  <li>In Edit Mode add additional bones to the armature.</li>
-  <li>Still in Edit Mode, in the <samp>Armature Bones</samp> panel, create
-parent/child relationships between each bone.
-<small>(Note: This panel also lets you rename bones. Don't do this - use the
-X-Plane&nbsp;Animation dialog to name the bones after the datarefs that
-they represent).</small></li>
-  <li>Use the technique described <a href="#basic_animation">above</a> to make
-your lamps/meshes the children of the "youngest" bone in the chain.</li>
-  <li>Insert <samp>LocRot</samp> keys for every bone in the chain
-(each bone can have a different number of keys).</li>
-</ul>
-<p>The X-Plane&nbsp;Animation dialog displays the settings for
-the lamp/mesh's parent bone, gandparent bone etc.
-<small>(Note: Don't change the parent/child relationships between your
-lamps/meshes and their parent bones while the X-Plane&nbsp;Animation dialog
-is being displayed).</small></p>
-
-<h5>Hiding lamps and meshes</h5>
-<p>You can make all of the lamps and meshes in an animation disappear
-when a dataref is within a certain range:</p>
-<ul>
-  <li>Use the technique described <a href="#basic_animation">above</a> to make
-your lamps/meshes the children of an armature bone<br>
-<small>(If you don't want to animate your lamps/meshes then don't
-insert any animation keys for this bone, and the bone doesn't have to be
-a valid dataref)</small></li>
-  <li>Choose <samp>Object Mode</samp> from the Mode menu in the <samp>3D View</samp> window's toolbar</li>
-  <li>Select a lamp or mesh that you want to hide</li>
-  <li>From the <samp>3D View</samp> window's menubar choose
-<samp>Object&nbsp;&rarr; Scripts&nbsp;&rarr; X-Plane&nbsp;Animation</samp></li>
-  <li>In the last panel, press the <samp>Add New</samp> button</li>
-  <li>Specify the dataref and the range of values
-(it's OK to use datarefs that are not otherwise used in the animation)</li>
-</ul>
-<p>You can make hidden lamps/meshes re-appear when a dataref value is within
-a certain range by adding another entry, and changing the type from Hide to
-Show.
-The dataref that you use to "show" the animation can be the same or different
-than the datarefs that you used to "hide" the animation.
-(The animation is always shown by default, so you only need to use
-a Show entry if you have used one or more Hide entries and you want to
-override them).</p>
-<p>The order of Hide and Show entries is significant; the animation
-will be hidden if any of the Hide dataref values are in range, unless a
-subsequent Show dataref value is also in range. You can use the Up and Down
-buttons to change the order of the entries.</p>
-<p>Note that the Hide and Show entries apply to all children of all bones
-in the armature. You can make an armature the child of a bone in a different
-armature; in which case all children are affected by any Hide and Show entries
-in parent armatures.</p>
-
-<h4><a name="order"><font size="+1">v8/v9: </font>Drawing order</a></h4>
-<p>The order in which X-Plane draws the animations, lights, lines and
+intended to work in X-Plane versions prior to 8.20.</P>
+<H4><FONT SIZE=4>v9: </FONT>Cockpit Panel Regions</H4>
+<P>The cockpit Panel Texture uses a lot of video memory, much of
+which is wasted when the 3D cockpit is being displayed:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">X-Plane has to round up the height
+	and width of your Panel Texture to be powers of two. <I>eg</I> if
+	your Panel Texture is 1600×1200 pixels then X-Plane rounds this up
+	to 2048×2048 pixels, which requires 16MB of video memory. More if
+	you also supply a LIT Panel Texture. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Typically up to half of your Panel
+	Texture represents your plane's windscreen, which is fully
+	transparent. You can't make use of this part of the texture in any
+	useful way in a 3D cockpit, so the memory that it consumes is
+	wasted. <FONT SIZE=2>(Note: You can construct a tinted windscreen in
+	your 3D cockpit quite cheaply by using a small semi-transparent part
+	of the non-panel texture).</FONT> 
+	</P>
+	<LI><P>The Panel Texture contains an alpha channel for transparency.
+	The alpha channel accounts for ¼ of the memory that the texture
+	consumes. But often your only need for transparency in the Panel
+	Texture is to represent the 2D windscreen, which is of no use in a
+	3D cockpit, so the memory that the alpha channel consumes is wasted.</P>
+</UL>
+<P>A &quot;Panel Region&quot; is a new texture which is cut out from
+your Panel Texture:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">You can create up to 4 Panel
+	Regions (which can overlap). 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">The height and width of a Panel
+	Region texture must be a power of two <I>eg</I> 128, 256, 512, 1024
+	or 2048, but it doesn't have to be square. 
+	</P>
+	<LI><P>Panel Region textures are opaque - they don't contain an
+	alpha channel. 
+	</P>
+</UL>
+<P>When you use Panel Regions instead of the Panel Texture to texture
+your 3D cockpit, X-Plane discards the Panel Texture's alpha channel
+and also discards all areas of the Panel Texture other than the
+pieces that you cut out to make the Panel Regions. This reduces video
+memory requirements and improves performance.</P>
+<H5>Creating a Panel Region</H5>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">In the <SAMP>UV/Image Editor</SAMP>
+	window, select your Panel Texture from the pop-up menu. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>Image&nbsp;→
+	X-Plane&nbsp;panel&nbsp;regions&nbsp;→ Create&nbsp;new&nbsp;region</SAMP>
+		</P>
+	<LI><P>Enter the co-ordinates in your Panel Texture where you want
+	the bottom-left pixel of the new Panel Region to start, and the
+	width and height of the new Panel Region. 
+	</P>
+</UL>
+<P>Any faces that you've textured using the Panel Texture which are
+contained inside the new Panel Region are transferred over to use the
+new Panel Region.</P>
+<P>Any areas that are fully transparent in the Panel Texture are
+coloured sky blue in the new Panel Region. You'll get undefined (<I>ie</I>
+weird) results in X-Plane if you use these sky blue areas to texture
+your faces.</P>
+<P><FONT SIZE=2>(Note: When you create a Panel Region, Blender also
+creates a hidden object named &quot;PanellRegionHandler&quot; to
+store accounting information. Don't mess with this object).</FONT></P>
+<H5>Deleting a Panel Region</H5>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">In the <SAMP>UV/Image Editor</SAMP>
+	window, select your Panel Region from the pop-up menu. 
+	</P>
+	<LI><P>Choose <SAMP>Image&nbsp;→ X-Plane&nbsp;panel&nbsp;regions&nbsp;→
+	Delete&nbsp;this&nbsp;region</SAMP> 
+	</P>
+</UL>
+<P>Any faces that you've textured using this Panel Region are
+transferred back to using the Panel Texture.</P>
+<P>The deleted Panel Region will remain in the <SAMP>UV/Image Editor</SAMP>
+window's pop-up menu for a while until Blender figures out that it
+can remove it. But the deleted Panel Region won't count towards your
+maximum of four Panel Regions.</P>
+<H5>Re-loading the Panel Regions</H5>
+<P>The Panel Regions aren't automatically updated when you edit your
+Panel Texture in an image editor application and then reload it in
+Blender, or when you reload your <CODE>.blend</CODE> file.</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">In the <SAMP>UV/Image Editor</SAMP>
+	window, select your Panel Texture from the pop-up menu. 
+	</P>
+	<LI><P>Choose <SAMP>Image&nbsp;→ X-Plane&nbsp;panel&nbsp;regions&nbsp;→
+	Reload&nbsp;all&nbsp;regions</SAMP> 
+	</P>
+</UL>
+<P><BR><BR>
+</P>
+<H3>Using Blender to create X-Plane objects</H3>
+<P>Only Lamps and Meshes are exported to X-Plane. You can use other
+Blender object types, <I>eg</I> Curves and Surfaces, to construct
+your scenery as long as you convert them to meshes before exporting
+to X-Plane.</P>
+<H4><A NAME="lamps"></A>Lamps</H4>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Only Lamp objects of type &quot;Lamp&quot;
+	are exported to X-Plane. Lamp objects of types &quot;Area&quot;,
+	&quot;Spot&quot;, &quot;Semi&quot; and &quot;Hemi&quot; are ignored
+	(and so can be used to illuminate your model in Blender). 
+	</P>
+	<LI><P><SAMP><B>v8/v9: </B></SAMP>Lamp objects with certain words in
+	their names have special behaviours when exported to an X-Plane v8
+	or v9 object: 
+	</P>
+	<DD><CODE>Lamp</CODE> - Normal (legacy) light. The colour is
+	determined by the <SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP>
+	sliders on the <SAMP>Lamp</SAMP> panel (<SAMP><B>F5</B></SAMP>). 
+	</DD><DD>
+	<CODE>Flash</CODE> - Flashing (legacy) light. The colour is
+	determined by the <SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP>
+	sliders on the <SAMP>Lamp</SAMP> panel (<SAMP><B>F5</B></SAMP>). 
+	</DD><DD>
+	<CODE>Traffic</CODE>, <CODE>smoke_black</CODE>, <CODE>smoke_white</CODE>
+	- As for X-Plane v7 objects; see below. (R,G,B settings are
+	ignored). 
+	</DD><DD>
+	<I>other</I> - X-Plane pre-defined &quot;named&quot; or &quot;custom&quot;
+	light. (Supported by X-Plane 8.50 and later. R,G,B settings are
+	ignored). The name of the X-Plane light is taken from the value of a
+	<A HREF="#properties">property</A> named <CODE>name</CODE> if this
+	exists, otherwise from the name of the lamp object. 
+	</DD><LI><P>
+	<SAMP><B>v7: </B></SAMP>Lamp objects with certain words in their
+	names have special behaviours when exported to an X-Plane v7 object:
+		</P>
+	<DD><CODE>Flash</CODE> - Flashing light. The colour is determined by
+	the <SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP> sliders on the <SAMP>Lamp</SAMP>
+	panel (<SAMP><B>F5</B></SAMP>). 
+	</DD><DD>
+	<CODE>airplane_beacon</CODE> - Red pulsing anti-collision light.
+	(R,G,B settings are ignored). 
+	</DD><DD>
+	<CODE>airplane_strobe</CODE> - White strobe light. (R,G,B settings
+	are ignored). 
+	</DD><DD>
+	<CODE>Traffic</CODE> - Cycles red, orange, green. (R,G,B settings
+	are ignored). 
+	</DD><DD>
+	<CODE>smoke_black</CODE> or <CODE>smoke_white</CODE> - Not really a
+	light; emits smoke. The size of the smoke puffs is determined by the
+	Energy slider on the <SAMP>Lamp</SAMP> panel (<SAMP><B>F5</B></SAMP>)
+	(R,G,B settings are ignored). 
+	</DD><DD>
+	<I>other</I> - Normal light. The colour is determined by the <SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP>
+	sliders on the <SAMP>Lamp</SAMP> panel (<SAMP><B>F5</B></SAMP>). 
+	</DD><LI><P>
+	<SAMP><B>csl: </B></SAMP>Lamp objects with certain names have
+	special behaviours when exported to an X-Plane CSL object. The
+	XSquawkBox documentation strongly recommends that you use these
+	special lights: 
+	</P>
+	<DD><CODE>airplane_landing</CODE> - White landing light. (R,G,B
+	settings are ignored). 
+	</DD><DD>
+	<CODE>airplane_taxi</CODE> - White taxi light. (R,G,B settings are
+	ignored). 
+	</DD><DD>
+	<CODE>airplane_nav_left</CODE> - Red navigation/position light.
+	(R,G,B settings are ignored). 
+	</DD><DD>
+	<CODE>airplane_nav_right</CODE> - Green navigation/position light.
+	(R,G,B settings are ignored). 
+	</DD><DD>
+	<CODE>airplane_beacon</CODE> - Red pulsing anti-collision light, on
+	when engines are running. (R,G,B settings are ignored). 
+	</DD><DD>
+	<CODE>airplane_strobe</CODE> - White strobe light. (R,G,B settings
+	are ignored). 
+	</DD><DD>
+	<I>other</I> - Normal light. The colour is determined by the <SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP>
+	sliders on the <SAMP>Lamp</SAMP> panel (<SAMP><B>F5</B></SAMP>). 
+	</DD><LI><P STYLE="margin-bottom: 0cm">
+	<SAMP><B>v8/v9: </B></SAMP>Custom lights (supported by X-Plane 8.50
+	and later) are created using the vertices from a Mesh object:<BR>In
+	the <SAMP>Material buttons</SAMP> panels (<SAMP><B>F5</B></SAMP>)
+	add a new material to the mesh, then press the <SAMP>Halo</SAMP>
+	button on the <SAMP>Links and Pipeline</SAMP> panel. You should use
+	just one material. 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">The <SAMP>Halo</SAMP> button and
+		the <SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP>,<SAMP>A</SAMP>
+		sliders on the <SAMP>Material</SAMP> panel control the light's
+		R,G,B and A values. Alternatively you can create <A HREF="#properties">properties</A>
+		named <CODE>R</CODE>, <CODE>G</CODE>, <CODE>B</CODE> and/or <CODE>A</CODE>
+		to set these values. 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm">The <SAMP>HaloSize</SAMP> control
+		on the <SAMP>Shaders</SAMP> panel controls the light's S
+		value.<BR>Also press the <SAMP>HaloTex</SAMP> button on this panel
+		to make Blender render the light correctly. 
+		</P>
+	</UL>
+	<P STYLE="margin-bottom: 0cm">In the <SAMP>Texture buttons</SAMP>
+	panels (<SAMP><B>F6</B></SAMP>) add a new texture to the material,
+	and change the <SAMP>Texture&nbsp;Type</SAMP> to <CODE>Image</CODE>.
+	You should use just one texture. 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">On the <SAMP>Image</SAMP> panel
+		load the texture file that contains the light that you want to use.
+				</P>
+		<LI><P STYLE="margin-bottom: 0cm">On the <SAMP>Map Image</SAMP>
+		panel press the <SAMP>UseAlpha</SAMP> button.<BR>Use the <SAMP>MinX</SAMP>,
+		<SAMP>MinX</SAMP>, <SAMP>MaxX</SAMP>, <SAMP>MaxY</SAMP> settings to
+		select a subset of the texture. 
+		</P>
+	</UL>
+	<P>To drive the custom light using a dataref add a String <A HREF="#properties">property</A>
+	named <CODE>name</CODE>. 
+	</P>
+</UL>
+<H4><A NAME="Meshes"></A>Meshes</H4>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Create faces with 3 or 4 edges
+	(called &quot;<CODE>tri</CODE>&quot;s and &quot;<CODE>quad</CODE>&quot;s
+	in X-Plane). 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">In the <SAMP>Link and Materials</SAMP>
+	Editing panel (<SAMP><B>F9</B></SAMP>): 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Set Smooth</SAMP> and <SAMP>Set
+		Solid</SAMP> control whether to smooth edges of faces in a mesh.
+		This is useful when using multiple faces to simulate a curved
+		surface. Go to &quot;Object Mode&quot;, select the mesh and press
+		<SAMP>Set Smooth</SAMP>. The effect is only visible in Blender <SAMP>3D
+		View</SAMP> windows when the <SAMP>Viewport Shading</SAMP> button
+		is set to <SAMP>Solid</SAMP> or <SAMP>Shaded</SAMP>.<BR><SAMP><B>v7:
+		</B></SAMP>Only faces that are part of a <A HREF="#strips">Strip</A>
+		will be smoothed when displayed in X-Plane. 
+		</P>
+	</UL>
+	<LI><P STYLE="margin-bottom: 0cm">In the <SAMP>Texture Face</SAMP>
+	Editing panel (<SAMP><B>F9</B></SAMP>) available in <SAMP>UV Face
+	Select</SAMP> mode: 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Tex</SAMP> button controls
+		whether the face has a texture:<BR>In an image editor application
+		create one texture file that is like a &quot;<A HREF="http://en.wikipedia.org/wiki/Collage" TARGET="_blank">collage</A>&quot;
+		of all of the textures that you need in your model. The height and
+		width of the texture file must be a power of two <I>eg</I> 128,
+		256, 512, 1024 or 2048 (X-Plane v9 only), but it doesn't have to be
+		square. (See <CODE>…/Custom&nbsp;Scenery/KSBD&nbsp;Demo&nbsp;Area/KSBD_example.png</CODE>
+		for an example).<BR>Save the texture file in 32bit or 24bit PNG
+		format (<I>ie</I> with or without an &quot;Alpha&quot; channel) in
+		the aircraft or scenery folder where you want the X-Plane <CODE>.obj</CODE>
+		file to end up.<BR>Use the <SAMP>UV/Image Editor</SAMP> window to
+		control mapping of the textures to the face. 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Tiles</SAMP> button
+		controls whether the face is rendered with &quot;polygon
+		offsetting&quot; (<CODE>ATTR_poly_os</CODE>) in X-Plane. Press this
+		button for faces that lie flat on the ground to prevent Z-buffer
+		thrashing in X-Plane. Don't press this button for other faces. For
+		best results with X-Plane versions prior to 8.50 you should ensure
+		that objects that use polygon offsetting are listed first in your
+		<CODE>.env</CODE> or <CODE>.dsf</CODE> scenery file.<BR><SAMP><B>v7:
+		</B></SAMP>&quot;polygon offsetting&quot; does not produce reliable
+		results in X-Plane versions prior to 8.20.<BR><SAMP><B>csl: </B></SAMP>This
+		button has no effect when exporting CSL objects. 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Collision</SAMP> button
+		indicates that the face is <U>not</U> &quot;hard&quot; (ie not
+		&quot;landable on&quot;) in X-Plane. Making faces hard is very
+		expensive, so this button should normally be pressed. Unpress this
+		button only for things like helicopter landing pads.<BR><FONT SIZE=2>(Note:
+		The meaning of this button was changed in v1.50. Use <A HREF="http://marginal.org.uk/x-planescenery/collide.txt">this</A>
+		script to turn the Collision button back on for all faces).</FONT><BR><SAMP><B>v9:
+		</B></SAMP>You can control whether it is possible to fly under this
+		hard face; add a Bool <A HREF="#properties">property</A> named <CODE>deck</CODE>
+		and give it the value <CODE>True</CODE>. You can't fly under hard
+		faces in X-Plane v8.<BR><SAMP><B>v8/v9: </B></SAMP>You can specify
+		the surface type; add a String <A HREF="#properties">property</A>
+		named <CODE>surface</CODE> and give it the value<CODE> water</CODE>,
+		<CODE>concrete</CODE>, <CODE>asphalt</CODE>, <CODE>grass</CODE>,
+		<CODE>dirt</CODE>, <CODE>gravel</CODE>, <CODE>lakebed</CODE>, <CODE>snow</CODE>,
+		<CODE>shoulder</CODE> or <CODE>blastpad</CODE>. The surface type is
+		ignored by X-Plane versions prior to 8.50.<BR><SAMP><B>v7: </B></SAMP>Only
+		faces with 4 edges (ie &quot;<CODE>quads</CODE>&quot;) are exported
+		as &quot;hard&quot;.<BR><SAMP><B>v7: </B></SAMP>X-Plane versions
+		prior to 8.20 have a bug where <CODE>.obj</CODE> files that contain
+		hard faces must be placed in WorldMaker with an &quot;object
+		heading&quot; of 0. Otherwise the &quot;hard&quot; part of the
+		surface ends up in the wrong place.<BR><SAMP><B>csl: </B></SAMP>This
+		button has no effect when exporting CSL objects. 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Twoside</SAMP> button
+		controls whether one or both sides of the face are displayed.
+		Unless you have a lot of double-sided faces it is cheaper to avoid
+		this button and to use two single-sided faces back-to-back instead.
+				</P>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Alpha</SAMP> button is a
+		hint to Blender and to X-Plane that the face is transparent or
+		translucent. Use this for outwards-facing transparent or
+		translucent faces to instruct X-Plane to draw these faces last so
+		that you can see other faces through them. Don't press this button
+		for opaque (normal) faces. See <A HREF="#order">drawing order</A>
+		for more fine-grained control over drawing order. 
+		</P>
+	</UL>
+	<LI><P STYLE="margin-bottom: 0cm"><SAMP><B>v8/v9: </B></SAMP>In the
+	<SAMP>Material buttons</SAMP> panels (<SAMP><B>F5</B></SAMP>) you
+	can change the way that the mesh reacts to light by specifying a
+	material. Changing between materials in X-Plane is expensive so you
+	should ensure that you only use a few materials in your model. Press
+	<SAMP>Add New</SAMP> to create a new material, or choose an existing
+	material (if any) from the drop-down list. You should use just one
+	material.<BR>Only a few of Blender's many material buttons affect
+	X-Plane: 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Col</SAMP> button and the
+		<SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP> sliders on the
+		<SAMP>Material</SAMP> panel control the diffuse colour of the
+		faces. X-Plane combines the colours that are specified by the
+		texture (if any) with this setting. The default X-Plane setting is
+		<CODE>1</CODE>, <CODE>1</CODE>, <CODE>1</CODE> (white). However the
+		default setting of a new material in Blender is <CODE>0.8</CODE>,
+		<CODE>0.8</CODE>, <CODE>0.8</CODE>.<BR>You should set this to <CODE>1</CODE>,
+		<CODE>1</CODE>, <CODE>1</CODE> - control the diffuse colour of the
+		faces by editing the texture file instead. 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Spec</SAMP> slider on the
+		<SAMP>Shaders</SAMP> panel controls the specularity (shininess) of
+		the faces. The default X-Plane setting is 0 (matt). However the
+		default setting of a new material in Blender is 0.5. 
+		</P>
+		<LI><P STYLE="margin-bottom: 0cm"><SAMP>Emit</SAMP> slider on the
+		<SAMP>Shaders</SAMP> panel controls the emissive brightness of the
+		faces. Emissive faces give off light so the effects of this setting
+		are most obvious at night. It is usually cheaper and easy to use
+		<CODE>_LIT</CODE> textures to control night-time brightness instead
+		of using this setting. However using this setting allows you to
+		create faces that also give off light during the daytime, <I>eg</I>
+		on overcast days, which <CODE>_LIT</CODE> textures do not. The
+		default X-Plane and Blender setting is 0 (not emissive). 
+		</P>
+		<LI><P><SAMP>Mir</SAMP> button and the <SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP>
+		sliders on the <SAMP>Material</SAMP> panel control the emissive
+		colour of the faces. 
+		</P>
+	</UL>
+</UL>
+<P>Use <A HREF="http://marginal.org.uk/x-planescenery/normalise.txt">this</A>
+script if you need to reset all faces in the scene to standard
+settings <FONT SIZE=2>(</FONT><FONT SIZE=2><I>ie</I></FONT><FONT SIZE=2>
+no polygon offsetting, not hard, single sided, not transparent)</FONT>.</P>
+<P>You can add &quot;modifiers&quot; in the <SAMP>Modifiers</SAMP>
+panel to change the way that the Mesh appers. Some useful modifiers
+when modelling for X-Plane are:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm"><SAMP>EdgeSplit</SAMP> -
+	automatically sharpen edges between mesh faces <FONT SIZE=2>(this
+	only has an effect if you've used the </FONT><SAMP><FONT SIZE=2>Set
+	Smooth</FONT></SAMP><FONT SIZE=2> button)</FONT> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm"><SAMP>Subsurf</SAMP> - produce a
+	more detailed version of the mesh by subdividing faces 
+	</P>
+	<LI><P><SAMP>Curve</SAMP> - bend the mesh along a curved path 
+	</P>
+</UL>
+<H4>Lines</H4>
+<P>Blender doesn't support Lines directly. Use a mesh with one
+4-edged face instead. The pair of vertices at each end of the &quot;line&quot;
+must be within 0.1 units of each other. The face must be the only
+face in its mesh and must not have a texture assigned to it.</P>
+<P>Assign a material to the face and use the <SAMP>Col</SAMP> button
+and the <SAMP>R</SAMP>,<SAMP>G</SAMP>,<SAMP>B</SAMP> sliders on the
+<SAMP>Material</SAMP> panel to control the colour of the line. Faces
+not linked to a material will be exported coloured grey.</P>
+<H4><A NAME="animation"></A><FONT SIZE=4>v8/v9: </FONT>Animation</H4>
+<P>You can make lamps, meshes and lines animate in X-Plane according
+to the value of any of the simulator datarefs listed <A HREF="http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html">here</A>
+that have type &quot;int&quot;, &quot;float&quot; or &quot;double&quot;.</P>
+<H5><A NAME="basic_animation"></A>Basic animation</H5>
+<P>Create an &quot;Armature&quot; object. Make the lamps and/or
+meshes that you want to animate the children of the armature's
+&quot;bone&quot;:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Click on the lamps and/or meshes
+	(the &quot;children&quot;) 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Shift-click on the armature 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm"><B>Choose </B><SAMP><B>Pose Mode</B></SAMP><B>
+	from the Mode menu in the </B><SAMP><B>3D View</B></SAMP><B>
+	window's toolbar</B> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Click on the bone (the &quot;parent&quot;)
+		</P>
+	<LI><P>Press <SAMP><B>Ctrl&nbsp;P</B></SAMP> and select <SAMP>Bone</SAMP>
+	from the popup menu 
+	</P>
+</UL>
+<P>Once you have assigned a parent bone to your lamps/meshes, you can
+specify the simulator <A HREF="http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html">dataref</A>
+that will drive the animation:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>Object Mode</SAMP>
+	from the Mode menu in the <SAMP>3D View</SAMP> window's toolbar 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Select the child lamp or mesh 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">From the <SAMP>3D View</SAMP>
+	window's menubar choose <SAMP>Object&nbsp;→ Scripts&nbsp;→
+	X-Plane&nbsp;Animation</SAMP> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">In the <SAMP>Parent Bone</SAMP>
+	panel, use the pop-up menu to select the <A HREF="http://www.xsquawkbox.net/xpsdk/docs/DataRefs.html">dataref</A><BR><FONT SIZE=2>(or
+	you can type in just the &quot;leaf&quot; name of the dataref into
+	the text field, or the full name of a custom dataref)</FONT> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Some datarefs require you to
+	specify a &quot;Part number&quot;;<BR><I>eg</I> the dataref
+	<CODE>sim/flightmodel/engine/ENGN_thro</CODE> represents the engine
+	throttle settings, so you need to specify which engine you're
+	referring to. Specify a &quot;Part number&quot; of <CODE>0</CODE>
+	for the first engine, <CODE>1</CODE> for the second engine etc 
+	</P>
+	<LI><P>Press the <SAMP>Apply</SAMP> button 
+	</P>
+</UL>
+<P>Use frames to represent the desired position of the lamps/meshes
+at various dataref values - X-Plane will <A HREF="http://en.wikipedia.org/wiki/Linear_interpolation">interpolate</A>
+linearly between the positions:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">In the Animation Frame field, in
+	the <SAMP>Buttons</SAMP> window's menubar, select frame 1 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Click on the armature 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>Pose Mode</SAMP> from
+	the Mode menu in the <SAMP>3D View</SAMP> window's toolbar 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Click on a bone 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Move and/or rotate the bone</P>
+	<LI><P STYLE="margin-bottom: 0cm">Press <SAMP><B>i</B></SAMP> and
+	specify a <SAMP>LocRot</SAMP> key (<I>ie</I> location and rotation) 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Repeat for any other bones in the
+	armature 
+	</P>
+	<LI><P>Select animation frame 2 and repeat 
+	</P>
+</UL>
+<P><FONT SIZE=2>(Note: X-Plane's animation syntax is quite simple; so
+don't use IPOcurves, Vertex Groups, Deformations, Shape Keys or any
+other advanced Blender animation techniques since these will be
+ignored by the exporter - only the positions specified by keys in the
+first <I>n</I> frames are significant to X-Plane.)</FONT></P>
+<P><SAMP><B>v8: </B></SAMP>X-Plane v8 only supports two frames, so if
+you want your <CODE>.obj</CODE> file to work in X-Plane v8 then you
+should insert &quot;LocRot&quot; keys only in frames 1 and 2. If you
+insert keys in frame 3 and above then your animation will not work at
+all in X-Plane v8. Use the <SAMP>Delete</SAMP> button in the X-Plane
+Animation dialog to delete any keys from additional frames.</P>
+<P><SAMP><B>v9: </B></SAMP>You can add &quot;LocRot&quot; keys in as
+many frames as you like. If you skip a frame then Blender and X-Plane
+will use the pose from the previous frame.</P>
+<P>The X-Plane&nbsp;Animation dialog renames the parent bone to the
+&quot;leaf&quot; name of the dataref. So pressing the <SAMP>Draw&nbsp;Names</SAMP>
+button in the <SAMP>Armature</SAMP> panel can be helpful to see
+what's going on when you have lots of animations.</P>
+<P>Use the <SAMP>Action Editor</SAMP> window to get an overview of
+which bones in the selected armature have keys inserted into which
+frames.</P>
+<H5>Controlling animation response to dataref values</H5>
+<P>By default, X-Plane will display the meshes in the frame 1
+position when the dataref has a value of 0, and in the last frame
+position when the dataref has a value of 1. You can change these
+values:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>Object Mode</SAMP>
+	from the Mode menu in the <SAMP>3D View</SAMP> window's toolbar 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Select the child lamp or mesh 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">From the <SAMP>3D View</SAMP>
+	window's menubar choose <SAMP>Object&nbsp;→ Scripts&nbsp;→
+	X-Plane&nbsp;Animation</SAMP> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Specify in the <SAMP>Frame #</SAMP><SAMP><I>n</I></SAMP>
+	fields the dataref values that correspend to each frame;<BR><I>eg</I>
+	the yoke pitch dataref <CODE>yolk_pitch_ratio</CODE> takes values
+	between -1 (forward) and +1 (back) in X-Plane. So, to make X-Plane
+	display the position in frame 1 when the yoke is pushed fully
+	forward specify <CODE>-1</CODE> in the <SAMP>Frame #1</SAMP> field 
+	</P>
+	<LI><P>Press the <SAMP>Apply</SAMP> button 
+	</P>
+</UL>
+<P><SAMP><B>v9: </B></SAMP>X-Plane will <A HREF="http://en.wikipedia.org/wiki/Extrapolation">extrapolate</A>
+your animation when the dataref has a value outside of the range that
+you specified in the <SAMP>Frame #</SAMP><SAMP><I>n</I></SAMP>
+fields. You can stop the extrapolation and &quot;clamp&quot; your
+animation's position by repeating the poses and <SAMP>Frame #</SAMP><SAMP><I>n</I></SAMP>
+values in the first two and/or the last two frames. Or you can cause
+your animation to loop back to frame 1 when the dataref value exceeds
+a certain number by specifying this number in the <SAMP>Loop</SAMP>
+field.</P>
+<H5>Using multiple datarefs</H5>
+<P>You can animate your lamps/meshes using multiple bones, each bone
+representing a different dataref:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">In Edit Mode add additional bones
+	to the armature. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Still in Edit Mode, in the
+	<SAMP>Armature Bones</SAMP> panel, create parent/child relationships
+	between each bone. <FONT SIZE=2>(Note: This panel also lets you
+	rename bones. Don't do this - use the X-Plane&nbsp;Animation dialog
+	to name the bones after the datarefs that they represent).</FONT> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Use the technique described <A HREF="#basic_animation">above</A>
+	to make your lamps/meshes the children of the &quot;youngest&quot;
+	bone in the chain. 
+	</P>
+	<LI><P>Insert <SAMP>LocRot</SAMP> keys for every bone in the chain
+	(each bone can have a different number of keys). 
+	</P>
+</UL>
+<P>The X-Plane&nbsp;Animation dialog displays the settings for the
+lamp/mesh's parent bone, gandparent bone etc. <FONT SIZE=2>(Note:
+Don't change the parent/child relationships between your lamps/meshes
+and their parent bones while the X-Plane&nbsp;Animation dialog is
+being displayed).</FONT></P>
+<H5>Hiding lamps and meshes</H5>
+<P>You can make all of the lamps and meshes in an animation disappear
+when a dataref is within a certain range:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Use the technique described <A HREF="#basic_animation">above</A>
+	to make your lamps/meshes the children of an armature bone<BR><FONT SIZE=2>(If
+	you don't want to animate your lamps/meshes then don't insert any
+	animation keys for this bone, and the bone doesn't have to be a
+	valid dataref)</FONT> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>Object Mode</SAMP>
+	from the Mode menu in the <SAMP>3D View</SAMP> window's toolbar 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Select a lamp or mesh that you
+	want to hide 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">From the <SAMP>3D View</SAMP>
+	window's menubar choose <SAMP>Object&nbsp;→ Scripts&nbsp;→
+	X-Plane&nbsp;Animation</SAMP> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">In the last panel, press the <SAMP>Add
+	New</SAMP> button 
+	</P>
+	<LI><P>Specify the dataref and the range of values (it's OK to use
+	datarefs that are not otherwise used in the animation) 
+	</P>
+</UL>
+<P>You can make hidden lamps/meshes re-appear when a dataref value is
+within a certain range by adding another entry, and changing the type
+from Hide to Show. The dataref that you use to &quot;show&quot; the
+animation can be the same or different than the datarefs that you
+used to &quot;hide&quot; the animation. (The animation is always
+shown by default, so you only need to use a Show entry if you have
+used one or more Hide entries and you want to override them).</P>
+<P>The order of Hide and Show entries is significant; the animation
+will be hidden if any of the Hide dataref values are in range, unless
+a subsequent Show dataref value is also in range. You can use the Up
+and Down buttons to change the order of the entries.</P>
+<P>Note that the Hide and Show entries apply to all children of all
+bones in the armature. You can make an armature the child of a bone
+in a different armature; in which case all children are affected by
+any Hide and Show entries in parent armatures.</P>
+<H4><A NAME="order"></A><FONT SIZE=4>v8/v9: </FONT>Drawing order</H4>
+<P>The order in which X-Plane draws the animations, lights, lines and
 triangles in your scenery or cockpit object usually has no effect on
-the appearance.
-So the exporter optimises the order of animations, lights, lines and
-triangles in your object to minimise the number of OpenGL state changes
-and therefore maximise X-Plane's framerate.</p>
-<p>However drawing order does become important if you use transparent and/or
-translucent textures on some of your faces - transparent and translucent faces
-must be drawn last, otherwise other faces and lights will not be visible
-through them.
-You should therefore tell Blender which faces are transparent/translucent
-using the <samp>Alpha</samp> button in the <samp>Texture Face</samp> Editing
-panel (<samp style="font-weight: bold;">F9</samp>) in
-<samp>UV Face Select</samp> mode. The exporter will ensure that X-Plane
-draws these faces last.</p>
-<p>But sometimes you need even more control over the drawing order -
-<i>eg</i> modelling a cockpit with a transparent HUD and
-(obviously) a transparent canopy; the HUD must be drawn after the canopy.</p>
-<p>You can specify the relative order in which lamps, meshes etc should be
-drawn by assigning them to "Groups" on the <samp>Object and links</samp>
-panel (<samp style="font-weight: bold;">F7</samp>):</p>
-<ul>
-  <li>Objects that don't belong to a group are drawn first.</li>
-  <li>The groups are sorted by alphabetical order, and then
-    <ul>
-      <li>objects that belong to the first group are drawn next.<br>
-      &#8230;</li>
-      <li>objects that belong to the last group are drawn last.</li>
-    </ul></li>
-</ul>
-<p><i>eg</i> in the case of the cockpit with transparent canopy and HUD,
-we could put the canopy and HUD into separate groups named <code>GroupA</code>
-and <code>GroupB</code> respectively. Since <code>A</code> is before
-<code>B</code> in the alphabet, the canopy would be drawn before the HUD
-(and both would be drawn after the rest of the cockpit).</p>
-<p>To add objects to a new group:</p>
-<ul>
-  <li>Select the meshes that you want to be drawn late.</li>
-  <li>Press the <samp>Add to Group</samp> button on the
-<samp>Object and links</samp> panel
-(<samp style="font-weight: bold;">F7</samp>) (or press
-<samp style="font-weight: bold;">Ctrl-G</samp>).</li>
-  <li>Choose <samp>ADD NEW</samp>.</li>
-  <li>Give the new group a name.</li>
-</ul>
-<p>Objects that belong to a group are highlighted in green instead of
-pink so that you can easily distinguish them.</p>
-<h4><a name="group"><font size="+1">v8/v9: </font>Drawing group</a></h4>
-<p>You can specify when X-Plane should draw your scenery object relative to
-other scenery elements:</p>
-<ul>
-  <li>Add a Blender object of type "Empty" to your scene.</li>
-  <li>Add a <a href="#properties">property</a> to the Empty object
-named <code>group_terrain</code>, <code>group_beaches</code>, <code>group_shoulders</code>, <code>group_taxiways</code>, <code>group_runways</code>, <code>group_markings</code>, <code>group_airports</code>, <code>group_roads</code>, <code>group_objects</code>, <code>group_light_objects</code> or <code>group_cars</code>.</li>
-  <li>Give the property a value between <code>-1</code> and <code>-5</code>
-to make X-Plane draw your object before this group,
-<code>0</code> to draw your object with this group, or between
-<code>1</code> and <code>5</code> to draw your object after this group.</li>
-</ul>
-<p><i>eg</i> to make X-Plane draw your object at the same time that it
-draws runway markings add a property named <code>group_markings</code>
-to an Empty object and give it the value <code>0</code>.</p>
-<h4><font size="+1">v8/v9: </font>Slung load weight</h4>
-<p>You can specify the weight of an object for use in X-Plane's physics
-engine if the object is being carried by a plane or helicopter:</p>
-<ul>
-  <li>Add a Blender object of type "Empty" to your scene.</li>
-  <li>Add a <a href="#properties">property</a> to the Empty object
-named <code>slung_load_weight</code> and specify the weight in pounds.
-</ul>
-<h3>Optimising for X-Plane</h3>
-<h4><a name="strips"><font size="+1">v7: </font>Strips</a></h4>
-<p>As well as basic 3- and 4-edged faces ("<code>tri</code>"s
-and "<code>quad</code>"s), X-Plane v7 objects support two
-compound types - "<code>tri_fan</code>" and "<code>quad_strip</code>".
-These are strips of two or more tris and quads that share common edges.
-Because the faces in these strips share common edges, X-Plane and the
-underlying OpenGL renderer have a third or a half as much work to do to
-render them compared to individual tris and quads. This gives higher
-frame rates.</p>
-<p>In order for a pair of faces to be considered for inclusion in
-one of these strips, the following conditions need to be true:</p>
-<ol>
-  <li>The faces must be facing the same way.</li>
-  <li>Each pair of faces must share a common edge (apart from the first and last face).</li>
-  <li>Each shared edge must have the same texture co-ordinates in both faces.</li>
-</ol>
-<p>In practice this means that the texture must be reversed in
+the appearance. So the exporter optimises the order of animations,
+lights, lines and triangles in your object to minimise the number of
+OpenGL state changes and therefore maximise X-Plane's framerate.</P>
+<P>However drawing order does become important if you use transparent
+and/or translucent textures on some of your faces - transparent and
+translucent faces must be drawn last, otherwise other faces and
+lights will not be visible through them. You should therefore tell
+Blender which faces are transparent/translucent using the <SAMP>Alpha</SAMP>
+button in the <SAMP>Texture Face</SAMP> Editing panel (<SAMP><B>F9</B></SAMP>)
+in <SAMP>UV Face Select</SAMP> mode. The exporter will ensure that
+X-Plane draws these faces last.</P>
+<P>But sometimes you need even more control over the drawing order -
+<I>eg</I> modelling a cockpit with a transparent HUD and (obviously)
+a transparent canopy; the HUD must be drawn after the canopy.</P>
+<P>You can specify the relative order in which lamps, meshes etc
+should be drawn by assigning them to &quot;Groups&quot; on the <SAMP>Object
+and links</SAMP> panel (<SAMP><B>F7</B></SAMP>):</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Objects that don't belong to a
+	group are drawn first. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">The groups are sorted by
+	alphabetical order, and then 
+	</P>
+	<UL>
+		<LI><P STYLE="margin-bottom: 0cm">objects that belong to the first
+		group are drawn next.<BR>… 
+		</P>
+		<LI><P>objects that belong to the last group are drawn last. 
+		</P>
+	</UL>
+</UL>
+<P><I>eg</I> in the case of the cockpit with transparent canopy and
+HUD, we could put the canopy and HUD into separate groups named
+<CODE>GroupA</CODE> and <CODE>GroupB</CODE> respectively. Since <CODE>A</CODE>
+is before <CODE>B</CODE> in the alphabet, the canopy would be drawn
+before the HUD (and both would be drawn after the rest of the
+cockpit).</P>
+<P>To add objects to a new group:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Select the meshes that you want to
+	be drawn late. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Press the <SAMP>Add to Group</SAMP>
+	button on the <SAMP>Object and links</SAMP> panel (<SAMP><B>F7</B></SAMP>)
+	(or press <SAMP><B>Ctrl-G</B></SAMP>). 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>ADD NEW</SAMP>. 
+	</P>
+	<LI><P>Give the new group a name. 
+	</P>
+</UL>
+<P>Objects that belong to a group are highlighted in green instead of
+pink so that you can easily distinguish them.</P>
+<H4><A NAME="group"></A><FONT SIZE=4>v8/v9: </FONT>Drawing group</H4>
+<P>You can specify when X-Plane should draw your scenery object
+relative to other scenery elements:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Add a Blender object of type
+	&quot;Empty&quot; to your scene. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Add a <A HREF="#properties">property</A>
+	to the Empty object named <CODE>group_terrain</CODE>, <CODE>group_beaches</CODE>,
+	<CODE>group_shoulders</CODE>, <CODE>group_taxiways</CODE>,
+	<CODE>group_runways</CODE>, <CODE>group_markings</CODE>,
+	<CODE>group_airports</CODE>, <CODE>group_roads</CODE>,
+	<CODE>group_objects</CODE>, <CODE>group_light_objects</CODE> or
+	<CODE>group_cars</CODE>. 
+	</P>
+	<LI><P>Give the property a value between <CODE>-1</CODE> and <CODE>-5</CODE>
+	to make X-Plane draw your object before this group, <CODE>0</CODE>
+	to draw your object with this group, or between <CODE>1</CODE> and <CODE>5</CODE>
+	to draw your object after this group. 
+	</P>
+</UL>
+<P><I>eg</I> to make X-Plane draw your object at the same time that
+it draws runway markings add a property named <CODE>group_markings</CODE>
+to an Empty object and give it the value <CODE>0</CODE>.</P>
+<H4><FONT SIZE=4>v8/v9: </FONT>Slung load weight</H4>
+<P>You can specify the weight of an object for use in X-Plane's
+physics engine if the object is being carried by a plane or
+helicopter:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Add a Blender object of type
+	&quot;Empty&quot; to your scene. 
+	</P>
+	<LI><P>Add a <A HREF="#properties">property</A> to the Empty object
+	named <CODE>slung_load_weight</CODE> and specify the weight in
+	pounds. 
+	</P>
+</UL>
+<H3>Optimising for X-Plane</H3>
+<H4><A NAME="strips"></A><FONT SIZE=4>v7: </FONT>Strips</H4>
+<P>As well as basic 3- and 4-edged faces (&quot;<CODE>tri</CODE>&quot;s
+and &quot;<CODE>quad</CODE>&quot;s), X-Plane v7 objects support two
+compound types - &quot;<CODE>tri_fan</CODE>&quot; and &quot;<CODE>quad_strip</CODE>&quot;.
+These are strips of two or more tris and quads that share common
+edges. Because the faces in these strips share common edges, X-Plane
+and the underlying OpenGL renderer have a third or a half as much
+work to do to render them compared to individual tris and quads. This
+gives higher frame rates.</P>
+<P>In order for a pair of faces to be considered for inclusion in one
+of these strips, the following conditions need to be true:</P>
+<OL>
+	<LI><P STYLE="margin-bottom: 0cm">The faces must be facing the same
+	way. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Each pair of faces must share a
+	common edge (apart from the first and last face). 
+	</P>
+	<LI><P>Each shared edge must have the same texture co-ordinates in
+	both faces. 
+	</P>
+</OL>
+<P>In practice this means that the texture must be reversed in
 alternate faces in the strip. In the case of tris this can also be
 achieved by mapping a single area of the texture across all the tris,
-with the tip of the tris at the centre of the texture area. Use
-<samp>UVs&nbsp;&rarr; Copy&nbsp;&amp;&nbsp;Paste</samp> from the
-<samp>UV/Image Editor</samp> window to automate the creation of strips.</p>
-<p>These compound types aren't supported directly by Blender.
-However, the export script automatically tries to spot when it can use
-them.</p>
-<p><samp style="font-weight: bold;">v8, v9 & csl: </samp>The
-performance gains from using strips are more modest in X-Plane v8 and v9,
-and for CSL objects.
-These compound types aren't supported in v8/v9 objects (X-Plane v8 and v9
-use more advanced techniques) and the only saving from using strips over
-some other UV mapping methods is in reduced "vertex count". It probably
-isn't worth going out of your way to look for opportunities of making
-strips.</p>
-<h4><a name="Level_Of_Detail"></a>Level Of Detail</h4>
-<p>X-Plane has borrowed the concept of "Level Of Detail" from 3D
-games. This works on the principle that when you're viewing an object
-from a large distance it can be displayed with reduced detail without you
-noticing the difference. By displaying distant objects with reduced detail
-we can simulate a more complex scene than would be possible if all
-objects were drawn at maximum detail.</p>
-<p>Use Layers to draw scenery and CSLs (but not aircraft Cockpits or
-Misc Objects) with multiple Levels Of Detail. Objects in layers 1-3 are
-visible in X-Plane at the following distances:</p>
-<div style="margin-left: 40px;">
-<table style="text-align: left;" border="0">
-  <thead>
-    <tr>
-      <th style="text-decoration: underline;">Layer</td>
-      <th></th>
-      <th style="text-decoration: underline;">Distance</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: center;">1</td>
-      <td></td>
-      <td>&lt; 1000m</td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">2</td>
-      <td></td>
-      <td>1000-4000m</td>
-    </tr>
-    <tr>
-      <td style="text-align: center;">3</td>
-      <td></td>
-      <td>4000m-10000m</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+with the tip of the tris at the centre of the texture area. Use <SAMP>UVs&nbsp;→
+Copy&nbsp;&amp;&nbsp;Paste</SAMP> from the <SAMP>UV/Image Editor</SAMP>
+window to automate the creation of strips.</P>
+<P>These compound types aren't supported directly by Blender.
+However, the export script automatically tries to spot when it can
+use them.</P>
+<P><SAMP><B>v8, v9 &amp; csl: </B></SAMP>The performance gains from
+using strips are more modest in X-Plane v8 and v9, and for CSL
+objects. These compound types aren't supported in v8/v9 objects
+(X-Plane v8 and v9 use more advanced techniques) and the only saving
+from using strips over some other UV mapping methods is in reduced
+&quot;vertex count&quot;. It probably isn't worth going out of your
+way to look for opportunities of making strips.</P>
+<H4><A NAME="Level_Of_Detail"></A>Level Of Detail</H4>
+<P>X-Plane has borrowed the concept of &quot;Level Of Detail&quot;
+from 3D games. This works on the principle that when you're viewing
+an object from a large distance it can be displayed with reduced
+detail without you noticing the difference. By displaying distant
+objects with reduced detail we can simulate a more complex scene than
+would be possible if all objects were drawn at maximum detail.</P>
+<P>Use Layers to draw scenery and CSLs (but not aircraft Cockpits or
+Misc Objects) with multiple Levels Of Detail. Objects in layers 1-3
+are visible in X-Plane at the following distances:</P>
+<DL>
+	<DD>
+	<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2>
+		<THEAD>
+			<TR>
+				<TH>
+					<P><U>Layer</U></P>
+				</TH>
+				<TH></TH>
+				<TH>
+					<P><U>Distance</U></P>
+				</TH>
+			</TR>
+		</THEAD>
+		<TBODY>
+			<TR>
+				<TD>
+					<P ALIGN=CENTER>1</P>
+				</TD>
+				<TD></TD>
+				<TD>
+					<P>&lt; 1000m</P>
+				</TD>
+			</TR>
+			<TR>
+				<TD>
+					<P ALIGN=CENTER>2</P>
+				</TD>
+				<TD></TD>
+				<TD>
+					<P>1000-4000m</P>
+				</TD>
+			</TR>
+			<TR>
+				<TD>
+					<P ALIGN=CENTER>3</P>
+				</TD>
+				<TD></TD>
+				<TD>
+					<P>4000m-10000m</P>
+				</TD>
+			</TR>
+		</TBODY>
+	</TABLE>
+</DL>
+<H3><A NAME="resize"></A>Changing the texture size</H3>
+<P>If you run out of space in your texture file then you can increase
+the size. The panel texture can by 1024×<I>any size</I> in X-Plane
+v8, and any size up to 2048×2048 in X-Plane v9. The height and width
+of a non-panel texture file must be a power of two <I>eg</I> 128,
+256, 512, 1024 or 2048 (X-Plane v9 only), but it doesn't have to be
+square.</P>
+<P>You should use the following procedure to ensure that your UV
+mappings and/or PlaneMaker instrument layouts are preserved:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Create a new, larger, texture in
+	an image editor application. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Panel texture: Paste the original
+	texture into the lower left corner of the new texture. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Non-panel texture: Paste the
+	original texture into one of the corners of the new texture, or
+	aligned on a multiple of the original texture's width and height. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">In Blender, in the <SAMP>UV/Image
+	Editor</SAMP> window, select the original texture from the pop-up
+	menu. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Choose <SAMP>Image&nbsp;→
+	Replace&nbsp;and&nbsp;fixup&nbsp;UV&nbsp;mapping…</SAMP> 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Select the new image and press
+	<SAMP>Replace image</SAMP>. 
+	</P>
+	<LI><P>In the <SAMP>Fixup UV mapping</SAMP> dialog, press the button
+	in the cluster of buttons that represents where you placed the
+	original texture in the new texture. 
+	</P>
+</UL>
+<P>You can also use this technique if you want to combine 3D models
+that use different texture files; paste all of the textures used by
+the 3D models into a single new texture file, then use <SAMP>Image&nbsp;→
+Replace&nbsp;and&nbsp;fixup&nbsp;UV&nbsp;mapping…</SAMP> on each of
+the original textures.</P>
+<H3>Blender tips</H3>
+<P>Blender has a quirky user interface:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">By default, Right mouse button
+	does what you would expect Left mouse button to do. I strongly
+	recommend that you change this; drag down the top menubar to reveal
+	the <SAMP>User Preferences</SAMP> window, select the <SAMP>View &amp;
+	Controls </SAMP>tab and choose <SAMP>Select with: Left Mouse</SAMP>.
+	See <A HREF="http://marginal.org.uk/x-planescenery/hangar_tutorial/1-setup.html#prefs">this
+	tutorial</A> for a fuller explanation. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Space does what you might expect
+	Right mouse button to do. 
+	</P>
+	<LI><P>The user interface is &quot;modal&quot;. Buttons and keys do
+	different things depending on whether you are in &quot;Object&quot;,
+	&quot;Edit&quot;, &quot;UV Face Select&quot; or &quot;Pose&quot;
+	mode. (And I thought modal UIs went out with &quot;vi&quot;). Tab
+	changes mode. 
+	</P>
+</UL>
+<H4>Auto-saving</H4>
+<P>Blender can automatically archive old copies of your <CODE>.blend</CODE>
+files when you save. This is useful if you later want to revert to an
+older version. In the <SAMP>User Preferences</SAMP> window, on the
+<SAMP>Auto Save</SAMP> tab, choose the number of <SAMP>Save Versions</SAMP>.
+The older versions of your file will be called <CODE>.blend1</CODE>,
+<CODE>.blend2</CODE> etc.</P>
+<P>Blender can also periodically save a copy of your work in case
+Blender or your computer crashes, or in case you quit Blender without
+saving. On the <SAMP>Auto Save</SAMP> tab press <SAMP>Auto Save Temp
+Files</SAMP>. Also, on the <SAMP>File Paths</SAMP> tab, ensure that
+<SAMP>Temp</SAMP> is set to a folder that exists on your machine.
+This is where the auto-saved files will be created. (The default
+value of <CODE>/tmp</CODE> is fine for Mac and Linux, but <CODE>/tmp</CODE>
+doesn't exist on most Windows machines so you should change this
+setting).</P>
+<H4><A NAME="properties"></A>Properties</H4>
+<P>&quot;Properties&quot; are used to specify <A HREF="#animation">animation</A>
+parameters, <A HREF="#lamps">&quot;named&quot; lights</A> and the
+<A HREF="#group">drawing group</A>. You can see an object's
+properties by selecting it and pressing <SAMP><B>F4</B></SAMP> to
+display the <SAMP>Logic</SAMP> panel. Press the <SAMP>Add Property</SAMP>
+to create a new property.</P>
+<P>Each property has three fields; Type, Name and Value. If you want
+to supply a non-numeric value, <I>eg</I> the name of a &quot;named&quot;
+light, you'll first need to change the Type from <SAMP>Float</SAMP>
+to <SAMP>String</SAMP>.</P>
+<H3>Limitations</H3>
+<H4>Import object</H4>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm"><CODE>smoke_black</CODE> and
+	<CODE>smoke_white</CODE> X-Plane primitives are ignored. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm"><CODE>ambient</CODE>, <CODE>blend</CODE>
+	and <CODE>specular</CODE> attributes are ignored. 
+	</P>
+	<LI><P>The importer usually can't work out which faces are partially
+	or wholly transparent. You should tell Blender which faces are
+	transparent using the <SAMP>Alpha</SAMP> button in <SAMP>UV Face
+	Select</SAMP> mode after import. 
+	</P>
+</UL>
+<H4>Import plane</H4>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Importing planes made with
+	PlaneMaker 7.30 or earlier is not supported. Convert an older plane
+	to v7 by opening it in PlaneMaker 7.63 and re-saving it. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Wings are simplified to reduce
+	polygon count. Any wing curvature <FONT SIZE=2>(</FONT><FONT SIZE=2><I>ie</I></FONT><FONT SIZE=2>
+	the </FONT><SAMP><FONT SIZE=2>customize chords</FONT></SAMP><FONT SIZE=2>
+	option in PlaneMaker)</FONT> is ignored. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Adjacent wing segments may not be
+	exactly joined-up. If not corrected manually this can create shadow
+	effects in XSquawkBox and X-IvAp. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Cockpit objects are ignored. You
+	can use <SAMP>File&nbsp;→ Import&nbsp;→ X-Plane&nbsp;Object</SAMP>
+	to import cockpits. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">Planes (and their weapons, misc
+	objects and cockpit objects) use multiple texture files. These are
+	not automagically merged into one file during the import. 
+	</P>
+	<LI><P STYLE="margin-bottom: 0cm">The importer can't work out which
+	faces are partially or wholly transparent. You should tell Blender
+	which faces are transparent by pressing the <SAMP>Alpha</SAMP>
+	button in <SAMP>UV Face Select</SAMP> mode after import. 
+	</P>
+	<LI><P>LOD algorithm can be insufficiently aggressive in layer 2. 
+	</P>
+</UL>
+<H4>Export object</H4>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">Only Lamps and Mesh Faces
+	(including &quot;lines&quot;) are exported. 
+	</P>
+	<LI><P>All faces must share a single texture file apart from cockpit
+	panel faces which can additionally use the cockpit panel texture
+	(this is a limitation of the X-Plane <CODE>.obj</CODE> file
+	formats). You can use <SAMP>Image&nbsp;→
+	Consolidate&nbsp;into&nbsp;one&nbsp;image</SAMP> to merge multiple
+	texture files into one file. 
+	</P>
+</UL>
+<H3>Problems</H3>
+<P>Please email any questions, problems etc to <A HREF="mailto:danklaue@gmail.com?subject=Xplane2Blender 3.10 Feedback">danklaue</A>.
+If reporting a problem, please:</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0cm">First, check that you are using
+	the <A HREF="http://marginal.org.uk/x-planescenery/tools.html">latest</A>
+	version of the scripts. 
+	</P>
+	<LI><P>Try to send me the the <CODE>.obj</CODE>, <CODE>.acf</CODE>
+	or <CODE>.blend</CODE> file (where relevant) and the contents of the
+	Console window. <FONT SIZE=2>(In Mac OS X, this is the &quot;Console&quot;
+	program. In Windows this the window titled &quot;Blender&quot; that
+	looks like a Command Prompt).</FONT> 
+	</P>
+</UL>
+<H3>License</H3>
+<P>These tools are licensed under the Creative Commons
+<A HREF="http://creativecommons.org/licenses/by-nc-sa/3.0/">Attribution-Noncommercial-ShareAlike</A>
+license.</P>
+<P>Use of these tools does not impose any requirement on you to
+license your work under a Creative Commons license. For the avoidance
+of doubt, this means that you can license any scenery that you make
+using these tools under commercial terms (subject to any licensing
+restrictions on any imported or library objects that you use).</P>
+<P>The team that is carrying on the development and upkeep of this
+script would appreciate a donation for the time and efforts spent on
+this script.  Although you are under no obligation to do so, it would
+help in keeping the team motivated to continue updating and improving
+the script.  If you wish to contribute, please click 
+<A HREF="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=C2ZMZZWH2KVD8">here</A>
+to donate an amount of your choice via PayPal.</P>
+<P><BR><BR>
+</P>
+<HR>
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="C2ZMZZWH2KVD8">
+<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
 
-<h3><a name="resize">Changing the texture size</a></h3>
-<p>If you run out of space in your texture file then you can increase the size.
-The panel texture can by 1024&times;<i>any size</i> in X-Plane v8, and
-any size up to 2048&times;2048 in X-Plane v9.
-The height and width of a non-panel texture file must be a power of two 
-<i>eg</i> 128, 256, 512, 1024 or 2048 (X-Plane v9 only), but it doesn't have
-to be square.</p>
-<p>You should use the following procedure to ensure that your UV mappings
-and/or PlaneMaker instrument layouts are preserved:</p>
-<p>
-<ul>
-  <li>Create a new, larger, texture in an image editor application.</li>
-  <li>Panel texture: Paste the original texture into the lower left
-corner of the new texture.</li>
-  <li>Non-panel texture: Paste the original texture into one of the corners
-of the new texture, or aligned on a multiple of the original texture's
-width and height.</li>
-  <li>In Blender, in the <samp>UV/Image Editor</samp> window, select the
-original texture from the pop-up menu.</li>
-  <li>Choose <samp>Image&nbsp;&rarr; Replace&nbsp;and&nbsp;fixup&nbsp;UV&nbsp;mapping&#8230;</samp></li>
-  <li>Select the new image and press <samp>Replace image</samp>.
-  <li>In the <samp>Fixup UV mapping</samp> dialog, press the button in the
-cluster of buttons that represents where you placed the original texture
-in the new texture.</li>
-</ul>
-<p>You can also use this technique if you want to combine 3D models that use
-different texture files; paste all of the textures used by the 3D models into
-a single new texture file, then use
-<samp>Image&nbsp;&rarr; Replace&nbsp;and&nbsp;fixup&nbsp;UV&nbsp;mapping&#8230;</samp> on each of the original textures.</p>
 
-<h3>Blender tips</h3>
-<p>Blender has a quirky user interface:</p>
-<ul>
-  <li>By default, Right mouse button does what you would expect
-Left mouse button to do. I strongly recommend that you change this;
-drag down the top menubar to reveal the <samp>User Preferences</samp>
-window, select the <samp>View &amp; Controls </samp>tab and choose
-<samp>Select with: Left Mouse</samp>.
-See <a href="http://marginal.org.uk/x-planescenery/hangar_tutorial/1-setup.html#prefs">this tutorial</a> for a fuller explanation.</li>
-  <li>Space does what you might expect Right mouse button to do.</li>
-  <li>The user interface is "modal". Buttons and keys do
-different things depending on whether you are in "Object", "Edit",
-"UV Face Select" or "Pose" mode. (And I thought modal UIs went out with
-"vi"). Tab changes mode.</li>
-</ul>
-<h4>Auto-saving</h4>
-<p>Blender can automatically archive old copies of your
-<code>.blend</code> files when you save. This is useful if you later want
-to revert to an older version.
-In the <samp>User Preferences</samp> window, on the
-<samp>Auto Save</samp> tab, choose the number of <samp>Save Versions</samp>.
-The older versions of your file will be called <code>.blend1</code>,
-<code>.blend2</code> etc.</p>
-<p>Blender can also periodically save a copy of your work in case Blender
-or your computer crashes, or in case you quit Blender without saving.
-On the <samp>Auto Save</samp> tab press <samp>Auto Save Temp Files</samp>.
-Also, on the <samp>File Paths</samp> tab, ensure that <samp>Temp</samp>
-is set to a folder that exists on your machine. This is where the
-auto-saved files will be created.
-(The default value of <code>/tmp</code> is fine for Mac and Linux,
-but <code>/tmp</code> doesn't exist on most Windows machines so
-you should change this setting).</p>
-<h4><a name="properties">Properties</a></h4>
-<p>"Properties" are used to specify <a href="#animation">animation</a>
-parameters, <a href="#lamps">"named" lights</a> and the
-<a href="#group">drawing group</a>. You can see an object's properties by
-selecting it and pressing <samp style="font-weight: bold;">F4</samp> to display
-the <samp>Logic</samp> panel. Press the <samp>Add Property</samp> to create
-a new property.</p>
-<p>Each
-property has three fields; Type, Name and Value. If you want to supply a
-non-numeric value, <i>eg</i> the name of a "named" light, you'll first need
-to change the Type from <samp>Float</samp> to <samp>String</samp>.</p>
 
-<h3>Limitations</h3>
-<h4>Import object</h4>
-<ul>
-  <li><code>smoke_black</code> and <code>smoke_white</code>
-X-Plane primitives are ignored.</li>
-  <li><code>ambient</code>, <code>blend</code> and
-<code>specular</code> attributes are ignored.</li>
-  <li>The importer usually can't work out which faces are
-partially or wholly transparent. You should tell Blender which
-faces are transparent using the <samp>Alpha</samp>
-button in <samp>UV Face Select</samp> mode after import.</li>
-</ul>
-<h4>Import plane</h4>
-<ul>
-  <li>Importing planes made with PlaneMaker 7.30 or earlier is not
-supported. Convert an older plane to v7 by opening it in PlaneMaker
-7.63 and re-saving it.</li>
-  <li>Wings are simplified to reduce polygon count. Any wing
-curvature <small>(<i>ie</i> the <samp>customize
-chords</samp> option in PlaneMaker)</small> is ignored.</li>
-  <li>Adjacent wing segments may not be exactly joined-up.
-If not corrected manually this can create shadow effects in
-XSquawkBox and X-IvAp.</li>
-  <li>Cockpit objects are ignored. You can use
-<samp>File&nbsp;&rarr; Import&nbsp;&rarr; X-Plane&nbsp;Object</samp>
-to import cockpits.</li>
-  <li>Planes (and their weapons, misc objects and cockpit objects)
-use multiple texture files. These are not automagically merged
-into one file during the import.</li>
-  <li>The importer can't work out which faces are partially or
-wholly transparent. You should tell Blender which faces are transparent
-by pressing the <samp>Alpha</samp> button in <samp>UV
-Face Select</samp> mode after import.</li>
-  <li>LOD algorithm can be insufficiently aggressive in layer 2.</li>
-</ul>
-<h4>Export object</h4>
-<ul>
-  <li>Only Lamps and Mesh Faces (including "lines") are exported.</li>
-  <li>All faces must share a single texture file apart from cockpit panel
-faces which can additionally use the cockpit panel texture
-(this is a limitation of the X-Plane <code>.obj</code> file formats).
-You can use
-<samp>Image&nbsp;&rarr; Consolidate&nbsp;into&nbsp;one&nbsp;image</samp>
-to merge multiple texture files into one file.</li>
-</ul>
 
-<h3>Problems</h3>
-<p>Please email any questions, problems etc to the
-<a href="mailto:Jonathan Harris <x-plane@marginal.org.uk>">author</a>.
-If reporting a problem, please:</p>
-<ul>
-  <li>First, check that you are using the
-<a href="http://marginal.org.uk/x-planescenery/tools.html">latest</a>
-version of the scripts.</li>
-  <li>Try to send me the the <code>.obj</code>, <code>.acf</code>
-or <code>.blend</code> file (where relevant) and the
-contents of the Console window. <small>(In Mac OS X, this is the
-"Console" program. In Windows this the window titled "Blender" that
-looks like a Command Prompt).</small></li>
-</ul>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2>
+	<TR>
+		<TD BGCOLOR="#87cefa">
+			<P ALIGN=LEFT><FONT FACE="Arial, Helvetica, sans-serif">Version
+			3.09 © 2004-2008 <A HREF="mailto:Jonathan%20Harris%20%3Cx-plane@marginal.org.uk%3E">Jonathan
+			Harris</A> 
+			<A HREF="http://creativecommons.org/licenses/by-nc-sa/3.0/"><FONT COLOR="#000000"><IMG SRC="http://creativecommons.org/images/public/somerights20.png" NAME="graphics1" ALIGN=BOTTOM WIDTH=91 HEIGHT=34 BORDER=1></FONT></A></FONT></P>
+			<P ALIGN=LEFT><FONT FACE="Arial, Helvetica, sans-serif">Version
+			3.10 © 2010 danklaue &amp; der_On</FONT></P>
+		</TD>
+	</TR>
+</TABLE>
 
-<h3>License</h3>
-<p>These tools are licensed under the Creative Commons <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Attribution-Noncommercial-ShareAlike</a> license.</p>
-<p>Use of these tools does not impose any requirement on you to license
-your work under a Creative Commons license. For the avoidance of doubt,
-this means that you can license any scenery that you make using these
-tools under commercial terms (subject to any licensing restrictions on
-any imported or library objects that you use).</p>
-<p>The author would appreciate a courtesy copy of any commercial scenery
-that you make using these tools, but you are under no obligation.</p>
 
-<hr>
-<table style="width: 100%;" border="0" cellpadding="2">
-  <tbody>
-    <tr>
-      <td class="banner">Version 3.09 &copy; 2004-2008
-<a href="mailto:Jonathan Harris <x-plane@marginal.org.uk>">Jonathan Harris</a>
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/">
-<img alt="Creative Commons License" style="border: 0px solid ; width: 88px; height: 31px; vertical-align: text-bottom;" src="http://creativecommons.org/images/public/somerights20.png"></a></td>
-    </tr>
-  </tbody>
-</table>
-
-  </body>
-</html>
+<P><BR><BR>
+</P>
+</BODY>
+</HTML>
