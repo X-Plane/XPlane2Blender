@@ -50,12 +50,15 @@ class XPlaneMaterial():
                 self.attributes['ATTR_emission_rgb'] = "%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2])
 
 
-        # Texture
-        self.texture = None
-        if(len(mat.texture_slots)>0 and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
-            tex =  mat.texture_slots[0].texture
-            if(tex.image.file_format=='PNG'):
-                self.texture = os.path.basename(tex.image.filepath)
+            # Texture and uv-coordinates
+            self.texture = None
+            if(len(mat.texture_slots)>0 and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
+                tex =  mat.texture_slots[0].texture
+                if(tex.image.file_format=='PNG'):
+                    self.texture = os.path.basename(tex.image.filepath)
+
+                if mat.texture_slots[0].texture_coords == 'UV':
+                    self.uv_name = mat.texture_slots[0].uv_layer
 
     def write(self):
         o=''
@@ -73,7 +76,8 @@ class XPlaneMesh():
 
         # store the global index offset, as indices start at 0 in each object
         offset = 0
-
+        
+        uvs = {}
         for prim in primitives:
             prim.vertices[0] = len(self.vertices)
             prim.indices[0] = len(self.indices)
@@ -84,35 +88,76 @@ class XPlaneMesh():
             # create a copy of the object mesh with modifiers applied
             mesh = prim.object.create_mesh(bpy.context.scene, True, "PREVIEW")
 
+            # with the new mesh generate uvFaces list
+            uvFaces = self.getUVFaces(mesh,prim.material.uv_name)
+
             # convert faces to triangles
             faces = []
-            for f in mesh.faces:
-                faces.extend(self.faceToTriangles(f))
-
-            for v in mesh.vertices:
-                # TODO: add UV coordinates
-                # convert local to global coordinates
-                co = matrix * v.co
-
-                # we need to flip the normals too
-                self.vertices.append([co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],0,0])
+            for i in range(0,len(mesh.faces)):
+                if uvFaces != None:
+                    faces.extend(self.faceToTriangles(mesh.faces[i],uvFaces[i]))
+                else:
+                    faces.extend(self.faceToTriangles(mesh.faces[i],None))
 
             for f in faces:
-               for i in f:
-                    self.indices.append(i+offset)
+                for i in range(0,len(f['indices'])):
+                    io = f['indices'][i]+offset
+                    self.indices.append(io)
+                    if len(f['uv'])>0 and io not in uvs:
+                        uvs[io] = f['uv'][i]
 
+            for v in mesh.vertices:
+                # convert local to global coordinates
+                co = matrix * v.co
+                    
+                # we need to swap y and z
+                self.vertices.append([co[0],co[2],co[1],v.normal[0],v.normal[2],v.normal[1]])            
+                
             # increase the index offset to num of indices
             offset = len(self.vertices)
             prim.vertices[1] = len(self.vertices)-1
             prim.indices[1] = len(self.indices)-1
 
-    def faceToTriangles(self,face):
-        triangles = []
-        if (len(face.vertices_raw) == 4): #quad
-            triangles.append( [ face.vertices_raw[0], face.vertices_raw[1], face.vertices_raw[2] ] )
-            triangles.append( [ face.vertices_raw[2], face.vertices_raw[3], face.vertices_raw[0] ] )
+        # add uvs to vertices
+        for i in uvs:
+            self.vertices[i].extend(uvs[i])
+            
+
+    def getUVFaces(self,mesh,uv_name):
+        # get the uv_texture
+
+        if len(mesh.uv_textures)>0:
+            uv_layer = None
+            if uv_name=="":
+                uv_layer = mesh.uv_textures[0]
+            else:
+                i = 0
+                while uv_layer == None and i<len(mesh.uv_textures):
+                    if mesh.uv_textures[i].name == uv_name:
+                        uv_layer = mesh.uv_textures[i]
+                    i+=1
+
+            if uv_layer!=None:
+                return uv_layer.data
+            else:
+                return None
         else:
-            triangles.append(face.vertices_raw)
+            return None
+
+    def faceToTriangles(self,face,uv):
+        triangles = []
+        if len(face.vertices_raw)==4: #quad
+            if uv != None:
+                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[1]]], "indices":[face.vertices_raw[0], face.vertices_raw[1], face.vertices_raw[2]]})
+                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv4[0], uv.uv4[1]], [uv.uv1[0], uv.uv1[1]]], "indices":[ face.vertices_raw[2], face.vertices_raw[3], face.vertices_raw[0]]})
+            else:
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices_raw[0], face.vertices_raw[1], face.vertices_raw[2]]})
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[ face.vertices_raw[2], face.vertices_raw[3], face.vertices_raw[0]]})
+        else:
+            if uv != None:
+                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[0]]], "indices":face.vertices_raw})
+            else:
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices_raw})
 
         return triangles
 
@@ -186,7 +231,7 @@ class XPlaneData():
             if debug:
                 print("scanning "+obj.name)
                 
-            if(obj.type=="EMPTY" and obj.xplane.exportChildren):
+            if(obj.type=="EMPTY" and obj.xplane.exportChildren and obj.hide==False):
                 if debug:
                     print(obj.name+": export children")
 
@@ -195,7 +240,7 @@ class XPlaneData():
                     if debug:
                         print("\t scanning "+child.name)
 
-                    if child.type=="MESH":
+                    if child.hide==False and child.type=="MESH":
                         if debug:
                             print("\t "+child.name+": adding to list")
                         self.files[obj.name].append(XPlanePrimitive(child))
