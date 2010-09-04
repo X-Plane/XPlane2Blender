@@ -17,24 +17,33 @@
 # ##### END GPL LICENSE BLOCK #####
 
 bl_addon_info = {
-	'name': 'Import/Export: XPlane',
-	'author': '',
-	'version': '3.11beta',
-	'blender': (2, 5, 3),
-	'location': 'File > Import/Export > XPlane ',
-	'description': 'Import and Export Xplane objects/planes (.obj,.aif format)',
-	'warning': '', # used for warning icon and text in addons panel
-	'category': 'Import/Export'}
+    'name': 'Import/Export: XPlane',
+    'author': 'Ondrej Brinkel',
+    'version': '3.2',
+    'blender': (2, 5, 3),
+    'location': 'File > Import/Export > XPlane ',
+    'description': 'Import and Export XPlane objects/planes (.obj,.aif format)',
+    'warning': '', # used for warning icon and text in addons panel
+    'category': 'Import/Export'}
 
 import bpy
+from io_xplane2blender import xplane_ui
+from io_xplane2blender import xplane_rna
+from io_xplane2blender import xplane_export
+
+# Add to a menu
+def menu_func(self, context):
+    self.layout.operator(xplane_export.ExportXPlane9.bl_idname, text="XPlane Object (.obj)")
 
 def register():
-	from io_xplane2blender import xplane_ui
-	bpy.types.register(xplane_ui.OBJECT_PT_xplane)
+    xplane_rna.addXPlaneRNA()
+    bpy.types.INFO_MT_file_export.append(menu_func)
+    #bpy.types.register(xplane_ui.OBJECT_PT_xplane)
 
 def unregister():
-	from io_xplane2blender import xplane_ui
-	bpy.types.unregister(xplane_ui.OBJECT_PT_xplane)
+    xplane_rna.removeXPlaneRNA()
+    bpy.types.INFO_MT_file_export.remove(menu_func)
+    bpy.types.unregister(xplane_ui.OBJECT_PT_xplane)
 
 if __name__ == "__main__":
     register()

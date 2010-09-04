@@ -1,5 +1,4 @@
 import bpy
-from io_xplane2blender.xplane_rna import *
 
 class OBJECT_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
@@ -10,43 +9,45 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 
     def draw(self, context):
         obj = context.object
-        add_xplane_rna(obj)
 		#load_xplane_properties(obj)
         
         if(obj.type == "EMPTY"):
-            default_layout(self, obj)
+            empty_layout(self, obj)
             
 #			if(obj.xplane_use):
 #				export_layout(self, obj)
     
         elif(obj.type == "MESH"):
-            default_layout(self, obj)
+            pass
+            #default_layout(self, obj)
 
     #			if(obj.xplane_use):
     #				dataref_layout(self, obj)
 
         elif(obj.type == "LAMP"):
-            default_layout(self, obj)
+            pass
+            #default_layout(self, obj)
 
     #			if(obj.xplane_use):
     #				dataref_layout(self, obj)
 
         elif(obj.type == "BONE"):
-            default_layout(self, obj)
+            pass
+            #default_layout(self, obj)
 
 #			if(obj.xplane_use):
 #				dataref_layout(self, obj)
 
 
-def default_layout(self, obj):
-    if(obj["xplane"]["use"] == False):
-        checkboxIcon = "CHECKBOX_DEHLT"
-    elif(obj["xplane"]["use"] == True):
+def empty_layout(self, obj):
+    if obj.xplane.exportChildren:
         checkboxIcon = "CHECKBOX_HLT"
+    else:
+        checkboxIcon = "CHECKBOX_DEHLT"
 
     layout = self.layout
     row = layout.row()
-    row.prop(obj["xplane"], "use", text="Use for X-Plane Export", icon=checkboxIcon, toggle=True)
+    row.prop(obj.xplane, "exportChildren", text="Export Children", icon=checkboxIcon, toggle=True)
 
     row = layout.row()
     row.separator()
