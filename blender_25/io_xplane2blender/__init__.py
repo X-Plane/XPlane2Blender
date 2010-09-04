@@ -30,7 +30,6 @@ import bpy
 
 def register():
 	from io_xplane2blender import xplane_ui
-	#add_xplane_properties()
 	bpy.types.register(xplane_ui.OBJECT_PT_xplane)
 
 def unregister():
