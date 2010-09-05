@@ -29,8 +29,9 @@ class XPlanePrimitive():
         self.name = object.name
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
+        self.faces = None
         self.animations = []
-        self.commands = []
+        self.commands = []        
 
 
 class XPlaneMaterial():
@@ -40,7 +41,10 @@ class XPlaneMaterial():
         self.uv_name = None
 
         # Material
-        self.attributes = {"ATTR_diffuse_rgb":None,"ATTR_specular_rgb":None,"ATTR_emission_rgb":None,"ATTR_shiny_rat":None}
+        self.attributes = {"ATTR_diffuse_rgb":None,
+                            "ATTR_specular_rgb":None,
+                            "ATTR_emission_rgb":None,
+                            "ATTR_shiny_rat":None}
 
         if len(object.data.materials)>0:
             mat = object.data.materials[0]
@@ -95,11 +99,32 @@ class XPlaneFace():
         self.alpha = False
         self.smooth = False
 
+
+class XPlaneFaces():
+    def __init__(self):
+        self.faces = []
+
+    def append(self,face):
+        self.faces.append(face)
+
+    def remove(self,face):
+        del self.faces[face]
+
+    def get(self,i):
+        if len(self.faces)-1>=i:
+            return self.faces[i]
+        else:
+            return None
+
+    def write(self):
+        # TODO: collect groups of face attributes and dump them together with the TRIS command?
+        return ''
+
+
 class XPlaneMesh():
     def __init__(self,file):
         self.vertices = []
         self.indices = []
-        self.faces = []
 
         # store the global index, as we are reindexing faces
         globalindex = 0
@@ -115,6 +140,8 @@ class XPlaneMesh():
 
             # with the new mesh get uvFaces list
             uvFaces = self.getUVFaces(mesh,prim.material.uv_name)
+
+            faces = XPlaneFaces()
 
             # convert faces to triangles
             tempfaces = []
@@ -146,8 +173,10 @@ class XPlaneMesh():
                     self.vertices.append([-co[0],co[2],co[1],-v.normal[0],v.normal[2],v.normal[1],f['uv'][i][0],f['uv'][i][1]])
                     self.indices.append(globalindex)
                     globalindex+=1
-                self.faces.append(xplaneFace)
-                
+                faces.append(xplaneFace)
+
+            # store the faces in the prim
+            prim.faces = faces
             prim.indices[1] = globalindex
 
         # TODO: go through all indices and check for double UVs to reduce vertice amount while remaping the indices
@@ -302,6 +331,7 @@ class XPlaneCommands():
             if debug:
                 o+="# %s\n" % prim.name
             o+=prim.material.write()
+            o+=prim.faces.write()
             offset = prim.indices[0]
             count = prim.indices[1]-prim.indices[0]
             o+="TRIS\t%d %d\n" % (offset,count)
@@ -391,7 +421,7 @@ class XPlaneHeader():
             self.attributes['slung_load_weight'] = file['parent'].xplane.slungLoadWeight
 
         # set Texture
-        if file['primitives'][0].material.texture != None:
+        if(len(file['primitives'])>0 and file['primitives'][0].material.texture != None):
             tex = file['primitives'][0].material.texture
             self.attributes['TEXTURE'] = tex
             self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
