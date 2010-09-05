@@ -25,11 +25,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     #				dataref_layout(self, obj)
 
         elif(obj.type == "LAMP"):
-            pass
-            #default_layout(self, obj)
-
-    #			if(obj.xplane_use):
-    #				dataref_layout(self, obj)
+            lamp_layout(self, obj)
 
         elif(obj.type == "BONE"):
             pass
@@ -49,9 +45,10 @@ def empty_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "exportChildren", text="Export Children", icon=checkboxIcon, toggle=True)
 
+def lamp_layout(self, obj):
+    layout = self.layout
     row = layout.row()
-    row.separator()
-
+    row.prop(obj.xplane, "lightType", text="Light type")
 
 #def dataref_layout(self, obj):
 #	layout = self.layout

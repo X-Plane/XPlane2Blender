@@ -7,6 +7,22 @@ from collections import OrderedDict
 
 debug = True
 
+class XPlaneLight():
+    def __init__(self,object):
+        self.object = object
+        self.name = object.name
+        self.indices = [0,0]
+        self.color = object.data.color
+        self.type = object.xplane.lightType       
+
+
+class XPlaneLine():
+    def __init_(self,object):
+        self.object = object
+        self.name = object.name
+        self.indices = [0,0]
+
+
 class XPlanePrimitive():
     def __init__(self,object):
         self.object = object            
@@ -15,6 +31,7 @@ class XPlanePrimitive():
         self.material = XPlaneMaterial(self.object)
         self.animations = []
         self.commands = []
+
 
 class XPlaneMaterial():
     def __init__(self,object):
@@ -79,7 +96,7 @@ class XPlaneFace():
         self.smooth = False
 
 class XPlaneMesh():
-    def __init__(self,primitives):
+    def __init__(self,file):
         self.vertices = []
         self.indices = []
         self.faces = []
@@ -87,7 +104,7 @@ class XPlaneMesh():
         # store the global index, as we are reindexing faces
         globalindex = 0
         
-        for prim in primitives:
+        for prim in file['primitives']:
             prim.indices[0] = globalindex
 
             # store the world translation matrix
@@ -208,7 +225,7 @@ class XPlaneMesh():
             for i in v:
                 o+="\t%6.4f" % i
             o+="\n"
-        o+="\n"
+        
         return o
 
     def writeIndices(self):
@@ -232,24 +249,66 @@ class XPlaneMesh():
         for i in group:
             o+="IDX\t%d\n" % i
             
-        o+="\n"
         return o
 
+class XPlaneLights():
+    def __init__(self,file):
+        self.vertices = []
+        self.indices = []
+
+        # store the global index, as we are reindexing faces
+        globalindex = 0
+
+        for light in file['lights']:
+            light.indices[0] = globalindex
+
+            # store the world translation matrix
+            matrix = light.object.matrix_world
+            
+            # get the vertice from original mesh
+            v = light.object.location
+
+            # convert local to global coordinates
+            co = matrix * v
+
+            self.vertices.append([-co[0],co[2],co[1],light.color[0],light.color[1],light.color[2]])
+            self.indices.append(globalindex)
+            globalindex+=1
+
+            light.indices[1] = globalindex
+
+        # reverse indices due to the inverted z axis
+        self.indices.reverse()
+
+    def writeVertices(self):
+        o=''
+        for v in self.vertices:
+            o+='VLIGHT'
+            for f in v:
+                o+='\t%6.4f' % f
+            o+='\n'
+        
+        return o
 
 class XPlaneCommands():
-    def __init__(self,primitives):
-        self.primitives = primitives
+    def __init__(self,file):
+        self.file = file
 
     def write(self):
         o=''
+         
         # write down all objects and there materials
-        for prim in self.primitives:
+        for prim in self.file['primitives']:
             if debug:
                 o+="# %s\n" % prim.name
             o+=prim.material.write()
             offset = prim.indices[0]
             count = prim.indices[1]-prim.indices[0]
             o+="TRIS\t%d %d\n" % (offset,count)
+
+        # write down all lights
+        if len(self.file['lights'])>0:
+            o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
 
         o+="\n"
         return o
@@ -258,6 +317,10 @@ class XPlaneCommands():
 class XPlaneData():
     def __init__(self):
         self.files = {}
+
+    def getEmptyFile(self):
+        return {'primitives':[],'lights':[],'lines':[]}
+
     # collect all exportable objects from the scene
     def collect(self):
         for obj in bpy.context.scene.objects:
@@ -268,15 +331,20 @@ class XPlaneData():
                 if debug:
                     print(obj.name+": export children")
 
-                self.files[obj.name] = []
+                self.files[obj.name] = self.getEmptyFile()
                 for child in obj.children:
                     if debug:
                         print("\t scanning "+child.name)
 
-                    if child.hide==False and child.type=="MESH":
-                        if debug:
-                            print("\t "+child.name+": adding to list")
-                        self.files[obj.name].append(XPlanePrimitive(child))
+                    if child.hide==False:
+                        if child.type=="MESH":
+                            if debug:
+                                print("\t "+child.name+": adding to list")
+                            self.files[obj.name]['primitives'].append(XPlanePrimitive(child))
+                        if child.type=="LAMP":
+                            if debug:
+                                print("\t "+child.name+": adding to list")
+                            self.files[obj.name]['lights'].append(XPlaneLight(child))
 
                 # apply further splitting by textures
                 self.splitFileByTexture(obj.name)
@@ -285,29 +353,29 @@ class XPlaneData():
         if len(self.files[name])>0:
             # stores prims that have to be removed after iteration
             remove = []
-            for prim in self.files[name]:
+            for prim in self.files[name]['primitives']:
                 if prim.material.texture!=None:
                     filename = name+'_'+prim.material.texture[0:-4]
                     
                     # create new file list if not existant
                     if filename not in self.files:
-                        self.files[filename] = []
+                        self.files[filename] = self.getEmptyFile()
 
                     # store prim in ne file list
-                    self.files[filename].append(prim)
+                    self.files[filename]['primitives'].append(prim)
                     remove.append(prim)
 
             # remove prims that have been placed in other files
             for prim in remove:
-                self.files[name].remove(prim)
+                self.files[name]['primitives'].remove(prim)
 
             # do some housecleaning
-            if len(self.files[name])==0:
-                del self.files[name]
+            #if len(self.files[name])==0:
+            #    del self.files[name]
     
 
 class XPlaneHeader():
-    def __init__(self,primitives,mesh,version):
+    def __init__(self,file,mesh,lights,version):
         self.version = version
         self.mode = "default"
         self.attributes = OrderedDict([("TEXTURE",None),
@@ -318,8 +386,8 @@ class XPlaneHeader():
                         ("COCKPIT_REGION",None)])
 
         # set Texture
-        if primitives[0].material.texture != None:
-            tex = primitives[0].material.texture
+        if file['primitives'][0].material.texture != None:
+            tex = file['primitives'][0].material.texture
             self.attributes['TEXTURE'] = tex
             self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
             self.attributes['TEXTURE_NORMAL'] = tex[0:-4]+'_NML.png'
@@ -327,7 +395,7 @@ class XPlaneHeader():
         # get point counts
         tris = len(mesh.vertices)
         lines = 0
-        lites = 0
+        lites = len(lights.vertices)
         indices = len(mesh.indices)
         
         self.attributes['POINT_COUNTS'] = "%d\t%d\t%d\t%d" % (tris,lines,lites,indices)
@@ -346,7 +414,7 @@ class XPlaneHeader():
         for attr in self.attributes:
             if self.attributes[attr]!=None:
                 o+='%s\t%s\n' % (attr,self.attributes[attr])
-        o+='\n'
+        
         return o
         
 
@@ -372,13 +440,19 @@ class ExportXPlane9(bpy.types.Operator):
         if len(data.files)>0:
             for file in data.files:
                 o=''
-                if len(data.files[file])>0:
+                if (len(data.files[file]['primitives'])>0 or len(data.files[file]['lights'])>0 or len(data.files[file]['lines'])>0):
                     mesh = XPlaneMesh(data.files[file])
-                    header = XPlaneHeader(data.files[file],mesh,9)
+                    lights = XPlaneLights(data.files[file])
+                    header = XPlaneHeader(data.files[file],mesh,lights,9)
                     commands = XPlaneCommands(data.files[file])
                     o+=header.write()
+                    o+="\n"
                     o+=mesh.writeVertices()
+                    o+="\n"
+                    o+=lights.writeVertices()
+                    o+="\n"
                     o+=mesh.writeIndices()
+                    o+="\n"
                     o+=commands.write()
                     write(os.path.join(filepath,file+'.obj'), o, context)
                 else:
