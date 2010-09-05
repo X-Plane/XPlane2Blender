@@ -11,7 +11,6 @@ class XPlanePrimitive():
     def __init__(self,object):
         self.object = object            
         self.name = object.name
-        self.vertices = [0,0]
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
         self.animations = []
@@ -68,19 +67,24 @@ class XPlaneMaterial():
 
         return o
 
+class XPlaneFace():
+    def __init__(self):
+        self.vertices = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
+        self.normals = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
+        self.indices = [0,0,0]
+        self.uvs = [(0.0,0.0),(0.0,0.0),(0.0,0.0)]
 
 class XPlaneMesh():
     def __init__(self,primitives):
         self.vertices = []
         self.indices = []
+        #self.faces = []
 
-        # store the global index offset, as indices start at 0 in each object
-        offset = 0
+        # store the global index, as we are reindexing faces
+        globalindex = 0
         
-        uvs = {}
         for prim in primitives:
-            prim.vertices[0] = len(self.vertices)
-            prim.indices[0] = len(self.indices)
+            prim.indices[0] = globalindex
 
             # store the world translation matrix
             matrix = prim.object.matrix_world
@@ -88,40 +92,64 @@ class XPlaneMesh():
             # create a copy of the object mesh with modifiers applied
             mesh = prim.object.create_mesh(bpy.context.scene, True, "PREVIEW")
 
-            # with the new mesh generate uvFaces list
+            # with the new mesh get uvFaces list
             uvFaces = self.getUVFaces(mesh,prim.material.uv_name)
 
             # convert faces to triangles
-            faces = []
+            tempfaces = []
             for i in range(0,len(mesh.faces)):
                 if uvFaces != None:
-                    faces.extend(self.faceToTriangles(mesh.faces[i],uvFaces[i]))
+                    tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i]))
                 else:
-                    faces.extend(self.faceToTriangles(mesh.faces[i],None))
+                    tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],None))
 
-            for f in faces:
+            for f in tempfaces:
+                xplaneFace = XPlaneFace()
                 for i in range(0,len(f['indices'])):
-                    io = f['indices'][i]+offset
-                    self.indices.append(io)
-                    if len(f['uv'])>0 and io not in uvs:
-                        uvs[io] = f['uv'][i]
+                    # get the original index
+                    vindex = f['indices'][i]
 
-            for v in mesh.vertices:
-                # convert local to global coordinates
-                co = matrix * v.co
+                    # get the vertice from original mesh
+                    v = mesh.vertices[vindex]
                     
-                # we need to swap y and z
-                self.vertices.append([co[0],co[2],co[1],v.normal[0],v.normal[2],v.normal[1]])            
-                
-            # increase the index offset to num of indices
-            offset = len(self.vertices)
-            prim.vertices[1] = len(self.vertices)-1
-            prim.indices[1] = len(self.indices)-1
+                    # convert local to global coordinates
+                    co = matrix * v.co
+                    
+                    # store face information alltogether in one struct
+                    # swap y and z and invert x (right handed system)
+                    xplaneFace.vertices[i] = (-co[0],co[2],co[1])
+                    xplaneFace.normals[i] = (-v.normal[0],v.normal[2],v.normal[1])
+                    xplaneFace.uvs[i] = (f['uv'][i][0],f['uv'][i][1])
+                    xplaneFace.indices[i] = globalindex
 
-        # add uvs to vertices
-        for i in uvs:
-            self.vertices[i].extend(uvs[i])
+                    self.vertices.append([-co[0],co[2],co[1],-v.normal[0],v.normal[2],v.normal[1],f['uv'][i][0],f['uv'][i][1]])
+                    self.indices.append(globalindex)
+                    globalindex+=1
+                #self.faces.append(xplaneFace)
+                
+            prim.indices[1] = globalindex
+
+        # TODO: go through all indices and check for double UVs to reduce vertice amount while remaping the indices
+#        for i in range(0,len(self.indices)):
+#            indexes = self.getUVDoubleVIndexes(i)
+#            if len(indexes)>0:
+#                
+#            for index in indexes:
+#                self.indices[]
+
+        # reverse indices due to the inverted z axis
+        self.indices.reverse()
             
+    def getUVDoubleVIndexes(self,index):
+        indexes = []
+
+        v = self.vertices[index]
+
+        for i in range(len(self.vertices)):
+            if (self.vertices[i][6] == v[6] and self.vertices[i][7] == v[7]):
+                indexes.append(i)
+
+        return indexes
 
     def getUVFaces(self,mesh,uv_name):
         # get the uv_texture
@@ -144,7 +172,7 @@ class XPlaneMesh():
         else:
             return None
 
-    def faceToTriangles(self,face,uv):
+    def faceToTrianglesWithUV(self,face,uv):
         triangles = []
         if len(face.vertices_raw)==4: #quad
             if uv != None:
@@ -155,7 +183,7 @@ class XPlaneMesh():
                 triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[ face.vertices_raw[2], face.vertices_raw[3], face.vertices_raw[0]]})
         else:
             if uv != None:
-                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[0]]], "indices":face.vertices_raw})
+                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[1]]], "indices":face.vertices_raw})
             else:
                 triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices_raw})
 
@@ -215,7 +243,7 @@ class XPlaneCommands():
                 o+="# %s\n" % prim.name
             o+=prim.material.write()
             offset = prim.indices[0]
-            count = prim.indices[1]-prim.indices[0]+1
+            count = prim.indices[1]-prim.indices[0]
             o+="TRIS\t%d %d\n" % (offset,count)
 
         o+="\n"
