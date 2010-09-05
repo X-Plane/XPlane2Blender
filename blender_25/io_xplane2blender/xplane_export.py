@@ -318,8 +318,8 @@ class XPlaneData():
     def __init__(self):
         self.files = {}
 
-    def getEmptyFile(self):
-        return {'primitives':[],'lights':[],'lines':[]}
+    def getEmptyFile(self,parent):
+        return {'primitives':[],'lights':[],'lines':[],'parent':parent}
 
     # collect all exportable objects from the scene
     def collect(self):
@@ -331,7 +331,7 @@ class XPlaneData():
                 if debug:
                     print(obj.name+": export children")
 
-                self.files[obj.name] = self.getEmptyFile()
+                self.files[obj.name] = self.getEmptyFile(obj)
                 for child in obj.children:
                     if debug:
                         print("\t scanning "+child.name)
@@ -347,9 +347,10 @@ class XPlaneData():
                             self.files[obj.name]['lights'].append(XPlaneLight(child))
 
                 # apply further splitting by textures
-                self.splitFileByTexture(obj.name)
+                self.splitFileByTexture(obj)
 
-    def splitFileByTexture(self,name):
+    def splitFileByTexture(self,parent):
+        name = parent.name
         if len(self.files[name])>0:
             # stores prims that have to be removed after iteration
             remove = []
@@ -359,7 +360,7 @@ class XPlaneData():
                     
                     # create new file list if not existant
                     if filename not in self.files:
-                        self.files[filename] = self.getEmptyFile()
+                        self.files[filename] = self.getEmptyFile(parent)
 
                     # store prim in ne file list
                     self.files[filename]['primitives'].append(prim)
@@ -384,6 +385,10 @@ class XPlaneHeader():
                         ("POINT_COUNTS",None),
                         ("slung_load_weight",None),
                         ("COCKPIT_REGION",None)])
+
+        # set slung load
+        if file['parent'].xplane.slungLoadWeight>0:
+            self.attributes['slung_load_weight'] = file['parent'].xplane.slungLoadWeight
 
         # set Texture
         if file['primitives'][0].material.texture != None:

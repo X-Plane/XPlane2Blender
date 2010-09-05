@@ -45,6 +45,18 @@ def empty_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "exportChildren", text="Export Children", icon=checkboxIcon, toggle=True)
 
+    row = layout.row()
+    row.prop(obj.xplane, "slungLoadWeight", text="Slung Load weight")
+
+    row = layout.row()
+    row.label("Custom Header Properties")
+    row = layout.row()
+    box = row.box()
+    for attr in obj.xplane.customHeaderAttributes:
+        subrow = box.row()
+        subrow.prop(attr,"customAttribute")
+    #row.prop(obj.xplane, "customHeaderAttributes", text="Custom Header Attributes")
+
 def lamp_layout(self, obj):
     layout = self.layout
     row = layout.row()
