@@ -19,6 +19,8 @@ class XPlanePrimitive():
 class XPlaneMaterial():
     def __init__(self,object):
         self.object = object
+        self.texture = None
+        self.uv_name = None
 
         # Material
         self.attributes = {"ATTR_diffuse_rgb":None,"ATTR_specular_rgb":None,"ATTR_emission_rgb":None,"ATTR_shiny_rat":None}
@@ -50,7 +52,6 @@ class XPlaneMaterial():
 
 
             # Texture and uv-coordinates
-            self.texture = None
             if(len(mat.texture_slots)>0 and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
                 tex =  mat.texture_slots[0].texture
                 if(tex.image.file_format=='PNG'):
@@ -73,12 +74,15 @@ class XPlaneFace():
         self.normals = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
         self.indices = [0,0,0]
         self.uvs = [(0.0,0.0),(0.0,0.0),(0.0,0.0)]
+        self.doubleSided = False
+        self.alpha = False
+        self.smooth = False
 
 class XPlaneMesh():
     def __init__(self,primitives):
         self.vertices = []
         self.indices = []
-        #self.faces = []
+        self.faces = []
 
         # store the global index, as we are reindexing faces
         globalindex = 0
@@ -125,13 +129,13 @@ class XPlaneMesh():
                     self.vertices.append([-co[0],co[2],co[1],-v.normal[0],v.normal[2],v.normal[1],f['uv'][i][0],f['uv'][i][1]])
                     self.indices.append(globalindex)
                     globalindex+=1
-                #self.faces.append(xplaneFace)
+                self.faces.append(xplaneFace)
                 
             prim.indices[1] = globalindex
 
         # TODO: go through all indices and check for double UVs to reduce vertice amount while remaping the indices
 #        for i in range(0,len(self.indices)):
-#            indexes = self.getUVDoubleVIndexes(i)
+#            indexes = self.getDupliVertices(i)
 #            if len(indexes)>0:
 #                
 #            for index in indexes:
@@ -140,21 +144,22 @@ class XPlaneMesh():
         # reverse indices due to the inverted z axis
         self.indices.reverse()
             
-    def getUVDoubleVIndexes(self,index):
+    def getDupliVertices(self,index):
         indexes = []
 
         v = self.vertices[index]
 
         for i in range(len(self.vertices)):
-            if (self.vertices[i][6] == v[6] and self.vertices[i][7] == v[7]):
-                indexes.append(i)
+            for ii in range(0,len(self.vertices[i])):
+                if self.vertices[i][ii] == v[ii]:
+                    indexes.append(i)
 
         return indexes
 
     def getUVFaces(self,mesh,uv_name):
         # get the uv_texture
 
-        if len(mesh.uv_textures)>0:
+        if (uv_name != None and len(mesh.uv_textures)>0):
             uv_layer = None
             if uv_name=="":
                 uv_layer = mesh.uv_textures[0]
@@ -272,6 +277,33 @@ class XPlaneData():
                         if debug:
                             print("\t "+child.name+": adding to list")
                         self.files[obj.name].append(XPlanePrimitive(child))
+
+                # apply further splitting by textures
+                self.splitFileByTexture(obj.name)
+
+    def splitFileByTexture(self,name):
+        if len(self.files[name])>0:
+            # stores prims that have to be removed after iteration
+            remove = []
+            for prim in self.files[name]:
+                if prim.material.texture!=None:
+                    filename = name+'_'+prim.material.texture[0:-4]
+                    
+                    # create new file list if not existant
+                    if filename not in self.files:
+                        self.files[filename] = []
+
+                    # store prim in ne file list
+                    self.files[filename].append(prim)
+                    remove.append(prim)
+
+            # remove prims that have been placed in other files
+            for prim in remove:
+                self.files[name].remove(prim)
+
+            # do some housecleaning
+            if len(self.files[name])==0:
+                del self.files[name]
     
 
 class XPlaneHeader():
@@ -338,8 +370,8 @@ class ExportXPlane9(bpy.types.Operator):
         data.collect()
 
         if len(data.files)>0:
-            o=''
             for file in data.files:
+                o=''
                 if len(data.files[file])>0:
                     mesh = XPlaneMesh(data.files[file])
                     header = XPlaneHeader(data.files[file],mesh,9)
