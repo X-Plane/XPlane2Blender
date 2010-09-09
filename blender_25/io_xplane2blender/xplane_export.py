@@ -436,8 +436,15 @@ class XPlaneHeader():
         self.attributes['POINT_COUNTS'] = "%d\t%d\t%d\t%d" % (tris,lines,lites,indices)
 
     def write(self):
-        # TODO: check if we are on MacOS and use 'A' then
-        o = 'I\n' # line ending types (I = UNIX/DOS, A = MacOS)
+        import platform
+
+        system = platform.system()
+
+        # line ending types (I = UNIX/DOS, A = MacOS)
+        if 'Mac OS' in system:
+            o = 'A\n'
+        else:
+            o = 'I\n'
 
         # version number
         if self.version>=8:
