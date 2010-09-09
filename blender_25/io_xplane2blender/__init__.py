@@ -37,13 +37,13 @@ def menu_func(self, context):
 
 def register():
     xplane_rna.addXPlaneRNA()
+    xplane_ui.addXPlaneUI()
     bpy.types.INFO_MT_file_export.append(menu_func)
-    #bpy.types.register(xplane_ui.OBJECT_PT_xplane)
 
 def unregister():
+    xplane_ui.removeXPlaneUI()
     xplane_rna.removeXPlaneRNA()
     bpy.types.INFO_MT_file_export.remove(menu_func)
-    bpy.types.unregister(xplane_ui.OBJECT_PT_xplane)
 
 if __name__ == "__main__":
     register()

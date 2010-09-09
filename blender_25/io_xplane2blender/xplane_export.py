@@ -44,7 +44,8 @@ class XPlaneMaterial():
         self.attributes = {"ATTR_diffuse_rgb":None,
                             "ATTR_specular_rgb":None,
                             "ATTR_emission_rgb":None,
-                            "ATTR_shiny_rat":None}
+                            "ATTR_shiny_rat":None,
+                            "ATTR_hard":None}
 
         if len(object.data.materials)>0:
             mat = object.data.materials[0]
@@ -71,6 +72,9 @@ class XPlaneMaterial():
                             mat.emit*mat.diffuse_color[2]]
                 self.attributes['ATTR_emission_rgb'] = "%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2])
 
+            # surface type
+            if mat.xplane.surfaceType != 'none':
+                self.attributes['ATTR_hard'] = mat.xplane.surfaceType
 
             # Texture and uv-coordinates
             if(len(mat.texture_slots)>0 and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
@@ -95,9 +99,11 @@ class XPlaneFace():
         self.normals = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
         self.indices = [0,0,0]
         self.uvs = [(0.0,0.0),(0.0,0.0),(0.0,0.0)]
-        self.doubleSided = False
         self.alpha = False
         self.smooth = False
+        self.depth = True
+        self.cull = True # double sided
+        self.blend = True
 
 
 class XPlaneFaces():

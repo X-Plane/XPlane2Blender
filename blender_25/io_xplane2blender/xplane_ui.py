@@ -1,5 +1,33 @@
 import bpy
 
+class LAMP_PT_xplane(bpy.types.Panel):
+    '''XPlane Material Panel'''
+    bl_label = "XPlane"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
+
+    def draw(self,context):
+        obj = context.object
+
+        if(obj.type == "LAMP"):
+            lamp_layout(self,obj.data)
+    
+
+class MATERIAL_PT_xplane(bpy.types.Panel):
+    '''XPlane Material Panel'''
+    bl_label = "XPlane"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+
+    def draw(self,context):
+        obj = context.object
+
+        if(obj.type == "MESH"):
+            material_layout(self,obj.active_material)
+    
+
 class OBJECT_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
     bl_label = "XPlane"
@@ -9,31 +37,12 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 
     def draw(self, context):
         obj = context.object
-		#load_xplane_properties(obj)
         
         if(obj.type == "EMPTY"):
             empty_layout(self, obj)
-            
-#			if(obj.xplane_use):
-#				export_layout(self, obj)
-    
-        elif(obj.type == "MESH"):
-            pass
-            #default_layout(self, obj)
-
-    #			if(obj.xplane_use):
-    #				dataref_layout(self, obj)
-
-        elif(obj.type == "LAMP"):
-            lamp_layout(self, obj)
-
-        elif(obj.type == "BONE"):
-            pass
-            #default_layout(self, obj)
-
-#			if(obj.xplane_use):
-#				dataref_layout(self, obj)
-
+        elif(obj.type == "MESH" or obj.type == "BONE" or obj.type == "LAMP"):
+            animation_layout(self,obj)
+        
 
 def empty_layout(self, obj):
     if obj.xplane.exportChildren:
@@ -62,30 +71,30 @@ def lamp_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "lightType", text="Light type")
 
-#def dataref_layout(self, obj):
-#	layout = self.layout
-#	row = layout.row()
-#	row.prop(obj, "xplane_dataref",text="Dataref")
-#
-#
-#def export_layout(self, obj):
-#	if(obj.xplane_export==False):
-#		checkboxIcon = "CHECKBOX_DEHLT"
-#	elif(obj.xplane_export==True):
-#		checkboxIcon = "CHECKBOX_HLT"
-#
-#	layout = self.layout
-#	row = layout.row()
-#	row.prop(obj, "xplane_export",text="Export all children into single file",icon=checkboxIcon,toggle=True)
-#
-#	if(obj.xplane_export):
-#		# set default file name to object name
-#		if(obj.xplane_export_file==''):
-#			obj.xplane_export_file = bpy.context.active_object.name+'.obj'
-#
-#		# check if filename ends with .obj, if not append it
-#		if (obj.xplane_export_file[-4:len(obj.xplane_export_file)]!='.obj'):
-#			obj.xplane_export_file+='.obj'
-#
-#		row = layout.row()
-#		row.prop(obj, "xplane_export_file",icon="FILE_BLANK")
+def material_layout(self, obj):
+    layout = self.layout
+
+    row = layout.row()
+    row.prop(obj.xplane, "surfaceType", text="Surface type")
+
+
+def animation_layout(self,obj):
+    layout = self.layout
+
+    row = layout.row()
+    row.label("Animation")
+    box = row.box()
+    subrow = box.row()
+    subrow.prop(obj.xplane, "dataref", text="Dataref")
+
+def addXPlaneUI():
+    print("adding xplane ui")
+#    bpy.types.register(OBJECT_PT_xplane)
+#    bpy.types.register(MATERIAL_PT_xplane)
+#    bpy.types.register(LAMP_PT_xplane)
+
+def removeXPlaneUI():
+    print("removing xplane ui")
+#    bpy.types.unregister(OBJECT_PT_xplane)
+#    bpy.types.unregister(MATERIAL_PT_xplane)
+#    bpy.types.unregister(LAMP_PT_xplane)
