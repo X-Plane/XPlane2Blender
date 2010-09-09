@@ -12,8 +12,24 @@ class XPlaneLight():
         self.object = object
         self.name = object.name
         self.indices = [0,0]
-        self.color = object.data.color
-        self.type = object.xplane.lightType       
+        self.color = [object.data.color[0],object.data.color[1],object.data.color[2]]
+        self.type = object.data.xplane.lightType
+
+        # change color according to type
+        if self.type=='flashing':
+            self.color[0] = -self.color[0]
+        elif self.type=='pulsing':
+            self.color[0] = 9.9
+            self.color[1] = 9.9
+            self.color[2] = 9.9
+        elif self.type=='strobe':
+            self.color[0] = 9.8
+            self.color[1] = 9.8
+            self.color[2] = 9.8
+        elif self.type=='traffic':
+            self.color[0] = 9.7
+            self.color[1] = 9.7
+            self.color[2] = 9.7
 
 
 class XPlaneLine():
@@ -42,10 +58,17 @@ class XPlaneMaterial():
 
         # Material
         self.attributes = {"ATTR_diffuse_rgb":None,
-                            "ATTR_specular_rgb":None,
-                            "ATTR_emission_rgb":None,
-                            "ATTR_shiny_rat":None,
-                            "ATTR_hard":None}
+                           "ATTR_specular_rgb":None,
+                           "ATTR_emission_rgb":None,
+                           "ATTR_shiny_rat":None,
+                           "ATTR_hard":None,
+                           "ATTR_no_hard":None,
+                           "ATTR_cull":None,
+                           "ATTR_no_cull":None,                           
+                           "ATTR_depth":None,
+                           "ATTR_no_depth":None,
+                           "ATTR_blend":None,
+                           "ATTR_no_blend":None}
 
         if len(object.data.materials)>0:
             mat = object.data.materials[0]
@@ -76,8 +99,20 @@ class XPlaneMaterial():
             if mat.xplane.surfaceType != 'none':
                 self.attributes['ATTR_hard'] = mat.xplane.surfaceType
 
+            # backface culling
+            if self.object.data.show_double_sided:
+                self.attributes['ATTR_no_cull'] = True
+
+            # blend
+            if mat.xplane.blend:
+                self.attributes['ATTR_no_blend'] = "%6.3f" % mat.xplane.blendRatio
+
+            # depth check
+            if self.object.xplane.depth == False:
+                self.attributes['ATTR_no_depth'] = True;
+
             # Texture and uv-coordinates
-            if(len(mat.texture_slots)>0 and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
+            if(len(mat.texture_slots)>0 and hasattr(mat.texture_slots[0],'use') and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
                 tex =  mat.texture_slots[0].texture
                 if(tex.image.file_format=='PNG'):
                     self.texture = os.path.basename(tex.image.filepath)
@@ -89,7 +124,10 @@ class XPlaneMaterial():
         o=''
         for attr in self.attributes:
             if self.attributes[attr]!=None:
-                o+='%s\t%s\n' % (attr,self.attributes[attr])
+                if(self.attributes[attr]==True):
+                    o+='%s\n' % attr
+                else:
+                    o+='%s\t%s\n' % (attr,self.attributes[attr])
 
         return o
 
@@ -99,11 +137,7 @@ class XPlaneFace():
         self.normals = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
         self.indices = [0,0,0]
         self.uvs = [(0.0,0.0),(0.0,0.0),(0.0,0.0)]
-        self.alpha = False
         self.smooth = False
-        self.depth = True
-        self.cull = True # double sided
-        self.blend = True
 
 
 class XPlaneFaces():
@@ -387,6 +421,7 @@ class XPlaneData():
 
     def splitFileByTexture(self,parent):
         name = parent.name
+        textures = []
         if len(self.files[name])>0:
             # stores prims that have to be removed after iteration
             remove = []
@@ -406,11 +441,14 @@ class XPlaneData():
             for prim in remove:
                 self.files[name]['primitives'].remove(prim)
 
+            # add texture to list
+            textures.append(filename)
+
             # do some house cleaning
             # if there is only one texture in use and no objects without texture, put everything in one file
-            if (len(self.files)==2 and len(self.files[name]['primitives'])==0):
-                self.files[filename]['lights'] = self.files[name]['lights']
-                self.files[filename]['lines'] = self.files[name]['lines']
+            if (len(textures)==1 and len(self.files[name]['primitives'])==0):
+                self.files[textures[0]]['lights'] = self.files[name]['lights']
+                self.files[textures[0]]['lines'] = self.files[name]['lines']
                 del self.files[name]
     
 
@@ -489,6 +527,7 @@ class ExportXPlane9(bpy.types.Operator):
         data.collect()
 
         if len(data.files)>0:
+            print("Writing XPlane Object file(s) ...")
             for file in data.files:
                 o=''
                 if (len(data.files[file]['primitives'])>0 or len(data.files[file]['lights'])>0 or len(data.files[file]['lines'])>0):
@@ -505,7 +544,14 @@ class ExportXPlane9(bpy.types.Operator):
                     o+=mesh.writeIndices()
                     o+="\n"
                     o+=commands.write()
-                    write(os.path.join(filepath,file+'.obj'), o, context)
+
+                    # write the file
+                    fullpath = os.path.join(filepath,file+'.obj')
+                    print("Writing %s" % fullpath)
+                    file = open(fullpath, "w")
+                    file.write(o)
+                    file.close()
+                    #print(o)
                 else:
                     print("No objects to export, aborting ...")
         else:
@@ -517,14 +563,3 @@ class ExportXPlane9(bpy.types.Operator):
         wm = context.window_manager
         wm.add_fileselect(self)
         return {'RUNNING_MODAL'}
-
-
-def write(filepath, output, context):
-    '''Export Objects to XPlane Object file(s).'''
-    print("Writing XPlane Object file(s) ...")
-    print(output)
-    # write the faces to a file
-    file = open(filepath, "w")
-    file.write(output)
-    file.close()
-

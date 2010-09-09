@@ -40,8 +40,11 @@ class OBJECT_PT_xplane(bpy.types.Panel):
         
         if(obj.type == "EMPTY"):
             empty_layout(self, obj)
-        elif(obj.type == "MESH" or obj.type == "BONE" or obj.type == "LAMP"):
-            animation_layout(self,obj)
+        else:
+            if obj.type == "MESH":
+                mesh_layout(self,obj)
+            if obj.type in ("MESH","BONE","LAMP"):
+                animation_layout(self,obj)
         
 
 def empty_layout(self, obj):
@@ -66,6 +69,11 @@ def empty_layout(self, obj):
         subrow.prop(attr,"customAttribute")
     #row.prop(obj.xplane, "customHeaderAttributes", text="Custom Header Attributes")
 
+def mesh_layout(self, obj):
+    layout = self.layout
+    row = layout.row()
+    row.prop(obj.xplane, "depth", text="Use depth culling")
+
 def lamp_layout(self, obj):
     layout = self.layout
     row = layout.row()
@@ -76,6 +84,13 @@ def material_layout(self, obj):
 
     row = layout.row()
     row.prop(obj.xplane, "surfaceType", text="Surface type")
+
+    row = layout.row()
+    row.prop(obj.xplane, "blend", text="Use alpha cutoff")
+
+    if(obj.xplane.blend==True):
+        row = layout.row()
+        row.prop(obj.xplane, "blendRatio", text="Alpha cutoff ratio")
 
 
 def animation_layout(self,obj):

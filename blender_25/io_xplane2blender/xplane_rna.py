@@ -33,7 +33,7 @@ def addXPlaneRNA():
 
     XPlaneObjectSettings.FloatProperty(attr="slungLoadWeight",
                                 name="Slung Load weight",
-                                description="Weight of the object in pounds, for use in the X-Plane physics engine if the object is being carried by a plane or helicopter.",
+                                description="Weight of the object in pounds, for use in the physics engine if the object is being carried by a plane or helicopter.",
                                 default=0.0,
                                 step=1,
                                 precision=3)
@@ -47,6 +47,11 @@ def addXPlaneRNA():
                                         name="X-Plane Dataref",
                                         description="X-Plane Dataref",
                                         default="")
+
+    XPlaneObjectSettings.BoolProperty(attr="depth",
+                                      name="Use depth culling",
+                                      description="If unchecked the renderer will perform no depth check on this object.",
+                                      default=True)
     
 
     # Lamp settings
@@ -77,6 +82,20 @@ def addXPlaneRNA():
                                                 ('snow','snow','snow'),
                                                 ('shoulder','shoulder','shoulder'),
                                                 ('blastpad','blastpad','blastpad')])
+
+    XPlaneMaterialSettings.BoolProperty(attr="blend",
+                                        name="Use Alpha cutoff",
+                                        description="If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.",
+                                        default=False)
+
+    XPlaneMaterialSettings.FloatProperty(attr="blendRatio",
+                                        name="Alpha cutoff ratio",
+                                        description="Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque.",
+                                        default=0.5,
+                                        step=0.1,
+                                        precision=2,
+                                        max=1.0,
+                                        min=0.0)
 
 
 def removeXPlaneRNA():
