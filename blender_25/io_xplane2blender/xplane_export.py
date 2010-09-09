@@ -400,9 +400,12 @@ class XPlaneData():
             for prim in remove:
                 self.files[name]['primitives'].remove(prim)
 
-            # do some housecleaning
-            #if len(self.files[name])==0:
-            #    del self.files[name]
+            # do some house cleaning
+            # if there is only one texture in use and no objects without texture, put everything in one file
+            if (len(self.files)==2 and len(self.files[name]['primitives'])==0):
+                self.files[filename]['lights'] = self.files[name]['lights']
+                self.files[filename]['lines'] = self.files[name]['lines']
+                del self.files[name]
     
 
 class XPlaneHeader():
