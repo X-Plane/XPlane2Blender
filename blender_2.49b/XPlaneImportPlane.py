@@ -4022,10 +4022,9 @@ class ACF:
                 raise ParseError("This is a %4.2f format plane! Please re-save it in PlaneMaker 7.63." % (self.HEADER_version/100.0))
         elif self.HEADER_version in [8000,810,815,830,840,860,900,901,902]:
             defs=eval("DEFfmt.acf%s" % self.HEADER_version)
-        elif self.HEADER_version<10000:
+        elif self.HEADER_version<9410:
             defs=eval("DEFfmt.acf%s" % self.HEADER_version)
         else:
-            print(self.HEADER_version)
             acffile.close()
             raise ParseError("Can't read %4.2f format planes!" % (self.HEADER_version/100.0))
         if dmp:
