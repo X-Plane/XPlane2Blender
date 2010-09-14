@@ -482,6 +482,11 @@ class XPlaneHeader():
         
         self.attributes['POINT_COUNTS'] = "%d\t%d\t%d\t%d" % (tris,lines,lites,indices)
 
+        # add custom attributes
+#        for prop in file['parent'].data:
+#            print(prop)
+#            #if 'xpl_' in prop.name:
+
     def write(self):
         import platform
 

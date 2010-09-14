@@ -9,21 +9,43 @@ class XPlaneMaterialSettings(bpy.types.IDPropertyGroup):
 class XPlaneLampSettings(bpy.types.IDPropertyGroup):
     pass
 
-class XPlaneCustomAttribute(bpy.types.IDPropertyGroup):
-    pass
+#class XPlaneCustomAttributeWrapper(bpy.types.IDPropertyGroup):
+#    pass
+#
+#class XPlaneCustomAttribute(bpy.types.IDPropertyGroup):
+#    pass
+
+class OBJECT_OP_addXPlaneHeaderAttribute(bpy.types.Operator):
+    bl_label = 'Add Header Attribute'
+    bl_idname = 'object.add_xplane_header_attribute'
+    bl_label = 'Add Property'
+    bl_description = 'Add a custom X-Plane header Property'
+
+    def execute(self,context):
+        obj = context.object
+        #obj.xplane.customHeaderAttributes.collection.append(XPlaneCustomAttribute())
+        #obj.xplane.customAttributes.items().append({"name":"","value":""})
+        return {'FINISHED'}
 
 def addXPlaneRNA():
-    print("adding xplane rna")
+    #bpy.ops.register(OBJECT_OP_addXPlaneHeaderAttribute)
     bpy.types.Object.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Material.PointerProperty(attr="xplane",type=XPlaneMaterialSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Lamp.PointerProperty(attr="xplane",type=XPlaneLampSettings, name="XPlane", description="XPlane Export Settings")
     #bpy.types.register(XPlaneCustomAttribute)
-
+    
     # custom Attribute
-    XPlaneCustomAttribute.StringProperty(attr="customAttribute",
-                                        name="Custom X-Plane Attribute",
-                                        description="User defined attributes for the X-Plane file.",
-                                        default="")
+#    bpy.types.Object.PointerProperty(attr="xplane_custom",type=XPlaneCustomAttribute, name="Custom XPlane Attribute", description="Custom XPlane Attribute")
+#
+#    XPlaneCustomAttribute.StringProperty(attr="name",
+#                                        name="Name",
+#                                        description="Name",
+#                                        default="")
+#
+#    XPlaneCustomAttribute.StringProperty(attr="value",
+#                                        name="Value",
+#                                        description="Value",
+#                                        default="")
 
     # Empty settings
     XPlaneObjectSettings.BoolProperty(attr="exportChildren",
@@ -38,10 +60,10 @@ def addXPlaneRNA():
                                 step=1,
                                 precision=3)
 
-    XPlaneObjectSettings.CollectionProperty(attr="customHeaderAttributes",
-                                      name="Custom X-Plane header attributes",
-                                      description="User defined header attributes for the X-Plane file.",
-                                      type=XPlaneCustomAttribute)
+#    XPlaneObjectSettings.CollectionProperty(attr="customAttributes",
+#                                      name="Custom X-Plane header attributes",
+#                                      description="User defined header attributes for the X-Plane file.",
+#                                      type=XPlaneCustomAttributeWrapper)
 
     XPlaneObjectSettings.StringProperty(attr="dataref",
                                         name="X-Plane Dataref",
@@ -99,8 +121,8 @@ def addXPlaneRNA():
 
 
 def removeXPlaneRNA():
-    print("removing xplane rna")
     #bpy.types.unregister(XPlaneCustomAttribute)
+    #bpy.ops.unregister(OBJECT_OP_addXPlaneHeaderAttribute)
     bpy.types.Object.RemoveProperty("xplane")
     bpy.types.Material.RemoveProperty("xplane")
     bpy.types.Lamp.RemoveProperty("xplane")

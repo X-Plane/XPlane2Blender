@@ -60,13 +60,16 @@ def empty_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "slungLoadWeight", text="Slung Load weight")
 
-    row = layout.row()
-    row.label("Custom Header Properties")
-    row = layout.row()
-    box = row.box()
-    for attr in obj.xplane.customHeaderAttributes:
-        subrow = box.row()
-        subrow.prop(attr,"customAttribute")
+    #row = layout.row()
+    #row.label("To add custom Header Property add a 'Custom Property' with a name starting with 'xpl_' followed by the property name.")
+    
+#    col = layout.column()
+#    col.operator("object.add_xplane_header_attribute", text="Add Property")
+#    box = layout.box()
+#    for attr in obj.xplane.customAttributes:
+#        subrow = box.row()
+#        subrow.prop(attr,"name")
+#        subrop.prop(attr,"value")
     #row.prop(obj.xplane, "customHeaderAttributes", text="Custom Header Attributes")
 
 def mesh_layout(self, obj):
@@ -103,13 +106,13 @@ def animation_layout(self,obj):
     subrow.prop(obj.xplane, "dataref", text="Dataref")
 
 def addXPlaneUI():
-    print("adding xplane ui")
+    pass
 #    bpy.types.register(OBJECT_PT_xplane)
 #    bpy.types.register(MATERIAL_PT_xplane)
 #    bpy.types.register(LAMP_PT_xplane)
 
 def removeXPlaneUI():
-    print("removing xplane ui")
+    pass
 #    bpy.types.unregister(OBJECT_PT_xplane)
 #    bpy.types.unregister(MATERIAL_PT_xplane)
 #    bpy.types.unregister(LAMP_PT_xplane)
