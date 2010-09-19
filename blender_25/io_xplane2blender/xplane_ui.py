@@ -35,6 +35,15 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "object"
 
+    @classmethod
+    def poll(self,context):
+        obj = context.object
+
+        if(obj.type in ("EMPTY","MESH")):
+            return True
+        else:
+            return False
+
     def draw(self, context):
         obj = context.object
         
@@ -62,14 +71,16 @@ def empty_layout(self, obj):
 
     #row = layout.row()
     #row.label("To add custom Header Property add a 'Custom Property' with a name starting with 'xpl_' followed by the property name.")
-    
-#    col = layout.column()
-#    col.operator("object.add_xplane_header_attribute", text="Add Property")
-#    box = layout.box()
-#    for attr in obj.xplane.customAttributes:
-#        subrow = box.row()
-#        subrow.prop(attr,"name")
-#        subrop.prop(attr,"value")
+    layout.separator()
+    row = layout.row()
+    row.label("Custom Header Properties")
+    row.operator("object.add_xplane_header_attribute", text="Add Property")
+    box = layout.box()
+    for i, attr in enumerate(obj.xplane.customAttributes):
+        subrow = box.row()
+        subrow.prop(attr,"name")
+        subrow.prop(attr,"value")
+        subrow.operator("object.remove_xplane_header_attribute",text="",emboss=False,icon="X").index = i
     #row.prop(obj.xplane, "customHeaderAttributes", text="Custom Header Attributes")
 
 def mesh_layout(self, obj):
@@ -102,8 +113,8 @@ def animation_layout(self,obj):
     row = layout.row()
     row.label("Animation")
     box = row.box()
-    subrow = box.row()
-    subrow.prop(obj.xplane, "dataref", text="Dataref")
+#    subrow = box.row()
+#    subrow.prop(obj.xplane, "dataref", text="Dataref")
 
 def addXPlaneUI():
     pass

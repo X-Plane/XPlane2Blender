@@ -9,13 +9,10 @@ class XPlaneMaterialSettings(bpy.types.IDPropertyGroup):
 class XPlaneLampSettings(bpy.types.IDPropertyGroup):
     pass
 
-#class XPlaneCustomAttributeWrapper(bpy.types.IDPropertyGroup):
-#    pass
-#
-#class XPlaneCustomAttribute(bpy.types.IDPropertyGroup):
-#    pass
+class XPlaneCustomAttribute(bpy.types.IDPropertyGroup):
+    pass
 
-class OBJECT_OP_addXPlaneHeaderAttribute(bpy.types.Operator):
+class OBJECT_OT_add_xplane_header_attribute(bpy.types.Operator):
     bl_label = 'Add Header Attribute'
     bl_idname = 'object.add_xplane_header_attribute'
     bl_label = 'Add Property'
@@ -23,61 +20,74 @@ class OBJECT_OP_addXPlaneHeaderAttribute(bpy.types.Operator):
 
     def execute(self,context):
         obj = context.object
-        #obj.xplane.customHeaderAttributes.collection.append(XPlaneCustomAttribute())
-        #obj.xplane.customAttributes.items().append({"name":"","value":""})
+        obj.xplane.customAttributes.add()
+        return {'FINISHED'}
+
+class OBJECT_OT_remove_xplane_header_attribute(bpy.types.Operator):
+    bl_label = 'Remove Header Attribute'
+    bl_idname = 'object.remove_xplane_header_attribute'
+    bl_label = 'Remove Property'
+    bl_description = 'Remove the custom X-Plane header Property'
+    
+    index = bpy.props.IntProperty()
+    
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
 def addXPlaneRNA():
-    #bpy.ops.register(OBJECT_OP_addXPlaneHeaderAttribute)
-    bpy.types.Object.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
-    bpy.types.Material.PointerProperty(attr="xplane",type=XPlaneMaterialSettings, name="XPlane", description="XPlane Export Settings")
-    bpy.types.Lamp.PointerProperty(attr="xplane",type=XPlaneLampSettings, name="XPlane", description="XPlane Export Settings")
-    #bpy.types.register(XPlaneCustomAttribute)
-    
-    # custom Attribute
-#    bpy.types.Object.PointerProperty(attr="xplane_custom",type=XPlaneCustomAttribute, name="Custom XPlane Attribute", description="Custom XPlane Attribute")
-#
-#    XPlaneCustomAttribute.StringProperty(attr="name",
-#                                        name="Name",
-#                                        description="Name",
-#                                        default="")
-#
-#    XPlaneCustomAttribute.StringProperty(attr="value",
-#                                        name="Value",
-#                                        description="Value",
-#                                        default="")
+    bpy.types.Object.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
+    bpy.types.Material.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneMaterialSettings, name="XPlane", description="XPlane Export Settings")
+    bpy.types.Lamp.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneLampSettings, name="XPlane", description="XPlane Export Settings")
+
+    # custom Attributes
+    XPlaneCustomAttribute.name = bpy.props.StringProperty(attr="name",
+                                        name="Name",
+                                        description="Name",
+                                        default="")
+
+    XPlaneCustomAttribute.value = bpy.props.StringProperty(attr="value",
+                                        name="Value",
+                                        description="Value",
+                                        default="")
+
+    XPlaneCustomAttribute.reset = bpy.props.StringProperty(attr="reset",
+                                        name="Reset",
+                                        description="Reset",
+                                        default="")
 
     # Empty settings
-    XPlaneObjectSettings.BoolProperty(attr="exportChildren",
+    XPlaneObjectSettings.exportChildren = bpy.props.BoolProperty(attr="exportChildren",
                                 name="Export Children",
                                 description="Export children of this to X-Plane.",
                                 default = False)
 
-    XPlaneObjectSettings.FloatProperty(attr="slungLoadWeight",
+    XPlaneObjectSettings.slungLoadWeight = bpy.props.FloatProperty(attr="slungLoadWeight",
                                 name="Slung Load weight",
                                 description="Weight of the object in pounds, for use in the physics engine if the object is being carried by a plane or helicopter.",
                                 default=0.0,
                                 step=1,
                                 precision=3)
 
-#    XPlaneObjectSettings.CollectionProperty(attr="customAttributes",
-#                                      name="Custom X-Plane header attributes",
-#                                      description="User defined header attributes for the X-Plane file.",
-#                                      type=XPlaneCustomAttributeWrapper)
+    XPlaneObjectSettings.customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
+                                      name="Custom X-Plane header attributes",
+                                      description="User defined header attributes for the X-Plane file.",
+                                      type=XPlaneCustomAttribute)
 
-    XPlaneObjectSettings.StringProperty(attr="dataref",
-                                        name="X-Plane Dataref",
-                                        description="X-Plane Dataref",
-                                        default="")
+#    XPlaneObjectSettings.dataref = bpy.props.StringProperty(attr="dataref",
+#                                        name="X-Plane Dataref",
+#                                        description="X-Plane Dataref",
+#                                        default="")
 
-    XPlaneObjectSettings.BoolProperty(attr="depth",
+    XPlaneObjectSettings.depth = bpy.props.BoolProperty(attr="depth",
                                       name="Use depth culling",
                                       description="If unchecked the renderer will perform no depth check on this object.",
                                       default=True)
     
 
     # Lamp settings
-    XPlaneLampSettings.EnumProperty(attr="lightType",
+    XPlaneLampSettings.lightType = bpy.props.EnumProperty(attr="lightType",
                                 name="Light type",
                                 description="Defines the type of the light in X-Plane.",
                                 default = "default",
@@ -89,7 +99,7 @@ def addXPlaneRNA():
 
     
     # Material settings
-    XPlaneMaterialSettings.EnumProperty(attr='surfaceType',
+    XPlaneMaterialSettings.surfaceType = bpy.props.EnumProperty(attr='surfaceType',
                                         name='Surface type',
                                         description='Controls the bumpiness of material in X-Plane.',
                                         default='none',
@@ -105,12 +115,12 @@ def addXPlaneRNA():
                                                 ('shoulder','shoulder','shoulder'),
                                                 ('blastpad','blastpad','blastpad')])
 
-    XPlaneMaterialSettings.BoolProperty(attr="blend",
+    XPlaneMaterialSettings.blend = bpy.props.BoolProperty(attr="blend",
                                         name="Use Alpha cutoff",
                                         description="If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.",
                                         default=False)
 
-    XPlaneMaterialSettings.FloatProperty(attr="blendRatio",
+    XPlaneMaterialSettings.blendRatio = bpy.props.FloatProperty(attr="blendRatio",
                                         name="Alpha cutoff ratio",
                                         description="Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque.",
                                         default=0.5,
@@ -121,8 +131,6 @@ def addXPlaneRNA():
 
 
 def removeXPlaneRNA():
-    #bpy.types.unregister(XPlaneCustomAttribute)
-    #bpy.ops.unregister(OBJECT_OP_addXPlaneHeaderAttribute)
     bpy.types.Object.RemoveProperty("xplane")
     bpy.types.Material.RemoveProperty("xplane")
     bpy.types.Lamp.RemoveProperty("xplane")
