@@ -12,27 +12,75 @@ class XPlaneLampSettings(bpy.types.IDPropertyGroup):
 class XPlaneCustomAttribute(bpy.types.IDPropertyGroup):
     pass
 
-class OBJECT_OT_add_xplane_header_attribute(bpy.types.Operator):
-    bl_label = 'Add Header Attribute'
-    bl_idname = 'object.add_xplane_header_attribute'
+class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
+    bl_label = 'Add Attribute'
+    bl_idname = 'object.add_xplane_object_attribute'
     bl_label = 'Add Property'
-    bl_description = 'Add a custom X-Plane header Property'
+    bl_description = 'Add a custom X-Plane Property'
 
     def execute(self,context):
         obj = context.object
         obj.xplane.customAttributes.add()
         return {'FINISHED'}
 
-class OBJECT_OT_remove_xplane_header_attribute(bpy.types.Operator):
-    bl_label = 'Remove Header Attribute'
-    bl_idname = 'object.remove_xplane_header_attribute'
+class OBJECT_OT_remove_xplane_object_attribute(bpy.types.Operator):
+    bl_label = 'Remove Attribute'
+    bl_idname = 'object.remove_xplane_object_attribute'
     bl_label = 'Remove Property'
-    bl_description = 'Remove the custom X-Plane header Property'
+    bl_description = 'Remove the custom X-Plane Property'
     
     index = bpy.props.IntProperty()
     
     def execute(self,context):
         obj = context.object
+        obj.xplane.customAttributes.remove(self.index)
+        return {'FINISHED'}
+
+class OBJECT_OT_add_xplane_material_attribute(bpy.types.Operator):
+    bl_label = 'Add Attribute'
+    bl_idname = 'object.add_xplane_material_attribute'
+    bl_label = 'Add Property'
+    bl_description = 'Add a custom X-Plane Property'
+
+    def execute(self,context):
+        obj = context.object.active_material
+        obj.xplane.customAttributes.add()
+        return {'FINISHED'}
+
+class OBJECT_OT_remove_xplane_material_attribute(bpy.types.Operator):
+    bl_label = 'Remove Attribute'
+    bl_idname = 'object.remove_xplane_material_attribute'
+    bl_label = 'Remove Property'
+    bl_description = 'Remove the custom X-Plane Property'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object.active_material
+        obj.xplane.customAttributes.remove(self.index)
+        return {'FINISHED'}
+
+class OBJECT_OT_add_xplane_lamp_attribute(bpy.types.Operator):
+    bl_label = 'Add Attribute'
+    bl_idname = 'object.add_xplane_lamp_attribute'
+    bl_label = 'Add Property'
+    bl_description = 'Add a custom X-Plane Property'
+
+    def execute(self,context):
+        obj = context.object.data
+        obj.xplane.customAttributes.add()
+        return {'FINISHED'}
+
+class OBJECT_OT_remove_xplane_lamp_attribute(bpy.types.Operator):
+    bl_label = 'Remove Attribute'
+    bl_idname = 'object.remove_xplane_lamp_attribute'
+    bl_label = 'Remove Property'
+    bl_description = 'Remove the custom X-Plane Property'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object.data
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
@@ -96,7 +144,11 @@ def addXPlaneRNA():
                                         ("pulsing","pulsing","pulsing"),
                                         ("strobe","strobe","strobe"),
                                         ("traffic","traffic","traffic")])
-
+                                        
+    XPlaneLampSettings.customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
+                                      name="Custom X-Plane light attributes",
+                                      description="User defined light attributes for the X-Plane file.",
+                                      type=XPlaneCustomAttribute)
     
     # Material settings
     XPlaneMaterialSettings.surfaceType = bpy.props.EnumProperty(attr='surfaceType',
@@ -128,6 +180,11 @@ def addXPlaneRNA():
                                         precision=2,
                                         max=1.0,
                                         min=0.0)
+
+    XPlaneMaterialSettings.customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
+                                      name="Custom X-Plane material attributes",
+                                      description="User defined material attributes for the X-Plane file.",
+                                      type=XPlaneCustomAttribute)
 
 
 def removeXPlaneRNA():

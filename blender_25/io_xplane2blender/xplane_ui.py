@@ -12,6 +12,7 @@ class LAMP_PT_xplane(bpy.types.Panel):
 
         if(obj.type == "LAMP"):
             lamp_layout(self,obj.data)
+            custom_layout(self,obj.data,"LAMP")
     
 
 class MATERIAL_PT_xplane(bpy.types.Panel):
@@ -26,6 +27,7 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
 
         if(obj.type == "MESH"):
             material_layout(self,obj.active_material)
+            custom_layout(self,obj.active_material,"MATERIAL")
     
 
 class OBJECT_PT_xplane(bpy.types.Panel):
@@ -49,9 +51,11 @@ class OBJECT_PT_xplane(bpy.types.Panel):
         
         if(obj.type == "EMPTY"):
             empty_layout(self, obj)
+            custom_layout(self,obj,obj.type)
         else:
             if obj.type == "MESH":
                 mesh_layout(self,obj)
+                custom_layout(self,obj,obj.type)
             if obj.type in ("MESH","BONE","LAMP"):
                 animation_layout(self,obj)
         
@@ -68,20 +72,6 @@ def empty_layout(self, obj):
 
     row = layout.row()
     row.prop(obj.xplane, "slungLoadWeight", text="Slung Load weight")
-
-    #row = layout.row()
-    #row.label("To add custom Header Property add a 'Custom Property' with a name starting with 'xpl_' followed by the property name.")
-    layout.separator()
-    row = layout.row()
-    row.label("Custom Header Properties")
-    row.operator("object.add_xplane_header_attribute", text="Add Property")
-    box = layout.box()
-    for i, attr in enumerate(obj.xplane.customAttributes):
-        subrow = box.row()
-        subrow.prop(attr,"name")
-        subrow.prop(attr,"value")
-        subrow.operator("object.remove_xplane_header_attribute",text="",emboss=False,icon="X").index = i
-    #row.prop(obj.xplane, "customHeaderAttributes", text="Custom Header Attributes")
 
 def mesh_layout(self, obj):
     layout = self.layout
@@ -106,6 +96,31 @@ def material_layout(self, obj):
         row = layout.row()
         row.prop(obj.xplane, "blendRatio", text="Alpha cutoff ratio")
 
+
+def custom_layout(self,obj,type):
+    if type in ("EMPTY","MESH"):
+        oType = 'object'
+    elif type=="MATERIAL":
+        oType = 'material'
+    elif type=='LAMP':
+        oType = 'lamp'
+
+    layout = self.layout
+    layout.separator()
+    row = layout.row()
+    row.label("Custom Properties")
+    row.operator("object.add_xplane_"+oType+"_attribute", text="Add Property")
+    box = layout.box()
+    for i, attr in enumerate(obj.xplane.customAttributes):
+        subbox = box.box()
+        subrow = subbox.row()
+        subrow.prop(attr,"name")
+        subrow.prop(attr,"value")
+        subrow.operator("object.remove_xplane_"+oType+"_attribute",text="",emboss=False,icon="X").index = i
+        if type in ("MATERIAL","MESH"):
+            subrow = subbox.row()
+            subrow.prop(attr,"reset")    
+    
 
 def animation_layout(self,obj):
     layout = self.layout

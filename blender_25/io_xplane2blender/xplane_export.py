@@ -46,8 +46,12 @@ class XPlanePrimitive():
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
         self.faces = None
-        self.animations = []
-        self.commands = []        
+        self.datarefs = {}
+        self.attributes = {}
+
+        # add custom attributes
+        for attr in object.xplane.customAttributes:
+            self.attributes[attr.name] = attr.value
 
 
 class XPlaneMaterial():
@@ -120,16 +124,20 @@ class XPlaneMaterial():
                 if mat.texture_slots[0].texture_coords == 'UV':
                     self.uv_name = mat.texture_slots[0].uv_layer
 
-    def write(self):
-        o=''
-        for attr in self.attributes:
-            if self.attributes[attr]!=None:
-                if(self.attributes[attr]==True):
-                    o+='%s\n' % attr
-                else:
-                    o+='%s\t%s\n' % (attr,self.attributes[attr])
+            # add custom attributes
+            for attr in mat.xplane.customAttributes:
+                self.attributes[attr.name] = attr.value
 
-        return o
+#    def write(self):
+#        o=''
+#        for attr in self.attributes:
+#            if self.attributes[attr]!=None:
+#                if(self.attributes[attr]==True):
+#                    o+='%s\n' % attr
+#                else:
+#                    o+='%s\t%s\n' % (attr,self.attributes[attr])
+#
+#        return o
 
 class XPlaneFace():
     def __init__(self):
@@ -370,7 +378,20 @@ class XPlaneCommands():
         for prim in self.file['primitives']:
             if debug:
                 o+="# %s\n" % prim.name
-            o+=prim.material.write()
+
+            #material
+            for attr in prim.material.attributes:
+                if prim.material.attributes[attr]!=None:
+                    if(prim.material.attributes[attr]==True):
+                        o+='%s\n' % attr
+                    else:
+                        o+='%s\t%s\n' % (attr,prim.material.attributes[attr])
+
+            #custom object attributes
+            for attr in prim.attributes:
+                o+='%s\t%s\n' % (attr,prim.attributes[attr])
+            
+            #o+=prim.material.write()
             o+=prim.faces.write()
             offset = prim.indices[0]
             count = prim.indices[1]-prim.indices[0]
