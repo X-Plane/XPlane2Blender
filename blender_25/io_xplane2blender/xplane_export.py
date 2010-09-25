@@ -210,45 +210,48 @@ class XPlaneMesh():
                     
                     # convert local to global coordinates
                     co = matrix * v.co
-                    
-                    # store face information alltogether in one struct
-                    # swap y and z and invert x (right handed system)
-                    xplaneFace.vertices[i] = (-co[0],co[2],co[1])
-                    xplaneFace.normals[i] = (-v.normal[0],v.normal[2],v.normal[1])
-                    xplaneFace.uvs[i] = (f['uv'][i][0],f['uv'][i][1])
-                    xplaneFace.indices[i] = globalindex
 
-                    self.vertices.append([-co[0],co[2],co[1],-v.normal[0],v.normal[2],v.normal[1],f['uv'][i][0],f['uv'][i][1]])
-                    self.indices.append(globalindex)
-                    globalindex+=1
+                    # swap y and z and invert x (right handed system)
+                    vert = [-co[0],co[2],co[1],-v.normal[0],v.normal[2],v.normal[1],f['uv'][i][0],f['uv'][i][1]]
+
+                    # use dupli vertice if any
+                    index = self.getDupliVerticeIndex(vert)
+                    if (index==-1):
+                        index = globalindex
+                        self.vertices.append(vert)
+                        globalindex+=1
+
+                    # store face information alltogether in one struct
+                    xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
+                    xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
+                    xplaneFace.uvs[i] = (vert[6],vert[7])
+                    xplaneFace.indices[i] = index  
+                    
+                    self.indices.append(index)
+                    
                 faces.append(xplaneFace)
 
             # store the faces in the prim
             prim.faces = faces
-            prim.indices[1] = globalindex
-
-        # TODO: go through all indices and check for double UVs to reduce vertice amount while remaping the indices
-#        for i in range(0,len(self.indices)):
-#            indexes = self.getDupliVertices(i)
-#            if len(indexes)>0:
-#                
-#            for index in indexes:
-#                self.indices[]
+            prim.indices[1] = len(self.indices)
 
         # reverse indices due to the inverted z axis
         self.indices.reverse()
             
-    def getDupliVertices(self,index):
-        indexes = []
-
-        v = self.vertices[index]
-
+    def getDupliVerticeIndex(self,v):
         for i in range(len(self.vertices)):
-            for ii in range(0,len(self.vertices[i])):
-                if self.vertices[i][ii] == v[ii]:
-                    indexes.append(i)
-
-        return indexes
+            match = True
+            ii = 0
+            while ii<len(self.vertices[i]):
+                if self.vertices[i][ii] != v[ii]:
+                    match = False
+                    ii = len(self.vertices[i])
+                ii+=1
+                
+            if match:
+                return i
+            
+        return -1
 
     def getUVFaces(self,mesh,uv_name):
         # get the uv_texture
@@ -370,6 +373,12 @@ class XPlaneLights():
 class XPlaneCommands():
     def __init__(self,file):
         self.file = file
+        
+        # stores attribtues that reset other attributes
+        self.reseters = {}
+
+        # stores all already written attributes
+        self.written = {} 
 
     def write(self):
         o=''
