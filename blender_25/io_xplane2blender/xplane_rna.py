@@ -12,6 +12,9 @@ class XPlaneLampSettings(bpy.types.IDPropertyGroup):
 class XPlaneCustomAttribute(bpy.types.IDPropertyGroup):
     pass
 
+class XPlaneDataref(bpy.types.IDPropertyGroup):
+    pass
+
 class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
     bl_label = 'Add Attribute'
     bl_idname = 'object.add_xplane_object_attribute'
@@ -84,6 +87,112 @@ class OBJECT_OT_remove_xplane_lamp_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
+class OBJECT_OT_add_xplane_dataref(bpy.types.Operator):
+    bl_label = 'Add Dataref'
+    bl_idname = 'object.add_xplane_dataref'
+    bl_label = 'Add Dataref'
+    bl_description = 'Add a X-Plane Dataref'
+
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.datarefs.add()
+        return {'FINISHED'}
+
+class OBJECT_OT_remove_xplane_dataref(bpy.types.Operator):
+    bl_label = 'Remove Dataref'
+    bl_idname = 'object.remove_xplane_dataref'
+    bl_label = 'Remove Dataref'
+    bl_description = 'Remove the X-Plane Dataref'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.datarefs.remove(self.index)
+        return {'FINISHED'}
+
+class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
+    bl_label = 'Add Dataref keyframe'
+    bl_idname = 'object.add_xplane_dataref_keyframe'
+    bl_label = 'Add Dataref keyframe'
+    bl_description = 'Add a X-Plane Dataref keyframe'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object
+        path = '["xplane"]["datarefs"]['+str(self.index)+']["value"]'
+        value = obj.xplane.datarefs[self.index].value
+        #obj.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs")
+        #obj.xplane.datarefs[self.index].value.keyframe_insert(group="XPlane Datarefs")
+        
+        #current workaround for setting keyframes to nested custom properties is adding an FCurve manually and assign its data_path and then set a keyframe
+        if (obj.animation_data == None):
+            obj.animation_data_create()
+        if (obj.animation_data.action == None):
+            obj.animation_data.action = bpy.data.actions.new(name=obj.name+"Action")
+
+        # add keyframe to fcurve
+        fcurve = None
+
+        if len(obj.animation_data.action.fcurves) == 0:
+            fcurve = obj.animation_data.action.fcurves.new(data_path=path,action_group="XPlane Datarefs")
+            fcurve.data_path = path
+            #fcurve.extrapolation = "LINEAR" # assign linear extrapolation as XPlane only uses these
+        else:
+            i = 0
+            
+            # find fcurve
+            while i<len(obj.animation_data.action.fcurves):
+                if obj.animation_data.action.fcurves[i].data_path == path:
+                    fcurve = obj.animation_data.action.fcurves[i]
+                    i = len(obj.animation_data.action.fcurves)
+                i+=1
+        
+        if fcurve:
+            keyframe = fcurve.keyframe_points.add(frame=bpy.context.scene.frame_current,value=value)
+            keyframe.interpolation = 'LINEAR' # assign linear interpolation as XPlane only uses these
+        
+        return {'FINISHED'}
+
+class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
+    bl_label = 'Remove Dataref keyframe'
+    bl_idname = 'object.remove_xplane_dataref_keyframe'
+    bl_label = 'Remove Dataref keyframe'
+    bl_description = 'Remove the X-Plane Dataref keyframe'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object
+        path = '["xplane"]["datarefs"]['+str(self.index)+']["value"]'
+        fcurve = None
+
+        if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
+            # find fcurve
+            i = 0
+            while i<len(obj.animation_data.action.fcurves):
+                if obj.animation_data.action.fcurves[i].data_path == path:
+                    fcurve = obj.animation_data.action.fcurves[i]
+                    i = len(obj.animation_data.action.fcurves)
+                i+=1
+
+        if fcurve:
+            # find keyframe
+            keyframe = None
+            if len(fcurve.keyframe_points)>0:
+                i = 0
+                while i<len(fcurve.keyframe_points):
+                    if fcurve.keyframe_points[i].co[0] == bpy.context.scene.frame_current:
+                        keyframe = fcurve.keyframe_points[i]
+                        i = len(fcurve.keyframe_points)
+                    i+=1
+
+            if keyframe:
+                fcurve.keyframe_points.remove(keyframe=keyframe)
+            
+        return {'FINISHED'}
+
 def addXPlaneRNA():
     bpy.types.Object.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Material.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneMaterialSettings, name="XPlane", description="XPlane Export Settings")
@@ -105,6 +214,22 @@ def addXPlaneRNA():
                                         description="Reset",
                                         default="")
 
+    # Datarefs
+    XPlaneDataref.path = bpy.props.StringProperty(attr="path",
+                                        name="Path",
+                                        description="Dataref Path",
+                                        default="")
+
+    XPlaneDataref.value = bpy.props.FloatProperty(attr="value",
+                                        name="Value",
+                                        description="Value",
+                                        default=0)
+
+#    XPlaneDataref.xplane_datarefs = bpy.props.CollectionProperty(attr="datarefs",
+#                                        name="Datarefs",
+#                                        descrption="Datarefs",
+#                                        type=bpy.props.StringProperty)
+
     # Empty settings
     XPlaneObjectSettings.exportChildren = bpy.props.BoolProperty(attr="exportChildren",
                                 name="Export Children",
@@ -123,10 +248,10 @@ def addXPlaneRNA():
                                       description="User defined header attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
 
-#    XPlaneObjectSettings.dataref = bpy.props.StringProperty(attr="dataref",
-#                                        name="X-Plane Dataref",
-#                                        description="X-Plane Dataref",
-#                                        default="")
+    XPlaneObjectSettings.datarefs = bpy.props.CollectionProperty(attr="datarefs",
+                                        name="X-Plane Datarefs",
+                                        description="X-Plane Datarefs",
+                                        type=XPlaneDataref)
 
     XPlaneObjectSettings.depth = bpy.props.BoolProperty(attr="depth",
                                       name="Use depth culling",
