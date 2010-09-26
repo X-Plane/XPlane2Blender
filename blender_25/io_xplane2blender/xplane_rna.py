@@ -1,5 +1,20 @@
 import bpy
 
+def findFCurveByPath(fcurves,path):
+    i = 0
+    fcurve = None
+    
+    # find fcurve
+    while i<len(fcurves):
+        if fcurves[i].data_path == path:
+            fcurve = fcurves[i]
+            i = len(fcurves)
+        i+=1
+    return fcurve
+
+def getDatarefValuePath(index):
+    return '["xplane"]["datarefs"]['+str(index)+']["value"]'
+
 class XPlaneObjectSettings(bpy.types.IDPropertyGroup):
     pass
 
@@ -109,6 +124,15 @@ class OBJECT_OT_remove_xplane_dataref(bpy.types.Operator):
     def execute(self,context):
         obj = context.object
         obj.xplane.datarefs.remove(self.index)
+
+        path = getDatarefValuePath(self.index)
+
+        # remove FCurves too
+        if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
+            fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
+            if fcurve:              
+                obj.animation_data.action.fcurves.remove(fcurve=fcurve)
+
         return {'FINISHED'}
 
 class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
@@ -121,7 +145,7 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
 
     def execute(self,context):
         obj = context.object
-        path = '["xplane"]["datarefs"]['+str(self.index)+']["value"]'
+        path = getDatarefValuePath(self.index)
         value = obj.xplane.datarefs[self.index].value
         #obj.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs")
         #obj.xplane.datarefs[self.index].value.keyframe_insert(group="XPlane Datarefs")
@@ -137,18 +161,12 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
 
         if len(obj.animation_data.action.fcurves) == 0:
             fcurve = obj.animation_data.action.fcurves.new(data_path=path,action_group="XPlane Datarefs")
-            fcurve.data_path = path
             #fcurve.extrapolation = "LINEAR" # assign linear extrapolation as XPlane only uses these
         else:
-            i = 0
-            
-            # find fcurve
-            while i<len(obj.animation_data.action.fcurves):
-                if obj.animation_data.action.fcurves[i].data_path == path:
-                    fcurve = obj.animation_data.action.fcurves[i]
-                    i = len(obj.animation_data.action.fcurves)
-                i+=1
-        
+            fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
+            if fcurve == None:
+                fcurve = obj.animation_data.action.fcurves.new(data_path=path,action_group="XPlane Datarefs")
+
         if fcurve:
             keyframe = fcurve.keyframe_points.add(frame=bpy.context.scene.frame_current,value=value)
             keyframe.interpolation = 'LINEAR' # assign linear interpolation as XPlane only uses these
@@ -165,17 +183,11 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
 
     def execute(self,context):
         obj = context.object
-        path = '["xplane"]["datarefs"]['+str(self.index)+']["value"]'
+        path = getDatarefValuePath(self.index)
         fcurve = None
 
         if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
-            # find fcurve
-            i = 0
-            while i<len(obj.animation_data.action.fcurves):
-                if obj.animation_data.action.fcurves[i].data_path == path:
-                    fcurve = obj.animation_data.action.fcurves[i]
-                    i = len(obj.animation_data.action.fcurves)
-                i+=1
+            fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
 
         if fcurve:
             # find keyframe
@@ -224,6 +236,10 @@ def addXPlaneRNA():
                                         name="Value",
                                         description="Value",
                                         default=0)
+
+    XPlaneDataref.loop = bpy.props.FloatProperty(attr="loop",
+                                                name="Loop Amount",
+                                                description="Loop amount of animation, usefull for ever increasing Datarefs.")
 
 #    XPlaneDataref.xplane_datarefs = bpy.props.CollectionProperty(attr="datarefs",
 #                                        name="Datarefs",

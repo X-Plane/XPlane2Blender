@@ -7,6 +7,13 @@ from collections import OrderedDict
 
 debug = True
 
+def localToGlobal(object):
+    matrix = object.matrix_world
+    return {"loc":matrix*object.location,"rot":object.rotation_euler,"scale":matrix*object.scale}
+
+def convertCoords(co):
+    return [-co[0],co[2],co[1]]
+
 class XPlaneLight():
     def __init__(self,object):
         self.object = object
@@ -39,15 +46,100 @@ class XPlaneLine():
         self.indices = [0,0]
 
 
+class XPlaneKeyframe():
+    def __init__(self,keyframe,prim):
+        self.value = keyframe.co[1]
+        object = prim.object
+
+        # goto keyframe and read out object values
+        # TODO: support subframes?
+        frame = int(round(keyframe.co[0]))
+        bpy.context.scene.frame_set(frame=frame)
+
+        # update object so we get values from the keyframe
+        object.update(scene=bpy.context.scene)
+        
+        # convert local to global
+        glob = localToGlobal(object)
+        location = glob['loc']
+        rotation = glob['rot']
+        scale = glob['scale']
+        
+        # swap y and z and invert x (right handed system)
+        self.location = [-location[0],location[2],location[1]]
+        self.rotation = [rotation[0],rotation[2],rotation[1]]
+        self.scale = [scale[0],scale[2],scale[1]]
+
+        self.hide = object.hide_render
+
+        # remove location from parent
+        if (object.parent!= None and object.parent.type=="EMPTY"):
+            parentLoc = localToGlobal(object.parent)['loc']
+            self.location[0]-=-object.parent.location[0]
+#            self.location[1]-=parentLoc[2]
+#            self.location[2]-=parentLoc[1]
+
+        # remove initial location, rotation and scale
+#        for i in range(0,len(prim.location)):
+#            self.location[i]-=prim.location[i]
+#
+#        for i in range(0,len(prim.rotation)):
+#            self.rotation[i]-=prim.rotation[i]
+#
+#        for i in range(0,len(prim.scale)):
+#            self.scale[i]-=prim.scale[i]
+
 class XPlanePrimitive():
     def __init__(self,object):
-        self.object = object            
+        self.object = object
         self.name = object.name
+        
+        # update object display so we have initial values
+        object.update(scene=bpy.context.scene)
+
+        # convert local to global
+        glob = localToGlobal(object)
+        location = glob['loc']
+        rotation = glob['rot']
+        scale = glob['scale']
+
+        # store initial global location, rotation and scale
+        self.location = [-location[0],location[2],location[1]]
+        self.rotation = [rotation[0],rotation[2],rotation[1]]
+        self.scale = [scale[0],scale[2],scale[1]]
+
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
         self.faces = None
         self.datarefs = {}
         self.attributes = {}
+        self.animations = {}
+
+        #check for animation
+        if debug:
+            print("\t\t checking animations")
+        if (object.animation_data != None and object.animation_data.action != None and len(object.animation_data.action.fcurves)>0):
+            if debug:
+                print("\t\t animation found")
+            #check for dataref animation by getting fcurves with the dataref group
+            for fcurve in object.animation_data.action.fcurves:
+                if debug:
+                    print("\t\t checking FCurve %s" % fcurve.data_path)
+                if (fcurve.group != None and fcurve.group.name == "XPlane Datarefs"):
+                    # get dataref name
+                    index = int(fcurve.data_path.replace('["xplane"]["datarefs"][','').replace(']["value"]',''))
+                    dataref = object.xplane.datarefs[index].path
+
+                    if debug:
+                        print("\t\t adding dataref animation: %s" % dataref)
+
+                    # time to add dataref to animations
+                    self.animations[dataref] = []
+
+                    for keyframe in fcurve.keyframe_points:
+                        if debug:
+                            print("\t\t adding keyframe: %6.3f" % keyframe.co[1])
+                        self.animations[dataref].append(XPlaneKeyframe(keyframe,self))
 
         # add custom attributes
         for attr in object.xplane.customAttributes:
@@ -176,10 +268,10 @@ class XPlaneMesh():
 
         # store the global index, as we are reindexing faces
         globalindex = 0
-        
-        for prim in file['primitives']:
-            prim.indices[0] = globalindex
 
+        for prim in file['primitives']:
+            prim.indices[0] = len(self.indices)
+            
             # store the world translation matrix
             matrix = prim.object.matrix_world
 
@@ -378,33 +470,72 @@ class XPlaneCommands():
         self.reseters = {}
 
         # stores all already written attributes
-        self.written = {} 
+        self.written = {}
 
     def write(self):
         o=''
          
-        # write down all objects and there materials
+        # write down all objects
         for prim in self.file['primitives']:
+            animationStarted = False
             if debug:
                 o+="# %s\n" % prim.name
+                
+            tabs = ''
+            if len(prim.animations)>0:
+                animationStarted = True
+                animLevel = self.getAnimLevel(prim)
+                print(animLevel)
+
+                # begin animation block
+                o+="%sANIM_begin\n" % self.getAnimTabs(animLevel)
+                animLevel+=1
+                tabs = self.getAnimTabs(animLevel)
+                
+                for dataref in prim.animations:
+                    # TODO: check wich animations are needed
+
+                    # translation
+                    o+="%sANIM_trans_begin\t%s\n" % (tabs,dataref)
+                    for keyframe in prim.animations[dataref]:
+                        o+="%s\tANIM_trans_key\t%s %6.3f %6.3f %6.3f\n" % (tabs,keyframe.value,keyframe.location[0],keyframe.location[1],keyframe.location[2])
+                    o+="%sANIM_trans_end\n" % tabs
 
             #material
             for attr in prim.material.attributes:
                 if prim.material.attributes[attr]!=None:
                     if(prim.material.attributes[attr]==True):
-                        o+='%s\n' % attr
+                        value = ""
+                        line = '%s\n' % attr
                     else:
-                        o+='%s\t%s\n' % (attr,prim.material.attributes[attr])
+                        value = prim.material.attributes[attr]
+                        line = '%s\t%s\n' % (attr,value)
+
+                    o+=tabs+line
+                    # only write line if attribtue wasn't already written with same value
+#                    if attr in self.written:
+#                        if self.written[attr]!=value:
+#                            o+=line
+#                            self.written[attr] = value
+#                    else:
+#                        o+=line
+#                        self.written[attr] = value
 
             #custom object attributes
             for attr in prim.attributes:
-                o+='%s\t%s\n' % (attr,prim.attributes[attr])
+                line='%s\t%s\n' % (attr,prim.attributes[attr])
+                o+=tabs+line
             
             #o+=prim.material.write()
             o+=prim.faces.write()
             offset = prim.indices[0]
             count = prim.indices[1]-prim.indices[0]
-            o+="TRIS\t%d %d\n" % (offset,count)
+            o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
+
+            if animationStarted:
+                # end animation block
+                animLevel-=1
+                o+="%sANIM_end\n" % self.getAnimTabs(animLevel)
 
         # write down all lights
         if len(self.file['lights'])>0:
@@ -412,6 +543,27 @@ class XPlaneCommands():
 
         o+="\n"
         return o
+
+    def getAnimTabs(self,level):
+        tabs = ''
+        if level>0:
+            i = 1
+            while i<=level:
+                tabs+='\t'
+                i+=1
+        
+        return tabs
+
+    def getAnimLevel(self,prim):
+        parent = prim.object
+        level = 0
+        
+        while parent != None:
+            parent = parent.parent
+            if (parent!=None and parent.type!="EMPTY"):
+                level+=1
+        
+        return level
 
 
 class XPlaneData():
@@ -451,6 +603,7 @@ class XPlaneData():
 
     def splitFileByTexture(self,parent):
         name = parent.name
+        filename = None
         textures = []
         if len(self.files[name])>0:
             # stores prims that have to be removed after iteration
@@ -463,7 +616,7 @@ class XPlaneData():
                     if filename not in self.files:
                         self.files[filename] = self.getEmptyFile(parent)
 
-                    # store prim in ne file list
+                    # store prim in the file list
                     self.files[filename]['primitives'].append(prim)
                     remove.append(prim)
 
@@ -472,7 +625,8 @@ class XPlaneData():
                 self.files[name]['primitives'].remove(prim)
 
             # add texture to list
-            textures.append(filename)
+            if filename:
+                textures.append(filename)
 
             # do some house cleaning
             # if there is only one texture in use and no objects without texture, put everything in one file
@@ -557,8 +711,19 @@ class ExportXPlane9(bpy.types.Operator):
         filepath = os.path.dirname(filepath)
         #filepath = bpy.path.ensure_ext(filepath, ".obj")
 
+        #store current frame as we will go back to it
+        currentFrame = bpy.context.scene.frame_current
+
+        # goto first frame so everything is in inital state
+        bpy.context.scene.frame_set(frame=1)
+        bpy.context.scene.update()
+
         data = XPlaneData()
         data.collect()
+
+        # goto first frame again so everything is in inital state
+        bpy.context.scene.frame_set(frame=1)
+        bpy.context.scene.update()
 
         if len(data.files)>0:
             print("Writing XPlane Object file(s) ...")
@@ -591,6 +756,10 @@ class ExportXPlane9(bpy.types.Operator):
         else:
             print("No objects to export, aborting ...")
 
+        # return to stored frame
+        bpy.context.scene.frame_set(frame=currentFrame)
+        bpy.context.scene.update()
+        
         return {'FINISHED'}
 
     def invoke(self, context, event):
