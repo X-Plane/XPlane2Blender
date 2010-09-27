@@ -6,6 +6,7 @@ from bpy.props import *
 from collections import OrderedDict
 
 debug = True
+version = 3200
 
 def localToGlobal(object):
     matrix = object.matrix_world
@@ -73,21 +74,21 @@ class XPlaneKeyframe():
         self.hide = object.hide_render
 
         # remove location from parent
-        if (object.parent!= None and object.parent.type=="EMPTY"):
-            parentLoc = localToGlobal(object.parent)['loc']
-            self.location[0]-=-object.parent.location[0]
+#        if (object.parent!= None and object.parent.type=="EMPTY"):
+#            parentLoc = localToGlobal(object.parent)['loc']
+#            self.location[0]-=-object.parent.location[0]
 #            self.location[1]-=parentLoc[2]
 #            self.location[2]-=parentLoc[1]
 
         # remove initial location, rotation and scale
-#        for i in range(0,len(prim.location)):
-#            self.location[i]-=prim.location[i]
-#
-#        for i in range(0,len(prim.rotation)):
-#            self.rotation[i]-=prim.rotation[i]
-#
-#        for i in range(0,len(prim.scale)):
-#            self.scale[i]-=prim.scale[i]
+        for i in range(0,len(prim.location)):
+            self.location[i]-=prim.location[i]
+
+        for i in range(0,len(prim.rotation)):
+            self.rotation[i]-=prim.rotation[i]
+
+        for i in range(0,len(prim.scale)):
+            self.scale[i]-=prim.scale[i]
 
 class XPlanePrimitive():
     def __init__(self,object):
@@ -485,7 +486,6 @@ class XPlaneCommands():
             if len(prim.animations)>0:
                 animationStarted = True
                 animLevel = self.getAnimLevel(prim)
-                print(animLevel)
 
                 # begin animation block
                 o+="%sANIM_begin\n" % self.getAnimTabs(animLevel)
@@ -498,7 +498,7 @@ class XPlaneCommands():
                     # translation
                     o+="%sANIM_trans_begin\t%s\n" % (tabs,dataref)
                     for keyframe in prim.animations[dataref]:
-                        o+="%s\tANIM_trans_key\t%s %6.3f %6.3f %6.3f\n" % (tabs,keyframe.value,keyframe.location[0],keyframe.location[1],keyframe.location[2])
+                        o+="%s\tANIM_trans_key\t%s\t%6.4f\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.location[0],keyframe.location[1],keyframe.location[2])
                     o+="%sANIM_trans_end\n" % tabs
 
             #material
@@ -540,8 +540,7 @@ class XPlaneCommands():
         # write down all lights
         if len(self.file['lights'])>0:
             o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
-
-        o+="\n"
+            
         return o
 
     def getAnimTabs(self,level):
@@ -743,6 +742,8 @@ class ExportXPlane9(bpy.types.Operator):
                     o+=mesh.writeIndices()
                     o+="\n"
                     o+=commands.write()
+                    
+                    o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,bpy.app.build_revision,version/1000)
 
                     # write the file
                     fullpath = os.path.join(filepath,file+'.obj')
