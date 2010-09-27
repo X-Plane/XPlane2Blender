@@ -133,14 +133,15 @@ class XPlanePrimitive():
 
                     if debug:
                         print("\t\t adding dataref animation: %s" % dataref)
+                        
+                    if len(fcurve.keyframe_points)>1:
+                        # time to add dataref to animations
+                        self.animations[dataref] = []
 
-                    # time to add dataref to animations
-                    self.animations[dataref] = []
-
-                    for keyframe in fcurve.keyframe_points:
-                        if debug:
-                            print("\t\t adding keyframe: %6.3f" % keyframe.co[1])
-                        self.animations[dataref].append(XPlaneKeyframe(keyframe,self))
+                        for keyframe in fcurve.keyframe_points:
+                            if debug:
+                                print("\t\t adding keyframe: %6.3f" % keyframe.co[1])
+                            self.animations[dataref].append(XPlaneKeyframe(keyframe,self))
 
         # add custom attributes
         for attr in object.xplane.customAttributes:
@@ -275,9 +276,12 @@ class XPlaneMesh():
             
             # store the world translation matrix
             matrix = prim.object.matrix_world
-
+            
             # create a copy of the object mesh with modifiers applied
             mesh = prim.object.create_mesh(bpy.context.scene, True, "PREVIEW")
+
+            # transform mesh with the world matrix
+            mesh.transform(matrix)
 
             # with the new mesh get uvFaces list
             uvFaces = self.getUVFaces(mesh,prim.material.uv_name)
@@ -291,18 +295,20 @@ class XPlaneMesh():
                     tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i]))
                 else:
                     tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],None))
-
+                    
             for f in tempfaces:
                 xplaneFace = XPlaneFace()
+                l = len(f['indices'])
                 for i in range(0,len(f['indices'])):
-                    # get the original index
-                    vindex = f['indices'][i]
+                    # get the original index, reverse direction because of axis swap
+                    vindex = f['indices'][l-1-i]
 
                     # get the vertice from original mesh
                     v = mesh.vertices[vindex]
                     
                     # convert local to global coordinates
-                    co = matrix * v.co
+                    #co = matrix * v.co
+                    co = v.co
 
                     # swap y and z and invert x (right handed system)
                     vert = [-co[0],co[2],co[1],-v.normal[0],v.normal[2],v.normal[1],f['uv'][i][0],f['uv'][i][1]]
@@ -327,9 +333,6 @@ class XPlaneMesh():
             # store the faces in the prim
             prim.faces = faces
             prim.indices[1] = len(self.indices)
-
-        # reverse indices due to the inverted z axis
-        self.indices.reverse()
             
     def getDupliVerticeIndex(self,v):
         for i in range(len(self.vertices)):
@@ -491,7 +494,7 @@ class XPlaneCommands():
                 o+="%sANIM_begin\n" % self.getAnimTabs(animLevel)
                 animLevel+=1
                 tabs = self.getAnimTabs(animLevel)
-                
+
                 for dataref in prim.animations:
                     # TODO: check wich animations are needed
 
