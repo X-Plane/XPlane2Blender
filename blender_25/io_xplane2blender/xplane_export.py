@@ -48,8 +48,9 @@ class XPlaneLine():
 
 
 class XPlaneKeyframe():
-    def __init__(self,keyframe,prim):
+    def __init__(self,keyframe,index,dataref,prim):
         self.value = keyframe.co[1]
+        self.dataref = dataref
         object = prim.object
 
         # goto keyframe and read out object values
@@ -72,23 +73,29 @@ class XPlaneKeyframe():
         self.scale = [scale[0],scale[2],scale[1]]
 
         self.hide = object.hide_render
-
-        # remove location from parent
-#        if (object.parent!= None and object.parent.type=="EMPTY"):
-#            parentLoc = localToGlobal(object.parent)['loc']
-#            self.location[0]-=-object.parent.location[0]
-#            self.location[1]-=parentLoc[2]
-#            self.location[2]-=parentLoc[1]
-
+        
         # remove initial location, rotation and scale
-        for i in range(0,len(prim.location)):
+        for i in range(0,len(self.location)):
             self.location[i]-=prim.location[i]
 
-        for i in range(0,len(prim.rotation)):
+        for i in range(0,len(self.rotation)):
             self.rotation[i]-=prim.rotation[i]
 
-        for i in range(0,len(prim.scale)):
+        for i in range(0,len(self.scale)):
             self.scale[i]-=prim.scale[i]
+            
+        if index>1:
+            # remove location, rotation and scale from previous keyframe to get the offset
+            keyframes = prim.animations[dataref]
+            
+            for i in range(0,len(self.location)):
+                self.location[i]-=keyframes[index-1].location[i]
+
+            for i in range(0,len(self.rotation)):
+                self.rotation[i]-=keyframes[index-1].rotation[i]
+
+            for i in range(0,len(self.scale)):
+                self.scale[i]-=keyframes[index-1].scale[i]
 
 class XPlanePrimitive():
     def __init__(self,object):
@@ -138,10 +145,19 @@ class XPlanePrimitive():
                         # time to add dataref to animations
                         self.animations[dataref] = []
 
+                        # store keyframes temporary, so we can resort them
+                        keyframes = []
+
                         for keyframe in fcurve.keyframe_points:
                             if debug:
-                                print("\t\t adding keyframe: %6.3f" % keyframe.co[1])
-                            self.animations[dataref].append(XPlaneKeyframe(keyframe,self))
+                                print("\t\t adding keyframe: %6.3f" % keyframe.co[0])
+                            keyframes.append(keyframe)
+
+                        # sort keyframes by frame number
+                        keyframesSorted = sorted(keyframes, key=lambda keyframe: keyframe.co[0])
+                        
+                        for i in range(0,len(keyframesSorted)):
+                            self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
 
         # add custom attributes
         for attr in object.xplane.customAttributes:
