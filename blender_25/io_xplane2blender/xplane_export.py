@@ -2,6 +2,7 @@ import os.path
 import bpy
 import struct
 import os
+import math
 from bpy.props import *
 from collections import OrderedDict
 
@@ -9,8 +10,14 @@ debug = True
 version = 3200
 
 def localToGlobal(object):
-    matrix = object.matrix_world
-    return {"loc":matrix*object.location,"rot":object.rotation_euler,"scale":matrix*object.scale}
+    matrix = object.matrix_local * object.matrix_world
+    loc = matrix.translation_part()
+    loc = [loc[0],loc[1],loc[2]]
+    rot = matrix.rotation_part().to_euler("XYZ")
+    rot = [rot[0],rot[1],rot[2]]
+    scale = matrix.scale_part()
+    scale = [scale[0],scale[1],scale[2]]
+    return {"loc":loc,"rot":rot,"scale":scale}
 
 def convertCoords(co):
     return [-co[0],co[2],co[1]]
@@ -69,9 +76,9 @@ class XPlaneKeyframe():
         
         # swap y and z and invert x (right handed system)
         self.location = [-location[0],location[2],location[1]]
-        self.rotation = [rotation[0],rotation[2],rotation[1]]
+        self.rotation = [math.degrees(rotation[0]),math.degrees(rotation[2]),math.degrees(rotation[1])]
         self.scale = [scale[0],scale[2],scale[1]]
-
+        
         self.hide = object.hide_render
         
         # remove initial location, rotation and scale
@@ -113,7 +120,7 @@ class XPlanePrimitive():
 
         # store initial global location, rotation and scale
         self.location = [-location[0],location[2],location[1]]
-        self.rotation = [rotation[0],rotation[2],rotation[1]]
+        self.rotation = [math.degrees(rotation[0]),math.degrees(rotation[2]),math.degrees(rotation[1])]
         self.scale = [scale[0],scale[2],scale[1]]
 
         self.indices = [0,0]
@@ -512,14 +519,12 @@ class XPlaneCommands():
                 tabs = self.getAnimTabs(animLevel)
 
                 for dataref in prim.animations:
-                    # TODO: check wich animations are needed
-
-                    # translation
-                    o+="%sANIM_trans_begin\t%s\n" % (tabs,dataref)
-                    for keyframe in prim.animations[dataref]:
-                        o+="%s\tANIM_trans_key\t%s\t%6.4f\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.location[0],keyframe.location[1],keyframe.location[2])
-                    o+="%sANIM_trans_end\n" % tabs
-
+                    # TODO: check which animations are needed
+                    o+=self.writeRotationAnim(prim,tabs,dataref,0) # x-rotation
+                    o+=self.writeRotationAnim(prim,tabs,dataref,1) # y-rotation
+                    o+=self.writeRotationAnim(prim,tabs,dataref,2) # z-rotation
+                    o+=self.writeTranslationAnim(prim,tabs,dataref,-1) # translation
+                    
             #material
             for attr in prim.material.attributes:
                 if prim.material.attributes[attr]!=None:
@@ -583,6 +588,33 @@ class XPlaneCommands():
         
         return level
 
+    def writeTranslationAnim(self,prim,tabs,dataref,axis):
+        o = ''
+        o+="%sANIM_trans_begin\t%s\n" % (tabs,dataref)
+        for keyframe in prim.animations[dataref]:
+            loc = [0.0,0.0,0.0]
+            if axis==-1:
+                loc[0] = keyframe.location[0]
+                loc[1] = keyframe.location[1]
+                loc[2] = keyframe.location[2]
+            elif axis>-1:
+                loc[axis] = keyframe.location[axis]
+            o+="%s\tANIM_trans_key\t%s\t%6.4f\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,loc[0],loc[1],loc[2])
+        o+="%sANIM_trans_end\n" % tabs
+
+        return o
+
+    def writeRotationAnim(self,prim,tabs,dataref,axis):
+        o = ''
+        axes = [0.0,0.0,0.0]
+        axes[axis] = 1.0
+        o+="%sANIM_rotate_begin\t%1.1f\t%1.1f\t%1.1f\t%s\n" % (tabs,axes[0],axes[1],axes[2],dataref)
+            
+        for keyframe in prim.animations[dataref]:
+            o+="%s\tANIM_rotate_key\t%s\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[axis])
+        o+="%sANIM_rotate_end\n" % tabs
+
+        return o
 
 class XPlaneData():
     def __init__(self):
