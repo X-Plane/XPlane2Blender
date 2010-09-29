@@ -1311,6 +1311,7 @@ class OBJexport8:
         panel=None
         alpha=None
         properties=None
+        hasPanelTexture=None
 
         if prim.style=='Tri':
             region=prim.region
