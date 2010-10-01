@@ -512,18 +512,17 @@ class XPlaneCommands():
             if len(prim.animations)>0:
                 animationStarted = True
                 animLevel = self.getAnimLevel(prim)
-
+                
                 # begin animation block
                 o+="%sANIM_begin\n" % self.getAnimTabs(animLevel)
                 animLevel+=1
                 tabs = self.getAnimTabs(animLevel)
-
+                
                 for dataref in prim.animations:
                     # TODO: check which animations are needed
-                    o+=self.writeRotationAnim(prim,tabs,dataref,0) # x-rotation
-                    o+=self.writeRotationAnim(prim,tabs,dataref,1) # y-rotation
-                    o+=self.writeRotationAnim(prim,tabs,dataref,2) # z-rotation
-                    o+=self.writeTranslationAnim(prim,tabs,dataref,-1) # translation
+                                        
+                    for i in range(0,len(prim.animations[dataref])):
+                        o+=self.writeKeyframe(prim,dataref,i)
                     
             #material
             for attr in prim.material.attributes:
@@ -604,16 +603,9 @@ class XPlaneCommands():
 
         return o
 
-    def writeRotationAnim(self,prim,tabs,dataref,axis):
+    def writeKeyframe(self,prim,dataref,index):
         o = ''
-        axes = [0.0,0.0,0.0]
-        axes[axis] = 1.0
-        o+="%sANIM_rotate_begin\t%1.1f\t%1.1f\t%1.1f\t%s\n" % (tabs,axes[0],axes[1],axes[2],dataref)
-            
-        for keyframe in prim.animations[dataref]:
-            o+="%s\tANIM_rotate_key\t%s\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[axis])
-        o+="%sANIM_rotate_end\n" % tabs
-
+        
         return o
 
 class XPlaneData():
