@@ -80,14 +80,19 @@ class XPlaneKeyframe():
         self.angle = [math.degrees(rotation[0]),math.degrees(rotation[2]),math.degrees(rotation[1])]
         
         self.hide = object.hide_render
-            
-        if index>0:
-            # remove location, rotation and scale from previous keyframe to get the offset
-            keyframes = prim.animations[dataref]
-            
-            for i in range(0,3):
-                self.translation[i] = self.location[i]-keyframes[index-1].location[i]
-                self.rotation[i] = self.angle[i]-keyframes[index-1].angle[i]
+
+        # remove initial location and rotation to get offset
+        for i in range(0,3):
+            self.translation[i] = self.location[i]-prim.location[i]
+            self.rotation[i] = self.angle[i]-prim.angle[i]
+
+#        if index>0:
+#            # remove location, rotation and scale from previous keyframe to get the offset
+#            keyframes = prim.animations[dataref]
+#
+#            for i in range(0,3):
+#                self.translation[i] = self.location[i]-keyframes[index-1].location[i]
+#                self.rotation[i] = self.angle[i]-keyframes[index-1].angle[i]
                 
 class XPlanePrimitive():
     def __init__(self,object):
@@ -502,10 +507,11 @@ class XPlaneCommands():
                 tabs = self.getAnimTabs(animLevel)
                 
                 for dataref in prim.animations:
-                    # TODO: check which animations are needed
-                                        
-                    for i in range(0,len(prim.animations[dataref])):
-                        o+=self.writeKeyframe(prim,dataref,i,tabs)
+                    if len(prim.animations[dataref])>1:
+                        o+=self.writeKeyframes(prim,dataref,tabs)
+
+#                    for i in range(0,len(prim.animations[dataref])):
+#                        o+=self.writeKeyframe(prim,dataref,i,tabs)
                     
             #material
             for attr in prim.material.attributes:
@@ -570,46 +576,99 @@ class XPlaneCommands():
         
         return level
 
-    def writeKeyframe(self,prim,dataref,index,tabs):
+    def writeKeyframes(self,prim,dataref,tabs):
         o = ''
 
-        if index>0:
-            if debug:
-                o+="%s# keyframes %d,%d\n" % (tabs,index-1,index)
-                
-            prevKeyframe = None
-            translations = []
-            rotations = []
-            prevKeyframe = prim.animations[dataref][index-1]
+        keyframes = prim.animations[dataref]
 
-            keyframe = prim.animations[dataref][index]
+        totalTrans = [0.0,0.0,0.0]
+        totalRot = [0.0,0.0,0.0]
+        
+        staticTrans = ['','']
+        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.location[0],prim.location[1],prim.location[2],prim.location[0],prim.location[1],prim.location[2])
+        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.location[0],-prim.location[1],-prim.location[2],-prim.location[0],-prim.location[1],-prim.location[2])
+        
+        trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
+        rot = ['','','']
+        rot[0] = "%sANIM_rotate_begin\t1.0\t0.0\t0.0\t%s\n" % (tabs,dataref)
+        rot[1] = "%sANIM_rotate_begin\t0.0\t1.0\t0.0\t%s\n" % (tabs,dataref)
+        rot[2] = "%sANIM_rotate_begin\t0.0\t0.0\t1.0\t%s\n" % (tabs,dataref)
+        
+        for keyframe in keyframes:
+            totalTrans[0]+=keyframe.translation[0]
+            totalTrans[1]+=keyframe.translation[1]
+            totalTrans[2]+=keyframe.translation[2]
+            trans+="%s\tANIM_trans_key\t%6.4f\t%6.4f\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2])
+            
+            totalRot[0]+=keyframe.rotation[0]
+            totalRot[1]+=keyframe.rotation[1]
+            totalRot[2]+=keyframe.rotation[2]
 
-            # check for translation and rotation
             for i in range(0,3):
-                if keyframe.translation[i]!=0:
-                    translations.append(i)
-                if keyframe.rotation[i]!=0:
-                    rotations.append(i)
+                rot[i]+="%s\tANIM_rotate_key\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[i])
+            
+        trans+="%sANIM_trans_end\n" % tabs
+        rot[0]+="%sANIM_rotate_end\n" % tabs
+        rot[1]+="%sANIM_rotate_end\n" % tabs
+        rot[2]+="%sANIM_rotate_end\n" % tabs
 
-            if len(rotations)>0:
-                # move object center to world origin by adding a static translation
-                o+="%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,keyframe.location[0],keyframe.location[1],keyframe.location[2],keyframe.location[0],keyframe.location[1],keyframe.location[2])
+        if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
+            o+=trans
 
-                #now add rotation from prev to current keyframe
-                for i in rotations:
-                    rot = [0.0,0.0,0.0]
-                    rot[i] = 1.0
-                    o+="%sANIM_rotate\t%6.4f\t%6.4f\t%6.4f\t0.0\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,rot[0],rot[1],rot[2],keyframe.rotation[i],prevKeyframe.value,keyframe.value,dataref)
+        if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
+            o+=staticTrans[0]
+            
+            if totalRot[0]!=0.0:
+                o+=rot[0]
+            if totalRot[1]!=0.0:
+                o+=rot[1]
+            if totalRot[2]!=0.0:
+                o+=rot[2]
 
-                # move object back to original position to add translation
-                o+="%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-keyframe.location[0],-keyframe.location[1],-keyframe.location[2],-keyframe.location[0],-keyframe.location[1],-keyframe.location[2])
-
-            if len(translations)>0:
-                #now add translation from prev to current keyframe
-                o+="%sANIM_trans\t0.0\t0.0\t0.0\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2],prevKeyframe.value,keyframe.value,dataref)
-
-
+            o+=staticTrans[1]
+        
         return o
+
+#    def writeKeyframe(self,prim,dataref,index,tabs):
+#        o = ''
+#
+#        if index>0:
+#            if debug:
+#                o+="%s# keyframes %d,%d\n" % (tabs,index-1,index)
+#
+#            prevKeyframe = None
+#            translations = []
+#            rotations = []
+#            prevKeyframe = prim.animations[dataref][index-1]
+#
+#            keyframe = prim.animations[dataref][index]
+#
+#            # check for translation and rotation
+#            for i in range(0,3):
+#                if keyframe.translation[i]!=0:
+#                    translations.append(i)
+#                if keyframe.rotation[i]!=0:
+#                    rotations.append(i)
+#
+#            if len(rotations)>0:
+#                # move object center to world origin by adding a static translation
+#                o+="%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,keyframe.location[0],keyframe.location[1],keyframe.location[2],keyframe.location[0],keyframe.location[1],keyframe.location[2])
+#
+#                #now add rotation from prev to current keyframe
+#                for i in rotations:
+#                    rot = [0.0,0.0,0.0]
+#                    rot[i] = 1.0
+#                    o+="%sANIM_rotate\t%6.4f\t%6.4f\t%6.4f\t0.0\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,rot[0],rot[1],rot[2],keyframe.rotation[i],prevKeyframe.value,keyframe.value,dataref)
+#
+#                # move object back to original position to add translation
+#                o+="%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-keyframe.location[0],-keyframe.location[1],-keyframe.location[2],-keyframe.location[0],-keyframe.location[1],-keyframe.location[2])
+#
+#            if len(translations)>0:
+#                #now add translation from prev to current keyframe
+#                o+="%sANIM_trans\t0.0\t0.0\t0.0\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2],prevKeyframe.value,keyframe.value,dataref)
+#
+#
+#        return o
 
 class XPlaneData():
     def __init__(self):
