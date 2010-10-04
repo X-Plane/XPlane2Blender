@@ -583,7 +583,8 @@ class XPlaneCommands():
 
         totalTrans = [0.0,0.0,0.0]
         totalRot = [0.0,0.0,0.0]
-        
+
+        # TODO: staticTrans can be merged into regular translations
         staticTrans = ['','']
         staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.location[0],prim.location[1],prim.location[2],prim.location[0],prim.location[1],prim.location[2])
         staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.location[0],-prim.location[1],-prim.location[2],-prim.location[0],-prim.location[1],-prim.location[2])

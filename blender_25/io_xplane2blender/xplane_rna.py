@@ -329,6 +329,4 @@ def addXPlaneRNA():
 
 
 def removeXPlaneRNA():
-    bpy.types.Object.RemoveProperty("xplane")
-    bpy.types.Material.RemoveProperty("xplane")
-    bpy.types.Lamp.RemoveProperty("xplane")
+    pass
