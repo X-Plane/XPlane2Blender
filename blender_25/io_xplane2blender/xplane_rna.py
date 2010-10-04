@@ -239,7 +239,7 @@ def addXPlaneRNA():
 
     XPlaneDataref.loop = bpy.props.IntProperty(attr="loop",
                                                 name="Loop Amount",
-                                                description="Loop amount of animation, usefull for ever increasing Datarefs.",
+                                                description="Loop amount of animation, usefull for ever increasing Datarefs. A value of 0 will ignore this setting.",
                                                 min=0)
 
     # Empty settings
