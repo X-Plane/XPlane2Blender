@@ -119,6 +119,7 @@ class XPlanePrimitive():
         self.datarefs = {}
         self.attributes = {}
         self.animations = {}
+        self.datarefs = {}
 
         #check for animation
         if debug:
@@ -134,6 +135,7 @@ class XPlanePrimitive():
                     # get dataref name
                     index = int(fcurve.data_path.replace('["xplane"]["datarefs"][','').replace(']["value"]',''))
                     dataref = object.xplane.datarefs[index].path
+                    self.datarefs[dataref] = object.xplane.datarefs[index]
 
                     if debug:
                         print("\t\t adding dataref animation: %s" % dataref)
@@ -511,7 +513,7 @@ class XPlaneCommands():
                 for dataref in prim.animations:
                     if len(prim.animations[dataref])>1:
                         o+=self.writeKeyframes(prim,dataref,tabs)
-
+                            
 #                    for i in range(0,len(prim.animations[dataref])):
 #                        o+=self.writeKeyframe(prim,dataref,i,tabs)
                     
@@ -617,6 +619,9 @@ class XPlaneCommands():
 
         if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
             o+=trans
+            # add loops if any
+            if prim.datarefs[dataref].loop>0:
+                o+="%sANIM_keyframe_loop\t%d\n" % (tabs,prim.datarefs[dataref].loop)
 
         if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
             o+=staticTrans[0]
@@ -628,6 +633,10 @@ class XPlaneCommands():
             if totalRot[2]!=0.0:
                 o+=rot[2]
 
+            # add loops if any
+            if prim.datarefs[dataref].loop>0:
+                o+="%sANIM_keyframe_loop\t%d\n" % (tabs,prim.datarefs[dataref].loop)
+                
             o+=staticTrans[1]
         
         return o
