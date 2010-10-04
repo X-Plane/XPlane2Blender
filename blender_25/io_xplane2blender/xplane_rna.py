@@ -237,14 +237,10 @@ def addXPlaneRNA():
                                         description="Value",
                                         default=0)
 
-    XPlaneDataref.loop = bpy.props.FloatProperty(attr="loop",
+    XPlaneDataref.loop = bpy.props.IntProperty(attr="loop",
                                                 name="Loop Amount",
-                                                description="Loop amount of animation, usefull for ever increasing Datarefs.")
-
-#    XPlaneDataref.xplane_datarefs = bpy.props.CollectionProperty(attr="datarefs",
-#                                        name="Datarefs",
-#                                        descrption="Datarefs",
-#                                        type=bpy.props.StringProperty)
+                                                description="Loop amount of animation, usefull for ever increasing Datarefs.",
+                                                min=0)
 
     # Empty settings
     XPlaneObjectSettings.exportChildren = bpy.props.BoolProperty(attr="exportChildren",

@@ -135,6 +135,8 @@ def animation_layout(self,obj):
         subrow.prop(attr,"path")
         subrow.operator("object.remove_xplane_dataref",text="",emboss=False,icon="X").index = i
         subrow = subbox.row()
+        subrow.prop(attr,"loop",text="Loops")
+        subrow = subbox.row()
         subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
         subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
         subrow.prop(attr,"value")
