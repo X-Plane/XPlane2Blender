@@ -20,7 +20,7 @@ bl_addon_info = {
     'name': 'Import/Export: XPlane',
     'author': 'Ondrej Brinkel',
     'version': (3,20),
-    'blender': (2, 5, 3),
+    'blender': (2, 5, 4),
     'location': 'File > Import/Export > XPlane ',
     'description': 'Import and Export XPlane objects/planes (.obj,.aif format)',
     'warning': '', # used for warning icon and text in addons panel
