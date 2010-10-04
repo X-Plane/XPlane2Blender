@@ -329,4 +329,6 @@ def addXPlaneRNA():
 
 
 def removeXPlaneRNA():
-    pass
+    del bpy.types.Object.xplane
+    del bpy.types.Material.xplane
+    del bpy.types.Lamp.xplane
