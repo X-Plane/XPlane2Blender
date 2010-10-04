@@ -58,6 +58,13 @@ class OBJECT_PT_xplane(bpy.types.Panel):
                 animation_layout(self,obj)
                 custom_layout(self,obj,obj.type)
         
+class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
+    '''XPlane Datarefs Search Menu'''
+    bl_label = "XPlane Datarefs"
+
+    def draw(self,context):
+        self.search_menu(xplane_datarefs,"text.open")
+
 
 def empty_layout(self, obj):
     if obj.xplane.exportChildren:
@@ -131,8 +138,10 @@ def animation_layout(self,obj):
     for i, attr in enumerate(obj.xplane.datarefs):
         subbox = box.box()
         subrow = subbox.row()
-        #subrow.prop_search(attr,"name",bpy.data.scenes[0],"xplane_datarefs")
-        subrow.prop(attr,"path")
+        if len(bpy.data.scenes[0].xplane_datarefs)>0:
+            subrow.prop_search(attr,"path",bpy.data.scenes[0],"xplane_datarefs",text="",icon="VIEWZOOM")
+        else:
+            subrow.prop(attr,"path")
         subrow.operator("object.remove_xplane_dataref",text="",emboss=False,icon="X").index = i
         subrow = subbox.row()
         subrow.prop(attr,"loop",text="Loops")
@@ -140,11 +149,10 @@ def animation_layout(self,obj):
         subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
         subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
         subrow.prop(attr,"value")
-        
+
 def parseDatarefs():
     import os
-    bpy.data.scenes[0]['xplane_datarefs'] = {}
-    search_data = bpy.data.scenes[0]['xplane_datarefs']
+    search_data = []
     filePath = os.path.dirname(__file__)+'/DataRefs.txt'
     if os.path.exists(filePath):
         try:
@@ -154,16 +162,20 @@ def parseDatarefs():
                 if i>1:
                     parts = line.split('\t')
                     if (len(parts)>1 and parts[1] in ('float','int')):
-                        search_data[str(i)] = parts[0]
+                        search_data.append(parts[0])
                 i+=1
         except IOError:
             print(IOError)
         finally:
             file.close()
+    return search_data
 
 def addXPlaneUI():
-    parseDatarefs()
-    pass
+    datarefs = parseDatarefs()
+    
+    for dataref in datarefs:
+        prop = bpy.data.scenes[0].xplane_datarefs.add()
+        prop.name = dataref
 #    bpy.types.register(OBJECT_PT_xplane)
 #    bpy.types.register(MATERIAL_PT_xplane)
 #    bpy.types.register(LAMP_PT_xplane)

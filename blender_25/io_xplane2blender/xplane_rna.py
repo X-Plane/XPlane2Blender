@@ -30,6 +30,9 @@ class XPlaneCustomAttribute(bpy.types.IDPropertyGroup):
 class XPlaneDataref(bpy.types.IDPropertyGroup):
     pass
 
+class XPlaneDatarefSearch(bpy.types.IDPropertyGroup):
+    pass
+
 class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
     bl_label = 'Add Attribute'
     bl_idname = 'object.add_xplane_object_attribute'
@@ -209,6 +212,15 @@ def addXPlaneRNA():
     bpy.types.Object.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Material.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneMaterialSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Lamp.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneLampSettings, name="XPlane", description="XPlane Export Settings")
+    bpy.types.Scene.xplane_datarefs = bpy.props.CollectionProperty(attr="xplane_datarefs",
+                                                                    name="XPlane Datarefs",
+                                                                    description="XPlane Datarefs",
+                                                                    type=XPlaneDatarefSearch)
+
+    XPlaneDatarefSearch.name = bpy.props.StringProperty(attr="path",
+                                                name="Dataref path",
+                                                description="XPlane Dataref path",
+                                                default = "")
 
     # custom Attributes
     XPlaneCustomAttribute.name = bpy.props.StringProperty(attr="name",
