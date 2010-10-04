@@ -98,7 +98,9 @@ class XPlanePrimitive():
     def __init__(self,object):
         self.object = object
         self.name = object.name
-        
+        self.children = []
+        self.parent = None
+
         # update object display so we have initial values
         object.update(scene=bpy.context.scene)
 
@@ -692,19 +694,45 @@ class XPlaneData():
                 for child in obj.children:
                     if debug:
                         print("\t scanning "+child.name)
-
+                    
                     if child.hide==False:
                         if child.type=="MESH":
                             if debug:
                                 print("\t "+child.name+": adding to list")
-                            self.files[obj.name]['primitives'].append(XPlanePrimitive(child))
+                            prim = self.files[obj.name]['primitives'].append(XPlanePrimitive(child))
+                            # look for children
+                            if len(child.children)>0:
+                                prim.children = self.getChildren(child)
                         if child.type=="LAMP":
                             if debug:
                                 print("\t "+child.name+": adding to list")
                             self.files[obj.name]['lights'].append(XPlaneLight(child))
 
                 # apply further splitting by textures
-                self.splitFileByTexture(obj)
+                self.splitFileByTexture(obj)    
+
+    def getChildren(self,prim):
+        children = []
+        obj = prim.object
+        
+        for child in obj.children:
+            if debug:
+                print("\t scanning "+child.name)
+
+            if child.hide==False:
+                if child.type=="MESH":
+                    if debug:
+                        print("\t "+child.name+": adding to list")
+                    childPrim = children.append(XPlanePrimitive(child))
+
+                    # store parent
+                    childPrim.parent = prim
+
+                    # recursion
+                    if len(child.children)>0:
+                        childPrim.children = self.getChildren(childPrim)
+
+        return children
 
     def splitFileByTexture(self,parent):
         name = parent.name
