@@ -138,10 +138,12 @@ def animation_layout(self,obj):
     for i, attr in enumerate(obj.xplane.datarefs):
         subbox = box.box()
         subrow = subbox.row()
-        if len(bpy.data.scenes[0].xplane_datarefs)>0:
-            subrow.prop_search(attr,"path",bpy.data.scenes[0],"xplane_datarefs",text="",icon="VIEWZOOM")
-        else:
-            subrow.prop(attr,"path")
+        # TODO: search is causing memory leak!
+#        if len(bpy.data.scenes[0].xplane_datarefs)>0:
+#            subrow.prop_search(attr,"path",bpy.data.scenes[0],"xplane_datarefs",text="",icon="VIEWZOOM")
+#        else:
+#            subrow.prop(attr,"path")
+        subrow.prop(attr,"path")
         subrow.operator("object.remove_xplane_dataref",text="",emboss=False,icon="X").index = i
         subrow = subbox.row()
         subrow.prop(attr,"loop",text="Loops")
@@ -171,11 +173,12 @@ def parseDatarefs():
     return search_data
 
 def addXPlaneUI():
-    datarefs = parseDatarefs()
-    
-    for dataref in datarefs:
-        prop = bpy.data.scenes[0].xplane_datarefs.add()
-        prop.name = dataref
+#    datarefs = parseDatarefs()
+#
+#    for dataref in datarefs:
+#        prop = bpy.data.scenes[0].xplane_datarefs.add()
+#        prop.name = dataref
+    pass
 
 def removeXPlaneUI():
     pass
