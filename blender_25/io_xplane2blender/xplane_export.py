@@ -72,46 +72,58 @@ class XPlaneKeyframe():
         
         # convert local to global
         glob = localToGlobal(object)
-        location = glob['loc']
-        rotation = glob['rot']
         
         # swap y and z and invert x (right handed system)
-        self.location = [-location[0],location[2],location[1]]
-        self.angle = [math.degrees(rotation[0]),math.degrees(rotation[2]),math.degrees(rotation[1])]
-        
+        self.location = [-glob['loc'][0],glob['loc'][2],glob['loc'][1]]
+        self.angle = [math.degrees(glob['rot'][0]),math.degrees(glob['rot'][2]),math.degrees(glob['rot'][1])]
+
         self.hide = object.hide_render
 
-        # remove initial location and rotation to get offset
-        for i in range(0,3):
-            self.translation[i] = self.location[i]-prim.location[i]
-            self.rotation[i] = self.angle[i]-prim.angle[i]
+        print(prim.name)
+        print(index)
 
-#        if index>0:
-#            # remove location, rotation and scale from previous keyframe to get the offset
-#            keyframes = prim.animations[dataref]
-#
-#            for i in range(0,3):
-#                self.translation[i] = self.location[i]-keyframes[index-1].location[i]
-#                self.rotation[i] = self.angle[i]-keyframes[index-1].angle[i]
-                
+        # remove parent location and angle to get local coordinates
+        if prim.parent!=None:
+             # update object so we get values from the keyframe
+            prim.parent.object.update(scene=bpy.context.scene)
+            glob = localToGlobal(prim.parent.object)
+            parentLocation = [-glob['loc'][0],glob['loc'][2],glob['loc'][1]]
+            parentAngle = [math.degrees(glob['rot'][0]),math.degrees(glob['rot'][2]),math.degrees(glob['rot'][1])]
+
+            self.locationLocal = [0.0,0.0,0.0]
+            self.angleLocal = [0.0,0.0,0.0]
+
+            # TODO: global-location seems to be wrong
+
+            for i in range(0,3):
+                self.locationLocal[i] = self.location[i] - parentLocation[i]
+                self.angleLocal[i] = self.angle[i] - parentAngle[i]
+
+                # remove initial location and rotation to get offset
+                self.translation[i] = self.locationLocal[i]-prim.locationLocal[i]
+                self.rotation[i] = self.angleLocal[i]-prim.angleLocal[i]
+
+            if debug:
+                print(self.location)
+                print(parentLocation)
+                print(self.locationLocal)
+                print(self.translation)
+        else:
+            self.locationLocal = self.location
+            self.angleLocal = self.angle
+
+            # remove initial location and rotation to get offset
+            for i in range(0,3):
+                self.translation[i] = self.location[i]-prim.location[i]
+                self.rotation[i] = self.angle[i]-prim.angle[i]
+
+
 class XPlanePrimitive():
-    def __init__(self,object):
+    def __init__(self,object,parent = None):
         self.object = object
         self.name = object.name
         self.children = []
-        self.parent = None
-
-        # update object display so we have initial values
-        object.update(scene=bpy.context.scene)
-
-        # convert local to global
-        glob = localToGlobal(object)
-        location = glob['loc']
-        rotation = glob['rot']
-
-        # store initial global location, rotation and scale
-        self.location = [-location[0],location[2],location[1]]
-        self.angle = [math.degrees(rotation[0]),math.degrees(rotation[2]),math.degrees(rotation[1])]
+        self.parent = parent
 
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
@@ -121,21 +133,58 @@ class XPlanePrimitive():
         self.animations = {}
         self.datarefs = {}
 
+        # add custom attributes
+        for attr in object.xplane.customAttributes:
+            self.attributes[attr.name] = attr.value
+
+        self.getCoordinates()
+        self.getAnimations()
+
+    def getCoordinates(self):
+        # update object display so we have initial values
+        self.object.update(scene=bpy.context.scene)
+
+        # convert local to global
+        glob = localToGlobal(self.object)
+
+        # store initial global location, rotation and scale
+        self.location = [-glob['loc'][0],glob['loc'][2],glob['loc'][1]]
+        self.angle = [math.degrees(glob['rot'][0]),math.degrees(glob['rot'][2]),math.degrees(glob['rot'][1])]
+
+        if self.parent!=None:
+            self.parent.object.update(scene=bpy.context.scene)
+            glob = localToGlobal(self.parent.object)
+            parentLocation = [-glob['loc'][0],glob['loc'][2],glob['loc'][1]]
+            parentAngle = [math.degrees(glob['rot'][0]),math.degrees(glob['rot'][2]),math.degrees(glob['rot'][1])]
+            self.locationLocal = [0.0,0.0,0.0]
+            self.angleLocal = [0.0,0.0,0.0]
+            
+            for i in range(0,3):
+                self.locationLocal[i] = self.location[i] - parentLocation[i]
+                self.angleLocal[i] = self.angle[i] - parentAngle[i]
+        else:
+            self.locationLocal = self.location
+            self.angleLocal = self.angle
+
+        print(self.name)
+        print(self.locationLocal)
+        print(self.angleLocal)
+
+    def getAnimations(self):
         #check for animation
         if debug:
             print("\t\t checking animations")
-        if (object.animation_data != None and object.animation_data.action != None and len(object.animation_data.action.fcurves)>0):
+        if (self.object.animation_data != None and self.object.animation_data.action != None and len(self.object.animation_data.action.fcurves)>0):
             if debug:
                 print("\t\t animation found")
             #check for dataref animation by getting fcurves with the dataref group
-            for fcurve in object.animation_data.action.fcurves:
+            for fcurve in self.object.animation_data.action.fcurves:
                 if debug:
                     print("\t\t checking FCurve %s" % fcurve.data_path)
                 if (fcurve.group != None and fcurve.group.name == "XPlane Datarefs"):
                     # get dataref name
                     index = int(fcurve.data_path.replace('["xplane"]["datarefs"][','').replace(']["value"]',''))
-                    dataref = object.xplane.datarefs[index].path
-                    self.datarefs[dataref] = object.xplane.datarefs[index]
+                    dataref = self.object.xplane.datarefs[index].path
 
                     if debug:
                         print("\t\t adding dataref animation: %s" % dataref)
@@ -143,6 +192,7 @@ class XPlanePrimitive():
                     if len(fcurve.keyframe_points)>1:
                         # time to add dataref to animations
                         self.animations[dataref] = []
+                        self.datarefs[dataref] = self.object.xplane.datarefs[index]
 
                         # store keyframes temporary, so we can resort them
                         keyframes = []
@@ -157,10 +207,6 @@ class XPlanePrimitive():
                         
                         for i in range(0,len(keyframesSorted)):
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
-
-        # add custom attributes
-        for attr in object.xplane.customAttributes:
-            self.attributes[attr.name] = attr.value
 
 
 class XPlaneMaterial():
@@ -491,67 +537,16 @@ class XPlaneCommands():
         # stores all already written attributes
         self.written = {}
 
+        # stores already written primitives, that have been written due to nested animations
+        self.writtenPrimitives = []
+
     def write(self):
         o=''
          
         # write down all objects
         for prim in self.file['primitives']:
-            animationStarted = False
-            if debug:
-                o+="# %s\n" % prim.name
-                
-            tabs = ''
-            if len(prim.animations)>0:
-                animationStarted = True
-                animLevel = self.getAnimLevel(prim)
-                
-                # begin animation block
-                o+="%sANIM_begin\n" % self.getAnimTabs(animLevel)
-                animLevel+=1
-                tabs = self.getAnimTabs(animLevel)
-                
-                for dataref in prim.animations:
-                    if len(prim.animations[dataref])>1:
-                        o+=self.writeKeyframes(prim,dataref,tabs)
-                            
-#                    for i in range(0,len(prim.animations[dataref])):
-#                        o+=self.writeKeyframe(prim,dataref,i,tabs)
-                    
-            #material
-            for attr in prim.material.attributes:
-                if prim.material.attributes[attr]!=None:
-                    if(prim.material.attributes[attr]==True):
-                        value = ""
-                        line = '%s\n' % attr
-                    else:
-                        value = prim.material.attributes[attr]
-                        line = '%s\t%s\n' % (attr,value)
-
-                    o+=tabs+line
-                    # only write line if attribtue wasn't already written with same value
-#                    if attr in self.written:
-#                        if self.written[attr]!=value:
-#                            o+=line
-#                            self.written[attr] = value
-#                    else:
-#                        o+=line
-#                        self.written[attr] = value
-
-            #custom object attributes
-            for attr in prim.attributes:
-                line='%s\t%s\n' % (attr,prim.attributes[attr])
-                o+=tabs+line
-            
-            #o+=prim.material.write()
-            o+=prim.faces.write()
-            offset = prim.indices[0]
-            count = prim.indices[1]-prim.indices[0]
-            o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
-
-            if animationStarted:
-                # end animation block
-                animLevel-=1
-                o+="%sANIM_end\n" % self.getAnimTabs(animLevel)
+            if prim not in self.writtenPrimitives:
+                o+=self.writePrimitive(prim,0)
 
         # write down all lights
         if len(self.file['lights'])>0:
@@ -559,26 +554,94 @@ class XPlaneCommands():
             
         return o
 
+    def writePrimitive(self,prim,animLevel):
+        o = ''
+        
+        animationStarted = False
+        tabs = self.getAnimTabs(animLevel)
+
+        if debug:
+            o+="%s# %s\n" % (tabs,prim.name)
+
+        if len(prim.animations)>0:
+            animationStarted = True
+
+            # begin animation block
+            o+="%sANIM_begin\n" % tabs
+            animLevel+=1
+            tabs = self.getAnimTabs(animLevel)
+
+            for dataref in prim.animations:
+                if len(prim.animations[dataref])>1:
+                    o+=self.writeKeyframes(prim,dataref,tabs)
+
+        o+=self.writeMaterial(prim,tabs)
+        o+=self.writeCustomAttributes(prim,tabs)
+
+        # triangle rendering
+        offset = prim.indices[0]
+        count = prim.indices[1]-prim.indices[0]
+        o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
+
+        self.writtenPrimitives.append(prim)
+
+        if animationStarted:
+            if len(prim.children)>0:
+                for childPrim in prim.children:
+                    if childPrim not in self.writtenPrimitives:
+                        o+=self.writePrimitive(childPrim,animLevel)
+            # TODO: check if primitive has an animated parent in another file, if so add a dummy anim-block around it?
+
+            # end animation block
+            o+="%sANIM_end\n" % self.getAnimTabs(animLevel-1)
+        return o
+
     def getAnimTabs(self,level):
         tabs = ''
-        if level>0:
-            i = 1
-            while i<=level:
-                tabs+='\t'
-                i+=1
+        for i in range(0,level):
+            tabs+='\t'
         
         return tabs
 
     def getAnimLevel(self,prim):
-        parent = prim.object
+        parent = prim
         level = 0
         
         while parent != None:
             parent = parent.parent
-            if (parent!=None and parent.type!="EMPTY"):
+            if (parent!=None):
                 level+=1
         
         return level
+
+    def writeMaterial(self,prim,tabs):
+        o = ''
+        for attr in prim.material.attributes:
+            if prim.material.attributes[attr]!=None:
+                if(prim.material.attributes[attr]==True):
+                    value = ""
+                    line = '%s\n' % attr
+                else:
+                    value = prim.material.attributes[attr]
+                    line = '%s\t%s\n' % (attr,value)
+
+                o+=tabs+line
+                # only write line if attribtue wasn't already written with same value
+#                    if attr in self.written:
+#                        if self.written[attr]!=value:
+#                            o+=line
+#                            self.written[attr] = value
+#                    else:
+#                        o+=line
+#                        self.written[attr] = value
+        return o
+
+    def writeCustomAttributes(self,prim,tabs):
+        o = ''
+        for attr in prim.attributes:
+            line='%s\t%s\n' % (attr,prim.attributes[attr])
+            o+=tabs+line
+        return o
 
     def writeKeyframes(self,prim,dataref,tabs):
         o = ''
@@ -590,8 +653,8 @@ class XPlaneCommands():
 
         # TODO: staticTrans can be merged into regular translations
         staticTrans = ['','']
-        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.location[0],prim.location[1],prim.location[2],prim.location[0],prim.location[1],prim.location[2])
-        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.location[0],-prim.location[1],-prim.location[2],-prim.location[0],-prim.location[1],-prim.location[2])
+        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.locationLocal[0],prim.locationLocal[1],prim.locationLocal[2],prim.locationLocal[0],prim.locationLocal[1],prim.locationLocal[2])
+        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2],-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
         rot = ['','','']
@@ -600,14 +663,14 @@ class XPlaneCommands():
         rot[2] = "%sANIM_rotate_begin\t0.0\t0.0\t1.0\t%s\n" % (tabs,dataref)
         
         for keyframe in keyframes:
-            totalTrans[0]+=keyframe.translation[0]
-            totalTrans[1]+=keyframe.translation[1]
-            totalTrans[2]+=keyframe.translation[2]
+            totalTrans[0]+=abs(keyframe.translation[0])
+            totalTrans[1]+=abs(keyframe.translation[1])
+            totalTrans[2]+=abs(keyframe.translation[2])
             trans+="%s\tANIM_trans_key\t%6.4f\t%6.4f\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2])
             
-            totalRot[0]+=keyframe.rotation[0]
-            totalRot[1]+=keyframe.rotation[1]
-            totalRot[2]+=keyframe.rotation[2]
+            totalRot[0]+=abs(keyframe.rotation[0])
+            totalRot[1]+=abs(keyframe.rotation[1])
+            totalRot[2]+=abs(keyframe.rotation[2])
 
             for i in range(0,3):
                 rot[i]+="%s\tANIM_rotate_key\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[i])
@@ -708,40 +771,43 @@ class XPlaneData():
                         if child.type=="MESH":
                             if debug:
                                 print("\t "+child.name+": adding to list")
-                            prim = self.files[obj.name]['primitives'].append(XPlanePrimitive(child))
+                            prim = XPlanePrimitive(child)
+                            self.files[obj.name]['primitives'].append(prim)
+
                             # look for children
                             if len(child.children)>0:
-                                prim.children = self.getChildren(child)
+                                self.addChildren(prim,obj.name)
+                                
                         if child.type=="LAMP":
                             if debug:
                                 print("\t "+child.name+": adding to list")
                             self.files[obj.name]['lights'].append(XPlaneLight(child))
 
                 # apply further splitting by textures
-                self.splitFileByTexture(obj)    
+                self.splitFileByTexture(obj)
 
-    def getChildren(self,prim):
-        children = []
+    def addChildren(self,prim,file):
         obj = prim.object
         
         for child in obj.children:
             if debug:
-                print("\t scanning "+child.name)
+                print("\t\t scanning "+child.name)
 
             if child.hide==False:
                 if child.type=="MESH":
                     if debug:
-                        print("\t "+child.name+": adding to list")
-                    childPrim = children.append(XPlanePrimitive(child))
+                        print("\t\t "+child.name+": adding to list")
+                    childPrim = XPlanePrimitive(child,prim)
+                    prim.children.append(childPrim)
 
-                    # store parent
-                    childPrim.parent = prim
+                    # add prim to file
+                    self.files[file]['primitives'].append(childPrim)
 
                     # recursion
                     if len(child.children)>0:
-                        childPrim.children = self.getChildren(childPrim)
-
-        return children
+                        self.addChildren(childPrim,file)
+                        
+        
 
     def splitFileByTexture(self,parent):
         name = parent.name
