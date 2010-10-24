@@ -9,18 +9,78 @@ from collections import OrderedDict
 debug = True
 version = 3200
 
-def localToGlobal(object):
-    matrix = object.matrix_world
-    loc = matrix.translation_part()
-    loc = [loc[0],loc[1],loc[2]]
-    rot = matrix.rotation_part().to_euler("XYZ")
-    rot = [rot[0],rot[1],rot[2]]
-    scale = matrix.scale_part()
-    scale = [scale[0],scale[1],scale[2]]
-    return {"loc":loc,"rot":rot,"scale":scale}
+class XPlaneCoords():
+    def __init__(self,object):
+        self.object = object
 
-def convertCoords(co):
-    return [-co[0],co[2],co[1]]
+    def worldLocation(self):
+        matrix = self.object.matrix_world
+        loc = matrix.translation_part()
+        return self.convert([loc[0],loc[1],loc[2]])
+
+    def worldRotation(self):
+        matrix = self.object.matrix_world
+        rot = matrix.rotation_part().to_euler("XYZ")
+        return self.convert([rot[0],rot[1],rot[2]])
+
+    def worldAngle(self):
+        return self.angle(self.worldRotation())
+
+    def worldScale(self):
+        matrix = self.object.matrix_world
+        scale = matrix.scale_part()
+        return self.convert([scale[0],scale[1],scale[2]],True)
+
+    def world(self):
+        matrix = self.object.matrix_world
+        loc = matrix.translation_part()
+        loc = self.convert([loc[0],loc[1],loc[2]])
+        rot = matrix.rotation_part().to_euler("XYZ")
+        rot = self.convert([rot[0],rot[1],rot[2]])
+        scale = matrix.scale_part()
+        scale = self.convert([scale[0],scale[1],scale[2]],True)
+        return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
+
+    def localLocation(self,parent):
+        matrix = self.relativeMatrix(parent)
+        loc = matrix.translation_part()
+        return self.convert([loc[0],loc[1],loc[2]])
+
+    def localRotation(self,parent):
+        matrix = self.relativeMatrix(parent)
+        rot = matrix.rotation_part().to_euler("XYZ")
+        return self.convert([rot[0],rot[1],rot[2]])
+
+    def localAngle(self,parent):
+        return self.angle(self.localRotation())
+
+    def localScale(self,parent):
+        matrix = self.relativeMatrix(parent)
+        scale = matrix.scale_part()
+        return self.convert([scale[0],scale[1],scale[2]],True)
+
+    def local(self,parent):
+        matrix = self.relativeMatrix(parent)
+        loc = matrix.translation_part()
+        loc = self.convert([loc[0],loc[1],loc[2]])
+        rot = matrix.rotation_part().to_euler("XYZ")
+        rot = self.convert([rot[0],rot[1],rot[2]])
+        scale = matrix.scale_part()
+        scale = self.convert([scale[0],scale[1],scale[2]],True)
+        return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
+
+    def angle(self,rot):
+        return [math.degrees(rot[0]),math.degrees(rot[1]),math.degrees(rot[2])]
+
+    def convert(self,co,scale = False):
+        if (scale):
+            return [co[0],co[2],co[1]]
+        else:
+            return [-co[0],co[2],co[1]]
+
+    def relativeMatrix(self,parent):
+        return self.object.matrix_world * parent.matrix_world.copy().invert()
+
 
 class XPlaneLight():
     def __init__(self,object):
@@ -60,57 +120,51 @@ class XPlaneKeyframe():
         self.dataref = dataref
         self.translation = [0.0,0.0,0.0]
         self.rotation = [0.0,0.0,0.0]
+        self.scale = [0.0,0.0,0.0]
         object = prim.object
 
         # goto keyframe and read out object values
         # TODO: support subframes?
         frame = int(round(keyframe.co[0]))
         bpy.context.scene.frame_set(frame=frame)
-
-        # update object so we get values from the keyframe
-        object.update(scene=bpy.context.scene)
-        
-        # convert local to global
-        glob = localToGlobal(object)
-        
-        # swap y and z and invert x (right handed system)
-        self.location = [-glob['loc'][0],glob['loc'][2],glob['loc'][1]]
-        self.angle = [math.degrees(glob['rot'][0]),math.degrees(glob['rot'][2]),math.degrees(glob['rot'][1])]
+        coords = XPlaneCoords(object)
 
         self.hide = object.hide_render
 
-        print(prim.name)
-        print(index)
-
-        # remove parent location and angle to get local coordinates
         if prim.parent!=None:
              # update object so we get values from the keyframe
             prim.parent.object.update(scene=bpy.context.scene)
-            glob = localToGlobal(prim.parent.object)
-            parentLocation = [-glob['loc'][0],glob['loc'][2],glob['loc'][1]]
-            parentAngle = [math.degrees(glob['rot'][0]),math.degrees(glob['rot'][2]),math.degrees(glob['rot'][1])]
+            object.update(scene=bpy.context.scene)
+            
+            world = coords.world()
+            local = coords.local(prim.parent.object)
 
-            self.locationLocal = [0.0,0.0,0.0]
-            self.angleLocal = [0.0,0.0,0.0]
-
-            # TODO: global-location seems to be wrong
-
+            self.location = world["location"]
+            self.angle = world["angle"]
+            self.scale = world["scale"]           
+            
+            self.locationLocal = local["location"]
+            self.angleLocal = local["angle"]
+            self.scaleLocal = local["scale"]
+            # TODO: multiply location with scale of parent
+            
             for i in range(0,3):
-                self.locationLocal[i] = self.location[i] - parentLocation[i]
-                self.angleLocal[i] = self.angle[i] - parentAngle[i]
-
                 # remove initial location and rotation to get offset
                 self.translation[i] = self.locationLocal[i]-prim.locationLocal[i]
                 self.rotation[i] = self.angleLocal[i]-prim.angleLocal[i]
-
-            if debug:
-                print(self.location)
-                print(parentLocation)
-                print(self.locationLocal)
-                print(self.translation)
         else:
+            # update object so we get values from the keyframe
+            object.update(scene=bpy.context.scene)
+
+            world = coords.world()
+
+            self.location = world["location"]
+            self.angle = world["angle"]
+            self.scale = world["scale"]
+
             self.locationLocal = self.location
             self.angleLocal = self.angle
+            self.scaleLocal = self.scale
 
             # remove initial location and rotation to get offset
             for i in range(0,3):
@@ -132,7 +186,7 @@ class XPlanePrimitive():
         self.attributes = {}
         self.animations = {}
         self.datarefs = {}
-
+        
         # add custom attributes
         for attr in object.xplane.customAttributes:
             self.attributes[attr.name] = attr.value
@@ -141,34 +195,39 @@ class XPlanePrimitive():
         self.getAnimations()
 
     def getCoordinates(self):
-        # update object display so we have initial values
-        self.object.update(scene=bpy.context.scene)
-
-        # convert local to global
-        glob = localToGlobal(self.object)
-
-        # store initial global location, rotation and scale
-        self.location = [-glob['loc'][0],glob['loc'][2],glob['loc'][1]]
-        self.angle = [math.degrees(glob['rot'][0]),math.degrees(glob['rot'][2]),math.degrees(glob['rot'][1])]
+        # goto first frame so everything is in inital state
+        bpy.context.scene.frame_set(frame=1)
+        coords = XPlaneCoords(self.object)
 
         if self.parent!=None:
+            # update object display so we have initial values
             self.parent.object.update(scene=bpy.context.scene)
-            glob = localToGlobal(self.parent.object)
-            parentLocation = [-glob['loc'][0],glob['loc'][2],glob['loc'][1]]
-            parentAngle = [math.degrees(glob['rot'][0]),math.degrees(glob['rot'][2]),math.degrees(glob['rot'][1])]
+            self.object.update(scene=bpy.context.scene)
+
+            world = coords.world()
+            local = coords.local(self.parent.object)
+
+            # store initial location, rotation and scale
+            self.location = world["location"]
+            self.angle = world["angle"]
+            self.scale = world["scale"]           
+            
+            self.locationLocal = local["location"]
+            self.angleLocal = local["angle"]
+            self.scaleLocal = local["scale"]
+        else:
+            # update object display so we have initial values
+            self.object.update(scene=bpy.context.scene)
+            
+            world = coords.world()
+
+            # store initial location, rotation and scale
+            self.location = world["location"]
+            self.angle = world["angle"]
+            self.scale = world["scale"]
             self.locationLocal = [0.0,0.0,0.0]
             self.angleLocal = [0.0,0.0,0.0]
-            
-            for i in range(0,3):
-                self.locationLocal[i] = self.location[i] - parentLocation[i]
-                self.angleLocal[i] = self.angle[i] - parentAngle[i]
-        else:
-            self.locationLocal = self.location
-            self.angleLocal = self.angle
-
-        print(self.name)
-        print(self.locationLocal)
-        print(self.angleLocal)
+            self.scaleLocal = [0.0,0.0,0.0]
 
     def getAnimations(self):
         #check for animation
@@ -283,17 +342,6 @@ class XPlaneMaterial():
             for attr in mat.xplane.customAttributes:
                 self.attributes[attr.name] = attr.value
 
-#    def write(self):
-#        o=''
-#        for attr in self.attributes:
-#            if self.attributes[attr]!=None:
-#                if(self.attributes[attr]==True):
-#                    o+='%s\n' % attr
-#                else:
-#                    o+='%s\t%s\n' % (attr,self.attributes[attr])
-#
-#        return o
-
 class XPlaneFace():
     def __init__(self):
         self.vertices = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
@@ -318,10 +366,6 @@ class XPlaneFaces():
             return self.faces[i]
         else:
             return None
-
-    def write(self):
-        # TODO: collect groups of face attributes and dump them together with the TRIS command?
-        return ''
 
 
 class XPlaneMesh():
@@ -412,7 +456,6 @@ class XPlaneMesh():
 
     def getUVFaces(self,mesh,uv_name):
         # get the uv_texture
-
         if (uv_name != None and len(mesh.uv_textures)>0):
             uv_layer = None
             if uv_name=="":
@@ -653,9 +696,9 @@ class XPlaneCommands():
 
         # TODO: staticTrans can be merged into regular translations
         staticTrans = ['','']
-        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.locationLocal[0],prim.locationLocal[1],prim.locationLocal[2],prim.locationLocal[0],prim.locationLocal[1],prim.locationLocal[2])
-        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2],-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2])
-        
+        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.location[0],prim.location[1],prim.location[2],prim.location[0],prim.location[1],prim.location[2])
+        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.location[0],-prim.location[1],-prim.location[2],-prim.location[0],-prim.location[1],-prim.location[2])
+
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
         rot = ['','','']
         rot[0] = "%sANIM_rotate_begin\t1.0\t0.0\t0.0\t%s\n" % (tabs,dataref)
@@ -703,47 +746,6 @@ class XPlaneCommands():
             o+=staticTrans[1]
         
         return o
-
-#    def writeKeyframe(self,prim,dataref,index,tabs):
-#        o = ''
-#
-#        if index>0:
-#            if debug:
-#                o+="%s# keyframes %d,%d\n" % (tabs,index-1,index)
-#
-#            prevKeyframe = None
-#            translations = []
-#            rotations = []
-#            prevKeyframe = prim.animations[dataref][index-1]
-#
-#            keyframe = prim.animations[dataref][index]
-#
-#            # check for translation and rotation
-#            for i in range(0,3):
-#                if keyframe.translation[i]!=0:
-#                    translations.append(i)
-#                if keyframe.rotation[i]!=0:
-#                    rotations.append(i)
-#
-#            if len(rotations)>0:
-#                # move object center to world origin by adding a static translation
-#                o+="%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,keyframe.location[0],keyframe.location[1],keyframe.location[2],keyframe.location[0],keyframe.location[1],keyframe.location[2])
-#
-#                #now add rotation from prev to current keyframe
-#                for i in rotations:
-#                    rot = [0.0,0.0,0.0]
-#                    rot[i] = 1.0
-#                    o+="%sANIM_rotate\t%6.4f\t%6.4f\t%6.4f\t0.0\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,rot[0],rot[1],rot[2],keyframe.rotation[i],prevKeyframe.value,keyframe.value,dataref)
-#
-#                # move object back to original position to add translation
-#                o+="%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-keyframe.location[0],-keyframe.location[1],-keyframe.location[2],-keyframe.location[0],-keyframe.location[1],-keyframe.location[2])
-#
-#            if len(translations)>0:
-#                #now add translation from prev to current keyframe
-#                o+="%sANIM_trans\t0.0\t0.0\t0.0\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2],prevKeyframe.value,keyframe.value,dataref)
-#
-#
-#        return o
 
 class XPlaneData():
     def __init__(self):
