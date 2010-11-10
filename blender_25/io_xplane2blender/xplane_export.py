@@ -9,6 +9,8 @@ from collections import OrderedDict
 debug = True
 version = 3200
 
+# python mathutils supports euler order so you could convert the rotation this way
+# probably transform rotation as a matrix into the exported space without the flipped axis, then convert to a euler with the order you need, and flip the axis
 class XPlaneCoords():
     def __init__(self,object):
         self.object = object
@@ -20,8 +22,8 @@ class XPlaneCoords():
 
     def worldRotation(self):
         matrix = self.object.matrix_world
-        rot = matrix.rotation_part().to_euler("XYZ")
-        return self.convert([rot[0],rot[1],rot[2]])
+        rot = matrix.rotation_part().to_euler("XZY")
+        return [-rot[0],rot[1],rot[2]]
 
     def worldAngle(self):
         return self.angle(self.worldRotation())
@@ -35,8 +37,8 @@ class XPlaneCoords():
         matrix = self.object.matrix_world
         loc = matrix.translation_part()
         loc = self.convert([loc[0],loc[1],loc[2]])
-        rot = matrix.rotation_part().to_euler("XYZ")
-        rot = self.convert([rot[0],rot[1],rot[2]])
+        rot = matrix.rotation_part().to_euler("XZY")
+        rot = [-rot[0],rot[1],rot[2]]
         scale = matrix.scale_part()
         scale = self.convert([scale[0],scale[1],scale[2]],True)
         return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
@@ -60,6 +62,20 @@ class XPlaneCoords():
         return self.convert([scale[0],scale[1],scale[2]],True)
 
     def local(self,parent):
+#        coordsParent = XPlaneCoords(parent).world()
+#        coords = self.world()
+#        for i in range(0,3):
+#            if (i==0):
+#                coords["location"][i] = coords["location"][i]-coordsParent["location"][i]
+#                coords["rotation"][i] = coords["rotation"][i]-coordsParent["rotation"][i]
+#                coords["angle"][i] = coords["angle"][i]-coordsParent["angle"][i]
+#            else:
+#                coords["location"][i] = coords["location"][i]+coordsParent["location"][i]
+#                coords["rotation"][i] = coords["rotation"][i]+coordsParent["rotation"][i]
+#                coords["angle"][i] = coords["angle"][i]+coordsParent["angle"][i]
+#
+#        return coords
+            
         matrix = self.relativeMatrix(parent)
         loc = matrix.translation_part()
         loc = self.convert([loc[0],loc[1],loc[2]])
@@ -121,12 +137,14 @@ class XPlaneKeyframe():
         self.translation = [0.0,0.0,0.0]
         self.rotation = [0.0,0.0,0.0]
         self.scale = [0.0,0.0,0.0]
+        self.index = index
+        self.primitive = prim
         object = prim.object
 
         # goto keyframe and read out object values
         # TODO: support subframes?
-        frame = int(round(keyframe.co[0]))
-        bpy.context.scene.frame_set(frame=frame)
+        self.frame = int(round(keyframe.co[0]))
+        bpy.context.scene.frame_set(frame=self.frame)
         coords = XPlaneCoords(object)
 
         self.hide = object.hide_render
@@ -696,9 +714,9 @@ class XPlaneCommands():
 
         # TODO: staticTrans can be merged into regular translations
         staticTrans = ['','']
-        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.location[0],prim.location[1],prim.location[2],prim.location[0],prim.location[1],prim.location[2])
-        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.location[0],-prim.location[1],-prim.location[2],-prim.location[0],-prim.location[1],-prim.location[2])
-
+        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.locationLocal[0],prim.locationLocal[1],prim.locationLocal[2],prim.locationLocal[0],prim.locationLocal[1],prim.locationLocal[2])
+        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2],-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2])
+        
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
         rot = ['','','']
         rot[0] = "%sANIM_rotate_begin\t1.0\t0.0\t0.0\t%s\n" % (tabs,dataref)
@@ -717,6 +735,16 @@ class XPlaneCommands():
 
             for i in range(0,3):
                 rot[i]+="%s\tANIM_rotate_key\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[i])
+
+            if debug:
+                print("%s keyframe %d@%d" % (keyframe.primitive.name,keyframe.index,keyframe.frame))
+                print("location/prim.location")
+                print(keyframe.location)
+                print(keyframe.primitive.location)
+                print("locationLocal/prim.locationLocal")
+                print(keyframe.locationLocal)
+                print(keyframe.primitive.locationLocal)
+                print("")
             
         trans+="%sANIM_trans_end\n" % tabs
         rot[0]+="%sANIM_rotate_end\n" % tabs
