@@ -76,6 +76,14 @@ def empty_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "exportChildren", text="Export Children", icon=checkboxIcon, toggle=True)
 
+    if obj.xplane.cockpit:
+        checkboxIcon = "CHECKBOX_HLT"
+    else:
+        checkboxIcon = "CHECKBOX_DEHLT"
+
+    row = layout.row()
+    row.prop(obj.xplane, "cockpit", text="Cockpit",icon=checkboxIcon, toggle=True)
+
     row = layout.row()
     row.prop(obj.xplane, "slungLoadWeight", text="Slung Load weight")
 

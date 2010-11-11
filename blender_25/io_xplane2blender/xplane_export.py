@@ -3,6 +3,7 @@ import bpy
 import struct
 import os
 import math
+from mathutils import Matrix
 from bpy.props import *
 from collections import OrderedDict
 
@@ -16,50 +17,50 @@ class XPlaneCoords():
         self.object = object
 
     def worldLocation(self):
-        matrix = self.object.matrix_world
+        matrix = self.object.matrix_world*self.conversionMatrix()
         loc = matrix.translation_part()
-        return self.convert([loc[0],loc[1],loc[2]])
+        return loc #self.convert([loc[0],loc[1],loc[2]])
 
     def worldRotation(self):
-        matrix = self.object.matrix_world
+        matrix = self.object.matrix_world*self.conversionMatrix()
         rot = matrix.rotation_part().to_euler("XZY")
-        return [-rot[0],rot[1],rot[2]]
+        return rot #[-rot[0],rot[1],rot[2]]
 
     def worldAngle(self):
         return self.angle(self.worldRotation())
 
     def worldScale(self):
-        matrix = self.object.matrix_world
+        matrix = self.object.matrix_world*self.conversionMatrix()
         scale = matrix.scale_part()
-        return self.convert([scale[0],scale[1],scale[2]],True)
+        return scale #self.convert([scale[0],scale[1],scale[2]],True)
 
     def world(self):
-        matrix = self.object.matrix_world
+        matrix = self.object.matrix_world*self.conversionMatrix()
         loc = matrix.translation_part()
-        loc = self.convert([loc[0],loc[1],loc[2]])
+        #loc = self.convert([loc[0],loc[1],loc[2]])
         rot = matrix.rotation_part().to_euler("XZY")
-        rot = [-rot[0],rot[1],rot[2]]
+        #rot = [-rot[0],rot[1],rot[2]]
         scale = matrix.scale_part()
-        scale = self.convert([scale[0],scale[1],scale[2]],True)
+        #scale = self.convert([scale[0],scale[1],scale[2]],True)
         return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
 
     def localLocation(self,parent):
-        matrix = self.relativeMatrix(parent)
+        matrix = self.relativeMatrix(parent)*self.conversionMatrix()
         loc = matrix.translation_part()
-        return self.convert([loc[0],loc[1],loc[2]])
+        return loc #self.convert([loc[0],loc[1],loc[2]])
 
     def localRotation(self,parent):
-        matrix = self.relativeMatrix(parent)
+        matrix = self.relativeMatrix(parent)**self.conversionMatrix()
         rot = matrix.rotation_part().to_euler("XYZ")
-        return self.convert([rot[0],rot[1],rot[2]])
+        return rot #self.convert([rot[0],rot[1],rot[2]])
 
     def localAngle(self,parent):
         return self.angle(self.localRotation())
 
     def localScale(self,parent):
-        matrix = self.relativeMatrix(parent)
+        matrix = self.relativeMatrix(parent)*self.conversionMatrix()
         scale = matrix.scale_part()
-        return self.convert([scale[0],scale[1],scale[2]],True)
+        return scale #self.convert([scale[0],scale[1],scale[2]],True)
 
     def local(self,parent):
 #        coordsParent = XPlaneCoords(parent).world()
@@ -76,13 +77,13 @@ class XPlaneCoords():
 #
 #        return coords
             
-        matrix = self.relativeMatrix(parent)
+        matrix = self.relativeMatrix(parent)*self.conversionMatrix()
         loc = matrix.translation_part()
-        loc = self.convert([loc[0],loc[1],loc[2]])
+        #loc = self.convert([loc[0],loc[1],loc[2]])
         rot = matrix.rotation_part().to_euler("XYZ")
-        rot = self.convert([rot[0],rot[1],rot[2]])
+        #rot = self.convert([rot[0],rot[1],rot[2]])
         scale = matrix.scale_part()
-        scale = self.convert([scale[0],scale[1],scale[2]],True)
+        #scale = self.convert([scale[0],scale[1],scale[2]],True)
         return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
 
     def angle(self,rot):
@@ -96,6 +97,22 @@ class XPlaneCoords():
 
     def relativeMatrix(self,parent):
         return self.object.matrix_world * parent.matrix_world.copy().invert()
+
+    def conversionMatrix(self):
+        cmatrix = Matrix()
+        cmatrix[0][0] = 1
+        cmatrix[1][2] = 1
+        cmatrix[2][1] = -1
+        return cmatrix
+
+    @staticmethod
+    def convertMatrix(matrix):
+        print(Matrix())
+        cmatrix = Matrix((1,0,0,0),
+                        (0,1,0,0),
+                        (0,0,1,0),
+                        (0,0,0,1))
+        return matrix*cmatrix
 
 
 class XPlaneLight():
@@ -398,7 +415,7 @@ class XPlaneMesh():
             prim.indices[0] = len(self.indices)
             
             # store the world translation matrix
-            matrix = prim.object.matrix_world
+            matrix = XPlaneCoords.convertMatrix(prim.object.matrix_world)
             
             # create a copy of the object mesh with modifiers applied
             mesh = prim.object.create_mesh(bpy.context.scene, True, "PREVIEW")
@@ -434,7 +451,7 @@ class XPlaneMesh():
                     co = v.co
 
                     # swap y and z and invert x (right handed system)
-                    vert = [-co[0],co[2],co[1],-v.normal[0],v.normal[2],v.normal[1],f['uv'][i][0],f['uv'][i][1]]
+                    vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
 
                     # use dupli vertice if any
                     index = self.getDupliVerticeIndex(vert)
@@ -624,17 +641,17 @@ class XPlaneCommands():
         if debug:
             o+="%s# %s\n" % (tabs,prim.name)
 
-        if len(prim.animations)>0:
-            animationStarted = True
-
-            # begin animation block
-            o+="%sANIM_begin\n" % tabs
-            animLevel+=1
-            tabs = self.getAnimTabs(animLevel)
-
-            for dataref in prim.animations:
-                if len(prim.animations[dataref])>1:
-                    o+=self.writeKeyframes(prim,dataref,tabs)
+#        if len(prim.animations)>0:
+#            animationStarted = True
+#
+#            # begin animation block
+#            o+="%sANIM_begin\n" % tabs
+#            animLevel+=1
+#            tabs = self.getAnimTabs(animLevel)
+#
+#            for dataref in prim.animations:
+#                if len(prim.animations[dataref])>1:
+#                    o+=self.writeKeyframes(prim,dataref,tabs)
 
         o+=self.writeMaterial(prim,tabs)
         o+=self.writeCustomAttributes(prim,tabs)

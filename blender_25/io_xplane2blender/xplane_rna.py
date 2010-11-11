@@ -260,6 +260,11 @@ def addXPlaneRNA():
                                 description="Export children of this to X-Plane.",
                                 default = False)
 
+    XPlaneObjectSettings.cockpit = bpy.props.BoolProperty(attr="cockpit",
+                                    name="Cockpit",
+                                    description="If checked the exported object will be interpreted as a cockpit.",
+                                    default=False)
+
     XPlaneObjectSettings.slungLoadWeight = bpy.props.FloatProperty(attr="slungLoadWeight",
                                 name="Slung Load weight",
                                 description="Weight of the object in pounds, for use in the physics engine if the object is being carried by a plane or helicopter.",
