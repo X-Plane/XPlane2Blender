@@ -17,12 +17,12 @@ class XPlaneCoords():
         self.object = object
 
     def worldLocation(self):
-        matrix = self.object.matrix_world*self.conversionMatrix()
+        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
         loc = matrix.translation_part()
         return loc #self.convert([loc[0],loc[1],loc[2]])
 
     def worldRotation(self):
-        matrix = self.object.matrix_world*self.conversionMatrix()
+        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
         rot = matrix.rotation_part().to_euler("XZY")
         return rot #[-rot[0],rot[1],rot[2]]
 
@@ -30,12 +30,12 @@ class XPlaneCoords():
         return self.angle(self.worldRotation())
 
     def worldScale(self):
-        matrix = self.object.matrix_world*self.conversionMatrix()
+        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
         scale = matrix.scale_part()
         return scale #self.convert([scale[0],scale[1],scale[2]],True)
 
     def world(self):
-        matrix = self.object.matrix_world*self.conversionMatrix()
+        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
         loc = matrix.translation_part()
         #loc = self.convert([loc[0],loc[1],loc[2]])
         rot = matrix.rotation_part().to_euler("XZY")
@@ -45,12 +45,12 @@ class XPlaneCoords():
         return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
 
     def localLocation(self,parent):
-        matrix = self.relativeMatrix(parent)*self.conversionMatrix()
+        matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
         loc = matrix.translation_part()
         return loc #self.convert([loc[0],loc[1],loc[2]])
-
+        
     def localRotation(self,parent):
-        matrix = self.relativeMatrix(parent)**self.conversionMatrix()
+        matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
         rot = matrix.rotation_part().to_euler("XYZ")
         return rot #self.convert([rot[0],rot[1],rot[2]])
 
@@ -58,7 +58,7 @@ class XPlaneCoords():
         return self.angle(self.localRotation())
 
     def localScale(self,parent):
-        matrix = self.relativeMatrix(parent)*self.conversionMatrix()
+        matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
         scale = matrix.scale_part()
         return scale #self.convert([scale[0],scale[1],scale[2]],True)
 
@@ -77,7 +77,7 @@ class XPlaneCoords():
 #
 #        return coords
             
-        matrix = self.relativeMatrix(parent)*self.conversionMatrix()
+        matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
         loc = matrix.translation_part()
         #loc = self.convert([loc[0],loc[1],loc[2]])
         rot = matrix.rotation_part().to_euler("XYZ")
@@ -107,12 +107,39 @@ class XPlaneCoords():
 
     @staticmethod
     def convertMatrix(matrix):
-        print(Matrix())
-        cmatrix = Matrix((1,0,0,0),
-                        (0,1,0,0),
-                        (0,0,1,0),
-                        (0,0,0,1))
-        return matrix*cmatrix
+#If your matrix looks like this:
+#{ rx, ry, rz, 0 }
+#{ ux, uy, uz, 0 }
+#{ lx, ly, lz, 0 }
+#{ px, py, pz, 1 }
+#
+#To change it from left to right or right to left, flip it like this:
+#{ rx, rz, ry, 0 }
+#{ lx, lz, ly, 0 }
+#{ ux, uz, uy, 0 }
+#{ px, pz, py, 1 }
+#        cmatrix = Matrix(( 1, 0, 0, 0),
+#                         ( 0, 1, 0, 0),
+#                         ( 0, 0,-1, 0),
+#                         ( 0, 0, 0, 1))
+#        cmatrix = Matrix(( 1, 0, 0, 0),
+#                         ( 0,-1, 0, 0),
+#                         ( 0, 0, 1, 0),
+#                         ( 0, 0, 0, 1))
+#        cmatrix = Matrix(( 1, 0, 0, 0),
+#                         ( 0,-1, 0, 0),
+#                         ( 0, 0,-1, 0),
+#                         ( 0, 0, 0, 1))
+#        cmatrix = Matrix(( 1, 0, 0, 0),
+#                         ( 0, 0,-1, 0),
+#                         ( 0,-1, 0, 0),
+#                         ( 0, 0, 0, 1))
+        cmatrix = Matrix(( matrix[0][0], matrix[0][2], -matrix[0][1], matrix[0][3]),
+                         ( matrix[2][0], matrix[2][2], -matrix[2][1], matrix[2][3]),
+                         ( matrix[1][0], matrix[1][2], -matrix[1][1], matrix[1][3]),
+                         ( matrix[3][0], matrix[3][2], -matrix[3][1], matrix[3][3]))
+        #return matrix*cmatrix
+        return cmatrix
 
 
 class XPlaneLight():
@@ -451,7 +478,7 @@ class XPlaneMesh():
                     co = v.co
 
                     # swap y and z and invert x (right handed system)
-                    vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
+                    vert = [co[0],co[1],co[2],-v.normal[0],-v.normal[1],-v.normal[2],f['uv'][i][0],f['uv'][i][1]]
 
                     # use dupli vertice if any
                     index = self.getDupliVerticeIndex(vert)
@@ -641,17 +668,17 @@ class XPlaneCommands():
         if debug:
             o+="%s# %s\n" % (tabs,prim.name)
 
-#        if len(prim.animations)>0:
-#            animationStarted = True
-#
-#            # begin animation block
-#            o+="%sANIM_begin\n" % tabs
-#            animLevel+=1
-#            tabs = self.getAnimTabs(animLevel)
-#
-#            for dataref in prim.animations:
-#                if len(prim.animations[dataref])>1:
-#                    o+=self.writeKeyframes(prim,dataref,tabs)
+        if len(prim.animations)>0:
+            animationStarted = True
+
+            # begin animation block
+            o+="%sANIM_begin\n" % tabs
+            animLevel+=1
+            tabs = self.getAnimTabs(animLevel)
+
+            for dataref in prim.animations:
+                if len(prim.animations[dataref])>1:
+                    o+=self.writeKeyframes(prim,dataref,tabs)
 
         o+=self.writeMaterial(prim,tabs)
         o+=self.writeCustomAttributes(prim,tabs)
