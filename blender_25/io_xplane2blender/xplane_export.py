@@ -102,6 +102,7 @@ class XPlaneCoords():
         cmatrix = Matrix()
         cmatrix[0][0] = 1
         cmatrix[1][2] = 1
+        #cmatrix[1][1] = 1
         cmatrix[2][1] = -1
         return cmatrix
 
@@ -137,7 +138,7 @@ class XPlaneCoords():
         cmatrix = Matrix(( matrix[0][0], matrix[0][2], -matrix[0][1], matrix[0][3]),
                          ( matrix[2][0], matrix[2][2], -matrix[2][1], matrix[2][3]),
                          ( matrix[1][0], matrix[1][2], -matrix[1][1], matrix[1][3]),
-                         ( matrix[3][0], matrix[3][2], -matrix[3][1], matrix[3][3]))
+                         ( matrix[3][0], matrix[3][2],  matrix[3][1], matrix[3][3]))
         #return matrix*cmatrix
         return cmatrix
 
@@ -468,13 +469,12 @@ class XPlaneMesh():
                 l = len(f['indices'])
                 for i in range(0,len(f['indices'])):
                     # get the original index, reverse direction because of axis swap
-                    vindex = f['indices'][l-1-i]
+                    vindex = f['indices'][i]
 
                     # get the vertice from original mesh
                     v = mesh.vertices[vindex]
                     
                     # convert local to global coordinates
-                    #co = matrix * v.co
                     co = v.co
 
                     # swap y and z and invert x (right handed system)
