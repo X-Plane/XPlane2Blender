@@ -17,27 +17,30 @@ class XPlaneProfiler():
 
     def start(self,name):
         from time import time
+
         if name in self.times:
             if self.times[name][3]:
                 self.times[name][0] = time()
                 self.times[name][3] = False
+
             self.times[name][2]+=1
         else:
             self.times[name] = [time(),0.0,1,False]
 
     def end(self,name):
         from time import time
+        
         if name in self.times:
             self.times[name][1]+=time()-self.times[name][0]
-            self.times[name][2] = True
+            self.times[name][3] = True
 
     def getTime(self,name):
-        return self.times[name][1]
+        return '%s: %6.4f sec (calls: %d)' % (name,self.times[name][1],self.times[name][2])
 
     def getTimes(self):
         _times = ''
         for name in self.times:
-            _times+='%s: %6.4f (called %d)\n' % (name,self.times[name][1],self.times[name][2])
+            _times+=self.getTime(name)+"\n"
 
         return _times
 
@@ -532,9 +535,8 @@ class XPlaneMesh():
             # store the faces in the prim
 #            prim.faces = faces
             prim.indices[1] = len(self.indices)
-
-            #TODO: now optimize vertex-table and remove duplicates
             
+            #TODO: now optimize vertex-table and remove duplicates
             # use dupli vertice if any
             #index = self.getDupliVerticeIndex(vert,endIndex)
         
@@ -1129,6 +1131,7 @@ class ExportXPlane9(bpy.types.Operator):
 
         if profile:
             profiler.end("ExportXPlane9")
+            print("\nProfiling results:")
             print(profiler.getTimes())
 
         return {'FINISHED'}
