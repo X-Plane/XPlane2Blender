@@ -8,7 +8,42 @@ from bpy.props import *
 from collections import OrderedDict
 
 debug = True
+profile = True
 version = 3200
+
+class XPlaneProfiler():
+    def __init__(self):
+        self.times = {}
+
+    def start(self,name):
+        from time import time
+        if name in self.times:
+            if self.times[name][3]:
+                self.times[name][0] = time()
+                self.times[name][3] = False
+            self.times[name][2]+=1
+        else:
+            self.times[name] = [time(),0.0,1,False]
+
+    def end(self,name):
+        from time import time
+        if name in self.times:
+            self.times[name][1]+=time()-self.times[name][0]
+            self.times[name][2] = True
+
+    def getTime(self,name):
+        return self.times[name][1]
+
+    def getTimes(self):
+        _times = ''
+        for name in self.times:
+            _times+='%s: %6.4f (called %d)\n' % (name,self.times[name][1],self.times[name][2])
+
+        return _times
+
+
+if profile:
+    profiler = XPlaneProfiler()
 
 # python mathutils supports euler order so you could convert the rotation this way
 # probably transform rotation as a matrix into the exported space without the flipped axis, then convert to a euler with the order you need, and flip the axis
@@ -454,7 +489,7 @@ class XPlaneMesh():
             # with the new mesh get uvFaces list
             uvFaces = self.getUVFaces(mesh,prim.material.uv_name)
 
-            faces = XPlaneFaces()
+#            faces = XPlaneFaces()
 
             # convert faces to triangles
             tempfaces = []
@@ -465,7 +500,7 @@ class XPlaneMesh():
                     tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],None))
                     
             for f in tempfaces:
-                xplaneFace = XPlaneFace()
+#                xplaneFace = XPlaneFace()
                 l = len(f['indices'])
                 for i in range(0,len(f['indices'])):
                     # get the original index, reverse direction because of axis swap
@@ -477,34 +512,40 @@ class XPlaneMesh():
                     # convert local to global coordinates
                     co = v.co
 
-                    # swap y and z and invert x (right handed system)
+                    # inverse normals (right handed system)
                     vert = [co[0],co[1],co[2],-v.normal[0],-v.normal[1],-v.normal[2],f['uv'][i][0],f['uv'][i][1]]
 
-                    # use dupli vertice if any
-                    index = self.getDupliVerticeIndex(vert)
-                    if (index==-1):
-                        index = globalindex
-                        self.vertices.append(vert)
-                        globalindex+=1
+                    index = globalindex
+                    self.vertices.append(vert)
+                    globalindex+=1
 
                     # store face information alltogether in one struct
-                    xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
-                    xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
-                    xplaneFace.uvs[i] = (vert[6],vert[7])
-                    xplaneFace.indices[i] = index  
+#                    xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
+#                    xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
+#                    xplaneFace.uvs[i] = (vert[6],vert[7])
+#                    xplaneFace.indices[i] = index
                     
                     self.indices.append(index)
                     
-                faces.append(xplaneFace)
+#                faces.append(xplaneFace)
 
             # store the faces in the prim
-            prim.faces = faces
+#            prim.faces = faces
             prim.indices[1] = len(self.indices)
+
+            #TODO: now optimize vertex-table and remove duplicates
             
-    def getDupliVerticeIndex(self,v):
+            # use dupli vertice if any
+            #index = self.getDupliVerticeIndex(vert,endIndex)
+        
+            
+    def getDupliVerticeIndex(self,v,startIndex = 0):
+        if profile:
+            profiler.start('XPlaneMesh.getDupliVerticeIndex')
+            
         for i in range(len(self.vertices)):
             match = True
-            ii = 0
+            ii = startIndex
             while ii<len(self.vertices[i]):
                 if self.vertices[i][ii] != v[ii]:
                     match = False
@@ -513,7 +554,10 @@ class XPlaneMesh():
                 
             if match:
                 return i
-            
+
+        if profile:
+            profiler.end('XPlaneMesh.getDupliVerticeIndex')
+
         return -1
 
     def getUVFaces(self,mesh,uv_name):
@@ -537,6 +581,9 @@ class XPlaneMesh():
             return None
 
     def faceToTrianglesWithUV(self,face,uv):
+        if profile:
+            profiler.start('XPlaneMesh.faceToTrianglesWithUV')
+
         triangles = []
         if len(face.vertices_raw)==4: #quad
             if uv != None:
@@ -551,6 +598,9 @@ class XPlaneMesh():
             else:
                 triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices_raw})
 
+        if profile:
+            profiler.end('XPlaneMesh.faceToTrianglesWithUV')
+
         return triangles
 
     def faceValues(self,face, mesh, matrix):
@@ -560,6 +610,9 @@ class XPlaneMesh():
         return fv
 
     def writeVertices(self):
+        if profile:
+            profiler.start('XPlaneMesh.writeVertices')
+
         o=''
         for v in self.vertices:
             # dump the vertex data
@@ -567,10 +620,16 @@ class XPlaneMesh():
             for i in v:
                 o+="\t%6.4f" % i
             o+="\n"
-        
+
+        if profile:
+            profiler.end('XPlaneMesh.writeVertices')
+
         return o
 
     def writeIndices(self):
+        if profile:
+            profiler.start('XPlaneMesh.writeIndices')
+
         o=''
         group = []
         for i in self.indices:
@@ -590,7 +649,10 @@ class XPlaneMesh():
         # dump overhanging indices
         for i in group:
             o+="IDX\t%d\n" % i
-            
+
+        if profile:
+            profiler.end('XPlaneMesh.writeIndices')
+
         return o
 
 class XPlaneLights():
@@ -660,6 +722,9 @@ class XPlaneCommands():
         return o
 
     def writePrimitive(self,prim,animLevel):
+        if profile:
+            profiler.start("XPlaneCommands.writePrimitve")
+            
         o = ''
         
         animationStarted = False
@@ -699,6 +764,10 @@ class XPlaneCommands():
 
             # end animation block
             o+="%sANIM_end\n" % self.getAnimTabs(animLevel-1)
+
+        if profile:
+            profiler.end("XPlaneCommands.writePrimitive")
+            
         return o
 
     def getAnimTabs(self,level):
@@ -782,13 +851,13 @@ class XPlaneCommands():
 
             if debug:
                 print("%s keyframe %d@%d" % (keyframe.primitive.name,keyframe.index,keyframe.frame))
-                print("location/prim.location")
-                print(keyframe.location)
-                print(keyframe.primitive.location)
-                print("locationLocal/prim.locationLocal")
-                print(keyframe.locationLocal)
-                print(keyframe.primitive.locationLocal)
-                print("")
+#                print("location/prim.location")
+#                print(keyframe.location)
+#                print(keyframe.primitive.location)
+#                print("locationLocal/prim.locationLocal")
+#                print(keyframe.locationLocal)
+#                print(keyframe.primitive.locationLocal)
+#                print("")
             
         trans+="%sANIM_trans_end\n" % tabs
         rot[0]+="%sANIM_rotate_end\n" % tabs
@@ -828,6 +897,9 @@ class XPlaneData():
 
     # collect all exportable objects from the scene
     def collect(self):
+        if profile:
+            profiler.start("XPlaneData.collect")
+        
         for obj in bpy.context.scene.objects:
             if debug:
                 print("scanning "+obj.name)
@@ -859,6 +931,9 @@ class XPlaneData():
 
                 # apply further splitting by textures
                 self.splitFileByTexture(obj)
+                
+        if profile:
+            profiler.end("XPlaneData.collect")
 
     def addChildren(self,prim,file):
         obj = prim.object
@@ -986,6 +1061,9 @@ class ExportXPlane9(bpy.types.Operator):
     check_existing = BoolProperty(name="Check Existing", description="Check and warn on overwriting existing files", default=True, options={'HIDDEN'})
 
     def execute(self, context):
+        if profile:
+            profiler.start("ExportXPlane9")
+
         filepath = self.properties.filepath
         if filepath=='':
             filepath = bpy.context.blend_data.filepath
@@ -1028,13 +1106,18 @@ class ExportXPlane9(bpy.types.Operator):
                     
                     o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,bpy.app.build_revision,version/1000)
 
+                    if profile:
+                        profiler.start("ExportXPlane9 %s" % file)
+
                     # write the file
                     fullpath = os.path.join(filepath,file+'.obj')
                     print("Writing %s" % fullpath)
                     file = open(fullpath, "w")
                     file.write(o)
                     file.close()
-                    #print(o)
+
+                    if profile:
+                        profiler.end("ExportXPlane9 %s" % file)
                 else:
                     print("No objects to export, aborting ...")
         else:
@@ -1043,7 +1126,11 @@ class ExportXPlane9(bpy.types.Operator):
         # return to stored frame
         bpy.context.scene.frame_set(frame=currentFrame)
         bpy.context.scene.update()
-        
+
+        if profile:
+            profiler.end("ExportXPlane9")
+            print(profiler.getTimes())
+
         return {'FINISHED'}
 
     def invoke(self, context, event):
