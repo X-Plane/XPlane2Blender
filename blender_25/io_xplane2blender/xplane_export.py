@@ -146,6 +146,7 @@ class XPlaneCoords():
 
     @staticmethod
     def convertMatrix(matrix):
+        import mathutils
 #If your matrix looks like this:
 #{ rx, ry, rz, 0 }
 #{ ux, uy, uz, 0 }
@@ -157,28 +158,13 @@ class XPlaneCoords():
 #{ lx, lz, ly, 0 }
 #{ ux, uz, uy, 0 }
 #{ px, pz, py, 1 }
-#        cmatrix = Matrix(( 1, 0, 0, 0),
-#                         ( 0, 1, 0, 0),
-#                         ( 0, 0,-1, 0),
-#                         ( 0, 0, 0, 1))
-#        cmatrix = Matrix(( 1, 0, 0, 0),
-#                         ( 0,-1, 0, 0),
-#                         ( 0, 0, 1, 0),
-#                         ( 0, 0, 0, 1))
-#        cmatrix = Matrix(( 1, 0, 0, 0),
-#                         ( 0,-1, 0, 0),
-#                         ( 0, 0,-1, 0),
-#                         ( 0, 0, 0, 1))
-#        cmatrix = Matrix(( 1, 0, 0, 0),
-#                         ( 0, 0,-1, 0),
-#                         ( 0,-1, 0, 0),
-#                         ( 0, 0, 0, 1))
-        cmatrix = Matrix(( matrix[0][0], matrix[0][2], -matrix[0][1], matrix[0][3]),
-                         ( matrix[2][0], matrix[2][2], -matrix[2][1], matrix[2][3]),
-                         ( matrix[1][0], matrix[1][2], -matrix[1][1], matrix[1][3]),
-                         ( matrix[3][0], matrix[3][2],  matrix[3][1], matrix[3][3]))
-        #return matrix*cmatrix
-        return cmatrix
+
+#        cmatrix = Matrix(( -matrix[0][0], matrix[0][2], matrix[0][1], matrix[0][3]),
+#                         ( -matrix[2][0], matrix[2][2], matrix[2][1], matrix[2][3]),
+#                         ( -matrix[1][0], matrix[1][2], matrix[1][1], matrix[1][3]),
+#                         ( -matrix[3][0], matrix[3][2], matrix[3][1], matrix[3][3]))
+        rmatrix = Matrix.Rotation(math.radians(-90),4,'X')
+        return rmatrix*matrix
 
 
 class XPlaneLight():
@@ -482,10 +468,10 @@ class XPlaneMesh():
             
             # store the world translation matrix
             matrix = XPlaneCoords.convertMatrix(prim.object.matrix_world)
-            
+
             # create a copy of the object mesh with modifiers applied
             mesh = prim.object.create_mesh(bpy.context.scene, True, "PREVIEW")
-
+            
             # transform mesh with the world matrix
             mesh.transform(matrix)
 
@@ -511,12 +497,10 @@ class XPlaneMesh():
 
                     # get the vertice from original mesh
                     v = mesh.vertices[vindex]
-                    
-                    # convert local to global coordinates
                     co = v.co
 
-                    # inverse normals (right handed system)
-                    vert = [co[0],co[1],co[2],-v.normal[0],-v.normal[1],-v.normal[2],f['uv'][i][0],f['uv'][i][1]]
+                    #TODO: somethings wrong with normals
+                    vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
 
                     index = globalindex
                     self.vertices.append(vert)
