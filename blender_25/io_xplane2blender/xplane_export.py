@@ -492,20 +492,20 @@ class XPlaneMesh():
 #                xplaneFace = XPlaneFace()
                 l = len(f['indices'])
                 for i in range(0,len(f['indices'])):
-                    # get the original index, reverse direction because of axis swap
+                    # get the original index
                     vindex = f['indices'][i]
-
+                    
                     # get the vertice from original mesh
                     v = mesh.vertices[vindex]
                     co = v.co
-
-                    #TODO: somethings wrong with normals
+                    
+                    #TODO: somethings wrong with normals? But not in every case.
                     vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
-
+                    
                     index = globalindex
                     self.vertices.append(vert)
                     globalindex+=1
-
+                    
                     # store face information alltogether in one struct
 #                    xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
 #                    xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
@@ -571,18 +571,18 @@ class XPlaneMesh():
             profiler.start('XPlaneMesh.faceToTrianglesWithUV')
 
         triangles = []
-        if len(face.vertices_raw)==4: #quad
+        if len(face.vertices)==4: #quad
             if uv != None:
-                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[1]]], "indices":[face.vertices_raw[0], face.vertices_raw[1], face.vertices_raw[2]]})
-                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv4[0], uv.uv4[1]], [uv.uv1[0], uv.uv1[1]]], "indices":[ face.vertices_raw[2], face.vertices_raw[3], face.vertices_raw[0]]})
+                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[1]]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]]})
+                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv4[0], uv.uv4[1]], [uv.uv1[0], uv.uv1[1]]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]]})
             else:
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices_raw[0], face.vertices_raw[1], face.vertices_raw[2]]})
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[ face.vertices_raw[2], face.vertices_raw[3], face.vertices_raw[0]]})
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]]})
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]]})
         else:
             if uv != None:
-                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[1]]], "indices":face.vertices_raw})
+                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[1]]], "indices":face.vertices})
             else:
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices_raw})
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices})
 
         if profile:
             profiler.end('XPlaneMesh.faceToTrianglesWithUV')
