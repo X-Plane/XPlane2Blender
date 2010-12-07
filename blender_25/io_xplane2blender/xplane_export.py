@@ -101,20 +101,6 @@ class XPlaneCoords():
         return scale #self.convert([scale[0],scale[1],scale[2]],True)
 
     def local(self,parent):
-#        coordsParent = XPlaneCoords(parent).world()
-#        coords = self.world()
-#        for i in range(0,3):
-#            if (i==0):
-#                coords["location"][i] = coords["location"][i]-coordsParent["location"][i]
-#                coords["rotation"][i] = coords["rotation"][i]-coordsParent["rotation"][i]
-#                coords["angle"][i] = coords["angle"][i]-coordsParent["angle"][i]
-#            else:
-#                coords["location"][i] = coords["location"][i]+coordsParent["location"][i]
-#                coords["rotation"][i] = coords["rotation"][i]+coordsParent["rotation"][i]
-#                coords["angle"][i] = coords["angle"][i]+coordsParent["angle"][i]
-#
-#        return coords
-            
         matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
         loc = matrix.translation_part()
         #loc = self.convert([loc[0],loc[1],loc[2]])
@@ -147,22 +133,6 @@ class XPlaneCoords():
     @staticmethod
     def convertMatrix(matrix):
         import mathutils
-#If your matrix looks like this:
-#{ rx, ry, rz, 0 }
-#{ ux, uy, uz, 0 }
-#{ lx, ly, lz, 0 }
-#{ px, py, pz, 1 }
-#
-#To change it from left to right or right to left, flip it like this:
-#{ rx, rz, ry, 0 }
-#{ lx, lz, ly, 0 }
-#{ ux, uz, uy, 0 }
-#{ px, pz, py, 1 }
-
-#        cmatrix = Matrix(( -matrix[0][0], matrix[0][2], matrix[0][1], matrix[0][3]),
-#                         ( -matrix[2][0], matrix[2][2], matrix[2][1], matrix[2][3]),
-#                         ( -matrix[1][0], matrix[1][2], matrix[1][1], matrix[1][3]),
-#                         ( -matrix[3][0], matrix[3][2], matrix[3][1], matrix[3][3]))
         rmatrix = Matrix.Rotation(math.radians(-90),4,'X')
         return rmatrix*matrix
 
@@ -407,6 +377,8 @@ class XPlaneMaterial():
             # backface culling
             if self.object.data.show_double_sided:
                 self.attributes['ATTR_no_cull'] = True
+            else:
+                self.attributes['ATTR_cull'] = True
 
             # blend
             if mat.xplane.blend:
@@ -492,16 +464,15 @@ class XPlaneMesh():
 #                xplaneFace = XPlaneFace()
                 l = len(f['indices'])
                 for i in range(0,len(f['indices'])):
-                    # get the original index
-                    vindex = f['indices'][i]
+                    # get the original index but reverse order, as this is reversing normals
+                    vindex = f['indices'][2-i]
                     
                     # get the vertice from original mesh
                     v = mesh.vertices[vindex]
                     co = v.co
                     
-                    #TODO: somethings wrong with normals? But not in every case.
                     vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
-                    
+
                     index = globalindex
                     self.vertices.append(vert)
                     globalindex+=1
@@ -521,7 +492,6 @@ class XPlaneMesh():
             prim.indices[1] = len(self.indices)
             
             #TODO: now optimize vertex-table and remove duplicates
-            # use dupli vertice if any
             #index = self.getDupliVerticeIndex(vert,endIndex)
         
             
@@ -571,16 +541,17 @@ class XPlaneMesh():
             profiler.start('XPlaneMesh.faceToTrianglesWithUV')
 
         triangles = []
+        #inverse uv's as we are inversing face indices later
         if len(face.vertices)==4: #quad
             if uv != None:
-                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[1]]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]]})
-                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv4[0], uv.uv4[1]], [uv.uv1[0], uv.uv1[1]]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]]})
+                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv1[0], uv.uv1[1]]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]]})
+                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv4[0], uv.uv4[1]], [uv.uv3[0], uv.uv3[1]]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]]})
             else:
                 triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]]})
                 triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]]})
         else:
             if uv != None:
-                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv3[0], uv.uv3[1]]], "indices":face.vertices})
+                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv1[0], uv.uv1[1]]], "indices":face.vertices})
             else:
                 triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices})
 
