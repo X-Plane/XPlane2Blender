@@ -48,8 +48,6 @@ class XPlaneProfiler():
 if profile:
     profiler = XPlaneProfiler()
 
-# python mathutils supports euler order so you could convert the rotation this way
-# probably transform rotation as a matrix into the exported space without the flipped axis, then convert to a euler with the order you need, and flip the axis
 class XPlaneCoords():
     def __init__(self,object):
         self.object = object
@@ -75,20 +73,17 @@ class XPlaneCoords():
     def world(self):
         matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
         loc = matrix.translation_part()
-        #loc = self.convert([loc[0],loc[1],loc[2]])
         rot = matrix.rotation_part().to_euler("XZY")
-        #rot = [-rot[0],rot[1],rot[2]]
         scale = matrix.scale_part()
-        #scale = self.convert([scale[0],scale[1],scale[2]],True)
         return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
 
     def localLocation(self,parent):
-        matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
+        matrix = self.relativeConvertedMatrix(parent)
         loc = matrix.translation_part()
         return loc #self.convert([loc[0],loc[1],loc[2]])
         
     def localRotation(self,parent):
-        matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
+        matrix = self.relativeConvertedMatrix(parent)
         rot = matrix.rotation_part().to_euler("XYZ")
         return rot #self.convert([rot[0],rot[1],rot[2]])
 
@@ -96,18 +91,15 @@ class XPlaneCoords():
         return self.angle(self.localRotation())
 
     def localScale(self,parent):
-        matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
+        matrix = self.relativeConvertedMatrix(parent)
         scale = matrix.scale_part()
         return scale #self.convert([scale[0],scale[1],scale[2]],True)
 
     def local(self,parent):
-        matrix = XPlaneCoords.convertMatrix(self.relativeMatrix(parent))
+        matrix = self.relativeConvertedMatrix(parent)
         loc = matrix.translation_part()
-        #loc = self.convert([loc[0],loc[1],loc[2]])
         rot = matrix.rotation_part().to_euler("XYZ")
-        #rot = self.convert([rot[0],rot[1],rot[2]])
         scale = matrix.scale_part()
-        #scale = self.convert([scale[0],scale[1],scale[2]],True)
         return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
 
     def angle(self,rot):
@@ -122,13 +114,8 @@ class XPlaneCoords():
     def relativeMatrix(self,parent):
         return self.object.matrix_world * parent.matrix_world.copy().invert()
 
-    def conversionMatrix(self):
-        cmatrix = Matrix()
-        cmatrix[0][0] = 1
-        cmatrix[1][2] = 1
-        #cmatrix[1][1] = 1
-        cmatrix[2][1] = -1
-        return cmatrix
+    def relativeConvertedMatrix(self,parent):
+        return XPlaneCoords.convertMatrix(self.object.matrix_world) * XPlaneCoords.convertMatrix(parent.matrix_world.copy().invert())
 
     @staticmethod
     def convertMatrix(matrix):
@@ -189,7 +176,7 @@ class XPlaneKeyframe():
         self.hide = object.hide_render
 
         if prim.parent!=None:
-             # update object so we get values from the keyframe
+             # update objects so we get values from the keyframe
             prim.parent.object.update(scene=bpy.context.scene)
             object.update(scene=bpy.context.scene)
             
@@ -204,7 +191,13 @@ class XPlaneKeyframe():
             self.angleLocal = local["angle"]
             self.scaleLocal = local["scale"]
             # TODO: multiply location with scale of parent
-            
+
+            print(prim.name)
+            print(self.locationLocal)
+            print(prim.locationLocal)
+            print(self.angleLocal)
+            print(prim.angleLocal)
+
             for i in range(0,3):
                 # remove initial location and rotation to get offset
                 self.translation[i] = self.locationLocal[i]-prim.locationLocal[i]
@@ -267,7 +260,7 @@ class XPlanePrimitive():
             # store initial location, rotation and scale
             self.location = world["location"]
             self.angle = world["angle"]
-            self.scale = world["scale"]           
+            self.scale = world["scale"]         
             
             self.locationLocal = local["location"]
             self.angleLocal = local["angle"]
