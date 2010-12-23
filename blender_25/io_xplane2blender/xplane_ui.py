@@ -29,6 +29,20 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
             material_layout(self,obj.active_material)
             custom_layout(self,obj.active_material,"MATERIAL")
     
+class SCENE_PT_xplane(bpy.types.Panel):
+    '''XPlane Scene Panel'''
+    bl_label = "XPlane"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+
+    @classmethod
+    def poll(self,context):
+        return True
+
+    def draw(self,context):
+        scene = context.scene
+        scene_layout(self, scene)
 
 class OBJECT_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
@@ -41,7 +55,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     def poll(self,context):
         obj = context.object
 
-        if(obj.type in ("EMPTY","MESH")):
+        if(obj.type in ("MESH")):
             return True
         else:
             return False
@@ -49,14 +63,10 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     def draw(self, context):
         obj = context.object
         
-        if(obj.type == "EMPTY"):
-            empty_layout(self, obj)
+        if obj.type == "MESH":
+            mesh_layout(self,obj)
+            animation_layout(self,obj)
             custom_layout(self,obj,obj.type)
-        else:
-            if obj.type == "MESH":
-                mesh_layout(self,obj)
-                animation_layout(self,obj)
-                custom_layout(self,obj,obj.type)
         
 class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
     '''XPlane Datarefs Search Menu'''
@@ -65,27 +75,60 @@ class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
     def draw(self,context):
         self.search_menu(xplane_datarefs,"text.open")
 
-
-def empty_layout(self, obj):
-    if obj.xplane.exportChildren:
-        checkboxIcon = "CHECKBOX_HLT"
-    else:
-        checkboxIcon = "CHECKBOX_DEHLT"
-
+def scene_layout(self, scene):
     layout = self.layout
     row = layout.row()
-    row.prop(obj.xplane, "exportChildren", text="Export Children", icon=checkboxIcon, toggle=True)
 
-    if obj.xplane.cockpit:
-        checkboxIcon = "CHECKBOX_HLT"
+    for i in range(0,len(scene.layers)):
+        row = layout.row()
+        layer_layout(self, scene, row, i)
+        
+
+def layer_layout(self, scene, layout, layer):
+    box = layout.box()
+    li = str(layer+1)
+
+    if scene.xplane.layers[layer].expanded:
+        expandIcon = "TRIA_DOWN"
+        expanded = True
     else:
-        checkboxIcon = "CHECKBOX_DEHLT"
+        expandIcon = "TRIA_RIGHT"
+        expanded = False
 
-    row = layout.row()
-    row.prop(obj.xplane, "cockpit", text="Cockpit",icon=checkboxIcon, toggle=True)
+    box.prop(scene.xplane.layers[layer],"expanded", text="Layer "+li, expand=True, emboss=False, icon=expandIcon)
 
+    if expanded:
+        box.prop(scene.xplane.layers[layer],"name", text="Name")
+
+        if scene.xplane.layers[layer].cockpit:
+            checkboxIcon = "CHECKBOX_HLT"
+        else:
+            checkboxIcon = "CHECKBOX_DEHLT"
+            
+        row = box.row()
+        row.prop(scene.xplane.layers[layer], "cockpit", text="Cockpit",icon=checkboxIcon, toggle=True)
+
+        row = box.row()
+        row.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
+
+        custom_layer_layout(self, box, scene, layer)
+
+def custom_layer_layout(self,layout, scene, layer):
+    layout.separator()
     row = layout.row()
-    row.prop(obj.xplane, "slungLoadWeight", text="Slung Load weight")
+    row.label("Custom Properties")
+    row.operator("scene.add_xplane_layer_attribute", text="Add Property").index = layer
+    box = layout.box()
+    for i, attr in enumerate(scene.xplane.layers[layer].customAttributes):
+        subbox = box.box()
+        subrow = subbox.row()
+        subrow.prop(attr,"name")
+        subrow.prop(attr,"value")
+        subrow.operator("scene.remove_xplane_layer_attribute",text="",emboss=False,icon="X").index = (layer,i)
+        if type in ("MATERIAL","MESH"):
+            subrow = subbox.row()
+            subrow.prop(attr,"reset")
+    
 
 def mesh_layout(self, obj):
     layout = self.layout
@@ -112,7 +155,7 @@ def material_layout(self, obj):
 
 
 def custom_layout(self,obj,type):
-    if type in ("EMPTY","MESH"):
+    if type in ("MESH"):
         oType = 'object'
     elif type=="MATERIAL":
         oType = 'material'

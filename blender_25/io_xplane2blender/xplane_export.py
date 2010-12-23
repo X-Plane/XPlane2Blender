@@ -842,74 +842,128 @@ class XPlaneData():
     def __init__(self):
         self.files = {}
 
+    # Returns the corresponding xplane-Layer to a blender layer index
+    def getXPlaneLayer(self,layer):
+        return bpy.context.scene.xplane.layers[layer]
+
+    # Returns the filename for a layer. If no name was given by user it will be generated.
+    def getFilenameFromXPlaneLayer(self,xplaneLayer):
+        if xplaneLayer.name == "":
+            filename = "layer_%d" % (xplaneLayer.index+1)
+        else:
+            filename = xplaneLayer.name
+
+        if xplaneLayer.cockpit:
+            filename +="_cockpit"
+
+        return filename
+
+    # Returns indices of all active blender layers
+    def getActiveLayers(self):
+        layers = []
+        for i in range(0,len(bpy.context.scene.layers)):
+            if bpy.context.scene.layers[i]:
+                layers.append(i)
+
+        return layers
+
+    # Returns all first level Objects of a blender layer
+    def getObjectsByLayer(self,layer):
+        objects = []
+        for object in bpy.context.scene.objects:
+            #only add top level objects that have no parents
+            if (object.parent==None):
+                for i in range(len(object.layers)):
+                    if object.layers[i]==True and i == layer:
+                        objects.append(object)
+
+        return objects
+
+    # Returns an empty obj-file hash
     def getEmptyFile(self,parent):
         return {'primitives':[],'lights':[],'lines':[],'parent':parent}
 
-    # collect all exportable objects from the scene
+    # Returns exportable child objects. If those are nested within bones or something else it will look recursive for objects.
+    def getChildObjects(self,parent,found = None):
+        if found==None:
+            found = []
+        if len(parent.children)>0:
+            for child in parent.children:
+                if child.type in ["MESH","LAMP"]:
+                    found.append(child)
+                else:
+                    self.getChildObjects(child,found)
+        
+        return found
+
+    # collects all exportable objects from the scene
     def collect(self):
         if profile:
             profiler.start("XPlaneData.collect")
         
-        for obj in bpy.context.scene.objects:
-            if debug:
-                print("scanning "+obj.name)
-                
-            if(obj.type=="EMPTY" and obj.xplane.exportChildren and obj.hide==False):
-                if debug:
-                    print(obj.name+": export children")
-
-                self.files[obj.name] = self.getEmptyFile(obj)
-                for child in obj.children:
-                    if debug:
-                        print("\t scanning "+child.name)
-                    
-                    if child.hide==False:
-                        if child.type=="MESH":
-                            if debug:
-                                print("\t "+child.name+": adding to list")
-                            prim = XPlanePrimitive(child)
-                            self.files[obj.name]['primitives'].append(prim)
-
-                            # look for children
-                            if len(child.children)>0:
-                                self.addChildren(prim,obj.name)
-                                
-                        if child.type=="LAMP":
-                            if debug:
-                                print("\t "+child.name+": adding to list")
-                            self.files[obj.name]['lights'].append(XPlaneLight(child))
-
-                # apply further splitting by textures
-                self.splitFileByTexture(obj)
+        for layer in self.getActiveLayers():
+            xplaneLayer = self.getXPlaneLayer(layer)
+            filename = self.getFilenameFromXPlaneLayer(xplaneLayer)
+            self.files[filename] = self.getEmptyFile(xplaneLayer)
+            self.collectObjects(self.getObjectsByLayer(layer),filename)
+            self.splitFileByTexture(xplaneLayer)
                 
         if profile:
             profiler.end("XPlaneData.collect")
 
-    def addChildren(self,prim,file):
-        obj = prim.object
-        
-        for child in obj.children:
+    def collectObjects(self,objects,filename):
+        for obj in objects:
             if debug:
-                print("\t\t scanning "+child.name)
+                print("scanning "+obj.name)
+                
+            if obj.hide==False:
+                # look for children
+                children = self.getChildObjects(obj)
 
-            if child.hide==False:
-                if child.type=="MESH":
+                # mesh: let's create a prim out of it
+                if obj.type=="MESH":
                     if debug:
-                        print("\t\t "+child.name+": adding to list")
-                    childPrim = XPlanePrimitive(child,prim)
-                    prim.children.append(childPrim)
+                        print("\t "+obj.name+": adding to list")
+                    prim = XPlanePrimitive(obj)
+                    self.files[filename]['primitives'].append(prim)
 
+                    # if object has children add them to the prim
+                    if len(children)>0:
+                        self.addChildren(prim,children,filename)
+
+                # lamp: let's create a XPlaneLight. Those cannot have children.
+                elif obj.type=="LAMP":
+                    if debug:
+                        print("\t "+child.name+": adding to list")
+                    self.files[filename]['lights'].append(XPlaneLight(child))
+                    
+                # something else: lets go through the valid children and add them
+                elif len(children)>0:
+                    self.collectObjects(children,filename)
+
+    def addChildren(self,prim,objects,filename):
+        for obj in objects:
+            if debug:
+                print("\t\t scanning "+obj.name)
+
+            if obj.hide==False:
+                if obj.type=="MESH":
+                    if debug:
+                        print("\t\t "+obj.name+": adding to list")
+                    childPrim = XPlanePrimitive(obj,prim)
+                    prim.children.append(childPrim)
+                    
                     # add prim to file
-                    self.files[file]['primitives'].append(childPrim)
+                    self.files[filename]['primitives'].append(childPrim)
 
                     # recursion
-                    if len(child.children)>0:
-                        self.addChildren(childPrim,file)
+                    children = self.getChildObjects(obj)
+                    if len(children)>0:
+                        self.addChildren(childPrim,children,filename)
                         
-        
 
     def splitFileByTexture(self,parent):
-        name = parent.name
+        name = self.getFilenameFromXPlaneLayer(parent)
         filename = None
         textures = []
         if len(self.files[name])>0:
@@ -955,8 +1009,8 @@ class XPlaneHeader():
                         ("COCKPIT_REGION",None)])
 
         # set slung load
-        if file['parent'].xplane.slungLoadWeight>0:
-            self.attributes['slung_load_weight'] = file['parent'].xplane.slungLoadWeight
+        if file['parent'].slungLoadWeight>0:
+            self.attributes['slung_load_weight'] = file['parent'].slungLoadWeight
 
         # set Texture
         if(len(file['primitives'])>0 and file['primitives'][0].material.texture != None):
@@ -974,7 +1028,7 @@ class XPlaneHeader():
         self.attributes['POINT_COUNTS'] = "%d\t%d\t%d\t%d" % (tris,lines,lites,indices)
 
         # add custom attributes
-        for attr in file['parent'].xplane.customAttributes:
+        for attr in file['parent'].customAttributes:
             self.attributes[attr.name] = attr.value
 
     def write(self):

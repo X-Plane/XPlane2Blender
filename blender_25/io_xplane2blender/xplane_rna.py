@@ -15,6 +15,15 @@ def findFCurveByPath(fcurves,path):
 def getDatarefValuePath(index):
     return '["xplane"]["datarefs"]['+str(index)+']["value"]'
 
+class XPlaneSceneSettings(bpy.types.IDPropertyGroup):
+    pass
+
+class XPlaneLayerSettings(bpy.types.IDPropertyGroup):
+    pass
+
+class XPlaneLayer(bpy.types.IDPropertyGroup):
+    pass
+
 class XPlaneObjectSettings(bpy.types.IDPropertyGroup):
     pass
 
@@ -33,6 +42,48 @@ class XPlaneDataref(bpy.types.IDPropertyGroup):
 class XPlaneDatarefSearch(bpy.types.IDPropertyGroup):
     pass
 
+class SCENE_OT_add_xplane_layers(bpy.types.Operator):
+    bl_label = 'Add X-Plane layers'
+    bl_idname = 'scene.add_xplane_layers'
+    bl_label = 'Add X-Plane layers'
+    bl_description = 'Add a X-Plane export layers'
+
+    def execute(self,context):
+        scene = context.scene
+        while len(scene.xplane.layers)<len(scene.layers):
+            scene.xplane.layers.add()
+
+        # re-add hidden data that user cannot change
+        for i in range(0,len(scene.xplane.layers)):
+            scene.xplane.layers[i].index = i
+        return {'FINISHED'}
+
+class SCENE_OT_add_xplane_layer_attribute(bpy.types.Operator):
+    bl_label = 'Add Attribute'
+    bl_idname = 'scene.add_xplane_layer_attribute'
+    bl_label = 'Add Property'
+    bl_description = 'Add a custom X-Plane Property'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        scene = context.scene
+        scene.xplane.layers[self.index].customAttributes.add()
+        return {'FINISHED'}
+
+class OBJECT_OT_remove_xplane_layer_attribute(bpy.types.Operator):
+    bl_label = 'Remove Attribute'
+    bl_idname = 'scene.remove_xplane_layer_attribute'
+    bl_label = 'Remove Property'
+    bl_description = 'Remove the custom X-Plane Property'
+
+    index = bpy.props.IntVectorProperty(size=2)
+
+    def execute(self,context):
+        scene = context.scene
+        scene.xplane.layers[self.index[0]].customAttributes.remove(self.index[1])
+        return {'FINISHED'}
+
 class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
     bl_label = 'Add Attribute'
     bl_idname = 'object.add_xplane_object_attribute'
@@ -49,9 +100,9 @@ class OBJECT_OT_remove_xplane_object_attribute(bpy.types.Operator):
     bl_idname = 'object.remove_xplane_object_attribute'
     bl_label = 'Remove Property'
     bl_description = 'Remove the custom X-Plane Property'
-    
+
     index = bpy.props.IntProperty()
-    
+
     def execute(self,context):
         obj = context.object
         obj.xplane.customAttributes.remove(self.index)
@@ -209,6 +260,7 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
         return {'FINISHED'}
 
 def addXPlaneRNA():
+    bpy.types.Scene.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneSceneSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Object.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Material.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneMaterialSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Lamp.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneLampSettings, name="XPlane", description="XPlane Export Settings")
@@ -254,29 +306,50 @@ def addXPlaneRNA():
                                                 description="Loop amount of animation, usefull for ever increasing Datarefs. A value of 0 will ignore this setting.",
                                                 min=0)
 
-    # Empty settings
-    XPlaneObjectSettings.exportChildren = bpy.props.BoolProperty(attr="exportChildren",
-                                name="Export Children",
-                                description="Export children of this to X-Plane.",
-                                default = False)
+    # Scene settings
+    XPlaneSceneSettings.layers = bpy.props.CollectionProperty(attr="layers",
+                                    name="Layers",
+                                    description="Export settings for the Blender layers",
+                                    type=XPlaneLayer)
 
-    XPlaneObjectSettings.cockpit = bpy.props.BoolProperty(attr="cockpit",
+#    XPlaneLayerSettings.exportChildren = bpy.props.BoolProperty(attr="exportChildren",
+#                                name="Export Children",
+#                                description="Export children of this to X-Plane.",
+#                                default = False)
+
+    XPlaneLayer.index = bpy.props.IntProperty(attr="index",
+                                    name="Index",
+                                    description="The blender layer index.",
+                                    default=-1)
+
+    XPlaneLayer.expanded = bpy.props.BoolProperty(attr="expanded",
+                                    name="Expanded",
+                                    description="Toggles the layer settings visibility.",
+                                    default=False)
+
+    XPlaneLayer.name = bpy.props.StringProperty(attr="name",
+                                    name="Name",
+                                    description="This name will be used as a filename hint for OBJ file(s).",
+                                    default="")
+
+    XPlaneLayer.cockpit = bpy.props.BoolProperty(attr="cockpit",
                                     name="Cockpit",
                                     description="If checked the exported object will be interpreted as a cockpit.",
                                     default=False)
 
-    XPlaneObjectSettings.slungLoadWeight = bpy.props.FloatProperty(attr="slungLoadWeight",
-                                name="Slung Load weight",
-                                description="Weight of the object in pounds, for use in the physics engine if the object is being carried by a plane or helicopter.",
-                                default=0.0,
-                                step=1,
-                                precision=3)
+    XPlaneLayer.slungLoadWeight = bpy.props.FloatProperty(attr="slungLoadWeight",
+                                    name="Slung Load weight",
+                                    description="Weight of the object in pounds, for use in the physics engine if the object is being carried by a plane or helicopter.",
+                                    default=0.0,
+                                    step=1,
+                                    precision=3)
 
-    XPlaneObjectSettings.customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
+    XPlaneLayer.customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane header attributes",
                                       description="User defined header attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
 
+    #Object settings
     XPlaneObjectSettings.datarefs = bpy.props.CollectionProperty(attr="datarefs",
                                         name="X-Plane Datarefs",
                                         description="X-Plane Datarefs",
@@ -286,7 +359,11 @@ def addXPlaneRNA():
                                       name="Use depth culling",
                                       description="If unchecked the renderer will perform no depth check on this object.",
                                       default=True)
-    
+
+    XPlaneObjectSettings.customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
+                                      name="Custom X-Plane attributes",
+                                      description="User defined attributes for the Object.",
+                                      type=XPlaneCustomAttribute)
 
     # Lamp settings
     XPlaneLampSettings.lightType = bpy.props.EnumProperty(attr="lightType",
@@ -339,6 +416,9 @@ def addXPlaneRNA():
                                       name="Custom X-Plane material attributes",
                                       description="User defined material attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
+
+    # create x-plane layers
+    bpy.ops.scene.add_xplane_layers()
 
 
 def removeXPlaneRNA():
