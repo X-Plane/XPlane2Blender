@@ -849,7 +849,7 @@ class XPlaneData():
     # Returns the filename for a layer. If no name was given by user it will be generated.
     def getFilenameFromXPlaneLayer(self,xplaneLayer):
         if xplaneLayer.name == "":
-            filename = "layer_%d" % (xplaneLayer.index+1)
+            filename = "layer_%s" % (str(xplaneLayer.index+1).zfill(2))
         else:
             filename = xplaneLayer.name
 
