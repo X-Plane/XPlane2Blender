@@ -8,8 +8,33 @@ from bpy.props import *
 from collections import OrderedDict
 
 debug = True
+log = True
 profile = True
 version = 3200
+
+class XPlaneDebugger():
+    def __init__(self):
+        pass
+
+    def start(self):
+        import time
+
+        if log:
+            (name,ext) = os.path.splitext(bpy.context.blend_data.filepath)
+            dir = os.path.dirname(bpy.context.blend_data.filepath)
+            file = os.path.join(dir,name+'_'+time.strftime("%y-%m-%d-%H-%M-%S")+'_xplane2blender.log')
+            self.logfile = open(file,"w")
+
+    def debug(self,msg):
+        print(msg)
+        if log:
+            self.logfile.write(msg+"\n")
+
+    def end(self):
+        self.logfile.close()
+
+if debug:
+    debugger = XPlaneDebugger()
 
 class XPlaneProfiler():
     def __init__(self):
@@ -282,21 +307,21 @@ class XPlanePrimitive():
     def getAnimations(self):
         #check for animation
         if debug:
-            print("\t\t checking animations")
+            debugger.debug("\t\t checking animations")
         if (self.object.animation_data != None and self.object.animation_data.action != None and len(self.object.animation_data.action.fcurves)>0):
             if debug:
-                print("\t\t animation found")
+                debugger.debug("\t\t animation found")
             #check for dataref animation by getting fcurves with the dataref group
             for fcurve in self.object.animation_data.action.fcurves:
                 if debug:
-                    print("\t\t checking FCurve %s" % fcurve.data_path)
+                    debugger.debug("\t\t checking FCurve %s" % fcurve.data_path)
                 if (fcurve.group != None and fcurve.group.name == "XPlane Datarefs"):
                     # get dataref name
                     index = int(fcurve.data_path.replace('["xplane"]["datarefs"][','').replace(']["value"]',''))
                     dataref = self.object.xplane.datarefs[index].path
 
                     if debug:
-                        print("\t\t adding dataref animation: %s" % dataref)
+                        debugger.debug("\t\t adding dataref animation: %s" % dataref)
                         
                     if len(fcurve.keyframe_points)>1:
                         # time to add dataref to animations
@@ -308,7 +333,7 @@ class XPlanePrimitive():
 
                         for keyframe in fcurve.keyframe_points:
                             if debug:
-                                print("\t\t adding keyframe: %6.3f" % keyframe.co[0])
+                                debugger.debug("\t\t adding keyframe: %6.3f" % keyframe.co[0])
                             keyframes.append(keyframe)
 
                         # sort keyframes by frame number
@@ -800,7 +825,7 @@ class XPlaneCommands():
                 rot[i]+="%s\tANIM_rotate_key\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[i])
 
             if debug:
-                print("%s keyframe %d@%d" % (keyframe.primitive.name,keyframe.index,keyframe.frame))
+                debugger.debug("%s keyframe %d@%d" % (keyframe.primitive.name,keyframe.index,keyframe.frame))
 #                print("location/prim.location")
 #                print(keyframe.location)
 #                print(keyframe.primitive.location)
@@ -914,7 +939,7 @@ class XPlaneData():
     def collectObjects(self,objects,filename):
         for obj in objects:
             if debug:
-                print("scanning "+obj.name)
+                debugger.debug("scanning "+obj.name)
                 
             if obj.hide==False:
                 # look for children
@@ -923,7 +948,7 @@ class XPlaneData():
                 # mesh: let's create a prim out of it
                 if obj.type=="MESH":
                     if debug:
-                        print("\t "+obj.name+": adding to list")
+                        debugger.debug("\t "+obj.name+": adding to list")
                     prim = XPlanePrimitive(obj)
                     self.files[filename]['primitives'].append(prim)
 
@@ -934,7 +959,7 @@ class XPlaneData():
                 # lamp: let's create a XPlaneLight. Those cannot have children.
                 elif obj.type=="LAMP":
                     if debug:
-                        print("\t "+child.name+": adding to list")
+                        debugger.debug("\t "+child.name+": adding to list")
                     self.files[filename]['lights'].append(XPlaneLight(child))
                     
                 # something else: lets go through the valid children and add them
@@ -944,12 +969,12 @@ class XPlaneData():
     def addChildren(self,prim,objects,filename):
         for obj in objects:
             if debug:
-                print("\t\t scanning "+obj.name)
+                debugger.debug("\t\t scanning "+obj.name)
 
             if obj.hide==False:
                 if obj.type=="MESH":
                     if debug:
-                        print("\t\t "+obj.name+": adding to list")
+                        debugger.debug("\t\t "+obj.name+": adding to list")
                     childPrim = XPlanePrimitive(obj,prim)
                     prim.children.append(childPrim)
                     
@@ -1065,6 +1090,9 @@ class ExportXPlane9(bpy.types.Operator):
     check_existing = BoolProperty(name="Check Existing", description="Check and warn on overwriting existing files", default=True, options={'HIDDEN'})
 
     def execute(self, context):
+        if debug:
+            debugger.start()
+
         if profile:
             profiler.start("ExportXPlane9")
 
@@ -1090,7 +1118,8 @@ class ExportXPlane9(bpy.types.Operator):
         bpy.context.scene.update()
 
         if len(data.files)>0:
-            print("Writing XPlane Object file(s) ...")
+            if debug:
+                debugger.debug("Writing XPlane Object file(s) ...")
             for file in data.files:
                 o=''
                 if (len(data.files[file]['primitives'])>0 or len(data.files[file]['lights'])>0 or len(data.files[file]['lines'])>0):
@@ -1115,7 +1144,8 @@ class ExportXPlane9(bpy.types.Operator):
 
                     # write the file
                     fullpath = os.path.join(filepath,file+'.obj')
-                    print("Writing %s" % fullpath)
+                    if debug:
+                        debugger.debug("Writing %s" % fullpath)
                     file = open(fullpath, "w")
                     file.write(o)
                     file.close()
@@ -1123,9 +1153,11 @@ class ExportXPlane9(bpy.types.Operator):
                     if profile:
                         profiler.end("ExportXPlane9 %s" % file)
                 else:
-                    print("No objects to export, aborting ...")
+                    if debug:
+                        debugger.debug("No objects to export, aborting ...")
         else:
-            print("No objects to export, aborting ...")
+            if debug:
+                debugger.debug("No objects to export, aborting ...")
 
         # return to stored frame
         bpy.context.scene.frame_set(frame=currentFrame)
@@ -1133,8 +1165,12 @@ class ExportXPlane9(bpy.types.Operator):
 
         if profile:
             profiler.end("ExportXPlane9")
-            print("\nProfiling results:")
-            print(profiler.getTimes())
+            if debug:
+                debugger.debug("\nProfiling results:")
+                debugger.debug(profiler.getTimes())
+
+        if debug:
+            debugger.end()
 
         return {'FINISHED'}
 
