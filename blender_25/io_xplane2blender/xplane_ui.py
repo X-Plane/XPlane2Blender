@@ -76,6 +76,9 @@ class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
         self.search_menu(xplane_datarefs,"text.open")
 
 def scene_layout(self, scene):
+    # create x-plane layers
+    bpy.ops.scene.add_xplane_layers()
+
     layout = self.layout
     row = layout.row()
 

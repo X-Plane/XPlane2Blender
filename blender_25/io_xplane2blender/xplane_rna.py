@@ -417,9 +417,6 @@ def addXPlaneRNA():
                                       description="User defined material attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
 
-    # create x-plane layers
-    bpy.ops.scene.add_xplane_layers()
-
 
 def removeXPlaneRNA():
     del bpy.types.Object.xplane
