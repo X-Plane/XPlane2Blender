@@ -833,12 +833,17 @@ class XPlaneCommands():
         staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2],-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
+
+        # TODO: pack all axes of rotation into one rotate block by using the multipliers.
+        # Question is what angle to use, as we propably need to find the min and max angles.
+        #rot = '%ANIM_rotate_begin\t%6.4f\t%6.4f%6.4f\t%s\n' % ()
         rot = ['','','']
         rot[0] = "%sANIM_rotate_begin\t1.0\t0.0\t0.0\t%s\n" % (tabs,dataref)
         rot[1] = "%sANIM_rotate_begin\t0.0\t1.0\t0.0\t%s\n" % (tabs,dataref)
         rot[2] = "%sANIM_rotate_begin\t0.0\t0.0\t1.0\t%s\n" % (tabs,dataref)
         
         for keyframe in keyframes:
+            # TODO: ignore high precision changes that won't be written anyway to the obj
             totalTrans[0]+=abs(keyframe.translation[0])
             totalTrans[1]+=abs(keyframe.translation[1])
             totalTrans[2]+=abs(keyframe.translation[2])
@@ -848,6 +853,7 @@ class XPlaneCommands():
             totalRot[1]+=abs(keyframe.rotation[1])
             totalRot[2]+=abs(keyframe.rotation[2])
 
+#            rot+=
             for i in range(0,3):
                 rot[i]+="%s\tANIM_rotate_key\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[i])
 
@@ -1198,7 +1204,7 @@ class ExportXPlane9(bpy.types.Operator):
 
         if debug:
             debugger.end()
-
+        
         return {'FINISHED'}
 
     def invoke(self, context, event):
