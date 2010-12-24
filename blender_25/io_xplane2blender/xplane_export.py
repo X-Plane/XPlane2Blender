@@ -327,9 +327,9 @@ class XPlanePrimitive():
             self.location = world["location"]
             self.angle = world["angle"]
             self.scale = world["scale"]
-            self.locationLocal = [0.0,0.0,0.0]
-            self.angleLocal = [0.0,0.0,0.0]
-            self.scaleLocal = [0.0,0.0,0.0]
+            self.locationLocal = self.location
+            self.angleLocal = self.angle
+            self.scaleLocal = self.scale
 
     def getAnimations(self):
         #check for animation
