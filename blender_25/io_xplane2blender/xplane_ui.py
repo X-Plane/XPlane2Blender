@@ -101,18 +101,19 @@ def layer_layout(self, scene, layout, layer):
     box.prop(scene.xplane.layers[layer],"expanded", text="Layer "+li, expand=True, emboss=False, icon=expandIcon)
 
     if expanded:
-        box.prop(scene.xplane.layers[layer],"name", text="Name")
+        column = box.column()
+        column.prop(scene.xplane.layers[layer],"name", text="Name")
 
         if scene.xplane.layers[layer].cockpit:
             checkboxIcon = "CHECKBOX_HLT"
         else:
             checkboxIcon = "CHECKBOX_DEHLT"
             
-        row = box.row()
-        row.prop(scene.xplane.layers[layer], "cockpit", text="Cockpit",icon=checkboxIcon, toggle=True)
+        #row = row.row()
+        column.prop(scene.xplane.layers[layer], "cockpit", text="Cockpit",icon=checkboxIcon, toggle=True)
 
-        row = box.row()
-        row.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
+        #row = row.row()
+        column.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
 
         custom_layer_layout(self, box, scene, layer)
 
