@@ -8,30 +8,57 @@ from bpy.props import *
 from collections import OrderedDict
 
 debug = True
-log = True
+log = False
 profile = True
 version = 3200
 
 class XPlaneDebugger():
     def __init__(self):
-        pass
+        self.log = False
 
-    def start(self):
+    def start(self,log):
         import time
+#        import sys
+#        import logging
 
-        if log:
+        self.log = log
+
+        if self.log:
             (name,ext) = os.path.splitext(bpy.context.blend_data.filepath)
             dir = os.path.dirname(bpy.context.blend_data.filepath)
-            file = os.path.join(dir,name+'_'+time.strftime("%y-%m-%d-%H-%M-%S")+'_xplane2blender.log')
-            self.logfile = open(file,"w")
+            self.logfile = os.path.join(dir,name+'_'+time.strftime("%y-%m-%d-%H-%M-%S")+'_xplane2blender.log')
+
+            # touch the file
+            file = open(self.logfile,"w");
+            file.close()
+
+#            self.excepthook = sys.excepthook
+#            sys.excepthook = self.exception
+#            self.logger = logging.getLogger()
+#            self.streamHandler = logging.StreamHandler()
+#            self.fileHandler = logging.FileHandler(self.logfile)
+#            self.logger.addHandler(self.streamHandler)
+            
+    def write(self,msg):
+        file = open(self.logfile,"a")
+        #file.seek(1,os.SEEK_END)
+        file.write(msg)
+        file.close()
 
     def debug(self,msg):
         print(msg)
-        if log:
-            self.logfile.write(msg+"\n")
-
+        if self.log:
+            self.write(msg+"\n")
+        
+    def exception(self,type,value,traceback):
+        o = "Exception: "+type+"\n"
+        o += "\t"+value+"\n"
+        o += "\tTraceback: "+str(traceback)+"\n"
+        self.write(o)
+        
     def end(self):
-        self.logfile.close()
+        self.log = False
+#        sys.excepthook = self.excepthook
 
 if debug:
     debugger = XPlaneDebugger()
@@ -1091,7 +1118,7 @@ class ExportXPlane9(bpy.types.Operator):
 
     def execute(self, context):
         if debug:
-            debugger.start()
+            debugger.start(log)
 
         if profile:
             profiler.start("ExportXPlane9")
