@@ -843,7 +843,6 @@ class XPlaneCommands():
         rot[2] = "%sANIM_rotate_begin\t0.0\t0.0\t1.0\t%s\n" % (tabs,dataref)
         
         for keyframe in keyframes:
-            # TODO: ignore high precision changes that won't be written anyway to the obj
             totalTrans[0]+=abs(keyframe.translation[0])
             totalTrans[1]+=abs(keyframe.translation[1])
             totalTrans[2]+=abs(keyframe.translation[2])
@@ -872,13 +871,15 @@ class XPlaneCommands():
         rot[1]+="%sANIM_rotate_end\n" % tabs
         rot[2]+="%sANIM_rotate_end\n" % tabs
 
-        if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
+        # ignore high precision changes that won't be written anyway
+        if round(totalTrans[0],0)!=0.0 or round(totalTrans[1],4)!=0.0 or round(totalTrans[2],4)!=0.0:
             o+=trans
             # add loops if any
             if prim.datarefs[dataref].loop>0:
                 o+="%sANIM_keyframe_loop\t%d\n" % (tabs,prim.datarefs[dataref].loop)
 
-        if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
+        # ignore high precision changes that won't be written anyway
+        if round(totalRot[0],4)!=0.0 or round(totalRot[1],4)!=0.0 or round(totalRot[2],4)!=0.0:
             o+=staticTrans[0]
             
             if totalRot[0]!=0.0:
