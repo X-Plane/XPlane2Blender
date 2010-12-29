@@ -882,12 +882,12 @@ class XPlaneCommands():
         if round(totalRot[0],4)!=0.0 or round(totalRot[1],4)!=0.0 or round(totalRot[2],4)!=0.0:
             o+=staticTrans[0]
             
-            if totalRot[0]!=0.0:
-                o+=rot[0]
-            if totalRot[1]!=0.0:
-                o+=rot[1]
             if totalRot[2]!=0.0:
                 o+=rot[2]
+            if totalRot[1]!=0.0:
+                o+=rot[1]
+            if totalRot[0]!=0.0:
+                o+=rot[0]
 
             # add loops if any
             if prim.datarefs[dataref].loop>0:
