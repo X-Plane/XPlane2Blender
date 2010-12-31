@@ -175,39 +175,6 @@ class XPlaneCoords():
         rmatrix = Matrix.Rotation(math.radians(-90),4,'X')
         return rmatrix*matrix
 
-
-class XPlaneLight():
-    def __init__(self,object):
-        self.object = object
-        self.name = object.name
-        self.indices = [0,0]
-        self.color = [object.data.color[0],object.data.color[1],object.data.color[2]]
-        self.type = object.data.xplane.lightType
-
-        # change color according to type
-        if self.type=='flashing':
-            self.color[0] = -self.color[0]
-        elif self.type=='pulsing':
-            self.color[0] = 9.9
-            self.color[1] = 9.9
-            self.color[2] = 9.9
-        elif self.type=='strobe':
-            self.color[0] = 9.8
-            self.color[1] = 9.8
-            self.color[2] = 9.8
-        elif self.type=='traffic':
-            self.color[0] = 9.7
-            self.color[1] = 9.7
-            self.color[2] = 9.7
-
-
-class XPlaneLine():
-    def __init_(self,object):
-        self.object = object
-        self.name = object.name
-        self.indices = [0,0]
-
-
 class XPlaneKeyframe():
     def __init__(self,keyframe,index,dataref,prim):
         self.value = keyframe.co[1]
@@ -231,14 +198,14 @@ class XPlaneKeyframe():
              # update objects so we get values from the keyframe
             prim.parent.object.update(scene=bpy.context.scene)
             object.update(scene=bpy.context.scene)
-            
+
             world = coords.world()
             local = coords.local(prim.parent.object)
 
             self.location = world["location"]
             self.angle = world["angle"]
-            self.scale = world["scale"]           
-            
+            self.scale = world["scale"]
+
             self.locationLocal = local["location"]
             self.angleLocal = local["angle"]
             self.scaleLocal = local["scale"]
@@ -273,28 +240,12 @@ class XPlaneKeyframe():
                 self.translation[i] = self.location[i]-prim.location[i]
                 self.rotation[i] = self.angle[i]-prim.angle[i]
 
-
-class XPlanePrimitive():
+class XPlaneObject():
     def __init__(self,object,parent = None):
         self.object = object
         self.name = object.name
         self.children = []
         self.parent = parent
-
-        self.indices = [0,0]
-        self.material = XPlaneMaterial(self.object)
-        self.faces = None
-        self.datarefs = {}
-        self.attributes = {}
-        self.animations = {}
-        self.datarefs = {}
-        
-        # add custom attributes
-        for attr in object.xplane.customAttributes:
-            self.attributes[attr.name] = attr.value
-
-        self.getCoordinates()
-        self.getAnimations()
 
     def getCoordinates(self):
         # goto first frame so everything is in inital state
@@ -312,15 +263,15 @@ class XPlanePrimitive():
             # store initial location, rotation and scale
             self.location = world["location"]
             self.angle = world["angle"]
-            self.scale = world["scale"]         
-            
+            self.scale = world["scale"]
+
             self.locationLocal = local["location"]
             self.angleLocal = local["angle"]
             self.scaleLocal = local["scale"]
         else:
             # update object display so we have initial values
             self.object.update(scene=bpy.context.scene)
-            
+
             world = coords.world()
 
             # store initial location, rotation and scale
@@ -330,6 +281,55 @@ class XPlanePrimitive():
             self.locationLocal = self.location
             self.angleLocal = self.angle
             self.scaleLocal = self.scale
+
+
+class XPlaneLight(XPlaneObject):
+    def __init__(self,object,parent = None):
+        super(XPlaneLight,self).__init__(object,parent)
+        self.indices = [0,0]
+        self.color = [object.data.color[0],object.data.color[1],object.data.color[2]]
+        self.type = object.data.xplane.lightType
+
+        # change color according to type
+        if self.type=='flashing':
+            self.color[0] = -self.color[0]
+        elif self.type=='pulsing':
+            self.color[0] = 9.9
+            self.color[1] = 9.9
+            self.color[2] = 9.9
+        elif self.type=='strobe':
+            self.color[0] = 9.8
+            self.color[1] = 9.8
+            self.color[2] = 9.8
+        elif self.type=='traffic':
+            self.color[0] = 9.7
+            self.color[1] = 9.7
+            self.color[2] = 9.7
+
+
+class XPlaneLine(XPlaneObject):
+    def __init_(self,object, parent = None):
+        super(object,parent)
+        self.indices = [0,0]
+
+class XPlanePrimitive(XPlaneObject):
+    def __init__(self,object,parent = None):
+        super(XPlanePrimitive,self).__init__(object,parent)
+        
+        self.indices = [0,0]
+        self.material = XPlaneMaterial(self.object)
+        self.faces = None
+        self.datarefs = {}
+        self.attributes = {}
+        self.animations = {}
+        self.datarefs = {}
+        
+        # add custom attributes
+        for attr in object.xplane.customAttributes:
+            self.attributes[attr.name] = attr.value
+
+        self.getCoordinates()
+        self.getAnimations()
 
     def getAnimations(self):
         #check for animation
