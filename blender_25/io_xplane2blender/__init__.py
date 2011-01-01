@@ -24,7 +24,7 @@ bl_addon_info = {
     'location': 'File > Import/Export > XPlane ',
     'description': 'Import and Export XPlane objects/planes (.obj,.aif format)',
     'warning': '', # used for warning icon and text in addons panel
-    'category': 'Import/Export'}
+    'category': 'Import-Export'}
 
 import bpy
 from io_xplane2blender import xplane_ui
