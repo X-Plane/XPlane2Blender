@@ -259,6 +259,7 @@ class XPlaneCommands():
             
         return o
 
+    # FIXME: Bone animations are not written, but processed. Why?
     def writeObject(self,obj,animLevel):
         if profile:
             profiler.start("XPlaneCommands.writeObject")
