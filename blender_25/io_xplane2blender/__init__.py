@@ -28,21 +28,23 @@ bl_addon_info = {
 
 import bpy
 from io_xplane2blender import xplane_ui
-from io_xplane2blender import xplane_rna
+from io_xplane2blender import xplane_props
 from io_xplane2blender import xplane_export
+from io_xplane2blender.xplane_config import *
+
 
 # Add to a menu
 def menu_func(self, context):
     self.layout.operator(xplane_export.ExportXPlane9.bl_idname, text="XPlane Object (.obj)")
 
-def register():
-    xplane_rna.addXPlaneRNA()
+def register():    
+    xplane_props.addXPlaneRNA()
     xplane_ui.addXPlaneUI()
     bpy.types.INFO_MT_file_export.append(menu_func)
 
 def unregister():
     xplane_ui.removeXPlaneUI()
-    xplane_rna.removeXPlaneRNA()
+    xplane_props.removeXPlaneRNA()
     bpy.types.INFO_MT_file_export.remove(menu_func)
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
 import bpy
+from io_xplane2blender.xplane_ops import *
+from io_xplane2blender.xplane_config import *
 
 class LAMP_PT_xplane(bpy.types.Panel):
     '''XPlane Material Panel'''
@@ -55,7 +57,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     def poll(self,context):
         obj = context.object
 
-        if(obj.type in ("MESH")):
+        if obj.type in ("MESH","EMPTY","ARMATURE"):
             return True
         else:
             return False
@@ -63,10 +65,11 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     def draw(self, context):
         obj = context.object
         
-        if obj.type == "MESH":
+        if obj.type in ("MESH","EMPTY","ARMATURE"):
             mesh_layout(self,obj)
             animation_layout(self,obj)
-            custom_layout(self,obj,obj.type)
+            if obj.type == "MESH":
+                custom_layout(self,obj,obj.type)
         
 class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
     '''XPlane Datarefs Search Menu'''

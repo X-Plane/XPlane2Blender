@@ -1,476 +1,9 @@
 import os.path
 import bpy
-import struct
 import os
-import math
-from mathutils import Matrix
-from bpy.props import *
-from collections import OrderedDict
-
-debug = True
-log = False
-profile = True
-version = 3200
-
-class XPlaneDebugger():
-    def __init__(self):
-        self.log = False
-
-    def start(self,log):
-        import time
-#        import sys
-#        import logging
-
-        self.log = log
-
-        if self.log:
-            (name,ext) = os.path.splitext(bpy.context.blend_data.filepath)
-            dir = os.path.dirname(bpy.context.blend_data.filepath)
-            self.logfile = os.path.join(dir,name+'_'+time.strftime("%y-%m-%d-%H-%M-%S")+'_xplane2blender.log')
-
-            # touch the file
-            file = open(self.logfile,"w");
-            file.close()
-
-#            self.excepthook = sys.excepthook
-#            sys.excepthook = self.exception
-#            self.logger = logging.getLogger()
-#            self.streamHandler = logging.StreamHandler()
-#            self.fileHandler = logging.FileHandler(self.logfile)
-#            self.logger.addHandler(self.streamHandler)
-            
-    def write(self,msg):
-        file = open(self.logfile,"a")
-        #file.seek(1,os.SEEK_END)
-        file.write(msg)
-        file.close()
-
-    def debug(self,msg):
-        print(msg)
-        if self.log:
-            self.write(msg+"\n")
-        
-    def exception(self,type,value,traceback):
-        o = "Exception: "+type+"\n"
-        o += "\t"+value+"\n"
-        o += "\tTraceback: "+str(traceback)+"\n"
-        self.write(o)
-        
-    def end(self):
-        self.log = False
-#        sys.excepthook = self.excepthook
-
-if debug:
-    debugger = XPlaneDebugger()
-
-class XPlaneProfiler():
-    def __init__(self):
-        self.times = {}
-
-    def start(self,name):
-        from time import time
-
-        if name in self.times:
-            if self.times[name][3]:
-                self.times[name][0] = time()
-                self.times[name][3] = False
-
-            self.times[name][2]+=1
-        else:
-            self.times[name] = [time(),0.0,1,False]
-
-    def end(self,name):
-        from time import time
-        
-        if name in self.times:
-            self.times[name][1]+=time()-self.times[name][0]
-            self.times[name][3] = True
-
-    def getTime(self,name):
-        return '%s: %6.4f sec (calls: %d)' % (name,self.times[name][1],self.times[name][2])
-
-    def getTimes(self):
-        _times = ''
-        for name in self.times:
-            _times+=self.getTime(name)+"\n"
-
-        return _times
-
-
-if profile:
-    profiler = XPlaneProfiler()
-
-class XPlaneCoords():
-    def __init__(self,object):
-        self.object = object
-
-    def worldLocation(self):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        loc = matrix.translation_part()
-        return loc #self.convert([loc[0],loc[1],loc[2]])
-
-    def worldRotation(self):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        rot = matrix.rotation_part().to_euler("XZY")
-        return rot #[-rot[0],rot[1],rot[2]]
-
-    def worldAngle(self):
-        return self.angle(self.worldRotation())
-
-    def worldScale(self):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        scale = matrix.scale_part()
-        return scale #self.convert([scale[0],scale[1],scale[2]],True)
-
-    def world(self):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        loc = matrix.translation_part()
-        rot = matrix.rotation_part().to_euler("XZY")
-        scale = matrix.scale_part()
-        return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
-
-    def localLocation(self,parent):
-        matrix = self.relativeConvertedMatrix(parent)
-        loc = matrix.translation_part()
-        return loc #self.convert([loc[0],loc[1],loc[2]])
-        
-    def localRotation(self,parent):
-        matrix = self.relativeConvertedMatrix(parent)
-        rot = matrix.rotation_part().to_euler("XYZ")
-        return rot #self.convert([rot[0],rot[1],rot[2]])
-
-    def localAngle(self,parent):
-        return self.angle(self.localRotation())
-
-    def localScale(self,parent):
-        matrix = self.relativeConvertedMatrix(parent)
-        scale = matrix.scale_part()
-        return scale #self.convert([scale[0],scale[1],scale[2]],True)
-
-    def local(self,parent):
-        matrix = self.relativeConvertedMatrix(parent)
-        loc = matrix.translation_part()
-        rot = matrix.rotation_part().to_euler("XYZ")
-        scale = matrix.scale_part()
-        return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
-
-    def angle(self,rot):
-        return [math.degrees(rot[0]),math.degrees(rot[1]),math.degrees(rot[2])]
-
-    def convert(self,co,scale = False):
-        if (scale):
-            return [co[0],co[2],co[1]]
-        else:
-            return [-co[0],co[2],co[1]]
-
-    def relativeMatrix(self,parent):
-        return self.object.matrix_world * parent.matrix_world.copy().invert()
-
-    def relativeConvertedMatrix(self,parent):
-        return XPlaneCoords.convertMatrix(self.object.matrix_world) * XPlaneCoords.convertMatrix(parent.matrix_world.copy().invert())
-
-    @staticmethod
-    def convertMatrix(matrix):
-        import mathutils
-        rmatrix = Matrix.Rotation(math.radians(-90),4,'X')
-        return rmatrix*matrix
-
-class XPlaneKeyframe():
-    def __init__(self,keyframe,index,dataref,prim):
-        self.value = keyframe.co[1]
-        self.dataref = dataref
-        self.translation = [0.0,0.0,0.0]
-        self.rotation = [0.0,0.0,0.0]
-        self.scale = [0.0,0.0,0.0]
-        self.index = index
-        self.primitive = prim
-        object = prim.object
-
-        # goto keyframe and read out object values
-        # TODO: support subframes?
-        self.frame = int(round(keyframe.co[0]))
-        bpy.context.scene.frame_set(frame=self.frame)
-        coords = XPlaneCoords(object)
-
-        self.hide = object.hide_render
-
-        if prim.parent!=None:
-             # update objects so we get values from the keyframe
-            prim.parent.object.update(scene=bpy.context.scene)
-            object.update(scene=bpy.context.scene)
-
-            world = coords.world()
-            local = coords.local(prim.parent.object)
-
-            self.location = world["location"]
-            self.angle = world["angle"]
-            self.scale = world["scale"]
-
-            self.locationLocal = local["location"]
-            self.angleLocal = local["angle"]
-            self.scaleLocal = local["scale"]
-            # TODO: multiply location with scale of parent
-
-            print(prim.name)
-            print(self.locationLocal)
-            print(prim.locationLocal)
-            print(self.angleLocal)
-            print(prim.angleLocal)
-
-            for i in range(0,3):
-                # remove initial location and rotation to get offset
-                self.translation[i] = self.locationLocal[i]-prim.locationLocal[i]
-                self.rotation[i] = self.angleLocal[i]-prim.angleLocal[i]
-        else:
-            # update object so we get values from the keyframe
-            object.update(scene=bpy.context.scene)
-
-            world = coords.world()
-
-            self.location = world["location"]
-            self.angle = world["angle"]
-            self.scale = world["scale"]
-
-            self.locationLocal = self.location
-            self.angleLocal = self.angle
-            self.scaleLocal = self.scale
-
-            # remove initial location and rotation to get offset
-            for i in range(0,3):
-                self.translation[i] = self.location[i]-prim.location[i]
-                self.rotation[i] = self.angle[i]-prim.angle[i]
-
-class XPlaneObject():
-    def __init__(self,object,parent = None):
-        self.object = object
-        self.name = object.name
-        self.children = []
-        self.parent = parent
-
-    def getCoordinates(self):
-        # goto first frame so everything is in inital state
-        bpy.context.scene.frame_set(frame=1)
-        coords = XPlaneCoords(self.object)
-
-        if self.parent!=None:
-            # update object display so we have initial values
-            self.parent.object.update(scene=bpy.context.scene)
-            self.object.update(scene=bpy.context.scene)
-
-            world = coords.world()
-            local = coords.local(self.parent.object)
-
-            # store initial location, rotation and scale
-            self.location = world["location"]
-            self.angle = world["angle"]
-            self.scale = world["scale"]
-
-            self.locationLocal = local["location"]
-            self.angleLocal = local["angle"]
-            self.scaleLocal = local["scale"]
-        else:
-            # update object display so we have initial values
-            self.object.update(scene=bpy.context.scene)
-
-            world = coords.world()
-
-            # store initial location, rotation and scale
-            self.location = world["location"]
-            self.angle = world["angle"]
-            self.scale = world["scale"]
-            self.locationLocal = self.location
-            self.angleLocal = self.angle
-            self.scaleLocal = self.scale
-
-
-class XPlaneLight(XPlaneObject):
-    def __init__(self,object,parent = None):
-        super(XPlaneLight,self).__init__(object,parent)
-        self.indices = [0,0]
-        self.color = [object.data.color[0],object.data.color[1],object.data.color[2]]
-        self.type = object.data.xplane.lightType
-
-        # change color according to type
-        if self.type=='flashing':
-            self.color[0] = -self.color[0]
-        elif self.type=='pulsing':
-            self.color[0] = 9.9
-            self.color[1] = 9.9
-            self.color[2] = 9.9
-        elif self.type=='strobe':
-            self.color[0] = 9.8
-            self.color[1] = 9.8
-            self.color[2] = 9.8
-        elif self.type=='traffic':
-            self.color[0] = 9.7
-            self.color[1] = 9.7
-            self.color[2] = 9.7
-
-
-class XPlaneLine(XPlaneObject):
-    def __init_(self,object, parent = None):
-        super(object,parent)
-        self.indices = [0,0]
-
-class XPlanePrimitive(XPlaneObject):
-    def __init__(self,object,parent = None):
-        super(XPlanePrimitive,self).__init__(object,parent)
-        
-        self.indices = [0,0]
-        self.material = XPlaneMaterial(self.object)
-        self.faces = None
-        self.datarefs = {}
-        self.attributes = {}
-        self.animations = {}
-        self.datarefs = {}
-        
-        # add custom attributes
-        for attr in object.xplane.customAttributes:
-            self.attributes[attr.name] = attr.value
-
-        self.getCoordinates()
-        self.getAnimations()
-
-    def getAnimations(self):
-        #check for animation
-        if debug:
-            debugger.debug("\t\t checking animations")
-        if (self.object.animation_data != None and self.object.animation_data.action != None and len(self.object.animation_data.action.fcurves)>0):
-            if debug:
-                debugger.debug("\t\t animation found")
-            #check for dataref animation by getting fcurves with the dataref group
-            for fcurve in self.object.animation_data.action.fcurves:
-                if debug:
-                    debugger.debug("\t\t checking FCurve %s" % fcurve.data_path)
-                if (fcurve.group != None and fcurve.group.name == "XPlane Datarefs"):
-                    # get dataref name
-                    index = int(fcurve.data_path.replace('["xplane"]["datarefs"][','').replace(']["value"]',''))
-                    dataref = self.object.xplane.datarefs[index].path
-
-                    if debug:
-                        debugger.debug("\t\t adding dataref animation: %s" % dataref)
-                        
-                    if len(fcurve.keyframe_points)>1:
-                        # time to add dataref to animations
-                        self.animations[dataref] = []
-                        self.datarefs[dataref] = self.object.xplane.datarefs[index]
-
-                        # store keyframes temporary, so we can resort them
-                        keyframes = []
-
-                        for keyframe in fcurve.keyframe_points:
-                            if debug:
-                                debugger.debug("\t\t adding keyframe: %6.3f" % keyframe.co[0])
-                            keyframes.append(keyframe)
-
-                        # sort keyframes by frame number
-                        keyframesSorted = sorted(keyframes, key=lambda keyframe: keyframe.co[0])
-                        
-                        for i in range(0,len(keyframesSorted)):
-                            self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
-
-
-class XPlaneMaterial():
-    def __init__(self,object):
-        self.object = object
-        self.texture = None
-        self.uv_name = None
-
-        # Material
-        self.attributes = {"ATTR_diffuse_rgb":None,
-                           "ATTR_specular_rgb":None,
-                           "ATTR_emission_rgb":None,
-                           "ATTR_shiny_rat":None,
-                           "ATTR_hard":None,
-                           "ATTR_no_hard":None,
-                           "ATTR_cull":None,
-                           "ATTR_no_cull":None,                           
-                           "ATTR_depth":None,
-                           "ATTR_no_depth":None,
-                           "ATTR_blend":None,
-                           "ATTR_no_blend":None}
-
-        if len(object.data.materials)>0:
-            mat = object.data.materials[0]
-
-            # diffuse
-            if mat.diffuse_intensity>0:
-                diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
-                            mat.diffuse_intensity*mat.diffuse_color[1],
-                            mat.diffuse_intensity*mat.diffuse_color[2]]
-                self.attributes['ATTR_diffuse_rgb'] = "%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2])
-
-            # specular
-            if mat.specular_intensity>0:
-                specular = [mat.specular_intensity*mat.specular_color[0],
-                            mat.specular_intensity*mat.specular_color[1],
-                            mat.specular_intensity*mat.specular_color[2]]
-                self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
-                self.attributes['ATTR_shiny_rat'] = "%6.3f" % mat.specular_hardness
-
-            # emission
-            if mat.emit>0:
-                emission = [mat.emit*mat.diffuse_color[0],
-                            mat.emit*mat.diffuse_color[1],
-                            mat.emit*mat.diffuse_color[2]]
-                self.attributes['ATTR_emission_rgb'] = "%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2])
-
-            # surface type
-            if mat.xplane.surfaceType != 'none':
-                self.attributes['ATTR_hard'] = mat.xplane.surfaceType
-
-            # backface culling
-            if self.object.data.show_double_sided:
-                self.attributes['ATTR_no_cull'] = True
-            else:
-                self.attributes['ATTR_cull'] = True
-
-            # blend
-            if mat.xplane.blend:
-                self.attributes['ATTR_no_blend'] = "%6.3f" % mat.xplane.blendRatio
-
-            # depth check
-            if self.object.xplane.depth == False:
-                self.attributes['ATTR_no_depth'] = True;
-
-            # Texture and uv-coordinates
-            if(len(mat.texture_slots)>0 and hasattr(mat.texture_slots[0],'use') and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
-                tex =  mat.texture_slots[0].texture
-                if(tex.image.file_format=='PNG'):
-                    self.texture = os.path.basename(tex.image.filepath)
-
-                if mat.texture_slots[0].texture_coords == 'UV':
-                    self.uv_name = mat.texture_slots[0].uv_layer
-
-            # add custom attributes
-            for attr in mat.xplane.customAttributes:
-                self.attributes[attr.name] = attr.value
-
-class XPlaneFace():
-    def __init__(self):
-        self.vertices = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
-        self.normals = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
-        self.indices = [0,0,0]
-        self.uvs = [(0.0,0.0),(0.0,0.0),(0.0,0.0)]
-        self.smooth = False
-
-
-class XPlaneFaces():
-    def __init__(self):
-        self.faces = []
-
-    def append(self,face):
-        self.faces.append(face)
-
-    def remove(self,face):
-        del self.faces[face]
-
-    def get(self,i):
-        if len(self.faces)-1>=i:
-            return self.faces[i]
-        else:
-            return None
-
+from io_xplane2blender.xplane_helpers import *
+from io_xplane2blender.xplane_types import *
+from io_xplane2blender.xplane_config import *
 
 class XPlaneMesh():
     def __init__(self,file):
@@ -478,64 +11,69 @@ class XPlaneMesh():
         self.indices = []
 
         # store the global index, as we are reindexing faces
-        globalindex = 0
+        self.globalindex = 0
+        self.writeObjects(file['objects'])
 
-        for prim in file['primitives']:
-            prim.indices[0] = len(self.indices)
-            
-            # store the world translation matrix
-            matrix = XPlaneCoords.convertMatrix(prim.object.matrix_world)
+    def writeObjects(self,objects):
+        for obj in objects:
+            if obj.type == 'PRIMITIVE':
+                obj.indices[0] = len(self.indices)
 
-            # create a copy of the object mesh with modifiers applied
-            mesh = prim.object.create_mesh(bpy.context.scene, True, "PREVIEW")
-            
-            # transform mesh with the world matrix
-            mesh.transform(matrix)
+                # store the world translation matrix
+                matrix = XPlaneCoords.convertMatrix(obj.object.matrix_world)
 
-            # with the new mesh get uvFaces list
-            uvFaces = self.getUVFaces(mesh,prim.material.uv_name)
+                # create a copy of the object mesh with modifiers applied
+                mesh = obj.object.create_mesh(bpy.context.scene, True, "PREVIEW")
 
-#            faces = XPlaneFaces()
+                # transform mesh with the world matrix
+                mesh.transform(matrix)
 
-            # convert faces to triangles
-            tempfaces = []
-            for i in range(0,len(mesh.faces)):
-                if uvFaces != None:
-                    tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i]))
-                else:
-                    tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],None))
-                    
-            for f in tempfaces:
-#                xplaneFace = XPlaneFace()
-                l = len(f['indices'])
-                for i in range(0,len(f['indices'])):
-                    # get the original index but reverse order, as this is reversing normals
-                    vindex = f['indices'][2-i]
-                    
-                    # get the vertice from original mesh
-                    v = mesh.vertices[vindex]
-                    co = v.co
-                    
-                    vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
+                # with the new mesh get uvFaces list
+                uvFaces = self.getUVFaces(mesh,obj.material.uv_name)
 
-                    index = globalindex
-                    self.vertices.append(vert)
-                    globalindex+=1
-                    
-                    # store face information alltogether in one struct
-#                    xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
-#                    xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
-#                    xplaneFace.uvs[i] = (vert[6],vert[7])
-#                    xplaneFace.indices[i] = index
-                    
-                    self.indices.append(index)
-                    
-#                faces.append(xplaneFace)
+    #            faces = XPlaneFaces()
 
-            # store the faces in the prim
-#            prim.faces = faces
-            prim.indices[1] = len(self.indices)
-            
+                # convert faces to triangles
+                tempfaces = []
+                for i in range(0,len(mesh.faces)):
+                    if uvFaces != None:
+                        tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i]))
+                    else:
+                        tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],None))
+
+                for f in tempfaces:
+    #                xplaneFace = XPlaneFace()
+                    l = len(f['indices'])
+                    for i in range(0,len(f['indices'])):
+                        # get the original index but reverse order, as this is reversing normals
+                        vindex = f['indices'][2-i]
+
+                        # get the vertice from original mesh
+                        v = mesh.vertices[vindex]
+                        co = v.co
+
+                        vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
+
+                        index = self.globalindex
+                        self.vertices.append(vert)
+                        self.globalindex+=1
+
+                        # store face information alltogether in one struct
+    #                    xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
+    #                    xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
+    #                    xplaneFace.uvs[i] = (vert[6],vert[7])
+    #                    xplaneFace.indices[i] = index
+
+                        self.indices.append(index)
+
+    #                faces.append(xplaneFace)
+
+                # store the faces in the prim
+    #            prim.faces = faces
+                obj.indices[1] = len(self.indices)
+
+            self.writeObjects(obj.children)
+
             #TODO: now optimize vertex-table and remove duplicates
             #index = self.getDupliVerticeIndex(vert,endIndex)
         
@@ -657,6 +195,7 @@ class XPlaneMesh():
 
         return o
 
+
 class XPlaneLights():
     def __init__(self,file):
         self.vertices = []
@@ -696,6 +235,7 @@ class XPlaneLights():
         
         return o
 
+
 class XPlaneCommands():
     def __init__(self,file):
         self.file = file
@@ -706,16 +246,12 @@ class XPlaneCommands():
         # stores all already written attributes
         self.written = {}
 
-        # stores already written primitives, that have been written due to nested animations
-        self.writtenPrimitives = []
-
     def write(self):
         o=''
          
         # write down all objects
-        for prim in self.file['primitives']:
-            if prim not in self.writtenPrimitives:
-                o+=self.writePrimitive(prim,0)
+        for obj in self.file['objects']:
+            o+=self.writeObject(obj,0)
 
         # write down all lights
         if len(self.file['lights'])>0:
@@ -723,9 +259,9 @@ class XPlaneCommands():
             
         return o
 
-    def writePrimitive(self,prim,animLevel):
+    def writeObject(self,obj,animLevel):
         if profile:
-            profiler.start("XPlaneCommands.writePrimitve")
+            profiler.start("XPlaneCommands.writeObject")
             
         o = ''
         
@@ -733,42 +269,50 @@ class XPlaneCommands():
         tabs = self.getAnimTabs(animLevel)
 
         if debug:
-            o+="%s# %s\n" % (tabs,prim.name)
+            o+="%s# %s\n" % (tabs,obj.name)
 
-        if len(prim.animations)>0:
+        if hasattr(obj,'animations') and len(obj.animations)>0:
             animationStarted = True
 
             # begin animation block
-            o+="%sANIM_begin\n" % tabs
+            oAnim = ''
             animLevel+=1
             tabs = self.getAnimTabs(animLevel)
 
-            for dataref in prim.animations:
-                if len(prim.animations[dataref])>1:
-                    o+=self.writeKeyframes(prim,dataref,tabs)
+            for dataref in obj.animations:
+                if len(obj.animations[dataref])>1:
+                    oAnim+=self.writeKeyframes(obj,dataref,tabs)
 
-        o+=self.writeMaterial(prim,tabs)
-        o+=self.writeCustomAttributes(prim,tabs)
+            if oAnim!='':
+                o+="%sANIM_begin\n" % self.getAnimTabs(animLevel-1)
+                o+=oAnim
+
+        if hasattr(obj,'material'):
+            o+=self.writeMaterial(obj,tabs)
+
+        if hasattr(obj,'attributes'):
+            o+=self.writeCustomAttributes(obj,tabs)
 
         # triangle rendering
-        offset = prim.indices[0]
-        count = prim.indices[1]-prim.indices[0]
-        o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
-
-        self.writtenPrimitives.append(prim)
+        if hasattr(obj,'indices'):
+            offset = obj.indices[0]
+            count = obj.indices[1]-obj.indices[0]
+            o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
 
         if animationStarted:
-            if len(prim.children)>0:
-                for childPrim in prim.children:
-                    if childPrim not in self.writtenPrimitives:
-                        o+=self.writePrimitive(childPrim,animLevel)
-            # TODO: check if primitive has an animated parent in another file, if so add a dummy anim-block around it?
+            for child in obj.children:
+                o+=self.writeObject(child,animLevel)
+            # TODO: check if Object has an animated parent in another file, if so add a dummy anim-block around it?
 
             # end animation block
-            o+="%sANIM_end\n" % self.getAnimTabs(animLevel-1)
+            if oAnim!='':
+                o+="%sANIM_end\n" % self.getAnimTabs(animLevel-1)
+        else:
+            for child in obj.children:
+                o+=self.writeObject(child,animLevel+1)
 
         if profile:
-            profiler.end("XPlaneCommands.writePrimitive")
+            profiler.end("XPlaneCommands.writeObject")
             
         return o
 
@@ -779,8 +323,8 @@ class XPlaneCommands():
         
         return tabs
 
-    def getAnimLevel(self,prim):
-        parent = prim
+    def getAnimLevel(self,obj):
+        parent = obj
         level = 0
         
         while parent != None:
@@ -819,18 +363,18 @@ class XPlaneCommands():
             o+=tabs+line
         return o
 
-    def writeKeyframes(self,prim,dataref,tabs):
+    def writeKeyframes(self,obj,dataref,tabs):
         o = ''
 
-        keyframes = prim.animations[dataref]
+        keyframes = obj.animations[dataref]
 
         totalTrans = [0.0,0.0,0.0]
         totalRot = [0.0,0.0,0.0]
 
         # TODO: staticTrans can be merged into regular translations
         staticTrans = ['','']
-        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,prim.locationLocal[0],prim.locationLocal[1],prim.locationLocal[2],prim.locationLocal[0],prim.locationLocal[1],prim.locationLocal[2])
-        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2],-prim.locationLocal[0],-prim.locationLocal[1],-prim.locationLocal[2])
+        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2],obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2])
+        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2],-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
 
@@ -857,13 +401,13 @@ class XPlaneCommands():
                 rot[i]+="%s\tANIM_rotate_key\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[i])
 
             if debug:
-                debugger.debug("%s keyframe %d@%d" % (keyframe.primitive.name,keyframe.index,keyframe.frame))
+                debugger.debug("%s keyframe %d@%d" % (keyframe.object.name,keyframe.index,keyframe.frame))
 #                print("location/prim.location")
 #                print(keyframe.location)
-#                print(keyframe.primitive.location)
+#                print(keyframe.object.location)
 #                print("locationLocal/prim.locationLocal")
 #                print(keyframe.locationLocal)
-#                print(keyframe.primitive.locationLocal)
+#                print(keyframe.object.locationLocal)
 #                print("")
             
         trans+="%sANIM_trans_end\n" % tabs
@@ -872,14 +416,22 @@ class XPlaneCommands():
         rot[2]+="%sANIM_rotate_end\n" % tabs
 
         # ignore high precision changes that won't be written anyway
-        if round(totalTrans[0],0)!=0.0 or round(totalTrans[1],4)!=0.0 or round(totalTrans[2],4)!=0.0:
+        totalTrans[0] = round(totalTrans[0],4)
+        totalTrans[1] = round(totalTrans[1],4)
+        totalTrans[2] = round(totalTrans[2],4)
+        
+        if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
             o+=trans
             # add loops if any
-            if prim.datarefs[dataref].loop>0:
-                o+="%sANIM_keyframe_loop\t%d\n" % (tabs,prim.datarefs[dataref].loop)
-
+            if obj.datarefs[dataref].loop>0:
+                o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
+                
         # ignore high precision changes that won't be written anyway
-        if round(totalRot[0],4)!=0.0 or round(totalRot[1],4)!=0.0 or round(totalRot[2],4)!=0.0:
+        totalRot[0] = round(totalRot[0],4)
+        totalRot[1] = round(totalRot[1],4)
+        totalRot[2] = round(totalRot[2],4)
+        
+        if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
             o+=staticTrans[0]
             
             if totalRot[2]!=0.0:
@@ -890,12 +442,13 @@ class XPlaneCommands():
                 o+=rot[0]
 
             # add loops if any
-            if prim.datarefs[dataref].loop>0:
-                o+="%sANIM_keyframe_loop\t%d\n" % (tabs,prim.datarefs[dataref].loop)
+            if obj.datarefs[dataref].loop>0:
+                o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
                 
             o+=staticTrans[1]
         
         return o
+
 
 class XPlaneData():
     def __init__(self):
@@ -940,7 +493,7 @@ class XPlaneData():
 
     # Returns an empty obj-file hash
     def getEmptyFile(self,parent):
-        return {'primitives':[],'lights':[],'lines':[],'parent':parent}
+        return {'objects':[],'lights':[],'lines':[],'primitives':[],'parent':parent}
 
     # Returns exportable child objects. If those are nested within bones or something else it will look recursive for objects.
     def getChildObjects(self,parent,found = None):
@@ -948,10 +501,11 @@ class XPlaneData():
             found = []
         if len(parent.children)>0:
             for child in parent.children:
-                if child.type in ["MESH","LAMP"]:
-                    found.append(child)
-                else:
-                    self.getChildObjects(child,found)
+                found.append(child)
+#                if child.type in ["MESH","LAMP"]:
+#                    found.append(child)
+#                else:
+#                    self.getChildObjects(child,found)
         
         return found
 
@@ -965,12 +519,33 @@ class XPlaneData():
             filename = self.getFilenameFromXPlaneLayer(xplaneLayer)
             self.files[filename] = self.getEmptyFile(xplaneLayer)
             self.collectObjects(self.getObjectsByLayer(layer),filename)
-            self.splitFileByTexture(xplaneLayer)
+            #self.splitFileByTexture(xplaneLayer)
                 
         if profile:
             profiler.end("XPlaneData.collect")
 
-    def collectObjects(self,objects,filename):
+    def collectBones(self,bones,filename,parent):
+        for bone in bones:
+            if debug:
+                debugger.debug("scanning "+bone.name)
+                debugger.debug("\t "+bone.name+": adding to list")
+
+            xplaneBone = XPlaneBone(bone,parent)
+            parent.children.append(xplaneBone)
+
+            # get child objects this bone might be a parent of
+            self.collectBoneObjects(xplaneBone,filename)
+            
+            # recursion
+            self.collectBones(bone.children,filename,xplaneBone)
+
+    def collectBoneObjects(self,xplaneBone,filename):
+        if xplaneBone.armature != None:
+            for obj in xplaneBone.armature.object.children:
+                if obj.parent_bone == xplaneBone.name:
+                    self.collectObjects([obj],filename,xplaneBone)
+                
+    def collectObjects(self,objects,filename,parent = None):
         for obj in objects:
             if debug:
                 debugger.debug("scanning "+obj.name)
@@ -979,48 +554,76 @@ class XPlaneData():
                 # look for children
                 children = self.getChildObjects(obj)
 
-                # mesh: let's create a prim out of it
-                if obj.type=="MESH":
+                # armature: go through the children and check if they are parented to a bone
+                if obj.type == 'ARMATURE':
+                    xplaneObj = XPlaneObject(obj,parent)
+                    if parent == None:
+                        self.files[filename]["objects"].append(xplaneObj)
+
+                    # add to child list
+                    if parent != None:
+                        parent.children.append(xplaneObj)
+
+                    for bone in obj.data.bones:
+                        rootBones = []
+                        # root bones only
+                        if bone.parent == None:
+                            rootBones.append(bone)
+
+                        # recursion
+                        self.collectBones(rootBones,filename,xplaneObj)
+
+                # unsuported object type: Keep it to store hierarchy
+                elif obj.type in ['EMPTY','CAMERA','SURFACE','CURVE','FONT','META','LATTICE']:
                     if debug:
                         debugger.debug("\t "+obj.name+": adding to list")
-                    prim = XPlanePrimitive(obj)
+                    xplaneObj = XPlaneObject(obj,parent)
+                    if parent == None:
+                        self.files[filename]["objects"].append(xplaneObj)
+
+                    # add to child list
+                    if parent != None:
+                        parent.children.append(xplaneObj)
+
+                    # recursion
+                    if len(children)>0:
+                        self.collectObjects(children,filename,xplaneObj)
+                    
+                # mesh: let's create a prim out of it
+                elif obj.type=="MESH":
+                    if debug:
+                        debugger.debug("\t "+obj.name+": adding to list")
+                    prim = XPlanePrimitive(obj,parent)
+                    if parent == None:
+                        self.files[filename]['objects'].append(prim)
+
                     self.files[filename]['primitives'].append(prim)
 
-                    # if object has children add them to the prim
-                    if len(children)>0:
-                        self.addChildren(prim,children,filename)
+                    # add to child list
+                    if parent != None:
+                        parent.children.append(prim)
 
-                # lamp: let's create a XPlaneLight. Those cannot have children.
+                    # recursion
+                    if len(children)>0:
+                        self.collectObjects(children,filename,prim)
+
+                # lamp: let's create a XPlaneLight. Those cannot have children (yet).
                 elif obj.type=="LAMP":
                     if debug:
                         debugger.debug("\t "+child.name+": adding to list")
-                    self.files[filename]['lights'].append(XPlaneLight(child))
-                    
-                # something else: lets go through the valid children and add them
-                elif len(children)>0:
-                    self.collectObjects(children,filename)
+                    self.files[filename]['lights'].append(XPlaneLight(child,parent))
 
-    def addChildren(self,prim,objects,filename):
-        for obj in objects:
-            if debug:
-                debugger.debug("\t\t scanning "+obj.name)
+                    # add to child list
+                    if parent != None:
+                        parent.children.append(xplaneObj)
+                
+    def getBone(self,armature,name):
+        for bone in armature.bones:
+            if bone.name == name:
+                return bone
+        return None
 
-            if obj.hide==False:
-                if obj.type=="MESH":
-                    if debug:
-                        debugger.debug("\t\t "+obj.name+": adding to list")
-                    childPrim = XPlanePrimitive(obj,prim)
-                    prim.children.append(childPrim)
-                    
-                    # add prim to file
-                    self.files[filename]['primitives'].append(childPrim)
-
-                    # recursion
-                    children = self.getChildObjects(obj)
-                    if len(children)>0:
-                        self.addChildren(childPrim,children,filename)
-                        
-
+    # TODO: not working with new nested export. Propably XPlane Layers must hold texture info?
     def splitFileByTexture(self,parent):
         name = self.getFilenameFromXPlaneLayer(parent)
         filename = None
@@ -1028,21 +631,21 @@ class XPlaneData():
         if len(self.files[name])>0:
             # stores prims that have to be removed after iteration
             remove = []
-            for prim in self.files[name]['primitives']:
-                if prim.material.texture!=None:
-                    filename = name+'_'+prim.material.texture[0:-4]
+            for obj in self.files[name]['objects']:
+                if obj.type=='PRIMITIVE' and obj.material.texture!=None:
+                    filename = name+'_'+obj.material.texture[0:-4]
                     
                     # create new file list if not existant
                     if filename not in self.files:
                         self.files[filename] = self.getEmptyFile(parent)
 
                     # store prim in the file list
-                    self.files[filename]['primitives'].append(prim)
-                    remove.append(prim)
+                    self.files[filename]['objects'].append(obj)
+                    remove.append(obj)
 
             # remove prims that have been placed in other files
-            for prim in remove:
-                self.files[name]['primitives'].remove(prim)
+            for obj in remove:
+                self.files[name]['objects'].remove(obj)
 
             # add texture to list
             if filename:
@@ -1050,7 +653,7 @@ class XPlaneData():
 
             # do some house cleaning
             # if there is only one texture in use and no objects without texture, put everything in one file
-            if (len(textures)==1 and len(self.files[name]['primitives'])==0):
+            if (len(textures)==1 and len(self.files[name]['objects'])==0):
                 self.files[textures[0]]['lights'] = self.files[name]['lights']
                 self.files[textures[0]]['lines'] = self.files[name]['lines']
                 del self.files[name]
@@ -1156,7 +759,7 @@ class ExportXPlane9(bpy.types.Operator):
                 debugger.debug("Writing XPlane Object file(s) ...")
             for file in data.files:
                 o=''
-                if (len(data.files[file]['primitives'])>0 or len(data.files[file]['lights'])>0 or len(data.files[file]['lines'])>0):
+                if (len(data.files[file]['objects'])>0 or len(data.files[file]['lights'])>0 or len(data.files[file]['lines'])>0):
                     mesh = XPlaneMesh(data.files[file])
                     lights = XPlaneLights(data.files[file])
                     header = XPlaneHeader(data.files[file],mesh,lights,9)
