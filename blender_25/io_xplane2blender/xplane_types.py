@@ -28,28 +28,10 @@ class XPlaneKeyframe():
             self.hide = self.object.object.hide_render
             
         # update objects so we get values from the keyframe
-        if self.object.type=='BONE':
-            self.object.armature.object.update(scene=bpy.context.scene)
-        else:
-            if self.object.parent != None:
-                if self.object.parent.type=='BONE':
-                    self.object.parent.armature.object.update(scene=bpy.context.scene)
-                else:
-                    self.object.parent.object.update(scene=bpy.context.scene)
-            self.object.object.update(scene=bpy.context.scene)
-
-        if self.object.type=='BONE':
-            poseBone = self.object.armature.getPoseBone(self.object.name)
-            if poseBone:
-                matrix = poseBone.matrix_basis
-            else:
-                matrix = self.object.object.matrix_local
-            matrix = XPlaneCoords.convertMatrix(matrix)
-            local = XPlaneCoords.coordsFromMatrix(matrix)
-            world = local
-        else:
-            local = coords.local()
-            world = coords.world()
+        self.object.update()
+        
+        local = self.object.getLocal(coords)
+        world = self.object.getWorld(coords)
 
         self.location = world["location"]
         self.angle = world["angle"]
@@ -82,9 +64,9 @@ class XPlaneObject():
         self.animations = {}
         self.datarefs = {}
 
-        try:
+        if hasattr(self.object,'type'):
             self.type = self.object.type
-        except:
+        else:
             self.type = None
 
     def getAnimations(self,object = None):
@@ -127,8 +109,19 @@ class XPlaneObject():
                         for i in range(0,len(keyframesSorted)):
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
 
-    def getVector(self):
-        return (0.0,0.0,1.0)
+    def getAxisVectors(self):
+        return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
+
+    def getLocal(self,coords):
+        return coords.local()
+
+    def getWorld(self,coords):
+        return coords.world()
+
+    def update(self):
+        if self.parent!=None and self.parent.type!='BONE':
+            self.parent.object.update(scene=bpy.context.scene)
+        self.object.update(scene=bpy.context.scene)
 
     def getCoordinates(self):
         # goto first frame so everything is in inital state
@@ -136,25 +129,12 @@ class XPlaneObject():
         coords = XPlaneCoords(self.object)
 
         # update object display so we have initial values
-        if self.type == 'BONE':
-            self.armature.object.update(scene=bpy.context.scene)
-        else:
-            if self.parent != None:
-                if self.parent.type=='BONE':
-                    self.parent.armature.object.update(scene=bpy.context.scene)
-                else:
-                    self.parent.object.update(scene=bpy.context.scene)
-            self.object.update(scene=bpy.context.scene)
+        self.update()
 
         # store initial coordinates
-        if self.type == 'BONE':
-            matrix = XPlaneCoords.convertMatrix(self.object.matrix.copy().resize4x4())
-            local = XPlaneCoords.coordsFromMatrix(matrix)
-            world = local
-        else:
-            local = coords.local()
-            world = coords.world()
-
+        local = self.getLocal(coords)
+        world = self.getWorld(coords)
+        
         self.location = world["location"]
         self.angle = world["angle"]
         self.scale = world["scale"]
@@ -179,8 +159,38 @@ class XPlaneBone(XPlaneObject):
         self.getCoordinates()
         self.getAnimations(self.armature.object)
 
-    def getVector(self):
-        return self.object.vector()
+    def getAxisVectors(self):
+        #return self.object.vector()
+        return (self.x_axis,self.y_axis,self.z_axis)
+
+    def getLocal(self,coords):
+        poseBone = self.armature.getPoseBone(self.object.name)
+        if poseBone:
+            matrix = poseBone.matrix
+        else:
+            matrix = self.object.matrix_local
+        matrix = XPlaneCoords.convertMatrix(matrix)
+        return XPlaneCoords.coordsFromMatrix(matrix)
+
+    def getWorld(self,coords):
+        poseBone = self.armature.getPoseBone(self.object.name)
+        if poseBone:
+            matrix = poseBone.matrix
+        else:
+            matrix = self.object.matrix_local
+        
+        matrix = XPlaneCoords.convertMatrix(matrix)
+        return XPlaneCoords.coordsFromMatrix(matrix)
+        
+    def update(self):
+        self.armature.object.update(scene=bpy.context.scene)
+
+        if self.parent != None:
+            if self.parent.type=='BONE':
+                self.parent.armature.object.update(scene=bpy.context.scene)
+            else:
+                self.parent.object.update(scene=bpy.context.scene)
+        
 
 class XPlaneArmature(XPlaneObject):
     def __init__(self,object,parent = None):
@@ -195,6 +205,7 @@ class XPlaneArmature(XPlaneObject):
             if poseBone.bone.name == name:
                 return poseBone
         return None
+
 
 class XPlaneLight(XPlaneObject):
     def __init__(self,object,parent = None):
@@ -227,6 +238,7 @@ class XPlaneLine(XPlaneObject):
         self.indices = [0,0]
         self.type = 'LINE'
 
+
 class XPlanePrimitive(XPlaneObject):
     def __init__(self,object,parent = None):
         super(XPlanePrimitive,self).__init__(object,parent)
@@ -242,6 +254,7 @@ class XPlanePrimitive(XPlaneObject):
 
         self.getCoordinates()
         self.getAnimations()
+
 
 class XPlaneMaterial():
     def __init__(self,object):
@@ -318,6 +331,7 @@ class XPlaneMaterial():
             # add custom attributes
             for attr in mat.xplane.customAttributes:
                 self.attributes[attr.name] = attr.value
+
 
 class XPlaneFace():
     def __init__(self):
