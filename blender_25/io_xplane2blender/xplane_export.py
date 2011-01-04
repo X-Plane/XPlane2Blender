@@ -375,18 +375,19 @@ class XPlaneCommands():
 
         # TODO: staticTrans can be merged into regular translations
         staticTrans = ['','']
-        staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2],obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2])
-        staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2],-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2])
+
+        # ignore high precision values
+        locationLocal = [round(obj.locationLocal[0],4),round(obj.locationLocal[1],4),round(obj.locationLocal[2],4)]
+        if locationLocal[0]!=0.0 or locationLocal[1]!=0.0 or locationLocal[2]!=0.0:
+            staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2],obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2])
+            staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2],-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
-
-        # TODO: pack all axes of rotation into one rotate block by using the multipliers.
-        # Question is what angle to use, as we propably need to find the min and max angles.
-        #rot = '%ANIM_rotate_begin\t%6.4f\t%6.4f%6.4f\t%s\n' % ()
+        
         rot = ['','','']
-        rot[0] = "%sANIM_rotate_begin\t1.0\t0.0\t0.0\t%s\n" % (tabs,dataref)
-        rot[1] = "%sANIM_rotate_begin\t0.0\t1.0\t0.0\t%s\n" % (tabs,dataref)
-        rot[2] = "%sANIM_rotate_begin\t0.0\t0.0\t1.0\t%s\n" % (tabs,dataref)
+        rot[0] = "%sANIM_rotate_begin\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,obj.vectors[0][0],obj.vectors[0][1],obj.vectors[0][2],dataref)
+        rot[1] = "%sANIM_rotate_begin\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,obj.vectors[1][0],obj.vectors[1][1],obj.vectors[1][2],dataref)
+        rot[2] = "%sANIM_rotate_begin\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,obj.vectors[2][0],obj.vectors[2][1],obj.vectors[2][2],dataref)
         
         for keyframe in keyframes:
             totalTrans[0]+=abs(keyframe.translation[0])

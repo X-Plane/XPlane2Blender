@@ -1,5 +1,6 @@
 import bpy
 import math
+import mathutils
 import struct
 from bpy.props import *
 from collections import OrderedDict
@@ -109,11 +110,30 @@ class XPlaneObject():
                         for i in range(0,len(keyframesSorted)):
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
 
-    def getAxisVectors(self):
-        return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
+    def getVectors(self):
+        mode = self.object.rotation_mode
+        self.object.rotation_mode = 'XYZ'
+        vectors = (mathutils.Vector((1.0,0.0,0.0)).rotate(mathutils.Vector((1.0,0.0,0.0)),self.object.rotation_euler[0]),
+                   mathutils.Vector((0.0,1.0,0.0)).rotate(mathutils.Vector((0.0,1.0,0.0)),self.object.rotation_euler[1]),
+                   mathutils.Vector((0.0,0.0,1.0)).rotate(mathutils.Vector((0.0,0.0,1.0)),self.object.rotation_euler[2]))
+        self.object.rotation_mode = mode
+        return vectors
 
     def getLocal(self,coords):
-        return coords.local()
+        local = {'angle':[0.0,0.0,0.0],
+                'location':[0.0,0.0,0.0],
+                'scale':[1.0,1.0,1.0]}
+
+        mode = self.object.rotation_mode = 'XYZ'
+        self.object.rotation_mode = 'XYZ'
+        local['angle'] = XPlaneCoords.angle(self.object.rotation_euler)
+        self.object.rotation_mode = mode
+        
+        for i in range(0,3):
+            local['location'][i] = self.object.location[i]
+            local['scale'][i] = self.object.scale[i]
+        #return coords.local()
+        return local
 
     def getWorld(self,coords):
         return coords.world()
@@ -143,6 +163,8 @@ class XPlaneObject():
         self.angleLocal = local["angle"]
         self.scaleLocal = local["scale"]
 
+        self.vectors = self.getVectors()
+
 
 class XPlaneBone(XPlaneObject):
     def __init__(self,object,parent = None):
@@ -159,28 +181,41 @@ class XPlaneBone(XPlaneObject):
         self.getCoordinates()
         self.getAnimations(self.armature.object)
 
-    def getAxisVectors(self):
+    def getVectors(self):
         #return self.object.vector()
-        return (self.x_axis,self.y_axis,self.z_axis)
+        return (self.object.x_axis,self.object.y_axis,self.object.z_axis)
 
     def getLocal(self,coords):
+        local = {'angle':[0.0,0.0,0.0],
+                'location':[0.0,0.0,0.0],
+                'scale':[1.0,1.0,1.0]}
+                
         poseBone = self.armature.getPoseBone(self.object.name)
         if poseBone:
-            matrix = poseBone.matrix
+            #matrix = poseBone.matrix_basis
+            # save mode to reset it afterwards
+            mode = poseBone.rotation_mode = 'XYZ'
+
+            poseBone.rotation_mode = 'XYZ'
+
+            local['angle'] = XPlaneCoords.angle(poseBone.rotation_euler)
+
+            for i in range(0,3):
+                local['location'][i] = poseBone.location[i]+self.parent.locationLocal[i]
+                local['scale'][i] = poseBone.scale[i]
+
+            poseBone.rotation_mode = mode
         else:
             matrix = self.object.matrix_local
-        matrix = XPlaneCoords.convertMatrix(matrix)
-        return XPlaneCoords.coordsFromMatrix(matrix)
+            matrix = XPlaneCoords.convertMatrix(matrix)
+            local = XPlaneCoords.coordsFromMatrix(matrix)
+            for i in range(0,3):
+                local['location'][i]+=self.parent.locationLocal[i]
+#        return XPlaneCoords.coordsFromMatrix(matrix)
+        return local
 
     def getWorld(self,coords):
-        poseBone = self.armature.getPoseBone(self.object.name)
-        if poseBone:
-            matrix = poseBone.matrix
-        else:
-            matrix = self.object.matrix_local
-        
-        matrix = XPlaneCoords.convertMatrix(matrix)
-        return XPlaneCoords.coordsFromMatrix(matrix)
+        return self.getLocal(coords)
         
     def update(self):
         self.armature.object.update(scene=bpy.context.scene)

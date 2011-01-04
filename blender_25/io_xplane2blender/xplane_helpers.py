@@ -96,7 +96,7 @@ class XPlaneCoords():
 
     def worldRotation(self):
         matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        rot = matrix.rotation_part().to_euler("XZY")
+        rot = matrix.rotation_part().to_euler("XYZ")
         return rot #[-rot[0],rot[1],rot[2]]
 
     def worldAngle(self):
