@@ -254,6 +254,7 @@ class XPlaneCommands():
             o+=self.writeObject(obj,0)
 
         # write down all lights
+        # TODO: write them in writeObjects instead to allow light animation and nesting
         if len(self.file['lights'])>0:
             o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
             
@@ -279,11 +280,11 @@ class XPlaneCommands():
             oAnim = ''
             animLevel+=1
             tabs = self.getAnimTabs(animLevel)
-
+            
             for dataref in obj.animations:
                 if len(obj.animations[dataref])>1:
                     oAnim+=self.writeKeyframes(obj,dataref,tabs)
-
+            
             if oAnim!='':
                 o+="%sANIM_begin\n" % self.getAnimTabs(animLevel-1)
                 o+=oAnim
@@ -447,7 +448,6 @@ class XPlaneCommands():
                 o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
                 
             o+=staticTrans[1]
-        
         return o
 
 
@@ -557,13 +557,13 @@ class XPlaneData():
 
                 # armature: go through the children and check if they are parented to a bone
                 if obj.type == 'ARMATURE':
-                    xplaneObj = XPlaneObject(obj,parent)
+                    armature = XPlaneArmature(obj,parent)
                     if parent == None:
-                        self.files[filename]["objects"].append(xplaneObj)
+                        self.files[filename]["objects"].append(armature)
 
                     # add to child list
                     if parent != None:
-                        parent.children.append(xplaneObj)
+                        parent.children.append(armature)
 
                     for bone in obj.data.bones:
                         rootBones = []
@@ -572,7 +572,7 @@ class XPlaneData():
                             rootBones.append(bone)
 
                         # recursion
-                        self.collectBones(rootBones,filename,xplaneObj)
+                        self.collectBones(rootBones,filename,armature)
 
                 # unsuported object type: Keep it to store hierarchy
                 elif obj.type in ['EMPTY','CAMERA','SURFACE','CURVE','FONT','META','LATTICE']:
@@ -612,7 +612,12 @@ class XPlaneData():
                 elif obj.type=="LAMP":
                     if debug:
                         debugger.debug("\t "+child.name+": adding to list")
-                    self.files[filename]['lights'].append(XPlaneLight(child,parent))
+                    light = XPlaneLight(child,parent)
+                    
+                    if parent == None:
+                        self.files[filename]['objects'].append(light)
+
+                    self.files[filename]['lights'].append(light)
 
                     # add to child list
                     if parent != None:

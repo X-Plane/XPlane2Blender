@@ -109,10 +109,7 @@ class XPlaneCoords():
 
     def world(self):
         matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        loc = matrix.translation_part()
-        rot = matrix.rotation_part().to_euler("XZY")
-        scale = matrix.scale_part()
-        return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
+        return XPlaneCoords.coordsFromMatrix(matrix)
 
     def localLocation(self,parent):
         matrix = self.relativeConvertedMatrix(parent)
@@ -137,15 +134,14 @@ class XPlaneCoords():
             matrix = self.relativeConvertedMatrix(parent)
         else:
             matrix = self.convertMatrix(self.object.matrix_local)
-        loc = matrix.translation_part()
-        rot = matrix.rotation_part().to_euler("XYZ")
-        scale = matrix.scale_part()
-        return {'location':loc,'rotation':rot,'scale':scale,'angle':self.angle(rot)}
+        return XPlaneCoords.coordsFromMatrix(matrix)
 
-    def angle(self,rot):
+    @staticmethod
+    def angle(rot):
         return [math.degrees(rot[0]),math.degrees(rot[1]),math.degrees(rot[2])]
 
-    def convert(self,co,scale = False):
+    @staticmethod
+    def convert(co,scale = False):
         if (scale):
             return [co[0],co[2],co[1]]
         else:
@@ -162,3 +158,10 @@ class XPlaneCoords():
         import mathutils
         rmatrix = Matrix.Rotation(math.radians(-90),4,'X')
         return rmatrix*matrix
+
+    @staticmethod
+    def coordsFromMatrix(matrix):
+        loc = matrix.translation_part()
+        rot = matrix.rotation_part().to_euler("XYZ")
+        scale = matrix.scale_part()
+        return {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}

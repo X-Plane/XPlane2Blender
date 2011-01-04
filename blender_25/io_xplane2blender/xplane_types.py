@@ -26,26 +26,30 @@ class XPlaneKeyframe():
 
         if self.object.type != 'BONE':
             self.hide = self.object.object.hide_render
-
-        #if prim.parent!=None:
+            
         # update objects so we get values from the keyframe
         if self.object.type=='BONE':
             self.object.armature.object.update(scene=bpy.context.scene)
         else:
-            if self.object.parent!=None and self.object.parent.type!='BONE':
-                self.object.parent.object.update(scene=bpy.context.scene)
+            if self.object.parent != None:
+                if self.object.parent.type=='BONE':
+                    self.object.parent.armature.object.update(scene=bpy.context.scene)
+                else:
+                    self.object.parent.object.update(scene=bpy.context.scene)
             self.object.object.update(scene=bpy.context.scene)
 
-        local = coords.local()
-        if self.object.type!='BONE':
-            world = coords.world()
-        else:
+        if self.object.type=='BONE':
+            poseBone = self.object.armature.getPoseBone(self.object.name)
+            if poseBone:
+                matrix = poseBone.matrix_basis
+            else:
+                matrix = self.object.object.matrix_local
+            matrix = XPlaneCoords.convertMatrix(matrix)
+            local = XPlaneCoords.coordsFromMatrix(matrix)
             world = local
-
-#        if self.object.parent!=None:
-#            local = coords.local(self.object.parent.object)
-#        else:
-#            local = coords.local()
+        else:
+            local = coords.local()
+            world = coords.world()
 
         self.location = world["location"]
         self.angle = world["angle"]
@@ -67,24 +71,7 @@ class XPlaneKeyframe():
             # remove initial location and rotation to get offset
             self.translation[i] = self.locationLocal[i]-self.object.locationLocal[i]
             self.rotation[i] = self.angleLocal[i]-self.object.angleLocal[i]
-#        else:
-#            # update object so we get values from the keyframe
-#            object.update(scene=bpy.context.scene)
-#
-#            world = coords.world()
-#
-#            self.location = world["location"]
-#            self.angle = world["angle"]
-#            self.scale = world["scale"]
-#
-#            self.locationLocal = self.location
-#            self.angleLocal = self.angle
-#            self.scaleLocal = self.scale
-#
-#            # remove initial location and rotation to get offset
-#            for i in range(0,3):
-#                self.translation[i] = self.location[i]-prim.location[i]
-#                self.rotation[i] = self.angle[i]-prim.angle[i]
+
 
 class XPlaneObject():
     def __init__(self,object,parent = None):
@@ -149,25 +136,24 @@ class XPlaneObject():
         coords = XPlaneCoords(self.object)
 
         # update object display so we have initial values
-        if self.parent != None:
-            if self.parent.type=='BONE':
-                self.parent.parent.object.update(scene=bpy.context.scene)
-            else:
-                self.parent.object.update(scene=bpy.context.scene)
-
-        if self.type != 'BONE':
+        if self.type == 'BONE':
+            self.armature.object.update(scene=bpy.context.scene)
+        else:
+            if self.parent != None:
+                if self.parent.type=='BONE':
+                    self.parent.armature.object.update(scene=bpy.context.scene)
+                else:
+                    self.parent.object.update(scene=bpy.context.scene)
             self.object.update(scene=bpy.context.scene)
 
         # store initial coordinates
-        local = coords.local()
-        if self.type != 'BONE':
-            world = coords.world()
-        else:
+        if self.type == 'BONE':
+            matrix = XPlaneCoords.convertMatrix(self.object.matrix.copy().resize4x4())
+            local = XPlaneCoords.coordsFromMatrix(matrix)
             world = local
-#            if self.parent!=None:
-#                local = coords.local(self.parent.object)
-#            else:
-#                local = coords.local()
+        else:
+            local = coords.local()
+            world = coords.world()
 
         self.location = world["location"]
         self.angle = world["angle"]
@@ -176,20 +162,6 @@ class XPlaneObject():
         self.locationLocal = local["location"]
         self.angleLocal = local["angle"]
         self.scaleLocal = local["scale"]
-#        else:
-#            # update object display so we have initial values
-#            if self.type != 'BONE':
-#                self.object.update(scene=bpy.context.scene)
-#
-#            world = coords.world()
-#
-#            # store initial location, rotation and scale
-#            self.location = world["location"]
-#            self.angle = world["angle"]
-#            self.scale = world["scale"]
-#            self.locationLocal = self.location
-#            self.angleLocal = self.angle
-#            self.scaleLocal = self.scale
 
 
 class XPlaneBone(XPlaneObject):
@@ -210,6 +182,19 @@ class XPlaneBone(XPlaneObject):
     def getVector(self):
         return self.object.vector()
 
+class XPlaneArmature(XPlaneObject):
+    def __init__(self,object,parent = None):
+        super(XPlaneArmature,self).__init__(object,parent)
+        self.type = 'ARMATURE'
+
+        self.getCoordinates()
+        #self.getAnimations()
+
+    def getPoseBone(self,name):
+        for poseBone in self.object.pose.bones:
+            if poseBone.bone.name == name:
+                return poseBone
+        return None
 
 class XPlaneLight(XPlaneObject):
     def __init__(self,object,parent = None):
