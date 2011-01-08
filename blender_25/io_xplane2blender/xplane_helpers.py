@@ -1,5 +1,5 @@
 import math
-from mathutils import Matrix
+from mathutils import Matrix,Vector
 from io_xplane2blender.xplane_config import *
 
 class XPlaneDebugger():
@@ -89,52 +89,16 @@ class XPlaneCoords():
     def __init__(self,object):
         self.object = object
 
-    def worldLocation(self):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        loc = matrix.translation_part()
-        return loc #self.convert([loc[0],loc[1],loc[2]])
+    def world(self,invert = False):
+        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world,invert)
+        return XPlaneCoords.fromMatrix(matrix)
 
-    def worldRotation(self):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        rot = matrix.rotation_part().to_euler("XYZ")
-        return rot #[-rot[0],rot[1],rot[2]]
-
-    def worldAngle(self):
-        return self.angle(self.worldRotation())
-
-    def worldScale(self):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        scale = matrix.scale_part()
-        return scale #self.convert([scale[0],scale[1],scale[2]],True)
-
-    def world(self):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world)
-        return XPlaneCoords.coordsFromMatrix(matrix)
-
-    def localLocation(self,parent):
-        matrix = self.relativeConvertedMatrix(parent)
-        loc = matrix.translation_part()
-        return loc #self.convert([loc[0],loc[1],loc[2]])
-
-    def localRotation(self,parent):
-        matrix = self.relativeConvertedMatrix(parent)
-        rot = matrix.rotation_part().to_euler("XYZ")
-        return rot #self.convert([rot[0],rot[1],rot[2]])
-
-    def localAngle(self,parent):
-        return self.angle(self.localRotation())
-
-    def localScale(self,parent):
-        matrix = self.relativeConvertedMatrix(parent)
-        scale = matrix.scale_part()
-        return scale #self.convert([scale[0],scale[1],scale[2]],True)
-
-    def local(self,parent = None):
+    def local(self,parent = None,invert = False):
         if parent!=None:
-            matrix = self.relativeConvertedMatrix(parent)
+            matrix = self.relativeConvertedMatrix(parent,invert)
         else:
-            matrix = self.convertMatrix(self.object.matrix_local)
-        return XPlaneCoords.coordsFromMatrix(matrix)
+            matrix = self.convertMatrix(self.object.matrix_local,invert)
+        return XPlaneCoords.fromMatrix(matrix)
 
     @staticmethod
     def angle(rot):
@@ -146,22 +110,39 @@ class XPlaneCoords():
             return [co[0],co[2],co[1]]
         else:
             return [-co[0],co[2],co[1]]
-
+            
     def relativeMatrix(self,parent):
         return self.object.matrix_world * parent.matrix_world.copy().invert()
 
-    def relativeConvertedMatrix(self,parent):
-        return XPlaneCoords.convertMatrix(self.object.matrix_world) * XPlaneCoords.convertMatrix(parent.matrix_world.copy().invert())
+    def relativeConvertedMatrix(self,parent, invert = False):
+        return XPlaneCoords.convertMatrix(self.object.matrix_world) * XPlaneCoords.convertMatrix(parent.matrix_world.copy().invert(),invert)
 
     @staticmethod
-    def convertMatrix(matrix):
-        import mathutils
-        rmatrix = Matrix.Rotation(math.radians(-90),4,'X')
-        return rmatrix*matrix
+    def conversionMatrix(invert = False):
+        if invert:
+            return Matrix.Rotation(math.radians(-90),4,'X').invert()
+        else:
+            return Matrix.Rotation(math.radians(-90),4,'X')
 
     @staticmethod
-    def coordsFromMatrix(matrix):
+    def convertMatrix(matrix,invert = False):
+        return XPlaneCoords.conversionMatrix(invert)*matrix
+
+    @staticmethod
+    def fromMatrix(matrix):
         loc = matrix.translation_part()
-        rot = matrix.rotation_part().to_euler("XYZ")
+        rot = matrix.rotation_part().to_euler("XZY")
         scale = matrix.scale_part()
         return {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}
+
+    @staticmethod
+    def vectorsFromMatrix(matrix):
+        rot = matrix.rotation_part().to_euler("XZY")
+        quat = matrix.to_quat()
+        v = quat.axis
+        print("vectorsFromMatrix")
+        print(rot)
+        print(v)
+        vectors = (v.rotate(Vector((0,1,0)),math.radians(-90)),v.rotate(Vector((1,0,0)),math.radians(90)),v)
+        print(vectors)
+        return vectors

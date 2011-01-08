@@ -41,7 +41,7 @@ class XPlaneKeyframe():
         self.locationLocal = local["location"]
         self.angleLocal = local["angle"]
         self.scaleLocal = local["scale"]
-        # TODO: multiply location with scale of parent
+        # TODO: multiply location with scale of parent?
 
         if debug:
             print(self.object.name)
@@ -50,10 +50,11 @@ class XPlaneKeyframe():
             print(self.angleLocal)
             print(self.object.angleLocal)
 
-        for i in range(0,3):
-            # remove initial location and rotation to get offset
-            self.translation[i] = self.locationLocal[i]-self.object.locationLocal[i]
-            self.rotation[i] = self.angleLocal[i]-self.object.angleLocal[i]
+        self.rotation = self.angleLocal
+#        for i in range(0,3):
+#            # remove initial location and rotation to get offset
+#            self.translation[i] = self.locationLocal[i]-self.object.locationLocal[i]
+#            self.rotation[i] = self.angleLocal[i]-self.object.angleLocal[i]
 
 
 class XPlaneObject():
@@ -110,38 +111,37 @@ class XPlaneObject():
                         for i in range(0,len(keyframesSorted)):
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
 
+    def getMatrix(self,world = False):
+        if world:
+            return self.object.matrix_world
+        else:
+            return self.object.matrix_local
+
     def getVectors(self):
-        mode = self.object.rotation_mode
-        self.object.rotation_mode = 'XYZ'
-        vectors = (mathutils.Vector((1.0,0.0,0.0)).rotate(mathutils.Vector((1.0,0.0,0.0)),self.object.rotation_euler[0]),
-                   mathutils.Vector((0.0,1.0,0.0)).rotate(mathutils.Vector((0.0,1.0,0.0)),self.object.rotation_euler[1]),
-                   mathutils.Vector((0.0,0.0,1.0)).rotate(mathutils.Vector((0.0,0.0,1.0)),self.object.rotation_euler[2]))
-        self.object.rotation_mode = mode
-        return vectors
+        if self.parent != None and self.parent.animated()==False:
+            matrix = XPlaneCoords.convertMatrix(self.parent.getMatrix())
+            #matrix = self.parent.getMatrix()
+            return XPlaneCoords.vectorsFromMatrix(matrix)
+        else:
+            return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
 
     def getLocal(self,coords):
-        local = {'angle':[0.0,0.0,0.0],
-                'location':[0.0,0.0,0.0],
-                'scale':[1.0,1.0,1.0]}
-
-        mode = self.object.rotation_mode = 'XYZ'
-        self.object.rotation_mode = 'XYZ'
-        local['angle'] = XPlaneCoords.angle(self.object.rotation_euler)
-        self.object.rotation_mode = mode
-        
-        for i in range(0,3):
-            local['location'][i] = self.object.location[i]
-            local['scale'][i] = self.object.scale[i]
-        #return coords.local()
+        #return coords.fromMatrix(self.getMatrix())
+        local = coords.local(None)
+        local['angle'][0]+=90
         return local
+        #return coords.local(None)
 
     def getWorld(self,coords):
-        return coords.world()
+        world = coords.world()
+        world['angle'][0]+=90
+        return world
+        #return coords.world()
 
     def update(self):
         if self.parent!=None and self.parent.type!='BONE':
-            self.parent.object.update(scene=bpy.context.scene)
-        self.object.update(scene=bpy.context.scene)
+            self.parent.object.update()
+        self.object.update()
 
     def getCoordinates(self):
         # goto first frame so everything is in inital state
@@ -165,6 +165,9 @@ class XPlaneObject():
 
         self.vectors = self.getVectors()
 
+    def animated(self):
+        return (hasattr(self,'animations') and len(self.animations)>0)
+
 
 class XPlaneBone(XPlaneObject):
     def __init__(self,object,parent = None):
@@ -181,50 +184,36 @@ class XPlaneBone(XPlaneObject):
         self.getCoordinates()
         self.getAnimations(self.armature.object)
 
-    def getVectors(self):
-        #return self.object.vector()
-        return (self.object.x_axis,self.object.y_axis,self.object.z_axis)
-
-    def getLocal(self,coords):
-        local = {'angle':[0.0,0.0,0.0],
-                'location':[0.0,0.0,0.0],
-                'scale':[1.0,1.0,1.0]}
-                
+    def getMatrix(self,world = False):
         poseBone = self.armature.getPoseBone(self.object.name)
         if poseBone:
-            #matrix = poseBone.matrix_basis
-            # save mode to reset it afterwards
-            mode = poseBone.rotation_mode = 'XYZ'
-
-            poseBone.rotation_mode = 'XYZ'
-
-            local['angle'] = XPlaneCoords.angle(poseBone.rotation_euler)
-
-            for i in range(0,3):
-                local['location'][i] = poseBone.location[i]+self.parent.locationLocal[i]
-                local['scale'][i] = poseBone.scale[i]
-
-            poseBone.rotation_mode = mode
+            matrix = poseBone.matrix
         else:
             matrix = self.object.matrix_local
-            matrix = XPlaneCoords.convertMatrix(matrix)
-            local = XPlaneCoords.coordsFromMatrix(matrix)
-            for i in range(0,3):
-                local['location'][i]+=self.parent.locationLocal[i]
-#        return XPlaneCoords.coordsFromMatrix(matrix)
-        return local
+        if world:
+            return matrix*self.armature.matrix_world
+        else:
+            return matrix
+
+    def getVectors(self):
+        matrix = XPlaneCoords.convertMatrix(self.getMatrix(),True)
+        return XPlaneCoords.vectorsFromMatrix(matrix)
+
+    def getLocal(self,coords):
+        matrix = XPlaneCoords.convertMatrix(self.getMatrix(),True)
+        return XPlaneCoords.fromMatrix(matrix)
 
     def getWorld(self,coords):
         return self.getLocal(coords)
         
     def update(self):
-        self.armature.object.update(scene=bpy.context.scene)
+        self.armature.object.update()
 
         if self.parent != None:
             if self.parent.type=='BONE':
-                self.parent.armature.object.update(scene=bpy.context.scene)
+                self.parent.armature.object.update()
             else:
-                self.parent.object.update(scene=bpy.context.scene)
+                self.parent.object.update()
         
 
 class XPlaneArmature(XPlaneObject):

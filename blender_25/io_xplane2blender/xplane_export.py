@@ -19,13 +19,24 @@ class XPlaneMesh():
             if obj.type == 'PRIMITIVE':
                 obj.indices[0] = len(self.indices)
 
-                # store the world translation matrix
-                matrix = XPlaneCoords.convertMatrix(obj.object.matrix_world)
-
                 # create a copy of the object mesh with modifiers applied
                 mesh = obj.object.create_mesh(bpy.context.scene, True, "PREVIEW")
 
-                # transform mesh with the world matrix
+                # Bake in different matrixes depending on animation and hierarchy
+                # TODO: What about nested animated objects, which parents are not animated?
+                if obj.animated():
+                    # Conversion matrix only. Object will be transformed to local coords during animation.
+                    matrix = XPlaneCoords.conversionMatrix()
+                else:
+                    if obj.parent == None:
+                        # World translation matrix. The object won't be animated and is on top level.
+                        matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
+                    else:
+                        if obj.parent.animated():
+                            # Local matrix, as object is not animated but parent is.
+                            matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
+
+                # bake the matrix into the mesh
                 mesh.transform(matrix)
 
                 # with the new mesh get uvFaces list
@@ -273,7 +284,7 @@ class XPlaneCommands():
         if debug:
             o+="%s# %s\n" % (tabs,obj.name)
 
-        if hasattr(obj,'animations') and len(obj.animations)>0:
+        if obj.animated():
             animationStarted = True
 
             # begin animation block
@@ -374,13 +385,15 @@ class XPlaneCommands():
         totalRot = [0.0,0.0,0.0]
 
         # TODO: staticTrans can be merged into regular translations
-        staticTrans = ['','']
+        #staticTrans = ['','']
+        staticTrans = ''
 
         # ignore high precision values
         locationLocal = [round(obj.locationLocal[0],4),round(obj.locationLocal[1],4),round(obj.locationLocal[2],4)]
         if locationLocal[0]!=0.0 or locationLocal[1]!=0.0 or locationLocal[2]!=0.0:
-            staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2],obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2])
-            staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2],-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2])
+            staticTrans = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2],obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2])
+            #staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2],obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2])
+            #staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2],-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
         
@@ -398,20 +411,12 @@ class XPlaneCommands():
             totalRot[0]+=abs(keyframe.rotation[0])
             totalRot[1]+=abs(keyframe.rotation[1])
             totalRot[2]+=abs(keyframe.rotation[2])
-
-#            rot+=
+            
             for i in range(0,3):
                 rot[i]+="%s\tANIM_rotate_key\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[i])
 
             if debug:
                 debugger.debug("%s keyframe %d@%d" % (keyframe.object.name,keyframe.index,keyframe.frame))
-#                print("location/prim.location")
-#                print(keyframe.location)
-#                print(keyframe.object.location)
-#                print("locationLocal/prim.locationLocal")
-#                print(keyframe.locationLocal)
-#                print(keyframe.object.locationLocal)
-#                print("")
             
         trans+="%sANIM_trans_end\n" % tabs
         rot[0]+="%sANIM_rotate_end\n" % tabs
@@ -425,30 +430,33 @@ class XPlaneCommands():
         
         if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
             o+=trans
-            # add loops if any
-            if obj.datarefs[dataref].loop>0:
-                o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
+        # add loops if any
+        if obj.datarefs[dataref].loop>0:
+            o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
                 
         # ignore high precision changes that won't be written anyway
         totalRot[0] = round(totalRot[0],4)
         totalRot[1] = round(totalRot[1],4)
         totalRot[2] = round(totalRot[2],4)
         
-        if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
-            o+=staticTrans[0]
-            
-            if totalRot[2]!=0.0:
-                o+=rot[2]
-            if totalRot[1]!=0.0:
-                o+=rot[1]
-            if totalRot[0]!=0.0:
-                o+=rot[0]
+        #if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
+            #o+=staticTrans[0]
 
-            # add loops if any
-            if obj.datarefs[dataref].loop>0:
-                o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
-                
-            o+=staticTrans[1]
+        o+=staticTrans
+
+        if totalRot[2]!=0.0:
+            o+=rot[2]
+        if totalRot[1]!=0.0:
+            o+=rot[1]
+        if totalRot[0]!=0.0:
+            o+=rot[0]
+
+        # add loops if any
+        if obj.datarefs[dataref].loop>0:
+            o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
+
+        #o+=staticTrans[1]
+        #o+=staticTrans
         return o
 
 
