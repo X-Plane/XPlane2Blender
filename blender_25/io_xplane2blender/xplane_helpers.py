@@ -133,7 +133,9 @@ class XPlaneCoords():
         loc = matrix.translation_part()
         rot = matrix.rotation_part().to_euler("XZY")
         scale = matrix.scale_part()
-        return {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}
+        coords = {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}
+        coords['angle'][0]+=90
+        return coords
 
     @staticmethod
     def vectorsFromMatrix(matrix):

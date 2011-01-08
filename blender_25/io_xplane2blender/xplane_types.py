@@ -120,23 +120,15 @@ class XPlaneObject():
     def getVectors(self):
         if self.parent != None and self.parent.animated()==False:
             matrix = XPlaneCoords.convertMatrix(self.parent.getMatrix())
-            #matrix = self.parent.getMatrix()
             return XPlaneCoords.vectorsFromMatrix(matrix)
         else:
             return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
 
     def getLocal(self,coords):
-        #return coords.fromMatrix(self.getMatrix())
-        local = coords.local(None)
-        local['angle'][0]+=90
-        return local
-        #return coords.local(None)
+        return coords.local(None)
 
     def getWorld(self,coords):
-        world = coords.world()
-        world['angle'][0]+=90
-        return world
-        #return coords.world()
+        return coords.world()
 
     def update(self):
         if self.parent!=None and self.parent.type!='BONE':
