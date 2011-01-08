@@ -1,5 +1,5 @@
 import math
-from mathutils import Matrix,Vector
+from mathutils import Matrix,Vector,Euler
 from io_xplane2blender.xplane_config import *
 
 class XPlaneDebugger():
@@ -140,11 +140,11 @@ class XPlaneCoords():
     @staticmethod
     def vectorsFromMatrix(matrix):
         rot = matrix.rotation_part().to_euler("XZY")
-        quat = matrix.to_quat()
-        v = quat.axis
-        print("vectorsFromMatrix")
-        print(rot)
-        print(v)
+        angle = XPlaneCoords.angle(rot)
+        # re-add 90° on x-axis
+        angle[0]+=90
+        # convert back to euler
+        rot = Euler((math.radians(angle[0]),math.radians(angle[1]),math.radians(angle[2])))
+        v = Vector((0.0,1.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
         vectors = (v.rotate(Vector((0,1,0)),math.radians(-90)),v.rotate(Vector((1,0,0)),math.radians(90)),v)
-        print(vectors)
         return vectors
