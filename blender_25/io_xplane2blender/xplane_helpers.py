@@ -97,7 +97,7 @@ class XPlaneCoords():
         if parent!=None:
             matrix = self.relativeConvertedMatrix(parent,invert)
         else:
-            matrix = self.convertMatrix(self.object.matrix_local,invert)
+            matrix = XPlaneCoords.convertMatrix(self.object.matrix_local,invert)
         return XPlaneCoords.fromMatrix(matrix)
 
     @staticmethod
@@ -145,6 +145,9 @@ class XPlaneCoords():
         angle[0]+=90
         # convert back to euler
         rot = Euler((math.radians(angle[0]),math.radians(angle[1]),math.radians(angle[2])))
-        v = Vector((0.0,1.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
-        vectors = (v.rotate(Vector((0,1,0)),math.radians(-90)),v.rotate(Vector((1,0,0)),math.radians(90)),v)
+        
+        vy = Vector((0.0,1.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
+        vx = Vector((1.0,0.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
+        vz = Vector((0.0,0.0,1.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
+        vectors = (vx,vy,vz)
         return vectors

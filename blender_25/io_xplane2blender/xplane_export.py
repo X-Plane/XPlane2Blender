@@ -25,8 +25,16 @@ class XPlaneMesh():
                 # Bake in different matrixes depending on animation and hierarchy
                 # TODO: What about nested animated objects, which parents are not animated?
                 if obj.animated():
-                    # Conversion matrix only. Object will be transformed to local coords during animation.
-                    matrix = XPlaneCoords.conversionMatrix()
+                    if obj.parent == None:
+                        # Conversion matrix only. Object will be transformed during animation.
+                        matrix = XPlaneCoords.conversionMatrix()
+                    else:
+                        if obj.parent.animated():
+                            # Conversion matrix only. Object will be transformed to local coords during animation.
+                            matrix = XPlaneCoords.conversionMatrix()
+                        else:
+                            # Local parent matrix, as parent will not transform object to parents local coordinates.
+                            matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix())
                 else:
                     if obj.parent == None:
                         # World translation matrix. The object won't be animated and is on top level.
