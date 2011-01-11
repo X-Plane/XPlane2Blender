@@ -131,23 +131,21 @@ class XPlaneCoords():
     @staticmethod
     def fromMatrix(matrix):
         loc = matrix.translation_part()
-        rot = matrix.rotation_part().to_euler("XZY")
+        rot = matrix.rotation_part().to_euler("XYZ")
+        # re-add 90° to X
+        rot.x+=math.radians(90)
         scale = matrix.scale_part()
         coords = {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}
-        coords['angle'][0]+=90
         return coords
 
     @staticmethod
     def vectorsFromMatrix(matrix):
-        rot = matrix.rotation_part().to_euler("XZY")
-        angle = XPlaneCoords.angle(rot)
+        rot = matrix.rotation_part().to_euler("XYZ")
         # re-add 90° on x-axis
-        angle[0]+=90
-        # convert back to euler
-        rot = Euler((math.radians(angle[0]),math.radians(angle[1]),math.radians(angle[2])))
-        
-        vy = Vector((0.0,1.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
+        rot.x+=math.radians(90)
+
         vx = Vector((1.0,0.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
+        vy = Vector((0.0,1.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
         vz = Vector((0.0,0.0,1.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
         vectors = (vx,vy,vz)
         return vectors
