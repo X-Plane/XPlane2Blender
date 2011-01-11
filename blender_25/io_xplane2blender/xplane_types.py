@@ -23,7 +23,6 @@ class XPlaneKeyframe():
         # TODO: support subframes?
         self.frame = int(round(keyframe.co[0]))
         bpy.context.scene.frame_set(frame=self.frame)
-        coords = XPlaneCoords(self.object.object)
 
         if self.object.type != 'BONE':
             self.hide = self.object.object.hide_render
@@ -32,8 +31,8 @@ class XPlaneKeyframe():
         self.object.update()
 
         # TODO: get parent coords depending on animation of parent
-        local = self.object.getLocal(coords)
-        world = self.object.getWorld(coords)
+        local = self.object.getLocal()
+        world = self.object.getWorld()
 
         self.location = world["location"]
         self.angle = world["angle"]
@@ -113,10 +112,14 @@ class XPlaneObject():
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
 
     def getMatrix(self,world = False):
-        if world:
+        if world or self.parent == None:
+            # world matrix
             return self.object.matrix_world
         else:
-            return self.object.matrix_local
+            if self.parent.animated():
+                return self.object.matrix_local
+            else:
+                return XPlaneCoords.relativeMatrix(self.object,self.parent.object)
 
     def getVectors(self):
         if self.parent != None and self.parent.animated()==False:
@@ -125,11 +128,11 @@ class XPlaneObject():
         else:
             return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
     
-    def getLocal(self,coords):
-        return coords.local(None)
+    def getLocal(self):
+        return XPlaneCoords.local(self.object)
 
-    def getWorld(self,coords):
-        return coords.world()
+    def getWorld(self):
+        return XPlaneCoords.world(self.object)
 
     def update(self):
         if self.parent!=None and self.parent.type!='BONE':
@@ -139,14 +142,13 @@ class XPlaneObject():
     def getCoordinates(self):
         # goto first frame so everything is in inital state
         bpy.context.scene.frame_set(frame=1)
-        coords = XPlaneCoords(self.object)
 
         # update object display so we have initial values
         self.update()
 
         # store initial coordinates
-        local = self.getLocal(coords)
-        world = self.getWorld(coords)
+        local = self.getLocal()
+        world = self.getWorld()
         
         self.location = world["location"]
         self.angle = world["angle"]
@@ -192,12 +194,12 @@ class XPlaneBone(XPlaneObject):
         matrix = XPlaneCoords.convertMatrix(self.getMatrix(),True)
         return XPlaneCoords.vectorsFromMatrix(matrix)
 
-    def getLocal(self,coords):
+    def getLocal(self):
         matrix = XPlaneCoords.convertMatrix(self.getMatrix(),True)
         return XPlaneCoords.fromMatrix(matrix)
 
-    def getWorld(self,coords):
-        return self.getLocal(coords)
+    def getWorld(self):
+        return self.getLocal()
         
     def update(self):
         self.armature.object.update()

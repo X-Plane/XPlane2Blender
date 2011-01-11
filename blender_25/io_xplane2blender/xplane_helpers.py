@@ -86,18 +86,20 @@ class XPlaneProfiler():
 
 
 class XPlaneCoords():
-    def __init__(self,object):
-        self.object = object
+    def __init__(self):
+        pass
 
-    def world(self,invert = False):
-        matrix = XPlaneCoords.convertMatrix(self.object.matrix_world,invert)
+    @staticmethod
+    def world(child,invert = False):
+        matrix = XPlaneCoords.convertMatrix(child.matrix_world,invert)
         return XPlaneCoords.fromMatrix(matrix)
 
-    def local(self,parent = None,invert = False):
+    @staticmethod
+    def local(child,parent = None,invert = False):
         if parent!=None:
-            matrix = self.relativeConvertedMatrix(parent,invert)
+            matrix = XPlaneCoords.relativeConvertedMatrix(child,parent,invert)
         else:
-            matrix = XPlaneCoords.convertMatrix(self.object.matrix_local,invert)
+            matrix = XPlaneCoords.convertMatrix(child.matrix_local,invert)
         return XPlaneCoords.fromMatrix(matrix)
 
     @staticmethod
@@ -110,12 +112,13 @@ class XPlaneCoords():
             return [co[0],co[2],co[1]]
         else:
             return [-co[0],co[2],co[1]]
-            
-    def relativeMatrix(self,parent):
-        return self.object.matrix_world * parent.matrix_world.copy().invert()
 
-    def relativeConvertedMatrix(self,parent, invert = False):
-        return XPlaneCoords.convertMatrix(self.object.matrix_world) * XPlaneCoords.convertMatrix(parent.matrix_world.copy().invert(),invert)
+    @staticmethod
+    def relativeMatrix(child,parent):
+        return child.matrix_world * parent.matrix_world.copy().invert()
+
+    def relativeConvertedMatrix(child,parent, invert = False):
+        return XPlaneCoords.convertMatrix(child.matrix_world) * XPlaneCoords.convertMatrix(parent.matrix_world.copy().invert(),invert)
 
     @staticmethod
     def conversionMatrix(invert = False):
