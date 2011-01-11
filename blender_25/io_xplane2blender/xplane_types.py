@@ -30,7 +30,8 @@ class XPlaneKeyframe():
             
         # update objects so we get values from the keyframe
         self.object.update()
-        
+
+        # TODO: get parent coords depending on animation of parent
         local = self.object.getLocal(coords)
         world = self.object.getWorld(coords)
 
@@ -123,7 +124,7 @@ class XPlaneObject():
             return XPlaneCoords.vectorsFromMatrix(matrix)
         else:
             return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
-
+    
     def getLocal(self,coords):
         return coords.local(None)
 
