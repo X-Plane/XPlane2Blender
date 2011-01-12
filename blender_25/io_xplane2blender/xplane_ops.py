@@ -196,6 +196,7 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
                 fcurve = obj.animation_data.action.fcurves.new(data_path=path,action_group="XPlane Datarefs")
 
         if fcurve:
+            # FIXME: recent blender build returns none here!
             keyframe = fcurve.keyframe_points.add(frame=bpy.context.scene.frame_current,value=value)
             keyframe.interpolation = 'LINEAR' # assign linear interpolation as XPlane only uses these
         
