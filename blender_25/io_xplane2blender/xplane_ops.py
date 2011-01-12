@@ -13,6 +13,7 @@ def findFCurveByPath(fcurves,path):
         i+=1
     return fcurve
 
+# FIXME: not working
 def makeKeyframesLinear(obj,path):
     fcurve = None
     
