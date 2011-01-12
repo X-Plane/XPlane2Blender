@@ -394,18 +394,41 @@ class XPlaneCommands():
         # TODO: staticTrans can be merged into regular translations
         #staticTrans = ['','']
         staticTrans = ['','']
-        
+        staticLocal = [[0.0,0.0,0.0],[0.0,0.0,0.0]]
+
         animatedParent = obj.firstAnimatedParent()
-        if animatedParent:
-            staticLocal = animatedParent.getLocal()['location']
-        else:
-            staticLocal = obj.getWorld()['location']
+        
+        # root level, no baking appeared
+        if obj.parent == None:
+            loc = obj.getWorld()['location']
+            # move object to world origin before rotation
+            # and then back to world location
+            for i in range(0,3):
+                staticLocal[0][i]=-loc[i]
+                staticLocal[1][i]=loc[i]
+
+        # not root level and no animated parent. Was baked to parents origin.
+        elif animatedParent == None:
+            # move object to world origin
+            ploc = obj.parent.getWorld()['location']
+            # move object to world origin before rotation with inverse of parents world location
+            # and then back to self world location
+            loc = obj.getWorld()['location']
+            for i in range(0,3):
+                staticLocal[0][i]=-ploc[i]
+                staticLocal[1][i]=loc[i]
+                
+        # not root level and we have an animated parent somewhere in the hierarchy
+        elif animatedParent:
+                # objects origin is baked to parents origin
+                # so we do not need to move it inverse before rotation
+                # instead we move it to local location after rotation
+                staticLocal[1] = obj.getLocal()['location']
             
         # ignore high precision values
-        if round(staticLocal[0],4)!=0.0 or round(staticLocal[1],4)!=0.0 or round(staticLocal[2],4)!=0.0:
-            staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,staticLocal[0],staticLocal[1],staticLocal[2],staticLocal[0],staticLocal[1],staticLocal[2])
-            if animatedParent == None:
-                staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-staticLocal[0],-staticLocal[1],-staticLocal[2],-staticLocal[0],-staticLocal[1],-staticLocal[2])
+        for i in range(0,2):    
+            if round(staticLocal[i][0],4)!=0.0 or round(staticLocal[i][1],4)!=0.0 or round(staticLocal[i][2],4)!=0.0:
+                staticTrans[i] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,staticLocal[i][0],staticLocal[i][1],staticLocal[i][2],staticLocal[i][0],staticLocal[i][1],staticLocal[i][2])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
         
@@ -456,12 +479,12 @@ class XPlaneCommands():
 
         o+=staticTrans[0]
 
-        if totalRot[2]!=0.0:
-            o+=rot[2]
-        if totalRot[1]!=0.0:
-            o+=rot[1]
         if totalRot[0]!=0.0:
             o+=rot[0]
+        if totalRot[1]!=0.0:
+            o+=rot[1]
+        if totalRot[2]!=0.0:
+            o+=rot[2]
 
         # add loops if any
         if obj.datarefs[dataref].loop>0:
