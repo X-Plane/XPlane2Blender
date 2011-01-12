@@ -127,9 +127,11 @@ class XPlaneObject():
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
 
     def getMatrix(self,world = False):
-        if world or self.parent == None:
-            # world matrix
+        if world:
             return self.object.matrix_world
+        if self.parent == None:
+            # world matrix
+            return self.object.matrix_local
         else:
             if self.parent.animated():
                 return self.object.matrix_local

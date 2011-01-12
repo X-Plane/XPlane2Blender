@@ -134,18 +134,18 @@ class XPlaneCoords():
     @staticmethod
     def fromMatrix(matrix):
         loc = matrix.translation_part()
-        rot = matrix.rotation_part().to_euler("XYZ")
+        rot = matrix.rotation_part().to_euler("XZY")
         # re-add 90° to X
-        rot.x+=math.radians(90)
+        rot.x=math.radians(math.degrees(rot.x)+90)
         scale = matrix.scale_part()
         coords = {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}
         return coords
 
     @staticmethod
     def vectorsFromMatrix(matrix):
-        rot = matrix.rotation_part().to_euler("XYZ")
+        rot = matrix.rotation_part().to_euler("XZY")
         # re-add 90° on x-axis
-        rot.x+=math.radians(90)
+        rot.x=math.radians(math.degrees(rot.x)+90)
 
         vx = Vector((1.0,0.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
         vy = Vector((0.0,1.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
