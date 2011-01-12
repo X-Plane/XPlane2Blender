@@ -34,15 +34,15 @@ class XPlaneMesh():
                             matrix = XPlaneCoords.conversionMatrix()
                         else:
                             # Local parent matrix, as parent will not transform object to parents local coordinates.
-                            matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix())
+                            matrix = XPlaneCoords.convertMatrix(obj.parent.object.matrix_local)
                 else:
                     if obj.parent == None:
                         # World translation matrix. The object won't be animated and is on top level.
-                        matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
+                        matrix = XPlaneCoords.convertMatrix(obj.object.matrix_world)
                     else:
                         if obj.parent.animated():
                             # Local matrix, as object is not animated but parent is.
-                            matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
+                            matrix = XPlaneCoords.convertMatrix(obj.object.matrix_local)
 
                 # bake the matrix into the mesh
                 mesh.transform(matrix)
@@ -393,14 +393,19 @@ class XPlaneCommands():
 
         # TODO: staticTrans can be merged into regular translations
         #staticTrans = ['','']
-        staticTrans = ''
-
+        staticTrans = ['','']
+        
+        animatedParent = obj.firstAnimatedParent()
+        if animatedParent:
+            staticLocal = animatedParent.getLocal()['location']
+        else:
+            staticLocal = obj.getWorld()['location']
+            
         # ignore high precision values
-        locationLocal = [round(obj.locationLocal[0],4),round(obj.locationLocal[1],4),round(obj.locationLocal[2],4)]
-        if locationLocal[0]!=0.0 or locationLocal[1]!=0.0 or locationLocal[2]!=0.0:
-            staticTrans = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2],obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2])
-            #staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2],obj.locationLocal[0],obj.locationLocal[1],obj.locationLocal[2])
-            #staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2],-obj.locationLocal[0],-obj.locationLocal[1],-obj.locationLocal[2])
+        if round(staticLocal[0],4)!=0.0 or round(staticLocal[1],4)!=0.0 or round(staticLocal[2],4)!=0.0:
+            staticTrans[0] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,staticLocal[0],staticLocal[1],staticLocal[2],staticLocal[0],staticLocal[1],staticLocal[2])
+            if animatedParent == None:
+                staticTrans[1] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,-staticLocal[0],-staticLocal[1],-staticLocal[2],-staticLocal[0],-staticLocal[1],-staticLocal[2])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
         
@@ -449,7 +454,7 @@ class XPlaneCommands():
         #if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
             #o+=staticTrans[0]
 
-        o+=staticTrans
+        o+=staticTrans[0]
 
         if totalRot[2]!=0.0:
             o+=rot[2]
@@ -462,8 +467,7 @@ class XPlaneCommands():
         if obj.datarefs[dataref].loop>0:
             o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
 
-        #o+=staticTrans[1]
-        #o+=staticTrans
+        o+=staticTrans[1]
         return o
 
 

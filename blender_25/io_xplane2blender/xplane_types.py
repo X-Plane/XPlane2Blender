@@ -29,8 +29,7 @@ class XPlaneKeyframe():
             
         # update objects so we get values from the keyframe
         self.object.update()
-
-        # TODO: get parent coords depending on animation of parent
+        
         local = self.object.getLocal()
         world = self.object.getWorld()
 
@@ -70,6 +69,21 @@ class XPlaneObject():
             self.type = self.object.type
         else:
             self.type = None
+
+    def firstAnimatedParent(self, child = None):
+        if child:
+            if child.parent:
+                if child.parent.animated():
+                    # found an animated parent
+                    return child.parent
+                else:
+                    # parent is not animated so go up in the hierarchy
+                    return self.firstAnimatedParent(child.parent)
+            else:
+                # reached root level and found no animated object
+                return None
+        else:
+            return self.firstAnimatedParent(self)
 
     def getAnimations(self,object = None):
         if object == None:
@@ -119,7 +133,11 @@ class XPlaneObject():
             if self.parent.animated():
                 return self.object.matrix_local
             else:
-                return XPlaneCoords.relativeMatrix(self.object,self.parent.object)
+                animatedParent = self.firstAnimatedParent()
+                if animatedParent:
+                    return XPlaneCoords.relativeMatrix(self.object,animatedParent.object)
+                else:
+                    return self.object.matrix_local
 
     def getVectors(self):
         if self.parent != None and self.parent.animated()==False:
@@ -129,7 +147,9 @@ class XPlaneObject():
             return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
     
     def getLocal(self):
-        return XPlaneCoords.local(self.object)
+        matrix = XPlaneCoords.convertMatrix(self.getMatrix())
+        return XPlaneCoords.fromMatrix(matrix)
+        #return XPlaneCoords.local(self.object)
 
     def getWorld(self):
         return XPlaneCoords.world(self.object)
