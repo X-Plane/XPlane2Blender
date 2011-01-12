@@ -13,6 +13,19 @@ def findFCurveByPath(fcurves,path):
         i+=1
     return fcurve
 
+def makeKeyframesLinear(obj,path):
+    fcurve = None
+    
+    if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
+        fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
+
+        if fcurve:
+            # find keyframe
+            keyframe = None
+            for keyframe in fcurve.keyframe_points:
+                keyframe.interpolation = 'LINEAR'
+
+
 def getDatarefValuePath(index):
     return '["xplane"]["datarefs"]['+str(index)+']["value"]'
 
@@ -175,30 +188,9 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
         obj = context.object
         path = getDatarefValuePath(self.index)
         value = obj.xplane.datarefs[self.index].value
-        #obj.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs")
-        #obj.xplane.datarefs[self.index].value.keyframe_insert(group="XPlane Datarefs")
-        
-        #current workaround for setting keyframes to nested custom properties is adding an FCurve manually and assign its data_path and then set a keyframe
-        if (obj.animation_data == None):
-            obj.animation_data_create()
-        if (obj.animation_data.action == None):
-            obj.animation_data.action = bpy.data.actions.new(name=obj.name+"Action")
-
-        # add keyframe to fcurve
-        fcurve = None
-
-        if len(obj.animation_data.action.fcurves) == 0:
-            fcurve = obj.animation_data.action.fcurves.new(data_path=path,action_group="XPlane Datarefs")
-            #fcurve.extrapolation = "LINEAR" # assign linear extrapolation as XPlane only uses these
-        else:
-            fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
-            if fcurve == None:
-                fcurve = obj.animation_data.action.fcurves.new(data_path=path,action_group="XPlane Datarefs")
-
-        if fcurve:
-            # FIXME: recent blender build returns none here!
-            keyframe = fcurve.keyframe_points.add(frame=bpy.context.scene.frame_current,value=value)
-            keyframe.interpolation = 'LINEAR' # assign linear interpolation as XPlane only uses these
+        # inserting keyframes for custom nested properties working now. YAY!
+        obj.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs")
+        makeKeyframesLinear(obj,path)
         
         return {'FINISHED'}
 
@@ -213,23 +205,6 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     def execute(self,context):
         obj = context.object
         path = getDatarefValuePath(self.index)
-        fcurve = None
-
-        if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
-            fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
-
-        if fcurve:
-            # find keyframe
-            keyframe = None
-            if len(fcurve.keyframe_points)>0:
-                i = 0
-                while i<len(fcurve.keyframe_points):
-                    if fcurve.keyframe_points[i].co[0] == bpy.context.scene.frame_current:
-                        keyframe = fcurve.keyframe_points[i]
-                        i = len(fcurve.keyframe_points)
-                    i+=1
-
-            if keyframe:
-                fcurve.keyframe_points.remove(keyframe=keyframe)
+        obj.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
             
         return {'FINISHED'}

@@ -100,7 +100,8 @@ class XPlaneObject():
                     debugger.debug("\t\t checking FCurve %s" % fcurve.data_path)
                 if (fcurve.group != None and fcurve.group.name == "XPlane Datarefs"):
                     # get dataref name
-                    index = int(fcurve.data_path.replace('["xplane"]["datarefs"][','').replace(']["value"]',''))
+                    index = fcurve.data_path.replace('xplane.datarefs[','').replace('].value','')
+                    index = int(index)
                     dataref = object.xplane.datarefs[index].path
 
                     if debug:
