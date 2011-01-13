@@ -472,7 +472,12 @@ class XPlaneCommands():
         totalTrans[0] = round(totalTrans[0],4)
         totalTrans[1] = round(totalTrans[1],4)
         totalTrans[2] = round(totalTrans[2],4)
-        
+
+        o+=static['trans'][0]
+        o+=static['rot'][0]
+        o+=static['rot'][1]
+        o+=static['rot'][2]
+
         if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
             o+=trans
         # add loops if any
@@ -484,14 +489,6 @@ class XPlaneCommands():
         totalRot[1] = round(totalRot[1],4)
         totalRot[2] = round(totalRot[2],4)
         
-        #if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
-            #o+=staticTrans[0]
-
-        o+=static['trans'][0]
-        o+=static['rot'][0]
-        o+=static['rot'][1]
-        o+=static['rot'][2]
-
         if totalRot[0]!=0.0:
             o+=rot[0]
         if totalRot[1]!=0.0:

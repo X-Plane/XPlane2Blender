@@ -36,7 +36,7 @@ class XPlaneKeyframe():
         self.location = world["location"]
         self.angle = world["angle"]
         self.scale = world["scale"]
-
+        
         self.locationLocal = local["location"]
         self.angleLocal = local["angle"]
         self.scaleLocal = local["scale"]
@@ -50,10 +50,11 @@ class XPlaneKeyframe():
             print(self.object.angleLocal)
 
         self.rotation = self.angleLocal
-#        for i in range(0,3):
-#            # remove initial location and rotation to get offset
-#            self.translation[i] = self.locationLocal[i]-self.object.locationLocal[i]
-#            self.rotation[i] = self.angleLocal[i]-self.object.angleLocal[i]
+
+        # local position will be applied by static translations right now
+        # so remove initial location to get offset
+        for i in range(0,3):
+            self.translation[i] = self.locationLocal[i]-self.object.locationLocal[i]
 
 
 class XPlaneObject():
