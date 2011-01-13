@@ -26,7 +26,7 @@ class XPlaneMesh():
                 # not at root level
                 if animatedParent:
                     # has some animated parent
-                    # bake relative rotation of the parent to the animated parent so we do not need to worry about it later
+                    # bake rotation of the parent relative to the animated parent so we do not need to worry about it later
                     matrix = XPlaneCoords.relativeConvertedMatrix(obj.parent.getMatrix(True),animatedParent.getMatrix(True))
                     matrix = XPlaneCoords.convertMatrix(matrix.rotation_part().resize4x4())
                 else:

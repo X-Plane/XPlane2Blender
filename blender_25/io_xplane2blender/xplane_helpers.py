@@ -143,7 +143,7 @@ class XPlaneCoords():
 
     @staticmethod
     def vectorsFromMatrix(matrix):
-        rot = matrix.rotation_part().to_euler("XZY")
+        rot = matrix.rotation_part().to_euler("XYZ")
         # re-add 90° on x-axis
         rot.x=math.radians(math.degrees(rot.x)+90)
 
