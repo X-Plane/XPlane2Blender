@@ -129,20 +129,11 @@ class XPlaneObject():
     def getMatrix(self,world = False):
         if world:
             return self.object.matrix_world
-        if self.parent == None:
-            # world matrix
-            return self.object.matrix_local
         else:
-            if self.parent.animated():
-                return self.object.matrix_local
-            else:
-                animatedParent = self.firstAnimatedParent()
-                if animatedParent:
-                    return XPlaneCoords.relativeMatrix(self.object,animatedParent.object)
-                else:
-                    return self.object.matrix_local
+            return self.object.matrix_local
 
     def getVectors(self):
+        # TODO: include animated Parent
         if self.parent != None and self.parent.animated()==False:
             matrix = XPlaneCoords.convertMatrix(self.parent.getMatrix())
             return XPlaneCoords.vectorsFromMatrix(matrix)
@@ -150,12 +141,13 @@ class XPlaneObject():
             return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
     
     def getLocal(self):
-        matrix = XPlaneCoords.convertMatrix(self.getMatrix())
-        return XPlaneCoords.fromMatrix(matrix)
-        #return XPlaneCoords.local(self.object)
+        return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrix()))
 
     def getWorld(self):
-        return XPlaneCoords.world(self.object)
+        return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrix(True)))
+
+    def getRelative(self,to):
+        return XPlaneCoords.fromMatrix(XPlaneCoords.relativeConvertedMatrix(self.getMatrix(True),to.getMatrix(True)))
 
     def update(self):
         if self.parent!=None and self.parent.type!='BONE':

@@ -14,6 +14,40 @@ class XPlaneMesh():
         self.globalindex = 0
         self.writeObjects(file['objects'])
 
+    def getBakeMatrix(self,obj):
+        # Bake in different matrixes depending on animation and hierarchy
+        animatedParent = obj.firstAnimatedParent()
+        if obj.animated():
+            if obj.parent == None:
+                # root level
+                # Conversion matrix only. Object will be transformed during animation.
+                matrix = XPlaneCoords.conversionMatrix()
+            else:
+                # not at root level
+                if animatedParent:
+                    # has some animated parent
+                    if animatedParent == obj.parent:
+                        # bake rotation of the parent so we do not need to worry about it later
+                        matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).rotation_part().resize4x4())
+                    else:
+                        # bake relative rotation of the parent to the animated parent so we do not need to worry about it later
+                        matrix = XPlaneCoords.relativeConvertedMatrix(obj.parent.getMatrix(True),animatedParent.getMatrix(True))
+                        matrix = XPlaneCoords.convertMatrix(matrix.rotation_part().resize4x4())
+                else:
+                    # no animated parent
+                    # bake rotation of the parent so we do not need to worry about it later
+                    matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).rotation_part().resize4x4())
+        else:
+            if animatedParent:
+                # object has some animated parent, so we need to bake the matrix relative to animated parent
+                matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),animatedParent.getMatrix(True))
+            else:
+                # no animated objects up in hierarchy, so this will become a static mesh on root level
+                # we can savely bake the world matrix as no transforms will occur
+                matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
+                
+        return matrix
+
     def writeObjects(self,objects):
         for obj in objects:
             if obj.type == 'PRIMITIVE':
@@ -22,30 +56,9 @@ class XPlaneMesh():
                 # create a copy of the object mesh with modifiers applied
                 mesh = obj.object.create_mesh(bpy.context.scene, True, "PREVIEW")
 
-                # Bake in different matrixes depending on animation and hierarchy
-                # TODO: What about nested animated objects, which parents are not animated?
-                if obj.animated():
-                    if obj.parent == None:
-                        # Conversion matrix only. Object will be transformed during animation.
-                        matrix = XPlaneCoords.conversionMatrix()
-                    else:
-                        if obj.parent.animated():
-                            # Conversion matrix only. Object will be transformed to local coords during animation.
-                            matrix = XPlaneCoords.conversionMatrix()
-                        else:
-                            # Local parent matrix, as parent will not transform object to parents local coordinates.
-                            matrix = XPlaneCoords.convertMatrix(obj.parent.object.matrix_local)
-                else:
-                    if obj.parent == None:
-                        # World translation matrix. The object won't be animated and is on top level.
-                        matrix = XPlaneCoords.convertMatrix(obj.object.matrix_world)
-                    else:
-                        if obj.parent.animated():
-                            # Local matrix, as object is not animated but parent is.
-                            matrix = XPlaneCoords.convertMatrix(obj.object.matrix_local)
-
-                # bake the matrix into the mesh
-                mesh.transform(matrix)
+                # now get the bake matrix
+                # and bake it to the mesh
+                mesh.transform(self.getBakeMatrix(obj))
 
                 # with the new mesh get uvFaces list
                 uvFaces = self.getUVFaces(mesh,obj.material.uv_name)
@@ -391,44 +404,45 @@ class XPlaneCommands():
         totalTrans = [0.0,0.0,0.0]
         totalRot = [0.0,0.0,0.0]
 
-        # TODO: staticTrans can be merged into regular translations
-        #staticTrans = ['','']
-        staticTrans = ['','']
-        staticLocal = [[0.0,0.0,0.0],[0.0,0.0,0.0]]
+        # now get static Transformations based up on hierarchy and animations in parents
+        # rotations are always applied at origin, even if a static translation happend before
+        # TODO: static transformations can be merged into keyframe transformations
+        static = {'trans':['',''],'rot':['','','']}
+        staticRot = [0.0,0.0,0.0]
+        staticTrans = [[0.0,0.0,0.0],[0.0,0.0,0.0]]
 
         animatedParent = obj.firstAnimatedParent()
         
-        # root level, no baking appeared
+        # root level
         if obj.parent == None:
-            loc = obj.getWorld()['location']
-            # move object to world origin before rotation
-            # and then back to world location
-            for i in range(0,3):
-                staticLocal[0][i]=-loc[i]
-                staticLocal[1][i]=loc[i]
+            world = obj.getWorld()
+            # move object to world location
+            staticTrans[0] = world['location']
 
-        # not root level and no animated parent. Was baked to parents origin.
+        # not root level and no animated parent
         elif animatedParent == None:
-            # move object to world origin
-            ploc = obj.parent.getWorld()['location']
-            # move object to world origin before rotation with inverse of parents world location
-            # and then back to self world location
-            loc = obj.getWorld()['location']
-            for i in range(0,3):
-                staticLocal[0][i]=-ploc[i]
-                staticLocal[1][i]=loc[i]
+            # move object to world location
+            # rotation of parent is already baked
+            world = obj.getWorld()
+            local = obj.parent.getLocal()
+            staticTrans[0] = world['location']
                 
         # not root level and we have an animated parent somewhere in the hierarchy
         elif animatedParent:
-                # objects origin is baked to parents origin
-                # so we do not need to move it inverse before rotation
-                # instead we move it to local location after rotation
-                staticLocal[1] = obj.getLocal()['location']
+            # move object to the location relative to animated Parent
+            relative = obj.getRelative(animatedParent)
+            staticTrans[0] = relative['location']
             
         # ignore high precision values
         for i in range(0,2):    
-            if round(staticLocal[i][0],4)!=0.0 or round(staticLocal[i][1],4)!=0.0 or round(staticLocal[i][2],4)!=0.0:
-                staticTrans[i] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,staticLocal[i][0],staticLocal[i][1],staticLocal[i][2],staticLocal[i][0],staticLocal[i][1],staticLocal[i][2])
+            if round(staticTrans[i][0],4)!=0.0 or round(staticTrans[i][1],4)!=0.0 or round(staticTrans[i][2],4)!=0.0:
+                static['trans'][i] = "%sANIM_trans\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,staticTrans[i][0],staticTrans[i][1],staticTrans[i][2],staticTrans[i][0],staticTrans[i][1],staticTrans[i][2])
+
+        for i in range(0,3):
+            if (round(staticRot[i],4)!=0.0):
+                vec = [0.0,0.0,0.0]
+                vec[i] = 1.0
+                static['rot'][i] = "%sANIM_rotate\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,vec[0],vec[1],vec[2],staticRot[i],staticRot[i])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
         
@@ -477,7 +491,10 @@ class XPlaneCommands():
         #if totalRot[0]!=0.0 or totalRot[1]!=0.0 or totalRot[2]!=0.0:
             #o+=staticTrans[0]
 
-        o+=staticTrans[0]
+        o+=static['trans'][0]
+        o+=static['rot'][0]
+        o+=static['rot'][1]
+        o+=static['rot'][2]
 
         if totalRot[0]!=0.0:
             o+=rot[0]
@@ -490,7 +507,7 @@ class XPlaneCommands():
         if obj.datarefs[dataref].loop>0:
             o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
 
-        o+=staticTrans[1]
+        o+=static['trans'][1]
         return o
 
 
