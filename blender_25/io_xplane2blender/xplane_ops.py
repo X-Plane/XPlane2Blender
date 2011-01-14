@@ -28,7 +28,7 @@ def makeKeyframesLinear(obj,path):
 
 
 def getDatarefValuePath(index):
-    return '["xplane"]["datarefs"]['+str(index)+']["value"]'
+    return 'xplane.datarefs['+str(index)+'].value'
 
 class SCENE_OT_add_xplane_layers(bpy.types.Operator):
     bl_label = 'Add X-Plane layers'
