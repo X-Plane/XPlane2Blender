@@ -65,6 +65,7 @@ class XPlaneObject():
         self.parent = parent
         self.animations = {}
         self.datarefs = {}
+        self.bakeMatrix = None
 
         if hasattr(self.object,'type'):
             self.type = self.object.type
@@ -140,6 +141,7 @@ class XPlaneObject():
             # regular global vectors
             return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
         else:
+            # TODO: use previously stored bake matrix, for speed up
             if animatedParent:
                 # not root level and an animated parent in hierarchy
                 # mesh is baked with parent rotation relative to animated parent, so take that vectors
@@ -211,20 +213,11 @@ class XPlaneBone(XPlaneObject):
         else:
             matrix = self.object.matrix_local
         if world:
-            return matrix*self.armature.matrix_world
+            print(XPlaneCoords.fromMatrix(matrix))
+            print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)))
+            return self.armature.getMatrix(True)*matrix
         else:
             return matrix
-
-    def getVectors(self):
-        matrix = XPlaneCoords.convertMatrix(self.getMatrix(),True)
-        return XPlaneCoords.vectorsFromMatrix(matrix)
-
-    def getLocal(self):
-        matrix = XPlaneCoords.convertMatrix(self.getMatrix(),True)
-        return XPlaneCoords.fromMatrix(matrix)
-
-    def getWorld(self):
-        return self.getLocal()
         
     def update(self):
         self.armature.object.update()
