@@ -142,8 +142,8 @@ class XPlaneObject():
         else:
             if animatedParent:
                 # not root level and an animated parent in hierarchy
-                # mesh is baked with rotation relative to animated parent, so take that vectors
-                return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.relativeConvertedMatrix(self.getMatrix(True),animatedParent.getMatrix(True)))
+                # mesh is baked with parent rotation relative to animated parent, so take that vectors
+                return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.relativeConvertedMatrix(self.parent.getMatrix(True),animatedParent.getMatrix(True)))
             else:
                 # not root level and no animated parent
                 # mesh is baked with parent rotation so we need that vectors
