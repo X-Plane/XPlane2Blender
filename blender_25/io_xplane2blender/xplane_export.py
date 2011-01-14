@@ -54,7 +54,8 @@ class XPlaneMesh():
 
                 # now get the bake matrix
                 # and bake it to the mesh
-                mesh.transform(self.getBakeMatrix(obj))
+                obj.bakeMatrix = self.getBakeMatrix(obj)
+                mesh.transform(obj.bakeMatrix)
 
                 # with the new mesh get uvFaces list
                 uvFaces = self.getUVFaces(mesh,obj.material.uv_name)
