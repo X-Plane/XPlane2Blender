@@ -146,10 +146,12 @@ class XPlaneObject():
                 # not root level and an animated parent in hierarchy
                 # mesh is baked with parent rotation relative to animated parent, so take that vectors
                 return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.relativeConvertedMatrix(self.parent.getMatrix(True),animatedParent.getMatrix(True)))
+                #return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
             else:
                 # not root level and no animated parent
                 # mesh is baked with parent rotation so we need that vectors
                 return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.parent.getMatrix()))
+                #return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
         
     
     def getLocal(self):
