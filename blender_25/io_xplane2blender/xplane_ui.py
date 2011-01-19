@@ -70,7 +70,28 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             animation_layout(self,obj)
             if obj.type == "MESH":
                 custom_layout(self,obj,obj.type)
-        
+
+class BONE_PT_xplane(bpy.types.Panel):
+    '''XPlane Object Panel'''
+    bl_label = "XPlane"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "bone"
+
+    @classmethod
+    def poll(self,context):
+        bone = context.bone
+
+        if bone:
+            return True
+        else:
+            return False
+
+    def draw(self, context):
+        bone = context.bone
+        if bone:
+            animation_layout(self,bone,True)
+
 class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
     '''XPlane Datarefs Search Menu'''
     bl_label = "XPlane Datarefs"
@@ -186,12 +207,15 @@ def custom_layout(self,obj,type):
             subrow.prop(attr,"reset")
     
 
-def animation_layout(self,obj):
+def animation_layout(self,obj,bone = False):
     layout = self.layout
     layout.separator()
     row = layout.row()
     row.label("Datarefs")
-    row.operator("object.add_xplane_dataref", text="Add Dataref")
+    if bone:
+        row.operator("bone.add_xplane_dataref", text="Add Dataref")
+    else:
+        row.operator("object.add_xplane_dataref", text="Add Dataref")
     box = layout.box()
     for i, attr in enumerate(obj.xplane.datarefs):
         subbox = box.box()
@@ -202,12 +226,21 @@ def animation_layout(self,obj):
 #        else:
 #            subrow.prop(attr,"path")
         subrow.prop(attr,"path")
-        subrow.operator("object.remove_xplane_dataref",text="",emboss=False,icon="X").index = i
+        if bone:
+            subrow.operator("bone.remove_xplane_dataref",text="",emboss=False,icon="X").index = i
+        else:
+            subrow.operator("object.remove_xplane_dataref",text="",emboss=False,icon="X").index = i
+            
         subrow = subbox.row()
         subrow.prop(attr,"loop",text="Loops")
         subrow = subbox.row()
-        subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
-        subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
+
+        if bone:
+            subrow.operator("bone.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
+            subrow.operator("bone.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
+        else:
+            subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
+            subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
         subrow.prop(attr,"value")
 
 def parseDatarefs():

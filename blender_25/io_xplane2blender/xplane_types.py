@@ -145,13 +145,18 @@ class XPlaneObject():
             if animatedParent:
                 # not root level and an animated parent in hierarchy
                 # mesh is baked with parent rotation relative to animated parent, so take that vectors
-                return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.relativeConvertedMatrix(self.parent.getMatrix(True),animatedParent.getMatrix(True)))
-                #return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
+                if self.bakeMatrix:
+                    return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
+                else:
+                    return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.relativeConvertedMatrix(self.parent.getMatrix(True),animatedParent.getMatrix(True)))
+                
             else:
                 # not root level and no animated parent
                 # mesh is baked with parent rotation so we need that vectors
-                return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.parent.getMatrix()))
-                #return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
+                if self.bakeMatrix:
+                    return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
+                else:
+                    return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.parent.getMatrix()))
         
     
     def getLocal(self):
@@ -211,12 +216,13 @@ class XPlaneBone(XPlaneObject):
     def getMatrix(self,world = False):
         poseBone = self.armature.getPoseBone(self.object.name)
         if poseBone:
-            matrix = poseBone.matrix
+            matrix = poseBone.matrix_basis
         else:
             matrix = self.object.matrix_local
         if world:
             print(XPlaneCoords.fromMatrix(matrix))
             print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)))
+            print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)*matrix))
             return self.armature.getMatrix(True)*matrix
         else:
             return matrix

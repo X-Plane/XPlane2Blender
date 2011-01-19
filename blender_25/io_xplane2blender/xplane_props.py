@@ -13,6 +13,9 @@ class XPlaneLayer(bpy.types.IDPropertyGroup):
 class XPlaneObjectSettings(bpy.types.IDPropertyGroup):
     pass
 
+class XPlaneBoneSettings(bpy.types.IDPropertyGroup):
+    pass
+
 class XPlaneMaterialSettings(bpy.types.IDPropertyGroup):
     pass
 
@@ -31,6 +34,7 @@ class XPlaneDatarefSearch(bpy.types.IDPropertyGroup):
 def addXPlaneRNA():
     bpy.types.Scene.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneSceneSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Object.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
+    bpy.types.Bone.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneBoneSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Material.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneMaterialSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Lamp.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneLampSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Scene.xplane_datarefs = bpy.props.CollectionProperty(attr="xplane_datarefs",
@@ -133,6 +137,12 @@ def addXPlaneRNA():
                                       name="Custom X-Plane attributes",
                                       description="User defined attributes for the Object.",
                                       type=XPlaneCustomAttribute)
+
+    #Bone settings
+    XPlaneBoneSettings.datarefs = bpy.props.CollectionProperty(attr="datarefs",
+                                        name="X-Plane Datarefs",
+                                        description="X-Plane Datarefs",
+                                        type=XPlaneDataref)
 
     # Lamp settings
     XPlaneLampSettings.lightType = bpy.props.EnumProperty(attr="lightType",

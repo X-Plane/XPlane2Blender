@@ -209,3 +209,71 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
         obj.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
             
         return {'FINISHED'}
+
+class BONE_OT_add_xplane_dataref(bpy.types.Operator):
+    bl_label = 'Add Dataref'
+    bl_idname = 'bone.add_xplane_dataref'
+    bl_label = 'Add Dataref'
+    bl_description = 'Add a X-Plane Dataref'
+
+    def execute(self,context):
+        bone = context.bone
+        bone.xplane.datarefs.add()
+        return {'FINISHED'}
+
+class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
+    bl_label = 'Remove Dataref'
+    bl_idname = 'bone.remove_xplane_dataref'
+    bl_label = 'Remove Dataref'
+    bl_description = 'Remove the X-Plane Dataref'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        bone = context.bone
+        obj = context.object
+        bone.xplane.datarefs.remove(self.index)
+
+        path = getDatarefValuePath(self.index)
+
+        # remove FCurves too
+        if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
+            fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
+            if fcurve:
+                obj.animation_data.action.fcurves.remove(fcurve=fcurve)
+
+        return {'FINISHED'}
+
+class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
+    bl_label = 'Add Dataref keyframe'
+    bl_idname = 'bone.add_xplane_dataref_keyframe'
+    bl_label = 'Add Dataref keyframe'
+    bl_description = 'Add a X-Plane Dataref keyframe'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        bone = context.bone
+        obj = context.object
+        path = getDatarefValuePath(self.index)
+        value = bone.xplane.datarefs[self.index].value
+        # inserting keyframes for custom nested properties working now. YAY!
+        bone.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs")
+        makeKeyframesLinear(obj,path)
+
+        return {'FINISHED'}
+
+class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
+    bl_label = 'Remove Dataref keyframe'
+    bl_idname = 'bone.remove_xplane_dataref_keyframe'
+    bl_label = 'Remove Dataref keyframe'
+    bl_description = 'Remove the X-Plane Dataref keyframe'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        bone = context.bone
+        path = getDatarefValuePath(self.index)
+        bone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
+
+        return {'FINISHED'}
