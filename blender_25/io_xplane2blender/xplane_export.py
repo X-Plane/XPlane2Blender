@@ -735,11 +735,17 @@ class XPlaneHeader():
             self.attributes['slung_load_weight'] = file['parent'].slungLoadWeight
 
         # set Texture
-        if(len(file['primitives'])>0 and file['primitives'][0].material.texture != None):
-            tex = file['primitives'][0].material.texture
-            self.attributes['TEXTURE'] = tex
-            self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
-            self.attributes['TEXTURE_NORMAL'] = tex[0:-4]+'_NML.png'
+#        if(len(file['primitives'])>0 and file['primitives'][0].material.texture != None):
+#            tex = file['primitives'][0].material.texture
+#            self.attributes['TEXTURE'] = tex
+#            self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
+#            self.attributes['TEXTURE_NORMAL'] = tex[0:-4]+'_NML.png'
+        if file['parent'].texture!='':
+            self.attributes['TEXTURE'] = file['parent'].texture
+        if file['parent'].texture_lit!='':
+            self.attributes['TEXTURE_LIT'] = file['parent'].texture_lit
+        if file['parent'].texture_normal!='':
+            self.attributes['TEXTURE_NORMAL'] = file['parent'].texture_normal
 
         # get point counts
         tris = len(mesh.vertices)
