@@ -256,10 +256,10 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
         bone = context.bone
         obj = context.object
         path = getDatarefValuePath(self.index)
-        value = bone.xplane.datarefs[self.index].value
+        #value = bone.xplane.datarefs[self.index].value
         # inserting keyframes for custom nested properties working now. YAY!
-        bone.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs")
-        makeKeyframesLinear(obj,path)
+        bone.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs "+bone.name)
+        #makeKeyframesLinear(obj,path)
 
         return {'FINISHED'}
 

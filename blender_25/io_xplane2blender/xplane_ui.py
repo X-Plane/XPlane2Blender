@@ -100,9 +100,6 @@ class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
         self.search_menu(xplane_datarefs,"text.open")
 
 def scene_layout(self, scene):
-    # create x-plane layers
-    bpy.ops.scene.add_xplane_layers()
-
     layout = self.layout
     row = layout.row()
 
@@ -127,16 +124,18 @@ def layer_layout(self, scene, layout, layer):
     if expanded:
         column = box.column()
         column.prop(scene.xplane.layers[layer],"name", text="Name")
-
+        
         if scene.xplane.layers[layer].cockpit:
             checkboxIcon = "CHECKBOX_HLT"
         else:
             checkboxIcon = "CHECKBOX_DEHLT"
-            
-        #row = row.row()
-        column.prop(scene.xplane.layers[layer], "cockpit", text="Cockpit",icon=checkboxIcon, toggle=True)
 
-        #row = row.row()
+        column.label('Textures')
+        tex_box = column.box()
+        tex_box.prop(scene.xplane.layers[layer], "texture", text="Default")
+        tex_box.prop(scene.xplane.layers[layer], "texture_lit", text="Night")
+        tex_box.prop(scene.xplane.layers[layer], "texture_normal", text="Normal / Specular")
+        column.prop(scene.xplane.layers[layer], "cockpit", text="Cockpit",icon=checkboxIcon, toggle=True)
         column.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
 
         custom_layer_layout(self, box, scene, layer)

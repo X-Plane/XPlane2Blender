@@ -117,6 +117,22 @@ def addXPlaneRNA():
                                     step=1,
                                     precision=3)
 
+    XPlaneLayer.texture = bpy.props.StringProperty(attr="texture",
+                                    name="Texture",
+                                    description="Texture to use for objects on this layer.",
+                                    default="")
+
+    XPlaneLayer.texture_lit = bpy.props.StringProperty(attr="texture_lit",
+                                    name="Night Texture",
+                                    description="Night Texture to use for objects on this layer.",
+                                    default="")
+
+    XPlaneLayer.texture_normal = bpy.props.StringProperty(attr="texture_normal",
+                                    name="Normal/Specular Texture",
+                                    description="Normal/Specular Texture to use for objects on this layer.",
+                                    default="")
+                                    
+
     XPlaneLayer.customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane header attributes",
                                       description="User defined header attributes for the X-Plane file.",
@@ -195,6 +211,9 @@ def addXPlaneRNA():
                                       name="Custom X-Plane material attributes",
                                       description="User defined material attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
+
+    # create x-plane layers
+    bpy.ops.scene.add_xplane_layers()
 
 
 def removeXPlaneRNA():
