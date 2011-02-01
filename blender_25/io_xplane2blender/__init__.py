@@ -16,11 +16,12 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-bl_addon_info = {
+bl_info = {
     'name': 'Import/Export: XPlane',
     'author': 'Ondrej Brinkel',
     'version': (3,20),
-    'blender': (2, 5, 4),
+    'blender': (2, 5, 6),
+    'api': 34601,
     'location': 'File > Import/Export > XPlane ',
     'description': 'Import and Export XPlane objects/planes (.obj,.aif format)',
     'warning': '', # used for warning icon and text in addons panel
