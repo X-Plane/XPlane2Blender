@@ -323,6 +323,10 @@ class XPlaneCommands():
         if hasattr(obj,'attributes'):
             o+=self.writeCustomAttributes(obj,tabs)
 
+        # write cockpit attributes
+        if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
+            o+=self.writeCockpitAttributes(obj,tabs)
+
         # triangle rendering
         if hasattr(obj,'indices'):
             offset = obj.indices[0]
@@ -364,17 +368,20 @@ class XPlaneCommands():
         
         return level
 
+    def writeAttribute(self,attr,value):
+        if value!=None:
+            if value==True:
+                return '%s\n' % attr
+            else:
+                return '%s\t%s\n' % (attr,value)
+        else:
+            return None
+
     def writeMaterial(self,prim,tabs):
         o = ''
         for attr in prim.material.attributes:
-            if prim.material.attributes[attr]!=None:
-                if(prim.material.attributes[attr]==True):
-                    value = ""
-                    line = '%s\n' % attr
-                else:
-                    value = prim.material.attributes[attr]
-                    line = '%s\t%s\n' % (attr,value)
-
+            line = self.writeAttribute(attr,prim.material.attributes[attr])
+            if line:
                 o+=tabs+line
                 # only write line if attribtue wasn't already written with same value
 #                    if attr in self.written:
@@ -386,11 +393,20 @@ class XPlaneCommands():
 #                        self.written[attr] = value
         return o
 
-    def writeCustomAttributes(self,prim,tabs):
+    def writeCustomAttributes(self,obj,tabs):
         o = ''
-        for attr in prim.attributes:
-            line='%s\t%s\n' % (attr,prim.attributes[attr])
-            o+=tabs+line
+        for attr in obj.attributes:
+            line = self.writeAttribute(attr,obj.attributes[attr])
+            if line!=None:
+                o+=tabs+line
+        return o
+
+    def writeCockpitAttributes(self,obj,tabs):
+        o = ''
+        for attr in obj.cockpitAttributes:
+            line = self.writeAttribute(attr,obj.cockpitAttributes[attr])
+            if line:
+                o+=tabs+line
         return o
 
     def writeKeyframes(self,obj,dataref,tabs):
@@ -520,8 +536,8 @@ class XPlaneData():
         else:
             filename = xplaneLayer.name
 
-        if xplaneLayer.cockpit:
-            filename +="_cockpit"
+#        if xplaneLayer.cockpit:
+#            filename +="_cockpit"
 
         return filename
 

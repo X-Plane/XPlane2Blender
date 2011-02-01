@@ -69,6 +69,8 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             mesh_layout(self,obj)
             animation_layout(self,obj)
             if obj.type == "MESH":
+                cockpit_layout(self,obj)
+                manipulator_layout(self,obj)
                 custom_layout(self,obj,obj.type)
 
 class BONE_PT_xplane(bpy.types.Panel):
@@ -242,6 +244,68 @@ def animation_layout(self,obj,bone = False):
             subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
         subrow.prop(attr,"value")
 
+def cockpit_layout(self,obj):
+    layout = self.layout
+    layout.separator()
+    row = layout.row()
+    row.prop(obj.xplane,'panel',text='Part of Cockpit panel')
+
+def manipulator_layout(self,obj):
+    layout = self.layout
+    layout.separator()
+    row = layout.row()
+    row.prop(obj.xplane.manip,'enabled',text='Manipulator')
+
+    if obj.xplane.manip.enabled:
+        box = layout.box()
+        box.prop(obj.xplane.manip,'type',text="Type")
+
+        type = obj.xplane.manip.type
+        
+        box.prop(obj.xplane.manip,'cursor',text="Cursor")
+        box.prop(obj.xplane.manip,'tooltip',text="Tooltip")
+
+        if type!='drag_xy':
+            box.prop(obj.xplane.manip,'dataref1',text="Dataref")
+        else:
+            box.prop(obj.xplane.manip,'dataref1',text="Dataref 1")
+            box.prop(obj.xplane.manip,'dataref2',text="Dataref 2")
+
+        # drag axis lenghts
+        if type in ('drag_xy','drag_axis','command_axis'):
+            box.prop(obj.xplane.manip,'dx',text="dx")
+            box.prop(obj.xplane.manip,'dy',text="dy")
+            if type in('drag_axis','command_axis'):
+                box.prop(obj.xplane.manip,'dz',text="dz")
+
+        # values
+        if type=='drag_xy':
+            box.prop(obj.xplane.manip,'v1_min',text="v1 min")
+            box.prop(obj.xplane.manip,'v1_max',text="v1 max")
+            box.prop(obj.xplane.manip,'v2_min',text="v2 min")
+            box.prop(obj.xplane.manip,'v2_max',text="v2 max")
+        elif type=='drag_axis':
+            box.prop(obj.xplane.manip,'v1',text="v1")
+            box.prop(obj.xplane.manip,'v2',text="v2")
+        elif type=='command':
+            box.prop(obj.xplane.manip,'command',text="Command")
+        elif type=='command_axis':
+            box.prop(obj.xplane.manip,'positive_command',text="Pos. command")
+            box.prop(obj.xplane.manip,'negative_command',text="Neg. command")
+        elif type=='push':
+            box.prop(obj.xplane.manip,'v_down',text="v down")
+            box.prop(obj.xplane.manip,'v_up',text="v up")
+        elif type=='radio':
+            box.prop(obj.xplane.manip,'v_down',text="v down")
+        elif type=='toggle':
+            box.prop(obj.xplane.manip,'v_on',text="v On")
+            box.prop(obj.xplane.manip,'v_off',text="v Off")
+        elif type in ('delta','wrap'):
+            box.prop(obj.xplane.manip,'v_down',text="v down")
+            box.prop(obj.xplane.manip,'v_hold',text="v hold")
+            box.prop(obj.xplane.manip,'v1_min',text="v min")
+            box.prop(obj.xplane.manip,'v1_max',text="v max")
+
 def parseDatarefs():
     import os
     search_data = []
@@ -261,6 +325,16 @@ def parseDatarefs():
         finally:
             file.close()
     return search_data
+
+def showError(message):
+    wm = byp.context.window_manager
+    wm.invoke_popup(bpy.ops.xplane_error)
+    return {'CANCELLED'}
+
+def showProgress(percent,message):
+    wm = byp.context.window_manager
+    wm.invoke_popup(bpy.ops.xplane_progress)
+    return {'RUNNING_MODAL'}
 
 def addXPlaneUI():
 #    datarefs = parseDatarefs()

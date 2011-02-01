@@ -292,13 +292,57 @@ class XPlanePrimitive(XPlaneObject):
         self.material = XPlaneMaterial(self.object)
         self.faces = None
         self.attributes = {}
+        self.cockpitAttributes = {
+            'ATTR_cockpit':None,
+            'ATTR_no_cockpit':None,
+            'ATTR_cockpit_region':None,
+            'ATTR_manip_none':None
+        }
 
         # add custom attributes
         for attr in object.xplane.customAttributes:
             self.attributes[attr.name] = attr.value
 
+        # add cockpit attributes
+        if object.xplane.panel:
+            self.cockpitAttributes['ATTR_cockpit'] = True
+        else:
+            self.cockpitAttributes['ATTR_no_cockpit'] = True
+
+        # add manipulator attributes
+        self.getManipulatorAttributes()
+
         self.getCoordinates()
         self.getAnimations()
+
+    def getManipulatorAttributes(self):
+        attr = 'ATTR_manip_'
+        value = True
+        
+        if self.object.xplane.manip.enabled:
+            manip = self.object.xplane.manip
+            type = self.object.xplane.manip.type
+            attr+=type    
+            if type=='drag_xy':
+                value = '%s\t%d\t%d\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.v1_min,manip.v1_max,manip.v2_min,manip.v2_max,manip.dataref1,manip.dataref2,manip.tooltip)
+            if type=='drag_axis':
+                value = '%s\t%d\t%d\t%d\t%6.4f\t%6.4f\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.v1,manip.v2,manip.dataref1,manip.tooltip)
+            if type=='command':
+                value = '%s\t%s\t%s' % (manip.cursor,manip.command,manip.tooltip)
+            if type=='command_axis':
+                value = '%s\t%d\t%d\t%d\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.positive_command,manip.negative_command,manip.tooltip)
+            if type=='push':
+                value = '%s\t%6.4f\t%6.4f\t%s\t%s' % (manip.cursor,manip.v_down,manip.v_up,manip.dataref1,manip.tooltip)
+            if type=='radio':
+                value = '%s\t%6.4f\t%s\t%s' % (manip.cursor,manip.v_down,manip.dataref1,manip.tooltip)
+            if type=='toggle':
+                value = '%s\t%6.4f\t%6.4f\t%s\t%s' % (manip.cursor,manip.v_on,manip.v_off,manip.dataref1,manip.tooltip)
+            if type in ('delta','wrap'):
+                value = '%s\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\t%s' % (manip.cursor,manip.v_down,manip.v_hold,manip.v1_min,manip.v1_max,manip.dataref1,manip.tooltip)
+        else:
+            attr+='none'
+
+        self.cockpitAttributes[attr] = value
 
 
 class XPlaneMaterial():

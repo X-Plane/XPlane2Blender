@@ -31,6 +31,9 @@ class XPlaneDataref(bpy.types.IDPropertyGroup):
 class XPlaneDatarefSearch(bpy.types.IDPropertyGroup):
     pass
 
+class XPlaneManipulator(bpy.types.IDPropertyGroup):
+    pass
+
 def addXPlaneRNA():
     bpy.types.Scene.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneSceneSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Object.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
@@ -153,6 +156,168 @@ def addXPlaneRNA():
                                       name="Custom X-Plane attributes",
                                       description="User defined attributes for the Object.",
                                       type=XPlaneCustomAttribute)
+
+    XPlaneObjectSettings.panel = bpy.props.BoolProperty(attr="panel",
+                                        name="Part of cockpit panel",
+                                        description="If checked this object will use the panel texture and will be clickable.",
+                                        default=False)
+
+    XPlaneObjectSettings.manip = bpy.props.PointerProperty(attr="manip",
+                                        name="Manipulator",
+                                        description="XPlane Manipulator Settings.",
+                                        type=XPlaneManipulator)
+
+    # TODO: cockpit region
+    # TODO: light level
+
+    # Manipulator
+    XPlaneManipulator.enabled = bpy.props.BoolProperty(attr="enabled",
+                                        name="Manipulator",
+                                        description="If checked this object will be treated as a manipulator.",
+                                        default=False)
+                                        
+    XPlaneManipulator.type = bpy.props.EnumProperty(attr="type",
+                                name="Manipulator type",
+                                description="The type of the manipulator.",
+                                default='drag_xy',
+                                items=[("drag_xy","drag_xy","drag_xy"),
+                                ("drag_axis","drag_axis","drag_axis"),
+                                ("command","command","command"),
+                                ("command_axis","command_axis","command_axis"),
+                                ("push","push","push"),
+                                ("radio","radio","radio"),
+                                ("toggle","toggle","toggle"),
+                                ("delta","delta","delta"),
+                                ("wrap","wrap","wrap"),
+                                ("toggle","toggle","toggle"),
+                                ("noop","noop","noop")])
+
+    XPlaneManipulator.tooltip = bpy.props.StringProperty(attr="tooltip",
+                                    name="Manipulator Tooltip",
+                                    description="The tooltip will be displayed when hovering over the object.",
+                                    default="")
+
+    XPlaneManipulator.cursor = bpy.props.EnumProperty(attr="cursor",
+                                name="Manipulator Cursor",
+                                description="The mouse cursor type when hovering over the object.",
+                                default="hand",
+                                items=[("four_arrows","four_arrows","four_arrows"),
+                                        ("hand","hand","hand"),
+                                        ("button","button","button"),
+                                        ("rotate_small","rotate_small","rotate_small"),
+                                        ("rotate_small_left","rotate_small_left","rotate_small_left"),
+                                        ("rotate_small_right","rotate_small_right","rotate_small_right"),
+                                        ("rotate_medium","rotate_medium","rotate_medium"),
+                                        ("rotate_medium_left","rotate_medium_left","rotate_medium_left"),
+                                        ("rotate_medium_right","rotate_medium_right","rotate_medium_right"),
+                                        ("rotate_large","rotate_large","rotate_large"),
+                                        ("rotate_large_left","rotate_large_left","rotate_large_left"),
+                                        ("rotate_large_right","rotate_large_right","rotate_large_right"),
+                                        ("up_down","up_down","up_down"),
+                                        ("down","down","down"),
+                                        ("up","up","up"),
+                                        ("left_right","left_right","left_right"),
+                                        ("left","left","left"),
+                                        ("right","right","right"),
+                                        ("arrow","arrow","arrow")])
+
+    XPlaneManipulator.dx = bpy.props.IntProperty(attr="dx",
+                            name="dx",
+                            description="X-Drag axis length",
+                            default=0,
+                            min=0)
+
+    XPlaneManipulator.dy = bpy.props.IntProperty(attr="dy",
+                            name="dy",
+                            description="Y-Drag axis length",
+                            default=0,
+                            min=0)
+
+    XPlaneManipulator.dz = bpy.props.IntProperty(attr="dz",
+                            name="dz",
+                            description="Z-Drag axis length",
+                            default=0,
+                            min=0)
+
+    XPlaneManipulator.v1 = bpy.props.FloatProperty(attr="v1",
+                            name="v1",
+                            description="Value 1",
+                            default=0)
+
+    XPlaneManipulator.v2 = bpy.props.FloatProperty(attr="v2",
+                            name="v2",
+                            description="Value 2",
+                            default=0)
+
+    XPlaneManipulator.v1_min = bpy.props.FloatProperty(attr="v1_min",
+                            name="v1 min",
+                            description="Value 1 min.",
+                            default=0)
+
+    XPlaneManipulator.v1_max = bpy.props.FloatProperty(attr="v1_max",
+                            name="v1 min",
+                            description="Value 1 max.",
+                            default=0)
+
+    XPlaneManipulator.v2_min = bpy.props.FloatProperty(attr="v2_min",
+                            name="v2 min",
+                            description="Value 2 min.",
+                            default=0)
+
+    XPlaneManipulator.v2_max = bpy.props.FloatProperty(attr="v2_max",
+                            name="v2 min",
+                            description="Value 2 max.",
+                            default=0)
+
+    XPlaneManipulator.v_down = bpy.props.FloatProperty(attr="v_down",
+                                name="v down",
+                                description="Value on mouse down",
+                                default=0)
+
+    XPlaneManipulator.v_up = bpy.props.FloatProperty(attr="v_up",
+                                name="v up",
+                                description="Value on mouse up",
+                                default=0)
+
+    XPlaneManipulator.v_hold = bpy.props.FloatProperty(attr="v_hold",
+                                name="v hold",
+                                description="Value on mouse hold",
+                                default=0)
+
+    XPlaneManipulator.v_on = bpy.props.FloatProperty(attr="v_on",
+                                name="v on",
+                                description="On value",
+                                default=0)
+
+    XPlaneManipulator.v_off = bpy.props.FloatProperty(attr="v_off",
+                                name="v off",
+                                description="Off value",
+                                default=0)
+
+    XPlaneManipulator.command = bpy.props.StringProperty(attr="command",
+                                name="Command",
+                                description="Command",
+                                default="")
+
+    XPlaneManipulator.positive_command = bpy.props.StringProperty(attr="positive_command",
+                                name="Positive command",
+                                description="Positive command",
+                                default="")
+
+    XPlaneManipulator.negative_command = bpy.props.StringProperty(attr="negative_command",
+                                name="Negative command",
+                                description="Negative command",
+                                default="")
+
+    XPlaneManipulator.dataref1 = bpy.props.StringProperty(attr="dataref1",
+                                name="Dataref 1",
+                                description="Dataref 1",
+                                default="")
+
+    XPlaneManipulator.dataref2 = bpy.props.StringProperty(attr="dataref2",
+                                name="Dataref 2",
+                                description="Dataref 2",
+                                default="")
 
     #Bone settings
     XPlaneBoneSettings.datarefs = bpy.props.CollectionProperty(attr="datarefs",

@@ -277,3 +277,7 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
         bone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
 
         return {'FINISHED'}
+
+#class OT_xplane_error(bpy.types.Operator):
+#    bl_label = 'Show an XPlane Error message'
+#    bl_idname = ''
