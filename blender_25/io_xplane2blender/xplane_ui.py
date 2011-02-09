@@ -173,7 +173,19 @@ def mesh_layout(self, obj):
 def lamp_layout(self, obj):
     layout = self.layout
     row = layout.row()
-    row.prop(obj.xplane, "lightType", text="Light type")
+    row.prop(obj.xplane, "type", text="Type")
+
+    if obj.xplane.type in ("named","param"):
+        row = layout.row()
+        row.prop(obj.xplane,"name",text="Name")
+        if obj.xplane.type=="param":
+            row = layout.row()
+            row.prop(obj.xplane,"params",text="Parameters")
+    elif obj.xplane.type=="custom":
+        row = layout.row()
+        row.prop(obj.xplane,"size",text="Size")
+        row = layout.row()
+        row.prop(obj.xplane,"dataref",text="Dataref")
 
 def material_layout(self, obj):
     layout = self.layout

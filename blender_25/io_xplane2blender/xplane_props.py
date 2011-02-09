@@ -326,15 +326,38 @@ def addXPlaneRNA():
                                         type=XPlaneDataref)
 
     # Lamp settings
-    XPlaneLampSettings.lightType = bpy.props.EnumProperty(attr="lightType",
-                                name="Light type",
+    XPlaneLampSettings.type = bpy.props.EnumProperty(attr="type",
+                                name="Type",
                                 description="Defines the type of the light in X-Plane.",
                                 default = "default",
                                 items=[("default","default","default"),
                                         ("flashing","flashing","flashing"),
                                         ("pulsing","pulsing","pulsing"),
                                         ("strobe","strobe","strobe"),
-                                        ("traffic","traffic","traffic")])
+                                        ("traffic","traffic","traffic"),
+                                        ("named","named","named"),
+                                        ("custom","custom","custom"),
+                                        ("param","param","param")])
+
+    XPlaneLampSettings.name = bpy.props.StringProperty(attr="name",
+                                    name='Name',
+                                    description="Named lights allow a light to be created based on pre-existing types.",
+                                    default="")
+
+    XPlaneLampSettings.params = bpy.props.StringProperty(attr="params",
+                                    name='Parameters',
+                                    description="The additional parameters vary in number and definition based on the particular parameterized light selected.",
+                                    default="")
+
+    XPlaneLampSettings.size = bpy.props.FloatProperty(attr="size",
+                                    name='Size',
+                                    description="The size of the light - this is not in a particular unit (like meters), but larger numbers produce bigger brighter lights.",
+                                    default=1.0)
+
+    XPlaneLampSettings.dataref = bpy.props.StringProperty(attr="dataref",
+                                    name='Dataref',
+                                    description="A X-Plane Dataref.",
+                                    default="")
 
     XPlaneLampSettings.customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane light attributes",

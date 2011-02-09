@@ -257,8 +257,13 @@ class XPlaneLight(XPlaneObject):
         super(XPlaneLight,self).__init__(object,parent)
         self.indices = [0,0]
         self.color = [object.data.color[0],object.data.color[1],object.data.color[2]]
+        self.energy = object.data.energy
         self.type = 'LIGHT'
-        self.lightType = object.data.xplane.lightType
+        self.lightType = object.data.xplane.type
+        self.size = object.data.xplane.size
+        self.lightName = object.data.xplane.name
+        self.params = object.data.xplane.params
+        self.dataref = object.data.xplane.dataref
 
         # change color according to type
         if self.lightType=='flashing':

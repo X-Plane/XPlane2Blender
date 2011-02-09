@@ -227,7 +227,7 @@ class XPlaneMesh():
 
 class XPlaneLights():
     def __init__(self,file):
-        self.vertices = []
+        self.lights = []
         self.indices = []
 
         # store the global index, as we are reindexing faces
@@ -236,32 +236,29 @@ class XPlaneLights():
         for light in file['lights']:
             light.indices[0] = globalindex
 
-            # store the world translation matrix
-            matrix = light.object.matrix_world
-            
-            # get the vertice from original mesh
-            v = light.object.location
+            # get the location
 
-            # convert local to global coordinates
-            co = matrix * v
+            matrix = XPlaneCoords.convertMatrix(light.getMatrix(True))
+            coords = XPlaneCoords.fromMatrix(matrix)
+            co = coords['location']
 
-            self.vertices.append([-co[0],co[2],co[1],light.color[0],light.color[1],light.color[2]])
+            if light.lightType=="named":
+                self.lights.append("LIGHT_NAMED\t%s\t%6.4f\t%6.4f\t%6.4f" % (light.lightName,co[0],co[1],co[2]))
+            elif light.lightType=="param":
+                self.lights.append("LIGHT_PARAM\t%s\t%6.4f\t%6.4f\t%6.4f\t%s" % (light.lightName,co[0],co[1],co[2],light.params))
+            elif light.lightType=="custom":
+                self.lights.append("LIGHT_CUSTOM\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0.0\t0.0\t1.0\t1.0\t%s" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2],light.energy,light.dataref))
+            else:
+                self.lights.append("VLIGHT\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2]))
             self.indices.append(globalindex)
             globalindex+=1
 
             light.indices[1] = globalindex
 
-        # reverse indices due to the inverted z axis
-        self.indices.reverse()
-
-    def writeVertices(self):
+    def writeLights(self):
         o=''
-        for v in self.vertices:
-            o+='VLIGHT'
-            for f in v:
-                o+='\t%6.4f' % f
-            o+='\n'
-        
+        for l in self.lights:
+            o+=l+'\n'
         return o
 
 
@@ -681,8 +678,8 @@ class XPlaneData():
                 # lamp: let's create a XPlaneLight. Those cannot have children (yet).
                 elif obj.type=="LAMP":
                     if debug:
-                        debugger.debug("\t "+child.name+": adding to list")
-                    light = XPlaneLight(child,parent)
+                        debugger.debug("\t "+obj.name+": adding to list")
+                    light = XPlaneLight(obj,parent)
                     
                     if parent == None:
                         self.files[filename]['objects'].append(light)
@@ -766,10 +763,10 @@ class XPlaneHeader():
         # get point counts
         tris = len(mesh.vertices)
         lines = 0
-        lites = len(lights.vertices)
+        lights = len(lights.lights)
         indices = len(mesh.indices)
         
-        self.attributes['POINT_COUNTS'] = "%d\t%d\t%d\t%d" % (tris,lines,lites,indices)
+        self.attributes['POINT_COUNTS'] = "%d\t%d\t%d\t%d" % (tris,lines,lights,indices)
 
         # add custom attributes
         for attr in file['parent'].customAttributes:
@@ -850,7 +847,7 @@ class ExportXPlane9(bpy.types.Operator):
                     o+="\n"
                     o+=mesh.writeVertices()
                     o+="\n"
-                    o+=lights.writeVertices()
+                    o+=lights.writeLights()
                     o+="\n"
                     o+=mesh.writeIndices()
                     o+="\n"
