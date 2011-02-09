@@ -42,7 +42,7 @@ class SCENE_OT_add_xplane_layers(bpy.types.Operator):
     bl_label = 'Add X-Plane layers'
     bl_idname = 'scene.add_xplane_layers'
     bl_label = 'Add X-Plane layers'
-    bl_description = 'Add a X-Plane export layers'
+    bl_description = 'Add X-Plane export layers'
 
     def execute(self,context):
         scene = context.scene

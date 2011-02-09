@@ -108,9 +108,12 @@ def scene_layout(self, scene):
     layout = self.layout
     row = layout.row()
 
-    for i in range(0,len(scene.layers)):
-        row = layout.row()
-        layer_layout(self, scene, row, i)
+    if len(scene.xplane.layers)!=0:
+        for i in range(0,len(scene.layers)):
+            row = layout.row()
+            layer_layout(self, scene, row, i)
+    else:
+        row.operator('scene.add_xplane_layers')
         
 
 def layer_layout(self, scene, layout, layer):
