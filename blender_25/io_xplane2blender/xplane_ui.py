@@ -275,13 +275,11 @@ def animation_layout(self,obj,bone = False):
 
 def cockpit_layout(self,obj):
     layout = self.layout
-    layout.separator()
     row = layout.row()
     row.prop(obj.xplane,'panel',text='Part of Cockpit panel')
 
 def manipulator_layout(self,obj):
     layout = self.layout
-    layout.separator()
     row = layout.row()
     row.prop(obj.xplane.manip,'enabled',text='Manipulator')
 
