@@ -141,7 +141,6 @@ class XPlaneObject():
             # regular global vectors
             return ((1.0,0.0,0.0),(0.0,1.0,0.0),(0.0,0.0,1.0))
         else:
-            # TODO: use previously stored bake matrix, for speed up
             if animatedParent:
                 # not root level and an animated parent in hierarchy
                 # mesh is baked with parent rotation relative to animated parent, so take that vectors
