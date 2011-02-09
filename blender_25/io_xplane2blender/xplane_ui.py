@@ -83,7 +83,7 @@ class BONE_PT_xplane(bpy.types.Panel):
     @classmethod
     def poll(self,context):
         bone = context.bone
-
+        
         if bone:
             return True
         else:
@@ -91,8 +91,11 @@ class BONE_PT_xplane(bpy.types.Panel):
 
     def draw(self, context):
         bone = context.bone
-        if bone:
-            animation_layout(self,bone,True)
+        obj = context.object
+        poseBone = getPoseBone(obj,bone.name)
+
+        if poseBone:
+            animation_layout(self,poseBone,True)
 
 class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
     '''XPlane Datarefs Search Menu'''

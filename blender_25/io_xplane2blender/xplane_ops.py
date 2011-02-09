@@ -30,6 +30,14 @@ def makeKeyframesLinear(obj,path):
 def getDatarefValuePath(index):
     return 'xplane.datarefs['+str(index)+'].value'
 
+
+def getPoseBone(armature,name):
+        for poseBone in armature.pose.bones:
+            if poseBone.bone.name == name:
+                return poseBone
+        return None
+
+
 class SCENE_OT_add_xplane_layers(bpy.types.Operator):
     bl_label = 'Add X-Plane layers'
     bl_idname = 'scene.add_xplane_layers'
@@ -218,7 +226,9 @@ class BONE_OT_add_xplane_dataref(bpy.types.Operator):
 
     def execute(self,context):
         bone = context.bone
-        bone.xplane.datarefs.add()
+        obj = context.object
+        poseBone = getPoseBone(obj,bone.name)
+        poseBone.xplane.datarefs.add()
         return {'FINISHED'}
 
 class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
@@ -232,8 +242,9 @@ class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
     def execute(self,context):
         bone = context.bone
         obj = context.object
-        bone.xplane.datarefs.remove(self.index)
-
+        #bone.xplane.datarefs.remove(self.index)
+        poseBone = getPoseBone(obj,bone.name)
+        poseBone.xplane.datarefs.remove(self.index)
         path = getDatarefValuePath(self.index)
 
         # remove FCurves too
@@ -251,14 +262,15 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     bl_description = 'Add a X-Plane Dataref keyframe'
 
     index = bpy.props.IntProperty()
-
+    
     def execute(self,context):
         bone = context.bone
         obj = context.object
+        poseBone = getPoseBone(obj,bone.name)
         path = getDatarefValuePath(self.index)
         #value = bone.xplane.datarefs[self.index].value
         # inserting keyframes for custom nested properties working now. YAY!
-        bone.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs "+bone.name)
+        poseBone.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs "+bone.name)
         #makeKeyframesLinear(obj,path)
 
         return {'FINISHED'}
@@ -274,7 +286,10 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     def execute(self,context):
         bone = context.bone
         path = getDatarefValuePath(self.index)
-        bone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
+        obj = context.object
+        poseBone = getPoseBone(obj,bone.name)
+        #bone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
+        poseBone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
 
         return {'FINISHED'}
 
