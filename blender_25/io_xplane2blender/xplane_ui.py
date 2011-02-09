@@ -66,9 +66,9 @@ class OBJECT_PT_xplane(bpy.types.Panel):
         obj = context.object
         
         if obj.type in ("MESH","EMPTY","ARMATURE"):
-            mesh_layout(self,obj)
             animation_layout(self,obj)
             if obj.type == "MESH":
+                mesh_layout(self,obj)
                 cockpit_layout(self,obj)
                 manipulator_layout(self,obj)
                 custom_layout(self,obj,obj.type)
@@ -169,6 +169,17 @@ def mesh_layout(self, obj):
     layout = self.layout
     row = layout.row()
     row.prop(obj.xplane, "depth", text="Use depth culling")
+    row = layout.row()
+
+    row.prop(obj.xplane,"lightLevel", text="Override light level")
+
+    if obj.xplane.lightLevel:
+        box = layout.box()
+        box.prop(obj.xplane,"lightLevel_v1",text="Value 1")
+        row = box.row()
+        row.prop(obj.xplane,"lightLevel_v2",text="Value 2")
+        row = box.row()
+        row.prop(obj.xplane,"lightLevel_dataref",text="Dataref")
 
 def lamp_layout(self, obj):
     layout = self.layout

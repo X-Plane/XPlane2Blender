@@ -167,8 +167,31 @@ def addXPlaneRNA():
                                         description="XPlane Manipulator Settings.",
                                         type=XPlaneManipulator)
 
+    XPlaneObjectSettings.lightLevel = bpy.props.BoolProperty(attr="lightLevel",
+                                        name="Light Level",
+                                        description="If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting.",
+                                        default=False)
+
+    XPlaneObjectSettings.lightLevel_v1 = bpy.props.FloatProperty(attr="lightLevel_v1",
+                                        name="Light Level v1",
+                                        description="Value 1",
+                                        default=0.0,
+                                        min=0.0,
+                                        max=1.0)
+
+    XPlaneObjectSettings.lightLevel_v2 = bpy.props.FloatProperty(attr="lightLevel_v2",
+                                        name="Light Level v2",
+                                        description="Value 2",
+                                        default=1.0,
+                                        min=0.0,
+                                        max=1.0)
+
+    XPlaneObjectSettings.lightLevel_dataref = bpy.props.StringProperty(attr="lightLevel_dataref",
+                                        name="Light Level Dataref",
+                                        description="The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped.",
+                                        default="")
+
     # TODO: cockpit region
-    # TODO: light level
 
     # Manipulator
     XPlaneManipulator.enabled = bpy.props.BoolProperty(attr="enabled",
@@ -352,7 +375,8 @@ def addXPlaneRNA():
     XPlaneLampSettings.size = bpy.props.FloatProperty(attr="size",
                                     name='Size',
                                     description="The size of the light - this is not in a particular unit (like meters), but larger numbers produce bigger brighter lights.",
-                                    default=1.0)
+                                    default=1.0,
+                                    min=0.0)
 
     XPlaneLampSettings.dataref = bpy.props.StringProperty(attr="dataref",
                                     name='Dataref',

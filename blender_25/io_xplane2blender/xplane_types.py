@@ -296,7 +296,10 @@ class XPlanePrimitive(XPlaneObject):
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
         self.faces = None
-        self.attributes = {}
+        self.attributes = {
+            'ATTR_light_level':None,
+            'ATTR_light_level_reset':True
+        }
         self.cockpitAttributes = {
             'ATTR_cockpit':None,
             'ATTR_no_cockpit':None,
@@ -316,6 +319,9 @@ class XPlanePrimitive(XPlaneObject):
 
         # add manipulator attributes
         self.getManipulatorAttributes()
+
+        # add light level attritubes
+        self.getLightLevelAttributes()
 
         self.getCoordinates()
         self.getAnimations()
@@ -349,6 +355,10 @@ class XPlanePrimitive(XPlaneObject):
 
         self.cockpitAttributes[attr] = value
 
+    def getLightLevelAttributes(self):
+        if self.object.xplane.lightLevel:
+            self.attributes['ATTR_light_level_reset'] = None
+            self.attributes['ATTR_light_level'] = "%6.4f\t%6.4f\t%s" % (self.object.xplane.lightLevel_v1,self.object.xplane.lightLevel_v2,self.object.xplane.lightLevel_dataref)
 
 class XPlaneMaterial():
     def __init__(self,object):
