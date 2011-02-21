@@ -28,7 +28,7 @@ class XPlaneKeyframe():
             self.hide = self.object.object.hide_render
             
         # update objects so we get values from the keyframe
-        self.object.update()
+        #self.object.update()
         
         local = self.object.getLocal()
         world = self.object.getWorld()
@@ -168,9 +168,10 @@ class XPlaneObject():
         return XPlaneCoords.fromMatrix(XPlaneCoords.relativeConvertedMatrix(self.getMatrix(True),to.getMatrix(True)))
 
     def update(self):
-        if self.parent!=None and self.parent.type!='BONE':
-            self.parent.object.update()
-        self.object.update()
+        pass
+#        if self.parent!=None and self.parent.type!='BONE':
+#            self.parent.object.update()
+#        self.object.update()
 
     def getCoordinates(self):
         # goto first frame so everything is in inital state
@@ -227,13 +228,14 @@ class XPlaneBone(XPlaneObject):
             return matrix
         
     def update(self):
-        self.armature.object.update()
-
-        if self.parent != None:
-            if self.parent.type=='BONE':
-                self.parent.armature.object.update()
-            else:
-                self.parent.object.update()
+        pass
+#        self.armature.object.update()
+#
+#        if self.parent != None:
+#            if self.parent.type=='BONE':
+#                self.parent.armature.object.update()
+#            else:
+#                self.parent.object.update()
         
 
 class XPlaneArmature(XPlaneObject):

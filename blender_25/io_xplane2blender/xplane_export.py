@@ -4,6 +4,7 @@ import os
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
+from io_utils import ImportHelper, ExportHelper
 
 class XPlaneMesh():
     def __init__(self,file):
@@ -32,7 +33,7 @@ class XPlaneMesh():
                 else:
                     # no animated parent
                     # bake rotation of the parent so we do not need to worry about it later
-                    matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).rotation_part().resize4x4())
+                    matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).to_euler().to_matrix().to_4x4())
         else:
             if animatedParent:
                 # object has some animated parent, so we need to bake the matrix relative to animated parent
@@ -455,7 +456,8 @@ class XPlaneCommands():
                 static['rot'][i] = "%sANIM_rotate\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,vec[0],vec[1],vec[2],staticRot[i],staticRot[i])
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
-        
+
+        print(obj.vectors)
         rot = ['','','']
         rot[0] = "%sANIM_rotate_begin\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,obj.vectors[0][0],obj.vectors[0][1],obj.vectors[0][2],dataref)
         rot[1] = "%sANIM_rotate_begin\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,obj.vectors[1][0],obj.vectors[1][1],obj.vectors[1][2],dataref)
@@ -797,13 +799,13 @@ class XPlaneHeader():
         return o
         
 
-class ExportXPlane9(bpy.types.Operator):
+class ExportXPlane9(bpy.types.Operator, ExportHelper):
     '''Export to XPlane Object file format (.obj)'''
     bl_idname = "export.xplane_obj"
     bl_label = 'Export XPlane Object'
     
     filepath = StringProperty(name="File Path", description="Filepath used for exporting the XPlane file(s)", maxlen= 1024, default= "")
-    check_existing = BoolProperty(name="Check Existing", description="Check and warn on overwriting existing files", default=True, options={'HIDDEN'})
+    #check_existing = BoolProperty(name="Check Existing", description="Check and warn on overwriting existing files", default=True, options={'HIDDEN'})
 
     def execute(self, context):
         if debug:

@@ -34,7 +34,6 @@ from io_xplane2blender import xplane_export
 from io_xplane2blender import xplane_ops
 from io_xplane2blender.xplane_config import *
 
-
 # Add to a menu
 def menu_func(self, context):
     self.layout.operator(xplane_export.ExportXPlane9.bl_idname, text="XPlane Object (.obj)")
@@ -43,13 +42,17 @@ def register():
     xplane_props.addXPlaneRNA()
     xplane_ops.addXPlaneOps()
     xplane_ui.addXPlaneUI()
+    bpy.utils.register_class(xplane_export.ExportXPlane9)
     bpy.types.INFO_MT_file_export.append(menu_func)
+    bpy.utils.register_module(__name__)
 
 def unregister():
     xplane_ui.removeXPlaneUI()
     xplane_ops.removeXPlaneOps()
     xplane_props.removeXPlaneRNA()
+    bpy.utils.unregister_class(xplane_export.ExportXPlane9)
     bpy.types.INFO_MT_file_export.remove(menu_func)
+    bpy.utils.unregister_module(__name__)
 
 if __name__ == "__main__":
     register()

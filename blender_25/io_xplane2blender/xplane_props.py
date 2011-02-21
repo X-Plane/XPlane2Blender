@@ -188,7 +188,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                 description="Dataref 2",
                                 default="")
 
-class XPlaneLayerSettings(bpy.types.PropertyGroup):
+class XPlaneLayer(bpy.types.PropertyGroup):
     index = bpy.props.IntProperty(attr="index",
                                     name="Index",
                                     description="The blender layer index.",
@@ -235,9 +235,6 @@ class XPlaneLayerSettings(bpy.types.PropertyGroup):
                                       name="Custom X-Plane header attributes",
                                       description="User defined header attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
-
-class XPlaneLayer(bpy.types.PropertyGroup):
-    pass
 
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
     layers = bpy.props.CollectionProperty(attr="layers",
@@ -390,7 +387,6 @@ def addXPlaneRNA():
     bpy.utils.register_class(XPlaneBoneSettings)
     bpy.utils.register_class(XPlaneMaterialSettings)
     bpy.utils.register_class(XPlaneLampSettings)
-    bpy.utils.register_class(XPlaneLayerSettings)
     bpy.utils.register_class(XPlaneSceneSettings)    
 
     bpy.types.Scene.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneSceneSettings, name="XPlane", description="XPlane Export Settings")
@@ -420,7 +416,6 @@ def removeXPlaneRNA():
     bpy.utils.unregister_class(XPlaneBoneSettings)
     bpy.utils.unregister_class(XPlaneMaterialSettings)
     bpy.utils.unregister_class(XPlaneLampSettings)
-    bpy.utils.unregister_class(XPlaneLayerSettings)
     bpy.utils.unregister_class(XPlaneSceneSettings)
 
     # basic classes
