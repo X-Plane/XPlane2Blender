@@ -369,7 +369,17 @@ def addXPlaneUI():
 #    for dataref in datarefs:
 #        prop = bpy.data.scenes[0].xplane_datarefs.add()
 #        prop.name = dataref
-    pass
+    bpy.utils.register_class(BONE_PT_xplane)
+    bpy.utils.register_class(LAMP_PT_xplane)
+    bpy.utils.register_class(MATERIAL_PT_xplane)
+    bpy.utils.register_class(OBJECT_PT_xplane)
+    bpy.utils.register_class(SCENE_PT_xplane)
+    bpy.utils.register_class(BONE_PT_xplane)
 
 def removeXPlaneUI():
-    pass
+    bpy.utils.unregister_class(BONE_PT_xplane)
+    bpy.utils.unregister_class(LAMP_PT_xplane)
+    bpy.utils.unregister_class(MATERIAL_PT_xplane)
+    bpy.utils.unregister_class(OBJECT_PT_xplane)
+    bpy.utils.unregister_class(SCENE_PT_xplane)
+    bpy.utils.unregister_class(BONE_PT_xplane)
