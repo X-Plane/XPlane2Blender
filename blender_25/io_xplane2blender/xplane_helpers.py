@@ -118,7 +118,7 @@ class XPlaneCoords():
         return child.matrix_world * parent.matrix_world.copy().invert()
 
     def relativeConvertedMatrix(child_matrix,parent_matrix, invert = False):
-        return XPlaneCoords.convertMatrix(parent_matrix.copy().invert()*child_matrix,invert)
+        return XPlaneCoords.convertMatrix(parent_matrix.copy().inverted()*child_matrix,invert)
 
     @staticmethod
     def conversionMatrix(invert = False):

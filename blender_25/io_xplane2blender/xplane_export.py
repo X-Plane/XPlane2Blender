@@ -29,7 +29,7 @@ class XPlaneMesh():
                     # has some animated parent
                     # bake rotation of the parent relative to the animated parent so we do not need to worry about it later
                     matrix = XPlaneCoords.relativeConvertedMatrix(obj.parent.getMatrix(True),animatedParent.getMatrix(True))
-                    matrix = XPlaneCoords.convertMatrix(matrix.rotation_part().resize4x4())
+                    matrix = XPlaneCoords.convertMatrix(matrix.to_euler().to_matrix().to_4x4())
                 else:
                     # no animated parent
                     # bake rotation of the parent so we do not need to worry about it later
