@@ -16,6 +16,8 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+# Variable: bl_info
+# Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
     'name': 'Import/Export: XPlane',
     'author': 'Ondrej Brinkel',
@@ -34,10 +36,17 @@ from io_xplane2blender import xplane_export
 from io_xplane2blender import xplane_ops
 from io_xplane2blender.xplane_config import *
 
-# Add to a menu
+# Function: menu_func
+# Adds the export option to the menu.
+#
+# Parameters:
+#   - self
+#   - context: The Blender context object
 def menu_func(self, context):
     self.layout.operator(xplane_export.ExportXPlane9.bl_idname, text="XPlane Object (.obj)")
 
+# Function: register
+# Registers the addon with all its classes and the menu function.
 def register():    
     xplane_props.addXPlaneRNA()
     xplane_ops.addXPlaneOps()
@@ -46,6 +55,8 @@ def register():
     bpy.types.INFO_MT_file_export.append(menu_func)
     bpy.utils.register_module(__name__)
 
+# Function: unregister
+# Unregisters the addon and all its classes and removes the entry from the menu.
 def unregister():
     xplane_ui.removeXPlaneUI()
     xplane_ops.removeXPlaneOps()
