@@ -5,7 +5,7 @@ from io_xplane2blender.xplane_helpers import XPlaneDebugger,XPlaneProfiler
 debug = True
 
 # Variable: log
-# Set to True, to log debug output in a file. This is still experimental and not implemented yet.
+# Set to True, to log debug output in a file. This is still experimental.
 log = False
 
 # Variable: profile
