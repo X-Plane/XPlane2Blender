@@ -268,7 +268,10 @@ class XPlaneCommands():
         self.file = file
         
         # stores attribtues that reset other attributes
-        self.reseters = {}
+        self.reseters = {
+            'ATTR_light_level':'ATTR_light_level_reset',
+            'ATTR_cockpit':'ATTR_no_cockpit'
+        }
 
         # stores all already written attributes
         self.written = {}
@@ -369,11 +372,25 @@ class XPlaneCommands():
     def writeAttribute(self,attr,value):
         if value!=None:
             if value==True:
-                return '%s\n' % attr
+                o = '%s\n' % attr
             else:
-                return '%s\t%s\n' % (attr,value)
+                o = '%s\t%s\n' % (attr,value)
+                
+            if self.canWrite(attr,value):
+                self.written[attr] = value
+                return o
+            else:
+                return None
         else:
             return None
+
+    def canWrite(self,attr,value):
+        if attr not in self.written:
+            return True
+        elif self.written[attr]==value:
+            return False
+        else:
+            return True
 
     def writeMaterial(self,prim,tabs):
         o = ''
