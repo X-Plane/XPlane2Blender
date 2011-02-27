@@ -230,8 +230,9 @@ def custom_layout(self,obj,type):
         subbox = box.box()
         subrow = subbox.row()
         subrow.prop(attr,"name")
-        subrow.prop(attr,"value")
         subrow.operator("object.remove_xplane_"+oType+"_attribute",text="",emboss=False,icon="X").index = i
+        subrow = subbox.row()
+        subrow.prop(attr,"value")
         if type in ("MATERIAL","MESH"):
             subrow = subbox.row()
             subrow.prop(attr,"reset")

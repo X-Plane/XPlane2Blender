@@ -42,12 +42,12 @@ class XPlaneKeyframe():
         self.scaleLocal = local["scale"]
         # TODO: multiply location with scale of parent?
 
-        if debug:
-            print(self.object.name)
-            print(self.locationLocal)
-            print(self.object.locationLocal)
-            print(self.angleLocal)
-            print(self.object.angleLocal)
+#        if debug:
+#            print(self.object.name)
+#            print(self.locationLocal)
+#            print(self.object.locationLocal)
+#            print(self.angleLocal)
+#            print(self.object.angleLocal)
 
         self.rotation = self.angleLocal
 
@@ -220,9 +220,9 @@ class XPlaneBone(XPlaneObject):
         else:
             matrix = self.object.matrix_local
         if world:
-            print(XPlaneCoords.fromMatrix(matrix))
-            print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)))
-            print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)*matrix))
+#            print(XPlaneCoords.fromMatrix(matrix))
+#            print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)))
+#            print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)*matrix))
             return self.armature.getMatrix(True)*matrix
         else:
             return matrix

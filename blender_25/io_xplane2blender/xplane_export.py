@@ -457,7 +457,7 @@ class XPlaneCommands():
         
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
 
-        print(obj.vectors)
+#        print(obj.vectors)
         rot = ['','','']
         rot[0] = "%sANIM_rotate_begin\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,obj.vectors[0][0],obj.vectors[0][1],obj.vectors[0][2],dataref)
         rot[1] = "%sANIM_rotate_begin\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,obj.vectors[1][0],obj.vectors[1][1],obj.vectors[1][2],dataref)
