@@ -40,8 +40,8 @@ from io_xplane2blender.xplane_config import *
 # Adds the export option to the menu.
 #
 # Parameters:
-#   - self
-#   - context: The Blender context object
+#   self
+#   context - The Blender context object
 def menu_func(self, context):
     self.layout.operator(xplane_export.ExportXPlane9.bl_idname, text="XPlane Object (.obj)")
 
