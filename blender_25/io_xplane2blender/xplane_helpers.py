@@ -1,3 +1,6 @@
+# File: xplane_helpers.py
+# Defines Helpers
+
 import math
 from mathutils import Matrix,Vector,Euler
 from io_xplane2blender.xplane_config import *
@@ -76,6 +79,7 @@ class XPlaneDebugger():
         self.log = False
 #        sys.excepthook = self.excepthook
 
+
 # Class: XPlaneProfiler
 # Stores profiling information of processes.
 class XPlaneProfiler():
@@ -143,11 +147,12 @@ class XPlaneProfiler():
 # Class: XPlaneCoords
 # Converts Blender coordinates into X-Plane coordinates.
 class XPlaneCoords():
+    # Constructor: __init__
     def __init__(self):
         pass
 
     # Method: world
-    # static - Returns converted object world coordinates.
+    # Returns converted object world coordinates.
     #
     # Parameters:
     #   child - A Blender object
@@ -161,7 +166,7 @@ class XPlaneCoords():
         return XPlaneCoords.fromMatrix(matrix)
 
     # Method: local
-    # static - Returns converted object local coordinates.
+    # Returns converted object local coordinates.
     #
     # Parameters:
     #   child - Blender object, the child object.
@@ -179,7 +184,7 @@ class XPlaneCoords():
         return XPlaneCoords.fromMatrix(matrix)
 
     # Method: angle
-    # static - Returns angles of a rotation.
+    # Returns angles of a rotation.
     #
     # Parameters:
     #   Euler rot - Euler rotation.
@@ -191,7 +196,7 @@ class XPlaneCoords():
         return [math.degrees(rot[0]),math.degrees(rot[1]),math.degrees(rot[2])]
 
     # Method: convert
-    # static - Converts Blender Vector (x,y,z) into X-Plane Vector
+    # Converts Blender Vector (x,y,z) into X-Plane Vector
     #
     # Parameters:
     #   Vector co - Blender Vector
@@ -207,7 +212,7 @@ class XPlaneCoords():
             return [-co[0],co[2],co[1]]
 
     # Method: relativeMatrix
-    # static - Get's the relative matrix between a child and a parent objects matrixes.
+    # Get's the relative matrix between a child and a parent objects matrixes.
     #
     # Parameters:
     #   Matrix child - Child matrix.
@@ -233,7 +238,7 @@ class XPlaneCoords():
         return XPlaneCoords.convertMatrix(parent_matrix.copy().inverted()*child_matrix,invert)
 
     # Method: conversionMatrix
-    # static - Returns the conversion matrix used to convert Blender matrixes to X-Plane matrixes. Basically this matrix contains a rotation of -90° along the x-axis.
+    # Returns the conversion matrix used to convert Blender matrixes to X-Plane matrixes. Basically this matrix contains a rotation of -90° along the x-axis.
     #
     # Parameters:
     #   bool invert - (default=False) True if the internaly used matrix should be inverted.
@@ -248,7 +253,7 @@ class XPlaneCoords():
             return Matrix.Rotation(math.radians(-90),4,'X')
 
     # Method: convertMatrix
-    # static - Converts a matrix using <conversionMatrix>.
+    # Converts a matrix using <conversionMatrix>.
     #
     # Parameters:
     #   Matrix matrix - The matrix to convert.
@@ -261,7 +266,7 @@ class XPlaneCoords():
         return XPlaneCoords.conversionMatrix(invert)*matrix
 
     # Method: fromMatrix
-    # static - Returns coordinates for a matrix.
+    # Returns coordinates for a matrix.
     #
     # Parameters:
     #   Matrix matrix - The matrix.
@@ -279,7 +284,7 @@ class XPlaneCoords():
         return coords
 
     # Method: vectorsFromMatrix
-    # static - Returns directional vectors from a given matrix.
+    # Returns directional vectors from a given matrix.
     #
     # Parameters:
     #   Matrix matrix - The matrix.

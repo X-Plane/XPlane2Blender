@@ -1,3 +1,6 @@
+# File: xplane_export.py
+# Defines Classes used to create OBJ files out of XPlane data types defined in <xplane_types.py>.
+
 import os.path
 import bpy
 import os
@@ -6,15 +9,38 @@ from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
 from io_utils import ImportHelper, ExportHelper
 
+# Class: XplaneMesh
+# Creates the OBJ meshes.
 class XPlaneMesh():
-    def __init__(self,file):
-        self.vertices = []
-        self.indices = []
+    # Property: vertices
+    # list - contains all mesh vertices
+    vertices = []
 
-        # store the global index, as we are reindexing faces
-        self.globalindex = 0
+    # Property: indices
+    # list - contains all face indices
+    indices = []
+
+    # Property: globalindex
+    # int - Stores the current global vertex index.
+    globalindex = 0
+
+    # Constructor: __init__
+    #
+    # Parameters:
+    #   dict file - A file dict coming from <XPlaneData>
+    def __init__(self,file):
         self.writeObjects(file['objects'])
 
+    # Method: getBakeMatrix
+    # Returns the bake matrix of a <XPlaneObject>.
+    # The bake matrix is the matrix the object vertices will be transformed with before they are written to the OBJ.
+    # It depends on the object hierarchy and animation.
+    #
+    # Parameters:
+    #   <XPlaneObject> obj - A <XPlaneObject>
+    #
+    # Returns:
+    #   Matrix - The bake matrix for this object.
     def getBakeMatrix(self,obj):
         # Bake in different matrixes depending on animation and hierarchy
         animatedParent = obj.firstAnimatedParent()
@@ -45,6 +71,15 @@ class XPlaneMesh():
                 
         return matrix
 
+    # Method: writeObjects
+    # Fills the <vertices> and <indices> from a list of <XPlaneObjects>.
+    # This method works recursively on the children of each <XPlaneObject>.
+    #
+    # Parameters:
+    #   list - list of <XPlaneObjects>.
+    #
+    # Todos:
+    #   - optimize vertex-table by removing duplicates. This implise the reordering of the indices.
     def writeObjects(self,objects):
         for obj in objects:
             if obj.type == 'PRIMITIVE':
@@ -107,7 +142,15 @@ class XPlaneMesh():
             #TODO: now optimize vertex-table and remove duplicates
             #index = self.getDupliVerticeIndex(vert,endIndex)
         
-            
+    # Method: getDupliVerticeIndex
+    # Returns the index of a vertice duplicate if any.
+    #
+    # Parameters:
+    #   v - The OBJ vertice.
+    #   int startIndex - (default=0) From which index to start searching for duplicates.
+    #
+    # Returns:
+    #   int - Index of the duplicate or -1 if none was found.
     def getDupliVerticeIndex(self,v,startIndex = 0):
         if profile:
             profiler.start('XPlaneMesh.getDupliVerticeIndex')
@@ -129,6 +172,15 @@ class XPlaneMesh():
 
         return -1
 
+    # Method: getUVFaces
+    # Returns Blender the UV faces of a Blender mesh.
+    #
+    # Parameters:
+    #   mesh - Blender mesh
+    #   string uv_name - Name of the uv layer to use. If not given the first layer will be used.
+    #
+    # Returns:
+    #   None if no UV faces could be found or the Blender UV Faces.
     def getUVFaces(self,mesh,uv_name):
         # get the uv_texture
         if (uv_name != None and len(mesh.uv_textures)>0):
@@ -149,6 +201,15 @@ class XPlaneMesh():
         else:
             return None
 
+    # Method: faceToTrianglesWithUV
+    # Converts a Blender face (3 or 4 sided) into one or two 3-sided faces together with the texture coordinates.
+    #
+    # Parameters:
+    #   face - A Blender face.
+    #   uv - UV coordiantes of a Blender UV face.
+    #
+    # Returns:
+    #   list - [{'uv':[[u1,v1],[u2,v2],[u3,v3]],'indices':[i1,i2,i3]},..] In length 1 or 2.
     def faceToTrianglesWithUV(self,face,uv):
         if profile:
             profiler.start('XPlaneMesh.faceToTrianglesWithUV')
@@ -173,12 +234,27 @@ class XPlaneMesh():
 
         return triangles
 
+    # Method: faceValues
+    # Returns the converted vertices of a face.
+    #
+    # Parameters:
+    #   face - A Blender face.
+    #   mesh - A Blender mesh.
+    #   Matrix matrix - The conversion matrix.
+    #
+    # Returns:
+    #   list - List of vertices.
     def faceValues(self,face, mesh, matrix):
         fv = []
         for verti in face.vertices_raw:
             fv.append(matrix * mesh.vertices[verti].co)
         return fv
 
+    # Method: writeVertices
+    # Returns the OBJ vertex table by iterating <vertices>.
+    #
+    # Returns:
+    #   string - The OBJ vertex table.
     def writeVertices(self):
         if profile:
             profiler.start('XPlaneMesh.writeVertices')
@@ -196,6 +272,11 @@ class XPlaneMesh():
 
         return o
 
+    # Method: writeIndices
+    # Returns the OBJ indices table by itering <indices>.
+    #
+    # Returns:
+    #   string - The OBJ indices table.
     def writeIndices(self):
         if profile:
             profiler.start('XPlaneMesh.writeIndices')
@@ -225,15 +306,26 @@ class XPlaneMesh():
 
         return o
 
-
+# Class: XPlaneLights
+# Creates OBJ lights.
 class XPlaneLights():
+    # Property: lights
+    # list - All ligths.
+    lights = []
+
+    # Property: indices
+    # list - All light indices.
+    indices = []
+
+    # Property: globalindex
+    # int - Current global light index.
+    globalindex = 0
+
+    # Constructor: __init__
+    #
+    # Parameters:
+    #   dict file - A file dict coming from <XPlaneData>
     def __init__(self,file):
-        self.lights = []
-        self.indices = []
-
-        # store the global index, as we are reindexing faces
-        globalindex = 0
-
         for light in file['lights']:
             light.indices[0] = globalindex
 
@@ -256,26 +348,43 @@ class XPlaneLights():
 
             light.indices[1] = globalindex
 
+    # Method: writeLights
+    # Returns the OBJ lights table by iterating <lights>.
+    #
+    # Returns:
+    #   string - The OBJ lights table.
     def writeLights(self):
         o=''
         for l in self.lights:
             o+=l+'\n'
         return o
 
-
+# Class: XPlaneCommands
+# Creates the OBJ commands table.
 class XPlaneCommands():
+    # Property: reseters
+    # dict - Stores attribtues that reset other attributes.
+    reseters = {
+        'ATTR_light_level':'ATTR_light_level_reset',
+        'ATTR_cockpit':'ATTR_no_cockpit'
+    }
+
+    # Property: written
+    # dict - Stores all already written attributes and theire values.
+    written = {}
+
+    # Constructor: __init__
+    #
+    # Parameters:
+    #   dict file - A file dict coming from <XPlaneData>
     def __init__(self,file):
         self.file = file
-        
-        # stores attribtues that reset other attributes
-        self.reseters = {
-            'ATTR_light_level':'ATTR_light_level_reset',
-            'ATTR_cockpit':'ATTR_no_cockpit'
-        }
 
-        # stores all already written attributes
-        self.written = {}
-
+    # Method: write
+    # Returns the OBJ commands table.
+    #
+    # Returns:
+    #   string - The OBJ commands table.
     def write(self):
         o=''
          
@@ -289,7 +398,16 @@ class XPlaneCommands():
             o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
             
         return o
-        
+
+    # Method: writeObject
+    # Returns the commands for one <XPlaneObject>.
+    #
+    # Parameters:
+    #   <XPlaneObject> obj - A <XPlaneObject>.
+    #   int animLevel - Level of animation.
+    #
+    # Returns:
+    #   string - OBJ Commands for the <obj>.
     def writeObject(self,obj,animLevel):
         if profile:
             profiler.start("XPlaneCommands.writeObject")
@@ -351,6 +469,14 @@ class XPlaneCommands():
             
         return o
 
+    # Method: getAnimTabs
+    # Returns the tabs used to indent the commands for better readibility in the OBJ file.
+    #
+    # Parameters:
+    #   int level - Level of animation.
+    #
+    # Returns:
+    #   string - The tabs.
     def getAnimTabs(self,level):
         tabs = ''
         for i in range(0,level):
@@ -358,6 +484,14 @@ class XPlaneCommands():
         
         return tabs
 
+    # Method: getAnimLevel
+    # Returns the animation level of an <XPlaneObject>. This is basically the nesting level of an object.
+    #
+    # Parameters:
+    #   <XPlaneObject> obj - A <XPlaneObject>.
+    #
+    # Returns:
+    #   int - the animation level.
     def getAnimLevel(self,obj):
         parent = obj
         level = 0
@@ -369,6 +503,16 @@ class XPlaneCommands():
         
         return level
 
+    # Method: writeAttribute
+    # Returns the Command line for an attribute.
+    # Uses <canWrite> to determine if the command needs to be written.
+    #
+    # Parameters:
+    #   string attr - The attribute name.
+    #   string value - The attribute value.
+    #
+    # Returns:
+    #   string or None if the command must not be written.
     def writeAttribute(self,attr,value):
         if value!=None:
             if value==True:
@@ -384,6 +528,15 @@ class XPlaneCommands():
         else:
             return None
 
+    # Method: canWrite
+    # Determines if an attribute must be written.
+    #
+    # Parameters:
+    #   string attr - The attribute name.
+    #   string value - The attribute value.
+    #
+    # Returns:
+    #   bool - True if the attribute must be written, else false.
     def canWrite(self,attr,value):
         if attr not in self.written:
             return True
@@ -392,10 +545,19 @@ class XPlaneCommands():
         else:
             return True
 
-    def writeMaterial(self,prim,tabs):
+    # Method: writeMaterials
+    # Returns the commands for a <XPlaneObject> material.
+    #
+    # Parameters:
+    #   <XPlaneObject> obj - A <XPlaneObject>.
+    #   string tabs - The indentation tabs.
+    #
+    # Returns:
+    #   string - Commands
+    def writeMaterial(self,obj,tabs):
         o = ''
-        for attr in prim.material.attributes:
-            line = self.writeAttribute(attr,prim.material.attributes[attr])
+        for attr in obj.material.attributes:
+            line = self.writeAttribute(attr,obj.material.attributes[attr])
             if line:
                 o+=tabs+line
                 # only write line if attribtue wasn't already written with same value
@@ -408,6 +570,15 @@ class XPlaneCommands():
 #                        self.written[attr] = value
         return o
 
+    # Method: writeCustomAttributes
+    # Returns the commands for custom attributes of a <XPlaneObject>.
+    #
+    # Parameters:
+    #   <XPlaneObject> obj - A <XPlaneObject>
+    #   string tabs - The indentation tabs.
+    #
+    # Returns:
+    #   string - Commands
     def writeCustomAttributes(self,obj,tabs):
         o = ''
         for attr in obj.attributes:
@@ -416,6 +587,15 @@ class XPlaneCommands():
                 o+=tabs+line
         return o
 
+    # Method: writeCockpitAttributes
+    # Returns the commands for a <XPlaneObject> cockpit related attributes (e.g. Manipulators).
+    #
+    # Parameters:
+    #   <XPlaneObject> obj - A <XPlaneObject>
+    #   string tabs - The indentation tabs.
+    #
+    # Returns:
+    #   string - Commands
     def writeCockpitAttributes(self,obj,tabs):
         o = ''
         for attr in obj.cockpitAttributes:
@@ -424,6 +604,16 @@ class XPlaneCommands():
                 o+=tabs+line
         return o
 
+    # Method: writeKeyframes
+    # Returns the commands for a <XPlaneObject> keyframes.
+    #
+    # Parameters:
+    #   <XPlaneObject> obj - A <XPlaneObject>
+    #   string dataref - Name of the dataref that is driving this animation.
+    #   string tabs - The indentation tabs.
+    #
+    # Returns:
+    #   string - Commands
     def writeKeyframes(self,obj,dataref,tabs):
         o = ''
 
@@ -536,16 +726,38 @@ class XPlaneCommands():
         o+=static['trans'][1]
         return o
 
-
+# Class: XPlaneData
+# Collects Blender data relevant for export and converts it to Classes from <xplanes_types.py>.
+# It handles multi-file export.
 class XPlaneData():
-    def __init__(self):
-        self.files = {}
+    # Property: files
+    # dict - Contains all files to be exported.
+    files = {}
 
-    # Returns the corresponding xplane-Layer to a blender layer index
+    # Constructor: __init__
+    def __init__(self):
+        pass
+
+    # Method: getXPlaneLayer
+    # Returns the corresponding <XPlaneLayer> for a Blender layer index.
+    #
+    # Parameters:
+    #   int layer - The Blender layer index.
+    #
+    # Returns:
+    #   <XPlaneLayer> - The <XPlaneLayer>.
     def getXPlaneLayer(self,layer):
         return bpy.context.scene.xplane.layers[layer]
 
-    # Returns the filename for a layer. If no name was given by user it will be generated.
+    # Method: getFilenameFromXPlaneLayer
+    # Returns the filename for a <XPlaneLayer>.
+    # If no name was given by the user it will be generated by the following pattern: "layer_[index]".
+    #
+    # Paramters:
+    #   <XPlaneLayer> xplaneLayer - A <XPlaneLayer>.
+    #
+    # Returns:
+    #   string - The filename.
     def getFilenameFromXPlaneLayer(self,xplaneLayer):
         if xplaneLayer.name == "":
             filename = "layer_%s" % (str(xplaneLayer.index+1).zfill(2))
@@ -557,7 +769,11 @@ class XPlaneData():
 
         return filename
 
-    # Returns indices of all active blender layers
+    # Method: getActiveLayers
+    # Returns indices of all active Blender layers.
+    #
+    # Returns:
+    #   list - Indices of all active blender layers.
     def getActiveLayers(self):
         layers = []
         for i in range(0,len(bpy.context.scene.layers)):
@@ -566,7 +782,14 @@ class XPlaneData():
 
         return layers
 
-    # Returns all first level Objects of a blender layer
+    # Method: getObjectsByLayer
+    # Returns all first level Objects of a Blender layer.
+    #
+    # Parameters:
+    #   int layer - The Blender layer index.
+    #
+    # Returns:
+    #   list - Blender Oobjects.
     def getObjectsByLayer(self,layer):
         objects = []
         for object in bpy.context.scene.objects:
@@ -578,11 +801,24 @@ class XPlaneData():
 
         return objects
 
-    # Returns an empty obj-file hash
+    # Method: getEmptyFile
+    # Returns an empty OBJ-file dict.
+    #
+    # Paramters:
+    #   <XPlaneLayer> parent - The <XPlaneLayer> this file will be generated from.
     def getEmptyFile(self,parent):
         return {'objects':[],'lights':[],'lines':[],'primitives':[],'parent':parent}
 
-    # Returns exportable child objects. If those are nested within bones or something else it will look recursive for objects.
+    # Method: getChildObjects
+    # Returns exportable Blender child objects.
+    # If those are nested within bones or something else it will look recursive for objects.
+    #
+    # Parameters:
+    #   parent - A Blender object to look for children in.
+    #   list found - Used internally. Contains all already found objects.
+    #
+    # Returns:
+    #   list - All found child objects.
     def getChildObjects(self,parent,found = None):
         if found==None:
             found = []
@@ -596,7 +832,8 @@ class XPlaneData():
         
         return found
 
-    # collects all exportable objects from the scene
+    # Method: collect
+    # Collects all exportable Blender objects from the scene in <files>.
     def collect(self):
         if profile:
             profiler.start("XPlaneData.collect")
@@ -611,6 +848,14 @@ class XPlaneData():
         if profile:
             profiler.end("XPlaneData.collect")
 
+    # Method: collectBones
+    # Generates and collects <XPlaneBones> from Blender bones.
+    # Uses <collectBoneObjects>.
+    #
+    # Parameters:
+    #   list bones - Blender bones.
+    #   string filename - OBJ filename in <files>.
+    #   parent - Blender object the bones are children of.
     def collectBones(self,bones,filename,parent):
         for bone in bones:
             if debug:
@@ -626,12 +871,25 @@ class XPlaneData():
             # recursion
             self.collectBones(bone.children,filename,xplaneBone)
 
+    # Method: collectBoneObjects
+    # Collects all Childobjects of an <XPlaneBone>.
+    #
+    # Parameters:
+    #   <XPlaneBone> xplaneBone - A <XPlaneBone>.
+    #   string filename - OBJ filename in <files>.
     def collectBoneObjects(self,xplaneBone,filename):
         if xplaneBone.armature != None:
             for obj in xplaneBone.armature.object.children:
                 if obj.parent_bone == xplaneBone.name:
                     self.collectObjects([obj],filename,xplaneBone)
-                
+
+    # Method: collectObjects
+    # Generates and collects <XPlaneObjects> from Blender objects.
+    #
+    # Parameters:
+    #   list - Blender objects
+    #   string filename - OBJ filename in <files>.
+    #   parent - None or the parent <XPlaneObject>.
     def collectObjects(self,objects,filename,parent = None):
         for obj in objects:
             if debug:
@@ -708,14 +966,27 @@ class XPlaneData():
                     # add to child list
                     if parent != None:
                         parent.children.append(xplaneObj)
-                
+
+    # Method: getBone
+    # Returns a bone from an armature.
+    #
+    # Parameters:
+    #   armature - Blender armature.
+    #   string name - Bone name.
+    #
+    # Returns:
+    #   None, if bone could not be found or Blender bone.
     def getBone(self,armature,name):
         for bone in armature.bones:
             if bone.name == name:
                 return bone
         return None
 
-    # TODO: not working with new nested export. Propably XPlane Layers must hold texture info?
+    # Method: splitFileByTexture
+    # Splits <files> by textures. This is depricated as files/textures are now defined per layer.
+    #
+    # Todos:
+    #   - not working with new nested export. Propably XPlane Layers must hold texture info?
     def splitFileByTexture(self,parent):
         name = self.getFilenameFromXPlaneLayer(parent)
         filename = None
@@ -750,8 +1021,25 @@ class XPlaneData():
                 self.files[textures[0]]['lines'] = self.files[name]['lines']
                 del self.files[name]
     
-
+# Class: XPLaneHeader
+# Create an OBJ header.
 class XPlaneHeader():
+    # Property: version
+    # OBJ format version
+
+    # Property: mode
+    # The OBJ file mode. ("default" or "cockpit"). This is currently not in use, I think.
+
+    # Property: attributes
+    # OrderedDict - Key value pairs of all Header attributes
+
+    # Constructor: __init__
+    #
+    # Parameters:
+    #   dict file - A file dict coming from <XPlaneData>.
+    #   <XPlaneMesh> mesh - A <XPlaneMesh>.
+    #   <XPlaneLights> lights - <XPlaneLights>
+    #   int version - OBJ format version.
     def __init__(self,file,mesh,lights,version):
         self.version = version
         self.mode = "default"
@@ -791,6 +1079,11 @@ class XPlaneHeader():
         for attr in file['parent'].customAttributes:
             self.attributes[attr.name] = attr.value
 
+    # Method: write
+    # Returns the OBJ header.
+    #
+    # Returns:
+    #   string - OBJ header
     def write(self):
         import platform
 
@@ -815,7 +1108,8 @@ class XPlaneHeader():
         
         return o
         
-
+# Class: ExportXplane9
+# Main Export class. Brings all parts together and creates the OBJ files.
 class ExportXPlane9(bpy.types.Operator, ExportHelper):
     '''Export to XPlane Object file format (.obj)'''
     bl_idname = "export.xplane_obj"
@@ -824,6 +1118,12 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
     filepath = StringProperty(name="File Path", description="Filepath used for exporting the XPlane file(s)", maxlen= 1024, default= "")
     #check_existing = BoolProperty(name="Check Existing", description="Check and warn on overwriting existing files", default=True, options={'HIDDEN'})
 
+    # Method: execute
+    # Used from Blender when user invokes export.
+    # Invokes the exporting.
+    #
+    # Parameters:
+    #   context - Blender context object.
     def execute(self, context):
         if debug:
             debugger.start(log)
@@ -909,6 +1209,12 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         
         return {'FINISHED'}
 
+    # Method: invoke
+    # Used from Blender when user hits the Export-Entry in the File>Export menu.
+    # Creates a file select window.
+    #
+    # Todos:
+    #   - window does not seem to work on Mac OS. Is there something different in the py API?
     def invoke(self, context, event):
         wm = context.window_manager
         wm.fileselect_add(self)

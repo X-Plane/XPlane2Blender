@@ -1,3 +1,6 @@
+# File: xplane_ops.py
+# Defines Operators
+
 import bpy
 from io_xplane2blender.xplane_config import *
 

@@ -1,3 +1,6 @@
+# File: __init__.py
+# Needed for python to register this folder as a module and for blender to register/unregister the addon.
+
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
