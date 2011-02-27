@@ -4,6 +4,15 @@
 import bpy
 from io_xplane2blender.xplane_config import *
 
+# Function: findFCurveByPath
+# Helper function to find an FCurve by an data-path.
+#
+# Parameters:
+#   list - FCurves
+#   string - data path.
+#
+# Returns:
+#   FCurve or None if no FCurve could be found.
 def findFCurveByPath(fcurves,path):
     i = 0
     fcurve = None
@@ -16,7 +25,15 @@ def findFCurveByPath(fcurves,path):
         i+=1
     return fcurve
 
-# FIXME: not working
+# Function: makeKeyframesLinear
+# Sets interpolation mode of keyframes to linear.
+#
+# Parameters:
+#   obj - Blender object
+#   string path - data path.
+#
+# Todos:
+#   - not working
 def makeKeyframesLinear(obj,path):
     fcurve = None
     
@@ -29,18 +46,34 @@ def makeKeyframesLinear(obj,path):
             for keyframe in fcurve.keyframe_points:
                 keyframe.interpolation = 'LINEAR'
 
-
+# Function: getDatarefValuePath
+# Returns the data path for a <XPlaneDataref> value.
+#
+# Parameters:
+#   int index - Index of the <XPlaneDataref>
+#
+# Returns:
+#   string - data path
 def getDatarefValuePath(index):
     return 'xplane.datarefs['+str(index)+'].value'
 
-
+# Function: getPoseBone
+# Returns the corresponding PoseBone of a BlenderBone.
+#
+# Parameters:
+#   armature - Blender armature the bone is part of.
+#   string name - Name of the Bone.
+#
+# Returns:
+#   PoseBone - A Blender PoseBone or None if it could not be found.
 def getPoseBone(armature,name):
         for poseBone in armature.pose.bones:
             if poseBone.bone.name == name:
                 return poseBone
         return None
 
-
+# Class: SCENE_OT_add_xplane_layers
+# Initially creates xplane relevant data for <XPlaneLayers> in the current Blender scene.
 class SCENE_OT_add_xplane_layers(bpy.types.Operator):
     bl_label = 'Add X-Plane layers'
     bl_idname = 'scene.add_xplane_layers'
@@ -57,6 +90,8 @@ class SCENE_OT_add_xplane_layers(bpy.types.Operator):
             scene['xplane']['layers'][i].index = i
         return {'FINISHED'}
 
+# Class: SCENE_OT_add_xplane_layer_attribute
+# Adds a custom attribute to a <XPlaneLayer>.
 class SCENE_OT_add_xplane_layer_attribute(bpy.types.Operator):
     bl_label = 'Add Attribute'
     bl_idname = 'scene.add_xplane_layer_attribute'
@@ -70,6 +105,8 @@ class SCENE_OT_add_xplane_layer_attribute(bpy.types.Operator):
         scene.xplane.layers[self.index].customAttributes.add()
         return {'FINISHED'}
 
+# Class: SCENE_OT_remove_xplane_layer_attribute
+# Removes a custom attribute from a <XPlaneLayer>.
 class SCENE_OT_remove_xplane_layer_attribute(bpy.types.Operator):
     bl_label = 'Remove Attribute'
     bl_idname = 'scene.remove_xplane_layer_attribute'
@@ -83,6 +120,8 @@ class SCENE_OT_remove_xplane_layer_attribute(bpy.types.Operator):
         scene.xplane.layers[self.index[0]].customAttributes.remove(self.index[1])
         return {'FINISHED'}
 
+# Class: OBJECT_OT_add_xplane_object_attribute
+# Adds a custom attribute to a Blender Object.
 class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
     bl_label = 'Add Attribute'
     bl_idname = 'object.add_xplane_object_attribute'
@@ -94,6 +133,8 @@ class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.add()
         return {'FINISHED'}
 
+# Class: OBJECT_OT_remove_xplane_object_attribute
+# Removes a custom attribute from a Blender Object.
 class OBJECT_OT_remove_xplane_object_attribute(bpy.types.Operator):
     bl_label = 'Remove Attribute'
     bl_idname = 'object.remove_xplane_object_attribute'
@@ -107,6 +148,8 @@ class OBJECT_OT_remove_xplane_object_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
+# Class: OBJECT_OT_add_xplane_material_attribute
+# Adds a custom attribute to a Blender Material.
 class OBJECT_OT_add_xplane_material_attribute(bpy.types.Operator):
     bl_label = 'Add Attribute'
     bl_idname = 'object.add_xplane_material_attribute'
@@ -118,6 +161,8 @@ class OBJECT_OT_add_xplane_material_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.add()
         return {'FINISHED'}
 
+# Class: OBJECT_OT_remove_xplane_object_attribute
+# Removes a custom attribute from a Blender Material.
 class OBJECT_OT_remove_xplane_material_attribute(bpy.types.Operator):
     bl_label = 'Remove Attribute'
     bl_idname = 'object.remove_xplane_material_attribute'
@@ -131,6 +176,8 @@ class OBJECT_OT_remove_xplane_material_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
+# Class: OBJECT_OT_add_xplane_lamp_attribute
+# Adds a custom attribute to a Blender Lamp.
 class OBJECT_OT_add_xplane_lamp_attribute(bpy.types.Operator):
     bl_label = 'Add Attribute'
     bl_idname = 'object.add_xplane_lamp_attribute'
@@ -142,6 +189,8 @@ class OBJECT_OT_add_xplane_lamp_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.add()
         return {'FINISHED'}
 
+# Class: OBJECT_OT_remove_xplane_object_attribute
+# Removes a custom attribute from a Blender Lamp.
 class OBJECT_OT_remove_xplane_lamp_attribute(bpy.types.Operator):
     bl_label = 'Remove Attribute'
     bl_idname = 'object.remove_xplane_lamp_attribute'
@@ -155,6 +204,8 @@ class OBJECT_OT_remove_xplane_lamp_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
+# Class: OBJECT_OT_add_xplane_dataref
+# Adds a <XPlaneDataref> to a Blender Object.
 class OBJECT_OT_add_xplane_dataref(bpy.types.Operator):
     bl_label = 'Add Dataref'
     bl_idname = 'object.add_xplane_dataref'
@@ -166,6 +217,8 @@ class OBJECT_OT_add_xplane_dataref(bpy.types.Operator):
         obj.xplane.datarefs.add()
         return {'FINISHED'}
 
+# Class: OBJECT_OT_remove_xplane_dataref
+# Removes a <XPlaneDataref> from a Blender Object.
 class OBJECT_OT_remove_xplane_dataref(bpy.types.Operator):
     bl_label = 'Remove Dataref'
     bl_idname = 'object.remove_xplane_dataref'
@@ -188,6 +241,8 @@ class OBJECT_OT_remove_xplane_dataref(bpy.types.Operator):
 
         return {'FINISHED'}
 
+# Class: OBJECT_OT_add_xplane_dataref_keyframe
+# Adds a Keyframe to the value of a <XPlaneDataref> of an object.
 class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     bl_label = 'Add Dataref keyframe'
     bl_idname = 'object.add_xplane_dataref_keyframe'
@@ -206,6 +261,8 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
         
         return {'FINISHED'}
 
+# Class: OBJECT_OT_remove_xplane_dataref_keyframe
+# Removes a Keyframe from the value of a <XPlaneDataref> of an object.
 class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     bl_label = 'Remove Dataref keyframe'
     bl_idname = 'object.remove_xplane_dataref_keyframe'
@@ -221,6 +278,8 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
             
         return {'FINISHED'}
 
+# Class: BONE_OT_add_xplane_dataref
+# Adds a <XPlaneDataref> to a Blender bone.
 class BONE_OT_add_xplane_dataref(bpy.types.Operator):
     bl_label = 'Add Dataref'
     bl_idname = 'bone.add_xplane_dataref'
@@ -234,6 +293,8 @@ class BONE_OT_add_xplane_dataref(bpy.types.Operator):
         poseBone.xplane.datarefs.add()
         return {'FINISHED'}
 
+# Class: BONE_OT_remove_xplane_dataref
+# Removes a <XPlaneDataref> from a Blender bone.
 class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
     bl_label = 'Remove Dataref'
     bl_idname = 'bone.remove_xplane_dataref'
@@ -258,6 +319,8 @@ class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
 
         return {'FINISHED'}
 
+# Class: BONE_OT_add_xplane_dataref_keyframe
+# Adds a Keyframe to the value of a <XPlaneDataref> of a bone.
 class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     bl_label = 'Add Dataref keyframe'
     bl_idname = 'bone.add_xplane_dataref_keyframe'
@@ -278,6 +341,8 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
 
         return {'FINISHED'}
 
+# Class: BONE_OT_remove_xplane_dataref_keyframe
+# Removes a Keyframe from the value of a <XPlaneDataref> of a bone.
 class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     bl_label = 'Remove Dataref keyframe'
     bl_idname = 'bone.remove_xplane_dataref_keyframe'
@@ -300,6 +365,8 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
 #    bl_label = 'Show an XPlane Error message'
 #    bl_idname = ''
 
+# Function: addXPlaneOps
+# Registers all Operators.
 def addXPlaneOps():
     bpy.utils.register_class(BONE_OT_add_xplane_dataref)
     bpy.utils.register_class(BONE_OT_add_xplane_dataref_keyframe)
@@ -323,6 +390,8 @@ def addXPlaneOps():
     bpy.utils.register_class(SCENE_OT_remove_xplane_layer_attribute)
 
 
+# Function: removeXPlaneOps
+# Unregisters all Operators.
 def removeXPlaneOps():
     bpy.utils.unregister_class(BONE_OT_add_xplane_dataref)
     bpy.utils.unregister_class(BONE_OT_add_xplane_dataref_keyframe)
