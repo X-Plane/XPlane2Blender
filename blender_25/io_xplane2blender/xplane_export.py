@@ -403,11 +403,11 @@ class XPlaneCommands():
     # Returns the commands for one <XPlaneObject>.
     #
     # Parameters:
-    #   <XPlaneObject> obj - A <XPlaneObject>.
+    #   XPlaneObject obj - A <XPlaneObject>.
     #   int animLevel - Level of animation.
     #
     # Returns:
-    #   string - OBJ Commands for the <obj>.
+    #   string - OBJ Commands for the "obj".
     def writeObject(self,obj,animLevel):
         if profile:
             profiler.start("XPlaneCommands.writeObject")
@@ -488,7 +488,7 @@ class XPlaneCommands():
     # Returns the animation level of an <XPlaneObject>. This is basically the nesting level of an object.
     #
     # Parameters:
-    #   <XPlaneObject> obj - A <XPlaneObject>.
+    #   XPlaneObject obj - A <XPlaneObject>.
     #
     # Returns:
     #   int - the animation level.
@@ -549,7 +549,7 @@ class XPlaneCommands():
     # Returns the commands for a <XPlaneObject> material.
     #
     # Parameters:
-    #   <XPlaneObject> obj - A <XPlaneObject>.
+    #   XPlaneObject obj - A <XPlaneObject>.
     #   string tabs - The indentation tabs.
     #
     # Returns:
@@ -574,7 +574,7 @@ class XPlaneCommands():
     # Returns the commands for custom attributes of a <XPlaneObject>.
     #
     # Parameters:
-    #   <XPlaneObject> obj - A <XPlaneObject>
+    #   XPlaneObject obj - A <XPlaneObject>
     #   string tabs - The indentation tabs.
     #
     # Returns:
@@ -591,7 +591,7 @@ class XPlaneCommands():
     # Returns the commands for a <XPlaneObject> cockpit related attributes (e.g. Manipulators).
     #
     # Parameters:
-    #   <XPlaneObject> obj - A <XPlaneObject>
+    #   XPlaneObject obj - A <XPlaneObject>
     #   string tabs - The indentation tabs.
     #
     # Returns:
@@ -608,7 +608,7 @@ class XPlaneCommands():
     # Returns the commands for a <XPlaneObject> keyframes.
     #
     # Parameters:
-    #   <XPlaneObject> obj - A <XPlaneObject>
+    #   XPlaneObject obj - A <XPlaneObject>
     #   string dataref - Name of the dataref that is driving this animation.
     #   string tabs - The indentation tabs.
     #
@@ -727,7 +727,7 @@ class XPlaneCommands():
         return o
 
 # Class: XPlaneData
-# Collects Blender data relevant for export and converts it to Classes from <xplanes_types.py>.
+# Collects Blender data relevant for export and converts it to Classes from <xplane_types.py>.
 # It handles multi-file export.
 class XPlaneData():
     # Property: files
