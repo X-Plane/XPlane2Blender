@@ -203,7 +203,7 @@ class XPlaneCoords():
     #   bool scale - (default=False) Don't know anymore.
     #
     # Returns:
-    #   list - [x,y,z] With converted <co>.
+    #   list - [x,y,z] With converted "co".
     @staticmethod
     def convert(co,scale = False):
         if (scale):

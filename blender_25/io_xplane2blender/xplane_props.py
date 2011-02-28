@@ -314,7 +314,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 #   bool depth - True if object will use depth culling.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 #   bool panel - True if object is part of the cockpit panel.
-#   <XPlaneManipulator> manip - Manipulator settings.
+#   XPlaneManipulator manip - Manipulator settings.
 #   bool lightLevel - True if object overrides default light levels.
 #   float lightLevel_v1 - Light Level Value 1
 #   float lightLevel_v2 - Light Level Value 2
@@ -429,10 +429,10 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 #
 # Properties:
 #   enum type - Light type as defined in OBJ specs.
-#   string name - Light name, if <type> is 'named'.
-#   string params - Light params, if <type> is 'param'.
-#   float size - Light size, if <type> is 'custom'.
-#   string dataref - Dataref driving the light, if <type> is 'custom'.
+#   string name - Light name, if "type" is 'named'.
+#   string params - Light params, if "type" is 'param'.
+#   float size - Light size, if "type" is 'custom'.
+#   string dataref - Dataref driving the light, if "type" is 'custom'.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneLampSettings(bpy.types.PropertyGroup):
     type = bpy.props.EnumProperty(attr="type",

@@ -409,7 +409,7 @@ class XPlaneBone(XPlaneObject):
 #   <XPlaneObject>
 class XPlaneArmature(XPlaneObject):
     # Constructor: __init__
-    # Runs <XPlaneObject.getCoordinates> and currently not <getAnimations>.
+    # Runs <XPlaneObject.getCoordinates> and currently not <XPlaneObject.getAnimations>.
     #
     # Parameters:
     #   object - A Blender object
@@ -451,19 +451,19 @@ class XPlaneLight(XPlaneObject):
     # float - Energy taken from Blender light.
 
     # Property: lightType
-    # string - Type of the light taken from <XPlaneLightSettings>.
+    # string - Type of the light taken from <XPlaneLampSettings>.
 
     # Property: size
-    # float - Size of the light taken from <XPlaneLightSettings>.
+    # float - Size of the light taken from <XPlaneLampSettings>.
 
     # Property: lightName
-    # string - Name of the light taken from <XPlaneLightSettings>.
+    # string - Name of the light taken from <XPlaneLampSettings>.
 
     # Property: params
-    # string - Parameters taken from <XPlaneLightSettings>.
+    # string - Parameters taken from <XPlaneLampSettings>.
 
     # Property: dataref
-    # string - Dataref path taken from <XPlaneLightSettings>.
+    # string - Dataref path taken from <XPlaneLampSettings>.
 
     # Constructor: __init__
     #
@@ -523,7 +523,7 @@ class XPlanePrimitive(XPlaneObject):
     # XPlaneMaterial - A <XPlaneMaterial>
 
     # Property: faces
-    # <XPlaneFaces> - currently not in use. This should be used when commands will work on a per face basis.
+    # XPlaneFaces - Instance of <XPlaneFaces> with all face of this mesh. Currently not in use. This should be used when commands will work on a per face basis.
 
     # Property: attributes
     # dict - Object attributes that will be turned into commands with <XPlaneCommands>.
