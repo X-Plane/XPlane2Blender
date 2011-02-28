@@ -1,7 +1,12 @@
+# File: xplane_ui.py
+# Creates the User Interface for all X-Plane settings.
+
 import bpy
 from io_xplane2blender.xplane_ops import *
 from io_xplane2blender.xplane_config import *
 
+# Class: LAMP_PT_xplane
+# Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
 class LAMP_PT_xplane(bpy.types.Panel):
     '''XPlane Material Panel'''
     bl_label = "XPlane"
@@ -16,7 +21,8 @@ class LAMP_PT_xplane(bpy.types.Panel):
             lamp_layout(self,obj.data)
             custom_layout(self,obj.data,"LAMP")
     
-
+# Class: MATERIAL_PT_xplane
+# Adds X-Plane Material settings to the material tab. Uses <material_layout> and <custom_layout>.
 class MATERIAL_PT_xplane(bpy.types.Panel):
     '''XPlane Material Panel'''
     bl_label = "XPlane"
@@ -30,7 +36,9 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
         if(obj.type == "MESH"):
             material_layout(self,obj.active_material)
             custom_layout(self,obj.active_material,"MATERIAL")
-    
+
+# Class: SCENE_PT_xplane
+# Adds X-Plane Layer settings to the scene tab. Uses <scene_layout>.
 class SCENE_PT_xplane(bpy.types.Panel):
     '''XPlane Scene Panel'''
     bl_label = "XPlane"
@@ -46,6 +54,8 @@ class SCENE_PT_xplane(bpy.types.Panel):
         scene = context.scene
         scene_layout(self, scene)
 
+# Class: OBJECT_PT_xplane
+# Adds X-Plane settings to the object tab. Uses <mesh_layout>, <cockpit_layout>, <manipulator_layout> and <custom_layout>.
 class OBJECT_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
     bl_label = "XPlane"
@@ -73,6 +83,8 @@ class OBJECT_PT_xplane(bpy.types.Panel):
                 manipulator_layout(self,obj)
                 custom_layout(self,obj,obj.type)
 
+# Class: BONE_PT_xplane
+# Adds X-Plane settings to the bone tab. Uses <animation_layout>.
 class BONE_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
     bl_label = "XPlane"
@@ -97,6 +109,8 @@ class BONE_PT_xplane(bpy.types.Panel):
         if poseBone:
             animation_layout(self,poseBone,True)
 
+# Class: OBJECT_MT_xplane_datarefs
+# Adds the X-Plane datarefs search menu. This is not implemented yet.
 class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
     '''XPlane Datarefs Search Menu'''
     bl_label = "XPlane Datarefs"
@@ -104,6 +118,12 @@ class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
     def draw(self,context):
         self.search_menu(xplane_datarefs,"text.open")
 
+# Function: scene_layout
+# Draws the UI layout for scene tabs. Uses <layer_layout>.
+#
+# Parameters:
+#   self - Instance of current panel class.
+#   scene - Blender scene.
 def scene_layout(self, scene):
     layout = self.layout
     row = layout.row()
@@ -115,7 +135,14 @@ def scene_layout(self, scene):
     else:
         row.operator('scene.add_xplane_layers')
         
-
+# Function: layer_layout
+# Draws the UI layout for <XPlaneLayers>. Uses <custom_layer_layout>.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   scene - Blender scene
+#   UILayout layout - Instance of sublayout to use.
+#   int layer - <XPlaneLayer> index.
 def layer_layout(self, scene, layout, layer):
     box = layout.box()
     li = str(layer+1)
@@ -148,8 +175,16 @@ def layer_layout(self, scene, layout, layer):
 
         custom_layer_layout(self, box, scene, layer)
 
+# Function: custom_layer_layout
+# Draws the UI layout for the custom attributes of a <XPlaneLayer>.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   UILayout layout - Instance of sublayout to use.
+#   scene - Blender scene
+#   int layer - <XPlaneLayer> index.
 def custom_layer_layout(self,layout, scene, layer):
-    layout.separator()
+    self.separator()
     row = layout.row()
     row.label("Custom Properties")
     row.operator("scene.add_xplane_layer_attribute", text="Add Property").index = layer
@@ -164,7 +199,12 @@ def custom_layer_layout(self,layout, scene, layer):
             subrow = subbox.row()
             subrow.prop(attr,"reset")
     
-
+# Function: mesh_layout
+# Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
 def mesh_layout(self, obj):
     layout = self.layout
     row = layout.row()
@@ -181,6 +221,12 @@ def mesh_layout(self, obj):
         row = box.row()
         row.prop(obj.xplane,"lightLevel_dataref",text="Dataref")
 
+# Function: lamp_layout
+# Draws the UI layout for lamps.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
 def lamp_layout(self, obj):
     layout = self.layout
     row = layout.row()
@@ -198,6 +244,12 @@ def lamp_layout(self, obj):
         row = layout.row()
         row.prop(obj.xplane,"dataref",text="Dataref")
 
+# Function: material_layout
+# Draws the UI layout for materials.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
 def material_layout(self, obj):
     layout = self.layout
 
@@ -211,7 +263,13 @@ def material_layout(self, obj):
         row = layout.row()
         row.prop(obj.xplane, "blendRatio", text="Alpha cutoff ratio")
 
-
+# Function: custom_layout
+# Draws the additional UI layout for custom attributes.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
+#   string type - Type of object. ("MESH","MATERIAL","LAMP")
 def custom_layout(self,obj,type):
     if type in ("MESH"):
         oType = 'object'
@@ -237,7 +295,13 @@ def custom_layout(self,obj,type):
             subrow = subbox.row()
             subrow.prop(attr,"reset")
     
-
+# Function: animation_layout
+# Draws the UI layout for animations. This includes Datarefs.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
+#   bool bone - True if the object is a bone.
 def animation_layout(self,obj,bone = False):
     layout = self.layout
     layout.separator()
@@ -274,11 +338,23 @@ def animation_layout(self,obj,bone = False):
             subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
         subrow.prop(attr,"value")
 
+# Function: cockpit_layout
+# Draws the UI layout for cockpit parameters. This includes panel.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
 def cockpit_layout(self,obj):
     layout = self.layout
     row = layout.row()
     row.prop(obj.xplane,'panel',text='Part of Cockpit panel')
 
+# Function: manipulator_layout
+# Draws the UI layout for manipulator settings.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
 def manipulator_layout(self,obj):
     layout = self.layout
     row = layout.row()
@@ -334,6 +410,9 @@ def manipulator_layout(self,obj):
             box.prop(obj.xplane.manip,'v1_min',text="v min")
             box.prop(obj.xplane.manip,'v1_max',text="v max")
 
+# Function: parseDatarefs
+# Parses the DataRefs.txt file which is located within the io_xplane2blender addon directory and stores results in a list.
+# This list should later be used to help search for datarefs with an autocomplete field.
 def parseDatarefs():
     import os
     search_data = []
@@ -354,16 +433,35 @@ def parseDatarefs():
             file.close()
     return search_data
 
+# Function: showError
+# Draws a window displaying an error message.
+#
+# Parameters:
+#   string message - The message to display.
+#
+# Todos:
+#   - Not working at all.
 def showError(message):
     wm = byp.context.window_manager
     wm.invoke_popup(bpy.ops.xplane_error)
     return {'CANCELLED'}
 
-def showProgress(percent,message):
+# Function: showProgress
+# Draws a progress bar together with a message.
+#
+# Parameters:
+#   float progress - value between 0 and 1 indicating the current progress.
+#   string message - An aditional message to display.
+#
+# Todos:
+#   - Not working at all.
+def showProgress(progress,message):
     wm = byp.context.window_manager
     wm.invoke_popup(bpy.ops.xplane_progress)
     return {'RUNNING_MODAL'}
 
+# Function: addXPlaneUI
+# Registers all UI Panels.
 def addXPlaneUI():
 #    datarefs = parseDatarefs()
 #
@@ -376,6 +474,8 @@ def addXPlaneUI():
     bpy.utils.register_class(OBJECT_PT_xplane)
     bpy.utils.register_class(SCENE_PT_xplane)
 
+# Function: removeXPlaneUI
+# Unregisters all UI Panels.
 def removeXPlaneUI():
     bpy.utils.unregister_class(BONE_PT_xplane)
     bpy.utils.unregister_class(LAMP_PT_xplane)
