@@ -1021,7 +1021,7 @@ class XPlaneData():
                 self.files[textures[0]]['lines'] = self.files[name]['lines']
                 del self.files[name]
     
-# Class: XPLaneHeader
+# Class: XPlaneHeader
 # Create an OBJ header.
 class XPlaneHeader():
     # Property: version
@@ -1108,7 +1108,7 @@ class XPlaneHeader():
         
         return o
         
-# Class: ExportXplane9
+# Class: ExportXPlane9
 # Main Export class. Brings all parts together and creates the OBJ files.
 class ExportXPlane9(bpy.types.Operator, ExportHelper):
     '''Export to XPlane Object file format (.obj)'''
