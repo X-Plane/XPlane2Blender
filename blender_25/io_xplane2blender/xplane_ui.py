@@ -184,7 +184,7 @@ def layer_layout(self, scene, layout, layer):
 #   scene - Blender scene
 #   int layer - <XPlaneLayer> index.
 def custom_layer_layout(self,layout, scene, layer):
-    self.separator()
+    layout.separator()
     row = layout.row()
     row.label("Custom Properties")
     row.operator("scene.add_xplane_layer_attribute", text="Add Property").index = layer
