@@ -7,7 +7,7 @@ This addon is used to export Objects from Blender 2.5x (www.blender3d.org) to th
 
 
 Topic: How it works
-The next paragraphs explain how this addons basically works, so new developers get a quick insight and can start digging deeper into the process and maybe make it better.
+The next paragraphs explains how this addon basically works, so new developers get a quick insight and can start digging deeper into the process and maybe make it better.
 
 For an addon to work in blender the file <__init__.py> is needed. This file ensures python recognizes the folder "io_xplane2blender" (where it is located) as a "module".
 Blender scans for new "modules" and reads out the variable "bl_info" from the <__init__.py> which contains information about the addon.
