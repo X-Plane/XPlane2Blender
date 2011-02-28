@@ -82,12 +82,12 @@ class SCENE_OT_add_xplane_layers(bpy.types.Operator):
 
     def execute(self,context):
         scene = context.scene
-        while len(scene['xplane']['layers'])<len(scene.layers):
-            scene['xplane']['layers'].add()
+        while len(scene.xplane.layers)<len(scene.layers):
+            scene.xplane.layers.add()
 
         # re-add hidden data that user cannot change
-        for i in range(0,len(scene['xplane']['layers'])):
-            scene['xplane']['layers'][i].index = i
+        for i in range(0,len(scene.xplane.layers)):
+            scene.xplane.layers[i].index = i
         return {'FINISHED'}
 
 # Class: SCENE_OT_add_xplane_layer_attribute
