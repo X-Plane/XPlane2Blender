@@ -1,3 +1,6 @@
+# File: xplane_types.py
+# Defines X-Plane data types.
+
 import bpy
 import math
 import mathutils
@@ -7,9 +10,38 @@ from collections import OrderedDict
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_config import *
 
-debug = True
-
+# Class: XPlaneKeyframe
+# A Keyframe.
 class XPlaneKeyframe():
+    # Property: object
+    # XPlaneObject - The <XPlaneObject> this keyframe belongs to.
+
+    # Property: value
+    # float - Contains the Dataref value in this keyframe.
+
+    # Property: dataref
+    # string - The Path of the dataref this keyframe refers to.
+
+    # Property: translation
+    # list - [x,y,z] With translations of the <object> relative to the <object> rest position (frame 1).
+
+    # Property: rotation
+    # list - [x,y,z] With rotation angles of the <object> in this keyframe.
+
+    # Property: scale
+    # list - [x,y,z] With scale of the <object> in this keyframe.
+
+    # Property: index
+    # int - The index of this keyframe in the <object> keyframe list.
+    
+    # Constructor: __init__
+    # Caclulates <translation>, <rotation> and <scale>.
+    #
+    # Parameters:
+    #   keyframe - A Blender keyframe
+    #   int index - The index of this keyframe in the <object> keyframe list.
+    #   string dataref - Path of the dataref this keyframe refers to.
+    #   XPlaneObject obj - A <XPlaneObject>.
     def __init__(self,keyframe,index,dataref,obj):
         self.value = keyframe.co[1]
         self.dataref = dataref
@@ -56,8 +88,66 @@ class XPlaneKeyframe():
         for i in range(0,3):
             self.translation[i] = self.locationLocal[i]-self.object.locationLocal[i]
 
-
+# Class: XPlaneObject
+# A basic object
+#
+# Sublcasses:
+#   <XPlaneBone>
+#   <XPlaneArmature>
+#   <XPlaneLight>
+#   <XPlaneLine>
+#   <XPlanePrimitive>
 class XPlaneObject():
+    # Property: object
+    # The blender object this <XPlaneObject> refers to.
+
+    # Property: name
+    # string - Name of this object. The same as the <object> name.
+
+    # Property: type
+    # string - Type of the object. Mostly the same as the <object> type.
+
+    # Property: children
+    # list - All child <XPlaneObjects>.
+
+    # Property: parent
+    # XPlaneObject - The parent <XPlaneObject>.
+
+    # Property: animations
+    # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframes>.
+
+    # Property: datarefs
+    # dict - The keys are the dataref paths and the values are references to <XPlaneDatarefs>.
+
+    # Property: bakeMatrix
+    # Matrix - The matrix this object was baked with. See <XPlaneMesh.getBakeMatrix> for more information.
+
+    # Property: location
+    # list - [x,y,z] With world location
+
+    # Property: angle
+    # list - [x,y,z] With world angle
+
+    # Property: scale
+    # list - [x,y,z] With world scale
+
+    # Property: locationLocal
+    # list - [x,y,z] With local location
+
+    # Property: angleLocal
+    # list - [x,y,z] With local angle
+
+    # Property: scaleLocal
+    # list - [x,y,z] With local scale
+
+    # Property: vectors
+    # Vector of vectors - (vx,vy,vz) With orientation of each rotational axis.
+
+    # Constructor: __init__
+    #
+    # Parameters:
+    #   object - A Blender object
+    #   XPlaneObject parent - (default=None) A <XPlaneObject> or None.
     def __init__(self,object,parent = None):
         self.object = object
         self.name = object.name
@@ -72,6 +162,14 @@ class XPlaneObject():
         else:
             self.type = None
 
+    # Method: firstAnimatedParent
+    # Returns the first <parent> in hierarchy that is animated.
+    #
+    # Parameters:
+    #   XPlaneObject child - (default=None) Used internally for recursion. If given the search starts upwards from this <XPlaneObject>.
+    #
+    # Returns:
+    #   XPlaneObject - The first <parent> in hierarchy that is animated or None if no animated parent could be found.
     def firstAnimatedParent(self, child = None):
         if child:
             if child.parent:
@@ -87,6 +185,11 @@ class XPlaneObject():
         else:
             return self.firstAnimatedParent(self)
 
+    # Method: getAnimations
+    # Stores all animations of <object> or another Blender object in <animations>.
+    #
+    # Parameters:
+    #   object - (default=None) A Blender object. If given animation of this object will be stored.
     def getAnimations(self,object = None):
         if object == None:
             object = self.object
@@ -128,12 +231,26 @@ class XPlaneObject():
                         for i in range(0,len(keyframesSorted)):
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
 
+    # Method: getMatrix
+    # Returns the matrix of <object>.
+    # This is a simple wrapper function and becomes more complex in inheritted classes.
+    # So please use it instead of directly accessing object matrices.
+    #
+    # Parameters:
+    #   bool world - (default=False) True if the world matrix should be returned.
     def getMatrix(self,world = False):
         if world:
             return self.object.matrix_world
         else:
             return self.object.matrix_local
 
+    # Method: getVectors
+    # Returns the objects axis vectors. Thats the orientation of each rotational axis.
+    # It takes the <bakeMatrix> into consideration.
+    # Uses <XPlaneCoords.vectorsFromMatrix>.
+    #
+    # Returns:
+    #   Vector of vectors - (vx,vy,vz)
     def getVectors(self):
         animatedParent = self.firstAnimatedParent()
         if self.parent == None:
@@ -157,22 +274,45 @@ class XPlaneObject():
                 else:
                     return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.parent.getMatrix()))
         
-    
+    # Method: getLocal
+    # Returns the local coordinates of the object.
+    # Uses <getMatrix>, <XPlaneCoords.convertMatrix> and <XPlaneCoords.fromMatrix>.
+    #
+    # Returns:
+    #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} Whith local coordinates.
     def getLocal(self):
         return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrix()))
 
+    # Method: getWorld
+    # Returns the world coordinates of the object.
+    # Uses <getMatrix>, <XPlaneCoords.convertMatrix> and <XPlaneCoords.fromMatrix>.
+    #
+    # Returns:
+    #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} Whith world coordinates.
     def getWorld(self):
         return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrix(True)))
 
+    # Method: getRelative
+    # Returns the coordinates of the object relative to another <XPlaneObject>.
+    # Uses <getMatrix>, <XPlaneCoords.relativeConvertedMatrix> and <XPlaneCoords.fromMatrix>.
+    #
+    # Returns:
+    #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} Whith relative coordinates.
     def getRelative(self,to):
         return XPlaneCoords.fromMatrix(XPlaneCoords.relativeConvertedMatrix(self.getMatrix(True),to.getMatrix(True)))
 
+    # Method: update
+    # A wrapper function to update the display/coordinates of the <object> after switching of frames.
+    # Since Blender r35028 this function does nothing anymore, as updating seems to be done by Blender already.
     def update(self):
         pass
 #        if self.parent!=None and self.parent.type!='BONE':
 #            self.parent.object.update()
 #        self.object.update()
 
+    # Method: getCoordinates
+    # Stores the local and world coordinates and the vectors of the object in rest position (frame 1).
+    # Uses <getLocal>, <getWorld> and <getVectors>.
     def getCoordinates(self):
         # goto first frame so everything is in inital state
         bpy.context.scene.frame_set(frame=1)
@@ -194,11 +334,29 @@ class XPlaneObject():
 
         self.vectors = self.getVectors()
 
+    # Method: animated
+    # Checks if the object is animated.
+    #
+    # Returns:
+    #   bool - True if object is animated, False if not.
     def animated(self):
         return (hasattr(self,'animations') and len(self.animations)>0)
 
-
+# Class: XPlaneBone
+# A Bone.
+#
+# Extends:
+#   <XPlaneObject>
 class XPlaneBone(XPlaneObject):
+    # Property: armature
+    # A <XPlaneArmature>.
+
+    # Constructor: __init__
+    # Finds the <armature>, runs <XPlaneObject.getCoordinates> and <XPlaneObject.getAnimations>.
+    #
+    # Parameters:
+    #   object - A Blender object
+    #   XPlaneObject parent - (default=None) A <XPlaneObject> or None.
     def __init__(self,object,parent = None):
         super(XPlaneBone,self).__init__(object,parent)
         self.type = 'BONE'
@@ -213,6 +371,12 @@ class XPlaneBone(XPlaneObject):
         self.getCoordinates()
         self.getAnimations(self.armature.object)
 
+    # Method: getMatrix
+    # Overrides <XPlaneObject.getMatrix> as bone matrices need to be taken from PoseBones.
+    # Uses <XPlaneArmature.getPoseBone>.
+    #
+    # Todos:
+    #   - This is not getting the correct matrix.
     def getMatrix(self,world = False):
         poseBone = self.armature.getPoseBone(self.object.name)
         if poseBone:
@@ -226,7 +390,8 @@ class XPlaneBone(XPlaneObject):
             return self.armature.getMatrix(True)*matrix
         else:
             return matrix
-        
+    # Method: update
+    # overrides <XPlaneObject.update>, but does nothing at all for same reason as in <XPlaneObject.update>.
     def update(self):
         pass
 #        self.armature.object.update()
@@ -237,8 +402,18 @@ class XPlaneBone(XPlaneObject):
 #            else:
 #                self.parent.object.update()
         
-
+# Class: XPlaneArmature
+# A Armature
+#
+# Extends:
+#   <XPlaneObject>
 class XPlaneArmature(XPlaneObject):
+    # Constructor: __init__
+    # Runs <XPlaneObject.getCoordinates> and currently not <getAnimations>.
+    #
+    # Parameters:
+    #   object - A Blender object
+    #   XPlaneObject parent - (default=None) A <XPlaneObject> or None.
     def __init__(self,object,parent = None):
         super(XPlaneArmature,self).__init__(object,parent)
         self.type = 'ARMATURE'
@@ -246,14 +421,55 @@ class XPlaneArmature(XPlaneObject):
         self.getCoordinates()
         #self.getAnimations()
 
+    # Method: getPoseBone
+    # Returns a Blender bones PoseBone.
+    #
+    # Parameters:
+    #   string name - Name of the Blender bone
+    #
+    # Returns:
+    #   PoseBone - A Blender PoseBone or None, if PoseBone could not be found.
     def getPoseBone(self,name):
         for poseBone in self.object.pose.bones:
             if poseBone.bone.name == name:
                 return poseBone
         return None
 
-
+# Class: XPlaneLight
+# A Light
+#
+# Extends:
+#   <XPlaneObject>
 class XPlaneLight(XPlaneObject):
+    # Property: indices
+    # list - [start,end] Starting end ending indices for this light.
+
+    # Property: color
+    # list - [r,g,b] Color taken from the original Blender light. Can change depending on <lightType>.
+
+    # Property: energy
+    # float - Energy taken from Blender light.
+
+    # Property: lightType
+    # string - Type of the light taken from <XPlaneLightSettings>.
+
+    # Property: size
+    # float - Size of the light taken from <XPlaneLightSettings>.
+
+    # Property: lightName
+    # string - Name of the light taken from <XPlaneLightSettings>.
+
+    # Property: params
+    # string - Parameters taken from <XPlaneLightSettings>.
+
+    # Property: dataref
+    # string - Dataref path taken from <XPlaneLightSettings>.
+
+    # Constructor: __init__
+    #
+    # Parameters:
+    #   object - A Blender object
+    #   XPlaneObject parent - (default=None) A <XPlaneObject> or None.
     def __init__(self,object,parent = None):
         super(XPlaneLight,self).__init__(object,parent)
         self.indices = [0,0]
@@ -282,15 +498,45 @@ class XPlaneLight(XPlaneObject):
             self.color[1] = 9.7
             self.color[2] = 9.7
 
-
+# Class: XPlaneLine
+# A Line/Curve
+# This class is not in use yet.
+#
+# Extends:
+#   <XPlaneObject>
 class XPlaneLine(XPlaneObject):
     def __init_(self,object, parent = None):
         super(object,parent)
         self.indices = [0,0]
         self.type = 'LINE'
 
-
+# Class: XPlanePrimitive
+# A Mesh object.
+#
+# Extends:
+#   <XPlaneObject>
 class XPlanePrimitive(XPlaneObject):
+    # Property: indices
+    # list - [start,end] Starting end ending indices for this object.
+
+    # Property: material
+    # XPlaneMaterial - A <XPlaneMaterial>
+
+    # Property: faces
+    # <XPlaneFaces> - currently not in use. This should be used when commands will work on a per face basis.
+
+    # Property: attributes
+    # dict - Object attributes that will be turned into commands with <XPlaneCommands>.
+
+    # Property: cockpitAttributes
+    # dict - Object attributes for cockpit settings, that will be turned into commands with <XPlaneCommands>.
+
+    # Constructor: __init__
+    # Defines basic <attributes> and <cockpitAttributes>, Creates <material>, runs <getManipulatorAttributes>, <getLightLevelAttributes>, <XPlaneObject.getCoordinates> and <XPlaneObject.getAnimations>.
+    #
+    # Parameters:
+    #   object - A Blender object
+    #   XPlaneObject parent - (default=None) A <XPlaneObject> or None.
     def __init__(self,object,parent = None):
         super(XPlanePrimitive,self).__init__(object,parent)
         self.type = 'PRIMITIVE'
@@ -327,6 +573,8 @@ class XPlanePrimitive(XPlaneObject):
         self.getCoordinates()
         self.getAnimations()
 
+    # Method: getManipulatorAttributes
+    # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.
     def getManipulatorAttributes(self):
         attr = 'ATTR_manip_'
         value = True
@@ -356,12 +604,35 @@ class XPlanePrimitive(XPlaneObject):
 
         self.cockpitAttributes[attr] = value
 
+    # Method: getLightLevelAttributes
+    # Defines light level attributes in <attributes> based on settings in <XPlaneObjectSettings>.
     def getLightLevelAttributes(self):
         if self.object.xplane.lightLevel:
             self.attributes['ATTR_light_level_reset'] = None
             self.attributes['ATTR_light_level'] = "%6.4f\t%6.4f\t%s" % (self.object.xplane.lightLevel_v1,self.object.xplane.lightLevel_v2,self.object.xplane.lightLevel_dataref)
 
+# Class: XPlaneMaterial
+# A Material
 class XPlaneMaterial():
+    # Property: object
+    # XPlaneObject - A <XPlaneObject>
+
+    # Property: texture
+    # string - Path to the texture in use for this material, or None if no texture is present.
+    # This property is no longer important as textures are defined by layer.
+
+    # Property: uv_name
+    # string - Name of the uv layer to be used for texture UVs.
+
+    # Property: attributes
+    # dict - Material attributes that will be turned into commands with <XPlaneCommands>.
+
+    # Constructor: __init__
+    # Defines the <attributes> by reading the original Blender material from the <object>.
+    # Also adds custom attributes to <attributes>.
+    #
+    # Parameters:
+    #   object - A Blender object
     def __init__(self,object):
         self.object = object
         self.texture = None
@@ -437,8 +708,24 @@ class XPlaneMaterial():
             for attr in mat.xplane.customAttributes:
                 self.attributes[attr.name] = attr.value
 
-
+# Class: XPlaneFace
+# A mesh face. This class is just a data wrapper used by <XPlaneFaces>.
 class XPlaneFace():
+    # Property: vertices
+    # list of vectors - [v1,v2,v3] The vertices forming the face.
+
+    # Property: normals
+    # list of vectors - [n1,n2,n3] The normals of each vertice in <vertices>.
+
+    # Property: indices
+    # list - [i1,i2,i3] The indices for each vertice in <vertices>.
+
+    # Property: uvs
+    # list of vectors - [(u1,v1),(u2,v2),(u3,v3)] With UV coordinates for each vertice in <vertices>.
+
+    # Property: smooth
+    # bool - (default=False) True if face is smooth shaded, False if it is flat shaded.
+
     def __init__(self):
         self.vertices = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
         self.normals = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
@@ -446,17 +733,41 @@ class XPlaneFace():
         self.uvs = [(0.0,0.0),(0.0,0.0),(0.0,0.0)]
         self.smooth = False
 
-
+# Class: XPlaneFaces
+# A collection of <XPlaneFace>.
 class XPlaneFaces():
-    def __init__(self):
-        self.faces = []
+    # Property: faces
+    # list - List of <XPlaneFace>.
+    faces = []
 
+    # Constructor: __init__
+    def __init__(self):
+        pass
+
+    # Method: append
+    # Adds a <XPlaneFace> to <faces>.
+    #
+    # Parameters:
+    #   XPlaneFace face - A <XPlaneFace>
     def append(self,face):
         self.faces.append(face)
 
+    # Method: remove
+    # Removes a <XPlaneFace> from <faces>.
+    #
+    # Parameters:
+    #   XPlaneFace face - A <XPlaneFace>
     def remove(self,face):
         del self.faces[face]
 
+    # Method: get
+    # Returns a <XPlaneFace> from <faces>.
+    #
+    # Parameters:
+    #   int i - Index of the face
+    #
+    # Returns:
+    #   XPlaneFace - A <XPlaneFace>
     def get(self,i):
         if len(self.faces)-1>=i:
             return self.faces[i]

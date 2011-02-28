@@ -9,7 +9,7 @@ from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
 from io_utils import ImportHelper, ExportHelper
 
-# Class: XplaneMesh
+# Class: XPlaneMesh
 # Creates the OBJ meshes.
 class XPlaneMesh():
     # Property: vertices
