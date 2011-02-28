@@ -1,6 +1,16 @@
+# File: xplane_props.py
+# Defines X-Plane Properties attached to regular Blender data types.
+
 import bpy
 from io_xplane2blender.xplane_config import *
 
+# Class: XPlaneCustomAttribute
+# A custom attribute.
+#
+# Properties:
+#   string name - Name of the attribute
+#   string value - Value of the attribute
+#   string reset - Reseter of the attribute
 class XPlaneCustomAttribute(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(attr="name",
                                     name="Name",
@@ -17,6 +27,13 @@ class XPlaneCustomAttribute(bpy.types.PropertyGroup):
                                     description="Reset",
                                     default="")
 
+# Class: XPlaneDataref
+# A X-Plane Dataref
+#
+# Properties:
+#   string path - Dataref path
+#   float value - Dataref value (can be keyframed)
+#   int loop - Loop amount of dataref animation.
 class XPlaneDataref(bpy.types.PropertyGroup):
     path = bpy.props.StringProperty(attr="path",
                                     name="Path",
@@ -33,12 +50,41 @@ class XPlaneDataref(bpy.types.PropertyGroup):
                                 description="Loop amount of animation, usefull for ever increasing Datarefs. A value of 0 will ignore this setting.",
                                 min=0)
 
+# Class: XPlaneDatarefSearch
+# Not used right now. Might be used to search for dataref paths.
 class XPlaneDatarefSearch(bpy.types.PropertyGroup):
     path = bpy.props.StringProperty(attr="path",
                                     name="Dataref path",
                                     description="XPlane Dataref path",
                                     default = "")
 
+# Class: XPlaneManipulator
+# A X-Plane manipulator settings
+#
+# Properties:
+#   bool enabled - True if object is a manipulator
+#   enum type - Manipulator types as defined in OBJ specs.
+#   string tooltip - Manipulator Tooltip
+#   enum cursor - Manipulator cursors as defined in OBJ specs.
+#   int dx - X-Drag axis length
+#   int dy - Y-Drag axis length
+#   int dz - Z-Drag axis length
+#   float v1 - Value 1
+#   float v2 - Value 2
+#   float v1_min - Value 1 min.
+#   float v1_max - Value 1 max.
+#   float v2_min - Value 2 min.
+#   float v2_max - Value 2 max.
+#   float v_down - Value on mouse down
+#   float v_up - Value on mouse up
+#   float v_hold - Value on mouse hold
+#   float v_on - On value
+#   float v_off - Off value
+#   string command - Command
+#   string positive_command - Positive command
+#   string negative_command - Negative command
+#   string dataref1 - Dataref 1
+#   string dataref2 - Dataref 2
 class XPlaneManipulator(bpy.types.PropertyGroup):
     enabled = bpy.props.BoolProperty(attr="enabled",
                                     name="Manipulator",
@@ -188,6 +234,19 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                 description="Dataref 2",
                                 default="")
 
+# Class: XPlaneLayer
+# Defines settings for a OBJ file. Is "parented" to a Blender layer.
+#
+# Properties:
+#   int index - index of this layer.
+#   bool expanded - True if the settings of this layer are expanded in the UI.
+#   string name - Name of the OBJ file to export from this layer.
+#   bool cockpit - True if this layer serves as a cockpit OBJ.
+#   float slungLoadWeight - Slung Load weight
+#   string texture - Texture file to use for this OBJ.
+#   string texture_lit - Night Texture to use for this OBJ.
+#   string texture_normal - Normal/Specular Texture to use for this OBJ.
+#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane header attributes.
 class XPlaneLayer(bpy.types.PropertyGroup):
     index = bpy.props.IntProperty(attr="index",
                                     name="Index",
@@ -236,12 +295,30 @@ class XPlaneLayer(bpy.types.PropertyGroup):
                                       description="User defined header attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
 
+# Class: XPlaneSceneSettings
+# Settings for Blender scenes.
+#
+# Properties:
+#   layers - Collection of <XPlaneLayers>. Export settings for the Blender layers.
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
     layers = bpy.props.CollectionProperty(attr="layers",
                                             name="Layers",
                                             description="Export settings for the Blender layers",
                                             type=XPlaneLayer)
 
+# Class: XPlaneObjectSettings
+# Settings for Blender objects.
+#
+# Properties:
+#   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
+#   bool depth - True if object will use depth culling.
+#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
+#   bool panel - True if object is part of the cockpit panel.
+#   <XPlaneManipulator> manip - Manipulator settings.
+#   bool lightLevel - True if object overrides default light levels.
+#   float lightLevel_v1 - Light Level Value 1
+#   float lightLevel_v2 - Light Level Value 2
+#   string lightLevel_dataref - Light Level Dataref
 class XPlaneObjectSettings(bpy.types.PropertyGroup):
     datarefs = bpy.props.CollectionProperty(attr="datarefs",
                                         name="X-Plane Datarefs",
@@ -292,12 +369,25 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
                                         description="The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped.",
                                         default="")
 
+# Class: XPlaneBoneSettings
+# Settings for Blender bones.
+#
+# Properties:
+#   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
 class XPlaneBoneSettings(bpy.types.PropertyGroup):
     datarefs = bpy.props.CollectionProperty(attr="datarefs",
                                         name="X-Plane Datarefs",
                                         description="X-Plane Datarefs",
                                         type=XPlaneDataref)
 
+# Class: XPlaneMaterialSettings
+# Settings for Blender materials.
+#
+# Properties:
+#   enum surfaceType - Surface type as defined in OBJ specs.
+#   bool blend - True if the material uses alpha cutoff.
+#   float blendRatio - Alpha cutoff ratio.
+#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     surfaceType = bpy.props.EnumProperty(attr='surfaceType',
                                         name='Surface type',
@@ -334,6 +424,16 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
                                       description="User defined material attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
 
+# Class: XPlaneLampSettings
+# Settings for Blender lamps.
+#
+# Properties:
+#   enum type - Light type as defined in OBJ specs.
+#   string name - Light name, if <type> is 'named'.
+#   string params - Light params, if <type> is 'param'.
+#   float size - Light size, if <type> is 'custom'.
+#   string dataref - Dataref driving the light, if <type> is 'custom'.
+#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneLampSettings(bpy.types.PropertyGroup):
     type = bpy.props.EnumProperty(attr="type",
                                 name="Type",
@@ -374,6 +474,8 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
                                       description="User defined light attributes for the X-Plane file.",
                                       type=XPlaneCustomAttribute)
 
+# Function: addXPlaneRNA
+# Registers all properties.
 def addXPlaneRNA():
     # basic classes
     bpy.utils.register_class(XPlaneCustomAttribute)
@@ -409,7 +511,8 @@ def addXPlaneRNA():
 
     
 
-
+# Function: removeXPlaneRNA
+# Unregisters all properties.
 def removeXPlaneRNA():
     # complex classes, depending on basic classes
     bpy.utils.unregister_class(XPlaneObjectSettings)
