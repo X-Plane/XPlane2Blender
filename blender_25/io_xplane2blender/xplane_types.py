@@ -206,7 +206,13 @@ class XPlaneObject():
                 if (fcurve.group != None and fcurve.group.name == "XPlane Datarefs"):
                     # get dataref name
                     index = fcurve.data_path.replace('xplane.datarefs[','').replace('].value','')
-                    index = int(index)
+
+                    # old style datarefs with wrong datapaths can cause errors so we just skip them
+                    try:
+                        index = int(index)
+                    except:
+                        return
+                    
                     dataref = object.xplane.datarefs[index].path
 
                     if debug:
