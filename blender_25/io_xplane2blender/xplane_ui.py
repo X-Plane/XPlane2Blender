@@ -442,9 +442,20 @@ def parseDatarefs():
 # Todos:
 #   - Not working at all.
 def showError(message):
-    wm = byp.context.window_manager
-    wm.invoke_popup(bpy.ops.xplane_error)
-    return {'CANCELLED'}
+    bpy.ops.xplane.msg(
+        msg_type='ERROR',
+        msg_text=message
+    )
+
+class XPlaneMessage(bpy.types.Operator):
+    """An operator to show simple messages in the UI"""
+    bl_idname = 'xplane.msg'
+    bl_label = 'Show UI Message'
+    msg_type = bpy.props.StringProperty(default='INFO')
+    msg_text = bpy.props.StringProperty(default='')
+    def execute(self, context):
+        self.report({self.properties.msg_type}, self.properties.msg_text)
+        return {'FINISHED'}
 
 # Function: showProgress
 # Draws a progress bar together with a message.
@@ -456,9 +467,10 @@ def showError(message):
 # Todos:
 #   - Not working at all.
 def showProgress(progress,message):
-    wm = byp.context.window_manager
-    wm.invoke_popup(bpy.ops.xplane_progress)
-    return {'RUNNING_MODAL'}
+    bpy.ops.xplane.msg(
+        msg_type='INFO',
+        msg_text='%s - %s' % (str(round(progress*100))+'%',message)
+    )
 
 # Function: addXPlaneUI
 # Registers all UI Panels.
@@ -473,6 +485,7 @@ def addXPlaneUI():
     bpy.utils.register_class(MATERIAL_PT_xplane)
     bpy.utils.register_class(OBJECT_PT_xplane)
     bpy.utils.register_class(SCENE_PT_xplane)
+    bpy.utils.register_class(XPlaneMessage)
 
 # Function: removeXPlaneUI
 # Unregisters all UI Panels.
@@ -482,3 +495,4 @@ def removeXPlaneUI():
     bpy.utils.unregister_class(MATERIAL_PT_xplane)
     bpy.utils.unregister_class(OBJECT_PT_xplane)
     bpy.utils.unregister_class(SCENE_PT_xplane)
+    bpy.utils.unregister_class(XPlaneMessage)

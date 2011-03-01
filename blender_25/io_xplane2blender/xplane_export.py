@@ -7,6 +7,7 @@ import os
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
+from io_xplane2blender.xplane_ui import showError,showProgress
 from io_utils import ImportHelper, ExportHelper
 
 # Class: XPlaneMesh
@@ -327,7 +328,7 @@ class XPlaneLights():
     #   dict file - A file dict coming from <XPlaneData>
     def __init__(self,file):
         for light in file['lights']:
-            light.indices[0] = globalindex
+            light.indices[0] = self.globalindex
 
             # get the location
 
@@ -343,10 +344,10 @@ class XPlaneLights():
                 self.lights.append("LIGHT_CUSTOM\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0.0\t0.0\t1.0\t1.0\t%s" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2],light.energy,light.dataref))
             else:
                 self.lights.append("VLIGHT\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2]))
-            self.indices.append(globalindex)
-            globalindex+=1
+            self.indices.append(self.globalindex)
+            self.globalindex+=1
 
-            light.indices[1] = globalindex
+            light.indices[1] = self.globalindex
 
     # Method: writeLights
     # Returns the OBJ lights table by iterating <lights>.
@@ -747,7 +748,10 @@ class XPlaneData():
     # Returns:
     #   XPlaneLayer - The <XPlaneLayer>.
     def getXPlaneLayer(self,layer):
-        return bpy.context.scene.xplane.layers[layer]
+        if len(bpy.context.scene.xplane.layers)>0:
+            return bpy.context.scene.xplane.layers[layer]
+        else:
+            return None
 
     # Method: getFilenameFromXPlaneLayer
     # Returns the filename for a <XPlaneLayer>.
@@ -840,10 +844,11 @@ class XPlaneData():
         
         for layer in self.getActiveLayers():
             xplaneLayer = self.getXPlaneLayer(layer)
-            filename = self.getFilenameFromXPlaneLayer(xplaneLayer)
-            self.files[filename] = self.getEmptyFile(xplaneLayer)
-            self.collectObjects(self.getObjectsByLayer(layer),filename)
-            #self.splitFileByTexture(xplaneLayer)
+            if xplaneLayer:
+                filename = self.getFilenameFromXPlaneLayer(xplaneLayer)
+                self.files[filename] = self.getEmptyFile(xplaneLayer)
+                self.collectObjects(self.getObjectsByLayer(layer),filename)
+                #self.splitFileByTexture(xplaneLayer)
                 
         if profile:
             profiler.end("XPlaneData.collect")
@@ -1116,6 +1121,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
     bl_label = 'Export XPlane Object'
     
     filepath = StringProperty(name="File Path", description="Filepath used for exporting the XPlane file(s)", maxlen= 1024, default= "")
+    filename_ext = 'obj'
     #check_existing = BoolProperty(name="Check Existing", description="Check and warn on overwriting existing files", default=True, options={'HIDDEN'})
 
     # Method: execute
@@ -1125,6 +1131,8 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
     # Parameters:
     #   context - Blender context object.
     def execute(self, context):
+        errors = False
+
         if debug:
             debugger.start(log)
 
@@ -1144,7 +1152,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         # goto first frame so everything is in inital state
         bpy.context.scene.frame_set(frame=1)
         bpy.context.scene.update()
-
+        
         data = XPlaneData()
         data.collect()
 
@@ -1153,6 +1161,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         bpy.context.scene.update()
 
         if len(data.files)>0:
+            showProgress(0.0,'Writing XPlane Object file(s) ...')
             if debug:
                 debugger.debug("Writing XPlane Object file(s) ...")
             for file in data.files:
@@ -1188,11 +1197,15 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     if profile:
                         profiler.end("ExportXPlane9 %s" % file)
                 else:
+                    errors=True
+                    showError('No objects to export, aborting ...')
                     if debug:
                         debugger.debug("No objects to export, aborting ...")
         else:
+            errors=True
+            showError('No files to export, aborting ...')
             if debug:
-                debugger.debug("No objects to export, aborting ...")
+                debugger.debug("No files to export, aborting ...")
 
         # return to stored frame
         bpy.context.scene.frame_set(frame=currentFrame)
@@ -1203,9 +1216,12 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
             if debug:
                 debugger.debug("\nProfiling results:")
                 debugger.debug(profiler.getTimes())
-
+    
         if debug:
             debugger.end()
+
+        if errors==False:
+            showProgress(1.0,'Done!')
         
         return {'FINISHED'}
 
