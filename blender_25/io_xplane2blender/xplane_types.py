@@ -640,6 +640,8 @@ class XPlaneMaterial():
     # Parameters:
     #   object - A Blender object
     def __init__(self,object):
+        from os import path
+
         self.object = object
         self.texture = None
         self.uv_name = None
@@ -705,7 +707,7 @@ class XPlaneMaterial():
             if(len(mat.texture_slots)>0 and hasattr(mat.texture_slots[0],'use') and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
                 tex =  mat.texture_slots[0].texture
                 if(tex.image.file_format=='PNG'):
-                    self.texture = os.path.basename(tex.image.filepath)
+                    self.texture = path.basename(tex.image.filepath)
 
                 if mat.texture_slots[0].texture_coords == 'UV':
                     self.uv_name = mat.texture_slots[0].uv_layer
