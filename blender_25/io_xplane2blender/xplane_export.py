@@ -1121,7 +1121,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
     bl_label = 'Export XPlane Object'
     
     filepath = StringProperty(name="File Path", description="Filepath used for exporting the XPlane file(s)", maxlen= 1024, default= "")
-    filename_ext = 'obj'
+    filename_ext = ''
     #check_existing = BoolProperty(name="Check Existing", description="Check and warn on overwriting existing files", default=True, options={'HIDDEN'})
 
     # Method: execute
