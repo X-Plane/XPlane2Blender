@@ -67,10 +67,25 @@ def getDatarefValuePath(index):
 # Returns:
 #   PoseBone - A Blender PoseBone or None if it could not be found.
 def getPoseBone(armature,name):
-        for poseBone in armature.pose.bones:
-            if poseBone.bone.name == name:
-                return poseBone
-        return None
+    for poseBone in armature.pose.bones:
+        if poseBone.bone.name == name:
+            return poseBone
+    return None
+
+# Function: getPoseBoneIndex
+# Returns the index of a PoseBone
+#
+# Parameters:
+#   armature - Blender armature the bone is part of.
+#   string name - Name of the Bone.
+#
+# Returns:
+#   int - Index of the PoseBone or -1 if it could not be found.
+def getPoseBoneIndex(armature,name):
+    for i in range(0,len(armature.pose.bones)):
+        if name==armature.pose.bones[i].bone.name:
+            return i
+    return -1
 
 # Class: SCENE_OT_add_xplane_layers
 # Initially creates xplane relevant data for <XPlaneLayers> in the current Blender scene.
@@ -331,13 +346,27 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     
     def execute(self,context):
         bone = context.bone
-        obj = context.object
-        poseBone = getPoseBone(obj,bone.name)
-        path = getDatarefValuePath(self.index)
-        #value = bone.xplane.datarefs[self.index].value
-        # inserting keyframes for custom nested properties working now. YAY!
-        poseBone.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs "+bone.name)
-        #makeKeyframesLinear(obj,path)
+        armature = context.object
+        poseBone = getPoseBone(armature,bone.name)
+        index = getPoseBoneIndex(armature,bone.name)
+        if index>-1:
+            path = 'pose.bones['+str()+'].'+getDatarefValuePath(self.index)
+            #poseBone.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs "+bone.name)
+            value = poseBone.xplane.datarefs[self.index].value
+
+            #makeKeyframesLinear(obj,path)
+
+            # workaround for adding keyframes to nested props in PoseBone is adding fcurve manually
+            if (armature.animation_data and armature.animation_data.action and armature.animation_data.action.fcurves):
+                fcurve = findFCurveByPath(armature.animation_data.action.fcurves,path)
+
+                # No fcurve found, so create a new one
+                if fcurve==None:
+                    fcurve = armature.animation_data.action.fcurves.new(data_path=path,action_group='XPLane Datarefs '+bone.name)
+
+                # Just be sure we have a fcurve
+                if fcurve:
+                    fcurve.keyframe_points.insert(frame=bpy.context.scene.frame_current,value=value)
 
         return {'FINISHED'}
 
@@ -360,10 +389,6 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
         poseBone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
 
         return {'FINISHED'}
-
-#class OT_xplane_error(bpy.types.Operator):
-#    bl_label = 'Show an XPlane Error message'
-#    bl_idname = ''
 
 # Function: addXPlaneOps
 # Registers all Operators.

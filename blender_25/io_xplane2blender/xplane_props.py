@@ -52,11 +52,11 @@ class XPlaneDataref(bpy.types.PropertyGroup):
 
 # Class: XPlaneDatarefSearch
 # Not used right now. Might be used to search for dataref paths.
-class XPlaneDatarefSearch(bpy.types.PropertyGroup):
-    path = bpy.props.StringProperty(attr="path",
-                                    name="Dataref path",
-                                    description="XPlane Dataref path",
-                                    default = "")
+#class XPlaneDatarefSearch(bpy.types.PropertyGroup):
+#    path = bpy.props.StringProperty(attr="path",
+#                                    name="Dataref path",
+#                                    description="XPlane Dataref path",
+#                                    default = "")
 
 # Class: XPlaneManipulator
 # A X-Plane manipulator settings
@@ -480,7 +480,7 @@ def addXPlaneRNA():
     # basic classes
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
-    bpy.utils.register_class(XPlaneDatarefSearch)
+    #bpy.utils.register_class(XPlaneDatarefSearch)
     bpy.utils.register_class(XPlaneManipulator)
     bpy.utils.register_class(XPlaneLayer)
 
@@ -496,10 +496,10 @@ def addXPlaneRNA():
     bpy.types.PoseBone.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneBoneSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Material.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneMaterialSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Lamp.xplane = bpy.props.PointerProperty(attr="xplane",type=XPlaneLampSettings, name="XPlane", description="XPlane Export Settings")
-    bpy.types.Scene.xplane_datarefs = bpy.props.CollectionProperty(attr="xplane_datarefs",
-                                                                    name="XPlane Datarefs",
-                                                                    description="XPlane Datarefs",
-                                                                    type=XPlaneDatarefSearch)
+#    bpy.types.Scene.xplane_datarefs = bpy.props.CollectionProperty(attr="xplane_datarefs",
+#                                                                    name="XPlane Datarefs",
+#                                                                    description="XPlane Datarefs",
+#                                                                    type=XPlaneDatarefSearch)
                                                                     
 
 #    XPlaneLayerSettings.exportChildren = bpy.props.BoolProperty(attr="exportChildren",
@@ -524,6 +524,6 @@ def removeXPlaneRNA():
     # basic classes
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
-    bpy.utils.unregister_class(XPlaneDatarefSearch)
+    #bpy.utils.unregister_class(XPlaneDatarefSearch)
     bpy.utils.unregister_class(XPlaneManipulator)
     bpy.utils.unregister_class(XPlaneLayer)

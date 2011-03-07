@@ -220,6 +220,8 @@ def mesh_layout(self, obj):
         row.prop(obj.xplane,"lightLevel_v2",text="Value 2")
         row = box.row()
         row.prop(obj.xplane,"lightLevel_dataref",text="Dataref")
+        row = box.row()
+        row.operator('xplane.dataref_search',text="Search dataref",emboss=True,icon="VIEWZOOM")
 
 # Function: lamp_layout
 # Draws the UI layout for lamps.
@@ -243,6 +245,8 @@ def lamp_layout(self, obj):
         row.prop(obj.xplane,"size",text="Size")
         row = layout.row()
         row.prop(obj.xplane,"dataref",text="Dataref")
+        row = layout.row()
+        row.operator('xplane.dataref_search',text="Search dataref",emboss=True,icon="VIEWZOOM")
 
 # Function: material_layout
 # Draws the UI layout for materials.
@@ -325,7 +329,8 @@ def animation_layout(self,obj,bone = False):
             subrow.operator("bone.remove_xplane_dataref",text="",emboss=False,icon="X").index = i
         else:
             subrow.operator("object.remove_xplane_dataref",text="",emboss=False,icon="X").index = i
-            
+        subrow = subbox.row()
+        subrow.operator('xplane.dataref_search',text="Search dataref",emboss=True,icon="VIEWZOOM")
         subrow = subbox.row()
         subrow.prop(attr,"loop",text="Loops")
         subrow = subbox.row()
@@ -371,9 +376,11 @@ def manipulator_layout(self,obj):
 
         if type!='drag_xy':
             box.prop(obj.xplane.manip,'dataref1',text="Dataref")
+            box.operator('xplane.dataref_search',text="Search dataref",emboss=True,icon="VIEWZOOM")
         else:
             box.prop(obj.xplane.manip,'dataref1',text="Dataref 1")
             box.prop(obj.xplane.manip,'dataref2',text="Dataref 2")
+            box.operator('xplane.dataref_search',text="Search dataref",emboss=True,icon="VIEWZOOM")
 
         # drag axis lenghts
         if type in ('drag_xy','drag_axis','command_axis'):
@@ -457,6 +464,40 @@ class XPlaneMessage(bpy.types.Operator):
         self.report({self.properties.msg_type}, self.properties.msg_text)
         return {'FINISHED'}
 
+#der_On, you could do this like the system icon viewer does it
+#(16:49:57) ideasman_42: use a panel and a number button as a scroller
+#(16:50:13) der_On: where can I find the system icon viewer?
+#(16:50:19) ideasman_42: its an addon
+class XPlaneDatarefSearch(bpy.types.Operator):
+    bl_label = 'XPlane dataref search'
+    bl_description = 'Search for XPlane dataref'
+    bl_idname = 'xplane.dataref_search'
+
+    datarefs = parseDatarefs()
+
+    def execute(self,context):
+        import webbrowser
+        webbrowser.open('http://atrium.anzui.de/xplane2blender-dataref-search/dataref-search.php')
+        return {'FINISHED'}
+
+#    def invoke(self,context,event):
+#        wm = context.window_manager
+#        return wm.invoke_popup(operator=self)
+#
+#    def draw(self,context):
+#        layout = self.layout
+#        row = layout.row()
+#        row.label('Search Datarefs')
+#        layout.separator()
+#        box = layout.box()
+#        datarefs = parseDatarefs()
+#        for dataref in datarefs:
+#            #subrow = box.row()
+#            subrow.label(dataref)
+#
+##        return {'FINISHED'}
+
+
 # Function: showProgress
 # Draws a progress bar together with a message.
 #
@@ -480,12 +521,14 @@ def addXPlaneUI():
 #    for dataref in datarefs:
 #        prop = bpy.data.scenes[0].xplane_datarefs.add()
 #        prop.name = dataref
+        
     bpy.utils.register_class(BONE_PT_xplane)
     bpy.utils.register_class(LAMP_PT_xplane)
     bpy.utils.register_class(MATERIAL_PT_xplane)
     bpy.utils.register_class(OBJECT_PT_xplane)
     bpy.utils.register_class(SCENE_PT_xplane)
     bpy.utils.register_class(XPlaneMessage)
+    bpy.utils.register_class(XPlaneDatarefSearch)
 
 # Function: removeXPlaneUI
 # Unregisters all UI Panels.
@@ -496,3 +539,4 @@ def removeXPlaneUI():
     bpy.utils.unregister_class(OBJECT_PT_xplane)
     bpy.utils.unregister_class(SCENE_PT_xplane)
     bpy.utils.unregister_class(XPlaneMessage)
+    bpy.utils.unregister_class(XPlaneDatarefSearch)
