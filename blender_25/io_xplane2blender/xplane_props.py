@@ -353,16 +353,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     lightLevel_v1 = bpy.props.FloatProperty(attr="lightLevel_v1",
                                         name="Light Level v1",
                                         description="Value 1",
-                                        default=0.0,
-                                        min=0.0,
-                                        max=1.0)
+                                        default=0.0)
 
     lightLevel_v2 = bpy.props.FloatProperty(attr="lightLevel_v2",
                                         name="Light Level v2",
                                         description="Value 2",
-                                        default=1.0,
-                                        min=0.0,
-                                        max=1.0)
+                                        default=1.0)
 
     lightLevel_dataref = bpy.props.StringProperty(attr="lightLevel_dataref",
                                         name="Light Level Dataref",
