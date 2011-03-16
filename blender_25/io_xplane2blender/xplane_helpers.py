@@ -23,6 +23,8 @@ class XPlaneDebugger():
     #   bool log - Set True if log file should be written, else False
     def start(self,log):
         import time
+        import os
+        import bpy
 #        import sys
 #        import logging
 

@@ -87,7 +87,7 @@ class XPlaneMesh():
                 obj.indices[0] = len(self.indices)
 
                 # create a copy of the object mesh with modifiers applied
-                mesh = obj.object.create_mesh(bpy.context.scene, True, "PREVIEW")
+                mesh = obj.object.to_mesh(bpy.context.scene, True, "PREVIEW")
 
                 # now get the bake matrix
                 # and bake it to the mesh
