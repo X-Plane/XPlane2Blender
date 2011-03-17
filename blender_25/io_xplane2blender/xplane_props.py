@@ -253,6 +253,11 @@ class XPlaneLayer(bpy.types.PropertyGroup):
                                     description="The blender layer index.",
                                     default=-1)
 
+    export = bpy.props.BoolProperty(attr="export",
+                                    name="Export",
+                                    description="If checked, this layer will be exported if visible.",
+                                    default=True)
+
     expanded = bpy.props.BoolProperty(attr="expanded",
                                     name="Expanded",
                                     description="Toggles the layer settings visibility.",
@@ -276,16 +281,19 @@ class XPlaneLayer(bpy.types.PropertyGroup):
                                     precision=3)
 
     texture = bpy.props.StringProperty(attr="texture",
+                                    subtype="FILE_PATH",
                                     name="Texture",
                                     description="Texture to use for objects on this layer.",
                                     default="")
 
     texture_lit = bpy.props.StringProperty(attr="texture_lit",
+                                    subtype="FILE_PATH",
                                     name="Night Texture",
                                     description="Night Texture to use for objects on this layer.",
                                     default="")
 
     texture_normal = bpy.props.StringProperty(attr="texture_normal",
+                                    subtype="FILE_PATH",
                                     name="Normal/Specular Texture",
                                     description="Normal/Specular Texture to use for objects on this layer.",
                                     default="")

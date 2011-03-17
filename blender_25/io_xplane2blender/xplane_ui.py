@@ -153,11 +153,12 @@ def layer_layout(self, scene, layout, layer):
     else:
         expandIcon = "TRIA_RIGHT"
         expanded = False
-
+        
     box.prop(scene.xplane.layers[layer],"expanded", text="Layer "+li, expand=True, emboss=False, icon=expandIcon)
 
     if expanded:
         column = box.column()
+        column.prop(scene.xplane.layers[layer],"export", text="Export")
         column.prop(scene.xplane.layers[layer],"name", text="Name")
         
         if scene.xplane.layers[layer].cockpit:

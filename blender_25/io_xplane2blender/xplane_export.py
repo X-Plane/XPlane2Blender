@@ -30,6 +30,9 @@ class XPlaneMesh():
     # Parameters:
     #   dict file - A file dict coming from <XPlaneData>
     def __init__(self,file):
+        self.vertices = []
+        self.indices = []
+        self.globalindex = 0
         self.writeObjects(file['objects'])
 
     # Method: getBakeMatrix
@@ -327,6 +330,10 @@ class XPlaneLights():
     # Parameters:
     #   dict file - A file dict coming from <XPlaneData>
     def __init__(self,file):
+        self.lights = []
+        self.indices = []
+        self.globalindex = 0
+        
         for light in file['lights']:
             light.indices[0] = self.globalindex
 
@@ -365,10 +372,7 @@ class XPlaneLights():
 class XPlaneCommands():
     # Property: reseters
     # dict - Stores attribtues that reset other attributes.
-    reseters = {
-        'ATTR_light_level':'ATTR_light_level_reset',
-        'ATTR_cockpit':'ATTR_no_cockpit'
-    }
+    reseters = {}
 
     # Property: written
     # dict - Stores all already written attributes and theire values.
@@ -379,6 +383,11 @@ class XPlaneCommands():
     # Parameters:
     #   dict file - A file dict coming from <XPlaneData>
     def __init__(self,file):
+        self.reseters = {
+            'ATTR_light_level':'ATTR_light_level_reset',
+            'ATTR_cockpit':'ATTR_no_cockpit'
+        }
+        self.written = {}
         self.file = file
 
     # Method: write
@@ -737,7 +746,7 @@ class XPlaneData():
 
     # Constructor: __init__
     def __init__(self):
-        pass
+        self.files = {}
 
     # Method: getXPlaneLayer
     # Returns the corresponding <XPlaneLayer> for a Blender layer index.
@@ -781,7 +790,7 @@ class XPlaneData():
     def getActiveLayers(self):
         layers = []
         for i in range(0,len(bpy.context.scene.layers)):
-            if bpy.context.scene.layers[i]:
+            if bpy.context.scene.layers[i] and bpy.context.scene.xplane.layers[i].export:
                 layers.append(i)
 
         return layers
@@ -1046,6 +1055,7 @@ class XPlaneHeader():
     #   XPlaneLights lights - <XPlaneLights>
     #   int version - OBJ format version.
     def __init__(self,file,mesh,lights,version):
+        import os
         self.version = version
         self.mode = "default"
         self.attributes = OrderedDict([("TEXTURE",None),
@@ -1066,11 +1076,11 @@ class XPlaneHeader():
 #            self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
 #            self.attributes['TEXTURE_NORMAL'] = tex[0:-4]+'_NML.png'
         if file['parent'].texture!='':
-            self.attributes['TEXTURE'] = file['parent'].texture
+            self.attributes['TEXTURE'] = os.path.basename(file['parent'].texture)
         if file['parent'].texture_lit!='':
-            self.attributes['TEXTURE_LIT'] = file['parent'].texture_lit
+            self.attributes['TEXTURE_LIT'] = os.path.basename(file['parent'].texture_lit)
         if file['parent'].texture_normal!='':
-            self.attributes['TEXTURE_NORMAL'] = file['parent'].texture_normal
+            self.attributes['TEXTURE_NORMAL'] = os.path.basename(file['parent'].texture_normal)
 
         # get point counts
         tris = len(mesh.vertices)

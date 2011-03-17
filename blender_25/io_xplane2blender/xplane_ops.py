@@ -375,7 +375,6 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
 class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     bl_label = 'Remove Dataref keyframe'
     bl_idname = 'bone.remove_xplane_dataref_keyframe'
-    bl_label = 'Remove Dataref keyframe'
     bl_description = 'Remove the X-Plane Dataref keyframe'
 
     index = bpy.props.IntProperty()
@@ -389,6 +388,7 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
         poseBone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
 
         return {'FINISHED'}
+
 
 # Function: addXPlaneOps
 # Registers all Operators.
