@@ -635,6 +635,10 @@ class XPlaneMaterial():
     # Property: attributes
     # dict - Material attributes that will be turned into commands with <XPlaneCommands>.
 
+    # Property: specularIntensityFactor
+    # float - The factor by which blenders specular intesity will be multiplied
+    specularIntensityFactor = 100.0
+
     # Constructor: __init__
     # Defines the <attributes> by reading the original Blender material from the <object>.
     # Also adds custom attributes to <attributes>.
@@ -666,26 +670,26 @@ class XPlaneMaterial():
             mat = object.data.materials[0]
 
             # diffuse
-            if mat.diffuse_intensity>0:
-                diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
-                            mat.diffuse_intensity*mat.diffuse_color[1],
-                            mat.diffuse_intensity*mat.diffuse_color[2]]
-                self.attributes['ATTR_diffuse_rgb'] = "%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2])
+            #if mat.diffuse_intensity>0:
+            diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
+                        mat.diffuse_intensity*mat.diffuse_color[1],
+                        mat.diffuse_intensity*mat.diffuse_color[2]]
+            self.attributes['ATTR_diffuse_rgb'] = "%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2])
 
             # specular
-            if mat.specular_intensity>0:
-                specular = [mat.specular_intensity*mat.specular_color[0],
-                            mat.specular_intensity*mat.specular_color[1],
-                            mat.specular_intensity*mat.specular_color[2]]
-                self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
-                self.attributes['ATTR_shiny_rat'] = "%6.3f" % mat.specular_hardness
+            #if mat.specular_intensity>0:
+            specular = [mat.specular_color[0],
+                        mat.specular_color[1],
+                        mat.specular_color[2]]
+            self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
+            self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.specular_intensity*self.specularIntensityFactor)
 
             # emission
-            if mat.emit>0:
-                emission = [mat.emit*mat.diffuse_color[0],
-                            mat.emit*mat.diffuse_color[1],
-                            mat.emit*mat.diffuse_color[2]]
-                self.attributes['ATTR_emission_rgb'] = "%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2])
+            #if mat.emit>0:
+            emission = [mat.emit*mat.diffuse_color[0],
+                        mat.emit*mat.diffuse_color[1],
+                        mat.emit*mat.diffuse_color[2]]
+            self.attributes['ATTR_emission_rgb'] = "%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2])
 
             # surface type
             if mat.xplane.surfaceType != 'none':
