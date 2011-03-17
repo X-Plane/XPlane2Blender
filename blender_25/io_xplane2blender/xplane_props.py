@@ -311,7 +311,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
     debug = bpy.props.BoolProperty(attr="debug",
                                     name="Debug",
-                                    description="If checked debug information will be printed to the console.",
+                                    description="If checked debug information will be printed to the console and into OBJ files.",
                                     default=False)
 
     profile = bpy.props.BoolProperty(attr="profile",
