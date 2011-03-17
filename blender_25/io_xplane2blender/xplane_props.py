@@ -309,6 +309,22 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 # Properties:
 #   layers - Collection of <XPlaneLayers>. Export settings for the Blender layers.
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
+    debug = bpy.props.BoolProperty(attr="debug",
+                                    name="Debug",
+                                    description="If checked debug information will be printed to the console.",
+                                    default=False)
+
+    profile = bpy.props.BoolProperty(attr="profile",
+                                    name="Profiling",
+                                    description="If checked profiling information will be printed together with the debug information.",
+                                    default=False)
+
+    log = bpy.props.BoolProperty(attr="log",
+                                    name="Log",
+                                    description="If checked the debug information will be written to a log file.",
+                                    default=False)
+
+
     layers = bpy.props.CollectionProperty(attr="layers",
                                             name="Layers",
                                             description="Export settings for the Blender layers",

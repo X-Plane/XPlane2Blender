@@ -128,6 +128,15 @@ def scene_layout(self, scene):
     layout = self.layout
     row = layout.row()
 
+    row.prop(scene.xplane,"debug",text="Debug")
+
+    if scene.xplane.debug:
+        box = layout.box()
+        box.prop(scene.xplane,"profile",text="Profiling")
+        box.prop(scene.xplane,"log",text="Log")
+
+    row = layout.row()
+
     if len(scene.xplane.layers)!=0:
         for i in range(0,len(scene.layers)):
             row = layout.row()

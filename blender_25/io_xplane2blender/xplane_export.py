@@ -1141,7 +1141,27 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
     # Parameters:
     #   context - Blender context object.
     def execute(self, context):
+        global debug
+        global profile
+        global log
+        
         errors = False
+
+        if context.scene.xplane.debug:
+            debug = True
+            if context.scene.xplane.profile:
+                profile = True
+            else:
+                profile = False
+
+            if context.scene.xplane.log:
+                log = True
+            else:
+                log = False
+        else:
+            debug = False
+            profile = False
+            log = False
 
         if debug:
             debugger.start(log)
@@ -1174,9 +1194,16 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
             showProgress(0.0,'Writing XPlane Object file(s) ...')
             if debug:
                 debugger.debug("Writing XPlane Object file(s) ...")
+
+            i = 0
             for file in data.files:
                 o=''
                 if (len(data.files[file]['objects'])>0 or len(data.files[file]['lights'])>0 or len(data.files[file]['lines'])>0):
+                    showProgress((1/len(data.files))*i,'Writing %s' % file)
+
+                    if profile:
+                        profiler.start("ExportXPlane9 %s" % file)
+
                     mesh = XPlaneMesh(data.files[file])
                     lights = XPlaneLights(data.files[file])
                     header = XPlaneHeader(data.files[file],mesh,lights,9)
@@ -1193,9 +1220,6 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     
                     o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,bpy.app.build_revision,version/1000)
 
-                    if profile:
-                        profiler.start("ExportXPlane9 %s" % file)
-
                     # write the file
                     fullpath = os.path.join(filepath,file+'.obj')
                     if debug:
@@ -1211,6 +1235,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     showError('No objects to export, aborting ...')
                     if debug:
                         debugger.debug("No objects to export, aborting ...")
+                i+=1
         else:
             errors=True
             showError('No files to export, aborting ...')

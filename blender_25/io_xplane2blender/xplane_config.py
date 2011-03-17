@@ -5,7 +5,7 @@ from io_xplane2blender.xplane_helpers import XPlaneDebugger,XPlaneProfiler
 
 # Variable: debug
 # Set to True for debugging output using <debugger>. Default is True, as we are still dealing with a development release.
-debug = True
+debug = False
 
 # Variable: log
 # Set to True, to log debug output in a file. This is still experimental.
@@ -13,7 +13,7 @@ log = False
 
 # Variable: profile
 # Set to True to use profiling processes using the <profiler>. Profiling results will be printed to the console.
-profile = True
+profile = False
 
 # Variable: version
 # Integer containing the version number of the addon. Until we reach a release candidate it will stay 3200 (3.20).

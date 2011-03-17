@@ -91,7 +91,7 @@ class XPlaneProfiler():
 
     # Constructor: __init__
     def __init__(self):
-        pass
+        self.times = {}
 
     # Method: def
     # Starts profiling of a process. If the process has already started profiling, the process counter will be increased.
@@ -100,7 +100,6 @@ class XPlaneProfiler():
     #   string name - Name of the process.
     def start(self,name):
         from time import time
-        self.times = {}
         
         if name in self.times:
             if self.times[name][3]:
