@@ -635,10 +635,6 @@ class XPlaneMaterial():
     # Property: attributes
     # dict - Material attributes that will be turned into commands with <XPlaneCommands>.
 
-    # Property: specularIntensityFactor
-    # float - The factor by which blenders specular intesity will be multiplied
-    specularIntensityFactor = 100.0
-
     # Constructor: __init__
     # Defines the <attributes> by reading the original Blender material from the <object>.
     # Also adds custom attributes to <attributes>.
@@ -682,7 +678,7 @@ class XPlaneMaterial():
                         mat.specular_color[1],
                         mat.specular_color[2]]
             self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
-            self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.specular_intensity*self.specularIntensityFactor)
+            self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.xplane.shinyRatio)
 
             # emission
             #if mat.emit>0:

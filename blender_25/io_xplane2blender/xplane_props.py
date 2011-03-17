@@ -409,6 +409,12 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
 #   float blendRatio - Alpha cutoff ratio.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
+    shinyRatio = bpy.props.FloatProperty(attr='shinyRatio',
+                                            name='Shiny ratio',
+                                            description='Controls the amount of specularity of the material in X-Plane.',
+                                            default=0.0,
+                                            min=0.0)
+
     surfaceType = bpy.props.EnumProperty(attr='surfaceType',
                                         name='Surface type',
                                         description='Controls the bumpiness of material in X-Plane.',

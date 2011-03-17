@@ -268,6 +268,9 @@ def material_layout(self, obj):
     layout = self.layout
 
     row = layout.row()
+    row.prop(obj.xplane, "shinyRatio", text="Shiny ratio")
+
+    row = layout.row()
     row.prop(obj.xplane, "surfaceType", text="Surface type")
 
     row = layout.row()
