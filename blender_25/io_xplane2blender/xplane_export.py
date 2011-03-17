@@ -385,7 +385,17 @@ class XPlaneCommands():
     def __init__(self,file):
         self.reseters = {
             'ATTR_light_level':'ATTR_light_level_reset',
-            'ATTR_cockpit':'ATTR_no_cockpit'
+            'ATTR_cockpit':'ATTR_no_cockpit',
+            'ATTR_cockpit_region':'ATTR_no_cockpit',
+            'ATTR_manip_drag_xy':'ATTR_manip_none',
+            'ATTR_manip_drag_axis':'ATTR_manip_none',
+            'ATTR_manip_command':'ATTR_manip_none',
+            'ATTR_manip_command_axis':'ATTR_manip_none',
+            'ATTR_manip_push':'ATTR_manip_none',
+            'ATTR_manip_radio':'ATTR_manip_none',
+            'ATTR_manip_toggle':'ATTR_manip_none',
+            'ATTR_manip_delta':'ATTR_manip_none',
+            'ATTR_manip_wrap':'ATTR_manip_none'
         }
         self.written = {}
         self.file = file
@@ -446,11 +456,12 @@ class XPlaneCommands():
                 o+="%sANIM_begin\n" % self.getAnimTabs(animLevel-1)
                 o+=oAnim
 
-        if hasattr(obj,'material'):
-            o+=self.writeMaterial(obj,tabs)
-
         if hasattr(obj,'attributes'):
+            o+=self.writeReseters(obj,tabs)
             o+=self.writeCustomAttributes(obj,tabs)
+
+        if hasattr(obj,'material'):
+            o+=self.writeMaterial(obj,tabs)            
 
         # write cockpit attributes
         if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
@@ -593,6 +604,11 @@ class XPlaneCommands():
         o = ''
         for attr in obj.attributes:
             line = self.writeAttribute(attr,obj.attributes[attr])
+
+            # add reseter to own resters list
+            if attr in obj.reseters and obj.reseters[attr]!='':
+                self.reseters[attr] = obj.reseters[attr]
+                
             if line!=None:
                 o+=tabs+line
         return o
@@ -612,6 +628,25 @@ class XPlaneCommands():
             line = self.writeAttribute(attr,obj.cockpitAttributes[attr])
             if line:
                 o+=tabs+line
+        return o
+
+    # Method: writeReseters
+    # Returns the commands for a <XPlaneObject> needed to reset previous commands.
+    #
+    # Parameters:
+    #   XPlaneObject obj - A <XPlaneObject>
+    #   string tabs - The indentation tabs.
+    #
+    # Returns:
+    #   string - Commands
+    def writeReseters(self,obj,tabs):
+        o = ''
+        for attr in self.reseters:
+            # only reset attributes that wont be written with this object again
+            if attr not in obj.attributes and attr in self.written:
+                o+=tabs+self.reseters[attr]+"\n"
+                # we've reset an attribute so remove it from written as it will need rewrite with next object
+                del self.written[attr]
         return o
 
     # Method: writeKeyframes

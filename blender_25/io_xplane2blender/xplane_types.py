@@ -534,6 +534,9 @@ class XPlanePrimitive(XPlaneObject):
     # Property: attributes
     # dict - Object attributes that will be turned into commands with <XPlaneCommands>.
 
+    # Property: reseters
+    # dict - Object attribute reseters that will be turned into commands with <XPlaneCommands>.
+
     # Property: cockpitAttributes
     # dict - Object attributes for cockpit settings, that will be turned into commands with <XPlaneCommands>.
 
@@ -550,25 +553,24 @@ class XPlanePrimitive(XPlaneObject):
         self.material = XPlaneMaterial(self.object)
         self.faces = None
         self.attributes = {
-            'ATTR_light_level':None,
-            'ATTR_light_level_reset':True
+            'ATTR_light_level':None
         }
+
+        self.reseters = {}
+
         self.cockpitAttributes = {
             'ATTR_cockpit':None,
-            'ATTR_no_cockpit':None,
-            'ATTR_cockpit_region':None,
-            'ATTR_manip_none':None
+            'ATTR_cockpit_region':None
         }
 
         # add custom attributes
         for attr in object.xplane.customAttributes:
             self.attributes[attr.name] = attr.value
+            self.reseters[attr.name] = attr.reset
 
         # add cockpit attributes
         if object.xplane.panel:
             self.cockpitAttributes['ATTR_cockpit'] = True
-        else:
-            self.cockpitAttributes['ATTR_no_cockpit'] = True
 
         # add manipulator attributes
         self.getManipulatorAttributes()
@@ -606,15 +608,15 @@ class XPlanePrimitive(XPlaneObject):
             if type in ('delta','wrap'):
                 value = '%s\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\t%s' % (manip.cursor,manip.v_down,manip.v_hold,manip.v1_min,manip.v1_max,manip.dataref1,manip.tooltip)
         else:
-            attr+='none'
+            attr=None
 
-        self.cockpitAttributes[attr] = value
+        if attr is not None:
+            self.cockpitAttributes[attr] = value
 
     # Method: getLightLevelAttributes
     # Defines light level attributes in <attributes> based on settings in <XPlaneObjectSettings>.
     def getLightLevelAttributes(self):
         if self.object.xplane.lightLevel:
-            self.attributes['ATTR_light_level_reset'] = None
             self.attributes['ATTR_light_level'] = "%6.4f\t%6.4f\t%s" % (self.object.xplane.lightLevel_v1,self.object.xplane.lightLevel_v2,self.object.xplane.lightLevel_dataref)
 
 # Class: XPlaneMaterial
