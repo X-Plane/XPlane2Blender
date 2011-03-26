@@ -713,6 +713,9 @@ class XPlaneMaterial():
 
                 if mat.texture_slots[0].texture_coords == 'UV':
                     self.uv_name = mat.texture_slots[0].uv_layer
+            elif len(self.object.data.uv_textures)>0:
+                self.uv_name = self.object.data.uv_textures.active.name
+
 
             # add custom attributes
             for attr in mat.xplane.customAttributes:
