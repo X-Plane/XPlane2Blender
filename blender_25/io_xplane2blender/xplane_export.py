@@ -264,12 +264,16 @@ class XPlaneMesh():
             profiler.start('XPlaneMesh.writeVertices')
 
         o=''
+        index = 0
         for v in self.vertices:
             # dump the vertex data
             o+="VT"
             for i in v:
                 o+="\t%6.4f" % i
+            if debug:
+                o+='\t# %d' % index
             o+="\n"
+            index+=1
 
         if profile:
             profiler.end('XPlaneMesh.writeVertices')
