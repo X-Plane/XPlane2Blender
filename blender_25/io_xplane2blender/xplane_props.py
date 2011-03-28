@@ -409,6 +409,16 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
 #   float blendRatio - Alpha cutoff ratio.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
+    draw = bpy.props.BoolProperty(attr="draw",
+                                    name="Draw enabled",
+                                    description="if turned off, objects with this material won't be drawn.",
+                                    default=True)
+
+    overrideSpecularity = bpy.props.BoolProperty(attr="overrideSpecularity",
+                                                name="Override specularity",
+                                                description="If checked you will override Blenders specularity with the 'Shiny Ratio'.",
+                                                default=False)
+
     shinyRatio = bpy.props.FloatProperty(attr='shinyRatio',
                                             name='Shiny ratio',
                                             description='Controls the amount of specularity of the material in X-Plane.',

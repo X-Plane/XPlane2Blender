@@ -403,7 +403,8 @@ class XPlaneCommands():
             'ATTR_manip_radio':'ATTR_manip_none',
             'ATTR_manip_toggle':'ATTR_manip_none',
             'ATTR_manip_delta':'ATTR_manip_none',
-            'ATTR_manip_wrap':'ATTR_manip_none'
+            'ATTR_manip_wrap':'ATTR_manip_none',
+            'ATTR_draw_disable':'ATTR_draw_enable'
         }
         self.written = {}
         self.staticWritten = []

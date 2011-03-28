@@ -268,17 +268,25 @@ def material_layout(self, obj):
     layout = self.layout
 
     row = layout.row()
-    row.prop(obj.xplane, "shinyRatio", text="Shiny ratio")
+    row.prop(obj.xplane, "draw", text="Draw")
+
+    if (obj.xplane.draw):
+        row = layout.row()
+        row.prop(obj.xplane, "overrideSpecularity", text="Override specularity")
+
+        if obj.xplane.overrideSpecularity:
+            row = layout.row()
+            row.prop(obj.xplane, "shinyRatio", text="Shiny ratio")
+
+        row = layout.row()
+        row.prop(obj.xplane, "blend", text="Use alpha cutoff")
+
+        if(obj.xplane.blend==True):
+            row = layout.row()
+            row.prop(obj.xplane, "blendRatio", text="Alpha cutoff ratio")
 
     row = layout.row()
     row.prop(obj.xplane, "surfaceType", text="Surface type")
-
-    row = layout.row()
-    row.prop(obj.xplane, "blend", text="Use alpha cutoff")
-
-    if(obj.xplane.blend==True):
-        row = layout.row()
-        row.prop(obj.xplane, "blendRatio", text="Alpha cutoff ratio")
 
 # Function: custom_layout
 # Draws the additional UI layout for custom attributes.

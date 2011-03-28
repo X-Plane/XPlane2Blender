@@ -660,32 +660,48 @@ class XPlaneMaterial():
                            "ATTR_depth":None,
                            "ATTR_no_depth":None,
                            "ATTR_blend":None,
-                           "ATTR_no_blend":None}
+                           "ATTR_no_blend":None,
+                           "ATTR_draw_disable":None}
+
 
         if len(object.data.materials)>0:
             mat = object.data.materials[0]
 
-            # diffuse
-            #if mat.diffuse_intensity>0:
-            diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
-                        mat.diffuse_intensity*mat.diffuse_color[1],
-                        mat.diffuse_intensity*mat.diffuse_color[2]]
-            self.attributes['ATTR_diffuse_rgb'] = "%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2])
+            if mat.xplane.draw:
+                # diffuse
+                #if mat.diffuse_intensity>0:
+                diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
+                            mat.diffuse_intensity*mat.diffuse_color[1],
+                            mat.diffuse_intensity*mat.diffuse_color[2]]
+                self.attributes['ATTR_diffuse_rgb'] = "%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2])
 
-            # specular
-            #if mat.specular_intensity>0:
-            specular = [mat.specular_color[0],
-                        mat.specular_color[1],
-                        mat.specular_color[2]]
-            self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
-            self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.xplane.shinyRatio)
+                # specular
+                #if mat.specular_intensity>0:
+                specular = [mat.specular_color[0],
+                            mat.specular_color[1],
+                            mat.specular_color[2]]
+                self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
+                if mat.xplane.overrideSpecularity:
+                    self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.xplane.shinyRatio)
+                else:
+                    self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.specular_intensity)
 
-            # emission
-            #if mat.emit>0:
-            emission = [mat.emit*mat.diffuse_color[0],
-                        mat.emit*mat.diffuse_color[1],
-                        mat.emit*mat.diffuse_color[2]]
-            self.attributes['ATTR_emission_rgb'] = "%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2])
+                # emission
+                #if mat.emit>0:
+                emission = [mat.emit*mat.diffuse_color[0],
+                            mat.emit*mat.diffuse_color[1],
+                            mat.emit*mat.diffuse_color[2]]
+                self.attributes['ATTR_emission_rgb'] = "%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2])
+
+                # blend
+                if mat.xplane.blend:
+                    self.attributes['ATTR_no_blend'] = "%6.3f" % mat.xplane.blendRatio
+            else:
+                self.attributes['ATTR_draw_disable'] = True
+
+            # depth check
+            if self.object.xplane.depth == False:
+                self.attributes['ATTR_no_depth'] = True;
 
             # surface type
             if mat.xplane.surfaceType != 'none':
@@ -696,14 +712,6 @@ class XPlaneMaterial():
                 self.attributes['ATTR_no_cull'] = True
             else:
                 self.attributes['ATTR_cull'] = True
-
-            # blend
-            if mat.xplane.blend:
-                self.attributes['ATTR_no_blend'] = "%6.3f" % mat.xplane.blendRatio
-
-            # depth check
-            if self.object.xplane.depth == False:
-                self.attributes['ATTR_no_depth'] = True;
 
             # Texture and uv-coordinates
             if(len(mat.texture_slots)>0 and hasattr(mat.texture_slots[0],'use') and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
@@ -717,8 +725,7 @@ class XPlaneMaterial():
             # if no uv layer was found in the texture, try to find it now.
             if(self.uv_name == None and len(self.object.data.uv_textures)>0):
                 self.uv_name = self.object.data.uv_textures.active.name
-
-
+                
             # add custom attributes
             for attr in mat.xplane.customAttributes:
                 self.attributes[attr.name] = attr.value
