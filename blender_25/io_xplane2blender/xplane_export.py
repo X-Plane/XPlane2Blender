@@ -382,6 +382,10 @@ class XPlaneCommands():
     # dict - Stores all already written attributes and theire values.
     written = {}
 
+    # Property: staticWritten
+    # list - Stores names of objects whos static translations/rotations have already been written.
+    staticWritten = []
+    
     # Constructor: __init__
     #
     # Parameters:
@@ -402,6 +406,7 @@ class XPlaneCommands():
             'ATTR_manip_wrap':'ATTR_manip_none'
         }
         self.written = {}
+        self.staticWritten = []
         self.file = file
 
     # Method: write
@@ -685,6 +690,8 @@ class XPlaneCommands():
             world = obj.getWorld()
             # move object to world location
             staticTrans[0] = world['location']
+            if debug:
+                debugger.debug('%s root level' % obj.name)
 
         # not root level and no animated parent
         elif animatedParent == None:
@@ -693,12 +700,16 @@ class XPlaneCommands():
             world = obj.getWorld()
             local = obj.parent.getLocal()
             staticTrans[0] = world['location']
+            if debug:
+                debugger.debug('%s not root level and no animated parent' % obj.name)
                 
         # not root level and we have an animated parent somewhere in the hierarchy
         elif animatedParent:
             # move object to the location relative to animated Parent
             relative = obj.getRelative(animatedParent)
             staticTrans[0] = relative['location']
+            if debug:
+                debugger.debug('%s not root level and animated parent' % obj.name)
             
         # ignore high precision values
         for i in range(0,2):    
@@ -733,7 +744,7 @@ class XPlaneCommands():
                 rot[i]+="%s\tANIM_rotate_key\t%6.4f\t%6.4f\n" % (tabs,keyframe.value,keyframe.rotation[i])
 
             if debug:
-                debugger.debug("%s keyframe %d@%d" % (keyframe.object.name,keyframe.index,keyframe.frame))
+                debugger.debug("%s keyframe %s@%d %s" % (keyframe.object.name,keyframe.index,keyframe.frame,keyframe.dataref))
             
         trans+="%sANIM_trans_end\n" % tabs
         rot[0]+="%sANIM_rotate_end\n" % tabs
@@ -745,10 +756,12 @@ class XPlaneCommands():
         totalTrans[1] = round(totalTrans[1],4)
         totalTrans[2] = round(totalTrans[2],4)
 
-        o+=static['trans'][0]
-        o+=static['rot'][0]
-        o+=static['rot'][1]
-        o+=static['rot'][2]
+        if obj.name not in self.staticWritten:
+            o+=static['trans'][0]
+            o+=static['rot'][0]
+            o+=static['rot'][1]
+            o+=static['rot'][2]
+            self.staticWritten.append(obj.name)
 
         if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
             o+=trans

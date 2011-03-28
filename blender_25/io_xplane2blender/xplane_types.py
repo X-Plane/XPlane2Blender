@@ -713,7 +713,9 @@ class XPlaneMaterial():
 
                 if mat.texture_slots[0].texture_coords == 'UV':
                     self.uv_name = mat.texture_slots[0].uv_layer
-            elif len(self.object.data.uv_textures)>0:
+
+            # if no uv layer was found in the texture, try to find it now.
+            if(self.uv_name == None and len(self.object.data.uv_textures)>0):
                 self.uv_name = self.object.data.uv_textures.active.name
 
 
