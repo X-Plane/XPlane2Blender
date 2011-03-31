@@ -104,10 +104,7 @@ class BONE_PT_xplane(bpy.types.Panel):
     def draw(self, context):
         bone = context.bone
         obj = context.object
-        poseBone = getPoseBone(obj,bone.name)
-
-        if poseBone:
-            animation_layout(self,poseBone,True)
+        animation_layout(self,bone,True)
 
 # Class: OBJECT_MT_xplane_datarefs
 # Adds the X-Plane datarefs search menu. This is not implemented yet.

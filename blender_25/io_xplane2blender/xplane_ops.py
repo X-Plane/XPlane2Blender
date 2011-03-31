@@ -54,8 +54,11 @@ def makeKeyframesLinear(obj,path):
 #
 # Returns:
 #   string - data path
-def getDatarefValuePath(index):
-    return 'xplane.datarefs['+str(index)+'].value'
+def getDatarefValuePath(index,bone = None):
+    if bone:
+        return 'bones["%s"].xplane.datarefs[%d].value' % (bone.name,index)
+    else:
+        return 'xplane.datarefs['+str(index)+'].value'
 
 # Function: getPoseBone
 # Returns the corresponding PoseBone of a BlenderBone.
@@ -304,8 +307,7 @@ class BONE_OT_add_xplane_dataref(bpy.types.Operator):
     def execute(self,context):
         bone = context.bone
         obj = context.object
-        poseBone = getPoseBone(obj,bone.name)
-        poseBone.xplane.datarefs.add()
+        bone.xplane.datarefs.add()
         return {'FINISHED'}
 
 # Class: BONE_OT_remove_xplane_dataref
@@ -321,10 +323,8 @@ class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
     def execute(self,context):
         bone = context.bone
         obj = context.object
-        #bone.xplane.datarefs.remove(self.index)
-        poseBone = getPoseBone(obj,bone.name)
-        poseBone.xplane.datarefs.remove(self.index)
-        path = getDatarefValuePath(self.index)
+        bone.xplane.datarefs.remove(self.index)
+        path = getDatarefValuePath(self.index,bone)
 
         # remove FCurves too
         if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
@@ -343,31 +343,14 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     bl_description = 'Add a X-Plane Dataref keyframe'
 
     index = bpy.props.IntProperty()
-    
+
+    # bpy.data.objects["Armature"].data.keyframe_insert(data_path='bones["Bone"].my_prop_group.nested',group="Nested Property")
     def execute(self,context):
         bone = context.bone
         armature = context.object
-        poseBone = getPoseBone(armature,bone.name)
-        index = getPoseBoneIndex(armature,bone.name)
-        if index>-1:
-            path = 'pose.bones['+str()+'].'+getDatarefValuePath(self.index)
-            #poseBone.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs "+bone.name)
-            value = poseBone.xplane.datarefs[self.index].value
-
-            #makeKeyframesLinear(obj,path)
-
-            # workaround for adding keyframes to nested props in PoseBone is adding fcurve manually
-            if (armature.animation_data and armature.animation_data.action and armature.animation_data.action.fcurves):
-                fcurve = findFCurveByPath(armature.animation_data.action.fcurves,path)
-
-                # No fcurve found, so create a new one
-                if fcurve==None:
-                    fcurve = armature.animation_data.action.fcurves.new(data_path=path,action_group='XPLane Datarefs '+bone.name)
-
-                # Just be sure we have a fcurve
-                if fcurve:
-                    fcurve.keyframe_points.insert(frame=bpy.context.scene.frame_current,value=value)
-
+        path = getDatarefValuePath(self.index,bone)
+        armature.data.keyframe_insert(data_path=path, group="XPlane Datarefs "+bone.name)
+        
         return {'FINISHED'}
 
 # Class: BONE_OT_remove_xplane_dataref_keyframe
@@ -382,10 +365,9 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     def execute(self,context):
         bone = context.bone
         path = getDatarefValuePath(self.index)
-        obj = context.object
-        poseBone = getPoseBone(obj,bone.name)
-        #bone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
-        poseBone.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
+        armature = context.object
+        path = getDatarefValuePath(self.index,bone)
+        armature.data.keyframe_delete(data_path=path, group="XPlane Datarefs "+bone.name)
 
         return {'FINISHED'}
 

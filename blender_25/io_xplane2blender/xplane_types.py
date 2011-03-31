@@ -190,12 +190,18 @@ class XPlaneObject():
     #
     # Parameters:
     #   object - (default=None) A Blender object. If given animation of this object will be stored.
-    def getAnimations(self,object = None):
+    def getAnimations(self,object = None, bone = None):
+        if bone:
+            groupName = "XPlane Datarefs "+bone.name
+            object = object.data
+        else:
+            groupName = "XPlane Datarefs"
+
         if object == None:
             object = self.object
         #check for animation
         if debug:
-            debugger.debug("\t\t checking animations")
+            debugger.debug("\t\t checking animations of %s" % object.name)
         if (object.animation_data != None and object.animation_data.action != None and len(object.animation_data.action.fcurves)>0):
             if debug:
                 debugger.debug("\t\t animation found")
@@ -203,9 +209,12 @@ class XPlaneObject():
             for fcurve in object.animation_data.action.fcurves:
                 if debug:
                     debugger.debug("\t\t checking FCurve %s" % fcurve.data_path)
-                if (fcurve.group != None and fcurve.group.name == "XPlane Datarefs"):
+                if (fcurve.group != None and fcurve.group.name == groupName):
                     # get dataref name
-                    index = fcurve.data_path.replace('xplane.datarefs[','').replace('].value','')
+                    if bone:
+                        index = fcurve.data_path.replace('bones["%s"].xplane.datarefs[' % bone.name,'').replace('].value','')
+                    else:
+                        index = fcurve.data_path.replace('xplane.datarefs[','').replace('].value','')
 
                     # old style datarefs with wrong datapaths can cause errors so we just skip them
                     try:
@@ -213,7 +222,10 @@ class XPlaneObject():
                     except:
                         return
                     
-                    dataref = object.xplane.datarefs[index].path
+                    if bone:
+                        dataref = bone.xplane.datarefs[index].path
+                    else:
+                        dataref = object.xplane.datarefs[index].path
 
                     if debug:
                         debugger.debug("\t\t adding dataref animation: %s" % dataref)
@@ -221,7 +233,10 @@ class XPlaneObject():
                     if len(fcurve.keyframe_points)>1:
                         # time to add dataref to animations
                         self.animations[dataref] = []
-                        self.datarefs[dataref] = object.xplane.datarefs[index]
+                        if bone:
+                            self.datarefs[dataref] = bone.xplane.datarefs[index]
+                        else:
+                            self.datarefs[dataref] = object.xplane.datarefs[index]
 
                         # store keyframes temporary, so we can resort them
                         keyframes = []
@@ -375,7 +390,7 @@ class XPlaneBone(XPlaneObject):
             self.armature = self.parent.armature
 
         self.getCoordinates()
-        self.getAnimations(self.armature.object)
+        self.getAnimations(self.armature.object,self.object)
 
     # Method: getMatrix
     # Overrides <XPlaneObject.getMatrix> as bone matrices need to be taken from PoseBones.
