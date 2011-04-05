@@ -249,7 +249,7 @@ class XPlaneCoords():
     @staticmethod
     def conversionMatrix(invert = False):
         if invert:
-            return Matrix.Rotation(math.radians(-90),4,'X').invert()
+            return Matrix.Rotation(math.radians(-90),4,'X').inverted()
         else:
             return Matrix.Rotation(math.radians(-90),4,'X')
 
@@ -298,9 +298,6 @@ class XPlaneCoords():
         # re-add 90° on x-axis
         rot.x=math.radians(math.degrees(rot.x)+90)
         
-        #vx = Vector((1.0,0.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
-        #vy = Vector((0.0,1.0,0.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
-        #vz = Vector((0.0,0.0,1.0)).rotate(Vector((1,0,0)),rot.x).rotate(Vector((0,1,0)),rot.y).rotate(Vector((0,0,1)),rot.z)
         vx = Vector((1.0,0.0,0.0))
         vy = Vector((0.0,1.0,0.0))
         vz = Vector((0.0,0.0,1.0))
@@ -309,3 +306,13 @@ class XPlaneCoords():
         vz.rotate(rot)
         vectors = (vx,vy,vz)
         return vectors
+
+    @staticmethod
+    def convertVector(v):
+        rot = XPlaneCoords.conversionMatrix().to_euler('XYZ')
+        # re-add 90° on x-axis
+        rot.x=math.radians(math.degrees(rot.x)+90)
+
+        vrot = v.copy()
+        vrot.rotate(rot)
+        return vrot

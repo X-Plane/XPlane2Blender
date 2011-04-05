@@ -74,12 +74,11 @@ class XPlaneKeyframe():
         self.scaleLocal = local["scale"]
         # TODO: multiply location with scale of parent?
 
-#        if debug:
-#            print(self.object.name)
-#            print(self.locationLocal)
-#            print(self.object.locationLocal)
-#            print(self.angleLocal)
-#            print(self.object.angleLocal)
+#        print(self.object.name)
+#        print(self.locationLocal)
+#        print(self.object.locationLocal)
+#        print(self.angleLocal)
+#        print(self.object.angleLocal)
 
         self.rotation = self.angleLocal
 
@@ -281,19 +280,24 @@ class XPlaneObject():
         else:
             if animatedParent:
                 # not root level and an animated parent in hierarchy
-                # mesh is baked with parent rotation relative to animated parent, so take that vectors
-                if self.bakeMatrix:
-                    return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
+                if self.type=="PRIMITVE":
+                    # mesh is baked with parent rotation relative to animated parent, so take that vectors
+                    if self.bakeMatrix:
+                        return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
+                    else:
+                        return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.relativeConvertedMatrix(self.parent.getMatrix(True),animatedParent.getMatrix(True)))
                 else:
-                    return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.relativeConvertedMatrix(self.parent.getMatrix(True),animatedParent.getMatrix(True)))
-                
+                    return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.getMatrix(True)))
             else:
                 # not root level and no animated parent
-                # mesh is baked with parent rotation so we need that vectors
-                if self.bakeMatrix:
-                    return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
+                if self.type=="PRIMITVE":
+                    # mesh is baked with parent rotation so we need that vectors
+                    if self.bakeMatrix:
+                        return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
+                    else:
+                        return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.parent.getMatrix()))
                 else:
-                    return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.parent.getMatrix()))
+                    return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.getMatrix(True)))
         
     # Method: getLocal
     # Returns the local coordinates of the object.
@@ -398,6 +402,8 @@ class XPlaneBone(XPlaneObject):
     #
     # Todos:
     #   - This is not getting the correct matrix.
+    # means to get worldspace do: pbone.matrix * obj.matrix_world
+    # its an addon, called math-vis: it draws matrix in the 3d view, http://pastie.org/1743032
     def getMatrix(self,world = False):
         poseBone = self.armature.getPoseBone(self.object.name)
         if poseBone:
@@ -405,12 +411,26 @@ class XPlaneBone(XPlaneObject):
         else:
             matrix = self.object.matrix_local
         if world:
-#            print(XPlaneCoords.fromMatrix(matrix))
-#            print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)))
-#            print(XPlaneCoords.fromMatrix(self.armature.getMatrix(True)*matrix))
             return self.armature.getMatrix(True)*matrix
         else:
-            return matrix
+            return self.armature.getMatrix()*matrix
+
+    # Method: getVectors
+    # Returns the objects axis vectors. Thats the orientation of each rotational axis.
+    # It takes the <bakeMatrix> into consideration.
+    # Uses <XPlaneCoords.vectorsFromMatrix>.
+    #
+    # Returns:
+    #   Vector of vectors - (vx,vy,vz)
+    def getVectors(self):
+        poseBone = self.armature.getPoseBone(self.object.name)
+        if poseBone==None:
+            matrix = poseBone.matrix
+        else:
+            matrix  = self.object.matrix_local
+            
+        return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(matrix))
+        
     # Method: update
     # overrides <XPlaneObject.update>, but does nothing at all for same reason as in <XPlaneObject.update>.
     def update(self):
