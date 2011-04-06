@@ -406,7 +406,12 @@ class XPlaneBone(XPlaneObject):
     def getMatrix(self,world = False):
         poseBone = self.armature.getPoseBone(self.object.name)
         if poseBone:
-            matrix = poseBone.matrix_basis
+            # we must construct our matrix to get correct translation
+            mat = poseBone.matrix # matrix relative to armature, we need this for translations
+            loc = mat.to_translation()
+            matBase = poseBone.matrix_basis # local matrix, we need this for rotations
+            rot = matBase.to_euler('XYZ')
+            matrix = rot.to_matrix().to_4x4()*Matrix.Translation(loc)
         else:
             matrix = self.object.matrix_local
         if world:
