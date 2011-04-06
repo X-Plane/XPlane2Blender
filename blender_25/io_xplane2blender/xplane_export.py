@@ -448,7 +448,7 @@ class XPlaneCommands():
         tabs = self.getAnimTabs(animLevel)
 
         if debug:
-            o+="%s# %s\n" % (tabs,obj.name)
+            o+="%s# %s: %s\n" % (tabs,obj.type,obj.name)
 
         if obj.animated():
             animationStarted = True
@@ -757,12 +757,13 @@ class XPlaneCommands():
         totalTrans[1] = round(totalTrans[1],4)
         totalTrans[2] = round(totalTrans[2],4)
 
-        if obj.name not in self.staticWritten:
+        
+        if obj.id not in self.staticWritten:
             o+=static['trans'][0]
             o+=static['rot'][0]
             o+=static['rot'][1]
             o+=static['rot'][2]
-            self.staticWritten.append(obj.name)
+            self.staticWritten.append(obj.id)
 
         if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
             o+=trans

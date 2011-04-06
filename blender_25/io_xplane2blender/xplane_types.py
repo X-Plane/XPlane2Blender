@@ -142,6 +142,9 @@ class XPlaneObject():
     # Property: vectors
     # Vector of vectors - (vx,vy,vz) With orientation of each rotational axis.
 
+    # Property: id
+    # int - A unique id
+
     # Constructor: __init__
     #
     # Parameters:
@@ -155,6 +158,7 @@ class XPlaneObject():
         self.animations = {}
         self.datarefs = {}
         self.bakeMatrix = None
+        self.id = int(object.as_pointer())
 
         if hasattr(self.object,'type'):
             self.type = self.object.type
@@ -399,11 +403,6 @@ class XPlaneBone(XPlaneObject):
     # Method: getMatrix
     # Overrides <XPlaneObject.getMatrix> as bone matrices need to be taken from PoseBones.
     # Uses <XPlaneArmature.getPoseBone>.
-    #
-    # Todos:
-    #   - This is not getting the correct matrix.
-    # means to get worldspace do: pbone.matrix * obj.matrix_world
-    # its an addon, called math-vis: it draws matrix in the 3d view, http://pastie.org/1743032
     def getMatrix(self,world = False):
         poseBone = self.armature.getPoseBone(self.object.name)
         if poseBone:
@@ -413,7 +412,33 @@ class XPlaneBone(XPlaneObject):
         if world:
             return self.armature.getMatrix(True)*matrix
         else:
-            return self.armature.getMatrix()*matrix
+            return matrix
+
+    # Method: getMatrixRest
+    def getMatrixRest(self,world = False):
+        matrix = self.object.matrix_local
+        if world:
+            return self.armature.getMatrix(True)*matrix
+        else:
+            return matrix
+
+    # Method: getLocalRest
+    # Returns the local coordinates of the bones rest position.
+    # Uses <getMatrix>, <XPlaneCoords.convertMatrix> and <XPlaneCoords.fromMatrix>.
+    #
+    # Returns:
+    #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} Whith local coordinates.
+    def getLocalRest(self):
+        return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrixRest()))
+
+    # Method: getWorldRest
+    # Returns the world coordinates of the bones rest position.
+    # Uses <getMatrix>, <XPlaneCoords.convertMatrix> and <XPlaneCoords.fromMatrix>.
+    #
+    # Returns:
+    #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} Whith world coordinates.
+    def getWorldRest(self):
+        return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrixRest(True)))
 
     # Method: getVectors
     # Returns the objects axis vectors. Thats the orientation of each rotational axis.
@@ -423,14 +448,32 @@ class XPlaneBone(XPlaneObject):
     # Returns:
     #   Vector of vectors - (vx,vy,vz)
     def getVectors(self):
-        poseBone = self.armature.getPoseBone(self.object.name)
-        if poseBone==None:
-            matrix = poseBone.matrix
-        else:
-            matrix  = self.object.matrix_local
-            
-        return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(matrix))
-        
+        return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.getMatrixRest()))
+
+    # Method: getCoordinates
+    # Stores the local and world coordinates and the vectors of the object in rest position (frame 1).
+    # Uses <getLocal>, <getWorld> and <getVectors>.
+    def getCoordinates(self):
+        # goto first frame so everything is in inital state
+        bpy.context.scene.frame_set(frame=1)
+
+        # update object display so we have initial values
+        self.update()
+
+        # store initial coordinates
+        local = self.getLocalRest()
+        world = self.getWorldRest()
+
+        self.location = world["location"]
+        self.angle = world["angle"]
+        self.scale = world["scale"]
+
+        self.locationLocal = local["location"]
+        self.angleLocal = local["angle"]
+        self.scaleLocal = local["scale"]
+
+        self.vectors = self.getVectors()
+
     # Method: update
     # overrides <XPlaneObject.update>, but does nothing at all for same reason as in <XPlaneObject.update>.
     def update(self):
