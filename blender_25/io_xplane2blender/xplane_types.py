@@ -675,13 +675,13 @@ class XPlanePrimitive(XPlaneObject):
             type = self.object.xplane.manip.type
             attr+=type    
             if type=='drag_xy':
-                value = '%s\t%d\t%d\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.v1_min,manip.v1_max,manip.v2_min,manip.v2_max,manip.dataref1,manip.dataref2,manip.tooltip)
+                value = '%s\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.v1_min,manip.v1_max,manip.v2_min,manip.v2_max,manip.dataref1,manip.dataref2,manip.tooltip)
             if type=='drag_axis':
-                value = '%s\t%d\t%d\t%d\t%6.4f\t%6.4f\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.v1,manip.v2,manip.dataref1,manip.tooltip)
+                value = '%s\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.v1,manip.v2,manip.dataref1,manip.tooltip)
             if type=='command':
                 value = '%s\t%s\t%s' % (manip.cursor,manip.command,manip.tooltip)
             if type=='command_axis':
-                value = '%s\t%d\t%d\t%d\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.positive_command,manip.negative_command,manip.tooltip)
+                value = '%s\t%6.4f\t%6.4f\t%6.4f\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.positive_command,manip.negative_command,manip.tooltip)
             if type=='push':
                 value = '%s\t%6.4f\t%6.4f\t%s\t%s' % (manip.cursor,manip.v_down,manip.v_up,manip.dataref1,manip.tooltip)
             if type=='radio':
