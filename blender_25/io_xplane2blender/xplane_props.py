@@ -136,78 +136,78 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                         ("right","right","right"),
                                         ("arrow","arrow","arrow")])
 
-    dx = bpy.props.IntProperty(attr="dx",
+    dx = bpy.props.FloatProperty(attr="dx",
                             name="dx",
                             description="X-Drag axis length",
-                            default=0,
-                            min=0)
+                            default=0.0,
+                            min=0.0)
 
-    dy = bpy.props.IntProperty(attr="dy",
+    dy = bpy.props.FloatProperty(attr="dy",
                             name="dy",
                             description="Y-Drag axis length",
-                            default=0,
-                            min=0)
+                            default=0.0,
+                            min=0.0)
 
-    dz = bpy.props.IntProperty(attr="dz",
+    dz = bpy.props.FloatProperty(attr="dz",
                             name="dz",
                             description="Z-Drag axis length",
-                            default=0,
-                            min=0)
+                            default=0.0,
+                            min=0.0)
 
     v1 = bpy.props.FloatProperty(attr="v1",
                             name="v1",
                             description="Value 1",
-                            default=0)
+                            default=0.0)
 
     v2 = bpy.props.FloatProperty(attr="v2",
                             name="v2",
                             description="Value 2",
-                            default=0)
+                            default=0.0)
 
     v1_min = bpy.props.FloatProperty(attr="v1_min",
                             name="v1 min",
                             description="Value 1 min.",
-                            default=0)
+                            default=0.0)
 
     v1_max = bpy.props.FloatProperty(attr="v1_max",
                             name="v1 min",
                             description="Value 1 max.",
-                            default=0)
+                            default=0.0)
 
     v2_min = bpy.props.FloatProperty(attr="v2_min",
                             name="v2 min",
                             description="Value 2 min.",
-                            default=0)
+                            default=0.0)
 
     v2_max = bpy.props.FloatProperty(attr="v2_max",
                             name="v2 min",
                             description="Value 2 max.",
-                            default=0)
+                            default=0.0)
 
     v_down = bpy.props.FloatProperty(attr="v_down",
                                 name="v down",
                                 description="Value on mouse down",
-                                default=0)
+                                default=0.0)
 
     v_up = bpy.props.FloatProperty(attr="v_up",
                                 name="v up",
                                 description="Value on mouse up",
-                                default=0)
+                                default=0.0)
 
     v_hold = bpy.props.FloatProperty(attr="v_hold",
                                 name="v hold",
                                 description="Value on mouse hold",
-                                default=0)
+                                default=0.0)
 
     v_on = bpy.props.FloatProperty(attr="v_on",
                                 name="v on",
                                 description="On value",
-                                default=0)
+                                default=0.0)
 
     v_off = bpy.props.FloatProperty(attr="v_off",
                                 name="v off",
                                 description="Off value",
-                                default=0)
+                                default=0.0)
 
     command = bpy.props.StringProperty(attr="command",
                                 name="Command",
