@@ -479,13 +479,10 @@ class XPlaneMessage(bpy.types.Operator):
     msg_type = bpy.props.StringProperty(default='INFO')
     msg_text = bpy.props.StringProperty(default='')
     def execute(self, context):
-        self.report({self.properties.msg_type}, self.properties.msg_text)
+        self.report(self.properties.msg_type, self.properties.msg_text)
         return {'FINISHED'}
 
-#der_On, you could do this like the system icon viewer does it
-#(16:49:57) ideasman_42: use a panel and a number button as a scroller
-#(16:50:13) der_On: where can I find the system icon viewer?
-#(16:50:19) ideasman_42: its an addon
+
 class XPlaneDatarefSearch(bpy.types.Operator):
     bl_label = 'XPlane dataref search'
     bl_description = 'Search for XPlane dataref'

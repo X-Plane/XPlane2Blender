@@ -849,6 +849,7 @@ class XPlaneData():
 
         return layers
 
+
     # Method: getObjectsByLayer
     # Returns all first level Objects of a Blender layer.
     #
@@ -1198,6 +1199,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         global debug
         global profile
         global log
+        global errors
         
         errors = False
 
@@ -1229,6 +1231,12 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
 
         filepath = os.path.dirname(filepath)
         #filepath = bpy.path.ensure_ext(filepath, ".obj")
+
+        # check if X-Plane layers have been created
+        if len(bpy.context.scene.xplane.layers) == 0:
+            errors = True
+            showError('You must create X-Plane layers first.')
+            return {'FINISHED'}            
 
         #store current frame as we will go back to it
         currentFrame = bpy.context.scene.frame_current
