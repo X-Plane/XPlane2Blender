@@ -11,25 +11,20 @@ Requirements:
 Installation:
 -------------
 
-Windows:
+Platform indipendent:
+
+1. If you don't have already, create a blender-scripts folder somewhere on your hard disc. Within that folder create an "addons" folder.
+2. Copy the folder io_xplane2blender into the "addons" folder.
+3. Open up Blender, go to File > User preferences > File and there select the previously created blender-scripts folder under "Scripts"
+4. Close Blender and continue with Activation described below.
+
+
+Windows (alternative method):
 
 Depending on what option you have choosen during installation you must place the folder io_xplane2blender and its contents in different directories:
 - "Use the Application Data directory": If you've choosen this option place io_xplane2blender into "[Documents and Settings]\[user]\[Application data]\Blender Foundation\Blender\2.5x\scripts\addons"
 - "Use installation directory": If you've choosen this option place io_xplane2blender into "[Path to installed Blender]\2.5x\scripts\addons". The path to the installed Blender is usually "C:\Programs\Blender Foundation\Blender".
 - "I have defined a %HOME% variable, please install files here.": If you've choosen this options place io_xplane2blender into "[%HOME%]\Blender Foundation\Blender\2.5x\scripts\addons".
-Contiunue with the Activation described below.
-
-
-MacOS:
-
-Copy the folder io_xplane2blender and its contents to the following folder "[Blender app folder]/Contents/MacOS/2.5x/scripts/addons".
-The Blender app folder should be found in your apps folder and its name will vary depending on the Blender 2.5 version you've downloaded.
-Contiunue with the Activation described below.
-
-
-Linux:
-
-Copy the folder io_xplane2blender and its contents to the following folder "[Main Blender Folder]/2.5x/scripts/addons"
 Contiunue with the Activation described below.
 
 
@@ -45,6 +40,11 @@ Usage:
 After activation you will find an additional "X-Plane" panels in various places in the Property window:
 - All Objects will have this panel in the Object context/tab.
 - All Mesh-Objects will have this panel in the Material context/tab.
+- All Bones will have this panel in the Bone context/tab.
+- All Lamps will have this panel in the Lamp context/tab.
+- All Scenes will have this panel in the Scene context/tab.
+
+Before you can start to export Blender scenes to OBJ files you need to create the X-Plane layers within each scene you want to export under the Scene context/tab.
 
 However the panel contents will vary from Object-Type.
 As UI-Paradigms are not entirely finished now this is also subject to change.
