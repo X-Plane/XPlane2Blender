@@ -4,8 +4,8 @@ This addon for Blender 2.5x makes it possible to export Objects to the X-Plane o
 Requirements:
 -------------
 
-- Blender 2.53 or higher
-- Python 3.x
+- Blender 2.57a or higher
+- Python 3.1 or higher
 
 
 Installation:
