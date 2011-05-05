@@ -468,6 +468,7 @@ def parseDatarefs():
 #   - Not working at all.
 def showError(message):
     bpy.ops.xplane.msg(
+        'INVOKE_DEFAULT',
         msg_type='ERROR',
         msg_text=message
     )
@@ -475,12 +476,24 @@ def showError(message):
 class XPlaneMessage(bpy.types.Operator):
     """An operator to show simple messages in the UI"""
     bl_idname = 'xplane.msg'
-    bl_label = 'Show UI Message'
+    bl_label = 'XPlane2Blender message'
     msg_type = bpy.props.StringProperty(default='INFO')
     msg_text = bpy.props.StringProperty(default='')
     def execute(self, context):
-        self.report(self.properties.msg_type, self.properties.msg_text)
+        self.report(self.msg_type, self.msg_text)
         return {'FINISHED'}
+
+    def invoke(self,context,event):
+        wm = context.window_manager
+        if self.msg_type=='ERROR':
+            return wm.invoke_props_dialog(self)
+        else:
+            return wm.invoke_popup(self)
+
+    def draw(self,context):
+        layout = self.layout
+        row = layout.row()
+        row.label(text=self.msg_type+': '+self.msg_text)
 
 
 class XPlaneDatarefSearch(bpy.types.Operator):
@@ -524,6 +537,7 @@ class XPlaneDatarefSearch(bpy.types.Operator):
 #   - Not working at all.
 def showProgress(progress,message):
     bpy.ops.xplane.msg(
+        'INVOKE_DEFAULT',
         msg_type='INFO',
         msg_text='%s - %s' % (str(round(progress*100))+'%',message)
     )
