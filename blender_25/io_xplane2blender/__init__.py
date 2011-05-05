@@ -29,15 +29,24 @@ bl_info = {
     'api': 36273,
     'location': 'File > Import/Export > XPlane ',
     'description': 'Import and Export XPlane objects/planes (.obj,.aif format)',
-    'warning': '', # used for warning icon and text in addons panel
+    'warning': 'beta', # used for warning icon and text in addons panel
     'category': 'Import-Export'}
 
-import bpy
-from io_xplane2blender import xplane_ui
-from io_xplane2blender import xplane_props
-from io_xplane2blender import xplane_export
-from io_xplane2blender import xplane_ops
-from io_xplane2blender.xplane_config import *
+if "bpy" in locals():
+    import imp
+    imp.reload(xplane_ui)
+    imp.reload(xplane_props)
+    imp.reload(xplane_export)
+    imp.reload(xplane_ops)
+    imp.reload(xplane_config)
+else:
+    import bpy
+    from io_xplane2blender import xplane_ui
+    from io_xplane2blender import xplane_props
+    from io_xplane2blender import xplane_export
+    from io_xplane2blender import xplane_ops
+    from io_xplane2blender.xplane_config import *
+
 
 # Function: menu_func
 # Adds the export option to the menu.

@@ -404,13 +404,11 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(BONE_OT_add_xplane_dataref_keyframe)
     bpy.utils.unregister_class(BONE_OT_remove_xplane_dataref)
     bpy.utils.unregister_class(BONE_OT_remove_xplane_dataref_keyframe)
-    bpy.utils.unregister_class(BONE_OT_add_xplane_dataref_keyframe)
 
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_dataref)
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_dataref_keyframe)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_dataref)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_dataref_keyframe)
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_dataref_keyframe)
 
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_lamp_attribute)
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_attribute)
@@ -419,6 +417,6 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_attribute)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_attribute)
 
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_layer_attribute)
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_layers)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_layer_attribute)
+    bpy.utils.unregister_class(SCENE_OT_add_xplane_layer_attribute)
+    bpy.utils.unregister_class(SCENE_OT_add_xplane_layers)
+    bpy.utils.unregister_class(SCENE_OT_remove_xplane_layer_attribute)
