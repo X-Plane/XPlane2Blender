@@ -658,11 +658,7 @@ class XPlanePrimitive(XPlaneObject):
             self.attributes[attr.name] = attr.value
             self.reseters[attr.name] = attr.reset
 
-        # add custom anim attributes
-        for attr in object.xplane.customAnimAttributes:
-            self.animAttributes[attr.name] = attr.value
-
-        # add regular anim attributes from datarefs
+        # add anim attributes from datarefs and custom anim attributes
         self.getAnimAttributes()
 
         # add cockpit attributes
@@ -717,10 +713,20 @@ class XPlanePrimitive(XPlaneObject):
             self.attributes['ATTR_light_level'] = "%6.4f\t%6.4f\t%s" % (self.object.xplane.lightLevel_v1,self.object.xplane.lightLevel_v2,self.object.xplane.lightLevel_dataref)
 
     def getAnimAttributes(self):
+        # add custom anim attributes
+        for attr in self.object.xplane.customAnimAttributes:
+            if attr.name not in self.animAttributes:
+                self.animAttributes[attr.name] = []
+            self.animAttributes[attr.name].append(attr.value)
+
+        # add anim attributes from datarefs
         for dataref in self.object.xplane.datarefs:
             # show/hide animation
             if dataref.anim_type in ("show","hide"):
-                self.animAttributes['ANIM_'+dataref.anim_type] = "%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path)
+                name = 'ANIM_'+dataref.anim_type
+                if name not in self.animAttributes:
+                    self.animAttributes[name] = []
+                self.animAttributes[name].append("%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path))
                 
 
 # Class: XPlaneMaterial

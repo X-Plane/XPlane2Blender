@@ -674,10 +674,11 @@ class XPlaneCommands():
     def writeAnimAttributes(self,obj,tabs):
         o = ''
         for attr in obj.animAttributes:
-            line = self.writeAttribute(attr,obj.animAttributes[attr])
+            for value in obj.animAttributes[attr]:
+                line = self.writeAttribute(attr,value)
             
-            if line!=None:
-                o+=tabs+line
+                if line!=None:
+                    o+=tabs+line
         return o
 
     # Method: writeKeyframes

@@ -282,7 +282,7 @@ class OBJECT_OT_remove_xplane_dataref(bpy.types.Operator):
         # remove FCurves too
         if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
             fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
-            if fcurve:              
+            if fcurve:
                 obj.animation_data.action.fcurves.remove(fcurve=fcurve)
 
         return {'FINISHED'}
