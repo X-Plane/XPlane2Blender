@@ -302,6 +302,8 @@ def custom_layout(self,obj,type):
 
     layout = self.layout
     layout.separator()
+
+    # regular attributes
     row = layout.row()
     row.label("Custom Properties")
     row.operator("object.add_xplane_"+oType+"_attribute", text="Add Property")
@@ -316,6 +318,20 @@ def custom_layout(self,obj,type):
         if type in ("MATERIAL","MESH"):
             subrow = subbox.row()
             subrow.prop(attr,"reset")
+
+    if type in ("MESH"):
+        # animation attributes
+        row = layout.row()
+        row.label("Custom Animation Properties")
+        row.operator("object.add_xplane_"+oType+"_anim_attribute", text="Add Property")
+        box = layout.box()
+        for i, attr in enumerate(obj.xplane.customAnimAttributes):
+            subbox = box.box()
+            subrow = subbox.row()
+            subrow.prop(attr,"name")
+            subrow.operator("object.remove_xplane_"+oType+"_anim_attribute",text="",emboss=False,icon="X").index = i
+            subrow = subbox.row()
+            subrow.prop(attr,"value")
     
 # Function: animation_layout
 # Draws the UI layout for animations. This includes Datarefs.
@@ -352,14 +368,21 @@ def animation_layout(self,obj,bone = False):
         subrow = subbox.row()
         subrow.prop(attr,"loop",text="Loops")
         subrow = subbox.row()
+        subrow.prop(attr,"show_hide",text="Show/Hide")
+        subrow = subbox.row()
 
-        if bone:
-            subrow.operator("bone.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
-            subrow.operator("bone.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
+        if attr.show_hide=='none':
+            if bone:
+                subrow.operator("bone.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
+                subrow.operator("bone.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
+            else:
+                subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
+                subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
+            subrow.prop(attr,"value")
         else:
-            subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
-            subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
-        subrow.prop(attr,"value")
+            subrow.prop(attr,"show_hide_v1")
+            subrow = subbox.row()
+            subrow.prop(attr,"show_hide_v2")
 
 # Function: cockpit_layout
 # Draws the UI layout for cockpit parameters. This includes panel.

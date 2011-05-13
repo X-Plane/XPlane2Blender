@@ -450,17 +450,20 @@ class XPlaneCommands():
         if debug:
             o+="%s# %s: %s\n" % (tabs,obj.type,obj.name)
 
-        if obj.animated():
+        if obj.animated() or obj.hasAnimAttributes():
             animationStarted = True
 
             # begin animation block
             oAnim = ''
             animLevel+=1
             tabs = self.getAnimTabs(animLevel)
-            
-            for dataref in obj.animations:
-                if len(obj.animations[dataref])>1:
-                    oAnim+=self.writeKeyframes(obj,dataref,tabs)
+
+            if obj.animated():
+                for dataref in obj.animations:
+                    if len(obj.animations[dataref])>1:
+                        oAnim+=self.writeKeyframes(obj,dataref,tabs)
+            if obj.hasAnimAttributes():
+                oAnim+=self.writeAnimAttributes(obj,tabs)
             
             if oAnim!='':
                 o+="%sANIM_begin\n" % self.getAnimTabs(animLevel-1)
@@ -657,6 +660,24 @@ class XPlaneCommands():
                 o+=tabs+self.reseters[attr]+"\n"
                 # we've reset an attribute so remove it from written as it will need rewrite with next object
                 del self.written[attr]
+        return o
+
+    # Method: writeAnimAttributes
+    # Returns the commands for animation attributes of a <XPlaneObject>.
+    #
+    # Parameters:
+    #   XPlaneObject obj - A <XPlaneObject>
+    #   string tabs - The indentation tabs.
+    #
+    # Returns:
+    #   string - Commands
+    def writeAnimAttributes(self,obj,tabs):
+        o = ''
+        for attr in obj.animAttributes:
+            line = self.writeAttribute(attr,obj.animAttributes[attr])
+            
+            if line!=None:
+                o+=tabs+line
         return o
 
     # Method: writeKeyframes

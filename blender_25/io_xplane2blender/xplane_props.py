@@ -50,6 +50,22 @@ class XPlaneDataref(bpy.types.PropertyGroup):
                                 description="Loop amount of animation, usefull for ever increasing Datarefs. A value of 0 will ignore this setting.",
                                 min=0)
 
+    show_hide = bpy.props.EnumProperty(attr="show_hide",
+                                        name="Show/Hide",
+                                        description="Use this Dataref for a show/hide animation.",
+                                        default="none",
+                                        items=[("none","none","none"),("show","show","show"),("hide","hide","hide")])
+
+    show_hide_v1 = bpy.props.FloatProperty(attr="show_hide_v1",
+                                            name="Value 1",
+                                            description="Show/Hide value 1",
+                                            default=0.0)
+
+    show_hide_v2 = bpy.props.FloatProperty(attr="show_hide_v2",
+                                            name="Value 2",
+                                            description="Show/Hide value 2",
+                                            default=0.0)
+
 # Class: XPlaneDatarefSearch
 # Not used right now. Might be used to search for dataref paths.
 #class XPlaneDatarefSearch(bpy.types.PropertyGroup):
@@ -354,6 +370,11 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane attributes",
                                       description="User defined attributes for the Object.",
+                                      type=XPlaneCustomAttribute)
+
+    customAnimAttributes = bpy.props.CollectionProperty(attr="customAnimAttributes",
+                                      name="Custom X-Plane animation attributes",
+                                      description="User defined attributes for animation of the Object.",
                                       type=XPlaneCustomAttribute)
 
     panel = bpy.props.BoolProperty(attr="panel",

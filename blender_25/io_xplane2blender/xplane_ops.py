@@ -166,6 +166,34 @@ class OBJECT_OT_remove_xplane_object_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
+# Class: OBJECT_OT_add_xplane_object_anim_attribute
+# Adds a custom animation attribute to a Blender Object.
+class OBJECT_OT_add_xplane_object_anim_attribute(bpy.types.Operator):
+    bl_label = 'Add Attribute'
+    bl_idname = 'object.add_xplane_object_anim_attribute'
+    bl_label = 'Add Property'
+    bl_description = 'Add a custom X-Plane Animation Property'
+
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.customAnimAttributes.add()
+        return {'FINISHED'}
+
+# Class: OBJECT_OT_remove_xplane_object_anim_attribute
+# Removes a custom animation attribute from a Blender Object.
+class OBJECT_OT_remove_xplane_object_anim_attribute(bpy.types.Operator):
+    bl_label = 'Remove Attribute'
+    bl_idname = 'object.remove_xplane_object_anim_attribute'
+    bl_label = 'Remove Property'
+    bl_description = 'Remove the custom X-Plane Animation Property'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.customAnimAttributes.remove(self.index)
+        return {'FINISHED'}
+
 # Class: OBJECT_OT_add_xplane_material_attribute
 # Adds a custom attribute to a Blender Material.
 class OBJECT_OT_add_xplane_material_attribute(bpy.types.Operator):
@@ -388,9 +416,11 @@ def addXPlaneOps():
     bpy.utils.register_class(OBJECT_OT_add_xplane_lamp_attribute)
     bpy.utils.register_class(OBJECT_OT_add_xplane_material_attribute)
     bpy.utils.register_class(OBJECT_OT_add_xplane_object_attribute)
+    bpy.utils.register_class(OBJECT_OT_add_xplane_object_anim_attribute)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_lamp_attribute)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_material_attribute)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_object_attribute)
+    bpy.utils.register_class(OBJECT_OT_remove_xplane_object_anim_attribute)
 
     bpy.utils.register_class(SCENE_OT_add_xplane_layer_attribute)
     bpy.utils.register_class(SCENE_OT_add_xplane_layers)
@@ -413,9 +443,11 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_lamp_attribute)
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_attribute)
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_object_attribute)
+    bpy.utils.unregister_class(OBJECT_OT_add_xplane_object_anim_attribute)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_lamp_attribute)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_attribute)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_attribute)
+    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_anim_attribute)
 
     bpy.utils.unregister_class(SCENE_OT_add_xplane_layer_attribute)
     bpy.utils.unregister_class(SCENE_OT_add_xplane_layers)
