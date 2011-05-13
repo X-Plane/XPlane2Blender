@@ -89,8 +89,9 @@ class XPlaneMesh():
             if obj.type == 'PRIMITIVE':
                 obj.indices[0] = len(self.indices)
 
-                # create a copy of the object mesh with modifiers applied
-                mesh = obj.object.to_mesh(bpy.context.scene, True, "PREVIEW")
+                # create a copy of the object mesh with modifiers applied and triangulated
+                mesh = self.getTriangulatedMesh(obj.object)
+                #mesh = obj.object.to_mesh(bpy.context.scene, True, "PREVIEW")
 
                 # now get the bake matrix
                 # and bake it to the mesh
@@ -204,6 +205,26 @@ class XPlaneMesh():
                 return None
         else:
             return None
+
+    def getTriangulatedMesh(self,object):
+        me_da = object.data.copy() #copy data
+        me_ob = object.copy() #copy object
+        #note two copy two types else it will use the current data or mesh
+        me_ob.data = me_da
+        bpy.context.scene.objects.link(me_ob)#link the object to the scene #current object location
+        for i in bpy.context.scene.objects: i.select = False #deselect all objects
+        me_ob.select = True
+        bpy.context.scene.objects.active = me_ob #set the mesh object to current
+        bpy.ops.object.mode_set(mode='EDIT') #Operators
+        bpy.ops.mesh.select_all(action='SELECT')#select all the face/vertex/edge
+        bpy.ops.mesh.quads_convert_to_tris() #Operators
+        bpy.context.scene.update()
+        bpy.ops.object.mode_set(mode='OBJECT') # set it in object
+
+        mesh = me_ob.to_mesh(bpy.context.scene, True, "PREVIEW")
+
+        bpy.context.scene.objects.unlink(object)
+        return mesh
 
     # Method: faceToTrianglesWithUV
     # Converts a Blender face (3 or 4 sided) into one or two 3-sided faces together with the texture coordinates.
