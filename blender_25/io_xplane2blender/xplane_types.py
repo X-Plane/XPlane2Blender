@@ -719,8 +719,8 @@ class XPlanePrimitive(XPlaneObject):
     def getAnimAttributes(self):
         for dataref in self.object.xplane.datarefs:
             # show/hide animation
-            if dataref.show_hide!='none':
-                self.animAttributes['ANIM_'+dataref.show_hide] = "%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path)
+            if dataref.anim_type in ("show","hide"):
+                self.animAttributes['ANIM_'+dataref.anim_type] = "%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path)
                 
 
 # Class: XPlaneMaterial

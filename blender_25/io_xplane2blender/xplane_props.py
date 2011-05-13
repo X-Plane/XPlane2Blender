@@ -50,11 +50,11 @@ class XPlaneDataref(bpy.types.PropertyGroup):
                                 description="Loop amount of animation, usefull for ever increasing Datarefs. A value of 0 will ignore this setting.",
                                 min=0)
 
-    show_hide = bpy.props.EnumProperty(attr="show_hide",
-                                        name="Show/Hide",
-                                        description="Use this Dataref for a show/hide animation.",
-                                        default="none",
-                                        items=[("none","none","none"),("show","show","show"),("hide","hide","hide")])
+    anim_type = bpy.props.EnumProperty(attr="anim_type",
+                                        name="Animation Type",
+                                        description="Type of animation this Dataref will use.",
+                                        default="transform",
+                                        items=[("transform","LocRot","transform"),("show","Show","show"),("hide","Hide","hide")])
 
     show_hide_v1 = bpy.props.FloatProperty(attr="show_hide_v1",
                                             name="Value 1",
