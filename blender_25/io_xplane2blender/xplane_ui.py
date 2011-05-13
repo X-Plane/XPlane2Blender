@@ -366,8 +366,6 @@ def animation_layout(self,obj,bone = False):
         subrow = subbox.row()
         subrow.operator('xplane.dataref_search',text="Search dataref",emboss=True,icon="VIEWZOOM")
         subrow = subbox.row()
-        subrow.prop(attr,"loop",text="Loops")
-        subrow = subbox.row()
         subrow.prop(attr,"anim_type",text="Animation")
         subrow = subbox.row()
 
@@ -379,6 +377,8 @@ def animation_layout(self,obj,bone = False):
                 subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
                 subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
             subrow.prop(attr,"value")
+            subrow = subbox.row()
+            subrow.prop(attr,"loop",text="Loops")
         elif attr.anim_type in ("show","hide"):
             subrow.prop(attr,"show_hide_v1")
             subrow = subbox.row()
