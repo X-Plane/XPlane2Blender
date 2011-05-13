@@ -90,8 +90,8 @@ class XPlaneMesh():
                 obj.indices[0] = len(self.indices)
 
                 # create a copy of the object mesh with modifiers applied and triangulated
-                mesh = self.getTriangulatedMesh(obj.object)
-                #mesh = obj.object.to_mesh(bpy.context.scene, True, "PREVIEW")
+                #mesh = self.getTriangulatedMesh(obj.object)
+                mesh = obj.object.to_mesh(bpy.context.scene, True, "PREVIEW")
 
                 # now get the bake matrix
                 # and bake it to the mesh
@@ -121,12 +121,19 @@ class XPlaneMesh():
                         # get the vertice from original mesh
                         v = mesh.vertices[vindex]
                         co = v.co
-
+                        
                         vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
 
-                        index = self.globalindex
-                        self.vertices.append(vert)
-                        self.globalindex+=1
+                        if bpy.context.scene.xplane.optimize:
+                            #check for duplicates
+                            index = self.getDupliVerticeIndex(vert,obj.indices[0])
+                        else:
+                            index = -1
+
+                        if index==-1:
+                            index = self.globalindex
+                            self.vertices.append(vert)
+                            self.globalindex+=1                            
 
                         # store face information alltogether in one struct
     #                    xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
@@ -144,9 +151,6 @@ class XPlaneMesh():
 
             self.writeObjects(obj.children)
 
-            #TODO: now optimize vertex-table and remove duplicates
-            #index = self.getDupliVerticeIndex(vert,endIndex)
-        
     # Method: getDupliVerticeIndex
     # Returns the index of a vertice duplicate if any.
     #
@@ -160,9 +164,9 @@ class XPlaneMesh():
         if profile:
             profiler.start('XPlaneMesh.getDupliVerticeIndex')
             
-        for i in range(len(self.vertices)):
+        for i in range(startIndex,len(self.vertices)):
             match = True
-            ii = startIndex
+            ii = 0
             while ii<len(self.vertices[i]):
                 if self.vertices[i][ii] != v[ii]:
                     match = False
@@ -223,7 +227,7 @@ class XPlaneMesh():
 
         mesh = me_ob.to_mesh(bpy.context.scene, True, "PREVIEW")
 
-        bpy.context.scene.objects.unlink(object)
+        bpy.context.scene.objects.unlink(me_ob)
         return mesh
 
     # Method: faceToTrianglesWithUV

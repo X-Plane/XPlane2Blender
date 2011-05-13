@@ -343,6 +343,11 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
                                             description="Export settings for the Blender layers",
                                             type=XPlaneLayer)
 
+    optimize = bpy.props.BoolProperty(attr="optimize",
+                                        name="Optimize",
+                                        description="If checked file size will be optimized. However this can increase export time dramatically.",
+                                        default=False)
+
 # Class: XPlaneObjectSettings
 # Settings for Blender objects.
 #
