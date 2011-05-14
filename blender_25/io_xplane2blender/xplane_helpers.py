@@ -275,12 +275,18 @@ class XPlaneCoords():
     # Returns:
     #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} With world X-Plane coordinates.
     @staticmethod
-    def fromMatrix(matrix):
+    def fromMatrix(matrix,scaleLoc = False):
         loc = matrix.to_translation()
         rot = matrix.to_euler("XZY")
         # re-add 90° to X
         rot.x=math.radians(math.degrees(rot.x)+90)
         scale = matrix.to_scale()
+
+        # apply scale to location
+        if scaleLoc:
+            loc.x = loc.x * scale.x
+            loc.y = loc.y * scale.y
+            loc.z = loc.z * scale.z
         coords = {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}
         return coords
 
@@ -316,3 +322,31 @@ class XPlaneCoords():
         vrot = v.copy()
         vrot.rotate(rot)
         return vrot
+
+    # Method: getScaleMatrix
+    # Returns a matrix with the global scale of a given object
+    #
+    # Paremters:
+    #   object - A <XPlaneObject>
+    #
+    # Returns:
+    #   matrix - Matrix with global object scale or None if the object is at root level.
+    @staticmethod
+    def scaleMatrix(object):
+        import mathutils
+        if object.parent:
+            scale = object.getMatrix(True).to_scale()
+            matrix = Matrix()
+            matrix[0][0] = scale.x
+            matrix[1][1] = scale.y
+            matrix[2][2] = scale.z
+
+            # FIXME: armature scale is not taken into account so add it, however this could be a Blender bug or a misunderstanding
+            if object.parent.type=='BONE':
+                scale = object.parent.armature.getMatrix(True).to_scale()
+                matrix[0][0]*=scale.x
+                matrix[1][1]*=scale.y
+                matrix[2][2]*=scale.z
+            return matrix
+        else:
+            return Matrix.Scale(1,4,Vector((1,1,1)))

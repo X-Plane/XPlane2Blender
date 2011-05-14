@@ -307,7 +307,7 @@ class XPlaneObject():
     # Returns:
     #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} Whith local coordinates.
     def getLocal(self):
-        return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrix()))
+        return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrix()*XPlaneCoords.scaleMatrix(self)),True)
 
     # Method: getWorld
     # Returns the world coordinates of the object.
@@ -349,7 +349,7 @@ class XPlaneObject():
         # store initial coordinates
         local = self.getLocal()
         world = self.getWorld()
-        
+
         self.location = world["location"]
         self.angle = world["angle"]
         self.scale = world["scale"]
@@ -422,7 +422,11 @@ class XPlaneBone(XPlaneObject):
         if world:
             return self.armature.getMatrix(True)*matrix
         else:
-            return matrix
+            # we have to bake armature rotation if armature is not animated
+            if self.armature.animated():
+                return matrix
+            else:
+                return matrix*self.armature.getMatrix().to_euler('XYZ').to_matrix().to_4x4()
 
     # Method: getMatrixRest
     def getMatrixRest(self,world = False):

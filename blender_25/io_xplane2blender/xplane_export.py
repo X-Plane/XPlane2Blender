@@ -73,7 +73,7 @@ class XPlaneMesh():
                 # we can savely bake the world matrix as no transforms will occur
                 matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
                 
-        return matrix
+        return matrix*XPlaneCoords.scaleMatrix(obj)
 
     # Method: writeObjects
     # Fills the <vertices> and <indices> from a list of <XPlaneObjects>.
@@ -148,7 +148,9 @@ class XPlaneMesh():
                 # store the faces in the prim
     #            prim.faces = faces
                 obj.indices[1] = len(self.indices)
-
+            else:
+                obj.bakeMatrix = self.getBakeMatrix(obj)
+                
             self.writeObjects(obj.children)
 
     # Method: getDupliVerticeIndex
@@ -210,6 +212,17 @@ class XPlaneMesh():
         else:
             return None
 
+    # Method: getTriangulatedMesh
+    # Returns a triangulated mesh from a given Blender object.
+    #
+    # Parameters:
+    #   object - Blender object
+    #
+    # Returns:
+    #   A Blender mesh
+    #
+    # Todos:
+    #   - Does not remove temporarily created mesh/object yet.
     def getTriangulatedMesh(self,object):
         me_da = object.data.copy() #copy data
         me_ob = object.copy() #copy object
