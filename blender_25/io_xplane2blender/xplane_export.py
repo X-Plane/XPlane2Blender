@@ -522,7 +522,7 @@ class XPlaneCommands():
         if hasattr(obj,'indices'):
             offset = obj.indices[0]
             count = obj.indices[1]-obj.indices[0]
-            if obj.type=='MESH':
+            if obj.type=='PRIMITIVE':
                 o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
             elif obj.type=='LIGHT':
                 o+="%sLIGHTS\t%d %d\n" % (tabs,offset,count)
