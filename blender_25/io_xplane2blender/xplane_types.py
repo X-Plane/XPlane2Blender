@@ -156,6 +156,10 @@ class XPlaneObject():
         self.datarefs = {}
         self.bakeMatrix = None
         self.id = int(object.as_pointer())
+        self.attributes = {}
+        self.reseters = {}
+        self.cockpitAttributes = {}
+        self.animAttributes = {}
 
         if hasattr(self.object,'type'):
             self.type = self.object.type
@@ -376,6 +380,31 @@ class XPlaneObject():
     def hasAnimAttributes(self):
         return (hasattr(self,'animAttributes') and len(self.animAttributes)>0)
 
+    def getCustomAttributes(self):
+        for attr in self.object.xplane.customAttributes:
+            self.attributes[attr.name] = attr.value
+            self.reseters[attr.name] = attr.reset
+        if hasattr(self.object,"data") and hasattr(self.object.data,"xplane") and hasattr(self.object.data.xplane,"customAttributes"):
+            for attr in self.object.data.xplane.customAttributes:
+                self.attributes[attr.name] = attr.value
+                self.reseters[attr.name] = attr.reset
+
+    def getAnimAttributes(self):
+        # add custom anim attributes
+        for attr in self.object.xplane.customAnimAttributes:
+            if attr.name not in self.animAttributes:
+                self.animAttributes[attr.name] = []
+            self.animAttributes[attr.name].append(attr.value)
+
+        # add anim attributes from datarefs
+        for dataref in self.object.xplane.datarefs:
+            # show/hide animation
+            if dataref.anim_type in ("show","hide"):
+                name = 'ANIM_'+dataref.anim_type
+                if name not in self.animAttributes:
+                    self.animAttributes[name] = []
+                self.animAttributes[name].append("%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path))
+
 # Class: XPlaneBone
 # A Bone.
 #
@@ -402,6 +431,8 @@ class XPlaneBone(XPlaneObject):
         elif self.parent.aramture != None:
             self.armature = self.parent.armature
 
+#        self.getCustomAttributes()
+#        self.getAnimAttributes()
         self.getCoordinates()
         self.getAnimations(self.armature.object,self.object)
 
@@ -516,8 +547,10 @@ class XPlaneArmature(XPlaneObject):
         super(XPlaneArmature,self).__init__(object,parent)
         self.type = 'ARMATURE'
 
+        self.getCustomAttributes()
+        self.getAnimAttributes()
         self.getCoordinates()
-        #self.getAnimations()
+        self.getAnimations()
 
     # Method: getPoseBone
     # Returns a Blender bones PoseBone.
@@ -596,6 +629,12 @@ class XPlaneLight(XPlaneObject):
             self.color[1] = 9.7
             self.color[2] = 9.7
 
+        self.getCustomAttributes()
+        self.getAnimAttributes()
+
+        self.getCoordinates()
+        self.getAnimations()
+
 # Class: XPlaneLine
 # A Line/Curve
 # This class is not in use yet.
@@ -644,24 +683,13 @@ class XPlanePrimitive(XPlaneObject):
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
         self.faces = None
-        self.attributes = {
-            'ATTR_light_level':None
-        }
-        
-        self.reseters = {}
-
-        self.cockpitAttributes = {
-            'ATTR_cockpit':None,
-            'ATTR_cockpit_region':None
-        }
-
-        self.animAttributes = {}
+        self.attributes['ATTR_light_level'] = None
+        self.cockpitAttributes['ATTR_cockpit'] = None
+        self.cockpitAttributes['ATTR_cockpit_region'] = None
 
         # add custom attributes
-        for attr in object.xplane.customAttributes:
-            self.attributes[attr.name] = attr.value
-            self.reseters[attr.name] = attr.reset
-
+        self.getCustomAttributes()
+        
         # add anim attributes from datarefs and custom anim attributes
         self.getAnimAttributes()
 
@@ -715,22 +743,6 @@ class XPlanePrimitive(XPlaneObject):
     def getLightLevelAttributes(self):
         if self.object.xplane.lightLevel:
             self.attributes['ATTR_light_level'] = "%6.4f\t%6.4f\t%s" % (self.object.xplane.lightLevel_v1,self.object.xplane.lightLevel_v2,self.object.xplane.lightLevel_dataref)
-
-    def getAnimAttributes(self):
-        # add custom anim attributes
-        for attr in self.object.xplane.customAnimAttributes:
-            if attr.name not in self.animAttributes:
-                self.animAttributes[attr.name] = []
-            self.animAttributes[attr.name].append(attr.value)
-
-        # add anim attributes from datarefs
-        for dataref in self.object.xplane.datarefs:
-            # show/hide animation
-            if dataref.anim_type in ("show","hide"):
-                name = 'ANIM_'+dataref.anim_type
-                if name not in self.animAttributes:
-                    self.animAttributes[name] = []
-                self.animAttributes[name].append("%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path))
                 
 
 # Class: XPlaneMaterial

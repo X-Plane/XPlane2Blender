@@ -423,6 +423,16 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
                                         description="X-Plane Datarefs",
                                         type=XPlaneDataref)
 
+    customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
+                                      name="Custom X-Plane attributes",
+                                      description="User defined attributes for the Object.",
+                                      type=XPlaneCustomAttribute)
+
+    customAnimAttributes = bpy.props.CollectionProperty(attr="customAnimAttributes",
+                                      name="Custom X-Plane animation attributes",
+                                      description="User defined attributes for animation of the Object.",
+                                      type=XPlaneCustomAttribute)
+
 # Class: XPlaneMaterialSettings
 # Settings for Blender materials.
 #

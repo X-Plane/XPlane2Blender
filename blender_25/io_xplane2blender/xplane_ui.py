@@ -30,6 +30,11 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "material"
 
+    @classmethod
+    def poll(self,context):
+        if context.material:
+            return True
+
     def draw(self,context):
         obj = context.object
 
@@ -67,7 +72,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     def poll(self,context):
         obj = context.object
 
-        if obj.type in ("MESH","EMPTY","ARMATURE"):
+        if obj.type in ("MESH","EMPTY","ARMATURE","LAMP"):
             return True
         else:
             return False
@@ -75,13 +80,16 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     def draw(self, context):
         obj = context.object
         
-        if obj.type in ("MESH","EMPTY","ARMATURE"):
+        if obj.type in ("MESH","EMPTY","ARMATURE","LAMP"):
             animation_layout(self,obj)
             if obj.type == "MESH":
                 mesh_layout(self,obj)
                 cockpit_layout(self,obj)
                 manipulator_layout(self,obj)
-                custom_layout(self,obj,obj.type)
+            type = obj.type
+            if type=="LAMP":
+                type = "OBJECT"
+            custom_layout(self,obj,type)
 
 # Class: BONE_PT_xplane
 # Adds X-Plane settings to the bone tab. Uses <animation_layout>.
@@ -295,7 +303,7 @@ def material_layout(self, obj):
 #   obj - Blender object.
 #   string type - Type of object. ("MESH","MATERIAL","LAMP")
 def custom_layout(self,obj,type):
-    if type in ("MESH"):
+    if type in ("MESH","ARMATURE","OBJECT"):
         oType = 'object'
     elif type=="MATERIAL":
         oType = 'material'
@@ -317,21 +325,21 @@ def custom_layout(self,obj,type):
         subrow.operator("object.remove_xplane_"+oType+"_attribute",text="",emboss=False,icon="X").index = i
         subrow = subbox.row()
         subrow.prop(attr,"value")
-        if type in ("MATERIAL","MESH"):
+        if type in ("MATERIAL","MESH","LAMP","ARMATURE"):
             subrow = subbox.row()
             subrow.prop(attr,"reset")
 
-    if type in ("MESH"):
-        # animation attributes
+    # animation attributes
+    if type in ("MESH","ARMATURE","OBJECT"):
         row = layout.row()
         row.label("Custom Animation Properties")
-        row.operator("object.add_xplane_"+oType+"_anim_attribute", text="Add Property")
+        row.operator("object.add_xplane_object_anim_attribute", text="Add Property")
         box = layout.box()
         for i, attr in enumerate(obj.xplane.customAnimAttributes):
             subbox = box.box()
             subrow = subbox.row()
             subrow.prop(attr,"name")
-            subrow.operator("object.remove_xplane_"+oType+"_anim_attribute",text="",emboss=False,icon="X").index = i
+            subrow.operator("object.remove_xplane_object_anim_attribute",text="",emboss=False,icon="X").index = i
             subrow = subbox.row()
             subrow.prop(attr,"value")
     

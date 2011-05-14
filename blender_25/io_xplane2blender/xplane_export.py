@@ -462,8 +462,8 @@ class XPlaneCommands():
 
         # write down all lights
         # TODO: write them in writeObjects instead to allow light animation and nesting
-        if len(self.file['lights'])>0:
-            o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
+#        if len(self.file['lights'])>0:
+#            o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
             
         return o
 
@@ -518,11 +518,14 @@ class XPlaneCommands():
         if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
             o+=self.writeCockpitAttributes(obj,tabs)
 
-        # triangle rendering
+        # rendering
         if hasattr(obj,'indices'):
             offset = obj.indices[0]
             count = obj.indices[1]-obj.indices[0]
-            o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
+            if obj.type=='MESH':
+                o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
+            elif obj.type=='LIGHT':
+                o+="%sLIGHTS\t%d %d\n" % (tabs,offset,count)
 
         if animationStarted:
             for child in obj.children:
@@ -835,7 +838,7 @@ class XPlaneCommands():
         totalRot[0] = round(totalRot[0],4)
         totalRot[1] = round(totalRot[1],4)
         totalRot[2] = round(totalRot[2],4)
-        
+
         if totalRot[0]!=0.0:
             o+=rot[0]
         if totalRot[1]!=0.0:
@@ -1048,7 +1051,7 @@ class XPlaneData():
                         self.collectBones(rootBones,filename,armature)
 
                 # unsuported object type: Keep it to store hierarchy
-                elif obj.type in ['EMPTY','CAMERA','SURFACE','CURVE','FONT','META','LATTICE']:
+                elif obj.type in ['EMPTY','CAMERA','SURFACE','CURVE','FONT','META','LATTICE'] and len(children)>0:
                     if debug:
                         debugger.debug("\t "+obj.name+": adding to list")
                     xplaneObj = XPlaneObject(obj,parent)
