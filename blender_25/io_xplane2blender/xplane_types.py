@@ -454,7 +454,7 @@ class XPlaneBone(XPlaneObject):
             return self.armature.getMatrix(True)*matrix
         else:
             # we have to bake armature rotation if armature is not animated
-            if self.armature.animated():
+            if (self.armature.parent and self.armature.parent.type=='BONE') or self.armature.animated():
                 return matrix
             else:
                 return matrix*self.armature.getMatrix().to_euler('XYZ').to_matrix().to_4x4()
