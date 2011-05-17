@@ -166,6 +166,9 @@ class XPlaneMesh():
     # Returns:
     #   int - Index of the duplicate or -1 if none was found.
     def getDupliVerticeIndex(self,v,startIndex = 0):
+        profile = getProfile()
+        profiler = getProfiler()
+
         if profile:
             profiler.start('XPlaneMesh.getDupliVerticeIndex')
             
@@ -256,6 +259,9 @@ class XPlaneMesh():
     # Returns:
     #   list - [{'uv':[[u1,v1],[u2,v2],[u3,v3]],'indices':[i1,i2,i3]},..] In length 1 or 2.
     def faceToTrianglesWithUV(self,face,uv):
+        profile = getProfile()
+        profiler = getProfiler()
+
         if profile:
             profiler.start('XPlaneMesh.faceToTrianglesWithUV')
 
@@ -301,6 +307,9 @@ class XPlaneMesh():
     # Returns:
     #   string - The OBJ vertex table.
     def writeVertices(self):
+        profile = getProfile()
+        profiler = getProfiler()
+
         if profile:
             profiler.start('XPlaneMesh.writeVertices')
 
@@ -327,6 +336,9 @@ class XPlaneMesh():
     # Returns:
     #   string - The OBJ indices table.
     def writeIndices(self):
+        profile = getProfile()
+        profiler = getProfiler()
+
         if profile:
             profiler.start('XPlaneMesh.writeIndices')
 
@@ -480,6 +492,11 @@ class XPlaneCommands():
     # Returns:
     #   string - OBJ Commands for the "obj".
     def writeObject(self,obj,animLevel):
+        profile = getProfile()
+        profiler = getProfiler()
+        debug = getDebug()
+        debugger = getDebugger()
+
         if profile:
             profiler.start("XPlaneCommands.writeObject")
             
@@ -736,6 +753,9 @@ class XPlaneCommands():
     # Returns:
     #   string - Commands
     def writeKeyframes(self,obj,dataref,tabs):
+        debug = getDebug()
+        debugger = getDebugger()
+
         o = ''
 
         keyframes = obj.animations[dataref]
@@ -822,7 +842,6 @@ class XPlaneCommands():
         totalTrans[0] = round(totalTrans[0],4)
         totalTrans[1] = round(totalTrans[1],4)
         totalTrans[2] = round(totalTrans[2],4)
-
         
         if obj.id not in self.staticWritten:
             o+=static['trans'][0]
@@ -969,6 +988,9 @@ class XPlaneData():
     # Method: collect
     # Collects all exportable Blender objects from the scene in <files>.
     def collect(self):
+        profile = getProfile()
+        profiler = getProfiler()
+
         if profile:
             profiler.start("XPlaneData.collect")
         
@@ -1026,6 +1048,9 @@ class XPlaneData():
     #   string filename - OBJ filename in <files>.
     #   parent - None or the parent <XPlaneObject>.
     def collectObjects(self,objects,filename,parent = None):
+        debug = getDebug()
+        debugger = getDebugger()
+
         for obj in objects:
             if debug:
                 debugger.debug("scanning "+obj.name)
@@ -1262,28 +1287,14 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
     # Parameters:
     #   context - Blender context object.
     def execute(self, context):
-        global debug
-        global profile
-        global log
-        global errors
+        initConfig()
+        profile = getProfile()
+        profiler = getProfiler()
+        log = getLog()
+        debug = getDebug()
+        debugger = getDebugger()
         
         errors = False
-
-        if context.scene.xplane.debug:
-            debug = True
-            if context.scene.xplane.profile:
-                profile = True
-            else:
-                profile = False
-
-            if context.scene.xplane.log:
-                log = True
-            else:
-                log = False
-        else:
-            debug = False
-            profile = False
-            log = False
 
         if debug:
             debugger.start(log)

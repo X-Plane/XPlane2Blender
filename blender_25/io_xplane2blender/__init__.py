@@ -45,7 +45,7 @@ else:
     from io_xplane2blender import xplane_props
     from io_xplane2blender import xplane_export
     from io_xplane2blender import xplane_ops
-    from io_xplane2blender.xplane_config import *
+    from io_xplane2blender import xplane_config
 
 
 # Function: menu_func

@@ -26,3 +26,50 @@ debugger = XPlaneDebugger()
 # Variable: profiler
 # Instance of <XPlaneProfiler> which is used to profile processes.
 profiler = XPlaneProfiler()
+
+def initConfig():
+    global debug
+    global profile
+    global log
+    import bpy
+
+    if hasattr(bpy.context.scene,"xplane") and bpy.context.scene.xplane.debug:
+        debug = True
+        if bpy.context.scene.xplane.profile:
+            profile = True
+        else:
+            profile = False
+
+        if bpy.context.scene.xplane.log:
+            log = True
+        else:
+            log = False
+    else:
+        debug = False
+        profile = False
+        log = False
+
+
+def getDebugger():
+    global debugger
+    return debugger
+
+def getProfiler():
+    global profiler
+    return profiler
+
+def getDebug():
+    global debug
+    return debug
+
+def getLog():
+    global log
+    return log
+
+def getProfile():
+    global profile
+    return profile
+
+def getVersion():
+    global version
+    return version

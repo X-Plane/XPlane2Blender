@@ -9,6 +9,7 @@ from bpy.props import *
 from collections import OrderedDict
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_config import *
+from io_xplane2blender.xplane_ui import showError,showProgress
 
 # Class: XPlaneKeyframe
 # A Keyframe.
@@ -30,7 +31,7 @@ class XPlaneKeyframe():
 
     # Property: scale
     # list - [x,y,z] With scale of the <object> in this keyframe.
-
+    
     # Property: index
     # int - The index of this keyframe in the <object> keyframe list.
     
@@ -195,6 +196,9 @@ class XPlaneObject():
     # Parameters:
     #   object - (default=None) A Blender object. If given animation of this object will be stored.
     def getAnimations(self,object = None, bone = None):
+        debug = getDebug()
+        debugger = getDebugger()
+
         if bone:
             groupName = "XPlane Datarefs "+bone.name
             object = object.data
