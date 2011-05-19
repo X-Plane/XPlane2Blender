@@ -188,8 +188,42 @@ def layer_layout(self, scene, layout, layer):
         tex_box.prop(scene.xplane.layers[layer], "texture_lit", text="Night")
         tex_box.prop(scene.xplane.layers[layer], "texture_normal", text="Normal / Specular")
         column.prop(scene.xplane.layers[layer], "cockpit", text="Cockpit",icon=checkboxIcon, toggle=True)
-        column.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
 
+        # cockpit regions
+        if scene.xplane.layers[layer].cockpit:
+            cockpit_box = column.box()
+            #cockpit_box.prop(scene.xplane.layers[layer],"panel_texture", text="Panel Texture")
+            cockpit_box.prop(scene.xplane.layers[layer],"cockpit_regions", text="Cockpit regions")
+            num_regions = int(scene.xplane.layers[layer].cockpit_regions)
+            if num_regions>0:
+                for i in range(0,num_regions):
+                    # get cockpit region or create it if not present
+                    if len(scene.xplane.layers[layer].cockpit_region)>i:
+                        cockpit_region = scene.xplane.layers[layer].cockpit_region[i]
+                    else:
+                        cockpit_region = scene.xplane.layers[layer].cockpit_region.add()
+
+                    if cockpit_region.expanded:
+                        expandIcon = "TRIA_DOWN"
+                    else:
+                        expandIcon = "TRIA_RIGHT"
+
+                    cockpit_box.prop(cockpit_region,"expanded",text="Cockpit region %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
+
+                    if cockpit_region.expanded:
+                        region_box = cockpit_box.box()
+                        region_box.prop(cockpit_region,"left")
+                        region_box.prop(cockpit_region,"top")
+                        region_split = region_box.split(percentage=0.5)
+                        region_split.prop(cockpit_region,"width")
+                        region_split.label("= %d" % (2 ** cockpit_region.width))
+                        region_split = region_box.split(percentage=0.5)
+                        region_split.prop(cockpit_region,"height")
+                        region_split.label("= %d" % (2 ** cockpit_region.height))
+        
+        column.separator()
+        column.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
+        
         custom_layer_layout(self, box, scene, layer)
 
 # Function: custom_layer_layout
@@ -260,6 +294,10 @@ def lamp_layout(self, obj):
     elif obj.xplane.type=="custom":
         row = layout.row()
         row.prop(obj.xplane,"size",text="Size")
+        row = layout.row()
+        row.label("Texture coordinates:")
+        row = layout.row()
+        row.prop(obj.xplane,"uv",text="")
         row = layout.row()
         row.prop(obj.xplane,"dataref",text="Dataref")
         row = layout.row()
@@ -405,6 +443,10 @@ def cockpit_layout(self,obj):
     row = layout.row()
     row.prop(obj.xplane,'panel',text='Part of Cockpit panel')
 
+    if obj.xplane.panel:
+        row = layout.row()
+        row.prop(obj.xplane,'cockpit_region',text="Cockpit region")
+
 # Function: manipulator_layout
 # Draws the UI layout for manipulator settings.
 #
@@ -506,6 +548,22 @@ def showError(message):
         msg_text=message
     )
 
+# Function: showProgress
+# Draws a progress bar together with a message.
+#
+# Parameters:
+#   float progress - value between 0 and 1 indicating the current progress.
+#   string message - An aditional message to display.
+#
+# Todos:
+#   - Not working at all.
+def showProgress(progress,message):
+    bpy.ops.xplane.msg(
+        'INVOKE_DEFAULT',
+        msg_type='INFO',
+        msg_text='%s - %s' % (str(round(progress*100))+'%',message)
+    )
+
 class XPlaneMessage(bpy.types.Operator):
     """An operator to show simple messages in the UI"""
     bl_idname = 'xplane.msg'
@@ -557,23 +615,6 @@ class XPlaneDatarefSearch(bpy.types.Operator):
 #            subrow.label(dataref)
 #
 ##        return {'FINISHED'}
-
-
-# Function: showProgress
-# Draws a progress bar together with a message.
-#
-# Parameters:
-#   float progress - value between 0 and 1 indicating the current progress.
-#   string message - An aditional message to display.
-#
-# Todos:
-#   - Not working at all.
-def showProgress(progress,message):
-    bpy.ops.xplane.msg(
-        'INVOKE_DEFAULT',
-        msg_type='INFO',
-        msg_text='%s - %s' % (str(round(progress*100))+'%',message)
-    )
 
 # Function: addXPlaneUI
 # Registers all UI Panels.

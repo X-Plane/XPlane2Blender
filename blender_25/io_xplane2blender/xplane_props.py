@@ -247,6 +247,47 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                 description="Dataref 2",
                                 default="")
 
+# Class: XPlaneCockpitRegion
+# Defines settings for a cockpit region.
+#
+# Properties:
+#   int top - top position of the region in px
+#   int left - left position of the region in px
+#   int width - width of the region in powers of 2
+#   int height - height of the region in powers of 2
+class XPlaneCockpitRegion(bpy.types.PropertyGroup):
+    expanded = bpy.props.BoolProperty(name="Expanded",
+                                  description="Toggle this cockpit region settings visibility.",
+                                  default=False)
+
+    top = bpy.props.IntProperty(attr="top",
+                                name="Top",
+                                description="Top",
+                                default=0,
+                                min=0,
+                                max=2048)
+
+    left = bpy.props.IntProperty(attr="left",
+                                name="Left",
+                                description="Left",
+                                default=0,
+                                min=0,
+                                max=2048)
+
+    width = bpy.props.IntProperty(attr="width",
+                                name="Width",
+                                description="Width in powers of 2.",
+                                default=1,
+                                min=1,
+                                max=11)
+
+    height = bpy.props.IntProperty(attr="height",
+                                name="Height",
+                                description="Height in powers of 2.",
+                                default=1,
+                                min=1,
+                                max=11)
+
 # Class: XPlaneLayer
 # Defines settings for a OBJ file. Is "parented" to a Blender layer.
 #
@@ -310,6 +351,22 @@ class XPlaneLayer(bpy.types.PropertyGroup):
                                     name="Normal/Specular Texture",
                                     description="Normal/Specular Texture to use for objects on this layer.",
                                     default="")
+
+#    panel_texture = bpy.props.StringProperty(attr="panel_texture",
+#                                    subtype="FILE_PATH",
+#                                    name="Panel Texture",
+#                                    description="Panel Texture (Screenshot of the 3D-Panel)",
+#                                    default="")
+
+    cockpit_regions = bpy.props.EnumProperty(attr="cockpit_regions",
+                                    name="Cockpit regions",
+                                    description="Number of Cockpit regions to use.",
+                                    default="0",
+                                    items=[("0","none","none"),("1","1","1"),("2","2","2"),("3","3","3"),("4","4","4")])
+
+    cockpit_region = bpy.props.CollectionProperty(name="cockpit_region",
+                                    type=XPlaneCockpitRegion,
+                                    description="Cockpit Region")
                                     
     customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane header attributes",
@@ -386,6 +443,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
                                         name="Part of cockpit panel",
                                         description="If checked this object will use the panel texture and will be clickable.",
                                         default=False)
+
+    cockpit_region = bpy.props.EnumProperty(attr="cockpit_region",
+                                        name="Cockpit region",
+                                        description="Cockpit region to use.",
+                                        default="0",
+                                        items=[("0","none","none"),("1","1","1"),("2","2","2"),("3","3","3"),("4","4","4")])
 
     manip = bpy.props.PointerProperty(attr="manip",
                                         name="Manipulator",
@@ -538,6 +601,14 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
                                     description="A X-Plane Dataref.",
                                     default="")
 
+    uv = bpy.props.FloatVectorProperty(name="Texture coordinates",
+                                        description="The texture coordinates in the following order: left,top,right,bottom (fractions from 0 to 1).",
+                                        default=(0.0,0.0,1.0,1.0),
+                                        min=0.0,
+                                        max=1.0,
+                                        precision=3,
+                                        size=4)
+
     customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane light attributes",
                                       description="User defined light attributes for the X-Plane file.",
@@ -551,9 +622,10 @@ def addXPlaneRNA():
     bpy.utils.register_class(XPlaneDataref)
     #bpy.utils.register_class(XPlaneDatarefSearch)
     bpy.utils.register_class(XPlaneManipulator)
-    bpy.utils.register_class(XPlaneLayer)
+    bpy.utils.register_class(XPlaneCockpitRegion)
 
     # complex classes, depending on basic classes
+    bpy.utils.register_class(XPlaneLayer)
     bpy.utils.register_class(XPlaneObjectSettings)
     bpy.utils.register_class(XPlaneBoneSettings)
     bpy.utils.register_class(XPlaneMaterialSettings)
@@ -589,10 +661,12 @@ def removeXPlaneRNA():
     bpy.utils.unregister_class(XPlaneMaterialSettings)
     bpy.utils.unregister_class(XPlaneLampSettings)
     bpy.utils.unregister_class(XPlaneSceneSettings)
+    bpy.utils.unregister_class(XPlaneLayer)
 
     # basic classes
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
     #bpy.utils.unregister_class(XPlaneDatarefSearch)
     bpy.utils.unregister_class(XPlaneManipulator)
-    bpy.utils.unregister_class(XPlaneLayer)
+    bpy.utils.unregister_class(XPlaneCockpitRegion)
+    

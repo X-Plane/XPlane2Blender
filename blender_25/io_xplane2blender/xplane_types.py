@@ -615,6 +615,7 @@ class XPlaneLight(XPlaneObject):
         self.size = object.data.xplane.size
         self.lightName = object.data.xplane.name
         self.params = object.data.xplane.params
+        self.uv = object.data.xplane.uv
         self.dataref = object.data.xplane.dataref
 
         # change color according to type
@@ -700,13 +701,16 @@ class XPlanePrimitive(XPlaneObject):
         # add cockpit attributes
         if object.xplane.panel:
             self.cockpitAttributes['ATTR_cockpit'] = True
+            cockpit_region = int(object.xplane.cockpit_region)
+            if cockpit_region>0:
+                self.cockpitAttributes['ATTR_cockpit_region'] = '%d' % (cockpit_region-1)
 
         # add manipulator attributes
         self.getManipulatorAttributes()
 
         # add light level attritubes
         self.getLightLevelAttributes()
-
+        
         self.getCoordinates()
         self.getAnimations()
 

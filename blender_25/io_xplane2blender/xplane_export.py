@@ -405,7 +405,7 @@ class XPlaneLights():
             elif light.lightType=="param":
                 self.lights.append("LIGHT_PARAM\t%s\t%6.4f\t%6.4f\t%6.4f\t%s" % (light.lightName,co[0],co[1],co[2],light.params))
             elif light.lightType=="custom":
-                self.lights.append("LIGHT_CUSTOM\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0.0\t0.0\t1.0\t1.0\t%s" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2],light.energy,light.dataref))
+                self.lights.append("LIGHT_CUSTOM\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%s" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2],light.energy,light.size,light.uv[0],light.uv[1],light.uv[2],light.uv[3],light.dataref))
             else:
                 self.lights.append("VLIGHT\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2]))
             self.indices.append(self.globalindex)
@@ -447,7 +447,7 @@ class XPlaneCommands():
         self.reseters = {
             'ATTR_light_level':'ATTR_light_level_reset',
             'ATTR_cockpit':'ATTR_no_cockpit',
-            'ATTR_cockpit_region':'ATTR_no_cockpit',
+            #'ATTR_cockpit_region':'ATTR_no_cockpit',
             'ATTR_manip_drag_xy':'ATTR_manip_none',
             'ATTR_manip_drag_axis':'ATTR_manip_none',
             'ATTR_manip_command':'ATTR_manip_none',
@@ -1228,6 +1228,14 @@ class XPlaneHeader():
         if file['parent'].texture_normal!='':
             self.attributes['TEXTURE_NORMAL'] = os.path.basename(file['parent'].texture_normal)
 
+        # set cockpit regions
+        num_regions = int(file['parent'].cockpit_regions)
+        if num_regions>0:
+            self.attributes['COCKPIT_REGION'] = []
+            for i in range(0,num_regions):
+                cockpit_region = file['parent'].cockpit_region[i]
+                self.attributes['COCKPIT_REGION'].append('%d\t%d\t%d\t%d' % (cockpit_region.left,cockpit_region.top+(2 ** cockpit_region.height),cockpit_region.left + (2 ** cockpit_region.width),cockpit_region.top))
+
         # get point counts
         tris = len(mesh.vertices)
         lines = 0
@@ -1265,7 +1273,11 @@ class XPlaneHeader():
         # attributes
         for attr in self.attributes:
             if self.attributes[attr]!=None:
-                o+='%s\t%s\n' % (attr,self.attributes[attr])
+                if type(self.attributes[attr]).__name__ == 'list':
+                    for value in self.attributes[attr]:
+                        o+='%s\t%s\n' % (attr,value)
+                else:
+                    o+='%s\t%s\n' % (attr,self.attributes[attr])
         
         return o
         
