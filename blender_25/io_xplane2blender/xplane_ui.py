@@ -208,10 +208,10 @@ def layer_layout(self, scene, layout, layer):
                     else:
                         expandIcon = "TRIA_RIGHT"
 
-                    cockpit_box.prop(cockpit_region,"expanded",text="Cockpit region %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
+                    region_box = cockpit_box.box()
+                    region_box.prop(cockpit_region,"expanded",text="Cockpit region %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
 
                     if cockpit_region.expanded:
-                        region_box = cockpit_box.box()
                         region_box.prop(cockpit_region,"left")
                         region_box.prop(cockpit_region,"top")
                         region_split = region_box.split(percentage=0.5)
