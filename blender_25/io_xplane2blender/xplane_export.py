@@ -8,7 +8,12 @@ from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_ui import showError,showProgress
-from io_utils import ImportHelper, ExportHelper
+
+# FIXME: on Mac io_utils seems to be in bpy_extras, on linux and windows however bpy_extras does not exists. This is a wacky workaround. Make it better some day.
+try:
+    from bpy_extras.io_utils import ImportHelper, ExportHelper
+except ImportError:
+    from io_utils import ImportHelper, ExportHelper
 
 # Class: XPlaneMesh
 # Creates the OBJ meshes.
