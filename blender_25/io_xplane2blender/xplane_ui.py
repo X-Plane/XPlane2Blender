@@ -261,6 +261,8 @@ def mesh_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "depth", text="Use depth culling")
     row = layout.row()
+    row.prop(obj.xplane, "poly_os", text="Polygon offset")
+    row = layout.row()
 
     row.prop(obj.xplane,"lightLevel", text="Override light level")
 

@@ -689,6 +689,7 @@ class XPlanePrimitive(XPlaneObject):
         self.material = XPlaneMaterial(self.object)
         self.faces = None
         self.attributes['ATTR_light_level'] = None
+        self.attributes['ATTR_poly_os'] = None
         self.cockpitAttributes['ATTR_cockpit'] = None
         self.cockpitAttributes['ATTR_cockpit_region'] = None
 
@@ -710,7 +711,11 @@ class XPlanePrimitive(XPlaneObject):
 
         # add light level attritubes
         self.getLightLevelAttributes()
-        
+
+        # polygon offsett attribute
+        if object.xplane.poly_os>0:
+            self.attributes['ATTR_poly_os'] = '%d' % object.xplane.poly_os
+
         self.getCoordinates()
         self.getAnimations()
 
@@ -784,7 +789,7 @@ class XPlaneMaterial():
 
         # Material
         self.attributes = {"ATTR_diffuse_rgb":None,
-                           "ATTR_specular_rgb":None,
+                           #"ATTR_specular_rgb":None, # useless according to Ben Supnik
                            "ATTR_emission_rgb":None,
                            "ATTR_shiny_rat":None,
                            "ATTR_hard":None,
@@ -811,10 +816,11 @@ class XPlaneMaterial():
 
                 # specular
                 #if mat.specular_intensity>0:
-                specular = [mat.specular_color[0],
-                            mat.specular_color[1],
-                            mat.specular_color[2]]
-                self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
+                # specular color is useless according to Ben Supnik
+#                specular = [mat.specular_color[0],
+#                            mat.specular_color[1],
+#                            mat.specular_color[2]]
+                #self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
                 if mat.xplane.overrideSpecularity:
                     self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.xplane.shinyRatio)
                 else:

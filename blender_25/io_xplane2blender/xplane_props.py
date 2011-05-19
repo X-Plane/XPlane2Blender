@@ -475,6 +475,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
                                         description="The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped.",
                                         default="")
 
+    poly_os = bpy.props.IntProperty(name="Polygon offset",
+                                    description="Sets the polygon offset state. Leave at 0 for default behaviour.",
+                                    default=0,
+                                    step=1,
+                                    min=0)
+
 # Class: XPlaneBoneSettings
 # Settings for Blender bones.
 #
