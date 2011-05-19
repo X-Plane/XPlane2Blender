@@ -594,7 +594,7 @@ class XPlaneDatarefSearch(bpy.types.Operator):
     bl_description = 'Search for XPlane dataref'
     bl_idname = 'xplane.dataref_search'
 
-    datarefs = parseDatarefs()
+    #datarefs = parseDatarefs()
 
     def execute(self,context):
         import webbrowser
