@@ -515,25 +515,25 @@ def manipulator_layout(self,obj):
 # Function: parseDatarefs
 # Parses the DataRefs.txt file which is located within the io_xplane2blender addon directory and stores results in a list.
 # This list should later be used to help search for datarefs with an autocomplete field.
-def parseDatarefs():
-    import os
-    search_data = []
-    filePath = os.path.dirname(__file__)+'/DataRefs.txt'
-    if os.path.exists(filePath):
-        try:
-            file = open(filePath,'r')
-            i = 0
-            for line in file:
-                if i>1:
-                    parts = line.split('\t')
-                    if (len(parts)>1 and parts[1] in ('float','int')):
-                        search_data.append(parts[0])
-                i+=1
-        except IOError:
-            print(IOError)
-        finally:
-            file.close()
-    return search_data
+#def parseDatarefs():
+#    import os
+#    search_data = []
+#    filePath = os.path.dirname(__file__)+'/DataRefs.txt'
+#    if os.path.exists(filePath):
+#        try:
+#            file = open(filePath,'r')
+#            i = 0
+#            for line in file:
+#                if i>1:
+#                    parts = line.split('\t')
+#                    if (len(parts)>1 and parts[1] in ('float','int')):
+#                        search_data.append(parts[0])
+#                i+=1
+#        except IOError:
+#            print(IOError)
+#        finally:
+#            file.close()
+#    return search_data
 
 # Function: showError
 # Draws a window displaying an error message.
