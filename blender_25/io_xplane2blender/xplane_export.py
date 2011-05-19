@@ -606,14 +606,16 @@ class XPlaneCommands():
     # Parameters:
     #   string attr - The attribute name.
     #   string value - The attribute value.
+    #   XPlaneObject object - A <XPlaneObject>.
     #
     # Returns:
     #   string or None if the command must not be written.
-    def writeAttribute(self,attr,value):
+    def writeAttribute(self,attr,value,object):
         if value!=None:
             if value==True:
                 o = '%s\n' % attr
             else:
+                value = self.parseAttributeValue(value,object)
                 o = '%s\t%s\n' % (attr,value)
                 
             if self.canWrite(attr,value):
@@ -623,6 +625,22 @@ class XPlaneCommands():
                 return None
         else:
             return None
+
+    # Method: parseAttributeValue
+    # Returns a string with the parsed attribute value (replacing insert tags)
+    #
+    # Parameters:
+    #   string value - The attribute value.
+    #   XPlaneObject object - A <XPlaneObject>.
+    #
+    # Returns:
+    #   string - The value with replaced insert tags.
+    def parseAttributeValue(self,value,object):
+        if str(value).find('{{xyz}}')!=-1:
+            return str(value).replace('{{xyz}}','%6.4f\t%6.4f\t%6.4f' % (object.locationLocal[0],object.locationLocal[1],object.locationLocal[2]))
+        else:
+            return value
+            
 
     # Method: canWrite
     # Determines if an attribute must be written.
@@ -653,7 +671,7 @@ class XPlaneCommands():
     def writeMaterial(self,obj,tabs):
         o = ''
         for attr in obj.material.attributes:
-            line = self.writeAttribute(attr,obj.material.attributes[attr])
+            line = self.writeAttribute(attr,obj.material.attributes[attr],obj)
             if line:
                 o+=tabs+line
                 # only write line if attribtue wasn't already written with same value
@@ -678,7 +696,7 @@ class XPlaneCommands():
     def writeCustomAttributes(self,obj,tabs):
         o = ''
         for attr in obj.attributes:
-            line = self.writeAttribute(attr,obj.attributes[attr])
+            line = self.writeAttribute(attr,obj.attributes[attr],obj)
 
             # add reseter to own resters list
             if attr in obj.reseters and obj.reseters[attr]!='':
@@ -700,7 +718,7 @@ class XPlaneCommands():
     def writeCockpitAttributes(self,obj,tabs):
         o = ''
         for attr in obj.cockpitAttributes:
-            line = self.writeAttribute(attr,obj.cockpitAttributes[attr])
+            line = self.writeAttribute(attr,obj.cockpitAttributes[attr],obj)
             if line:
                 o+=tabs+line
         return o
@@ -737,7 +755,7 @@ class XPlaneCommands():
         o = ''
         for attr in obj.animAttributes:
             for value in obj.animAttributes[attr]:
-                line = self.writeAttribute(attr,value)
+                line = self.writeAttribute(attr,value,obj)
             
                 if line!=None:
                     o+=tabs+line
