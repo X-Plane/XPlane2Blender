@@ -288,6 +288,27 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
                                 min=1,
                                 max=11)
 
+# Class: XPlaneLOD
+# Defines settings for a level of detail.
+#
+# Properties:
+#   int near - near distance
+#   int far - far distance
+class XPlaneLOD(bpy.types.PropertyGroup):
+    expanded = bpy.props.BoolProperty(name="Expanded",
+                                  description="Toggle this LOD settings visibility.",
+                                  default=False)
+
+    near = bpy.props.IntProperty(name="Near",
+                                description="Near distance (inclusive) in meters",
+                                default=0,
+                                min=0)
+
+    far = bpy.props.IntProperty(name="Far",
+                                description="Far distance (exclusive) in meters",
+                                default=0,
+                                min=0)
+
 # Class: XPlaneLayer
 # Defines settings for a OBJ file. Is "parented" to a Blender layer.
 #
@@ -352,12 +373,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
                                     description="Normal/Specular Texture to use for objects on this layer.",
                                     default="")
 
-#    panel_texture = bpy.props.StringProperty(attr="panel_texture",
-#                                    subtype="FILE_PATH",
-#                                    name="Panel Texture",
-#                                    description="Panel Texture (Screenshot of the 3D-Panel)",
-#                                    default="")
-
     cockpit_regions = bpy.props.EnumProperty(attr="cockpit_regions",
                                     name="Cockpit regions",
                                     description="Number of Cockpit regions to use.",
@@ -367,7 +382,16 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     cockpit_region = bpy.props.CollectionProperty(name="cockpit_region",
                                     type=XPlaneCockpitRegion,
                                     description="Cockpit Region")
-                                    
+
+    lods = bpy.props.EnumProperty(name="Levels of detail",
+                                    description="Levels of detail",
+                                    default="0",
+                                    items=[("0","none","none"),("2","2","2"),("3","3","3")])
+
+    lod = bpy.props.CollectionProperty(name="LOD",
+                                    type=XPlaneLOD,
+                                    description="Level of detail")
+
     customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane header attributes",
                                       description="User defined header attributes for the X-Plane file.",
@@ -480,6 +504,11 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
                                     default=0,
                                     step=1,
                                     min=0)
+
+    lod = bpy.props.BoolVectorProperty(name="Levels of detail",
+                                        description="Define in wich LODs this object will be used. If none is checked it will be used in all.",
+                                        default=(False,False,False),
+                                        size=3)
 
 # Class: XPlaneBoneSettings
 # Settings for Blender bones.
@@ -637,6 +666,7 @@ def addXPlaneRNA():
     #bpy.utils.register_class(XPlaneDatarefSearch)
     bpy.utils.register_class(XPlaneManipulator)
     bpy.utils.register_class(XPlaneCockpitRegion)
+    bpy.utils.register_class(XPlaneLOD)
 
     # complex classes, depending on basic classes
     bpy.utils.register_class(XPlaneLayer)
@@ -683,4 +713,5 @@ def removeXPlaneRNA():
     #bpy.utils.unregister_class(XPlaneDatarefSearch)
     bpy.utils.unregister_class(XPlaneManipulator)
     bpy.utils.unregister_class(XPlaneCockpitRegion)
+    bpy.utils.unregister_class(XPlaneLOD)
     

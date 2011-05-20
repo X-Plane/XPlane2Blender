@@ -89,6 +89,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             type = obj.type
             if type=="LAMP":
                 type = "OBJECT"
+            lod_layout(self,obj)
             custom_layout(self,obj,type)
 
 # Class: BONE_PT_xplane
@@ -220,7 +221,32 @@ def layer_layout(self, scene, layout, layer):
                         region_split = region_box.split(percentage=0.5)
                         region_split.prop(cockpit_region,"height")
                         region_split.label("= %d" % (2 ** cockpit_region.height))
-        
+
+        # LODs
+        if scene.xplane.layers[layer].cockpit==False:
+            lods_box = column.box()
+            lods_box.prop(scene.xplane.layers[layer],"lods", text="Levels of detail")
+            num_lods = int(scene.xplane.layers[layer].lods)
+            if num_lods>0:
+                for i in range(0,num_lods):
+                    # get lod or create it if not present
+                    if len(scene.xplane.layers[layer].lod)>i:
+                        lod = scene.xplane.layers[layer].lod[i]
+                    else:
+                        lod = scene.xplane.layers[layer].lod.add()
+
+                    if lod.expanded:
+                        expandIcon = "TRIA_DOWN"
+                    else:
+                        expandIcon = "TRIA_RIGHT"
+
+                    lod_box = lods_box.box()
+                    lod_box.prop(lod,"expanded",text="Level of detail %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
+
+                    if lod.expanded:
+                        lod_box.prop(lod,"near")
+                        lod_box.prop(lod,"far")
+
         column.separator()
         column.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
         
@@ -518,6 +544,17 @@ def manipulator_layout(self,obj):
             box.prop(obj.xplane.manip,'v_hold',text="v hold")
             box.prop(obj.xplane.manip,'v1_min',text="v min")
             box.prop(obj.xplane.manip,'v1_max',text="v max")
+
+# Function: lod_layout
+# Draws the UI for Levels of detail
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
+def lod_layout(self,obj):
+    layout = self.layout
+    row = layout.row()
+    row.prop(obj.xplane,"lod",text="LOD")
 
 # Function: parseDatarefs
 # Parses the DataRefs.txt file which is located within the io_xplane2blender addon directory and stores results in a list.
