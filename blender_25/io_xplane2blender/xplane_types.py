@@ -793,6 +793,7 @@ class XPlaneMaterial():
                            "ATTR_emission_rgb":None,
                            "ATTR_shiny_rat":None,
                            "ATTR_hard":None,
+                           "ATTR_hard_deck":None,
                            "ATTR_no_hard":None,
                            "ATTR_cull":None,
                            "ATTR_no_cull":None,
@@ -800,7 +801,9 @@ class XPlaneMaterial():
                            "ATTR_no_depth":None,
                            "ATTR_blend":None,
                            "ATTR_no_blend":None,
-                           "ATTR_draw_disable":None}
+                           "ATTR_draw_disable":None,
+                           "ATTR_solid_camera":None,
+                           "ATTR_no_solid_camera":None}
 
 
         if len(object.data.materials)>0:
@@ -845,13 +848,24 @@ class XPlaneMaterial():
 
             # surface type
             if mat.xplane.surfaceType != 'none':
-                self.attributes['ATTR_hard'] = mat.xplane.surfaceType
+                if mat.xplane.deck:
+                    self.attributes['ATTR_hard_deck'] = mat.xplane.surfaceType
+                else:
+                    self.attributes['ATTR_hard'] = mat.xplane.surfaceType
+            else:
+                self.attributes['ATTR_no_hard'] = True
 
             # backface culling
             if self.object.data.show_double_sided:
                 self.attributes['ATTR_no_cull'] = True
             else:
                 self.attributes['ATTR_cull'] = True
+
+            # camera collision
+            if mat.xplane.solid_camera:
+                self.attributes['ATTR_solid_camera'] = True
+            else:
+                self.attributes['ATTR_no_solid_camera'] = True
 
             # Texture and uv-coordinates
             if(len(mat.texture_slots)>0 and hasattr(mat.texture_slots[0],'use') and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):

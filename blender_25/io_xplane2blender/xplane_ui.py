@@ -335,6 +335,13 @@ def material_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "surfaceType", text="Surface type")
 
+    if obj.xplane.surfaceType!='none':
+        row = layout.row()
+        row.prop(obj.xplane,"deck",text="Deck")
+
+    row = layout.row()
+    row.prop(obj.xplane,"solid_camera",text="Camera collision")
+
 # Function: custom_layout
 # Draws the additional UI layout for custom attributes.
 #

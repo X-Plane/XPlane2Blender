@@ -543,6 +543,14 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
                                                 ('shoulder','shoulder','shoulder'),
                                                 ('blastpad','blastpad','blastpad')])
 
+    deck = bpy.props.BoolProperty(name="Deck",
+                                    description="Allows the user to fly under the surface.",
+                                    default=False)
+
+    solid_camera = bpy.props.BoolProperty(name="Camera collision",
+                                        description="Will impede the movement of the 3-d camera. Works only in Cockpits.",
+                                        default=False)
+
     blend = bpy.props.BoolProperty(attr="blend",
                                         name="Use Alpha cutoff",
                                         description="If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.",

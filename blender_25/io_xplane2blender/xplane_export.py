@@ -679,14 +679,6 @@ class XPlaneCommands():
             line = self.writeAttribute(attr,obj.material.attributes[attr],obj)
             if line:
                 o+=tabs+line
-                # only write line if attribtue wasn't already written with same value
-#                    if attr in self.written:
-#                        if self.written[attr]!=value:
-#                            o+=line
-#                            self.written[attr] = value
-#                    else:
-#                        o+=line
-#                        self.written[attr] = value
         return o
 
     # Method: writeCustomAttributes
