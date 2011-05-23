@@ -9,7 +9,7 @@ from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_ui import showError,showProgress
 
-# FIXME: on Mac io_utils seems to be in bpy_extras, on linux and windows however bpy_extras does not exists. This is a wacky workaround. Make it better some day.
+# TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
 try:
     from bpy_extras.io_utils import ImportHelper, ExportHelper
 except ImportError:
@@ -514,44 +514,46 @@ class XPlaneCommands():
         if debug:
             o+="%s# %s: %s\n" % (tabs,obj.type,obj.name)
 
-        if obj.animated() or obj.hasAnimAttributes():
-            animationStarted = True
+        # only write objects that are in current layer/file
+        if self.objectInFile(obj):
+            if obj.animated() or obj.hasAnimAttributes():
+                animationStarted = True
 
-            # begin animation block
-            oAnim = ''
-            animLevel+=1
-            tabs = self.getAnimTabs(animLevel)
+                # begin animation block
+                oAnim = ''
+                animLevel+=1
+                tabs = self.getAnimTabs(animLevel)
 
-            if obj.animated():
-                for dataref in obj.animations:
-                    if len(obj.animations[dataref])>1:
-                        oAnim+=self.writeKeyframes(obj,dataref,tabs)
-            if obj.hasAnimAttributes():
-                oAnim+=self.writeAnimAttributes(obj,tabs)
-            
-            if oAnim!='':
-                o+="%sANIM_begin\n" % self.getAnimTabs(animLevel-1)
-                o+=oAnim
+                if obj.animated():
+                    for dataref in obj.animations:
+                        if len(obj.animations[dataref])>1:
+                            oAnim+=self.writeKeyframes(obj,dataref,tabs)
+                if obj.hasAnimAttributes():
+                    oAnim+=self.writeAnimAttributes(obj,tabs)
 
-        if hasattr(obj,'attributes'):
-            o+=self.writeReseters(obj,tabs)
-            o+=self.writeCustomAttributes(obj,tabs)
+                if oAnim!='':
+                    o+="%sANIM_begin\n" % self.getAnimTabs(animLevel-1)
+                    o+=oAnim
 
-        if hasattr(obj,'material'):
-            o+=self.writeMaterial(obj,tabs)            
+            if hasattr(obj,'attributes'):
+                o+=self.writeReseters(obj,tabs)
+                o+=self.writeCustomAttributes(obj,tabs)
 
-        # write cockpit attributes
-        if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
-            o+=self.writeCockpitAttributes(obj,tabs)
+            if hasattr(obj,'material'):
+                o+=self.writeMaterial(obj,tabs)
 
-        # rendering
-        if hasattr(obj,'indices'):
-            offset = obj.indices[0]
-            count = obj.indices[1]-obj.indices[0]
-            if obj.type=='PRIMITIVE':
-                o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
-            elif obj.type=='LIGHT':
-                o+="%sLIGHTS\t%d %d\n" % (tabs,offset,count)
+            # write cockpit attributes
+            if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
+                o+=self.writeCockpitAttributes(obj,tabs)
+
+            # rendering
+            if hasattr(obj,'indices'):
+                offset = obj.indices[0]
+                count = obj.indices[1]-obj.indices[0]
+                if obj.type=='PRIMITIVE':
+                    o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
+                elif obj.type=='LIGHT':
+                    o+="%sLIGHTS\t%d %d\n" % (tabs,offset,count)
 
         if animationStarted:
             for child in obj.children:
@@ -569,6 +571,15 @@ class XPlaneCommands():
             profiler.end("XPlaneCommands.writeObject")
             
         return o
+
+    def objectInFile(self,obj):
+        layer = self.file['parent'].index
+        if obj.type=='BONE':
+            obj = obj.armature
+        for i in range(len(obj.object.layers)):
+            if obj.object.layers[i]==True and i == layer:
+                return True
+        return False
 
     # Method: getAnimTabs
     # Returns the tabs used to indent the commands for better readibility in the OBJ file.
@@ -969,7 +980,7 @@ class XPlaneData():
                         objects.append(object)
 
         return objects
-
+        
     # Method: getEmptyFile
     # Returns an empty OBJ-file dict.
     #
