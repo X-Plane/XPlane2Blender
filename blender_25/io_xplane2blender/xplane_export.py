@@ -81,7 +81,7 @@ class XPlaneMesh():
                 # we can savely bake the world matrix as no transforms will occur
                 matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
                 
-        return matrix*XPlaneCoords.scaleMatrix(obj)
+        return XPlaneCoords.convertMatrix(XPlaneCoords.scaleMatrix(obj,False))*matrix
 
     # Method: writeObjects
     # Fills the <vertices> and <indices> from a list of <XPlaneObjects>.
