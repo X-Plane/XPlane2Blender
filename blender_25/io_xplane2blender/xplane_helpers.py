@@ -332,11 +332,14 @@ class XPlaneCoords():
     # Returns:
     #   matrix - Matrix with global object scale or None if the object is at root level.
     @staticmethod
-    def scaleMatrix(object,noParent = True):
+    def scaleMatrix(object,convert = False, noParent = True):
         import mathutils
         if noParent:
             if object.parent:
-                scale = object.getMatrix(True).to_scale()
+                if convert:
+                    scale = XPlaneCoords.convertMatrix(object.getMatrix(True)).to_scale()
+                else:
+                    scale = object.getMatrix(True).to_scale()
                 matrix = Matrix()
                 matrix[0][0] = scale.x
                 matrix[1][1] = scale.y
@@ -344,7 +347,10 @@ class XPlaneCoords():
 
                 # FIXME: armature scale is not taken into account so add it, however this could be a Blender bug or a misunderstanding
                 if object.parent and object.parent.type=='BONE':
-                    scale = object.parent.armature.getMatrix(True).to_scale()
+                    if convert:
+                        scale = XPlaneCoords.convertMatrix(object.parent.armature.getMatrix(True)).to_scale()
+                    else:
+                        scale = object.parent.armature.getMatrix(True).to_scale()
                     matrix[0][0]*=scale.x
                     matrix[1][1]*=scale.y
                     matrix[2][2]*=scale.z
@@ -352,7 +358,10 @@ class XPlaneCoords():
             else:
                 return Matrix.Scale(1,4,Vector((1,1,1)))
         else:
-            scale = object.getMatrix(True).to_scale()
+            if convert:
+                scale = XPlaneCoords.convertMatrix(object.getMatrix(True)).to_scale()
+            else:
+                scale = object.getMatrix(True).to_scale()
             matrix = Matrix()
             matrix[0][0] = scale.x
             matrix[1][1] = scale.y
