@@ -82,8 +82,22 @@ class XPlaneMesh():
                     matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
         else:
             if animatedParent:
-                # object has some animated parent, so we need to bake the matrix relative to animated parent
-                matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),animatedParent.getMatrix(True))
+                #print("%s: not animated, animated Parent" % obj.name)
+                if animatedParent!=obj.parent:
+                    #print("%s: animatedParent!=parent (%s)" % (obj.name,obj.parent.name))
+                    # object has some animated parent, so we need to bake the matrix relative to animated parent
+                    matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),animatedParent.getMatrix(True))
+                else:
+                    #print("%s: animatedParent==parent (%s)" % (obj.name,obj.parent.name))
+                    if obj.parent.type in ("BONE","ARMATURE","EMPTY","LIGHT"):
+                        # objects parent is animated, so we need to bake the matrix relative to parent
+                        matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),obj.parent.getMatrix(True))
+                    else:
+                        # bake local matrix
+                        matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
+                    
+#                co = XPlaneCoords.fromMatrix(matrix)
+#                print(co['angle'])
             else:
                 # no animated objects up in hierarchy, so this will become a static mesh on root level
                 # we can savely bake the world matrix as no transforms will occur
@@ -554,8 +568,8 @@ class XPlaneCommands():
             if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
                 o+=self.writeCockpitAttributes(obj,tabs)
 
-            # rendering
-            if hasattr(obj,'indices'):
+            # rendering (do not render meshes/objects with no indices)
+            if hasattr(obj,'indices') and obj.indices[1]>obj.indices[0]:
                 offset = obj.indices[0]
                 count = obj.indices[1]-obj.indices[0]
                 if obj.type=='PRIMITIVE':
@@ -887,9 +901,6 @@ class XPlaneCommands():
 
         if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
             o+=trans
-        # add loops if any
-        if obj.datarefs[dataref].loop>0:
-            o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
                 
         # ignore high precision changes that won't be written anyway
         totalRot[0] = round(totalRot[0],4)
