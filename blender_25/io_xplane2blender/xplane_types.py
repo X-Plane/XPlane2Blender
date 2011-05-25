@@ -229,11 +229,18 @@ class XPlaneObject():
                         index = int(index)
                     except:
                         return
-                    
+
+                    # FIXME: removed datarefs keep fcurves, so we have to check if dataref is still there. FCurves have to be deleted correctly.
                     if bone:
-                        dataref = bone.xplane.datarefs[index].path
+                        if index<len(bone.xplane.datarefs):
+                            dataref = bone.xplane.datarefs[index].path
+                        else:
+                            return
                     else:
-                        dataref = object.xplane.datarefs[index].path
+                        if index<len(object.xplane.datarefs):
+                            dataref = object.xplane.datarefs[index].path
+                        else:
+                            return
 
                     if debug:
                         debugger.debug("\t\t adding dataref animation: %s" % dataref)
