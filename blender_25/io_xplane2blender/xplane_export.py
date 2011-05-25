@@ -916,7 +916,7 @@ class XPlaneCommands():
 
         # add loops if any
         if obj.datarefs[dataref].loop>0:
-            o+="%sANIM_keyframe_loop\t%d\n" % (tabs,obj.datarefs[dataref].loop)
+            o+="%sANIM_keyframe_loop\t%6.4f\n" % (tabs,obj.datarefs[dataref].loop)
 
         o+=static['trans'][1]
         return o
