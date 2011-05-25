@@ -58,6 +58,8 @@ class XPlaneMesh():
                 # root level
                 # Conversion matrix only. Object will be transformed during animation.
                 matrix = XPlaneCoords.conversionMatrix()
+                # add objects world scale
+                matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
             else:
                 # not at root level
                 if animatedParent:
@@ -66,12 +68,18 @@ class XPlaneMesh():
                         # bake rotation of the parent relative to the animated parent so we do not need to worry about it later
                         matrix = XPlaneCoords.relativeConvertedMatrix(obj.parent.getMatrix(True),animatedParent.getMatrix(True))
                         matrix = XPlaneCoords.convertMatrix(matrix.to_euler().to_matrix().to_4x4())
+                        # add objects world scale
+                        matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
                     else:
                         matrix = XPlaneCoords.conversionMatrix()
+                        # add objects world scale
+                        matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
                 else:
                     # no animated parent
                     # bake rotation of the parent so we do not need to worry about it later
                     matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).to_euler().to_matrix().to_4x4())
+                    # add objects world scale
+                    matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
         else:
             if animatedParent:
                 # object has some animated parent, so we need to bake the matrix relative to animated parent
@@ -81,7 +89,7 @@ class XPlaneMesh():
                 # we can savely bake the world matrix as no transforms will occur
                 matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
                 
-        return matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+        return matrix
 
     # Method: writeObjects
     # Fills the <vertices> and <indices> from a list of <XPlaneObjects>.
