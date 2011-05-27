@@ -43,12 +43,14 @@ class XPlaneDataref(bpy.types.PropertyGroup):
     value = bpy.props.FloatProperty(attr="value",
                                     name="Value",
                                     description="Value",
-                                    default=0)
+                                    default=0.0,
+                                    precision=6)
 
     loop = bpy.props.FloatProperty(attr="loop",
                                 name="Loop Amount",
                                 description="Loop amount of animation, usefull for ever increasing Datarefs. A value of 0 will ignore this setting.",
-                                min=0.0)
+                                min=0.0,
+                                precision=3)
 
     anim_type = bpy.props.EnumProperty(attr="anim_type",
                                         name="Animation Type",
