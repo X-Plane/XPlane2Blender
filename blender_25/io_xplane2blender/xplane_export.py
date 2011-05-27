@@ -82,6 +82,7 @@ class XPlaneMesh():
                     matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
         else:
             if animatedParent:
+                # TODO: this is not working in all cases. Needs more investigation.
                 #print("%s: not animated, animated Parent" % obj.name)
                 if animatedParent!=obj.parent:
                     #print("%s: animatedParent!=parent (%s)" % (obj.name,obj.parent.name))
@@ -857,9 +858,15 @@ class XPlaneCommands():
                 vec = [0.0,0.0,0.0]
                 vec[i] = 1.0
                 static['rot'][i] = "%sANIM_rotate\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t%6.4f\t0\t0\tnone\n" % (tabs,vec[0],vec[1],vec[2],staticRot[i],staticRot[i])
-        
-        trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
 
+        # add loops if any
+        if obj.datarefs[dataref].loop>0:
+            loops="%s\tANIM_keyframe_loop\t%6.4f\n" % (tabs,obj.datarefs[dataref].loop)
+        else:
+            loops = ''
+
+        trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
+        
 #        print(obj.vectors)
         rot = ['','','']
         rot[0] = "%sANIM_rotate_begin\t%6.4f\t%6.4f\t%6.4f\t%s\n" % (tabs,obj.vectors[0][0],obj.vectors[0][1],obj.vectors[0][2],dataref)
@@ -881,10 +888,14 @@ class XPlaneCommands():
 
             if debug:
                 debugger.debug("%s keyframe %s@%d %s" % (keyframe.object.name,keyframe.index,keyframe.frame,keyframe.dataref))
-            
+
+        trans+=loops
         trans+="%sANIM_trans_end\n" % tabs
+        rot[0]+=loops
         rot[0]+="%sANIM_rotate_end\n" % tabs
+        rot[1]+=loops
         rot[1]+="%sANIM_rotate_end\n" % tabs
+        rot[2]+=loops
         rot[2]+="%sANIM_rotate_end\n" % tabs
 
         # ignore high precision changes that won't be written anyway
@@ -913,10 +924,6 @@ class XPlaneCommands():
             o+=rot[1]
         if totalRot[2]!=0.0:
             o+=rot[2]
-
-        # add loops if any
-        if obj.datarefs[dataref].loop>0:
-            o+="%sANIM_keyframe_loop\t%6.4f\n" % (tabs,obj.datarefs[dataref].loop)
 
         o+=static['trans'][1]
         return o
