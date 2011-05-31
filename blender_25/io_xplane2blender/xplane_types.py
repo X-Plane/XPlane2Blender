@@ -700,21 +700,19 @@ class XPlanePrimitive(XPlaneObject):
         self.cockpitAttributes['ATTR_cockpit'] = None
         self.cockpitAttributes['ATTR_cockpit_region'] = None
 
+        self.getMaterialAttributes()
+
         # add custom attributes
         self.getCustomAttributes()
         
         # add anim attributes from datarefs and custom anim attributes
         self.getAnimAttributes()
 
-        # add cockpit attributes
-        if object.xplane.panel:
-            self.cockpitAttributes['ATTR_cockpit'] = True
-            cockpit_region = int(object.xplane.cockpit_region)
-            if cockpit_region>0:
-                self.cockpitAttributes['ATTR_cockpit_region'] = '%d' % (cockpit_region-1)
-
         # add manipulator attributes
         self.getManipulatorAttributes()
+
+        # add cockpit attributes
+        self.getCockpitAttributes()
 
         # add light level attritubes
         self.getLightLevelAttributes()
@@ -725,6 +723,17 @@ class XPlanePrimitive(XPlaneObject):
 
         self.getCoordinates()
         self.getAnimations()
+
+    def getMaterialAttributes(self):
+        for attr in self.material.attributes:
+            self.attributes[attr] = self.material.attributes[attr]
+
+    def getCockpitAttributes(self):
+        if self.object.xplane.panel:
+            self.cockpitAttributes['ATTR_cockpit'] = True
+            cockpit_region = int(self.object.xplane.cockpit_region)
+            if cockpit_region>0:
+                self.cockpitAttributes['ATTR_cockpit_region'] = '%d' % (cockpit_region-1)
 
     # Method: getManipulatorAttributes
     # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.

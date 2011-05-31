@@ -486,7 +486,12 @@ class XPlaneCommands():
             'ATTR_manip_delta':'ATTR_manip_none',
             'ATTR_manip_wrap':'ATTR_manip_none',
             'ATTR_draw_disable':'ATTR_draw_enable',
-            'ATTR_poly_os':'ATTR_poly_os 0'
+            'ATTR_poly_os':'ATTR_poly_os 0',
+            'ATTR_no_cull':'ATTR_cull',
+            'ATTR_hard':'ATTR_no_hard',
+            'ATTR_hard_deck':'ATTR_no_hard',
+            'ATTR_depth':'ATTR_no_depth',
+            'ATTR_blend':'ATTR_no_blend',
         }
         self.written = {}
         self.staticWritten = []
@@ -560,10 +565,7 @@ class XPlaneCommands():
 
             if hasattr(obj,'attributes'):
                 o+=self.writeReseters(obj,tabs)
-                o+=self.writeCustomAttributes(obj,tabs)
-
-            if hasattr(obj,'material'):
-                o+=self.writeMaterial(obj,tabs)
+                o+=self.writeAttributes(obj,tabs)
 
             # write cockpit attributes
             if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
@@ -698,25 +700,8 @@ class XPlaneCommands():
         else:
             return True
 
-    # Method: writeMaterials
-    # Returns the commands for a <XPlaneObject> material.
-    #
-    # Parameters:
-    #   XPlaneObject obj - A <XPlaneObject>.
-    #   string tabs - The indentation tabs.
-    #
-    # Returns:
-    #   string - Commands
-    def writeMaterial(self,obj,tabs):
-        o = ''
-        for attr in obj.material.attributes:
-            line = self.writeAttribute(attr,obj.material.attributes[attr],obj)
-            if line:
-                o+=tabs+line
-        return o
-
-    # Method: writeCustomAttributes
-    # Returns the commands for custom attributes of a <XPlaneObject>.
+    # Method: writeAttributes
+    # Returns the commands for attributes of a <XPlaneObject>.
     #
     # Parameters:
     #   XPlaneObject obj - A <XPlaneObject>
@@ -724,7 +709,7 @@ class XPlaneCommands():
     #
     # Returns:
     #   string - Commands
-    def writeCustomAttributes(self,obj,tabs):
+    def writeAttributes(self,obj,tabs):
         o = ''
         for attr in obj.attributes:
             line = self.writeAttribute(attr,obj.attributes[attr],obj)
@@ -767,7 +752,7 @@ class XPlaneCommands():
         o = ''
         for attr in self.reseters:
             # only reset attributes that wont be written with this object again
-            if attr not in obj.attributes and attr in self.written:
+            if (attr not in obj.attributes or attr not in obj.cockpitAttributes) and attr in self.written:
                 o+=tabs+self.reseters[attr]+"\n"
                 # we've reset an attribute so remove it from written as it will need rewrite with next object
                 del self.written[attr]
