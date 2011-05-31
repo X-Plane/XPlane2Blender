@@ -1,2 +1,3 @@
 *.pyc
 io_xplane_debug.py
+setup.py
