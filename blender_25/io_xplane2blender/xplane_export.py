@@ -752,7 +752,7 @@ class XPlaneCommands():
         o = ''
         for attr in self.reseters:
             # only reset attributes that wont be written with this object again
-            if (attr not in obj.attributes or attr not in obj.cockpitAttributes) and attr in self.written:
+            if attr not in obj.attributes and attr in self.written:
                 o+=tabs+self.reseters[attr]+"\n"
                 # we've reset an attribute so remove it from written as it will need rewrite with next object
                 del self.written[attr]
