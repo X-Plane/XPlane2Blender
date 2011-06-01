@@ -700,7 +700,7 @@ class XPlanePrimitive(XPlaneObject):
         self.cockpitAttributes['ATTR_cockpit'] = None
         self.cockpitAttributes['ATTR_cockpit_region'] = None
 
-        self.getMaterialAttributes()
+        #self.getMaterialAttributes()
 
         # add custom attributes
         self.getCustomAttributes()
@@ -787,6 +787,9 @@ class XPlaneMaterial():
     # Property: uv_name
     # string - Name of the uv layer to be used for texture UVs.
 
+    # Property: name
+    # string - Name of the Blender material.
+
     # Property: attributes
     # dict - Material attributes that will be turned into commands with <XPlaneCommands>.
 
@@ -802,10 +805,13 @@ class XPlaneMaterial():
         self.object = object
         self.texture = None
         self.uv_name = None
+        self.name = None
 
         # Material
         self.attributes = {"ATTR_diffuse_rgb":None,
                            #"ATTR_specular_rgb":None, # useless according to Ben Supnik
+                           "ATTR_shade_smooth":True,
+                           "ATTR_shade_flat":None,
                            "ATTR_emission_rgb":None,
                            "ATTR_shiny_rat":None,
                            "ATTR_hard":None,
@@ -817,6 +823,7 @@ class XPlaneMaterial():
                            "ATTR_no_depth":None,
                            "ATTR_blend":None,
                            "ATTR_no_blend":None,
+                           "ATTR_draw_enable":None,
                            "ATTR_draw_disable":None,
                            "ATTR_solid_camera":None,
                            "ATTR_no_solid_camera":None}
@@ -824,8 +831,11 @@ class XPlaneMaterial():
 
         if len(object.data.materials)>0:
             mat = object.data.materials[0]
+            self.name = mat.name
 
             if mat.xplane.draw:
+                self.attributes['ATTR_draw_enable'] = True
+
                 # diffuse
                 #if mat.diffuse_intensity>0:
                 diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
@@ -861,6 +871,8 @@ class XPlaneMaterial():
             # depth check
             if self.object.xplane.depth == False:
                 self.attributes['ATTR_no_depth'] = True;
+            else:
+                self.attributes['ATTR_depth'] = True
 
             # surface type
             if mat.xplane.surfaceType != 'none':

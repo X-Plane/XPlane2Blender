@@ -490,7 +490,7 @@ class XPlaneCommands():
             'ATTR_no_cull':'ATTR_cull',
             'ATTR_hard':'ATTR_no_hard',
             'ATTR_hard_deck':'ATTR_no_hard',
-            'ATTR_depth':'ATTR_no_depth',
+            'ATTR_no_depth':'ATTR_depth',
             'ATTR_blend':'ATTR_no_blend',
         }
         self.written = {}
@@ -563,9 +563,17 @@ class XPlaneCommands():
                     o+="%sANIM_begin\n" % self.getAnimTabs(animLevel-1)
                     o+=oAnim
 
+        
+#            if debug:
+#                debugger.debug('\nWriting attributes for %s' % obj.name)
+
+            o+=self.writeReseters(obj,tabs)
+            
             if hasattr(obj,'attributes'):
-                o+=self.writeReseters(obj,tabs)
-                o+=self.writeAttributes(obj,tabs)
+                o+=self.writeCustomAttributes(obj,tabs)
+
+            if hasattr(obj,'material'):
+                o+=self.writeMaterial(obj,tabs)
 
             # write cockpit attributes
             if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
@@ -652,6 +660,9 @@ class XPlaneCommands():
     # Returns:
     #   string or None if the command must not be written.
     def writeAttribute(self,attr,value,object):
+#        debug = getDebug()
+#        debugger = getDebugger()
+
         if value!=None:
             if value==True:
                 o = '%s\n' % attr
@@ -660,11 +671,30 @@ class XPlaneCommands():
                 o = '%s\t%s\n' % (attr,value)
                 
             if self.canWrite(attr,value):
+#                if debug and draw:
+#                    debugger.debug('writing Attribute %s = %s' % (attr,str(value)))
                 self.written[attr] = value
+
+                # check if this thing has a reseter and remove counterpart if any
+                if attr in self.reseters and self.reseters[attr] in self.written:
+#                    if debug and draw:
+#                        debugger.debug('removing reseter counterpart %s' % self.reseters[attr])
+                    del self.written[self.reseters[attr]]
+
+                # check if a reseter counterpart has been written and if so delete its reseter
+                for reseter in self.reseters:
+                    if self.reseters[reseter] == attr and reseter in self.written:
+#                        if debug and draw:
+#                            debugger.debug('removing reseter %s' % reseter)
+                        del self.written[reseter]
                 return o
             else:
+#                if debug and draw:
+#                    debugger.debug("can't write Attribute %s = %s" % (attr,str(value)))
                 return None
         else:
+#            if debug and draw:
+#                debugger.debug('empty Attribute %s = %s' % (attr,str(value)))
             return None
 
     # Method: parseAttributeValue
@@ -700,8 +730,8 @@ class XPlaneCommands():
         else:
             return True
 
-    # Method: writeAttributes
-    # Returns the commands for attributes of a <XPlaneObject>.
+    # Method: writeCustomAttributes
+    # Returns the commands for custom attributes of a <XPlaneObject>.
     #
     # Parameters:
     #   XPlaneObject obj - A <XPlaneObject>
@@ -709,7 +739,7 @@ class XPlaneCommands():
     #
     # Returns:
     #   string - Commands
-    def writeAttributes(self,obj,tabs):
+    def writeCustomAttributes(self,obj,tabs):
         o = ''
         for attr in obj.attributes:
             line = self.writeAttribute(attr,obj.attributes[attr],obj)
@@ -749,11 +779,36 @@ class XPlaneCommands():
     # Returns:
     #   string - Commands
     def writeReseters(self,obj,tabs):
+        debug = getDebug()
+        debugger = getDebugger()
         o = ''
+        
+        # create a temporary attributes dict
+        attributes = {}
+        # add custom attributes
+        for attr in obj.attributes:
+            if obj.attributes[attr]:
+                attributes[attr] = obj.attributes[attr]
+        # add material attributes if any
+        if hasattr(obj,'material'):
+            for attr in obj.material.attributes:
+                if obj.material.attributes[attr]:
+                    attributes[attr] = obj.material.attributes[attr]
+        # add cockpit attributes
+        for attr in obj.cockpitAttributes:
+            if obj.cockpitAttributes[attr]:
+                attributes[attr] = obj.cockpitAttributes[attr]
+            
         for attr in self.reseters:
             # only reset attributes that wont be written with this object again
-            if attr not in obj.attributes and attr in self.written:
+            if attr not in attributes and attr in self.written:
+#                if debug:
+#                    debugger.debug('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
+
+                # write reseter and add it to written
                 o+=tabs+self.reseters[attr]+"\n"
+                self.written[self.reseters[attr]] = True
+                
                 # we've reset an attribute so remove it from written as it will need rewrite with next object
                 del self.written[attr]
         return o
@@ -775,6 +830,26 @@ class XPlaneCommands():
             
                 if line!=None:
                     o+=tabs+line
+        return o
+
+    # Method: writeMaterial
+    # Returns the commands for a <XPlaneObject> material.
+    #
+    # Parameters:
+    #   XPlaneObject obj - A <XPlaneObject>.
+    #   string tabs - The indentation tabs.
+    #
+    # Returns:
+    #   string - Commands
+    def writeMaterial(self,obj,tabs):
+        debug = getDebug()
+        o = ''
+        if debug:
+            o+='%s# MATERIAL: %s\n' % (tabs,obj.material.name)
+        for attr in obj.material.attributes:
+            line = self.writeAttribute(attr,obj.material.attributes[attr],obj)
+            if line:
+                o+=tabs+line
         return o
 
     # Method: writeKeyframes
