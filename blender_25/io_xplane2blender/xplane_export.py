@@ -826,10 +826,8 @@ class XPlaneCommands():
         o = ''
         for attr in obj.animAttributes:
             for value in obj.animAttributes[attr]:
-                line = self.writeAttribute(attr,value,obj)
-            
-                if line!=None:
-                    o+=tabs+line
+                line = "%s\t%s" % (attr,value)
+                o+=tabs+line
         return o
 
     # Method: writeMaterial
