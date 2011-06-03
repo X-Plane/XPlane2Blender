@@ -826,7 +826,7 @@ class XPlaneCommands():
         o = ''
         for attr in obj.animAttributes:
             for value in obj.animAttributes[attr]:
-                line = "%s\t%s" % (attr,value)
+                line = "%s\t%s\n" % (attr,value)
                 o+=tabs+line
         return o
 
