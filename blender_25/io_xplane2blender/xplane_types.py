@@ -93,10 +93,13 @@ class XPlaneAttributes(OrderedDict):
         super(XPlaneAttributes,self).__init__()
 
     # Method: order
-    # Sorts its items by weight.
+    # Sorts items by weight.
     def order(self):
-        from operator import attrgetter
-        self.sort(key=attrgetter('weight'))
+        max_weight = 0
+        for name in self:
+            if self[name].weight>max_weight:
+                self.move_to_end(name,True)
+                max_weight = self[name].weight
 
     # Method: add
     # Adds an attribute to the dict.
@@ -670,6 +673,10 @@ class XPlaneArmature(XPlaneObject):
 
         self.getCustomAttributes()
         self.getAnimAttributes()
+
+        self.attributes.order()
+        self.animAttributes.order()
+
         self.getCoordinates()
         self.getAnimations()
 
@@ -830,6 +837,10 @@ class XPlanePrimitive(XPlaneObject):
         # polygon offsett attribute
         if object.xplane.poly_os>0:
             self.attributes['ATTR_poly_os'].setValue('%d' % object.xplane.poly_os)
+
+        self.attributes.order()
+        self.animAttributes.order()
+        self.cockpitAttributes.order()
 
         self.getCoordinates()
         self.getAnimations()
@@ -1021,6 +1032,8 @@ class XPlaneMaterial():
             # add custom attributes
             for attr in mat.xplane.customAttributes:
                 self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
+
+        self.attributes.order()
 
 # Class: XPlaneFace
 # A mesh face. This class is just a data wrapper used by <XPlaneFaces>.
