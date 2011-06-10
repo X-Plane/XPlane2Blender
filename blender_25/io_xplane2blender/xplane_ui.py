@@ -401,6 +401,7 @@ def custom_layout(self,obj,type):
         if type in ("MATERIAL","MESH","LAMP","ARMATURE"):
             subrow = subbox.row()
             subrow.prop(attr,"reset")
+            subrow = subbox.row()
             subrow.prop(attr,"weight")
 
     # animation attributes
@@ -416,6 +417,7 @@ def custom_layout(self,obj,type):
             subrow.operator("object.remove_xplane_object_anim_attribute",text="",emboss=False,icon="X").index = i
             subrow = subbox.row()
             subrow.prop(attr,"value")
+            subrow = subbox.row()
             subrow.prop(attr,"weight")
     
 # Function: animation_layout
