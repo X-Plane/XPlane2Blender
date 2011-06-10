@@ -538,13 +538,25 @@ class XPlaneObject():
     # Returns:
     #   int - The weight of this object.
     def getWeight(self):
+        weight = 0
         if self.object.xplane.override_weight:
             return self.object.xplane.weight
-        elif hasattr(self,'material'):
-            for i in range(0,len(bpy.data.materials)):
-                if self.object.data.materials[0] == bpy.data.materials[i]:
-                    return i
-        return 0
+        else:
+            if self.object.type=='LIGHT':
+                weight = 10000
+            elif self.object.type=='LINE':
+                weight = 9000
+            else:
+                if hasattr(self,'material'):
+                    for i in range(0,len(bpy.data.materials)):
+                        if self.object.data.materials[0] == bpy.data.materials[i]:
+                            weight = i
+
+            # add 100 to weight on animated objects, so they are all grouped
+            if self.animated():
+                weight+=100
+                        
+        return weight
 
 # Class: XPlaneBone
 # A Bone.
@@ -758,7 +770,6 @@ class XPlaneLight(XPlaneObject):
         self.params = object.data.xplane.params
         self.uv = object.data.xplane.uv
         self.dataref = object.data.xplane.dataref
-        self.weight = 10000 # give a heavy weight so it will come last
 
         # change color according to type
         if self.lightType=='flashing':
@@ -793,7 +804,6 @@ class XPlaneLine(XPlaneObject):
         super(object,parent)
         self.indices = [0,0]
         self.type = 'LINE'
-        self.weight = 9000
 
 # Class: XPlanePrimitive
 # A Mesh object.
