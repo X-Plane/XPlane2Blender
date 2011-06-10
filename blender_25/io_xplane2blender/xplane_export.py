@@ -742,7 +742,7 @@ class XPlaneCommands():
     def writeCustomAttributes(self,obj,tabs):
         o = ''
         for attr in obj.attributes:
-            line = self.writeAttribute(attr,obj.attributes[attr],obj)
+            line = self.writeAttribute(attr,obj.attributes[attr].getValue(),obj)
 
             # add reseter to own resters list
             if attr in obj.reseters and obj.reseters[attr]!='':
@@ -764,7 +764,7 @@ class XPlaneCommands():
     def writeCockpitAttributes(self,obj,tabs):
         o = ''
         for attr in obj.cockpitAttributes:
-            line = self.writeAttribute(attr,obj.cockpitAttributes[attr],obj)
+            line = self.writeAttribute(attr,obj.cockpitAttributes[attr].getValue(),obj)
             if line:
                 o+=tabs+line
         return o
@@ -784,20 +784,20 @@ class XPlaneCommands():
         o = ''
         
         # create a temporary attributes dict
-        attributes = {}
+        attributes = XPlaneAttributes()
         # add custom attributes
         for attr in obj.attributes:
             if obj.attributes[attr]:
-                attributes[attr] = obj.attributes[attr]
+                attributes.add(obj.attributes[attr])
         # add material attributes if any
         if hasattr(obj,'material'):
             for attr in obj.material.attributes:
                 if obj.material.attributes[attr]:
-                    attributes[attr] = obj.material.attributes[attr]
+                    attributes.add(obj.material.attributes[attr])
         # add cockpit attributes
         for attr in obj.cockpitAttributes:
             if obj.cockpitAttributes[attr]:
-                attributes[attr] = obj.cockpitAttributes[attr]
+                attributes.add(obj.cockpitAttributes[attr])
             
         for attr in self.reseters:
             # only reset attributes that wont be written with this object again
@@ -825,7 +825,7 @@ class XPlaneCommands():
     def writeAnimAttributes(self,obj,tabs):
         o = ''
         for attr in obj.animAttributes:
-            for value in obj.animAttributes[attr]:
+            for value in obj.animAttributes[attr].getValues():
                 line = "%s\t%s\n" % (attr,value)
                 o+=tabs+line
         return o
@@ -845,7 +845,7 @@ class XPlaneCommands():
         if debug:
             o+='%s# MATERIAL: %s\n' % (tabs,obj.material.name)
         for attr in obj.material.attributes:
-            line = self.writeAttribute(attr,obj.material.attributes[attr],obj)
+            line = self.writeAttribute(attr,obj.material.attributes[attr].getValue(),obj)
             if line:
                 o+=tabs+line
         return o

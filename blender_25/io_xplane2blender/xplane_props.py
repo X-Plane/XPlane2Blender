@@ -27,6 +27,11 @@ class XPlaneCustomAttribute(bpy.types.PropertyGroup):
                                     description="Reset",
                                     default="")
 
+    weight = bpy.props.IntProperty(name="weight",
+                                    description="The more weight an attribute has the later it gets written in the OBJ.",
+                                    default=0,
+                                    min=0)
+
 # Class: XPlaneDataref
 # A X-Plane Dataref
 #

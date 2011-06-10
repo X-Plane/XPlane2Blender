@@ -85,6 +85,119 @@ class XPlaneKeyframe():
         for i in range(0,3):
             self.translation[i] = self.locationLocal[i]-self.object.locationLocal[i]
 
+
+# Class: XPlaneAttributes
+# A Wrapper for OrderedDict that stores a collection of <XPlaneAttribute>.
+class XPlaneAttributes(OrderedDict):
+    def __init__(self):
+        super(XPlaneAttributes,self).__init__()
+
+    # Method: order
+    # Sorts its items by weight.
+    def order(self):
+        from operator import attrgetter
+        self.sort(key=attrgetter('weight'))
+
+    # Method: add
+    # Adds an attribute to the dict.
+    #
+    # Parameters:
+    #   attr - A <XPlaneAttribute>
+    def add(self,attr):
+        if attr.name in self:
+            self[attr.name].addValues(attr.getValues())
+        else:
+            self[attr.name] = attr
+
+    # Method: get
+    # Returns an attribute.
+    #
+    # Parameters:
+    #   string name - Name of the attribute
+    #
+    # Returns:
+    #   a <XPlaneAttribute> or None
+    def get(self,name):
+        if name in self:
+            return self[name]
+        else:
+            return None
+
+    # Method: set
+    # Overwrites an existing attribute.
+    #
+    # Paramters:
+    #   attr - A <XPlaneAttribute>
+    def set(self,attr):
+        if attr.name in self:
+            self[attr.name] = attr
+            
+        
+# Class: XPlaneAttribute
+# An Attribute
+class XPlaneAttribute():
+    name = ''
+    value = None
+    weight = 0
+
+    # Constructor: __init__
+    #
+    # Parameters:
+    #   string name - Name of the attribute
+    #   mixed value - (default = None) Either a string or boolean
+    #   int weight - (default = 0) The attribute weight. Bigger weight will write the attribute later in the OBJ file.
+    def __init__(self,name,value = None,weight = 0):
+        self.name = name
+        self.value = [value]
+        self.weight = weight
+
+    # Method: addValue
+    # Adds a value to the attribute.
+    #
+    # Parameters:
+    #   mixed value - Either a string or boolean
+    def addValue(self,value):
+        if value not in self.values:
+            self.value.append(value)
+
+    # Method: addValues
+    # Add multiple values at once to the attribute.
+    #
+    # Parameters:
+    #   list values - A list of values.
+    def addValues(self,values):
+        for value in values:
+            if value not in self.value:
+                self.value.append(value)
+
+    # Method: setValue
+    # Overwrites the current attribute value.
+    #
+    # Parameters:
+    #   mixed value - Either a string or boolean
+    #   int i - (default = 0) The index of the value.
+    def setValue(self,value,i = 0):
+        self.value[i] =  value
+
+    # Method: getValue
+    # Return the current value of the attribute.
+    #
+    # Paramters:
+    #   int i - (default = 0) The index of the value.
+    #
+    # Returns:
+    #   mixed - The value
+    def getValue(self,i = 0):
+        return self.value[i]
+
+    # Method: getValues
+    #
+    # Returns:
+    #   list - All values of the attribute.
+    def getValues(self):
+        return value
+    
+
 # Class: XPlaneObject
 # A basic object
 #
@@ -157,10 +270,10 @@ class XPlaneObject():
         self.datarefs = {}
         self.bakeMatrix = None
         self.id = int(object.as_pointer())
-        self.attributes = {}
+        self.attributes = XPlaneAttributes()
         self.reseters = {}
-        self.cockpitAttributes = {}
-        self.animAttributes = {}
+        self.cockpitAttributes = XPlaneAttributes()
+        self.animAttributes = XPlaneAttributes()
 
         if hasattr(self.object,'type'):
             self.type = self.object.type
@@ -393,28 +506,25 @@ class XPlaneObject():
 
     def getCustomAttributes(self):
         for attr in self.object.xplane.customAttributes:
-            self.attributes[attr.name] = attr.value
+            self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
             self.reseters[attr.name] = attr.reset
         if hasattr(self.object,"data") and hasattr(self.object.data,"xplane") and hasattr(self.object.data.xplane,"customAttributes"):
             for attr in self.object.data.xplane.customAttributes:
-                self.attributes[attr.name] = attr.value
+                self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
                 self.reseters[attr.name] = attr.reset
 
     def getAnimAttributes(self):
         # add custom anim attributes
         for attr in self.object.xplane.customAnimAttributes:
-            if attr.name not in self.animAttributes:
-                self.animAttributes[attr.name] = []
-            self.animAttributes[attr.name].append(attr.value)
+            self.animAttributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
 
         # add anim attributes from datarefs
         for dataref in self.object.xplane.datarefs:
             # show/hide animation
             if dataref.anim_type in ("show","hide"):
                 name = 'ANIM_'+dataref.anim_type
-                if name not in self.animAttributes:
-                    self.animAttributes[name] = []
-                self.animAttributes[name].append("%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path))
+                value = "%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path)
+                self.animAttributes.add(XPlaneAttribute(name,value))
 
 # Class: XPlaneBone
 # A Bone.
@@ -695,10 +805,10 @@ class XPlanePrimitive(XPlaneObject):
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
         self.faces = None
-        self.attributes['ATTR_light_level'] = None
-        self.attributes['ATTR_poly_os'] = None
-        self.cockpitAttributes['ATTR_cockpit'] = None
-        self.cockpitAttributes['ATTR_cockpit_region'] = None
+        self.attributes.add(XPlaneAttribute('ATTR_light_level'))
+        self.attributes.add(XPlaneAttribute('ATTR_poly_os'))
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit'))
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region'))
 
         #self.getMaterialAttributes()
 
@@ -719,21 +829,21 @@ class XPlanePrimitive(XPlaneObject):
 
         # polygon offsett attribute
         if object.xplane.poly_os>0:
-            self.attributes['ATTR_poly_os'] = '%d' % object.xplane.poly_os
+            self.attributes['ATTR_poly_os'].setValue('%d' % object.xplane.poly_os)
 
         self.getCoordinates()
         self.getAnimations()
 
     def getMaterialAttributes(self):
         for attr in self.material.attributes:
-            self.attributes[attr] = self.material.attributes[attr]
+            self.attributes.add(self.material.attributes[attr])
 
     def getCockpitAttributes(self):
         if self.object.xplane.panel:
-            self.cockpitAttributes['ATTR_cockpit'] = True
+            self.cockpitAttributes['ATTR_cockpit'].setValue(True)
             cockpit_region = int(self.object.xplane.cockpit_region)
             if cockpit_region>0:
-                self.cockpitAttributes['ATTR_cockpit_region'] = '%d' % (cockpit_region-1)
+                self.cockpitAttributes['ATTR_cockpit_region'].setValue('%d' % (cockpit_region-1))
 
     # Method: getManipulatorAttributes
     # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.
@@ -765,13 +875,13 @@ class XPlanePrimitive(XPlaneObject):
             attr=None
 
         if attr is not None:
-            self.cockpitAttributes[attr] = value
+            self.cockpitAttributes.add(XPlaneAttribute(attr,value))
 
     # Method: getLightLevelAttributes
     # Defines light level attributes in <attributes> based on settings in <XPlaneObjectSettings>.
     def getLightLevelAttributes(self):
         if self.object.xplane.lightLevel:
-            self.attributes['ATTR_light_level'] = "%6.4f\t%6.4f\t%s" % (self.object.xplane.lightLevel_v1,self.object.xplane.lightLevel_v2,self.object.xplane.lightLevel_dataref)
+            self.attributes['ATTR_light_level'].setValue("%6.4f\t%6.4f\t%s" % (self.object.xplane.lightLevel_v1,self.object.xplane.lightLevel_v2,self.object.xplane.lightLevel_dataref))
                 
 
 # Class: XPlaneMaterial
@@ -808,40 +918,40 @@ class XPlaneMaterial():
         self.name = None
 
         # Material
-        self.attributes = {"ATTR_diffuse_rgb":None,
-                           #"ATTR_specular_rgb":None, # useless according to Ben Supnik
-                           "ATTR_shade_smooth":True,
-                           "ATTR_shade_flat":None,
-                           "ATTR_emission_rgb":None,
-                           "ATTR_shiny_rat":None,
-                           "ATTR_hard":None,
-                           "ATTR_hard_deck":None,
-                           "ATTR_no_hard":None,
-                           "ATTR_cull":None,
-                           "ATTR_no_cull":None,
-                           "ATTR_depth":None,
-                           "ATTR_no_depth":None,
-                           "ATTR_blend":None,
-                           "ATTR_no_blend":None,
-                           "ATTR_draw_enable":None,
-                           "ATTR_draw_disable":None,
-                           "ATTR_solid_camera":None,
-                           "ATTR_no_solid_camera":None}
-
+        self.attributes = XPlaneAttributes()
+        self.attributes.add(XPlaneAttribute("ATTR_diffuse_rgb"))
+        #self.attributes.add(XPlaneAttribute("ATTR_specular_rgb")) # useless according to Ben Supnik
+        self.attributes.add(XPlaneAttribute("ATTR_shade_smooth",True))
+        self.attributes.add(XPlaneAttribute("ATTR_shade_flat"))
+        self.attributes.add(XPlaneAttribute("ATTR_emission_rgb"))
+        self.attributes.add(XPlaneAttribute("ATTR_shiny_rat"))
+        self.attributes.add(XPlaneAttribute("ATTR_hard"))
+        self.attributes.add(XPlaneAttribute("ATTR_hard_deck"))
+        self.attributes.add(XPlaneAttribute("ATTR_no_hard"))
+        self.attributes.add(XPlaneAttribute("ATTR_cull"))
+        self.attributes.add(XPlaneAttribute("ATTR_no_cull"))
+        self.attributes.add(XPlaneAttribute("ATTR_depth"))
+        self.attributes.add(XPlaneAttribute("ATTR_no_depth"))
+        self.attributes.add(XPlaneAttribute("ATTR_blend"))
+        self.attributes.add(XPlaneAttribute("ATTR_no_blend"))
+        self.attributes.add(XPlaneAttribute("ATTR_draw_enable"))
+        self.attributes.add(XPlaneAttribute("ATTR_draw_disable"))
+        self.attributes.add(XPlaneAttribute("ATTR_solid_camera"))
+        self.attributes.add(XPlaneAttribute("ATTR_no_solid_camera"))
 
         if len(object.data.materials)>0:
             mat = object.data.materials[0]
             self.name = mat.name
 
             if mat.xplane.draw:
-                self.attributes['ATTR_draw_enable'] = True
+                self.attributes['ATTR_draw_enable'].setValue(True)
 
                 # diffuse
                 #if mat.diffuse_intensity>0:
                 diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
                             mat.diffuse_intensity*mat.diffuse_color[1],
                             mat.diffuse_intensity*mat.diffuse_color[2]]
-                self.attributes['ATTR_diffuse_rgb'] = "%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2])
+                self.attributes['ATTR_diffuse_rgb'].setValue("%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2]))
 
                 # specular
                 #if mat.specular_intensity>0:
@@ -851,49 +961,49 @@ class XPlaneMaterial():
 #                            mat.specular_color[2]]
                 #self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
                 if mat.xplane.overrideSpecularity:
-                    self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.xplane.shinyRatio)
+                    self.attributes['ATTR_shiny_rat'].setValue("%6.3f" % (mat.xplane.shinyRatio))
                 else:
-                    self.attributes['ATTR_shiny_rat'] = "%6.3f" % (mat.specular_intensity)
+                    self.attributes['ATTR_shiny_rat'].setValue("%6.3f" % (mat.specular_intensity))
 
                 # emission
                 #if mat.emit>0:
                 emission = [mat.emit*mat.diffuse_color[0],
                             mat.emit*mat.diffuse_color[1],
                             mat.emit*mat.diffuse_color[2]]
-                self.attributes['ATTR_emission_rgb'] = "%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2])
+                self.attributes['ATTR_emission_rgb'].setValue("%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2]))
 
                 # blend
                 if mat.xplane.blend:
-                    self.attributes['ATTR_no_blend'] = "%6.3f" % mat.xplane.blendRatio
+                    self.attributes['ATTR_no_blend'].setValue("%6.3f" % mat.xplane.blendRatio)
             else:
-                self.attributes['ATTR_draw_disable'] = True
+                self.attributes['ATTR_draw_disable'].setValue(True)
 
             # depth check
             if self.object.xplane.depth == False:
-                self.attributes['ATTR_no_depth'] = True;
+                self.attributes['ATTR_no_depth'].setValue(True);
             else:
-                self.attributes['ATTR_depth'] = True
+                self.attributes['ATTR_depth'].setValue(True)
 
             # surface type
             if mat.xplane.surfaceType != 'none':
                 if mat.xplane.deck:
-                    self.attributes['ATTR_hard_deck'] = mat.xplane.surfaceType
+                    self.attributes['ATTR_hard_deck'].setValue(mat.xplane.surfaceType)
                 else:
-                    self.attributes['ATTR_hard'] = mat.xplane.surfaceType
+                    self.attributes['ATTR_hard'].setValue(mat.xplane.surfaceType)
             else:
-                self.attributes['ATTR_no_hard'] = True
+                self.attributes['ATTR_no_hard'].setValue(True)
 
             # backface culling
             if self.object.data.show_double_sided:
-                self.attributes['ATTR_no_cull'] = True
+                self.attributes['ATTR_no_cull'].setValue(True)
             else:
-                self.attributes['ATTR_cull'] = True
+                self.attributes['ATTR_cull'].setValue(True)
 
             # camera collision
             if mat.xplane.solid_camera:
-                self.attributes['ATTR_solid_camera'] = True
+                self.attributes['ATTR_solid_camera'].setValue(True)
             else:
-                self.attributes['ATTR_no_solid_camera'] = True
+                self.attributes['ATTR_no_solid_camera'].setValue(True)
 
             # Texture and uv-coordinates
             if(len(mat.texture_slots)>0 and hasattr(mat.texture_slots[0],'use') and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
@@ -910,7 +1020,7 @@ class XPlaneMaterial():
                 
             # add custom attributes
             for attr in mat.xplane.customAttributes:
-                self.attributes[attr.name] = attr.value
+                self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
 
 # Class: XPlaneFace
 # A mesh face. This class is just a data wrapper used by <XPlaneFaces>.
