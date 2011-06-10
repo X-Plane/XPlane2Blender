@@ -259,6 +259,9 @@ class XPlaneObject():
     # Property: id
     # int - A unique id
 
+    # Property: weight
+    # int - (default = 0) The object weight. Higher weight will write the object later in OBJ.
+
     # Constructor: __init__
     #
     # Parameters:
@@ -277,6 +280,7 @@ class XPlaneObject():
         self.reseters = {}
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
+        self.weight = 0
 
         if hasattr(self.object,'type'):
             self.type = self.object.type
@@ -741,6 +745,7 @@ class XPlaneLight(XPlaneObject):
         self.params = object.data.xplane.params
         self.uv = object.data.xplane.uv
         self.dataref = object.data.xplane.dataref
+        self.weight = 10000 # give a heavy weight so it will come last
 
         # change color according to type
         if self.lightType=='flashing':
@@ -775,6 +780,7 @@ class XPlaneLine(XPlaneObject):
         super(object,parent)
         self.indices = [0,0]
         self.type = 'LINE'
+        self.weight = 9000
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -816,6 +822,7 @@ class XPlanePrimitive(XPlaneObject):
         self.attributes.add(XPlaneAttribute('ATTR_poly_os'))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit'))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region'))
+        self.weight = self.getWeight()
 
         #self.getMaterialAttributes()
 
@@ -844,6 +851,12 @@ class XPlanePrimitive(XPlaneObject):
 
         self.getCoordinates()
         self.getAnimations()
+
+    def getWeight(self):
+        for i in range(0,len(bpy.data.materials)):
+            if self.object.data.materials[0] == bpy.data.materials[i]:
+                return i
+        return 0        
 
     def getMaterialAttributes(self):
         for attr in self.material.attributes:

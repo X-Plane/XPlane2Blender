@@ -8,6 +8,7 @@ from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_ui import showError,showProgress
+from operator import attrgetter
 
 # TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
 try:
@@ -1112,7 +1113,8 @@ class XPlaneData():
                 self.files[filename] = self.getEmptyFile(xplaneLayer)
                 self.collectObjects(self.getObjectsByLayer(layer),filename)
                 #self.splitFileByTexture(xplaneLayer)
-                
+        
+
         if profile:
             profiler.end("XPlaneData.collect")
 
@@ -1189,6 +1191,9 @@ class XPlaneData():
                         # recursion
                         self.collectBones(rootBones,filename,armature)
 
+                    # sort child objects by weight
+                    armature.children.sort(key=attrgetter('weight'))
+
                 # unsuported object type: Keep it to store hierarchy
                 elif obj.type in ['EMPTY','CAMERA','SURFACE','CURVE','FONT','META','LATTICE'] and len(children)>0:
                     if debug:
@@ -1204,6 +1209,8 @@ class XPlaneData():
                     # recursion
                     if len(children)>0:
                         self.collectObjects(children,filename,xplaneObj)
+                        # sort child objects by weight
+                        xplaneObj.children.sort(key=attrgetter('weight'))
                     
                 # mesh: let's create a prim out of it
                 elif obj.type=="MESH":
@@ -1222,6 +1229,8 @@ class XPlaneData():
                     # recursion
                     if len(children)>0:
                         self.collectObjects(children,filename,prim)
+                        # sort child objects by weight
+                        prim.children.sort(key=attrgetter('weight'))
 
                 # lamp: let's create a XPlaneLight. Those cannot have children (yet).
                 elif obj.type=="LAMP":
@@ -1237,6 +1246,9 @@ class XPlaneData():
                     # add to child list
                     if parent != None:
                         parent.children.append(xplaneObj)
+
+        # sort objects by weight on top level
+        self.files[filename]['objects'].sort(key=attrgetter('weight'))
 
     # Method: getBone
     # Returns a bone from an armature.
