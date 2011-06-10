@@ -90,7 +90,9 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             if type=="LAMP":
                 type = "OBJECT"
             lod_layout(self,obj)
+            weight_layout(self,obj)
             custom_layout(self,obj,type)
+            
 
 # Class: BONE_PT_xplane
 # Adds X-Plane settings to the bone tab. Uses <animation_layout>.
@@ -559,6 +561,19 @@ def lod_layout(self,obj):
     layout = self.layout
     row = layout.row()
     row.prop(obj.xplane,"lod",text="LOD")
+
+# Function: weight_layout
+# Draws the UI for Object weight
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
+def weight_layout(self,obj):
+    layout = self.layout
+    row = layout.row()
+    row.prop(obj.xplane,'override_weight')
+    if obj.xplane.override_weight:
+        row.prop(obj.xplane,'weight')
 
 # Function: parseDatarefs
 # Parses the DataRefs.txt file which is located within the io_xplane2blender addon directory and stores results in a list.

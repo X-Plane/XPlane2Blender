@@ -517,6 +517,15 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
                                         default=(False,False,False),
                                         size=3)
 
+    override_weight = bpy.props.BoolProperty(name="Override weight",
+                                        description="If checked you can override the internal weight of the object. Heavier objects will be written later in OBJ.",
+                                        default=False)
+
+    weight = bpy.props.IntProperty(name="Weight",
+                                    description="Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lamps >=10000.",
+                                    default=0,
+                                    min=0)
+
 # Class: XPlaneBoneSettings
 # Settings for Blender bones.
 #

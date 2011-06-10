@@ -280,7 +280,7 @@ class XPlaneObject():
         self.reseters = {}
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
-        self.weight = 0
+        self.weight = self.getWeight()
 
         if hasattr(self.object,'type'):
             self.type = self.object.type
@@ -532,6 +532,19 @@ class XPlaneObject():
                 name = 'ANIM_'+dataref.anim_type
                 value = "%6.4f\t%6.4f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name,value))
+
+    # Method: getWeight
+    #
+    # Returns:
+    #   int - The weight of this object.
+    def getWeight(self):
+        if self.object.xplane.override_weight:
+            return self.object.xplane.weight
+        elif hasattr(self,'material'):
+            for i in range(0,len(bpy.data.materials)):
+                if self.object.data.materials[0] == bpy.data.materials[i]:
+                    return i
+        return 0
 
 # Class: XPlaneBone
 # A Bone.
@@ -823,7 +836,6 @@ class XPlanePrimitive(XPlaneObject):
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit'))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit',True))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region'))
-        self.weight = self.getWeight()
 
         #self.getMaterialAttributes()
 
@@ -852,12 +864,6 @@ class XPlanePrimitive(XPlaneObject):
 
         self.getCoordinates()
         self.getAnimations()
-
-    def getWeight(self):
-        for i in range(0,len(bpy.data.materials)):
-            if self.object.data.materials[0] == bpy.data.materials[i]:
-                return i
-        return 0        
 
     def getMaterialAttributes(self):
         for attr in self.material.attributes:
