@@ -476,7 +476,7 @@ class XPlaneCommands():
         self.reseters = {
             'ATTR_light_level':'ATTR_light_level_reset',
             'ATTR_cockpit':'ATTR_no_cockpit',
-            #'ATTR_cockpit_region':'ATTR_no_cockpit',
+#            'ATTR_cockpit_region':'ATTR_no_cockpit',
             'ATTR_manip_drag_xy':'ATTR_manip_none',
             'ATTR_manip_drag_axis':'ATTR_manip_none',
             'ATTR_manip_command':'ATTR_manip_none',

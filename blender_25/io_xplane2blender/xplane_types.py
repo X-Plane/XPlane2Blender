@@ -821,6 +821,7 @@ class XPlanePrimitive(XPlaneObject):
         self.attributes.add(XPlaneAttribute('ATTR_light_level'))
         self.attributes.add(XPlaneAttribute('ATTR_poly_os'))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit'))
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit',True))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region'))
         self.weight = self.getWeight()
 
@@ -865,6 +866,7 @@ class XPlanePrimitive(XPlaneObject):
     def getCockpitAttributes(self):
         if self.object.xplane.panel:
             self.cockpitAttributes['ATTR_cockpit'].setValue(True)
+            self.cockpitAttributes['ATTR_no_cockpit'].setValue(None)
             cockpit_region = int(self.object.xplane.cockpit_region)
             if cockpit_region>0:
                 self.cockpitAttributes['ATTR_cockpit_region'].setValue('%d' % (cockpit_region-1))
