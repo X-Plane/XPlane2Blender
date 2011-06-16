@@ -459,15 +459,18 @@ def animation_layout(self,obj,bone = False):
         subrow = subbox.row()
 
         if attr.anim_type=='transform':
-            if bone:
-                subrow.operator("bone.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
-                subrow.operator("bone.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
+            if bpy.context.object.animation_data:
+                if bone:
+                    subrow.operator("bone.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
+                    subrow.operator("bone.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
+                else:
+                    subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
+                    subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
+                subrow.prop(attr,"value")
+                subrow = subbox.row()
+                subrow.prop(attr,"loop",text="Loops")
             else:
-                subrow.operator("object.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
-                subrow.operator("object.remove_xplane_dataref_keyframe",text="",icon="KEY_DEHLT").index = i
-            subrow.prop(attr,"value")
-            subrow = subbox.row()
-            subrow.prop(attr,"loop",text="Loops")
+                subrow.label('Object not animated.')
         elif attr.anim_type in ("show","hide"):
             subrow.prop(attr,"show_hide_v1")
             subrow = subbox.row()

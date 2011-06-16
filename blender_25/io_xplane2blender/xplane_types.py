@@ -338,7 +338,7 @@ class XPlaneObject():
             #check for dataref animation by getting fcurves with the dataref group
             for fcurve in object.animation_data.action.fcurves:
                 if debug:
-                    debugger.debug("\t\t checking FCurve %s" % fcurve.data_path)
+                    debugger.debug("\t\t checking FCurve %s Group: %s" % (fcurve.data_path,fcurve.group))
                 if (fcurve.group != None and fcurve.group.name == groupName):
                     # get dataref name
                     if bone:
