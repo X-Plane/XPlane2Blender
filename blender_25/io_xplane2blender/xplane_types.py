@@ -280,12 +280,13 @@ class XPlaneObject():
         self.reseters = {}
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
-        self.weight = self.getWeight()
 
         if hasattr(self.object,'type'):
             self.type = self.object.type
         else:
             self.type = None
+
+        self.getWeight()
 
     # Method: firstAnimatedParent
     # Returns the first <parent> in hierarchy that is animated.
@@ -552,11 +553,25 @@ class XPlaneObject():
                         if self.object.data.materials[0] == bpy.data.materials[i]:
                             weight = i
 
-            # add 100 to weight on animated objects, so they are all grouped
-            if self.animated():
-                weight+=100
+            # add max weight of attributes
+            max_attr_weight = 0
+
+            for attr in self.attributes:
+                if self.attributes[attr].weight>max_attr_weight:
+                    max_attr_weight = self.attributes[attr].weight
+
+            for attr in self.cockpitAttributes:
+                if self.cockpitAttributes[attr].weight>max_attr_weight:
+                    max_attr_weight = self.cockpitAttributes[attr].weight
+
+            weight+=max_attr_weight
+
+            # add 1000 to weight on animated objects, so they are all grouped
+            # TODO: decide if this is neccessary as it would interrupt grouping by material and animations are fairly cheap.
+#            if self.animated():
+#                weight+=1000
                         
-        return weight
+        self.weight = weight
 
 # Class: XPlaneBone
 # A Bone.
@@ -586,6 +601,9 @@ class XPlaneBone(XPlaneObject):
 
 #        self.getCustomAttributes()
 #        self.getAnimAttributes()
+
+        self.getWeight()
+
         self.getCoordinates()
         self.getAnimations(self.armature.object,self.object)
 
@@ -706,6 +724,8 @@ class XPlaneArmature(XPlaneObject):
         self.attributes.order()
         self.animAttributes.order()
 
+        self.getWeight()
+
         self.getCoordinates()
         self.getAnimations()
 
@@ -790,6 +810,8 @@ class XPlaneLight(XPlaneObject):
         self.getCustomAttributes()
         self.getAnimAttributes()
 
+        self.getWeight()
+
         self.getCoordinates()
         self.getAnimations()
 
@@ -804,6 +826,8 @@ class XPlaneLine(XPlaneObject):
         super(object,parent)
         self.indices = [0,0]
         self.type = 'LINE'
+
+        self.getWeight()
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -841,11 +865,11 @@ class XPlanePrimitive(XPlaneObject):
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
         self.faces = None
-        self.attributes.add(XPlaneAttribute('ATTR_light_level'))
-        self.attributes.add(XPlaneAttribute('ATTR_poly_os'))
-        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit'))
+        self.attributes.add(XPlaneAttribute('ATTR_light_level',None,1000))
+        self.attributes.add(XPlaneAttribute('ATTR_poly_os',None,1000))
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit',None,2000))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit',True))
-        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region'))
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region',None,2000))
 
         #self.getMaterialAttributes()
 
@@ -871,6 +895,8 @@ class XPlanePrimitive(XPlaneObject):
         self.attributes.order()
         self.animAttributes.order()
         self.cockpitAttributes.order()
+
+        self.getWeight()
 
         self.getCoordinates()
         self.getAnimations()
