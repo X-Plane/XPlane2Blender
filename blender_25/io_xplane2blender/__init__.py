@@ -46,7 +46,7 @@ else:
     from io_xplane2blender import xplane_export
     from io_xplane2blender import xplane_ops
     from io_xplane2blender import xplane_config
-
+    
 
 # Function: menu_func
 # Adds the export option to the menu.

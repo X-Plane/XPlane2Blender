@@ -598,6 +598,7 @@ def weight_layout(self,obj):
 #            file.close()
 #    return search_data
 
+
 # Function: showError
 # Draws a window displaying an error message.
 #
@@ -607,11 +608,11 @@ def weight_layout(self,obj):
 # Todos:
 #   - Not working at all.
 def showError(message):
-    bpy.ops.xplane.msg(
+    bpy.ops.xplane.error(
         'INVOKE_DEFAULT',
-        msg_type='ERROR',
         msg_text=message
     )
+    setErrors(True)
 
 # Function: showProgress
 # Draws a progress bar together with a message.
@@ -625,12 +626,10 @@ def showError(message):
 def showProgress(progress,message):
     bpy.ops.xplane.msg(
         'INVOKE_DEFAULT',
-        msg_type='INFO',
         msg_text='%s - %s' % (str(round(progress*100))+'%',message)
     )
 
 class XPlaneMessage(bpy.types.Operator):
-    """An operator to show simple messages in the UI"""
     bl_idname = 'xplane.msg'
     bl_label = 'XPlane2Blender message'
     msg_type = bpy.props.StringProperty(default='INFO')
@@ -641,10 +640,27 @@ class XPlaneMessage(bpy.types.Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        if self.msg_type=='ERROR':
-            return wm.invoke_props_dialog(self)
-        else:
-            return wm.invoke_popup(self)
+        return wm.invoke_popup(self)
+
+    def draw(self,context):
+        layout = self.layout
+        row = layout.row()
+        row.label(text=self.msg_type+': '+self.msg_text)
+
+
+class XPlaneError(bpy.types.Operator):
+    bl_idname = 'xplane.error'
+    bl_label = 'XPlane2Blender error'
+    msg_type = bpy.props.StringProperty(default='ERROR')
+    msg_text = bpy.props.StringProperty(default='')
+
+    def execute(self, context):
+        self.report(self.msg_type, self.msg_text)
+        return {'FINISHED'}
+
+    def invoke(self,context,event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
 
     def draw(self,context):
         layout = self.layout
@@ -696,6 +712,7 @@ def addXPlaneUI():
     bpy.utils.register_class(OBJECT_PT_xplane)
     bpy.utils.register_class(SCENE_PT_xplane)
     bpy.utils.register_class(XPlaneMessage)
+    bpy.utils.register_class(XPlaneError)
     bpy.utils.register_class(XPlaneDatarefSearch)
 
 # Function: removeXPlaneUI
@@ -707,4 +724,5 @@ def removeXPlaneUI():
     bpy.utils.unregister_class(OBJECT_PT_xplane)
     bpy.utils.unregister_class(SCENE_PT_xplane)
     bpy.utils.unregister_class(XPlaneMessage)
+    bpy.utils.unregister_class(XPlaneError)
     bpy.utils.unregister_class(XPlaneDatarefSearch)

@@ -27,6 +27,8 @@ debugger = XPlaneDebugger()
 # Instance of <XPlaneProfiler> which is used to profile processes.
 profiler = XPlaneProfiler()
 
+errors = False
+
 def initConfig():
     global debug
     global profile
@@ -73,3 +75,11 @@ def getProfile():
 def getVersion():
     global version
     return version
+
+def getErrors():
+    global errors
+    return errors
+
+def setErrors(err):
+    global errors
+    errors = err

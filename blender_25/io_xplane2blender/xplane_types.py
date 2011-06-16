@@ -11,6 +11,7 @@ from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_ui import showError,showProgress
 
+
 # Class: XPlaneKeyframe
 # A Keyframe.
 class XPlaneKeyframe():
@@ -550,7 +551,7 @@ class XPlaneObject():
             else:
                 if hasattr(self,'material'):
                     for i in range(0,len(bpy.data.materials)):
-                        if self.object.data.materials[0] == bpy.data.materials[i]:
+                        if len(self.object.data.materials)>0 and self.object.data.materials[0] == bpy.data.materials[i]:
                             weight = i
 
             # add max weight of attributes
@@ -1089,6 +1090,9 @@ class XPlaneMaterial():
             # add custom attributes
             for attr in mat.xplane.customAttributes:
                 self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
+
+        else:
+            showError('%s: No Material found.' % object.name)
 
         self.attributes.order()
 

@@ -7,7 +7,6 @@ import os
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
-from io_xplane2blender.xplane_ui import showError,showProgress
 from operator import attrgetter
 
 # TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
@@ -1429,7 +1428,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         debug = getDebug()
         debugger = getDebugger()
         
-        errors = False
+        setErrors(False)
 
         if debug:
             debugger.start(log)
@@ -1505,13 +1504,11 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     if profile:
                         profiler.end("ExportXPlane9 %s" % file)
                 else:
-                    errors=True
                     showError('No objects to export, aborting ...')
                     if debug:
                         debugger.debug("No objects to export, aborting ...")
                 i+=1
         else:
-            errors=True
             showError('No files to export, aborting ...')
             if debug:
                 debugger.debug("No files to export, aborting ...")
@@ -1529,7 +1526,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         if debug:
             debugger.end()
 
-        if errors==False:
+        if getErrors()==False:
             showProgress(1.0,'Done!')
         
         return {'FINISHED'}
