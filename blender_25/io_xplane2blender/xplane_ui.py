@@ -40,6 +40,7 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
 
         if(obj.type == "MESH"):
             material_layout(self,obj.active_material)
+            cockpit_layout(self,obj.active_material)
             custom_layout(self,obj.active_material,"MATERIAL")
 
 # Class: SCENE_PT_xplane
@@ -84,7 +85,6 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             animation_layout(self,obj)
             if obj.type == "MESH":
                 mesh_layout(self,obj)
-                cockpit_layout(self,obj)
                 manipulator_layout(self,obj)
             type = obj.type
             if type=="LAMP":
@@ -289,20 +289,6 @@ def mesh_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "depth", text="Use depth culling")
     row = layout.row()
-    row.prop(obj.xplane, "poly_os", text="Polygon offset")
-    row = layout.row()
-
-    row.prop(obj.xplane,"lightLevel", text="Override light level")
-
-    if obj.xplane.lightLevel:
-        box = layout.box()
-        box.prop(obj.xplane,"lightLevel_v1",text="Value 1")
-        row = box.row()
-        row.prop(obj.xplane,"lightLevel_v2",text="Value 2")
-        row = box.row()
-        row.prop(obj.xplane,"lightLevel_dataref",text="Dataref")
-        row = box.row()
-        row.operator('xplane.dataref_search',text="Search dataref",emboss=True,icon="VIEWZOOM")
 
 # Function: lamp_layout
 # Draws the UI layout for lamps.
@@ -369,6 +355,22 @@ def material_layout(self, obj):
 
     row = layout.row()
     row.prop(obj.xplane,"solid_camera",text="Camera collision")
+
+    row = layout.row()
+    row.prop(obj.xplane, "poly_os", text="Polygon offset")
+    row = layout.row()
+
+    row.prop(obj.xplane,"lightLevel", text="Override light level")
+    
+    if obj.xplane.lightLevel:
+        box = layout.box()
+        box.prop(obj.xplane,"lightLevel_v1",text="Value 1")
+        row = box.row()
+        row.prop(obj.xplane,"lightLevel_v2",text="Value 2")
+        row = box.row()
+        row.prop(obj.xplane,"lightLevel_dataref",text="Dataref")
+        row = box.row()
+        row.operator('xplane.dataref_search',text="Search dataref",emboss=True,icon="VIEWZOOM")
 
 # Function: custom_layout
 # Draws the additional UI layout for custom attributes.

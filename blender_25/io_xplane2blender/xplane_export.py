@@ -848,6 +848,13 @@ class XPlaneCommands():
             line = self.writeAttribute(attr,obj.material.attributes[attr].getValue(),obj)
             if line:
                 o+=tabs+line
+
+        if self.file['parent'].cockpit:
+            for attr in obj.material.cockpitAttributes:
+                line = self.writeAttribute(attr,obj.material.cockpitAttributes[attr].getValue(),obj)
+                if line:
+                    o+=tabs+line
+
         return o
 
     # Method: writeKeyframes

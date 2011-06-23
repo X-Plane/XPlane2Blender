@@ -866,11 +866,6 @@ class XPlanePrimitive(XPlaneObject):
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
         self.faces = None
-        self.attributes.add(XPlaneAttribute('ATTR_light_level',None,1000))
-        self.attributes.add(XPlaneAttribute('ATTR_poly_os',None,1000))
-        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit',None,2000))
-        self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit',True))
-        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region',None,2000))
 
         #self.getMaterialAttributes()
 
@@ -882,16 +877,6 @@ class XPlanePrimitive(XPlaneObject):
 
         # add manipulator attributes
         self.getManipulatorAttributes()
-
-        # add cockpit attributes
-        self.getCockpitAttributes()
-
-        # add light level attritubes
-        self.getLightLevelAttributes()
-
-        # polygon offsett attribute
-        if object.xplane.poly_os>0:
-            self.attributes['ATTR_poly_os'].setValue('%d' % object.xplane.poly_os)
 
         self.attributes.order()
         self.animAttributes.order()
@@ -905,14 +890,6 @@ class XPlanePrimitive(XPlaneObject):
     def getMaterialAttributes(self):
         for attr in self.material.attributes:
             self.attributes.add(self.material.attributes[attr])
-
-    def getCockpitAttributes(self):
-        if self.object.xplane.panel:
-            self.cockpitAttributes['ATTR_cockpit'].setValue(True)
-            self.cockpitAttributes['ATTR_no_cockpit'].setValue(None)
-            cockpit_region = int(self.object.xplane.cockpit_region)
-            if cockpit_region>0:
-                self.cockpitAttributes['ATTR_cockpit_region'].setValue('%d' % (cockpit_region-1))
 
     # Method: getManipulatorAttributes
     # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.
@@ -945,12 +922,6 @@ class XPlanePrimitive(XPlaneObject):
 
         if attr is not None:
             self.cockpitAttributes.add(XPlaneAttribute(attr,value))
-
-    # Method: getLightLevelAttributes
-    # Defines light level attributes in <attributes> based on settings in <XPlaneObjectSettings>.
-    def getLightLevelAttributes(self):
-        if self.object.xplane.lightLevel:
-            self.attributes['ATTR_light_level'].setValue("%6.4f\t%6.4f\t%s" % (self.object.xplane.lightLevel_v1,self.object.xplane.lightLevel_v2,self.object.xplane.lightLevel_dataref))
                 
 
 # Class: XPlaneMaterial
@@ -1008,42 +979,62 @@ class XPlaneMaterial():
         self.attributes.add(XPlaneAttribute("ATTR_solid_camera"))
         self.attributes.add(XPlaneAttribute("ATTR_no_solid_camera"))
 
+        self.attributes.add(XPlaneAttribute('ATTR_light_level',None,1000))
+        self.attributes.add(XPlaneAttribute('ATTR_poly_os',None,1000))
+
+        self.cockpitAttributes = XPlaneAttributes()
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit',None,2000))
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit',True))
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region',None,2000))
+
         if len(object.data.materials)>0:
             mat = object.data.materials[0]
             self.name = mat.name
 
             if mat.xplane.draw:
-                self.attributes['ATTR_draw_enable'].setValue(True)
+                # add cockpit attributes
+                self.getCockpitAttributes(mat)
 
-                # diffuse
-                #if mat.diffuse_intensity>0:
-                diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
-                            mat.diffuse_intensity*mat.diffuse_color[1],
-                            mat.diffuse_intensity*mat.diffuse_color[2]]
-                self.attributes['ATTR_diffuse_rgb'].setValue("%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2]))
+                # add light level attritubes
+                self.getLightLevelAttributes(mat)
 
-                # specular
-                #if mat.specular_intensity>0:
-                # specular color is useless according to Ben Supnik
-#                specular = [mat.specular_color[0],
-#                            mat.specular_color[1],
-#                            mat.specular_color[2]]
-                #self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
-                if mat.xplane.overrideSpecularity:
-                    self.attributes['ATTR_shiny_rat'].setValue("%6.3f" % (mat.xplane.shinyRatio))
-                else:
-                    self.attributes['ATTR_shiny_rat'].setValue("%6.3f" % (mat.specular_intensity))
+                # polygon offsett attribute
+                if mat.xplane.poly_os>0:
+                    self.attributes['ATTR_poly_os'].setValue('%d' % mat.xplane.poly_os)
 
-                # emission
-                #if mat.emit>0:
-                emission = [mat.emit*mat.diffuse_color[0],
-                            mat.emit*mat.diffuse_color[1],
-                            mat.emit*mat.diffuse_color[2]]
-                self.attributes['ATTR_emission_rgb'].setValue("%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2]))
+                if mat.xplane.panel==False:
 
-                # blend
-                if mat.xplane.blend:
-                    self.attributes['ATTR_no_blend'].setValue("%6.3f" % mat.xplane.blendRatio)
+                    self.attributes['ATTR_draw_enable'].setValue(True)
+
+                    # diffuse
+                    #if mat.diffuse_intensity>0:
+                    diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
+                                mat.diffuse_intensity*mat.diffuse_color[1],
+                                mat.diffuse_intensity*mat.diffuse_color[2]]
+                    self.attributes['ATTR_diffuse_rgb'].setValue("%6.3f %6.3f %6.3f" % (diffuse[0], diffuse[1], diffuse[2]))
+
+                    # specular
+                    #if mat.specular_intensity>0:
+                    # specular color is useless according to Ben Supnik
+    #                specular = [mat.specular_color[0],
+    #                            mat.specular_color[1],
+    #                            mat.specular_color[2]]
+                    #self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
+                    if mat.xplane.overrideSpecularity:
+                        self.attributes['ATTR_shiny_rat'].setValue("%6.3f" % (mat.xplane.shinyRatio))
+                    else:
+                        self.attributes['ATTR_shiny_rat'].setValue("%6.3f" % (mat.specular_intensity))
+
+                    # emission
+                    #if mat.emit>0:
+                    emission = [mat.emit*mat.diffuse_color[0],
+                                mat.emit*mat.diffuse_color[1],
+                                mat.emit*mat.diffuse_color[2]]
+                    self.attributes['ATTR_emission_rgb'].setValue("%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2]))
+
+                    # blend
+                    if mat.xplane.blend:
+                        self.attributes['ATTR_no_blend'].setValue("%6.3f" % mat.xplane.blendRatio)
             else:
                 self.attributes['ATTR_draw_disable'].setValue(True)
 
@@ -1095,6 +1086,20 @@ class XPlaneMaterial():
             showError('%s: No Material found.' % object.name)
 
         self.attributes.order()
+
+    def getCockpitAttributes(self,mat):
+        if mat.xplane.panel:
+            self.cockpitAttributes['ATTR_cockpit'].setValue(True)
+            self.cockpitAttributes['ATTR_no_cockpit'].setValue(None)
+            cockpit_region = int(mat.xplane.cockpit_region)
+            if cockpit_region>0:
+                self.cockpitAttributes['ATTR_cockpit_region'].setValue('%d' % (cockpit_region-1))
+
+    # Method: getLightLevelAttributes
+    # Defines light level attributes in <attributes> based on settings in <XPlaneObjectSettings>.
+    def getLightLevelAttributes(self,mat):
+        if mat.xplane.lightLevel:
+            self.attributes['ATTR_light_level'].setValue("%6.4f\t%6.4f\t%s" % (mat.xplane.lightLevel_v1,mat.xplane.lightLevel_v2,mat.xplane.lightLevel_dataref))
 
 # Class: XPlaneFace
 # A mesh face. This class is just a data wrapper used by <XPlaneFaces>.

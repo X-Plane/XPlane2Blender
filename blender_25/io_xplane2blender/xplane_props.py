@@ -470,47 +470,10 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
                                       description="User defined attributes for animation of the Object.",
                                       type=XPlaneCustomAttribute)
 
-    panel = bpy.props.BoolProperty(attr="panel",
-                                        name="Part of cockpit panel",
-                                        description="If checked this object will use the panel texture and will be clickable.",
-                                        default=False)
-
-    cockpit_region = bpy.props.EnumProperty(attr="cockpit_region",
-                                        name="Cockpit region",
-                                        description="Cockpit region to use.",
-                                        default="0",
-                                        items=[("0","none","none"),("1","1","1"),("2","2","2"),("3","3","3"),("4","4","4")])
-
     manip = bpy.props.PointerProperty(attr="manip",
                                         name="Manipulator",
                                         description="XPlane Manipulator Settings.",
                                         type=XPlaneManipulator)
-
-    lightLevel = bpy.props.BoolProperty(attr="lightLevel",
-                                        name="Light Level",
-                                        description="If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting.",
-                                        default=False)
-
-    lightLevel_v1 = bpy.props.FloatProperty(attr="lightLevel_v1",
-                                        name="Light Level v1",
-                                        description="Value 1",
-                                        default=0.0)
-
-    lightLevel_v2 = bpy.props.FloatProperty(attr="lightLevel_v2",
-                                        name="Light Level v2",
-                                        description="Value 2",
-                                        default=1.0)
-
-    lightLevel_dataref = bpy.props.StringProperty(attr="lightLevel_dataref",
-                                        name="Light Level Dataref",
-                                        description="The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped.",
-                                        default="")
-
-    poly_os = bpy.props.IntProperty(name="Polygon offset",
-                                    description="Sets the polygon offset state. Leave at 0 for default behaviour.",
-                                    default=0,
-                                    step=1,
-                                    min=0)
 
     lod = bpy.props.BoolVectorProperty(name="Levels of detail",
                                         description="Define in wich LODs this object will be used. If none is checked it will be used in all.",
@@ -609,6 +572,43 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
                                         precision=2,
                                         max=1.0,
                                         min=0.0)
+
+    panel = bpy.props.BoolProperty(attr="panel",
+                                        name="Part of cockpit panel",
+                                        description="If checked this object will use the panel texture and will be clickable.",
+                                        default=False)
+
+    cockpit_region = bpy.props.EnumProperty(attr="cockpit_region",
+                                        name="Cockpit region",
+                                        description="Cockpit region to use.",
+                                        default="0",
+                                        items=[("0","none","none"),("1","1","1"),("2","2","2"),("3","3","3"),("4","4","4")])
+
+    lightLevel = bpy.props.BoolProperty(attr="lightLevel",
+                                        name="Light Level",
+                                        description="If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting.",
+                                        default=False)
+
+    lightLevel_v1 = bpy.props.FloatProperty(attr="lightLevel_v1",
+                                        name="Light Level v1",
+                                        description="Value 1",
+                                        default=0.0)
+
+    lightLevel_v2 = bpy.props.FloatProperty(attr="lightLevel_v2",
+                                        name="Light Level v2",
+                                        description="Value 2",
+                                        default=1.0)
+
+    lightLevel_dataref = bpy.props.StringProperty(attr="lightLevel_dataref",
+                                        name="Light Level Dataref",
+                                        description="The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped.",
+                                        default="")
+
+    poly_os = bpy.props.IntProperty(name="Polygon offset",
+                                    description="Sets the polygon offset state. Leave at 0 for default behaviour.",
+                                    default=0,
+                                    step=1,
+                                    min=0)
 
     customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane material attributes",
