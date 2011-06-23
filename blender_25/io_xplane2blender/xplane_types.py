@@ -541,12 +541,12 @@ class XPlaneObject():
     #   int - The weight of this object.
     def getWeight(self):
         weight = 0
-        if self.object.xplane.override_weight:
+        if hasattr(self.object.xplane,'override_weight') and self.object.xplane.override_weight:
             return self.object.xplane.weight
         else:
-            if self.object.type=='LIGHT':
+            if self.type=='LIGHT':
                 weight = 10000
-            elif self.object.type=='LINE':
+            elif self.type=='LINE':
                 weight = 9000
             else:
                 if hasattr(self,'material'):
