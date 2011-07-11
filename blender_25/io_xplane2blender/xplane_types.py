@@ -199,7 +199,7 @@ class XPlaneAttribute():
     # Returns:
     #   list - All values of the attribute.
     def getValues(self):
-        return value
+        return self.value
     
 
 # Class: XPlaneObject
