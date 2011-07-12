@@ -542,7 +542,7 @@ class XPlaneObject():
     def getWeight(self):
         weight = 0
         if hasattr(self.object.xplane,'override_weight') and self.object.xplane.override_weight:
-            self.weight = self.object.xplane.weight
+            weight = self.object.xplane.weight
         else:
             if self.type=='LIGHT':
                 weight = 10000

@@ -543,7 +543,7 @@ class XPlaneCommands():
         tabs = self.getAnimTabs(animLevel)
 
         if debug:
-            o+="%s# %s: %s\n" % (tabs,obj.type,obj.name)
+            o+="%s# %s: %s\tweight: %d\n" % (tabs,obj.type,obj.name,obj.weight)
 
         # only write objects that are in current layer/file
         if self.objectInFile(obj):
