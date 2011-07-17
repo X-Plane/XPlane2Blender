@@ -384,7 +384,7 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
         groupName = "XPlane Datarefs "+bone.name
 
         if groupName not in armature.animation_data.action.groups:
-            obj.animation_data.action.groups.new(groupName)
+            armature.animation_data.action.groups.new(groupName)
 
         armature.data.keyframe_insert(data_path=path, group=groupName)
         
