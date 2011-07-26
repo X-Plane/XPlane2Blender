@@ -37,8 +37,21 @@ class XPlaneMesh():
     def __init__(self,file):
         self.vertices = []
         self.indices = []
+        self.faces = []
         self.globalindex = 0
-        self.writeObjects(file['objects'])
+        self.debug = []
+        self.file = file
+        self.writeObjects(self.file['objects'])
+
+        debug = getDebug()
+        debugger = getDebugger()
+
+        if debug:
+            from operator import itemgetter
+            self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
+            for d in self.debug:
+                debugger.debug('%s: faces %d | obj-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],d['obj_faces'] / d['faces'],d['end_index']-d['start_index'],d['vertices']))
+            debugger.debug('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
 
     # Method: getBakeMatrix
     # Returns the bake matrix of a <XPlaneObject>.
@@ -116,8 +129,9 @@ class XPlaneMesh():
     # Todos:
     #   - optimize vertex-table by removing duplicates. This implise the reordering of the indices.
     def writeObjects(self,objects):
+        debug = getDebug()
         for obj in objects:
-            if obj.type == 'PRIMITIVE':
+            if obj.type == 'PRIMITIVE' and self.isInFile(obj):
                 obj.indices[0] = len(self.indices)
 
                 # create a copy of the object mesh with modifiers applied and triangulated
@@ -132,18 +146,33 @@ class XPlaneMesh():
                 # with the new mesh get uvFaces list
                 uvFaces = self.getUVFaces(mesh,obj.material.uv_name)
 
-    #            faces = XPlaneFaces()
+                faces = []
+
+                if debug:
+                    d = {'name':obj.name,'obj_face':0,'faces':len(mesh.faces),'quads':0,'vertices':len(mesh.vertices),'uvs':0}
 
                 # convert faces to triangles
                 tempfaces = []
                 for i in range(0,len(mesh.faces)):
                     if uvFaces != None:
-                        tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i]))
+                        f = self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i])
+                        tempfaces.extend(f)
+                        if debug:
+                            d['uvs']+=1
+                            if len(f)>1:
+                                d['quads']+=1
                     else:
-                        tempfaces.extend(self.faceToTrianglesWithUV(mesh.faces[i],None))
+                        f = self.faceToTrianglesWithUV(mesh.faces[i],None)
+                        tempfaces.extend(f)
+                        if debug:
+                            if len(f)>1:
+                                d['quads']+=1
 
+                if debug:
+                    d['obj_faces'] = len(tempfaces)
+                
                 for f in tempfaces:
-    #                xplaneFace = XPlaneFace()
+                    xplaneFace = XPlaneFace()
                     l = len(f['indices'])
                     for i in range(0,len(f['indices'])):
                         # get the original index but reverse order, as this is reversing normals
@@ -170,22 +199,34 @@ class XPlaneMesh():
                             self.globalindex+=1                            
 
                         # store face information alltogether in one struct
-    #                    xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
-    #                    xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
-    #                    xplaneFace.uvs[i] = (vert[6],vert[7])
-    #                    xplaneFace.indices[i] = index
+                        xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
+                        xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
+                        xplaneFace.uvs[i] = (vert[6],vert[7])
+                        xplaneFace.indices[i] = index
 
                         self.indices.append(index)
 
-    #                faces.append(xplaneFace)
+                    faces.append(xplaneFace)
 
                 # store the faces in the prim
-    #            prim.faces = faces
+                obj.faces = faces
                 obj.indices[1] = len(self.indices)
+                self.faces.extend(faces)
+
+                if debug:
+                    d['start_index'] = obj.indices[0]
+                    d['end_index'] = obj.indices[1]
+                    self.debug.append(d)
             else:
                 obj.bakeMatrix = self.getBakeMatrix(obj)
                 
             self.writeObjects(obj.children)
+
+    def isInFile(self,obj):
+        for i in range(0,len(obj.object.layers)):
+            if obj.object.layers[i] and i==self.file['parent'].index:
+                return True
+        return False
 
     # Method: getDupliVerticeIndex
     # Returns the index of a vertice duplicate if any.
@@ -1052,7 +1093,7 @@ class XPlaneData():
         for i in range(0,len(bpy.context.scene.layers)):
             if bpy.context.scene.layers[i] and bpy.context.scene.xplane.layers[i].export:
                 layers.append(i)
-
+                
         return layers
 
 
