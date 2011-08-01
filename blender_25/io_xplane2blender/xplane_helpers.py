@@ -131,7 +131,7 @@ class XPlaneProfiler():
     # Returns:
     #   string - Information about the the process.
     def getTime(self,name):
-        return '%s: %6.4f sec (calls: %d)' % (name,self.times[name][1],self.times[name][2])
+        return '%s: %6.6f sec (calls: %d)' % (name,self.times[name][1],self.times[name][2])
 
     # Method: getTimes
     # Returns the times and call numbers of all processes. Uses <getTime> internally.

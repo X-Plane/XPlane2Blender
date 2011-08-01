@@ -61,7 +61,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
                                         name="Animation Type",
                                         description="Type of animation this Dataref will use.",
                                         default="transform",
-                                        items=[("transform","LocRot","Location/Rotation"),("show","Show","Show"),("hide","Hide","Hide")])
+                                        items=[("transform","LocRot","Location/Rotation"),('translate','Loc','Location'),('rotate','Rot','Rotation'),("show","Show","Show"),("hide","Hide","Hide")])
 
     show_hide_v1 = bpy.props.FloatProperty(attr="show_hide_v1",
                                             name="Value 1",

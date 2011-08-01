@@ -460,7 +460,7 @@ def animation_layout(self,obj,bone = False):
         subrow.prop(attr,"anim_type",text="Animation")
         subrow = subbox.row()
 
-        if attr.anim_type=='transform':
+        if attr.anim_type in ('transform','translate','rotate'):
             if bpy.context.object.animation_data:
                 if bone:
                     subrow.operator("bone.add_xplane_dataref_keyframe",text="",icon="KEY_HLT").index = i
