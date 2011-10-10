@@ -1193,7 +1193,10 @@ class XPlaneData():
 
             # get child objects this bone might be a parent of
             self.collectBoneObjects(xplaneBone,filename)
-            
+
+            # sort child objects by weight
+            xplaneBone.children.sort(key=attrgetter('weight'))
+
             # recursion
             self.collectBones(bone.children,filename,xplaneBone)
 

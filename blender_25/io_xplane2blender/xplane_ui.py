@@ -115,6 +115,7 @@ class BONE_PT_xplane(bpy.types.Panel):
     def draw(self, context):
         bone = context.bone
         obj = context.object
+        weight_layout(self,bone)
         animation_layout(self,bone,True)
 
 # Class: OBJECT_MT_xplane_datarefs
