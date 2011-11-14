@@ -32,10 +32,10 @@ class XPlaneKeyframe():
 
     # Property: scale
     # list - [x,y,z] With scale of the <object> in this keyframe.
-    
+
     # Property: index
     # int - The index of this keyframe in the <object> keyframe list.
-    
+
     # Constructor: __init__
     # Caclulates <translation>, <rotation> and <scale>.
     #
@@ -57,17 +57,17 @@ class XPlaneKeyframe():
         # TODO: support subframes?
         self.frame = int(round(keyframe.co[0]))
         bpy.context.scene.frame_set(frame=self.frame)
-            
+
         # update objects so we get values from the keyframe
         #self.object.update()
-        
+
         local = self.object.getLocal()
         world = self.object.getWorld()
 
         self.location = world["location"]
         self.angle = world["angle"]
         self.scale = world["scale"]
-        
+
         self.locationLocal = local["location"]
         self.angleLocal = local["angle"]
         self.scaleLocal = local["scale"]
@@ -135,8 +135,8 @@ class XPlaneAttributes(OrderedDict):
     def set(self,attr):
         if attr.name in self:
             self[attr.name] = attr
-            
-        
+
+
 # Class: XPlaneAttribute
 # An Attribute
 class XPlaneAttribute():
@@ -200,7 +200,7 @@ class XPlaneAttribute():
     #   list - All values of the attribute.
     def getValues(self):
         return self.value
-    
+
 
 # Class: XPlaneObject
 # A basic object
@@ -436,7 +436,7 @@ class XPlaneObject():
                         return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.parent.getMatrix()))
                 else:
                     return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.getMatrix(True)))
-        
+
     # Method: getLocal
     # Returns the local coordinates of the object.
     # Uses <getMatrix>, <XPlaneCoords.convertMatrix> and <XPlaneCoords.fromMatrix>.
@@ -571,7 +571,7 @@ class XPlaneObject():
             # TODO: decide if this is neccessary as it would interrupt grouping by material and animations are fairly cheap.
 #            if self.animated():
 #                weight+=1000
-                        
+
         self.weight = weight
 
 # Class: XPlaneBone
@@ -702,7 +702,7 @@ class XPlaneBone(XPlaneObject):
 #                self.parent.armature.object.update()
 #            else:
 #                self.parent.object.update()
-        
+
 # Class: XPlaneArmature
 # A Armature
 #
@@ -871,7 +871,7 @@ class XPlanePrimitive(XPlaneObject):
 
         # add custom attributes
         self.getCustomAttributes()
-        
+
         # add anim attributes from datarefs and custom anim attributes
         self.getAnimAttributes()
 
@@ -896,11 +896,11 @@ class XPlanePrimitive(XPlaneObject):
     def getManipulatorAttributes(self):
         attr = 'ATTR_manip_'
         value = True
-        
+
         if self.object.xplane.manip.enabled:
             manip = self.object.xplane.manip
             type = self.object.xplane.manip.type
-            attr+=type    
+            attr+=type
             if type=='drag_xy':
                 value = '%s\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.v1_min,manip.v1_max,manip.v2_min,manip.v2_max,manip.dataref1,manip.dataref2,manip.tooltip)
             if type=='drag_axis':
@@ -922,7 +922,7 @@ class XPlanePrimitive(XPlaneObject):
 
         if attr is not None:
             self.cockpitAttributes.add(XPlaneAttribute(attr,value))
-                
+
 
 # Class: XPlaneMaterial
 # A Material
@@ -1035,6 +1035,8 @@ class XPlaneMaterial():
                     # blend
                     if mat.xplane.blend:
                         self.attributes['ATTR_no_blend'].setValue("%6.3f" % mat.xplane.blendRatio)
+                    else:
+                        self.attributes['ATTR_blend'].setValue(True)
             else:
                 self.attributes['ATTR_draw_disable'].setValue(True)
 
@@ -1077,7 +1079,7 @@ class XPlaneMaterial():
             # if no uv layer was found in the texture, try to find it now.
             if(self.uv_name == None and len(self.object.data.uv_textures)>0):
                 self.uv_name = self.object.data.uv_textures.active.name
-                
+
             # add custom attributes
             for attr in mat.xplane.customAttributes:
                 self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))

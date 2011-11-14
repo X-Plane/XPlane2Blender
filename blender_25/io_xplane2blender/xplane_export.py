@@ -111,14 +111,14 @@ class XPlaneMesh():
                     else:
                         # bake local matrix
                         matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
-                    
+
 #                co = XPlaneCoords.fromMatrix(matrix)
 #                print(co['angle'])
             else:
                 # no animated objects up in hierarchy, so this will become a static mesh on root level
                 # we can savely bake the world matrix as no transforms will occur
                 matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
-                
+
         return matrix
 
     # Method: writeObjects
@@ -172,7 +172,7 @@ class XPlaneMesh():
 
                 if debug:
                     d['obj_faces'] = len(tempfaces)
-                
+
                 for f in tempfaces:
                     xplaneFace = XPlaneFace()
                     l = len(f['indices'])
@@ -198,7 +198,7 @@ class XPlaneMesh():
                         if index==-1:
                             index = self.globalindex
                             self.vertices.append(vert)
-                            self.globalindex+=1                            
+                            self.globalindex+=1
 
                         # store face information alltogether in one struct
                         xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
@@ -221,7 +221,7 @@ class XPlaneMesh():
                     self.debug.append(d)
             else:
                 obj.bakeMatrix = self.getBakeMatrix(obj)
-                
+
             self.writeObjects(obj.children)
 
     def isInFile(self,obj):
@@ -245,7 +245,7 @@ class XPlaneMesh():
 
         if profile:
             profiler.start('XPlaneMesh.getDupliVerticeIndex')
-            
+
         for i in range(startIndex,len(self.vertices)):
             match = True
             ii = 0
@@ -254,7 +254,7 @@ class XPlaneMesh():
                     match = False
                     ii = len(self.vertices[i])
                 ii+=1
-                
+
             if match:
                 return i
 
@@ -431,7 +431,7 @@ class XPlaneMesh():
                 o+="\n"
                 group = []
                 group.append(i)
-        
+
         # dump overhanging indices
         for i in group:
             o+="IDX\t%d\n" % i
@@ -464,7 +464,7 @@ class XPlaneLights():
         self.lights = []
         self.indices = []
         self.globalindex = 0
-        
+
         for light in file['lights']:
             light.indices[0] = self.globalindex
 
@@ -512,7 +512,7 @@ class XPlaneCommands():
     # Property: staticWritten
     # list - Stores names of objects whos static translations/rotations have already been written.
     staticWritten = []
-    
+
     # Constructor: __init__
     #
     # Parameters:
@@ -537,7 +537,7 @@ class XPlaneCommands():
             'ATTR_hard':'ATTR_no_hard',
             'ATTR_hard_deck':'ATTR_no_hard',
             'ATTR_no_depth':'ATTR_depth',
-            'ATTR_blend':'ATTR_no_blend',
+            'ATTR_no_blend':'ATTR_blend',
         }
         self.written = {}
         self.staticWritten = []
@@ -550,7 +550,7 @@ class XPlaneCommands():
     #   string - The OBJ commands table.
     def write(self):
         o=''
-         
+
         # write down all objects
         for obj in self.file['objects']:
             o+=self.writeObject(obj,0)
@@ -559,7 +559,7 @@ class XPlaneCommands():
         # TODO: write them in writeObjects instead to allow light animation and nesting
 #        if len(self.file['lights'])>0:
 #            o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
-            
+
         return o
 
     # Method: writeObject
@@ -579,9 +579,9 @@ class XPlaneCommands():
 
         if profile:
             profiler.start("XPlaneCommands.writeObject")
-            
+
         o = ''
-        
+
         animationStarted = False
         tabs = self.getAnimTabs(animLevel)
 
@@ -609,12 +609,12 @@ class XPlaneCommands():
                     o+="%sANIM_begin\n" % self.getAnimTabs(animLevel-1)
                     o+=oAnim
 
-        
+
 #            if debug:
 #                debugger.debug('\nWriting attributes for %s' % obj.name)
 
             o+=self.writeReseters(obj,tabs)
-            
+
             if hasattr(obj,'attributes'):
                 o+=self.writeCustomAttributes(obj,tabs)
 
@@ -648,7 +648,7 @@ class XPlaneCommands():
 
         if profile:
             profiler.end("XPlaneCommands.writeObject")
-            
+
         return o
 
     def objectInFile(self,obj):
@@ -672,7 +672,7 @@ class XPlaneCommands():
         tabs = ''
         for i in range(0,level):
             tabs+='\t'
-        
+
         return tabs
 
     # Method: getAnimLevel
@@ -686,12 +686,12 @@ class XPlaneCommands():
     def getAnimLevel(self,obj):
         parent = obj
         level = 0
-        
+
         while parent != None:
             parent = parent.parent
             if (parent!=None):
                 level+=1
-        
+
         return level
 
     # Method: writeAttribute
@@ -715,7 +715,7 @@ class XPlaneCommands():
             else:
                 value = self.parseAttributeValue(value,object)
                 o = '%s\t%s\n' % (attr,value)
-                
+
             if self.canWrite(attr,value):
 #                if debug and draw:
 #                    debugger.debug('writing Attribute %s = %s' % (attr,str(value)))
@@ -757,7 +757,7 @@ class XPlaneCommands():
             return str(value).replace('{{xyz}}','%6.6f\t%6.6f\t%6.6f' % (object.locationLocal[0],object.locationLocal[1],object.locationLocal[2]))
         else:
             return value
-            
+
 
     # Method: canWrite
     # Determines if an attribute must be written.
@@ -793,7 +793,7 @@ class XPlaneCommands():
             # add reseter to own resters list
             if attr in obj.reseters and obj.reseters[attr]!='':
                 self.reseters[attr] = obj.reseters[attr]
-                
+
             if line!=None:
                 o+=tabs+line
         return o
@@ -828,7 +828,7 @@ class XPlaneCommands():
         debug = getDebug()
         debugger = getDebugger()
         o = ''
-        
+
         # create a temporary attributes dict
         attributes = XPlaneAttributes()
         # add custom attributes
@@ -844,7 +844,7 @@ class XPlaneCommands():
         for attr in obj.cockpitAttributes:
             if obj.cockpitAttributes[attr]:
                 attributes.add(obj.cockpitAttributes[attr])
-            
+
         for attr in self.reseters:
             # only reset attributes that wont be written with this object again
             if attr not in attributes and attr in self.written:
@@ -854,7 +854,7 @@ class XPlaneCommands():
                 # write reseter and add it to written
                 o+=tabs+self.reseters[attr]+"\n"
                 self.written[self.reseters[attr]] = True
-                
+
                 # we've reset an attribute so remove it from written as it will need rewrite with next object
                 del self.written[attr]
         return o
@@ -932,7 +932,7 @@ class XPlaneCommands():
         staticTrans = [[0.0,0.0,0.0],[0.0,0.0,0.0]]
 
         animatedParent = obj.firstAnimatedParent()
-        
+
         # root level
         if obj.parent == None:
             world = obj.getWorld()
@@ -950,7 +950,7 @@ class XPlaneCommands():
             staticTrans[0] = world['location']
             if debug:
                 debugger.debug('%s not root level and no animated parent' % obj.name)
-                
+
         # not root level and we have an animated parent somewhere in the hierarchy
         elif animatedParent:
             # move object to the location relative to animated Parent
@@ -958,9 +958,9 @@ class XPlaneCommands():
             staticTrans[0] = relative['location']
             if debug:
                 debugger.debug('%s not root level and animated parent' % obj.name)
-            
+
         # ignore high precision values
-        for i in range(0,2):    
+        for i in range(0,2):
             if round(staticTrans[i][0],4)!=0.0 or round(staticTrans[i][1],4)!=0.0 or round(staticTrans[i][2],4)!=0.0:
                 static['trans'][i] = "%sANIM_trans\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t0\t0\tnone\n" % (tabs,staticTrans[i][0],staticTrans[i][1],staticTrans[i][2],staticTrans[i][0],staticTrans[i][1],staticTrans[i][2])
 
@@ -977,23 +977,23 @@ class XPlaneCommands():
             loops = ''
 
         trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
-        
+
 #        print(obj.vectors)
         rot = ['','','']
         rot[0] = "%sANIM_rotate_begin\t%6.6f\t%6.6f\t%6.6f\t%s\n" % (tabs,obj.vectors[0][0],obj.vectors[0][1],obj.vectors[0][2],dataref)
         rot[1] = "%sANIM_rotate_begin\t%6.6f\t%6.6f\t%6.6f\t%s\n" % (tabs,obj.vectors[1][0],obj.vectors[1][1],obj.vectors[1][2],dataref)
         rot[2] = "%sANIM_rotate_begin\t%6.6f\t%6.6f\t%6.6f\t%s\n" % (tabs,obj.vectors[2][0],obj.vectors[2][1],obj.vectors[2][2],dataref)
-        
+
         for keyframe in keyframes:
             totalTrans[0]+=abs(keyframe.translation[0])
             totalTrans[1]+=abs(keyframe.translation[1])
             totalTrans[2]+=abs(keyframe.translation[2])
             trans+="%s\tANIM_trans_key\t%6.6f\t%6.6f\t%6.6f\t%6.6f\n" % (tabs,keyframe.value,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2])
-            
+
             totalRot[0]+=abs(keyframe.rotation[0])
             totalRot[1]+=abs(keyframe.rotation[1])
             totalRot[2]+=abs(keyframe.rotation[2])
-            
+
             for i in range(0,3):
                 rot[i]+="%s\tANIM_rotate_key\t%6.6f\t%6.6f\n" % (tabs,keyframe.value,keyframe.rotation[i])
 
@@ -1013,7 +1013,7 @@ class XPlaneCommands():
         totalTrans[0] = round(totalTrans[0],FLOAT_PRECISION)
         totalTrans[1] = round(totalTrans[1],FLOAT_PRECISION)
         totalTrans[2] = round(totalTrans[2],FLOAT_PRECISION)
-        
+
         if obj.id not in self.staticWritten:
             o+=static['trans'][0]
             o+=static['rot'][0]
@@ -1025,7 +1025,7 @@ class XPlaneCommands():
         if obj.datarefs[dataref].anim_type in ('transform','translate'):
             if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
                 o+=trans
-                
+
         # ignore high precision changes that won't be written anyway
         totalRot[0] = round(totalRot[0],FLOAT_PRECISION)
         totalRot[1] = round(totalRot[1],FLOAT_PRECISION)
@@ -1099,7 +1099,7 @@ class XPlaneData():
         for i in range(0,len(bpy.context.scene.layers)):
             if bpy.context.scene.layers[i] and bpy.context.scene.xplane.layers[i].export:
                 layers.append(i)
-                
+
         return layers
 
 
@@ -1121,7 +1121,7 @@ class XPlaneData():
                         objects.append(object)
 
         return objects
-        
+
     # Method: getEmptyFile
     # Returns an empty OBJ-file dict.
     #
@@ -1150,7 +1150,7 @@ class XPlaneData():
 #                    found.append(child)
 #                else:
 #                    self.getChildObjects(child,found)
-        
+
         return found
 
     # Method: collect
@@ -1161,7 +1161,7 @@ class XPlaneData():
 
         if profile:
             profiler.start("XPlaneData.collect")
-        
+
         for layer in self.getActiveLayers():
             xplaneLayer = self.getXPlaneLayer(layer)
             if xplaneLayer:
@@ -1169,7 +1169,7 @@ class XPlaneData():
                 self.files[filename] = self.getEmptyFile(xplaneLayer)
                 self.collectObjects(self.getObjectsByLayer(layer),filename)
                 #self.splitFileByTexture(xplaneLayer)
-        
+
 
         if profile:
             profiler.end("XPlaneData.collect")
@@ -1226,7 +1226,7 @@ class XPlaneData():
         for obj in objects:
             if debug:
                 debugger.debug("scanning "+obj.name)
-                
+
             if obj.hide==False:
                 # look for children
                 children = self.getChildObjects(obj)
@@ -1270,7 +1270,7 @@ class XPlaneData():
                         self.collectObjects(children,filename,xplaneObj)
                         # sort child objects by weight
                         xplaneObj.children.sort(key=attrgetter('weight'))
-                    
+
                 # mesh: let's create a prim out of it
                 elif obj.type=="MESH":
                     if debug:
@@ -1296,7 +1296,7 @@ class XPlaneData():
                     if debug:
                         debugger.debug("\t "+obj.name+": adding to list")
                     light = XPlaneLight(obj,parent)
-                    
+
                     if parent == None:
                         self.files[filename]['objects'].append(light)
 
@@ -1339,7 +1339,7 @@ class XPlaneData():
             for obj in self.files[name]['objects']:
                 if obj.type=='PRIMITIVE' and obj.material.texture!=None:
                     filename = name+'_'+obj.material.texture[0:-4]
-                    
+
                     # create new file list if not existant
                     if filename not in self.files:
                         self.files[filename] = self.getEmptyFile(parent)
@@ -1362,7 +1362,7 @@ class XPlaneData():
                 self.files[textures[0]]['lights'] = self.files[name]['lights']
                 self.files[textures[0]]['lines'] = self.files[name]['lines']
                 del self.files[name]
-    
+
 # Class: XPlaneHeader
 # Create an OBJ header.
 class XPlaneHeader():
@@ -1423,7 +1423,7 @@ class XPlaneHeader():
         lines = 0
         lights = len(lights.lights)
         indices = len(mesh.indices)
-        
+
         self.attributes['POINT_COUNTS'] = "%d\t%d\t%d\t%d" % (tris,lines,lights,indices)
 
         # add custom attributes
@@ -1460,16 +1460,16 @@ class XPlaneHeader():
                         o+='%s\t%s\n' % (attr,value)
                 else:
                     o+='%s\t%s\n' % (attr,self.attributes[attr])
-        
+
         return o
-        
+
 # Class: ExportXPlane9
 # Main Export class. Brings all parts together and creates the OBJ files.
 class ExportXPlane9(bpy.types.Operator, ExportHelper):
     '''Export to XPlane Object file format (.obj)'''
     bl_idname = "export.xplane_obj"
     bl_label = 'Export XPlane Object'
-    
+
     filepath = StringProperty(name="File Path", description="Filepath used for exporting the XPlane file(s)", maxlen= 1024, default= "")
     filename_ext = ''
     #check_existing = BoolProperty(name="Check Existing", description="Check and warn on overwriting existing files", default=True, options={'HIDDEN'})
@@ -1487,7 +1487,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         log = getLog()
         debug = getDebug()
         debugger = getDebugger()
-        
+
         setErrors(False)
 
         if debug:
@@ -1507,7 +1507,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         if len(bpy.context.scene.xplane.layers) == 0:
             errors = True
             showError('You must create X-Plane layers first.')
-            return {'FINISHED'}            
+            return {'FINISHED'}
 
         #store current frame as we will go back to it
         currentFrame = bpy.context.scene.frame_current
@@ -1515,7 +1515,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
         # goto first frame so everything is in inital state
         bpy.context.scene.frame_set(frame=1)
         bpy.context.scene.update()
-        
+
         data = XPlaneData()
         data.collect()
 
@@ -1550,7 +1550,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     o+=mesh.writeIndices()
                     o+="\n"
                     o+=commands.write()
-                    
+
                     o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,bpy.app.build_revision,version/1000)
 
                     # write the file
@@ -1582,13 +1582,13 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
             if debug:
                 debugger.debug("\nProfiling results:")
                 debugger.debug(profiler.getTimes())
-    
+
         if debug:
             debugger.end()
 
         if getErrors()==False:
             showProgress(1.0,'Done!')
-        
+
         return {'FINISHED'}
 
     # Method: invoke
