@@ -339,7 +339,8 @@ class XPlaneObject():
             for fcurve in object.animation_data.action.fcurves:
                 if debug:
                     debugger.debug("\t\t checking FCurve %s Group: %s" % (fcurve.data_path,fcurve.group))
-                if (fcurve.group != None and fcurve.group.name == groupName):
+                #if (fcurve.group != None and fcurve.group.name == groupName): # since 2.61 group names are not set so we have to check the datapath
+                if ('xplane.datarefs' in fcurve.data_path):
                     # get dataref name
                     if bone:
                         index = fcurve.data_path.replace('bones["%s"].xplane.datarefs[' % bone.name,'').replace('].value','')
