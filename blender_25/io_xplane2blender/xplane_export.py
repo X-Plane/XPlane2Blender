@@ -958,16 +958,21 @@ class XPlaneCommands():
             staticTrans[0] = relative['location']
             if debug:
                 debugger.debug('%s not root level and animated parent' % obj.name)
+            # direct parent is animated so rotate statically to parents bake matrix rotation
+            if animatedParent == obj.parent:
+                bake = XPlaneCoords.fromMatrix(obj.parent.bakeMatrix)
+                staticRot = bake['angle']
+
 
         # ignore high precision values
         for i in range(0,2):
             if round(staticTrans[i][0],4)!=0.0 or round(staticTrans[i][1],4)!=0.0 or round(staticTrans[i][2],4)!=0.0:
                 static['trans'][i] = "%sANIM_trans\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t0\t0\tnone\n" % (tabs,staticTrans[i][0],staticTrans[i][1],staticTrans[i][2],staticTrans[i][0],staticTrans[i][1],staticTrans[i][2])
 
+        vectors = obj.getVectors()
         for i in range(0,3):
             if (round(staticRot[i],4)!=0.0):
-                vec = [0.0,0.0,0.0]
-                vec[i] = 1.0
+                vec = vectors[i]
                 static['rot'][i] = "%sANIM_rotate\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t0\t0\tnone\n" % (tabs,vec[0],vec[1],vec[2],staticRot[i],staticRot[i])
 
         # add loops if any
