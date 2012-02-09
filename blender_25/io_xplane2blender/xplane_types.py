@@ -598,7 +598,7 @@ class XPlaneBone(XPlaneObject):
         # store armature
         if self.parent.type == 'ARMATURE':
             self.armature = self.parent
-        elif self.parent.aramture != None:
+        elif self.parent.armature != None:
             self.armature = self.parent.armature
 
 #        self.getCustomAttributes()
