@@ -342,10 +342,11 @@ class XPlaneObject():
                 #if (fcurve.group != None and fcurve.group.name == groupName): # since 2.61 group names are not set so we have to check the datapath
                 if ('xplane.datarefs' in fcurve.data_path):
                     # get dataref name
-                    if bone:
-                        index = fcurve.data_path.replace('bones["%s"].xplane.datarefs[' % bone.name,'').replace('].value','')
+                    pos = fcurve.data_path.find('xplane.datarefs[')
+                    if pos!=-1:
+                      index = fcurve.data_path[pos+len('xplane.datarefs[') : -len('].value')]
                     else:
-                        index = fcurve.data_path.replace('xplane.datarefs[','').replace('].value','')
+                        return
 
                     # old style datarefs with wrong datapaths can cause errors so we just skip them
                     try:
