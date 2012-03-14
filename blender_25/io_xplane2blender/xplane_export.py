@@ -537,7 +537,7 @@ class XPlaneCommands():
             'ATTR_hard':'ATTR_no_hard',
             'ATTR_hard_deck':'ATTR_no_hard',
             'ATTR_no_depth':'ATTR_depth',
-            'ATTR_no_blend':'ATTR_blend',
+            'ATTR_no_blend':'ATTR_blend'
         }
         self.written = {}
         self.staticWritten = []
@@ -776,6 +776,23 @@ class XPlaneCommands():
         else:
             return True
 
+    # Method: attributeIsReseter
+    # Determines if a given attribute is a resetter.
+    #
+    # Parameters:
+    #  string attr - The attribute name
+    #  dict reseters - optional (default = self.reseters) a dict of reseters
+    #
+    # Returns:
+    #  bool - True if attribute is a reseter, else False
+    def attributeIsReseter(self,attr,reseters = None):
+      if reseters == None: reseters = self.reseters
+
+      for reseter_attr in reseters:
+        if attr == reseters[reseter_attr]: return True
+
+      return False
+
     # Method: writeCustomAttributes
     # Returns the commands for custom attributes of a <XPlaneObject>.
     #
@@ -790,7 +807,7 @@ class XPlaneCommands():
         for attr in obj.attributes:
             line = self.writeAttribute(attr,obj.attributes[attr].getValue(),obj)
 
-            # add reseter to own resters list
+            # add reseter to own reseters list
             if attr in obj.reseters and obj.reseters[attr]!='':
                 self.reseters[attr] = obj.reseters[attr]
 
@@ -891,15 +908,19 @@ class XPlaneCommands():
         if debug:
             o+='%s# MATERIAL: %s\n' % (tabs,obj.material.name)
         for attr in obj.material.attributes:
-            line = self.writeAttribute(attr,obj.material.attributes[attr].getValue(),obj)
-            if line:
-                o+=tabs+line
+            # do not write own reseters just now
+            if self.attributeIsReseter(attr,obj.reseters) == False:
+              line = self.writeAttribute(attr,obj.material.attributes[attr].getValue(),obj)
+              if line:
+                  o+=tabs+line
 
         if self.file['parent'].cockpit:
             for attr in obj.material.cockpitAttributes:
-                line = self.writeAttribute(attr,obj.material.cockpitAttributes[attr].getValue(),obj)
-                if line:
-                    o+=tabs+line
+                #do not write own reseters just now
+                if self.attributeIsReseter(attr,obj.reseters) == False:
+                  line = self.writeAttribute(attr,obj.material.cockpitAttributes[attr].getValue(),obj)
+                  if line:
+                      o+=tabs+line
 
         return o
 
