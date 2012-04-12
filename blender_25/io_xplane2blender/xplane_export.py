@@ -52,7 +52,10 @@ class XPlaneMesh():
             from operator import itemgetter
             self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
             for d in self.debug:
-                debugger.debug('%s: faces %d | obj-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],d['obj_faces'] / d['faces'],d['end_index']-d['start_index'],d['vertices']))
+                tris_to_quads = 1.0
+                if d['faces'] > 0:
+                  tris_to_quads = d['obj_faces'] / d['faces']
+                debugger.debug('%s: faces %d | obj-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],tris_to_quads,d['end_index']-d['start_index'],d['vertices']))
             debugger.debug('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
 
     # Method: getBakeMatrix
@@ -127,9 +130,6 @@ class XPlaneMesh():
     #
     # Parameters:
     #   list - list of <XPlaneObjects>.
-    #
-    # Todos:
-    #   - optimize vertex-table by removing duplicates. This implise the reordering of the indices.
     def writeObjects(self,objects):
         debug = getDebug()
         for obj in objects:
