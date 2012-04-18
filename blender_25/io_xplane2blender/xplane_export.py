@@ -154,66 +154,67 @@ class XPlaneMesh():
                     d = {'name':obj.name,'obj_face':0,'faces':len(mesh.faces),'quads':0,'vertices':len(mesh.vertices),'uvs':0}
 
                 # convert faces to triangles
-                tempfaces = []
-                for i in range(0,len(mesh.faces)):
-                    if uvFaces != None:
-                        f = self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i])
-                        tempfaces.extend(f)
-                        if debug:
-                            d['uvs']+=1
-                            if len(f)>1:
-                                d['quads']+=1
-                    else:
-                        f = self.faceToTrianglesWithUV(mesh.faces[i],None)
-                        tempfaces.extend(f)
-                        if debug:
-                            if len(f)>1:
-                                d['quads']+=1
+                if hasattr(mesh,'faces') and len(mesh.faces)>0:
+                  tempfaces = []
+                  for i in range(0,len(mesh.faces)):
+                      if uvFaces != None:
+                          f = self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i])
+                          tempfaces.extend(f)
+                          if debug:
+                              d['uvs']+=1
+                              if len(f)>1:
+                                  d['quads']+=1
+                      else:
+                          f = self.faceToTrianglesWithUV(mesh.faces[i],None)
+                          tempfaces.extend(f)
+                          if debug:
+                              if len(f)>1:
+                                  d['quads']+=1
 
-                if debug:
-                    d['obj_faces'] = len(tempfaces)
+                  if debug:
+                      d['obj_faces'] = len(tempfaces)
 
-                for f in tempfaces:
-                    xplaneFace = XPlaneFace()
-                    l = len(f['indices'])
-                    for i in range(0,len(f['indices'])):
-                        # get the original index but reverse order, as this is reversing normals
-                        vindex = f['indices'][2-i]
+                  for f in tempfaces:
+                      xplaneFace = XPlaneFace()
+                      l = len(f['indices'])
+                      for i in range(0,len(f['indices'])):
+                          # get the original index but reverse order, as this is reversing normals
+                          vindex = f['indices'][2-i]
 
-                        # get the vertice from original mesh
-                        v = mesh.vertices[vindex]
-                        co = v.co
+                          # get the vertice from original mesh
+                          v = mesh.vertices[vindex]
+                          co = v.co
 
-                        if f['original_face'].use_smooth: # use smoothed vertex normal
-                            vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
-                        else: # use flat face normal
-                            vert = [co[0],co[1],co[2],f['original_face'].normal[0],f['original_face'].normal[1],f['original_face'].normal[2],f['uv'][i][0],f['uv'][i][1]]
+                          if f['original_face'].use_smooth: # use smoothed vertex normal
+                              vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
+                          else: # use flat face normal
+                              vert = [co[0],co[1],co[2],f['original_face'].normal[0],f['original_face'].normal[1],f['original_face'].normal[2],f['uv'][i][0],f['uv'][i][1]]
 
-                        if bpy.context.scene.xplane.optimize:
-                            #check for duplicates
-                            index = self.getDupliVerticeIndex(vert,obj.indices[0])
-                        else:
-                            index = -1
+                          if bpy.context.scene.xplane.optimize:
+                              #check for duplicates
+                              index = self.getDupliVerticeIndex(vert,obj.indices[0])
+                          else:
+                              index = -1
 
-                        if index==-1:
-                            index = self.globalindex
-                            self.vertices.append(vert)
-                            self.globalindex+=1
+                          if index==-1:
+                              index = self.globalindex
+                              self.vertices.append(vert)
+                              self.globalindex+=1
 
-                        # store face information alltogether in one struct
-                        xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
-                        xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
-                        xplaneFace.uvs[i] = (vert[6],vert[7])
-                        xplaneFace.indices[i] = index
+                          # store face information alltogether in one struct
+                          xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
+                          xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
+                          xplaneFace.uvs[i] = (vert[6],vert[7])
+                          xplaneFace.indices[i] = index
 
-                        self.indices.append(index)
+                          self.indices.append(index)
 
-                    faces.append(xplaneFace)
+                      faces.append(xplaneFace)
 
-                # store the faces in the prim
-                obj.faces = faces
-                obj.indices[1] = len(self.indices)
-                self.faces.extend(faces)
+                  # store the faces in the prim
+                  obj.faces = faces
+                  obj.indices[1] = len(self.indices)
+                  self.faces.extend(faces)
 
                 if debug:
                     d['start_index'] = obj.indices[0]
