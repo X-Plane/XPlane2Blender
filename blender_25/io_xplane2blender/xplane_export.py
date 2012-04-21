@@ -145,27 +145,35 @@ class XPlaneMesh():
                 obj.bakeMatrix = self.getBakeMatrix(obj)
                 mesh.transform(obj.bakeMatrix)
 
+                #TODO: for BMesh compatibility use Mesh.update(calc_tessface=True) then access Mesh.tessfaces
+                #TODO: for UVs in BMESH: http://blenderartists.org/forum/showthread.php?251840-Bmesh-Where-did-the-UV-coords-go&p=2097099&viewfull=1#post2097099
+                if hasattr(mesh,'polygons'): # BMesh
+                  mesh.calc_tessface()
+                  mesh_faces = mesh.tessfaces
+                else:
+                  mesh_faces = mesh.faces
+
                 # with the new mesh get uvFaces list
                 uvFaces = self.getUVFaces(mesh,obj.material.uv_name)
 
                 faces = []
 
                 if debug:
-                    d = {'name':obj.name,'obj_face':0,'faces':len(mesh.faces),'quads':0,'vertices':len(mesh.vertices),'uvs':0}
+                    d = {'name':obj.name,'obj_face':0,'faces':len(mesh_faces),'quads':0,'vertices':len(mesh.vertices),'uvs':0}
 
                 # convert faces to triangles
-                if hasattr(mesh,'faces') and len(mesh.faces)>0:
+                if len(mesh_faces)>0:
                   tempfaces = []
-                  for i in range(0,len(mesh.faces)):
+                  for i in range(0,len(mesh_faces)):
                       if uvFaces != None:
-                          f = self.faceToTrianglesWithUV(mesh.faces[i],uvFaces[i])
+                          f = self.faceToTrianglesWithUV(mesh_faces[i],uvFaces[i])
                           tempfaces.extend(f)
                           if debug:
                               d['uvs']+=1
                               if len(f)>1:
                                   d['quads']+=1
                       else:
-                          f = self.faceToTrianglesWithUV(mesh.faces[i],None)
+                          f = self.faceToTrianglesWithUV(mesh_faces[i],None)
                           tempfaces.extend(f)
                           if debug:
                               if len(f)>1:
@@ -275,15 +283,20 @@ class XPlaneMesh():
     #   None if no UV faces could be found or the Blender UV Faces.
     def getUVFaces(self,mesh,uv_name):
         # get the uv_texture
-        if (uv_name != None and len(mesh.uv_textures)>0):
+        if hasattr(mesh,'polygons'): # BMesh
+          uv_textures = mesh.tessface_uv_textures
+        else:
+          uv_textures = mesh.uv_textures
+
+        if (uv_name != None and len(uv_textures)>0):
             uv_layer = None
             if uv_name=="":
-                uv_layer = mesh.uv_textures[0]
+                uv_layer = uv_textures[0]
             else:
                 i = 0
-                while uv_layer == None and i<len(mesh.uv_textures):
-                    if mesh.uv_textures[i].name == uv_name:
-                        uv_layer = mesh.uv_textures[i]
+                while uv_layer == None and i<len(uv_textures):
+                    if uv_textures[i].name == uv_name:
+                        uv_layer = uv_textures[i]
                     i+=1
 
             if uv_layer!=None:
