@@ -145,8 +145,6 @@ class XPlaneMesh():
                 obj.bakeMatrix = self.getBakeMatrix(obj)
                 mesh.transform(obj.bakeMatrix)
 
-                #TODO: for BMesh compatibility use Mesh.update(calc_tessface=True) then access Mesh.tessfaces
-                #TODO: for UVs in BMESH: http://blenderartists.org/forum/showthread.php?251840-Bmesh-Where-did-the-UV-coords-go&p=2097099&viewfull=1#post2097099
                 if hasattr(mesh,'polygons'): # BMesh
                   mesh.calc_tessface()
                   mesh_faces = mesh.tessfaces
