@@ -193,8 +193,11 @@ class XPlaneCoords():
     # Returns:
     #   list - [x,y,z] With angles.
     @staticmethod
-    def angle(rot):
-        return [math.degrees(rot[0]),math.degrees(rot[1]),math.degrees(rot[2])]
+    def angle(rot,localRotation=False):  #Modified by EagleIan
+        if localRotation:
+            return [math.degrees(rot[0]),math.degrees(rot[2]),math.degrees(rot[1])]
+        else:
+            return [math.degrees(rot[0]),math.degrees(rot[1]),math.degrees(rot[2])]
 
     # Method: convert
     # Converts Blender Vector (x,y,z) into X-Plane Vector
@@ -275,7 +278,7 @@ class XPlaneCoords():
     # Returns:
     #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} With world X-Plane coordinates.
     @staticmethod
-    def fromMatrix(matrix,scaleLoc = False):
+    def fromMatrix(matrix,scaleLoc = False, localRotation=None):   #localRotation parameter added by EagleIan
         loc = matrix.to_translation()
         rot = matrix.to_euler("XZY")
         # re-add 90° to X
@@ -287,7 +290,11 @@ class XPlaneCoords():
             loc.x = loc.x * scale.x
             loc.y = loc.y * scale.y
             loc.z = loc.z * scale.z
-        coords = {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}
+        if localRotation:     #following lines added by EagleIan
+            localRotation.y *= -1
+            coords = {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(localRotation,True)}
+        else:
+            coords = {'location':loc,'rotation':rot,'scale':scale,'angle':XPlaneCoords.angle(rot)}
         return coords
 
     # Method: vectorsFromMatrix

@@ -1032,7 +1032,12 @@ class XPlaneCommands():
             totalRot[1]+=abs(keyframe.rotation[1])
             totalRot[2]+=abs(keyframe.rotation[2])
 
-            for i in range(0,3):
+            for i in range(0,3):  #modified by EagleIan
+                if keyframe.index > 0:
+                    prevRot=keyframes[keyframe.index - 1].rotation[i]
+                    if (keyframe.rotation[i] - prevRot) > 180:
+                        correctedRot=(360 - keyframe.rotation[i])*-1
+                        keyframes[keyframe.index].rotation[i]= correctedRot
                 rot[i]+="%s\tANIM_rotate_key\t%6.6f\t%6.6f\n" % (tabs,keyframe.value,keyframe.rotation[i])
 
             if debug:

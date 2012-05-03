@@ -61,7 +61,7 @@ class XPlaneKeyframe():
         # update objects so we get values from the keyframe
         #self.object.update()
 
-        local = self.object.getLocal()
+        local = self.object.getLocal(True)     #True parameter added by EagleIan
         world = self.object.getWorld()
 
         self.location = world["location"]
@@ -445,8 +445,11 @@ class XPlaneObject():
     #
     # Returns:
     #   dict - {'location':[x,y,z],'rotation':[x,y,z],'scale':[x,y,z],'angle':[x,y,z]} Whith local coordinates.
-    def getLocal(self):
-        return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrix()*XPlaneCoords.scaleMatrix(self)),True)
+    def getLocal(self,isAnimation=False):     #Method modified by EagleIan
+        localRotation=None
+        if isAnimation:
+            localRotation=(self.getMatrix()*XPlaneCoords.scaleMatrix(self)).to_euler()
+        return XPlaneCoords.fromMatrix(XPlaneCoords.convertMatrix(self.getMatrix()*XPlaneCoords.scaleMatrix(self)),True,localRotation)
 
     # Method: getWorld
     # Returns the world coordinates of the object.
