@@ -146,6 +146,7 @@ class XPlaneMesh():
                 mesh.transform(obj.bakeMatrix)
 
                 if hasattr(mesh,'polygons'): # BMesh
+                  mesh.update(calc_tessface=True)
                   mesh.calc_tessface()
                   mesh_faces = mesh.tessfaces
                 else:
