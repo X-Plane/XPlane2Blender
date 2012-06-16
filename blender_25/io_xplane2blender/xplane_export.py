@@ -1348,7 +1348,7 @@ class XPlaneData():
 
                     # add to child list
                     if parent != None:
-                        parent.children.append(xplaneObj)
+                        parent.children.append(light)
 
         # sort objects by weight on top level
         self.files[filename]['objects'].sort(key=attrgetter('weight'))
