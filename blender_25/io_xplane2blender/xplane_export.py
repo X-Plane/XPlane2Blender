@@ -1422,11 +1422,12 @@ class XPlaneHeader():
     # Constructor: __init__
     #
     # Parameters:
+    #   string exportpath - filepath to the destiantion directory
     #   dict file - A file dict coming from <XPlaneData>.
     #   XPlaneMesh mesh - A <XPlaneMesh>.
     #   XPlaneLights lights - <XPlaneLights>
     #   int version - OBJ format version.
-    def __init__(self,file,mesh,lights,version):
+    def __init__(self,exportpath,file,mesh,lights,version):
         import os
         self.version = version
         self.mode = "default"
@@ -1448,11 +1449,11 @@ class XPlaneHeader():
 #            self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
 #            self.attributes['TEXTURE_NORMAL'] = tex[0:-4]+'_NML.png'
         if file['parent'].texture!='':
-            self.attributes['TEXTURE'] = os.path.basename(file['parent'].texture)
+            self.attributes['TEXTURE'] = os.path.relpath(os.path.abspath(file['parent'].texture),os.path.abspath(exportpath))
         if file['parent'].texture_lit!='':
-            self.attributes['TEXTURE_LIT'] = os.path.basename(file['parent'].texture_lit)
+            self.attributes['TEXTURE_LIT'] = os.path.relpath(os.path.abspath(file['parent'].texture_lit),os.path.abspath(exportpath))
         if file['parent'].texture_normal!='':
-            self.attributes['TEXTURE_NORMAL'] = os.path.basename(file['parent'].texture_normal)
+            self.attributes['TEXTURE_NORMAL'] = os.path.relpath(os.path.abspath(file['parent'].texture_normal),os.path.abspath(exportpath))
 
         # set cockpit regions
         num_regions = int(file['parent'].cockpit_regions)
@@ -1583,7 +1584,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
 
                     mesh = XPlaneMesh(data.files[file])
                     lights = XPlaneLights(data.files[file])
-                    header = XPlaneHeader(data.files[file],mesh,lights,9)
+                    header = XPlaneHeader(filepath,data.files[file],mesh,lights,9)
                     commands = XPlaneCommands(data.files[file])
                     o+=header.write()
                     o+="\n"
