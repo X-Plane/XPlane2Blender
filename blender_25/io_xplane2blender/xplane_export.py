@@ -1448,12 +1448,20 @@ class XPlaneHeader():
 #            self.attributes['TEXTURE'] = tex
 #            self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
 #            self.attributes['TEXTURE_NORMAL'] = tex[0:-4]+'_NML.png'
+
+        exportdir = os.path.dirname(os.path.abspath(os.path.normpath(exportpath)))
+
         if file['parent'].texture!='':
-            self.attributes['TEXTURE'] = os.path.relpath(os.path.abspath(file['parent'].texture),os.path.abspath(exportpath))
+            texpath = os.path.abspath(os.path.normpath(file['parent'].texture))
+            self.attributes['TEXTURE'] = os.path.relpath(texpath,exportdir)
+
         if file['parent'].texture_lit!='':
-            self.attributes['TEXTURE_LIT'] = os.path.relpath(os.path.abspath(file['parent'].texture_lit),os.path.abspath(exportpath))
+            texpath = os.path.abspath(file['parent'].texture_lit)
+            self.attributes['TEXTURE_LIT'] = os.path.relpath(texpath,exportdir)
+
         if file['parent'].texture_normal!='':
-            self.attributes['TEXTURE_NORMAL'] = os.path.relpath(os.path.abspath(file['parent'].texture_normal),os.path.abspath(exportpath))
+            texpath = os.path.abspath(file['parent'].texture_normal)
+            self.attributes['TEXTURE_NORMAL'] = os.path.relpath(texpath,exportdir)
 
         # set cockpit regions
         num_regions = int(file['parent'].cockpit_regions)
@@ -1577,6 +1585,8 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
             for file in data.files:
                 o=''
                 if (len(data.files[file]['objects'])>0 or len(data.files[file]['lights'])>0 or len(data.files[file]['lines'])>0):
+                    fullpath = os.path.join(filepath,file+'.obj')
+
                     showProgress((1/len(data.files))*i,'Writing %s' % file)
 
                     if profile:
@@ -1584,7 +1594,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
 
                     mesh = XPlaneMesh(data.files[file])
                     lights = XPlaneLights(data.files[file])
-                    header = XPlaneHeader(filepath,data.files[file],mesh,lights,9)
+                    header = XPlaneHeader(fullpath,data.files[file],mesh,lights,9)
                     commands = XPlaneCommands(data.files[file])
                     o+=header.write()
                     o+="\n"
@@ -1599,7 +1609,6 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,bpy.app.build_revision,version/1000)
 
                     # write the file
-                    fullpath = os.path.join(filepath,file+'.obj')
                     if debug:
                         debugger.debug("Writing %s" % fullpath)
                     file = open(fullpath, "w")
