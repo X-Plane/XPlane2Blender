@@ -992,8 +992,8 @@ class XPlaneMaterial():
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit',True))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region',None,2000))
 
-        if len(object.data.materials)>0:
-            mat = object.data.materials[0]
+        if (len(self.object.data.materials)>0 and hasattr(self.object.data.materials[0],'name')):
+            mat = self.object.data.materials[0]
             self.name = mat.name
 
             if mat.xplane.draw:
@@ -1072,17 +1072,8 @@ class XPlaneMaterial():
             else:
                 self.attributes['ATTR_no_solid_camera'].setValue(True)
 
-            # Texture and uv-coordinates
-            if(len(mat.texture_slots)>0 and hasattr(mat.texture_slots[0],'use') and mat.texture_slots[0].use and mat.texture_slots[0].texture.type=="IMAGE"):
-                tex =  mat.texture_slots[0].texture
-                if(tex.image.file_format=='PNG'):
-                    self.texture = path.basename(tex.image.filepath)
-
-                if mat.texture_slots[0].texture_coords == 'UV':
-                    self.uv_name = mat.texture_slots[0].uv_layer
-
-            # if no uv layer was found in the texture, try to find it now.
-            if(self.uv_name == None and len(self.object.data.uv_textures)>0):
+            # try to find uv layer
+            if(len(self.object.data.uv_textures)>0):
                 self.uv_name = self.object.data.uv_textures.active.name
 
             # add custom attributes
