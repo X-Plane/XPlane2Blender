@@ -387,43 +387,46 @@ def custom_layout(self,obj,type):
         oType = 'material'
     elif type=='LAMP':
         oType = 'lamp'
+    else:
+        oType = None
 
     layout = self.layout
     layout.separator()
 
-    # regular attributes
-    row = layout.row()
-    row.label("Custom Properties")
-    row.operator("object.add_xplane_"+oType+"_attribute", text="Add Property")
-    box = layout.box()
-    for i, attr in enumerate(obj.xplane.customAttributes):
-        subbox = box.box()
-        subrow = subbox.row()
-        subrow.prop(attr,"name")
-        subrow.operator("object.remove_xplane_"+oType+"_attribute",text="",emboss=False,icon="X").index = i
-        subrow = subbox.row()
-        subrow.prop(attr,"value")
-        if type in ("MATERIAL","MESH","LAMP","ARMATURE"):
-            subrow = subbox.row()
-            subrow.prop(attr,"reset")
-            subrow = subbox.row()
-            subrow.prop(attr,"weight")
-
-    # animation attributes
-    if type in ("MESH","ARMATURE","OBJECT"):
+    if oType:
+        # regular attributes
         row = layout.row()
-        row.label("Custom Animation Properties")
-        row.operator("object.add_xplane_object_anim_attribute", text="Add Property")
+        row.label("Custom Properties")
+        row.operator("object.add_xplane_"+oType+"_attribute", text="Add Property")
         box = layout.box()
-        for i, attr in enumerate(obj.xplane.customAnimAttributes):
+        for i, attr in enumerate(obj.xplane.customAttributes):
             subbox = box.box()
             subrow = subbox.row()
             subrow.prop(attr,"name")
-            subrow.operator("object.remove_xplane_object_anim_attribute",text="",emboss=False,icon="X").index = i
+            subrow.operator("object.remove_xplane_"+oType+"_attribute",text="",emboss=False,icon="X").index = i
             subrow = subbox.row()
             subrow.prop(attr,"value")
-            subrow = subbox.row()
-            subrow.prop(attr,"weight")
+            if type in ("MATERIAL","MESH","LAMP","ARMATURE"):
+                subrow = subbox.row()
+                subrow.prop(attr,"reset")
+                subrow = subbox.row()
+                subrow.prop(attr,"weight")
+
+        # animation attributes
+        if type in ("MESH","ARMATURE","OBJECT"):
+            row = layout.row()
+            row.label("Custom Animation Properties")
+            row.operator("object.add_xplane_object_anim_attribute", text="Add Property")
+            box = layout.box()
+            for i, attr in enumerate(obj.xplane.customAnimAttributes):
+                subbox = box.box()
+                subrow = subbox.row()
+                subrow.prop(attr,"name")
+                subrow.operator("object.remove_xplane_object_anim_attribute",text="",emboss=False,icon="X").index = i
+                subrow = subbox.row()
+                subrow.prop(attr,"value")
+                subrow = subbox.row()
+                subrow.prop(attr,"weight")
     
 # Function: animation_layout
 # Draws the UI layout for animations. This includes Datarefs.

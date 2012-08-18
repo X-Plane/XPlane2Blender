@@ -50,7 +50,10 @@ class XPlaneMesh():
 
         if debug:
             from operator import itemgetter
-            self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
+            try:
+              self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
+            except :
+                pass
             for d in self.debug:
                 tris_to_quads = 1.0
                 if d['faces'] > 0:
@@ -1449,18 +1452,36 @@ class XPlaneHeader():
 #            self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
 #            self.attributes['TEXTURE_NORMAL'] = tex[0:-4]+'_NML.png'
 
-        exportdir = os.path.dirname(os.path.abspath(os.path.normpath(exportpath)))
+        blenddir = os.path.dirname(bpy.context.blend_data.filepath)
+
+        # normalize the exporpath
+        if os.path.isabs(exportpath):
+            exportdir = os.path.dirname(os.path.normpath(exportpath))
+        else:
+            exportdir = os.path.dirname(os.path.abspath(os.path.normpath(os.path.join(blenddir,exportpath))))
 
         if file['parent'].texture!='':
-            texpath = os.path.abspath(os.path.normpath(file['parent'].texture))
+            if os.path.isabs(file['parent'].texture):
+                texpath = os.path.abspath(os.path.normpath(file['parent'].texture))
+            else:
+                texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir,file['parent'].texture)))
+
             self.attributes['TEXTURE'] = os.path.relpath(texpath,exportdir)
 
         if file['parent'].texture_lit!='':
-            texpath = os.path.abspath(file['parent'].texture_lit)
+            if os.path.isabs(file['parent'].texture):
+                texpath = os.path.abspath(os.path.normpath(file['parent'].texture_lit))
+            else:
+                texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir,file['parent'].texture_lit)))
+
             self.attributes['TEXTURE_LIT'] = os.path.relpath(texpath,exportdir)
 
         if file['parent'].texture_normal!='':
-            texpath = os.path.abspath(file['parent'].texture_normal)
+            if os.path.isabs(file['parent'].texture):
+                texpath = os.path.abspath(os.path.normpath(file['parent'].texture_normal))
+            else:
+                texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir,file['parent'].texture_normal)))
+
             self.attributes['TEXTURE_NORMAL'] = os.path.relpath(texpath,exportdir)
 
         # set cockpit regions
