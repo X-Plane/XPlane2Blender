@@ -686,7 +686,7 @@ class XPlaneDatarefSearch(bpy.types.Operator):
 
     def execute(self,context):
         import webbrowser
-        webbrowser.open('http://www.anzui.de/xplane/dataref-search/dataref-search.php')
+        webbrowser.open('http://xplane.anzui.de/dataref-search/dataref-search.php')
         return {'FINISHED'}
 
 #    def invoke(self,context,event):
