@@ -1490,7 +1490,7 @@ class XPlaneHeader():
             self.attributes['COCKPIT_REGION'] = []
             for i in range(0,num_regions):
                 cockpit_region = file['parent'].cockpit_region[i]
-                self.attributes['COCKPIT_REGION'].append('%d\t%d\t%d\t%d' % (cockpit_region.left, cockpit_region.top, cockpit_region.top + (2 ** cockpit_region.height), cockpit_region.left + (2 ** cockpit_region.width)))
+                self.attributes['COCKPIT_REGION'].append('%d\t%d\t%d\t%d' % (cockpit_region.left, cockpit_region.top, cockpit_region.left + (2 ** cockpit_region.width), cockpit_region.top + (2 ** cockpit_region.height)))
 
         # get point counts
         tris = len(mesh.vertices)
