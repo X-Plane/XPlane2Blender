@@ -12,6 +12,9 @@ from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_ui import showError,showProgress
 
 
+FLOAT_PRECISION = 8
+FLOAT_PRECISION_STR = "8"
+
 # Class: XPlaneKeyframe
 # A Keyframe.
 class XPlaneKeyframe():
@@ -537,7 +540,7 @@ class XPlaneObject():
             # show/hide animation
             if dataref.anim_type in ("show","hide"):
                 name = 'ANIM_'+dataref.anim_type
-                value = "%6.6f\t%6.6f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path)
+                value = "%6.8f\t%6.8f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name,value))
 
     # Method: getWeight
@@ -907,21 +910,21 @@ class XPlanePrimitive(XPlaneObject):
             type = self.object.xplane.manip.type
             attr+=type
             if type=='drag_xy':
-                value = '%s\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.v1_min,manip.v1_max,manip.v2_min,manip.v2_max,manip.dataref1,manip.dataref2,manip.tooltip)
+                value = "%s\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s\t%s\t%s" % (manip.cursor,manip.dx,manip.dy,manip.v1_min,manip.v1_max,manip.v2_min,manip.v2_max,manip.dataref1,manip.dataref2,manip.tooltip)
             if type=='drag_axis':
-                value = '%s\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.v1,manip.v2,manip.dataref1,manip.tooltip)
+                value = "%s\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s\t%s" % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.v1,manip.v2,manip.dataref1,manip.tooltip)
             if type=='command':
-                value = '%s\t%s\t%s' % (manip.cursor,manip.command,manip.tooltip)
+                value = "%s\t%s\t%s" % (manip.cursor,manip.command,manip.tooltip)
             if type=='command_axis':
-                value = '%s\t%6.6f\t%6.6f\t%6.6f\t%s\t%s\t%s' % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.positive_command,manip.negative_command,manip.tooltip)
+                value = "%s\t%6.8f\t%6.8f\t%6.8f\t%s\t%s\t%s" % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.positive_command,manip.negative_command,manip.tooltip)
             if type=='push':
-                value = '%s\t%6.6f\t%6.6f\t%s\t%s' % (manip.cursor,manip.v_down,manip.v_up,manip.dataref1,manip.tooltip)
+                value = "%s\t%6.8f\t%6.8f\t%s\t%s" % (manip.cursor,manip.v_down,manip.v_up,manip.dataref1,manip.tooltip)
             if type=='radio':
-                value = '%s\t%6.6f\t%s\t%s' % (manip.cursor,manip.v_down,manip.dataref1,manip.tooltip)
+                value = "%s\t%6.8f\t%s\t%s" % (manip.cursor,manip.v_down,manip.dataref1,manip.tooltip)
             if type=='toggle':
-                value = '%s\t%6.6f\t%6.6f\t%s\t%s' % (manip.cursor,manip.v_on,manip.v_off,manip.dataref1,manip.tooltip)
+                value = "%s\t%6.8f\t%6.8f\t%s\t%s" % (manip.cursor,manip.v_on,manip.v_off,manip.dataref1,manip.tooltip)
             if type in ('delta','wrap'):
-                value = '%s\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%s\t%s' % (manip.cursor,manip.v_down,manip.v_hold,manip.v1_min,manip.v1_max,manip.dataref1,manip.tooltip)
+                value = "%s\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s\t%s" % (manip.cursor,manip.v_down,manip.v_hold,manip.v1_min,manip.v1_max,manip.dataref1,manip.tooltip)
         else:
             attr=None
 
@@ -1097,7 +1100,7 @@ class XPlaneMaterial():
     # Defines light level attributes in <attributes> based on settings in <XPlaneObjectSettings>.
     def getLightLevelAttributes(self,mat):
         if mat.xplane.lightLevel:
-            self.attributes['ATTR_light_level'].setValue("%6.6f\t%6.6f\t%s" % (mat.xplane.lightLevel_v1,mat.xplane.lightLevel_v2,mat.xplane.lightLevel_dataref))
+            self.attributes['ATTR_light_level'].setValue("%6.8f\t%6.8f\t%s" % (mat.xplane.lightLevel_v1,mat.xplane.lightLevel_v2,mat.xplane.lightLevel_dataref))
 
 # Class: XPlaneFace
 # A mesh face. This class is just a data wrapper used by <XPlaneFaces>.

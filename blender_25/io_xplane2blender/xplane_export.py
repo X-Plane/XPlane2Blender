@@ -9,7 +9,8 @@ from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
 from operator import attrgetter
 
-FLOAT_PRECISION = 6
+FLOAT_PRECISION = 8
+FLOAT_PRECISION_STR = "8"
 
 # TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
 try:
@@ -409,7 +410,7 @@ class XPlaneMesh():
             # dump the vertex data
             o+="VT"
             for i in v:
-                o+="\t%6.6f" % i
+                o+="\t%6.8f" % i
             if debug:
                 o+='\t# %d' % index
             o+="\n"
@@ -491,13 +492,13 @@ class XPlaneLights():
             co = coords['location']
 
             if light.lightType=="named":
-                self.lights.append("LIGHT_NAMED\t%s\t%6.6f\t%6.6f\t%6.6f" % (light.lightName,co[0],co[1],co[2]))
+                self.lights.append("LIGHT_NAMED\t%s\t%6.8f\t%6.8f\t%6.8f" % (light.lightName,co[0],co[1],co[2]))
             elif light.lightType=="param":
-                self.lights.append("LIGHT_PARAM\t%s\t%6.6f\t%6.6f\t%6.6f\t%s" % (light.lightName,co[0],co[1],co[2],light.params))
+                self.lights.append("LIGHT_PARAM\t%s\t%6.8f\t%6.8f\t%6.8f\t%s" % (light.lightName,co[0],co[1],co[2],light.params))
             elif light.lightType=="custom":
-                self.lights.append("LIGHT_CUSTOM\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%s" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2],light.energy,light.size,light.uv[0],light.uv[1],light.uv[2],light.uv[3],light.dataref))
+                self.lights.append("LIGHT_CUSTOM\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2],light.energy,light.size,light.uv[0],light.uv[1],light.uv[2],light.uv[3],light.dataref))
             else:
-                self.lights.append("VLIGHT\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2]))
+                self.lights.append("VLIGHT\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2]))
             self.indices.append(self.globalindex)
             self.globalindex+=1
 
@@ -770,7 +771,7 @@ class XPlaneCommands():
     #   string - The value with replaced insert tags.
     def parseAttributeValue(self,value,object):
         if str(value).find('{{xyz}}')!=-1:
-            return str(value).replace('{{xyz}}','%6.6f\t%6.6f\t%6.6f' % (object.locationLocal[0],object.locationLocal[1],object.locationLocal[2]))
+            return str(value).replace('{{xyz}}','%6.8f\t%6.8f\t%6.8f' % (object.locationLocal[0],object.locationLocal[1],object.locationLocal[2]))
         else:
             return value
 
@@ -1004,17 +1005,17 @@ class XPlaneCommands():
         # ignore high precision values
         for i in range(0,2):
             if round(staticTrans[i][0],4)!=0.0 or round(staticTrans[i][1],4)!=0.0 or round(staticTrans[i][2],4)!=0.0:
-                static['trans'][i] = "%sANIM_trans\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t0\t0\tnone\n" % (tabs,staticTrans[i][0],staticTrans[i][1],staticTrans[i][2],staticTrans[i][0],staticTrans[i][1],staticTrans[i][2])
+                static['trans'][i] = "%sANIM_trans\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t0\t0\tnone\n" % (tabs,staticTrans[i][0],staticTrans[i][1],staticTrans[i][2],staticTrans[i][0],staticTrans[i][1],staticTrans[i][2])
 
         vectors = obj.getVectors()
         for i in range(0,3):
             if (round(staticRot[i],4)!=0.0):
                 vec = vectors[i]
-                static['rot'][i] = "%sANIM_rotate\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t%6.6f\t0\t0\tnone\n" % (tabs,vec[0],vec[1],vec[2],staticRot[i],staticRot[i])
+                static['rot'][i] = "%sANIM_rotate\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t0\t0\tnone\n" % (tabs,vec[0],vec[1],vec[2],staticRot[i],staticRot[i])
 
         # add loops if any
         if obj.datarefs[dataref].loop>0:
-            loops="%s\tANIM_keyframe_loop\t%6.6f\n" % (tabs,obj.datarefs[dataref].loop)
+            loops="%s\tANIM_keyframe_loop\t%6.8f\n" % (tabs,obj.datarefs[dataref].loop)
         else:
             loops = ''
 
@@ -1022,15 +1023,15 @@ class XPlaneCommands():
 
 #        print(obj.vectors)
         rot = ['','','']
-        rot[0] = "%sANIM_rotate_begin\t%6.6f\t%6.6f\t%6.6f\t%s\n" % (tabs,obj.vectors[0][0],obj.vectors[0][1],obj.vectors[0][2],dataref)
-        rot[1] = "%sANIM_rotate_begin\t%6.6f\t%6.6f\t%6.6f\t%s\n" % (tabs,obj.vectors[1][0],obj.vectors[1][1],obj.vectors[1][2],dataref)
-        rot[2] = "%sANIM_rotate_begin\t%6.6f\t%6.6f\t%6.6f\t%s\n" % (tabs,obj.vectors[2][0],obj.vectors[2][1],obj.vectors[2][2],dataref)
+        rot[0] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs,obj.vectors[0][0],obj.vectors[0][1],obj.vectors[0][2],dataref)
+        rot[1] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs,obj.vectors[1][0],obj.vectors[1][1],obj.vectors[1][2],dataref)
+        rot[2] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs,obj.vectors[2][0],obj.vectors[2][1],obj.vectors[2][2],dataref)
 
         for keyframe in keyframes:
             totalTrans[0]+=abs(keyframe.translation[0])
             totalTrans[1]+=abs(keyframe.translation[1])
             totalTrans[2]+=abs(keyframe.translation[2])
-            trans+="%s\tANIM_trans_key\t%6.6f\t%6.6f\t%6.6f\t%6.6f\n" % (tabs,keyframe.value,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2])
+            trans+="%s\tANIM_trans_key\t%6.8f\t%6.8f\t%6.8f\t%6.8f\n" % (tabs,keyframe.value,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2])
 
             totalRot[0]+=abs(keyframe.rotation[0])
             totalRot[1]+=abs(keyframe.rotation[1])
@@ -1042,7 +1043,7 @@ class XPlaneCommands():
                     if (keyframe.rotation[i] - prevRot) > 180:
                         correctedRot=(360 - keyframe.rotation[i])*-1
                         keyframes[keyframe.index].rotation[i]= correctedRot
-                rot[i]+="%s\tANIM_rotate_key\t%6.6f\t%6.6f\n" % (tabs,keyframe.value,keyframe.rotation[i])
+                rot[i]+="%s\tANIM_rotate_key\t%6.8f\t%6.8f\n" % (tabs,keyframe.value,keyframe.rotation[i])
 
             if debug:
                 debugger.debug("%s keyframe %s@%d %s" % (keyframe.object.name,keyframe.index,keyframe.frame,keyframe.dataref))
