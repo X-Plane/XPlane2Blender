@@ -124,7 +124,6 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                 ("command_axis","command_axis","command_axis"),
                                 ("push","push","push"),
                                 ("radio","radio","radio"),
-                                ("toggle","toggle","toggle"),
                                 ("delta","delta","delta"),
                                 ("wrap","wrap","wrap"),
                                 ("toggle","toggle","toggle"),
@@ -435,6 +434,11 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
                                         name="Optimize",
                                         description="If checked file size will be optimized. However this can increase export time dramatically.",
                                         default=False)
+
+    version = bpy.props.EnumProperty(attr="version",
+                                        name="X-Plane Version",
+                                        default="900",
+                                        items=[("900","9.x","9.x"),("1000","10.0x","10.0x"),("1010","10.1x","10.1x")])
 
 # Class: XPlaneObjectSettings
 # Settings for Blender objects.

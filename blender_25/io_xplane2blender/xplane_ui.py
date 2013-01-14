@@ -136,6 +136,9 @@ class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
 def scene_layout(self, scene):
     layout = self.layout
     row = layout.row()
+    row.prop(scene.xplane,"version",text="X-Plane Version")
+
+    row = layout.row()
     row.prop(scene.xplane,"optimize",text="Optimize")
 
     row = layout.row()
