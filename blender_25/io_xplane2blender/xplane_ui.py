@@ -157,7 +157,7 @@ def scene_layout(self, scene):
             layer_layout(self, scene, row, i)
     else:
         row.operator('scene.add_xplane_layers')
-        
+
 # Function: layer_layout
 # Draws the UI layout for <XPlaneLayers>. Uses <custom_layer_layout>.
 #
@@ -689,7 +689,7 @@ class XPlaneDatarefSearch(bpy.types.Operator):
 
     def execute(self,context):
         import webbrowser
-        webbrowser.open('http://xplane.anzui.de/dataref-search/dataref-search.php')
+        webbrowser.open('http://xplane.anzui.de/dataref-search/')
         return {'FINISHED'}
 
 #    def invoke(self,context,event):
