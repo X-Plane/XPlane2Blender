@@ -114,7 +114,8 @@ class XPlaneMesh():
                     #print("%s: animatedParent==parent (%s)" % (obj.name,obj.parent.name))
                     if obj.parent.type in ("BONE","ARMATURE","EMPTY","LIGHT"):
                         # objects parent is animated, so we need to bake the matrix relative to parent
-                        matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),obj.parent.getMatrix(True))
+                        #matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),obj.parent.getMatrix(True))
+                        matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
                     else:
                         # bake local matrix
                         matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
