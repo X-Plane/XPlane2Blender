@@ -140,6 +140,7 @@ class XPlaneMesh():
         for obj in objects:
             if obj.type == 'PRIMITIVE' and self.isInFile(obj):
                 obj.indices[0] = len(self.indices)
+                first_vertice_of_this_object = len(self.vertices)
 
                 # create a copy of the object mesh with modifiers applied and triangulated
                 #mesh = self.getTriangulatedMesh(obj.object)
@@ -204,7 +205,8 @@ class XPlaneMesh():
 
                           if bpy.context.scene.xplane.optimize:
                               #check for duplicates
-                              index = self.getDupliVerticeIndex(vert,obj.indices[0])
+                              #index = self.getDupliVerticeIndex(vert, obj.indices[0])
+                              index = self.getDupliVerticeIndex(vert, first_vertice_of_this_object)
                           else:
                               index = -1
 
