@@ -104,9 +104,14 @@ class SCENE_OT_add_xplane_layers(bpy.types.Operator):
         while len(scene.xplane.layers)<len(scene.layers):
             scene.xplane.layers.add()
 
-            ## add all lods
+            # add all lods
             for ii in range(0,3):
                 scene.xplane.layers[i].lod.add()
+
+            # add cockpit regions
+            for ii in range(0,4):
+                scene.xplane.layers[i].cockpit_region.add()
+
             i+=1
 
         # re-add hidden data that user cannot change
@@ -128,6 +133,23 @@ class SCENE_OT_add_xplane_layer_lods(bpy.types.Operator):
 
         while len(scene.xplane.layers[self.index].lod) < 3:
             scene.xplane.layers[self.index].lod.add()
+
+        return {'FINISHED'}
+
+class SCENE_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
+    bl_label = 'Add cockpit regions'
+    bl_idname = 'scene.add_xplane_layer_cockpit_regions'
+    bl_description = 'Add X-Plane layer Cockpit Regions'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        scene = context.scene
+
+        num_regions = int(scene.xplane.layers[self.index].cockpit_regions)
+
+        while len(scene.xplane.layers[self.index].cockpit_region) < 4:
+            scene.xplane.layers[self.index].cockpit_region.add()
 
         return {'FINISHED'}
 

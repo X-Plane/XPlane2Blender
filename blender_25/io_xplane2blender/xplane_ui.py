@@ -202,31 +202,34 @@ def layer_layout(self, scene, layout, layer):
             #cockpit_box.prop(scene.xplane.layers[layer],"panel_texture", text="Panel Texture")
             cockpit_box.prop(scene.xplane.layers[layer],"cockpit_regions", text="Cockpit regions")
             num_regions = int(scene.xplane.layers[layer].cockpit_regions)
+
             if num_regions>0:
-                for i in range(0,num_regions):
-                    # get cockpit region or create it if not present
-                    if len(scene.xplane.layers[layer].cockpit_region)>i:
-                        cockpit_region = scene.xplane.layers[layer].cockpit_region[i]
-                    else:
-                        cockpit_region = scene.xplane.layers[layer].cockpit_region.add()
-
-                    if cockpit_region.expanded:
-                        expandIcon = "TRIA_DOWN"
-                    else:
-                        expandIcon = "TRIA_RIGHT"
-
+                if len(scene.xplane.layers[layer].cockpit_region) < num_regions:
                     region_box = cockpit_box.box()
-                    region_box.prop(cockpit_region,"expanded",text="Cockpit region %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
+                    region_box.operator("scene.add_xplane_layer_cockpit_regions").index = layer
+                else:
+                    for i in range(0,num_regions):
+                        # get cockpit region or create it if not present
+                        if len(scene.xplane.layers[layer].cockpit_region)>i:
+                            cockpit_region = scene.xplane.layers[layer].cockpit_region[i]
 
-                    if cockpit_region.expanded:
-                        region_box.prop(cockpit_region,"left")
-                        region_box.prop(cockpit_region,"top")
-                        region_split = region_box.split(percentage=0.5)
-                        region_split.prop(cockpit_region,"width")
-                        region_split.label("= %d" % (2 ** cockpit_region.width))
-                        region_split = region_box.split(percentage=0.5)
-                        region_split.prop(cockpit_region,"height")
-                        region_split.label("= %d" % (2 ** cockpit_region.height))
+                            if cockpit_region.expanded:
+                                expandIcon = "TRIA_DOWN"
+                            else:
+                                expandIcon = "TRIA_RIGHT"
+
+                            region_box = cockpit_box.box()
+                            region_box.prop(cockpit_region,"expanded",text="Cockpit region %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
+
+                            if cockpit_region.expanded:
+                                region_box.prop(cockpit_region,"left")
+                                region_box.prop(cockpit_region,"top")
+                                region_split = region_box.split(percentage=0.5)
+                                region_split.prop(cockpit_region,"width")
+                                region_split.label("= %d" % (2 ** cockpit_region.width))
+                                region_split = region_box.split(percentage=0.5)
+                                region_split.prop(cockpit_region,"height")
+                                region_split.label("= %d" % (2 ** cockpit_region.height))
 
         # LODs
         if scene.xplane.layers[layer].cockpit==False:
@@ -241,23 +244,20 @@ def layer_layout(self, scene, layout, layer):
                     lod_box.operator("scene.add_xplane_layer_lods").index = layer
                 else:
                     for i in range(0,num_lods):
-                        # get lod or create it if not present
                         if len(scene.xplane.layers[layer].lod)>i:
                             lod = scene.xplane.layers[layer].lod[i]
-                        else:
-                            lod = scene.xplane.layers[layer].lod.add()
 
-                        if lod.expanded:
-                            expandIcon = "TRIA_DOWN"
-                        else:
-                            expandIcon = "TRIA_RIGHT"
+                            if lod.expanded:
+                                expandIcon = "TRIA_DOWN"
+                            else:
+                                expandIcon = "TRIA_RIGHT"
 
-                        lod_box = lods_box.box()
-                        lod_box.prop(lod,"expanded",text="Level of detail %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
+                            lod_box = lods_box.box()
+                            lod_box.prop(lod,"expanded",text="Level of detail %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
 
-                        if lod.expanded:
-                            lod_box.prop(lod,"near")
-                            lod_box.prop(lod,"far")
+                            if lod.expanded:
+                                lod_box.prop(lod,"near")
+                                lod_box.prop(lod,"far")
 
         column.separator()
         column.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")

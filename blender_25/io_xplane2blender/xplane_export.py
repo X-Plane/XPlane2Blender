@@ -1660,8 +1660,9 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
 
                     # write commands for each additional LOD
                     for lod_index in range(0,num_lods):
-                        o+="ATTR_LOD %6.8f %6.8f\n" % (int(xplaneLayer.lod[lod_index].near), int(xplaneLayer.lod[lod_index].far))
-                        o+=commands.write(lod_index)
+                        if lod_index < len(xplaneLayer.lod):
+                            o+="ATTR_LOD %6.8f %6.8f\n" % (int(xplaneLayer.lod[lod_index].near), int(xplaneLayer.lod[lod_index].far))
+                            o+=commands.write(lod_index)
 
                     # if lods are present we need to attach a closing lod containing all objects not in a lod that should always be visible
                     if num_lods > 0:
