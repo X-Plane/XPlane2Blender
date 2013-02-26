@@ -126,7 +126,7 @@ class SCENE_OT_add_xplane_layer_lods(bpy.types.Operator):
 
         num_lods = int(scene.xplane.layers[self.index].lods)
 
-        while len(scene.xplane.layers[self.index].lod) < num_lods:
+        while len(scene.xplane.layers[self.index].lod) < 3:
             scene.xplane.layers[self.index].lod.add()
 
         return {'FINISHED'}
