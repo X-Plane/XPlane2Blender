@@ -99,8 +99,15 @@ class SCENE_OT_add_xplane_layers(bpy.types.Operator):
 
     def execute(self,context):
         scene = context.scene
+
+        i = 0
         while len(scene.xplane.layers)<len(scene.layers):
             scene.xplane.layers.add()
+
+            ## add all lods
+            for ii in range(0,3):
+                scene.xplane.layers[i].lod.add()
+            i+=1
 
         # re-add hidden data that user cannot change
         for i in range(0,len(scene.xplane.layers)):

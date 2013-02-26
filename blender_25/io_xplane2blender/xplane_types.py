@@ -266,6 +266,9 @@ class XPlaneObject():
     # Property: weight
     # int - (default = 0) The object weight. Higher weight will write the object later in OBJ.
 
+    # Property: lod
+    # vector - (False,False,False) with levels of details this object is in
+
     # Constructor: __init__
     #
     # Parameters:
@@ -284,6 +287,11 @@ class XPlaneObject():
         self.reseters = {}
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
+
+        if hasattr(self.object.xplane,'lod'):
+            self.lod = self.object.xplane.lod
+        else:
+            self.lod = (False,False,False)
 
         if hasattr(self.object,'type'):
             self.type = self.object.type

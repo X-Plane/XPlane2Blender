@@ -566,14 +566,21 @@ class XPlaneCommands():
     # Method: write
     # Returns the OBJ commands table.
     #
+    # Params:
+    #   int lod - (default -1) Level of detail randing from 0..2, if -1 no level of detail will be used
+    #
     # Returns:
     #   string - The OBJ commands table.
-    def write(self):
+    def write(self,lod = -1):
         o=''
 
         # write down all objects
         for obj in self.file['objects']:
-            o+=self.writeObject(obj,0)
+            if lod == -1:
+                if obj.lod[0] == False and obj.lod[1] == False and obj.lod[2] == False: # only write objects that are in no lod
+                    o+=self.writeObject(obj,0)
+            elif obj.lod[lod] == True or (obj.lod[0] == False and obj.lod[1] == False and obj.lod[2] == False): # write objects that are within that lod and in no lod, as those should appear everywhere
+                o+=self.writeObject(obj,0)
 
         # write down all lights
         # TODO: write them in writeObjects instead to allow light animation and nesting
@@ -1617,6 +1624,9 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     if profile:
                         profiler.start("ExportXPlane9 %s" % file)
 
+                    xplaneLayer = data.files[file]['parent']
+                    num_lods = int(xplaneLayer.lods)
+
                     mesh = XPlaneMesh(data.files[file])
                     lights = XPlaneLights(data.files[file])
                     header = XPlaneHeader(fullpath,data.files[file],mesh,lights,9)
@@ -1629,7 +1639,34 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     o+="\n"
                     o+=mesh.writeIndices()
                     o+="\n"
+
+                    # if lods are present we need one base lod containing all objects not in a lod that should always be visible
+                    if num_lods > 0:
+                        smallest_near = float(xplaneLayer.lod[0].near)
+                        tallest_far = float(xplaneLayer.lod[0].far)
+                        for lod in xplaneLayer.lod:
+                            near = float(lod.near)
+                            far = float(lod.far)
+
+                            if smallest_near > near:
+                                smallest_near = near
+
+                            if tallest_far < far:
+                                tallest_far = far
+
+                        o+="ATTR_LOD 0.0 %6.8f\n" % smallest_near
+
                     o+=commands.write()
+
+                    # write commands for each additional LOD
+                    for lod_index in range(0,num_lods):
+                        o+="ATTR_LOD %6.8f %6.8f\n" % (int(xplaneLayer.lod[lod_index].near), int(xplaneLayer.lod[lod_index].far))
+                        o+=commands.write(lod_index)
+
+                    # if lods are present we need to attach a closing lod containing all objects not in a lod that should always be visible
+                    if num_lods > 0:
+                        o+="ATTR_LOD %6.8f 100000.0\n" % tallest_far
+                        o+=commands.write()
 
                     o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,bpy.app.build_revision,version/1000)
 
