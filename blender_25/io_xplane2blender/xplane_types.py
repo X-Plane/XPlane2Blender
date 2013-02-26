@@ -79,7 +79,7 @@ class XPlaneKeyframe():
 #        print(self.object.name)
 #        print(self.locationLocal)
 #        print(self.object.locationLocal)
-#        print(self.angleLocal)
+#        print(obj.name, self.angleLocal)
 #        print(self.object.angleLocal)
 
         self.rotation = self.angleLocal

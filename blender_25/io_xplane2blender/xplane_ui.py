@@ -233,25 +233,31 @@ def layer_layout(self, scene, layout, layer):
             lods_box = column.box()
             lods_box.prop(scene.xplane.layers[layer],"lods", text="Levels of detail")
             num_lods = int(scene.xplane.layers[layer].lods)
+
             if num_lods>0:
-                for i in range(0,num_lods):
-                    # get lod or create it if not present
-                    if len(scene.xplane.layers[layer].lod)>i:
-                        lod = scene.xplane.layers[layer].lod[i]
-                    else:
-                        lod = scene.xplane.layers[layer].lod.add()
 
-                    if lod.expanded:
-                        expandIcon = "TRIA_DOWN"
-                    else:
-                        expandIcon = "TRIA_RIGHT"
-
+                if len(scene.xplane.layers[layer].lod) < num_lods:
                     lod_box = lods_box.box()
-                    lod_box.prop(lod,"expanded",text="Level of detail %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
+                    lod_box.operator("scene.add_xplane_layer_lods").index = layer
+                else:
+                    for i in range(0,num_lods):
+                        # get lod or create it if not present
+                        if len(scene.xplane.layers[layer].lod)>i:
+                            lod = scene.xplane.layers[layer].lod[i]
+                        else:
+                            lod = scene.xplane.layers[layer].lod.add()
 
-                    if lod.expanded:
-                        lod_box.prop(lod,"near")
-                        lod_box.prop(lod,"far")
+                        if lod.expanded:
+                            expandIcon = "TRIA_DOWN"
+                        else:
+                            expandIcon = "TRIA_RIGHT"
+
+                        lod_box = lods_box.box()
+                        lod_box.prop(lod,"expanded",text="Level of detail %i" % (i+1), expand=True, emboss=False, icon=expandIcon)
+
+                        if lod.expanded:
+                            lod_box.prop(lod,"near")
+                            lod_box.prop(lod,"far")
 
         column.separator()
         column.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
