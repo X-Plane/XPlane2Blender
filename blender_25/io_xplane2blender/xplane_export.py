@@ -578,9 +578,9 @@ class XPlaneCommands():
         for obj in self.file['objects']:
             if lod == -1:
                 if obj.lod[0] == False and obj.lod[1] == False and obj.lod[2] == False: # only write objects that are in no lod
-                    o+=self.writeObject(obj,0)
+                    o+=self.writeObject(obj,0,lod)
             elif obj.lod[lod] == True or (obj.lod[0] == False and obj.lod[1] == False and obj.lod[2] == False): # write objects that are within that lod and in no lod, as those should appear everywhere
-                o+=self.writeObject(obj,0)
+                o+=self.writeObject(obj,0,lod)
 
         # write down all lights
         # TODO: write them in writeObjects instead to allow light animation and nesting
@@ -595,10 +595,11 @@ class XPlaneCommands():
     # Parameters:
     #   XPlaneObject obj - A <XPlaneObject>.
     #   int animLevel - Level of animation.
+    #   int lod - (default -1) Level of detail randing from 0..2, if -1 no level of detail will be used
     #
     # Returns:
     #   string - OBJ Commands for the "obj".
-    def writeObject(self,obj,animLevel):
+    def writeObject(self,obj,animLevel, lod = -1):
         profile = getProfile()
         profiler = getProfiler()
         debug = getDebug()
@@ -671,7 +672,11 @@ class XPlaneCommands():
                 o+="%sANIM_end\n" % self.getAnimTabs(animLevel-1)
         else:
             for child in obj.children:
-                o+=self.writeObject(child,animLevel+1)
+                if lod == -1:
+                    if child.lod[0] == False and child.lod[1] == False and child.lod[2] == False: # only write objects that are in no lod
+                        o+=self.writeObject(child,animLevel+1, lod)
+                elif child.lod[lod] == True or (child.lod[0] == False and child.lod[1] == False and child.lod[2] == False): # write objects that are within that lod and in no lod, as those should appear everywhere
+                    o+=self.writeObject(child,animLevel+1, lod)
 
         if profile:
             profiler.end("XPlaneCommands.writeObject")
