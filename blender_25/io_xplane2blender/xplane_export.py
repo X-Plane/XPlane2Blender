@@ -488,24 +488,19 @@ class XPlaneLights():
         for light in file['lights']:
             light.indices[0] = self.globalindex
 
-            # get the location
+            # we only write vlights here, all other lights go into the commands table directly
+            if  light.lightType not in ('named','param','custom'):
+                # get the location
 
-            matrix = XPlaneCoords.convertMatrix(light.getMatrix(True))
-            coords = XPlaneCoords.fromMatrix(matrix)
-            co = coords['location']
+                matrix = XPlaneCoords.convertMatrix(light.getMatrix(True))
+                coords = XPlaneCoords.fromMatrix(matrix)
+                co = coords['location']
 
-            if light.lightType=="named":
-                self.lights.append("LIGHT_NAMED\t%s\t%6.8f\t%6.8f\t%6.8f" % (light.lightName,co[0],co[1],co[2]))
-            elif light.lightType=="param":
-                self.lights.append("LIGHT_PARAM\t%s\t%6.8f\t%6.8f\t%6.8f\t%s" % (light.lightName,co[0],co[1],co[2],light.params))
-            elif light.lightType=="custom":
-                self.lights.append("LIGHT_CUSTOM\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2],light.energy,light.size,light.uv[0],light.uv[1],light.uv[2],light.uv[3],light.dataref))
-            else:
                 self.lights.append("VLIGHT\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2]))
-            self.indices.append(self.globalindex)
-            self.globalindex+=1
+                self.indices.append(self.globalindex)
+                self.globalindex+=1
 
-            light.indices[1] = self.globalindex
+                light.indices[1] = self.globalindex
 
     # Method: writeLights
     # Returns the OBJ lights table by iterating <lights>.
@@ -657,10 +652,15 @@ class XPlaneCommands():
             if hasattr(obj,'indices') and obj.indices[1]>obj.indices[0]:
                 offset = obj.indices[0]
                 count = obj.indices[1]-obj.indices[0]
-                if obj.type=='PRIMITIVE':
+
+                if obj.type == 'PRIMITIVE':
                     o+="%sTRIS\t%d %d\n" % (tabs,offset,count)
-                elif obj.type=='LIGHT':
-                    o+="%sLIGHTS\t%d %d\n" % (tabs,offset,count)
+                elif obj.type == 'LIGHT':
+                    if obj.lightType not in ('named','param','custom'):
+                        o+="%sLIGHTS\t%d %d\n" % (tabs,offset,count)
+
+            if obj.type == 'LIGHT' and obj.lightType in ('named','param','custom'):
+                o+=self.writeLight(obj,animLevel)
 
         if animationStarted:
             for child in obj.children:
@@ -680,6 +680,26 @@ class XPlaneCommands():
 
         if profile:
             profiler.end("XPlaneCommands.writeObject")
+
+        return o
+
+    def writeLight(self, light, animLevel):
+        tabs = self.getAnimTabs(animLevel)
+
+        # TODO: resolve relative coordinates based on animated parent(s)
+
+        matrix = XPlaneCoords.convertMatrix(light.getMatrix(True))
+        coords = XPlaneCoords.fromMatrix(matrix)
+        co = coords['location']
+
+        o = ''
+
+        if light.lightType=="named":
+            o+="%sLIGHT_NAMED\t%s\t%6.8f\t%6.8f\t%6.8f\n" % (tabs, light.lightName, co[0], co[1], co[2])
+        elif light.lightType=="param":
+            o+="%sLIGHT_PARAM\t%s\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs, light.lightName, co[0], co[1], co[2], light.params)
+        elif light.lightType=="custom":
+            o+="%sLIGHT_CUSTOM\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs, co[0], co[1], co[2], light.color[0], light.color[1], light.color[2], light.energy, light.size, light.uv[0], light.uv[1], light.uv[2], light.uv[3], light.dataref)
 
         return o
 
@@ -1290,7 +1310,7 @@ class XPlaneData():
             if debug:
                 debugger.debug("scanning "+obj.name)
 
-            if obj.hide==False:
+            if obj.hide == False:
                 # look for children
                 children = self.getChildObjects(obj)
 
@@ -1321,6 +1341,7 @@ class XPlaneData():
                     if debug:
                         debugger.debug("\t "+obj.name+": adding to list")
                     xplaneObj = XPlaneObject(obj,parent)
+
                     if parent == None:
                         self.files[filename]["objects"].append(xplaneObj)
 
@@ -1335,10 +1356,11 @@ class XPlaneData():
                         xplaneObj.children.sort(key=attrgetter('weight'))
 
                 # mesh: let's create a prim out of it
-                elif obj.type=="MESH":
+                elif obj.type == "MESH":
                     if debug:
                         debugger.debug("\t "+obj.name+": adding to list")
                     prim = XPlanePrimitive(obj,parent)
+
                     if parent == None:
                         self.files[filename]['objects'].append(prim)
 
@@ -1355,7 +1377,7 @@ class XPlaneData():
                         prim.children.sort(key=attrgetter('weight'))
 
                 # lamp: let's create a XPlaneLight. Those cannot have children (yet).
-                elif obj.type=="LAMP":
+                elif obj.type == "LAMP":
                     if debug:
                         debugger.debug("\t "+obj.name+": adding to list")
                     light = XPlaneLight(obj,parent)
