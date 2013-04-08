@@ -687,9 +687,7 @@ class XPlaneCommands():
         tabs = self.getAnimTabs(animLevel)
 
         # TODO: resolve relative coordinates based on animated parent(s)
-
-        matrix = XPlaneCoords.convertMatrix(light.getMatrix(True))
-        coords = XPlaneCoords.fromMatrix(matrix)
+        coords = light.getWorld()
         co = coords['location']
 
         o = ''
