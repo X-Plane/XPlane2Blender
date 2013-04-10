@@ -431,7 +431,7 @@ class XPlaneObject():
         else:
             if animatedParent:
                 # not root level and an animated parent in hierarchy
-                if self.type=="PRIMITVE":
+                if self.type=='PRIMITIVE':
                     # mesh is baked with parent rotation relative to animated parent, so take that vectors
                     if self.bakeMatrix:
                         return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
@@ -441,7 +441,7 @@ class XPlaneObject():
                     return XPlaneCoords.vectorsFromMatrix(XPlaneCoords.convertMatrix(self.getMatrix(True)))
             else:
                 # not root level and no animated parent
-                if self.type=="PRIMITVE":
+                if self.type=='PRIMITIVE':
                     # mesh is baked with parent rotation so we need that vectors
                     if self.bakeMatrix:
                         return XPlaneCoords.vectorsFromMatrix(self.bakeMatrix)
