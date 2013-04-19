@@ -1497,28 +1497,13 @@ class XPlaneHeader():
             exportdir = os.path.dirname(os.path.abspath(os.path.normpath(os.path.join(blenddir,exportpath))))
 
         if file['parent'].texture!='':
-            if os.path.isabs(file['parent'].texture):
-                texpath = os.path.abspath(os.path.normpath(file['parent'].texture))
-            else:
-                texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir,file['parent'].texture)))
-
-            self.attributes['TEXTURE'] = os.path.relpath(texpath,exportdir)
+            self.attributes['TEXTURE'] = self.getTexturePath(file['parent'].texture, exportdir, blenddir)
 
         if file['parent'].texture_lit!='':
-            if os.path.isabs(file['parent'].texture):
-                texpath = os.path.abspath(os.path.normpath(file['parent'].texture_lit))
-            else:
-                texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir,file['parent'].texture_lit)))
-
-            self.attributes['TEXTURE_LIT'] = os.path.relpath(texpath,exportdir)
+            self.attributes['TEXTURE_LIT'] = self.getTexturePath(file['parent'].texture_lit, exportdir, blenddir)
 
         if file['parent'].texture_normal!='':
-            if os.path.isabs(file['parent'].texture):
-                texpath = os.path.abspath(os.path.normpath(file['parent'].texture_normal))
-            else:
-                texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir,file['parent'].texture_normal)))
-
-            self.attributes['TEXTURE_NORMAL'] = os.path.relpath(texpath,exportdir)
+            self.attributes['TEXTURE_NORMAL'] = self.getTexturePath(file['parent'].texture_normal, exportdir, blenddir)
 
         # set cockpit regions
         num_regions = int(file['parent'].cockpit_regions)
@@ -1539,6 +1524,30 @@ class XPlaneHeader():
         # add custom attributes
         for attr in file['parent'].customAttributes:
             self.attributes[attr.name] = attr.value
+
+    # Method: getTexturePath
+    # Returns the texture path relative to the exported OBJ
+    #
+    # Parameters:
+    #   string texpath - the relative or absolute texture path as chosen by the user
+    #   string exportdir - the absolute export directory
+    #   string blenddir - the absolute path to the directory the blend is in
+    #
+    # Returns:
+    #   string - the texture path relative to the exported OBJ
+    def getTexturePath(self, texpath, exportdir, blenddir):
+        # blender stores relative paths on UNIX with leading double slash
+        if texpath[0:2] == '//':
+            texpath = texpath[2:]
+
+        if os.path.isabs(texpath):
+            texpath = os.path.abspath(os.path.normpath(texpath))
+        else:
+            texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir, texpath)))
+
+        texpath = os.path.relpath(texpath, exportdir)
+
+        return texpath
 
     # Method: write
     # Returns the OBJ header.
