@@ -985,7 +985,7 @@ class XPlaneCommands():
     #
     # Returns:
     #   string - Commands
-    def writeKeyframes(self,obj,dataref,tabs):
+    def writeKeyframes(self, obj, dataref, tabs):
         debug = getDebug()
         debugger = getDebugger()
 
@@ -993,15 +993,15 @@ class XPlaneCommands():
 
         keyframes = obj.animations[dataref]
 
-        totalTrans = [0.0,0.0,0.0]
-        totalRot = [0.0,0.0,0.0]
+        totalTrans = [0.0, 0.0, 0.0]
+        totalRot = [0.0, 0.0, 0.0]
 
         # now get static Transformations based up on hierarchy and animations in parents
         # rotations are always applied at origin, even if a static translation happend before
         # TODO: static transformations can be merged into keyframe transformations
-        static = {'trans':['',''],'rot':['','','']}
-        staticRot = [0.0,0.0,0.0]
-        staticTrans = [[0.0,0.0,0.0],[0.0,0.0,0.0]]
+        static = {'trans': ['', ''], 'rot': ['', '', '']}
+        staticRot = [0.0, 0.0, 0.0]
+        staticTrans = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
 
         animatedParent = obj.firstAnimatedParent()
 
@@ -1038,75 +1038,76 @@ class XPlaneCommands():
 
         # ignore high precision values
         for i in range(0,2):
-            if round(staticTrans[i][0],4)!=0.0 or round(staticTrans[i][1],4)!=0.0 or round(staticTrans[i][2],4)!=0.0:
-                static['trans'][i] = "%sANIM_trans\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t0\t0\tnone\n" % (tabs,staticTrans[i][0],staticTrans[i][1],staticTrans[i][2],staticTrans[i][0],staticTrans[i][1],staticTrans[i][2])
+            if round(staticTrans[i][0], 4) != 0.0 or round(staticTrans[i][1], 4) != 0.0 or round(staticTrans[i][2], 4) != 0.0:
+                static['trans'][i] = "%sANIM_trans\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t0\t0\tnone\n" % (tabs, staticTrans[i][0], staticTrans[i][1], staticTrans[i][2], staticTrans[i][0], staticTrans[i][1], staticTrans[i][2])
 
         vectors = obj.getVectors()
-        for i in range(0,3):
-            if (round(staticRot[i],4)!=0.0):
+        for i in range(0, 3):
+            if (round(staticRot[i], 4) != 0.0):
                 vec = vectors[i]
-                static['rot'][i] = "%sANIM_rotate\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t0\t0\tnone\n" % (tabs,vec[0],vec[1],vec[2],staticRot[i],staticRot[i])
+                static['rot'][i] = "%sANIM_rotate\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t0\t0\tnone\n" % (tabs, vec[0], vec[1], vec[2], staticRot[i], staticRot[i])
 
         # add loops if any
-        if obj.datarefs[dataref].loop>0:
-            loops="%s\tANIM_keyframe_loop\t%6.8f\n" % (tabs,obj.datarefs[dataref].loop)
+        if obj.datarefs[dataref].loop > 0:
+            loops = "%s\tANIM_keyframe_loop\t%6.8f\n" % (tabs, obj.datarefs[dataref].loop)
         else:
             loops = ''
 
-        trans = "%sANIM_trans_begin\t%s\n" % (tabs,dataref)
+        trans = "%sANIM_trans_begin\t%s\n" % (tabs, dataref)
 
 #        print(obj.vectors)
-        rot = ['','','']
-        rot[0] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs,obj.vectors[0][0],obj.vectors[0][1],obj.vectors[0][2],dataref)
-        rot[1] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs,obj.vectors[1][0],obj.vectors[1][1],obj.vectors[1][2],dataref)
-        rot[2] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs,obj.vectors[2][0],obj.vectors[2][1],obj.vectors[2][2],dataref)
+        rot = ['', '', '']
+        rot[0] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs, obj.vectors[0][0], obj.vectors[0][1], obj.vectors[0][2], dataref)
+        rot[1] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs, obj.vectors[1][0], obj.vectors[1][1], obj.vectors[1][2], dataref)
+        rot[2] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs, obj.vectors[2][0], obj.vectors[2][1], obj.vectors[2][2], dataref)
 
         for keyframe in keyframes:
-            totalTrans[0]+=abs(keyframe.translation[0])
-            totalTrans[1]+=abs(keyframe.translation[1])
-            totalTrans[2]+=abs(keyframe.translation[2])
-            trans+="%s\tANIM_trans_key\t%6.8f\t%6.8f\t%6.8f\t%6.8f\n" % (tabs,keyframe.value,keyframe.translation[0],keyframe.translation[1],keyframe.translation[2])
+            totalTrans[0] += abs(keyframe.translation[0])
+            totalTrans[1] += abs(keyframe.translation[1])
+            totalTrans[2] += abs(keyframe.translation[2])
+            trans += "%s\tANIM_trans_key\t%6.8f\t%6.8f\t%6.8f\t%6.8f\n" % (tabs, keyframe.value, keyframe.translation[0], keyframe.translation[1], keyframe.translation[2])
 
-            totalRot[0]+=abs(keyframe.rotation[0])
-            totalRot[1]+=abs(keyframe.rotation[1])
-            totalRot[2]+=abs(keyframe.rotation[2])
+            totalRot[0] += abs(keyframe.rotation[0])
+            totalRot[1] += abs(keyframe.rotation[1])
+            totalRot[2] += abs(keyframe.rotation[2])
 
             for i in range(0,3):  #modified by EagleIan
                 if keyframe.index > 0:
-                    prevRot=keyframes[keyframe.index - 1].rotation[i]
+                    prevRot = keyframes[keyframe.index - 1].rotation[i]
                     if (keyframe.rotation[i] - prevRot) > 180:
-                        correctedRot=(360 - keyframe.rotation[i])*-1
-                        keyframes[keyframe.index].rotation[i]= correctedRot
-                rot[i]+="%s\tANIM_rotate_key\t%6.8f\t%6.8f\n" % (tabs,keyframe.value,keyframe.rotation[i])
+                        correctedRot = (360 - keyframe.rotation[i])*-1
+                        keyframes[keyframe.index].rotation[i] = correctedRot
+                rot[i] += "%s\tANIM_rotate_key\t%6.8f\t%6.8f\n" % (tabs, keyframe.value, keyframe.rotation[i])
 
             if debug:
-                debugger.debug("%s keyframe %s@%d %s" % (keyframe.object.name,keyframe.index,keyframe.frame,keyframe.dataref))
+                debugger.debug("%s keyframe %s@%d %s" % (keyframe.object.name, keyframe.index, keyframe.frame, keyframe.dataref))
 
-        trans+=loops
-        trans+="%sANIM_trans_end\n" % tabs
-        rot[0]+=loops
-        rot[0]+="%sANIM_rotate_end\n" % tabs
-        rot[1]+=loops
-        rot[1]+="%sANIM_rotate_end\n" % tabs
-        rot[2]+=loops
-        rot[2]+="%sANIM_rotate_end\n" % tabs
+        trans += loops
+        trans += "%sANIM_trans_end\n" % tabs
+        rot[0] += loops
+        rot[0] += "%sANIM_rotate_end\n" % tabs
+        rot[1] += loops
+        rot[1] += "%sANIM_rotate_end\n" % tabs
+        rot[2] += loops
+        rot[2] += "%sANIM_rotate_end\n" % tabs
 
         # ignore high precision changes that won't be written anyway
-        totalTrans[0] = round(totalTrans[0],FLOAT_PRECISION)
-        totalTrans[1] = round(totalTrans[1],FLOAT_PRECISION)
-        totalTrans[2] = round(totalTrans[2],FLOAT_PRECISION)
+        totalTrans[0] = round(totalTrans[0], FLOAT_PRECISION)
+        totalTrans[1] = round(totalTrans[1], FLOAT_PRECISION)
+        totalTrans[2] = round(totalTrans[2], FLOAT_PRECISION)
 
         if obj.id not in self.staticWritten:
-            o+=static['trans'][0]
-            o+=static['rot'][0]
-            o+=static['rot'][1]
-            o+=static['rot'][2]
+            o += static['trans'][0]
+            # o += static['rot'][0]
+            o += static['rot'][1]
+            o += static['rot'][2]
+            o += static['rot'][0] # x-axis comes last due to coordinate conversion
             self.staticWritten.append(obj.id)
 
         # ignore translation if dataref has 'rotate' anim_type
-        if obj.datarefs[dataref].anim_type in ('transform','translate'):
-            if totalTrans[0]!=0.0 or totalTrans[1]!=0.0 or totalTrans[2]!=0.0:
-                o+=trans
+        if obj.datarefs[dataref].anim_type in ('transform', 'translate'):
+            if totalTrans[0] != 0.0 or totalTrans[1] != 0.0 or totalTrans[2] != 0.0:
+                o += trans
 
         # ignore high precision changes that won't be written anyway
         totalRot[0] = round(totalRot[0],FLOAT_PRECISION)
@@ -1114,15 +1115,18 @@ class XPlaneCommands():
         totalRot[2] = round(totalRot[2],FLOAT_PRECISION)
 
         # ignore rotation if dataref has 'translate' anim_type
-        if obj.datarefs[dataref].anim_type in ('transform','rotate'):
-            if totalRot[0]!=0.0:
-                o+=rot[0]
-            if totalRot[1]!=0.0:
-                o+=rot[1]
-            if totalRot[2]!=0.0:
-                o+=rot[2]
+        if obj.datarefs[dataref].anim_type in ('transform', 'rotate'):
+            # if totalRot[0] != 0.0:
+            #    o += rot[0]
+            if totalRot[1] != 0.0:
+                o += rot[1]
+            if totalRot[2] != 0.0:
+                o += rot[2]
+            # x-axis comes last due to coordinate conversion
+            if totalRot[0] != 0.0:
+                o += rot[0]
 
-        o+=static['trans'][1]
+        o += static['trans'][1]
         return o
 
 # Class: XPlaneData
