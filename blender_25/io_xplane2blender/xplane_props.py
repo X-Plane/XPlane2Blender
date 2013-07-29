@@ -577,6 +577,14 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
                                         description="If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.",
                                         default=False)
 
+    blend_v1000 = bpy.props.EnumProperty(attr="blend_v1000",
+                                         name="Blend",
+                                         description="Controls texture alpha/blending",
+                                         default="on",
+                                         items=[('off', 'alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
+                                                ('on', 'alpha blend', 'Textures alpha channel will blended.'),
+                                                ('shadow', 'shadow', 'In shadow mode, shadows are not blended but primary drawing is.')])
+
     blendRatio = bpy.props.FloatProperty(attr="blendRatio",
                                         name="Alpha cutoff ratio",
                                         description="Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque.",
@@ -595,7 +603,11 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
                                         name="Cockpit region",
                                         description="Cockpit region to use.",
                                         default="0",
-                                        items=[("0","none","none"),("1","1","1"),("2","2","2"),("3","3","3"),("4","4","4")])
+                                        items=[("0","none","none"),
+                                               ("1","1","1"),
+                                               ("2","2","2"),
+                                               ("3","3","3"),
+                                               ("4","4","4")])
 
     lightLevel = bpy.props.BoolProperty(attr="lightLevel",
                                         name="Light Level",

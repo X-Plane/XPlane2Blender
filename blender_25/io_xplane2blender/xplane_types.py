@@ -989,6 +989,7 @@ class XPlaneMaterial():
         self.attributes.add(XPlaneAttribute("ATTR_depth"))
         self.attributes.add(XPlaneAttribute("ATTR_no_depth"))
         self.attributes.add(XPlaneAttribute("ATTR_blend"))
+        self.attributes.add(XPlaneAttribute("ATTR_shadow_blend"))
         self.attributes.add(XPlaneAttribute("ATTR_no_blend"))
         self.attributes.add(XPlaneAttribute("ATTR_draw_enable"))
         self.attributes.add(XPlaneAttribute("ATTR_draw_disable"))
@@ -1049,10 +1050,18 @@ class XPlaneMaterial():
                     self.attributes['ATTR_emission_rgb'].setValue("%6.3f %6.3f %6.3f" % (emission[0], emission[1], emission[2]))
 
                     # blend
-                    if mat.xplane.blend:
-                        self.attributes['ATTR_no_blend'].setValue("%6.3f" % mat.xplane.blendRatio)
+                    if (int(bpy.context.scene.xplane.version) >= 1000):
+                        if mat.xplane.blend_v1000 == 'off':
+                            self.attributes['ATTR_no_blend'].setValue("%6.3f" % mat.xplane.blendRatio)
+                        elif mat.xplane.blend_v1000 == 'on':
+                            self.attributes['ATTR_blend'].setValue(True)
+                        elif mat.xplane.blend_v1000 == 'shadow':
+                            self.attributes['ATTR_shadow_blend'].setValue(True)
                     else:
-                        self.attributes['ATTR_blend'].setValue(True)
+                        if mat.xplane.blend:
+                            self.attributes['ATTR_no_blend'].setValue("%6.3f" % mat.xplane.blendRatio)
+                        else:
+                            self.attributes['ATTR_blend'].setValue(True)
             else:
                 self.attributes['ATTR_draw_disable'].setValue(True)
 

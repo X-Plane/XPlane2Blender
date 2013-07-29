@@ -237,7 +237,7 @@ def layer_layout(self, scene, layout, layer):
             lods_box.prop(scene.xplane.layers[layer],"lods", text="Levels of detail")
             num_lods = int(scene.xplane.layers[layer].lods)
 
-            if num_lods>0:
+            if num_lods > 0:
 
                 if len(scene.xplane.layers[layer].lod) < num_lods:
                     lod_box = lods_box.box()
@@ -350,9 +350,13 @@ def material_layout(self, obj):
             row.prop(obj.xplane, "shinyRatio", text="Shiny ratio")
 
         row = layout.row()
-        row.prop(obj.xplane, "blend", text="Use alpha cutoff")
 
-        if(obj.xplane.blend==True):
+        if (int(bpy.context.scene.xplane.version) >= 1000):
+            row.prop(obj.xplane, "blend_v1000", text="Blend")
+        else:
+            row.prop(obj.xplane, "blend", text="Use alpha cutoff")
+
+        if(obj.xplane.blend==True or obj.xplane.blend_v1000 == 'off'):
             row = layout.row()
             row.prop(obj.xplane, "blendRatio", text="Alpha cutoff ratio")
 
