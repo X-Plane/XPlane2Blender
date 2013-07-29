@@ -436,6 +436,57 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
 
         return {'FINISHED'}
 
+# Class: OBJECT_OT_add_xplane_object_condition
+# Adds a custom attribute to a Blender Object.
+class OBJECT_OT_add_xplane_object_condition(bpy.types.Operator):
+    bl_label = 'Add Condition'
+    bl_idname = 'object.add_xplane_object_condition'
+    bl_description = 'Add a X-Plane condition'
+
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.conditions.add()
+        return {'FINISHED'}
+
+# Class: OBJECT_OT_remove_xplane_object_condition
+# Removes a custom attribute from a Blender Object.
+class OBJECT_OT_remove_xplane_object_condition(bpy.types.Operator):
+    bl_label = 'Remove Condition'
+    bl_idname = 'object.remove_xplane_object_condition'
+    bl_description = 'Remove X-Plane Condition'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.conditions.remove(self.index)
+        return {'FINISHED'}
+
+    # Class: OBJECT_OT_add_xplane_material_condition
+# Adds a custom attribute to a Blender Object.
+class OBJECT_OT_add_xplane_material_condition(bpy.types.Operator):
+    bl_label = 'Add Condition'
+    bl_idname = 'object.add_xplane_material_condition'
+    bl_description = 'Add a X-Plane condition'
+
+    def execute(self,context):
+        obj = context.object.active_material
+        obj.xplane.conditions.add()
+        return {'FINISHED'}
+
+# Class: OBJECT_OT_remove_xplane_material_condition
+# Removes a custom attribute from a Blender Object.
+class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
+    bl_label = 'Remove Condition'
+    bl_idname = 'object.remove_xplane_material_condition'
+    bl_description = 'Remove X-Plane Condition'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object.active_material
+        obj.xplane.conditions.remove(self.index)
+        return {'FINISHED'}
 
 # Function: addXPlaneOps
 # Registers all Operators.
@@ -463,6 +514,11 @@ def addXPlaneOps():
     bpy.utils.register_class(SCENE_OT_add_xplane_layers)
     bpy.utils.register_class(SCENE_OT_remove_xplane_layer_attribute)
 
+    bpy.utils.register_class(OBJECT_OT_add_xplane_object_condition)
+    bpy.utils.register_class(OBJECT_OT_remove_xplane_object_condition)
+    bpy.utils.register_class(OBJECT_OT_add_xplane_material_condition)
+    bpy.utils.register_class(OBJECT_OT_remove_xplane_material_condition)
+
 
 # Function: removeXPlaneOps
 # Unregisters all Operators.
@@ -489,3 +545,8 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(SCENE_OT_add_xplane_layer_attribute)
     bpy.utils.unregister_class(SCENE_OT_add_xplane_layers)
     bpy.utils.unregister_class(SCENE_OT_remove_xplane_layer_attribute)
+
+    bpy.utils.unregister_class(OBJECT_OT_add_xplane_object_condition)
+    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_condition)
+    bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_condition)
+    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_condition)

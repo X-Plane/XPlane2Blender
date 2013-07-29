@@ -613,6 +613,12 @@ class XPlaneCommands():
 
         # only write objects that are in current layer/file
         if self.objectInFile(obj):
+            # open conditions
+            if (hasattr(obj, 'material')):
+                o += self.writeConditions(obj.material, tabs)
+
+            o += self.writeConditions(obj, tabs)
+
             if obj.animated() or obj.hasAnimAttributes():
                 animationStarted = True
 
@@ -661,6 +667,12 @@ class XPlaneCommands():
 
             if obj.type == 'LIGHT' and obj.lightType in ('named','param','custom'):
                 o+=self.writeLight(obj,animLevel)
+
+            # close conditions
+            if (hasattr(obj, 'material')):
+                o += self.writeConditions(obj.material, tabs, True)
+
+            o += self.writeConditions(obj, tabs, True)
 
         if animationStarted:
             for child in obj.children:
@@ -1127,6 +1139,19 @@ class XPlaneCommands():
                 o += rot[0]
 
         o += static['trans'][1]
+        return o
+
+    def writeConditions(self, obj, tabs, close=False):
+        o = ''
+        for condition in obj.conditions:
+            if close == True:
+                o += tabs + 'ENDIF\n'
+            else:
+                if condition.value == True:
+                    o += tabs + 'IF %s\n' % condition.variable
+                else:
+                    o += tabs + 'IF NOT %s\n' % condition.variable
+
         return o
 
 # Class: XPlaneData

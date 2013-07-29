@@ -287,6 +287,7 @@ class XPlaneObject():
         self.reseters = {}
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
+        self.conditions = []
 
         if hasattr(self.object.xplane,'lod'):
             self.lod = self.object.xplane.lod
@@ -589,6 +590,11 @@ class XPlaneObject():
 #                weight+=1000
 
         self.weight = weight
+
+
+    def getConditions(self):
+        if self.object.xplane.conditions:
+            self.conditions = self.object.xplane.conditions
 
 # Class: XPlaneBone
 # A Bone.
@@ -894,6 +900,9 @@ class XPlanePrimitive(XPlaneObject):
         # add manipulator attributes
         self.getManipulatorAttributes()
 
+        # add conditions
+        self.getConditions()
+
         self.attributes.order()
         self.animAttributes.order()
         self.cockpitAttributes.order()
@@ -1004,6 +1013,8 @@ class XPlaneMaterial():
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit',True))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region',None,2000))
 
+        self.conditions = []
+
         if (len(self.object.data.materials)>0 and hasattr(self.object.data.materials[0],'name')):
             mat = self.object.data.materials[0]
             self.name = mat.name
@@ -1014,6 +1025,9 @@ class XPlaneMaterial():
 
                 # add light level attritubes
                 self.getLightLevelAttributes(mat)
+
+                # add conditions
+                self.getConditions(mat)
 
                 # polygon offsett attribute
                 if mat.xplane.poly_os>0:
@@ -1118,6 +1132,10 @@ class XPlaneMaterial():
     def getLightLevelAttributes(self,mat):
         if mat.xplane.lightLevel:
             self.attributes['ATTR_light_level'].setValue("%6.8f\t%6.8f\t%s" % (mat.xplane.lightLevel_v1,mat.xplane.lightLevel_v2,mat.xplane.lightLevel_dataref))
+
+    def getConditions(self, mat):
+        if mat.xplane.conditions:
+            self.conditions = mat.xplane.conditions
 
 # Class: XPlaneFace
 # A mesh face. This class is just a data wrapper used by <XPlaneFaces>.

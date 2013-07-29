@@ -37,11 +37,16 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
 
     def draw(self,context):
         obj = context.object
+        version = int(context.scene.xplane.version)
 
         if(obj.type == "MESH"):
             material_layout(self,obj.active_material)
             cockpit_layout(self,obj.active_material)
             custom_layout(self,obj.active_material,"MATERIAL")
+
+            if version >= 1000:
+                conditions_layout(self, obj.active_material, "MATERIAL")
+
 
 # Class: SCENE_PT_xplane
 # Adds X-Plane Layer settings to the scene tab. Uses <scene_layout>.
@@ -80,6 +85,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 
     def draw(self, context):
         obj = context.object
+        version = int(context.scene.xplane.version)
         
         if obj.type in ("MESH","EMPTY","ARMATURE","LAMP"):
             animation_layout(self,obj)
@@ -92,6 +98,10 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             lod_layout(self,obj)
             weight_layout(self,obj)
             custom_layout(self,obj,type)
+
+            # v1000
+            if version >= 1000:
+                conditions_layout(self, obj, "OBJECT")
             
 
 # Class: BONE_PT_xplane
@@ -389,6 +399,7 @@ def lamp_layout(self, obj):
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
 def material_layout(self, obj):
+    version = int(bpy.context.scene.xplane.version)
     layout = self.layout
 
     row = layout.row()
@@ -404,12 +415,13 @@ def material_layout(self, obj):
 
         row = layout.row()
 
-        if (int(bpy.context.scene.xplane.version) >= 1000):
+        # v1000 blend / v9000 blend
+        if version >= 1000:
             row.prop(obj.xplane, "blend_v1000", text="Blend")
         else:
             row.prop(obj.xplane, "blend", text="Use alpha cutoff")
 
-        if(obj.xplane.blend==True or obj.xplane.blend_v1000 == 'off'):
+        if obj.xplane.blend==True or obj.xplane.blend_v1000 == 'off':
             row = layout.row()
             row.prop(obj.xplane, "blendRatio", text="Alpha cutoff ratio")
 
@@ -625,6 +637,31 @@ def manipulator_layout(self,obj):
             box.prop(obj.xplane.manip,'v_hold',text="v hold")
             box.prop(obj.xplane.manip,'v1_min',text="v min")
             box.prop(obj.xplane.manip,'v1_max',text="v max")
+
+# Function: conditions_layout
+# Draws the UI layout for conditions.
+#
+# Parameters:
+#   UILayout self - Instance of current UILayout.
+#   obj - Blender object.
+#   type - object type
+def conditions_layout(self, obj, type):
+    layout = self.layout
+
+    type = type.lower()
+
+    # regular attributes
+    row = layout.row()
+    row.label("Conditions")
+    row.operator('object.add_xplane_' + type + '_condition', text="Add Condition")
+    box = layout.box()
+    for i, attr in enumerate(obj.xplane.conditions):
+        subbox = box.box()
+        subrow = subbox.row()
+        subrow.prop(attr,"variable")
+        subrow.operator('object.remove_xplane_' + type + '_condition',text="",emboss=False,icon="X").index = i
+        subrow = subbox.row()
+        subrow.prop(attr,"value")
 
 # Function: lod_layout
 # Draws the UI for Levels of detail

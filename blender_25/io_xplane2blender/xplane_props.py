@@ -73,6 +73,28 @@ class XPlaneDataref(bpy.types.PropertyGroup):
                                             description="Show/Hide value 2",
                                             default=0.0)
 
+
+# Class: XPlaneCondition
+# A custom attribute.
+#
+# Properties:
+#   string variable - Condition variable
+#   string value - Value of the variable
+#   string operator - Conditional operator to use
+class XPlaneCondition(bpy.types.PropertyGroup):
+    variable = bpy.props.EnumProperty(attr="variable",
+                                    name="Variable",
+                                    description="Variable",
+                                    default="GLOBAL_LIGHTING",
+                                    items=[('GLOBAL_LIGHTING','HDR', 'HDR mode On/Off'),
+                                            ('GLOBAL_SHADOWS','Global shadows', 'Global shadows On/Off'),
+                                            ('VERSION10','Version 10.x','Always "On", as V9 does not support conditions.')])
+
+    value = bpy.props.BoolProperty(attr="value",
+                                    name="On",
+                                    description="On/Off",
+                                    default=True)
+
 # Class: XPlaneDatarefSearch
 # Not used right now. Might be used to search for dataref paths.
 #class XPlaneDatarefSearch(bpy.types.PropertyGroup):
@@ -586,6 +608,11 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
                                     description="Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lamps >=10000.",
                                     default=0,
                                     min=0)
+    # v1000
+    conditions = bpy.props.CollectionProperty(attr="conditions",
+                                              name="Conditions",
+                                              description="Hide/show object depending on rendering settings",
+                                              type=XPlaneCondition)
 
 # Class: XPlaneBoneSettings
 # Settings for Blender bones.
@@ -729,6 +756,12 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
                                     step=1,
                                     min=0)
 
+    # v1000
+    conditions = bpy.props.CollectionProperty(attr="conditions",
+                                              name="Conditions",
+                                              description="Hide/show objects with material depending on rendering settings",
+                                              type = XPlaneCondition)
+
     customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
                                       name="Custom X-Plane material attributes",
                                       description="User defined material attributes for the X-Plane file.",
@@ -798,6 +831,7 @@ def addXPlaneRNA():
     # basic classes
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
+    bpy.utils.register_class(XPlaneCondition)
     #bpy.utils.register_class(XPlaneDatarefSearch)
     bpy.utils.register_class(XPlaneManipulator)
     bpy.utils.register_class(XPlaneCockpitRegion)
