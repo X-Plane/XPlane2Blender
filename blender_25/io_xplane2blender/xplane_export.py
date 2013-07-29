@@ -1471,28 +1471,32 @@ class XPlaneHeader():
     #   XPlaneMesh mesh - A <XPlaneMesh>.
     #   XPlaneLights lights - <XPlaneLights>
     #   int version - OBJ format version.
-    def __init__(self,exportpath,file,mesh,lights,version):
+    def __init__(self, exportpath, file, mesh, lights, version):
         import os
         self.version = version
         self.mode = "default"
+        # TODO: use Attributes object instead
         self.attributes = OrderedDict([("TEXTURE",None),
                         ("TEXTURE_LIT",None),
                         ("TEXTURE_NORMAL",None),
                         ("POINT_COUNTS",None),
                         ("slung_load_weight",None),
-                        ("COCKPIT_REGION",None)])
+                        ("COCKPIT_REGION",None),
+                        ("GLOBAL_no_blend",None),
+                        ("GLOBAL_shadow_blend",None),
+                        ("GLOBAL_specular",None),
+                        ("GLOBAL_no_shadow",None),
+                        ("SLOPE_LIMIT",None),
+                        ("TILTED",None),
+                        ("REQUIRE_WET",None),
+                        ("REQUIRE_DRY",None),
+                        ("GLOBAL_cockpit_lit",None)])
 
         # set slung load
         if file['parent'].slungLoadWeight>0:
             self.attributes['slung_load_weight'] = file['parent'].slungLoadWeight
 
         # set Texture
-#        if(len(file['primitives'])>0 and file['primitives'][0].material.texture != None):
-#            tex = file['primitives'][0].material.texture
-#            self.attributes['TEXTURE'] = tex
-#            self.attributes['TEXTURE_LIT'] = tex[0:-4]+'_LIT.png'
-#            self.attributes['TEXTURE_NORMAL'] = tex[0:-4]+'_NML.png'
-
         blenddir = os.path.dirname(bpy.context.blend_data.filepath)
 
         # normalize the exporpath
@@ -1525,6 +1529,44 @@ class XPlaneHeader():
         indices = len(mesh.indices)
 
         self.attributes['POINT_COUNTS'] = "%d\t%d\t%d\t%d" % (tris,lines,lights,indices)
+
+        xplane_version = int(bpy.context.scene.xplane.version)
+
+        # v1000
+        if xplane_version >= 1000:
+            # blend
+            if file['parent'].blend == "off":
+                self.attributes['GLOBAL_no_blend'] = '%6.8f' % file['parent'].blendRatio
+            elif file['parent'].blend == 'shadow':
+                self.attributes['GLOBAL_shadow_blend'] = True
+
+            # specular
+            if file['parent'].overrideSpecularity == True:
+                self.attributes['GLOBAL_specular'] = '%6.8f' % file['parent'].specular
+
+            # tilted
+            if file['parent'].tilted == True:
+                self.attributes['TILTED'] = True
+
+            # slope_limit
+            if file['parent'].slope_limit == True:
+                self.attributes['SLOPE_LIMIT'] = '%6.8f\t%6.8f\t%6.8f\t%6.8f' % (file['parent'].slope_limit_min_pitch, file['parent'].slope_limit_max_pitch, file['parent'].slope_limit_min_roll, file['parent'].slope_limit_max_roll)
+
+            # require surface
+            if file['parent'].require_surface == 'wet':
+                self.attributes['REQUIRE_WET'] = True
+            elif file['parent'].require_surface == 'dry':
+                self.attributes['REQUIRE_DRY'] = True
+
+        # v1010
+        if xplane_version >= 1010:
+            # shadow
+            if file['parent'].shadow == False:
+                self.attributes['GLOBAL_no_shadow'] = True
+
+            # cockpit_lit
+            if file['parent'].cockpit_lit == True:
+                self.attributes['GLOBAL_cockpit_lit'] = True
 
         # add custom attributes
         for attr in file['parent'].customAttributes:
@@ -1581,9 +1623,15 @@ class XPlaneHeader():
             if self.attributes[attr]!=None:
                 if type(self.attributes[attr]).__name__ == 'list':
                     for value in self.attributes[attr]:
-                        o+='%s\t%s\n' % (attr,value)
+                        if value == True:
+                            o+='%s\n' % attr
+                        else:
+                            o+='%s\t%s\n' % (attr,value)
                 else:
-                    o+='%s\t%s\n' % (attr,self.attributes[attr])
+                    if self.attributes[attr] == True:
+                        o+='%s\n' % attr
+                    else:
+                        o+='%s\t%s\n' % (attr, self.attributes[attr])
 
         return o
 

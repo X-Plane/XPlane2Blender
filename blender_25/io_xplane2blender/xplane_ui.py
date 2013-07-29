@@ -167,6 +167,7 @@ def scene_layout(self, scene):
 #   UILayout layout - Instance of sublayout to use.
 #   int layer - <XPlaneLayer> index.
 def layer_layout(self, scene, layout, layer):
+    version = int(scene.xplane.version)
     box = layout.box()
     li = str(layer+1)
 
@@ -231,8 +232,13 @@ def layer_layout(self, scene, layout, layer):
                                 region_split.prop(cockpit_region,"height")
                                 region_split.label("= %d" % (2 ** cockpit_region.height))
 
+            # v1010
+            # cockpit_lit
+            cockpit_lit_box = column.row()
+            cockpit_lit_box.prop(scene.xplane.layers[layer], "cockpit_lit", "3D-Cockpit lighting")
+
         # LODs
-        if scene.xplane.layers[layer].cockpit==False:
+        else:
             lods_box = column.box()
             lods_box.prop(scene.xplane.layers[layer],"lods", text="Levels of detail")
             num_lods = int(scene.xplane.layers[layer].lods)
@@ -261,7 +267,54 @@ def layer_layout(self, scene, layout, layer):
 
         column.separator()
         column.prop(scene.xplane.layers[layer], "slungLoadWeight", text="Slung Load weight")
-        
+
+        # v1000
+        if version >= 1000:
+            # blend
+            blend_box = column.box()
+            blend_box.prop(scene.xplane.layers[layer], "blend", text="Blend")
+
+            if(scene.xplane.layers[layer].blend=="off"):
+                row = blend_box.row()
+                row.prop(scene.xplane.layers[layer], "blendRatio", text="Alpha cutoff ratio")
+
+            # slope_limit
+            slope_box = column.box()
+            slope_box.prop(scene.xplane.layers[layer], "slope_limit", text="Slope limit")
+
+            if(scene.xplane.layers[layer].slope_limit==True):
+                row = slope_box.row()
+                row.prop(scene.xplane.layers[layer], "slope_limit_min_pitch", text="Min. pitch")
+                row = slope_box.row()
+                row.prop(scene.xplane.layers[layer], "slope_limit_max_pitch", text="Max. pitch")
+                row = slope_box.row()
+                row.prop(scene.xplane.layers[layer], "slope_limit_min_roll", text="Min. roll")
+                row = slope_box.row()
+                row.prop(scene.xplane.layers[layer], "slope_limit_max_roll", text="Max. roll")
+
+            # tilted
+            tilted_box = column.row()
+            tilted_box.prop(scene.xplane.layers[layer], "tilted", text="Tilted")
+
+            # require surface
+            require_box = column.row()
+            require_box.prop(scene.xplane.layers[layer], "require_surface", "Require surface")
+
+            # specular
+            specular_box = column.box()
+            specular_box.prop(scene.xplane.layers[layer], "overrideSpecularity", "Override specularity")
+
+            if scene.xplane.layers[layer].overrideSpecularity == True:
+                row = specular_box.row()
+                row.prop(scene.xplane.layers[layer], "specular", "Specularity")
+
+        # v1010
+        if version >= 1010:
+            # shadow
+            shadow_box = column.row()
+            shadow_box.prop(scene.xplane.layers[layer], "shadow", "Cast shadows")
+
+
         custom_layer_layout(self, box, scene, layer)
 
 # Function: custom_layer_layout

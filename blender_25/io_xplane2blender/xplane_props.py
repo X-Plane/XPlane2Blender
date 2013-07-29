@@ -397,11 +397,105 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     lod = bpy.props.CollectionProperty(name="LOD",
                                     type=XPlaneLOD,
                                     description="Level of detail")
+    # v1000
+    blend = bpy.props.EnumProperty(attr="blend",
+                                    name="Blend",
+                                    description="Controls texture alpha/blending",
+                                    default="on",
+                                    items=[('off', 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
+                                            ('on', 'Alpha blend', 'Textures alpha channel will blended.'),
+                                            ('shadow', 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')])
+    # v1000
+    blendRatio = bpy.props.FloatProperty(attr="blendRatio",
+                                    name="Alpha cutoff ratio",
+                                    description="Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque.",
+                                    default=0.5,
+                                    step=0.1,
+                                    precision=2,
+                                    max=1.0,
+                                    min=0.0)
+    # v1000
+    overrideSpecularity = bpy.props.BoolProperty(attr="overrideSpecularity",
+                                                name="Override specularity",
+                                                description="If checked you will enable control over overall amount of specularity.",
+                                                default=False)
+    # v1000
+    specular = bpy.props.FloatProperty(attr='specular',
+                                    name='Specularity',
+                                    description='Controls the overall amount of specularity of the materials in X-Plane.',
+                                    default=0.0,
+                                    min=0.0)
+    # v1000 (only for instances)
+    tint = bpy.props.BoolProperty(attr="tint",
+                                    name="Tint",
+                                    description="If active you can set the albedo and emissive tint.",
+                                    default=False)
+    # v1000 (only for instances)
+    tint_albedo = bpy.props.FloatProperty(attr="tint_albedo",
+                                    name="Albedo",
+                                    description="Albedo tint. 0.0 no darkening, 1.0 total darkening.",
+                                    min=0.0,
+                                    max=1.0,
+                                    default=0.0)
+    # v1000 (only for instances)
+    tint_emissive = bpy.props.FloatProperty(attr="tint_emissive",
+                                    name="Emissive",
+                                    description="Emissive tint. 0.0 no darkening, 1.0 total darkening.",
+                                    min=0.0,
+                                    max=1.0,
+                                    default=0.0)
+    # v1000
+    tilted = bpy.props.BoolProperty(attr="tilted",
+                                    name="Tilted",
+                                    description="Causes objects placed on a scenery tile to sit “on” the ground even if it is sloped.",
+                                    default=False)
+    # v1000
+    slope_limit = bpy.props.BoolProperty(attr="slope_limit",
+                                    name="Slope limit",
+                                    description="Establishes the maximum slope limit an object will tolerate (in degrees) for library objects placed in a DSF",
+                                    default=False)
+    # v1000
+    slope_limit_min_pitch = bpy.props.FloatProperty(attr="slope_limit_min_pitch",
+                                    name="Min. pitch",
+                                    description="Represents the ground sloping down at the front of the object.",
+                                    default=0.0)
+    # v1000
+    slope_limit_max_pitch = bpy.props.FloatProperty(attr="slope_limit_max_pitch",
+                                    name="Max. pitch",
+                                    description="Represents the ground sloping down at the front of the object.",
+                                    default=0.0)
+    # v1000
+    slope_limit_min_roll = bpy.props.FloatProperty(attr="slope_limit_min_roll",
+                                    name="Min. roll",
+                                    description="Represents the ground sloping down to the left of the object.",
+                                    default=0.0)
+    # v1000
+    slope_limit_max_roll = bpy.props.FloatProperty(attr="slope_limit_max_roll",
+                                    name="Max. roll",
+                                    description="Represents the ground sloping down to the left of the object.",
+                                    default=0.0)
+    # v1000
+    require_surface = bpy.props.EnumProperty(attr="require_surface",
+                                    name="Require surface",
+                                    description="whether an object should be used over wet or dry terrain when placed from the library",
+                                    default="none",
+                                    items=[("none", "Any", "Any surface"),
+                                            ("dry", "Dry", "Must be placed on dry surface"),
+                                            ("wet", "Wet", "Must be placed on wet surface")])
+    # v1010
+    shadow = bpy.props.BoolProperty(attr="shadow",
+                                    name="Cast shadows",
+                                    description="If disabled object will not cast any shadows.",
+                                    default=True)
+    # v1010
+    cockpit_lit = bpy.props.BoolProperty(attr="cockpit_lit",
+                                    name="3D-Cockpit lighting",
+                                    default=True)
 
     customAttributes = bpy.props.CollectionProperty(attr="customAttributes",
-                                      name="Custom X-Plane header attributes",
-                                      description="User defined header attributes for the X-Plane file.",
-                                      type=XPlaneCustomAttribute)
+                                    name="Custom X-Plane header attributes",
+                                    description="User defined header attributes for the X-Plane file.",
+                                    type=XPlaneCustomAttribute)
 
 # Class: XPlaneSceneSettings
 # Settings for Blender scenes.
@@ -426,19 +520,19 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
 
     layers = bpy.props.CollectionProperty(attr="layers",
-                                            name="Layers",
-                                            description="Export settings for the Blender layers",
-                                            type=XPlaneLayer)
+                                    name="Layers",
+                                    description="Export settings for the Blender layers",
+                                    type=XPlaneLayer)
 
     optimize = bpy.props.BoolProperty(attr="optimize",
-                                        name="Optimize",
-                                        description="If checked file size will be optimized. However this can increase export time dramatically.",
-                                        default=False)
+                                    name="Optimize",
+                                    description="If checked file size will be optimized. However this can increase export time dramatically.",
+                                    default=False)
 
     version = bpy.props.EnumProperty(attr="version",
-                                        name="X-Plane Version",
-                                        default="900",
-                                        items=[("900","9.x","9.x"),("1000","10.0x","10.0x"),("1010","10.1x","10.1x")])
+                                    name="X-Plane Version",
+                                    default="900",
+                                    items=[("900","9.x","9.x"),("1000","10.0x","10.0x"),("1010","10.1x","10.1x")])
 
 # Class: XPlaneObjectSettings
 # Settings for Blender objects.
@@ -576,14 +670,14 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
                                         name="Use Alpha cutoff",
                                         description="If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.",
                                         default=False)
-
+    # v1000
     blend_v1000 = bpy.props.EnumProperty(attr="blend_v1000",
                                          name="Blend",
                                          description="Controls texture alpha/blending",
                                          default="on",
-                                         items=[('off', 'alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
-                                                ('on', 'alpha blend', 'Textures alpha channel will blended.'),
-                                                ('shadow', 'shadow', 'In shadow mode, shadows are not blended but primary drawing is.')])
+                                         items=[('off', 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
+                                                ('on', 'Alpha blend', 'Textures alpha channel will blended.'),
+                                                ('shadow', 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')])
 
     blendRatio = bpy.props.FloatProperty(attr="blendRatio",
                                         name="Alpha cutoff ratio",
