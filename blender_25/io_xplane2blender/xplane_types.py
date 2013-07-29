@@ -930,6 +930,8 @@ class XPlanePrimitive(XPlaneObject):
                 value = "%s\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s\t%s\t%s" % (manip.cursor,manip.dx,manip.dy,manip.v1_min,manip.v1_max,manip.v2_min,manip.v2_max,manip.dataref1,manip.dataref2,manip.tooltip)
             if type=='drag_axis':
                 value = "%s\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s\t%s" % (manip.cursor,manip.dx,manip.dy,manip.dz,manip.v1,manip.v2,manip.dataref1,manip.tooltip)
+            if type=='drag_axis_pix':
+                value = "%s\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s\t%s" % (manip.cursor,manip.dx,manip.step,manip.exp,manip.v1,manip.v2,manip.dataref1,manip.tooltip)
             if type=='command':
                 value = "%s\t%s\t%s" % (manip.cursor,manip.command,manip.tooltip)
             if type=='command_axis':

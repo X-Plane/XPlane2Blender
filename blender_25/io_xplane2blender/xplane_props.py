@@ -142,6 +142,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                 default='drag_xy',
                                 items=[("drag_xy","drag_xy","drag_xy"),
                                 ("drag_axis","drag_axis","drag_axis"),
+                                ("drag_axis_pix","drag_axis_pix (v10.10 or higher only)","drag_axis_pix (v10.10 or higher only)"),
                                 ("command","command","command"),
                                 ("command_axis","command_axis","command_axis"),
                                 ("push","push","push"),
@@ -274,6 +275,16 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                 name="Dataref 2",
                                 description="Dataref 2",
                                 default="")
+
+    step = bpy.props.FloatProperty(attr="step",
+                                   name="Step",
+                                   description="Dataref increment",
+                                   default=1.0)
+
+    exp = bpy.props.FloatProperty(attr="exp",
+                                   name="Exp",
+                                   description="Power of an exponential curve that controls the speed at which the dataref changes. Higher numbers cause a more “non-linear” response, where small drags are very precise and large drags are very fast.",
+                                   default=1.0)
 
 # Class: XPlaneCockpitRegion
 # Defines settings for a cockpit region.

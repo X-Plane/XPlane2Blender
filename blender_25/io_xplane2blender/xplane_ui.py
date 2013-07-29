@@ -607,8 +607,14 @@ def manipulator_layout(self,obj):
         if type in ('drag_xy','drag_axis','command_axis'):
             box.prop(obj.xplane.manip,'dx',text="dx")
             box.prop(obj.xplane.manip,'dy',text="dy")
+
             if type in('drag_axis','command_axis'):
                 box.prop(obj.xplane.manip,'dz',text="dz")
+
+        elif type == 'drag_axis_pix':
+             box.prop(obj.xplane.manip,'dx',text="dx")
+             box.prop(obj.xplane.manip, 'step', text="Step")
+             box.prop(obj.xplane.manip, 'exp', text="Exp")
 
         # values
         if type=='drag_xy':
@@ -616,7 +622,7 @@ def manipulator_layout(self,obj):
             box.prop(obj.xplane.manip,'v1_max',text="v1 max")
             box.prop(obj.xplane.manip,'v2_min',text="v2 min")
             box.prop(obj.xplane.manip,'v2_max',text="v2 max")
-        elif type=='drag_axis':
+        elif type=='drag_axis' or type == 'drag_axis_pix':
             box.prop(obj.xplane.manip,'v1',text="v1")
             box.prop(obj.xplane.manip,'v2',text="v2")
         elif type=='command':
