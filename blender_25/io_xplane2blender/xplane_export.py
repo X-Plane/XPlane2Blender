@@ -124,7 +124,9 @@ class XPlaneMesh():
                 pass
             for d in self.debug:
                 tris_to_quads = 1.0
-                if 'faces' in d and 'obj_faces' in d and d['faces'] > 0:
+                if not 'obj_faces' in d:
+                    d['obj_faces'] = 0
+                if d['faces'] > 0:
                   tris_to_quads = d['obj_faces'] / d['faces']
                 debugger.debug('%s: faces %d | obj-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],tris_to_quads,d['end_index']-d['start_index'],d['vertices']))
             debugger.debug('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
