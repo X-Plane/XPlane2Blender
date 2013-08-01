@@ -140,7 +140,7 @@ class XPlaneMesh():
     def writeObjects(self,objects):
         debug = getDebug()
         for obj in objects:
-            if obj.type == 'PRIMITIVE' and self.isInFile(obj) and obj.export_mesh[self.file['parent'].index] == True:
+            if obj.type == 'PRIMITIVE' and self.isInFile(obj) and self.canExportMesh(obj):
                 obj.indices[0] = len(self.indices)
                 first_vertice_of_this_object = len(self.vertices)
 
@@ -240,6 +240,9 @@ class XPlaneMesh():
                 obj.bakeMatrix = getBakeMatrix(obj)
 
             self.writeObjects(obj.children)
+
+    def canExportMesh(self, obj):
+        return obj.export_mesh[self.file['parent'].index] == True
 
     def isInFile(self,obj):
         for i in range(0,len(obj.object.layers)):
@@ -616,7 +619,7 @@ class XPlaneCommands():
         # only write objects that are in current layer/file
         if self.objectInFile(obj):
             # open conditions
-            if (hasattr(obj, 'material')):
+            if hasattr(obj, 'material') and self.canExportMesh(obj):
                 o += self.writeConditions(obj.material, tabs)
 
             o += self.writeConditions(obj, tabs)
@@ -649,15 +652,15 @@ class XPlaneCommands():
             if hasattr(obj,'attributes'):
                 o+=self.writeCustomAttributes(obj,tabs)
 
-            if hasattr(obj,'material'):
+            if hasattr(obj,'material') and self.canExportMesh(obj):
                 o+=self.writeMaterial(obj,tabs)
 
             # write cockpit attributes
-            if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes'):
+            if self.file['parent'].cockpit and hasattr(obj,'cockpitAttributes') and self.canExportMesh(obj):
                 o+=self.writeCockpitAttributes(obj,tabs)
 
             # rendering (do not render meshes/objects with no indices)
-            if hasattr(obj,'indices') and obj.indices[1]>obj.indices[0]:
+            if hasattr(obj,'indices') and obj.indices[1]>obj.indices[0] and self.canExportMesh(obj):
                 offset = obj.indices[0]
                 count = obj.indices[1]-obj.indices[0]
 
@@ -671,7 +674,7 @@ class XPlaneCommands():
                 o+=self.writeLight(obj,animLevel)
 
             # close conditions
-            if (hasattr(obj, 'material')):
+            if hasattr(obj, 'material') and self.canExportMesh(obj):
                 o += self.writeConditions(obj.material, tabs, True)
 
             o += self.writeConditions(obj, tabs, True)
@@ -715,6 +718,9 @@ class XPlaneCommands():
             o+="%sLIGHT_CUSTOM\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs, co[0], co[1], co[2], light.color[0], light.color[1], light.color[2], light.energy, light.size, light.uv[0], light.uv[1], light.uv[2], light.uv[3], light.dataref)
 
         return o
+
+    def canExportMesh(self, obj):
+        return obj.export_mesh[self.file['parent'].index] == True
 
     def objectInFile(self,obj):
         layer = self.file['parent'].index
