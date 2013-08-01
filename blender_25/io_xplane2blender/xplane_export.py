@@ -242,7 +242,7 @@ class XPlaneMesh():
             self.writeObjects(obj.children)
 
     def canExportMesh(self, obj):
-        return obj.export_mesh[self.file['parent'].index] == True
+        return hasattr(obj, 'export_mesh') and obj.export_mesh[self.file['parent'].index] == True
 
     def isInFile(self,obj):
         for i in range(0,len(obj.object.layers)):
@@ -720,7 +720,7 @@ class XPlaneCommands():
         return o
 
     def canExportMesh(self, obj):
-        return obj.export_mesh[self.file['parent'].index] == True
+        return hasattr(obj, 'export_mesh') and obj.export_mesh[self.file['parent'].index] == True
 
     def objectInFile(self,obj):
         layer = self.file['parent'].index
