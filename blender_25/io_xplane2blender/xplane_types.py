@@ -887,6 +887,7 @@ class XPlanePrimitive(XPlaneObject):
         self.type = 'PRIMITIVE'
         self.indices = [0,0]
         self.material = XPlaneMaterial(self.object)
+        self.export_mesh = object.xplane.export_mesh
         self.faces = None
 
         #self.getMaterialAttributes()

@@ -619,6 +619,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
                                     description="Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lamps >=10000.",
                                     default=0,
                                     min=0)
+
+    export_mesh = bpy.props.BoolVectorProperty(name="Export mesh in layers",
+                                         description="If disabled only object's animations will be exported in the selected layers, but not the mesh itself.",
+                                         default = [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True],
+                                         size=20,
+                                         subtype='LAYER')
     # v1000
     conditions = bpy.props.CollectionProperty(attr="conditions",
                                               name="Conditions",

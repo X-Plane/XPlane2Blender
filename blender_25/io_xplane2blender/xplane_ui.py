@@ -362,6 +362,8 @@ def mesh_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "depth", text="Use depth culling")
     row = layout.row()
+    row.prop(obj.xplane, "export_mesh", text="Export mesh in layers")
+    row = layout.row()
 
 # Function: lamp_layout
 # Draws the UI layout for lamps.

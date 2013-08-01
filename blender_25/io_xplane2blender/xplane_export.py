@@ -140,7 +140,7 @@ class XPlaneMesh():
     def writeObjects(self,objects):
         debug = getDebug()
         for obj in objects:
-            if obj.type == 'PRIMITIVE' and self.isInFile(obj):
+            if obj.type == 'PRIMITIVE' and self.isInFile(obj) and obj.export_mesh[self.file['parent'].index] == True:
                 obj.indices[0] = len(self.indices)
                 first_vertice_of_this_object = len(self.vertices)
 
