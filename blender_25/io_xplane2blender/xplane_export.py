@@ -1598,7 +1598,7 @@ class XPlaneHeader():
                 self.attributes['GLOBAL_no_shadow'] = True
 
             # cockpit_lit
-            if file['parent'].cockpit_lit == True:
+            if file['parent'].cockpit == True and file['parent'].cockpit_lit == True:
                 self.attributes['GLOBAL_cockpit_lit'] = True
 
         # add custom attributes
