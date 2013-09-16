@@ -142,7 +142,6 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                 default='drag_xy',
                                 items=[("drag_xy","drag_xy","drag_xy"),
                                 ("drag_axis","drag_axis","drag_axis"),
-                                ("drag_axis_pix","drag_axis_pix (v10.10 or higher only)","drag_axis_pix (v10.10 or higher only)"),
                                 ("command","command","command"),
                                 ("command_axis","command_axis","command_axis"),
                                 ("push","push","push"),
@@ -150,7 +149,8 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
                                 ("delta","delta","delta"),
                                 ("wrap","wrap","wrap"),
                                 ("toggle","toggle","toggle"),
-                                ("noop","noop","noop")])
+                                ("noop","noop","noop"),
+                                ("drag_axis_pix","drag_axis_pix (v10.10 or higher only)","drag_axis_pix (v10.10 or higher only)")])
 
     tooltip = bpy.props.StringProperty(attr="tooltip",
                                     name="Manipulator Tooltip",
