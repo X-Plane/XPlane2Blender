@@ -24,8 +24,8 @@
 bl_info = {
     'name': 'Import/Export: XPlane',
     'author': 'Ondrej Brinkel',
-    'version': (3,20,7),
-    'blender': (2, 5, 7),
+    'version': (3,20,8),
+    'blender': (2, 6, 8),
     'api': 36273,
     'location': 'File > Import/Export > XPlane ',
     'description': 'Import and Export XPlane objects/planes (.obj,.aif format)',

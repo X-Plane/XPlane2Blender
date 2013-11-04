@@ -951,6 +951,21 @@ class XPlanePrimitive(XPlaneObject):
         if attr is not None:
             self.cockpitAttributes.add(XPlaneAttribute(attr,value))
 
+# Class: XPlanePrimitive
+# A Mesh object.
+#
+# Extends:
+#   <XPlaneObject>
+class XPlaneEmpty(XPlaneObject):
+
+    def __init__(self,object,parent = None):
+        super(XPlaneEmpty,self).__init__(object,parent)
+
+        self.getWeight()
+
+        self.getCoordinates()
+        self.getAnimations()
+
 
 # Class: XPlaneMaterial
 # A Material

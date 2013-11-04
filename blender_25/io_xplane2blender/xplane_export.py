@@ -1372,11 +1372,11 @@ class XPlaneData():
                     # sort child objects by weight
                     armature.children.sort(key=attrgetter('weight'))
 
-                # unsuported object type: Keep it to store hierarchy
+                # unsuported object type: Keep it to store hierarchy and animation
                 elif obj.type in ['EMPTY','CAMERA','SURFACE','CURVE','FONT','META','LATTICE'] and len(children)>0:
                     if debug:
                         debugger.debug("\t "+obj.name+": adding to list")
-                    xplaneObj = XPlaneObject(obj,parent)
+                    xplaneObj = XPlaneEmpty(obj,parent)
 
                     if parent == None:
                         self.files[filename]["objects"].append(xplaneObj)
@@ -1801,9 +1801,9 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     if profile:
                         profiler.end("ExportXPlane9 %s" % file)
                 else:
-                    showError('No objects to export, aborting ...')
+                    showError('%s: No objects to export, aborting ...' % file)
                     if debug:
-                        debugger.debug("No objects to export, aborting ...")
+                        debugger.debug("%s: No objects to export, aborting ..." % file)
                 i+=1
         else:
             showError('No files to export, aborting ...')

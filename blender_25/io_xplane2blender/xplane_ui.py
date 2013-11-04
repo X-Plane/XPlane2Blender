@@ -775,7 +775,7 @@ class XPlaneError(bpy.types.Operator):
     msg_text = bpy.props.StringProperty(default='')
 
     def execute(self, context):
-        self.report(self.msg_type, self.msg_text)
+        # self.report({self.msg_type}, self.msg_text)
         return {'FINISHED'}
 
     def invoke(self,context,event):
