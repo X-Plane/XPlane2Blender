@@ -24,12 +24,13 @@
 bl_info = {
     'name': 'Import/Export: XPlane',
     'author': 'Ondrej Brinkel',
-    'version': (3,20,8),
-    'blender': (2, 6, 8),
+    'version': (3,20,9),
+    'blender': (2, 6, 9),
     'api': 36273,
     'location': 'File > Import/Export > XPlane ',
     'description': 'Import and Export XPlane objects/planes (.obj,.aif format)',
-    'warning': 'beta', # used for warning icon and text in addons panel
+    'wiki_url': 'https://github.com/der-On/XPlane2Blender/wiki',
+    'tracker_url': 'https://github.com/der-On/XPlane2Blender/issues',
     'category': 'Import-Export'}
 
 if "bpy" in locals():
