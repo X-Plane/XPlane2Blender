@@ -712,7 +712,6 @@ dt {
   max-width: 650px;
   margin: 0 auto;
   padding: 0 10px;
-  background: blue;
   margin: 6px auto;
 }
 #header nav li {
@@ -769,6 +768,9 @@ dt {
 #header nav li.fork {
   float: left;
   margin-left: 0px;
+}
+#header nav li.docs, #header nav li.donations {
+    margin-left: 6px;
 }
 #header nav li.downloads {
   float: right;

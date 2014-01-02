@@ -1,0 +1,18 @@
+{
+  "name": "XPlane2Blender-Website",
+  "version": "0.0.1",
+  "description": "Website for the Blender addon XPlane2Blender",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/der-On/XPlane2Blender.git"
+  },
+  "author": "Ondrej Brinkel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/der-On/XPlane2Blender/issues"
+  }
+}
