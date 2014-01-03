@@ -1,0 +1,12 @@
+{
+  "name": "XPlane2Blender-Website",
+  "version": "0.0.1",
+  "homepage": "http://xplane2blender.anzui.de",
+  "authors": [
+    "Ondrej Brinkel <info@anzui.de>"
+  ],
+  "description": "Website for the Blender addon XPlane2Blender",
+  "main": "index.html",
+  "license": "MIT",
+  "private": true
+}
