@@ -86,7 +86,6 @@ task('push', {async: true}, function(){
             fail(stderr);
             return;
         }
-        console.log(stdout);
         console.log('deployment done');
         complete();
     });
