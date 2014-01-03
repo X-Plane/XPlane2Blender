@@ -10,10 +10,12 @@ var http = require('http');
 task('watch', function() {
     var pagesPath = path.join(__dirname, 'pages');
     utils.file.watch(pagesPath, { includePattern: /(\.md)$/}, function(filePath) {
-       jake.Task['compile'].invoke(filePath);
+        jake.Task['compile'].reenable();
+        jake.Task['compile'].invoke(filePath);
     });
 
     utils.file.watch(path.join(__dirname, 'templates'), { includePattern: /(\.ejs)$/}, function(filePath) {
+        jake.Task['build'].reenable();
         jake.Task['build'].invoke();
     });
 });
@@ -36,7 +38,7 @@ task('compile', function(filePath) {
 
     // markdow to html
     var body = fs.readFileSync(filePath, { encoding: 'utf-8'});
-    body = markdown(body, { breaks: true });
+    body = markdown(body, { breaks: false });
 
     // compile to html
     var html = ejs.render(htmlTemplate, { filename: htmlTemplatePath, title: title, body: body });
@@ -66,14 +68,29 @@ task('build', {async: true}, function(){
     });
 
     pageFiles.forEach(function(filePath) {
+        jake.Task['compile'].reenable();
         jake.Task['compile'].invoke(filePath);
     });
+    complete();
 });
 
 task('push', {async: true}, function(){
-
+    console.log('pushing changes');
+    cp.exec('git add . && git commit -m\'deployment\' && git push origin gh-pages', function(error, stderr, stdout) {
+        if (error) {
+            console.error(error);
+            fail(error.message);
+            return;
+        }
+        if (stderr) {
+            fail(stderr);
+            return;
+        }
+        console.log(stdout);
+        console.log('deployment done');
+        complete();
+    });
 });
 
 task('deploy', ['build','push'], function(){
-    complete('Deployed');
 });

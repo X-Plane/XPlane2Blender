@@ -5,6 +5,6 @@ This addon for <a href="http://www.blender.org/">Blender</a> 2.6x makes it possi
 - Blender 2.69 or higher
 - Python 3.1 or higher
 
-How to use:
+## How to use:
 
 See the [docs in the wiki](https://github.com/der-On/XPlane2Blender/wiki/docs-3.2x-main).
