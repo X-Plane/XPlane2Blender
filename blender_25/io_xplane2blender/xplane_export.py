@@ -1789,7 +1789,14 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                         o+="ATTR_LOD %6.8f 100000.0\n" % tallest_far
                         o+=commands.write()
 
-                    o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,bpy.app.build_revision,version/1000)
+                    build = 'unknown'
+
+                    if hasattr(bpy.app, 'build_hash'):
+                        build = bpy.app.build_hash
+                    else:
+                        build = bpy.app.build_revision
+
+                    o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,build,version/1000)
 
                     # write the file
                     if debug:
