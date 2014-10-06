@@ -29,61 +29,61 @@ except ImportError:
 # Returns:
 #   Matrix - The bake matrix for this object.
 def getBakeMatrix(obj):
-    # Bake in different matrixes depending on animation and hierarchy
-    animatedParent = obj.firstAnimatedParent()
-    if obj.animated():
-        if obj.parent == None:
-            # root level
-            # Conversion matrix only. Object will be transformed during animation.
-            matrix = XPlaneCoords.conversionMatrix()
-            # add objects world scale
-            matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
-        else:
-            # not at root level
-            if animatedParent:
-                # has some animated parent
-                if animatedParent!=obj.parent:
-                    # bake rotation of the parent relative to the animated parent so we do not need to worry about it later
-                    matrix = XPlaneCoords.relativeConvertedMatrix(obj.parent.getMatrix(True),animatedParent.getMatrix(True))
-                    matrix = XPlaneCoords.convertMatrix(matrix.to_euler().to_matrix().to_4x4())
-                    # add objects world scale
-                    matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
-                else:
-                    matrix = XPlaneCoords.conversionMatrix()
-                    # add objects world scale
-                    matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
-            else:
-                # no animated parent
-                # bake rotation of the parent so we do not need to worry about it later
-                matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).to_euler().to_matrix().to_4x4())
-                # add objects world scale
-                matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
-    else:
-        if animatedParent:
-            # TODO: this is not working in all cases. Needs more investigation.
-            #print("%s: not animated, animated Parent" % obj.name)
-            if animatedParent!=obj.parent:
-                #print("%s: animatedParent!=parent (%s)" % (obj.name,obj.parent.name))
-                # object has some animated parent, so we need to bake the matrix relative to animated parent
-                matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),animatedParent.getMatrix(True))
-            else:
-                #print("%s: animatedParent==parent (%s)" % (obj.name,obj.parent.name))
-                if obj.parent.type in ("BONE","ARMATURE","EMPTY","LIGHT"):
-                    # objects parent is animated, so we need to bake the matrix relative to parent
-                    #matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),obj.parent.getMatrix(True))
-                    matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
-                else:
-                    # bake local matrix
-                    matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
+	# Bake in different matrixes depending on animation and hierarchy
+	animatedParent = obj.firstAnimatedParent()
+	if obj.animated():
+		if obj.parent == None:
+			# root level
+			# Conversion matrix only. Object will be transformed during animation.
+			matrix = XPlaneCoords.conversionMatrix()
+			# add objects world scale
+			matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+		else:
+			# not at root level
+			if animatedParent:
+				# has some animated parent
+				if animatedParent!=obj.parent:
+					# bake rotation of the parent relative to the animated parent so we do not need to worry about it later
+					matrix = XPlaneCoords.relativeConvertedMatrix(obj.parent.getMatrix(True),animatedParent.getMatrix(True))
+					matrix = XPlaneCoords.convertMatrix(matrix.to_euler().to_matrix().to_4x4())
+					# add objects world scale
+					matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+				else:
+					matrix = XPlaneCoords.conversionMatrix()
+					# add objects world scale
+					matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+			else:
+				# no animated parent
+				# bake rotation of the parent so we do not need to worry about it later
+				matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).to_euler().to_matrix().to_4x4())
+				# add objects world scale
+				matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+	else:
+		if animatedParent:
+			# TODO: this is not working in all cases. Needs more investigation.
+			#print("%s: not animated, animated Parent" % obj.name)
+			if animatedParent!=obj.parent:
+				#print("%s: animatedParent!=parent (%s)" % (obj.name,obj.parent.name))
+				# object has some animated parent, so we need to bake the matrix relative to animated parent
+				matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),animatedParent.getMatrix(True))
+			else:
+				#print("%s: animatedParent==parent (%s)" % (obj.name,obj.parent.name))
+				if obj.parent.type in ("BONE","ARMATURE","EMPTY","LIGHT"):
+					# objects parent is animated, so we need to bake the matrix relative to parent
+					#matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),obj.parent.getMatrix(True))
+					matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
+				else:
+					# bake local matrix
+					matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
 
-                #                co = XPlaneCoords.fromMatrix(matrix)
-                #                print(co['angle'])
-        else:
-            # no animated objects up in hierarchy, so this will become a static mesh on root level
-            # we can savely bake the world matrix as no transforms will occur
-            matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
+#                co = XPlaneCoords.fromMatrix(matrix)
+#                print(co['angle'])
+		else:
+			# no animated objects up in hierarchy, so this will become a static mesh on root level
+			# we can savely bake the world matrix as no transforms will occur
+			matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
 
-    return matrix
+	return matrix
 
 # Class: XPlaneMesh
 # Creates the OBJ meshes.
@@ -119,7 +119,7 @@ class XPlaneMesh():
         if debug:
             from operator import itemgetter
             try:
-                self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
+              self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
             except :
                 pass
             for d in self.debug:
@@ -127,7 +127,7 @@ class XPlaneMesh():
                 if not 'obj_faces' in d:
                     d['obj_faces'] = 0
                 if d['faces'] > 0:
-                    tris_to_quads = d['obj_faces'] / d['faces']
+                  tris_to_quads = d['obj_faces'] / d['faces']
                 debugger.debug('%s: faces %d | obj-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],tris_to_quads,d['end_index']-d['start_index'],d['vertices']))
             debugger.debug('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
 
@@ -154,11 +154,11 @@ class XPlaneMesh():
                 mesh.transform(obj.bakeMatrix)
 
                 if hasattr(mesh,'polygons'): # BMesh
-                    mesh.update(calc_tessface=True)
-                    mesh.calc_tessface()
-                    mesh_faces = mesh.tessfaces
+                  mesh.update(calc_tessface=True)
+                  mesh.calc_tessface()
+                  mesh_faces = mesh.tessfaces
                 else:
-                    mesh_faces = mesh.faces
+                  mesh_faces = mesh.faces
 
                 # with the new mesh get uvFaces list
                 uvFaces = self.getUVFaces(mesh,obj.material.uv_name)
@@ -170,67 +170,67 @@ class XPlaneMesh():
 
                 # convert faces to triangles
                 if len(mesh_faces)>0:
-                    tempfaces = []
-                    for i in range(0,len(mesh_faces)):
-                        if uvFaces != None:
-                            f = self.faceToTrianglesWithUV(mesh_faces[i],uvFaces[i])
-                            tempfaces.extend(f)
-                            if debug:
-                                d['uvs']+=1
-                                if len(f)>1:
-                                    d['quads']+=1
-                        else:
-                            f = self.faceToTrianglesWithUV(mesh_faces[i],None)
-                            tempfaces.extend(f)
-                            if debug:
-                                if len(f)>1:
-                                    d['quads']+=1
+                  tempfaces = []
+                  for i in range(0,len(mesh_faces)):
+                      if uvFaces != None:
+                          f = self.faceToTrianglesWithUV(mesh_faces[i],uvFaces[i])
+                          tempfaces.extend(f)
+                          if debug:
+                              d['uvs']+=1
+                              if len(f)>1:
+                                  d['quads']+=1
+                      else:
+                          f = self.faceToTrianglesWithUV(mesh_faces[i],None)
+                          tempfaces.extend(f)
+                          if debug:
+                              if len(f)>1:
+                                  d['quads']+=1
 
-                    if debug:
-                        d['obj_faces'] = len(tempfaces)
+                  if debug:
+                      d['obj_faces'] = len(tempfaces)
 
-                    for f in tempfaces:
-                        xplaneFace = XPlaneFace()
-                        l = len(f['indices'])
-                        for i in range(0,len(f['indices'])):
-                            # get the original index but reverse order, as this is reversing normals
-                            vindex = f['indices'][2-i]
+                  for f in tempfaces:
+                      xplaneFace = XPlaneFace()
+                      l = len(f['indices'])
+                      for i in range(0,len(f['indices'])):
+                          # get the original index but reverse order, as this is reversing normals
+                          vindex = f['indices'][2-i]
 
-                            # get the vertice from original mesh
-                            v = mesh.vertices[vindex]
-                            co = v.co
+                          # get the vertice from original mesh
+                          v = mesh.vertices[vindex]
+                          co = v.co
 
-                            if f['original_face'].use_smooth: # use smoothed vertex normal
-                                vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
-                            else: # use flat face normal
-                                vert = [co[0],co[1],co[2],f['original_face'].normal[0],f['original_face'].normal[1],f['original_face'].normal[2],f['uv'][i][0],f['uv'][i][1]]
+                          if f['original_face'].use_smooth: # use smoothed vertex normal
+                              vert = [co[0],co[1],co[2],v.normal[0],v.normal[1],v.normal[2],f['uv'][i][0],f['uv'][i][1]]
+                          else: # use flat face normal
+                              vert = [co[0],co[1],co[2],f['original_face'].normal[0],f['original_face'].normal[1],f['original_face'].normal[2],f['uv'][i][0],f['uv'][i][1]]
 
-                            if bpy.context.scene.xplane.optimize:
-                                #check for duplicates
-                                #index = self.getDupliVerticeIndex(vert, obj.indices[0])
-                                index = self.getDupliVerticeIndex(vert, first_vertice_of_this_object)
-                            else:
-                                index = -1
+                          if bpy.context.scene.xplane.optimize:
+                              #check for duplicates
+                              #index = self.getDupliVerticeIndex(vert, obj.indices[0])
+                              index = self.getDupliVerticeIndex(vert, first_vertice_of_this_object)
+                          else:
+                              index = -1
 
-                            if index==-1:
-                                index = self.globalindex
-                                self.vertices.append(vert)
-                                self.globalindex+=1
+                          if index==-1:
+                              index = self.globalindex
+                              self.vertices.append(vert)
+                              self.globalindex+=1
 
-                            # store face information alltogether in one struct
-                            xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
-                            xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
-                            xplaneFace.uvs[i] = (vert[6],vert[7])
-                            xplaneFace.indices[i] = index
+                          # store face information alltogether in one struct
+                          xplaneFace.vertices[i] = (vert[0],vert[1],vert[2])
+                          xplaneFace.normals[i] = (vert[3],vert[4],vert[5])
+                          xplaneFace.uvs[i] = (vert[6],vert[7])
+                          xplaneFace.indices[i] = index
 
-                            self.indices.append(index)
+                          self.indices.append(index)
 
-                        faces.append(xplaneFace)
+                      faces.append(xplaneFace)
 
-                    # store the faces in the prim
-                    obj.faces = faces
-                    obj.indices[1] = len(self.indices)
-                    self.faces.extend(faces)
+                  # store the faces in the prim
+                  obj.faces = faces
+                  obj.indices[1] = len(self.indices)
+                  self.faces.extend(faces)
 
                 if debug:
                     d['start_index'] = obj.indices[0]
@@ -295,9 +295,9 @@ class XPlaneMesh():
     def getUVFaces(self,mesh,uv_name):
         # get the uv_texture
         if hasattr(mesh,'polygons'): # BMesh
-            uv_textures = mesh.tessface_uv_textures
+          uv_textures = mesh.tessface_uv_textures
         else:
-            uv_textures = mesh.uv_textures
+          uv_textures = mesh.uv_textures
 
         if (uv_name != None and len(uv_textures)>0):
             uv_layer = None
@@ -541,7 +541,7 @@ class XPlaneCommands():
         self.reseters = {
             'ATTR_light_level':'ATTR_light_level_reset',
             'ATTR_cockpit':'ATTR_no_cockpit',
-            #            'ATTR_cockpit_region':'ATTR_no_cockpit',
+#            'ATTR_cockpit_region':'ATTR_no_cockpit',
             'ATTR_manip_drag_xy':'ATTR_manip_none',
             'ATTR_manip_drag_axis':'ATTR_manip_none',
             'ATTR_manip_command':'ATTR_manip_none',
@@ -582,10 +582,10 @@ class XPlaneCommands():
             elif obj.lod[lod] == True or (obj.lod[0] == False and obj.lod[1] == False and obj.lod[2] == False): # write objects that are within that lod and in no lod, as those should appear everywhere
                 o+=self.writeObject(obj,0,lod)
 
-                # write down all lights
-                # TODO: write them in writeObjects instead to allow light animation and nesting
-            #        if len(self.file['lights'])>0:
-            #            o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
+        # write down all lights
+        # TODO: write them in writeObjects instead to allow light animation and nesting
+#        if len(self.file['lights'])>0:
+#            o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
 
         return o
 
@@ -644,8 +644,8 @@ class XPlaneCommands():
                     o+=oAnim
 
 
-                #            if debug:
-                #                debugger.debug('\nWriting attributes for %s' % obj.name)
+#            if debug:
+#                debugger.debug('\nWriting attributes for %s' % obj.name)
 
             o+=self.writeReseters(obj,tabs)
 
@@ -777,8 +777,8 @@ class XPlaneCommands():
     # Returns:
     #   string or None if the command must not be written.
     def writeAttribute(self,attr,value,object):
-        #        debug = getDebug()
-        #        debugger = getDebugger()
+#        debug = getDebug()
+#        debugger = getDebugger()
 
         if value!=None:
             if value==True:
@@ -788,30 +788,30 @@ class XPlaneCommands():
                 o = '%s\t%s\n' % (attr,value)
 
             if self.canWrite(attr,value):
-                #                if debug and draw:
-                #                    debugger.debug('writing Attribute %s = %s' % (attr,str(value)))
+#                if debug and draw:
+#                    debugger.debug('writing Attribute %s = %s' % (attr,str(value)))
                 self.written[attr] = value
 
                 # check if this thing has a reseter and remove counterpart if any
                 if attr in self.reseters and self.reseters[attr] in self.written:
-                    #                    if debug and draw:
-                    #                        debugger.debug('removing reseter counterpart %s' % self.reseters[attr])
+#                    if debug and draw:
+#                        debugger.debug('removing reseter counterpart %s' % self.reseters[attr])
                     del self.written[self.reseters[attr]]
 
                 # check if a reseter counterpart has been written and if so delete its reseter
                 for reseter in self.reseters:
                     if self.reseters[reseter] == attr and reseter in self.written:
-                        #                        if debug and draw:
-                        #                            debugger.debug('removing reseter %s' % reseter)
+#                        if debug and draw:
+#                            debugger.debug('removing reseter %s' % reseter)
                         del self.written[reseter]
                 return o
             else:
-                #                if debug and draw:
-                #                    debugger.debug("can't write Attribute %s = %s" % (attr,str(value)))
+#                if debug and draw:
+#                    debugger.debug("can't write Attribute %s = %s" % (attr,str(value)))
                 return None
         else:
-            #            if debug and draw:
-            #                debugger.debug('empty Attribute %s = %s' % (attr,str(value)))
+#            if debug and draw:
+#                debugger.debug('empty Attribute %s = %s' % (attr,str(value)))
             return None
 
     # Method: parseAttributeValue
@@ -857,12 +857,12 @@ class XPlaneCommands():
     # Returns:
     #  bool - True if attribute is a reseter, else False
     def attributeIsReseter(self,attr,reseters = None):
-        if reseters == None: reseters = self.reseters
+      if reseters == None: reseters = self.reseters
 
-        for reseter_attr in reseters:
-            if attr == reseters[reseter_attr]: return True
+      for reseter_attr in reseters:
+        if attr == reseters[reseter_attr]: return True
 
-        return False
+      return False
 
     # Method: writeCustomAttributes
     # Returns the commands for custom attributes of a <XPlaneObject>.
@@ -936,8 +936,8 @@ class XPlaneCommands():
         for attr in self.reseters:
             # only reset attributes that wont be written with this object again
             if attr not in attributes and attr in self.written:
-                #                if debug:
-                #                    debugger.debug('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
+#                if debug:
+#                    debugger.debug('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
 
                 # write reseter and add it to written
                 o+=tabs+self.reseters[attr]+"\n"
@@ -981,17 +981,17 @@ class XPlaneCommands():
         for attr in obj.material.attributes:
             # do not write own reseters just now
             if self.attributeIsReseter(attr,obj.reseters) == False:
-                line = self.writeAttribute(attr,obj.material.attributes[attr].getValue(),obj)
-                if line:
-                    o+=tabs+line
+              line = self.writeAttribute(attr,obj.material.attributes[attr].getValue(),obj)
+              if line:
+                  o+=tabs+line
 
         if self.file['parent'].cockpit:
             for attr in obj.material.cockpitAttributes:
                 #do not write own reseters just now
                 if self.attributeIsReseter(attr,obj.reseters) == False:
-                    line = self.writeAttribute(attr,obj.material.cockpitAttributes[attr].getValue(),obj)
-                    if line:
-                        o+=tabs+line
+                  line = self.writeAttribute(attr,obj.material.cockpitAttributes[attr].getValue(),obj)
+                  if line:
+                      o+=tabs+line
 
         return o
 
@@ -1075,7 +1075,7 @@ class XPlaneCommands():
 
         trans = "%sANIM_trans_begin\t%s\n" % (tabs, dataref)
 
-        #        print(obj.vectors)
+#        print(obj.vectors)
         rot = ['', '', '']
         rot[0] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs, obj.vectors[0][0], obj.vectors[0][1], obj.vectors[0][2], dataref)
         rot[1] = "%sANIM_rotate_begin\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (tabs, obj.vectors[1][0], obj.vectors[1][1], obj.vectors[1][2], dataref)
@@ -1203,8 +1203,8 @@ class XPlaneData():
         else:
             filename = xplaneLayer.name
 
-        #        if xplaneLayer.cockpit:
-        #            filename +="_cockpit"
+#        if xplaneLayer.cockpit:
+#            filename +="_cockpit"
 
         return filename
 
@@ -1265,10 +1265,10 @@ class XPlaneData():
         if len(parent.children)>0:
             for child in parent.children:
                 found.append(child)
-            #                if child.type in ["MESH","LAMP"]:
-            #                    found.append(child)
-            #                else:
-            #                    self.getChildObjects(child,found)
+#                if child.type in ["MESH","LAMP"]:
+#                    found.append(child)
+#                else:
+#                    self.getChildObjects(child,found)
 
         return found
 
@@ -1510,20 +1510,20 @@ class XPlaneHeader():
         self.mode = "default"
         # TODO: use Attributes object instead
         self.attributes = OrderedDict([("TEXTURE",None),
-                                       ("TEXTURE_LIT",None),
-                                       ("TEXTURE_NORMAL",None),
-                                       ("POINT_COUNTS",None),
-                                       ("slung_load_weight",None),
-                                       ("COCKPIT_REGION",None),
-                                       ("GLOBAL_no_blend",None),
-                                       ("GLOBAL_shadow_blend",None),
-                                       ("GLOBAL_specular",None),
-                                       ("GLOBAL_no_shadow",None),
-                                       ("SLOPE_LIMIT",None),
-                                       ("TILTED",None),
-                                       ("REQUIRE_WET",None),
-                                       ("REQUIRE_DRY",None),
-                                       ("GLOBAL_cockpit_lit",None)])
+                        ("TEXTURE_LIT",None),
+                        ("TEXTURE_NORMAL",None),
+                        ("POINT_COUNTS",None),
+                        ("slung_load_weight",None),
+                        ("COCKPIT_REGION",None),
+                        ("GLOBAL_no_blend",None),
+                        ("GLOBAL_shadow_blend",None),
+                        ("GLOBAL_specular",None),
+                        ("GLOBAL_no_shadow",None),
+                        ("SLOPE_LIMIT",None),
+                        ("TILTED",None),
+                        ("REQUIRE_WET",None),
+                        ("REQUIRE_DRY",None),
+                        ("GLOBAL_cockpit_lit",None)])
 
         # set slung load
         if file['parent'].slungLoadWeight>0:
@@ -1789,14 +1789,14 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                         o+="ATTR_LOD %6.8f 100000.0\n" % tallest_far
                         o+=commands.write()
 
-                    hash = ''
+                    build = 'unknown'
 
-                    if hasattr(bpy.app,'build_revision'):
-                        hash = bpy.app.build_revision
-                    elif hasattr(bpy.app,'build_hash'):
-                        hash  = bpy.app.build_hash
+                    if hasattr(bpy.app, 'build_hash'):
+                        build = bpy.app.build_hash
+                    else:
+                        build = bpy.app.build_revision
 
-                    o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %d.%d.%d" % (bpy.app.version_string,hash,version[0],version[1],version[2])
+                    o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,build,version/1000)
 
                     # write the file
                     if debug:
