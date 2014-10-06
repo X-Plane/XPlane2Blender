@@ -17,7 +17,7 @@ profile = False
 
 # Variable: version
 # Integer containing the version number of the addon.
-version = (3,20,10)
+version = (3,20,11)
 
 # Variable: debugger
 # An instance of <XPlaneDebugger> which is used to output debug information.

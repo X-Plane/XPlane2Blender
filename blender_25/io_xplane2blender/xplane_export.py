@@ -1796,7 +1796,7 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     else:
                         build = bpy.app.build_revision
 
-                    o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %3.2f" % (bpy.app.version_string,build,version/1000)
+                    o+="\n# Build with Blender %s (build %s) Exported with XPlane2Blender %d.%d.%d" % (bpy.app.version_string,build,version[0],version[1],version[2])
 
                     # write the file
                     if debug:
