@@ -16,8 +16,8 @@ log = False
 profile = False
 
 # Variable: version
-# Integer containing the version number of the addon. Until we reach a release candidate it will stay 3200 (3.20).
-version = 3200
+# Integer containing the version number of the addon.
+version = (3,20,12)
 
 # Variable: debugger
 # An instance of <XPlaneDebugger> which is used to output debug information.
