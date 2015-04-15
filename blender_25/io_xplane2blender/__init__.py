@@ -24,7 +24,7 @@
 bl_info = {
     'name': 'Import/Export: XPlane',
     'author': 'Ondrej Brinkel',
-    'version': (3,20,10),
+    'version': (3,20,11),
     'blender': (2, 6, 9),
     'api': 36273,
     'location': 'File > Import/Export > XPlane ',
@@ -47,7 +47,7 @@ else:
     from io_xplane2blender import xplane_export
     from io_xplane2blender import xplane_ops
     from io_xplane2blender import xplane_config
-    
+
 
 # Function: menu_func
 # Adds the export option to the menu.
@@ -60,7 +60,7 @@ def menu_func(self, context):
 
 # Function: register
 # Registers the addon with all its classes and the menu function.
-def register():    
+def register():
     xplane_props.addXPlaneRNA()
     xplane_ops.addXPlaneOps()
     xplane_ui.addXPlaneUI()

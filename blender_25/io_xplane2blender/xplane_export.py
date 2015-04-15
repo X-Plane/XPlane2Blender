@@ -3,6 +3,7 @@
 
 import os.path
 import bpy
+import mathutils
 import os
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_types import *
@@ -1170,9 +1171,14 @@ class XPlaneData():
     # dict - Contains all files to be exported.
     files = {}
 
+    # Property: tempObjects
+    # list - list of temporary objects that will be removed after export
+    tempObjects = []
+
     # Constructor: __init__
     def __init__(self):
         self.files = {}
+        self.tempObjects = []
 
     # Method: getXPlaneLayer
     # Returns the corresponding <XPlaneLayer> for a Blender layer index.
@@ -1262,7 +1268,41 @@ class XPlaneData():
     def getChildObjects(self,parent,found = None):
         if found==None:
             found = []
-        if len(parent.children)>0:
+
+        if parent.dupli_type == 'GROUP':
+            objects = parent.dupli_group.objects
+            offset = parent.dupli_group.dupli_offset
+
+            # create copy of parent
+            #parent_copy = parent.copy()
+            #self.tempObjects.append(parent_copy)
+
+            # set same layer as the original
+            #parent_copy.layers = parent.layers
+
+            # remove the dupli group
+            #parent_copy.dupli_type = 'NONE'
+            #parent_copy.dupli_group = None
+
+            for object in objects:
+                # create a copy
+                object_copy = object.copy()
+                self.tempObjects.append(object_copy)
+
+                # make it a child of the parent, to keep hierachy and transforms
+                object_copy.parent = parent
+
+                # set same layer as the parent
+                object_copy.layers = parent.layers
+
+                # set correct matrix
+                object_copy.matrix_world = parent.matrix_world * mathutils.Matrix.Translation(-offset) * object.matrix_world
+
+                # finally link parent copy to scene and append it to the found objects
+                # parent.scene.objects.link(object_copy)
+                found.append(object_copy)
+
+        elif len(parent.children)>0:
             for child in parent.children:
                 found.append(child)
 #                if child.type in ["MESH","LAMP"]:
@@ -1448,8 +1488,7 @@ class XPlaneData():
     # Method: splitFileByTexture
     # Splits <files> by textures. This is depricated as files/textures are now defined per layer.
     #
-    # Todos:
-    #   - not working with new nested export. Propably XPlane Layers must hold texture info?
+    # Deprecated: no longer used as layers hold texture information
     def splitFileByTexture(self,parent):
         name = self.getFilenameFromXPlaneLayer(parent)
         filename = None
@@ -1483,6 +1522,13 @@ class XPlaneData():
                 self.files[textures[0]]['lights'] = self.files[name]['lights']
                 self.files[textures[0]]['lines'] = self.files[name]['lines']
                 del self.files[name]
+
+    # Method: cleanUp
+    # Removes temporary objects from scene
+    def cleanUp(self):
+        while(len(self.tempObjects) > 0):
+            tempObject = self.tempObjects.pop()
+            bpy.data.objects.remove(tempObject)
 
 # Class: XPlaneHeader
 # Create an OBJ header.
@@ -1812,6 +1858,9 @@ class ExportXPlane9(bpy.types.Operator, ExportHelper):
                     if debug:
                         debugger.debug("%s: No objects to export, aborting ..." % file)
                 i+=1
+
+            # data must cleanup after writing files
+            data.cleanUp()
         else:
             showError('No files to export, aborting ...')
             if debug:
