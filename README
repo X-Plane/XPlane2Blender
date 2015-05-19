@@ -12,3 +12,12 @@ How to use:
 -----------
 
 All documentation is located here: https://github.com/der-On/XPlane2Blender/wiki/docs-3.2x-main
+
+
+Run Tests:
+----------
+
+```bash
+$ cd blender_25
+$ python tests.py
+```
