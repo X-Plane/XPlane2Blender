@@ -13,4 +13,4 @@ install:
   - tar jxf blender-2.74-linux-glibc211-x86_64.tar.bz2
   - mv blender-2.74-linux-glibc211-x86_64 blender
   - rm blender-2.74-linux-glibc211-x86_64.tar.bz2
-script: cd blender_25 && python tests.py ../tmp/blender/blender
+script: cd XPlane2Blender/blender_25 && python tests.py ../tmp/blender/blender
