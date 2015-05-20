@@ -7,6 +7,7 @@ before_install:
   - sudo apt-get install blender
 install:
   - git clone -b E-120-automated-tests https://github.com/der-On/XPlane2Blender.git
+  - cd XPlane2Blender
   - mkdir tmp && cd tmp
   - wget http://mirror.cs.umn.edu/blender.org/release/Blender2.74/blender-2.74-linux-glibc211-x86_64.tar.bz2
   - tar jxf blender-2.74-linux-glibc211-x86_64.tar.bz2
