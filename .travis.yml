@@ -4,6 +4,7 @@ python:
   - "3.4"
 before_install:
   - sudo apt-get update -qq
+  - sudo apt-get install blender
 install:
   - mkdir tmp && cd tmp
   - wget http://mirror.cs.umn.edu/blender.org/release/Blender2.74/blender-2.74-linux-glibc211-x86_64.tar.bz2
