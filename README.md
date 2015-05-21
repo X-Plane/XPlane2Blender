@@ -20,6 +20,5 @@ Run Tests:
 ----------
 
 ```bash
-$ cd blender_25
 $ python tests.py
 ```
