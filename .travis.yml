@@ -12,6 +12,7 @@ install:
   - mv blender-2.74-linux-glibc211-x86_64 blender
   - rm blender-2.74-linux-glibc211-x86_64.tar.bz2
   - cd ..
+  - mkdir -p ~/.config/blender/
   - cp blender_25/tests/userpref.blend ~/.config/blender/userpref.blend
   - sudo ln -s ${PWD}/blender_25/io_xplane2blender ${PWD}/tmp/blender/2.74/python/scripts/addons/io_xplane2blender
 script: cd blender_25 && python tests.py ../tmp/blender/blender
