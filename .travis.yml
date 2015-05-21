@@ -13,4 +13,4 @@ install:
   - rm blender-2.74-linux-glibc211-x86_64.tar.bz2
   - cd ..
   - sudo ln -s ${PWD}/io_xplane2blender ${PWD}/tmp/blender/2.74/scripts/addons/io_xplane2blender
-script: python tests.py ../tmp/blender/blender
+script: python tests.py ./tmp/blender/blender
