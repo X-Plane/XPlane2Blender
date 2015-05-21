@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/der-On/XPlane2Blender.svg?branch=E-120-automated-tests)](https://travis-ci.org/der-On/XPlane2Blender)
+[![Build Status](https://travis-ci.org/der-On/XPlane2Blender.svg?branch=v3-3)](https://travis-ci.org/der-On/XPlane2Blender)
 
 This addon for Blender 2.6x makes it possible to export Objects to the X-Plane object format (.obj).
 
