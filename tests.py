@@ -16,10 +16,10 @@ if not os.path.exists('./tests/tmp'):
 if len(sys.argv) > 1:
     blenderExecutable = sys.argv[1]
 
-for file in glob.glob('./tests/**/*.test.py'):
-  blendFile = file.replace('.py', '.blend')
+for pyFile in glob.glob('./tests/**/*.test.py'):
+    blendFile = pyFile.replace('.py', '.blend')
 
-  if os.path.exists(blendFile):
-      subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', blendFile, '--python', file])
-  else:
-      subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', '--python', file])
+    if os.path.exists(blendFile):
+        subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', blendFile, '--python', pyFile])
+    else:
+        subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', '--python', pyFile])
