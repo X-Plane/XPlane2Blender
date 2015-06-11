@@ -845,6 +845,14 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 # Function: addXPlaneRNA
 # Registers all properties.
 def addXPlaneRNA():
+    # XPlane2Blender version
+    bpy.types.BlendData.xplane2blender_version = bpy.props.StringProperty(
+        attr="xplane2blender_version",
+        name="XPlane2Blender Version",
+        description="XPlane2Blender Version used to create this blend",
+        default='.'.join(map(str,version))
+    )
+
     # basic classes
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
@@ -860,7 +868,7 @@ def addXPlaneRNA():
     bpy.utils.register_class(XPlaneBoneSettings)
     bpy.utils.register_class(XPlaneMaterialSettings)
     bpy.utils.register_class(XPlaneLampSettings)
-    bpy.utils.register_class(XPlaneSceneSettings)    
+    bpy.utils.register_class(XPlaneSceneSettings)
 
     bpy.types.Scene.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneSceneSettings, name="XPlane", description="XPlane Export Settings")
     bpy.types.Object.xplane = bpy.props.PointerProperty(attr="xplane", type=XPlaneObjectSettings, name="XPlane", description="XPlane Export Settings")
@@ -871,7 +879,7 @@ def addXPlaneRNA():
 #                                                                    name="XPlane Datarefs",
 #                                                                    description="XPlane Datarefs",
 #                                                                    type=XPlaneDatarefSearch)
-                                                                    
+
 
 #    XPlaneLayerSettings.exportChildren = bpy.props.BoolProperty(attr="exportChildren",
 #                                name="Export Children",
@@ -880,7 +888,7 @@ def addXPlaneRNA():
 
     # TODO: cockpit region
 
-    
+
 
 # Function: removeXPlaneRNA
 # Unregisters all properties.
@@ -900,4 +908,3 @@ def removeXPlaneRNA():
     bpy.utils.unregister_class(XPlaneManipulator)
     bpy.utils.unregister_class(XPlaneCockpitRegion)
     bpy.utils.unregister_class(XPlaneLOD)
-    
