@@ -27,6 +27,9 @@ debugger = XPlaneDebugger()
 # Instance of <XPlaneProfiler> which is used to profile processes.
 profiler = XPlaneProfiler()
 
+FLOAT_PRECISION = 8
+FLOAT_PRECISION_STR = "8"
+
 errors = False
 
 def initConfig():

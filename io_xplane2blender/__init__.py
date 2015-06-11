@@ -19,12 +19,14 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+from io_xplane2blender.xplane_config import *
+
 # Variable: bl_info
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
     'name': 'Import/Export: XPlane',
     'author': 'Ondrej Brinkel',
-    'version': (3,20,14),
+    'version': version,
     'blender': (2, 6, 9),
     'api': 36273,
     'location': 'File > Import/Export > XPlane ',

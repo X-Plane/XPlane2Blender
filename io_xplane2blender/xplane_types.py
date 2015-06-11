@@ -11,10 +11,6 @@ from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_ui import showError,showProgress
 
-
-FLOAT_PRECISION = 8
-FLOAT_PRECISION_STR = "8"
-
 # Class: XPlaneKeyframe
 # A Keyframe.
 class XPlaneKeyframe():
@@ -595,6 +591,12 @@ class XPlaneObject():
     def getConditions(self):
         if self.object.xplane.conditions:
             self.conditions = self.object.xplane.conditions
+
+    # Returns OBJ code for this object
+    def write(self):
+        # TODO: implement it
+        pass
+
 
 # Class: XPlaneBone
 # A Bone.

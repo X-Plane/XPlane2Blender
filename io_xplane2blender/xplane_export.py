@@ -10,9 +10,6 @@ from io_xplane2blender.xplane_types import *
 from io_xplane2blender.xplane_config import *
 from operator import attrgetter
 
-FLOAT_PRECISION = 8
-FLOAT_PRECISION_STR = "8"
-
 # TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
 try:
     from bpy_extras.io_utils import ImportHelper, ExportHelper
@@ -31,60 +28,60 @@ except ImportError:
 #   Matrix - The bake matrix for this object.
 def getBakeMatrix(obj):
 	# Bake in different matrixes depending on animation and hierarchy
-	animatedParent = obj.firstAnimatedParent()
-	if obj.animated():
-		if obj.parent == None:
+    animatedParent = obj.firstAnimatedParent()
+    if obj.animated():
+        if obj.parent == None:
 			# root level
 			# Conversion matrix only. Object will be transformed during animation.
-			matrix = XPlaneCoords.conversionMatrix()
+            matrix = XPlaneCoords.conversionMatrix()
 			# add objects world scale
-			matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
-		else:
+            matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+        else:
 			# not at root level
-			if animatedParent:
+            if animatedParent:
 				# has some animated parent
-				if animatedParent!=obj.parent:
+                if animatedParent!=obj.parent:
 					# bake rotation of the parent relative to the animated parent so we do not need to worry about it later
-					matrix = XPlaneCoords.relativeConvertedMatrix(obj.parent.getMatrix(True),animatedParent.getMatrix(True))
-					matrix = XPlaneCoords.convertMatrix(matrix.to_euler().to_matrix().to_4x4())
+                    matrix = XPlaneCoords.relativeConvertedMatrix(obj.parent.getMatrix(True),animatedParent.getMatrix(True))
+                    matrix = XPlaneCoords.convertMatrix(matrix.to_euler().to_matrix().to_4x4())
 					# add objects world scale
-					matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
-				else:
-					matrix = XPlaneCoords.conversionMatrix()
+                    matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+                else:
+                    matrix = XPlaneCoords.conversionMatrix()
 					# add objects world scale
-					matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
-			else:
+                    matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+            else:
 				# no animated parent
 				# bake rotation of the parent so we do not need to worry about it later
-				matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).to_euler().to_matrix().to_4x4())
+                matrix = XPlaneCoords.convertMatrix(obj.parent.getMatrix(True).to_euler().to_matrix().to_4x4())
 				# add objects world scale
-				matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
-	else:
-		if animatedParent:
-			# TODO: this is not working in all cases. Needs more investigation.
+                matrix = matrix*XPlaneCoords.scaleMatrix(obj,True,False)
+    else:
+        if animatedParent:
+            # TODO: this is not working in all cases. Needs more investigation.
 			#print("%s: not animated, animated Parent" % obj.name)
-			if animatedParent!=obj.parent:
+            if animatedParent!=obj.parent:
 				#print("%s: animatedParent!=parent (%s)" % (obj.name,obj.parent.name))
 				# object has some animated parent, so we need to bake the matrix relative to animated parent
-				matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),animatedParent.getMatrix(True))
-			else:
+                matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),animatedParent.getMatrix(True))
+            else:
 				#print("%s: animatedParent==parent (%s)" % (obj.name,obj.parent.name))
-				if obj.parent.type in ("BONE","ARMATURE","EMPTY","LIGHT"):
+                if obj.parent.type in ("BONE","ARMATURE","EMPTY","LIGHT"):
 					# objects parent is animated, so we need to bake the matrix relative to parent
 					#matrix = XPlaneCoords.relativeConvertedMatrix(obj.getMatrix(True),obj.parent.getMatrix(True))
-					matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
-				else:
+                    matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
+                else:
 					# bake local matrix
-					matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
+                    matrix = XPlaneCoords.convertMatrix(obj.getMatrix())
 
 #                co = XPlaneCoords.fromMatrix(matrix)
 #                print(co['angle'])
-		else:
+        else:
 			# no animated objects up in hierarchy, so this will become a static mesh on root level
 			# we can savely bake the world matrix as no transforms will occur
-			matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
+            matrix = XPlaneCoords.convertMatrix(obj.getMatrix(True))
 
-	return matrix
+    return matrix
 
 # Class: XPlaneMesh
 # Creates the OBJ meshes.
@@ -120,7 +117,7 @@ class XPlaneMesh():
         if debug:
             from operator import itemgetter
             try:
-              self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
+                self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
             except :
                 pass
             for d in self.debug:
@@ -128,7 +125,7 @@ class XPlaneMesh():
                 if not 'obj_faces' in d:
                     d['obj_faces'] = 0
                 if d['faces'] > 0:
-                  tris_to_quads = d['obj_faces'] / d['faces']
+                    tris_to_quads = d['obj_faces'] / d['faces']
                 debugger.debug('%s: faces %d | obj-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],tris_to_quads,d['end_index']-d['start_index'],d['vertices']))
             debugger.debug('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
 
@@ -155,11 +152,11 @@ class XPlaneMesh():
                 mesh.transform(obj.bakeMatrix)
 
                 if hasattr(mesh,'polygons'): # BMesh
-                  mesh.update(calc_tessface=True)
-                  mesh.calc_tessface()
-                  mesh_faces = mesh.tessfaces
+                    mesh.update(calc_tessface=True)
+                    mesh.calc_tessface()
+                    mesh_faces = mesh.tessfaces
                 else:
-                  mesh_faces = mesh.faces
+                    mesh_faces = mesh.faces
 
                 # with the new mesh get uvFaces list
                 uvFaces = self.getUVFaces(mesh,obj.material.uv_name)
