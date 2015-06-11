@@ -846,11 +846,11 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 # Registers all properties.
 def addXPlaneRNA():
     # XPlane2Blender version
-    bpy.types.BlendData.xplane2blender_version = bpy.props.StringProperty(
+    bpy.types.World.xplane2blender_version = bpy.props.StringProperty(
         attr="xplane2blender_version",
         name="XPlane2Blender Version",
         description="XPlane2Blender Version used to create this blend",
-        default='.'.join(map(str,version))
+        default=""
     )
 
     # basic classes

@@ -42,6 +42,7 @@ if "bpy" in locals():
     imp.reload(xplane_export)
     imp.reload(xplane_ops)
     imp.reload(xplane_config)
+    imp.reload(xplane_updater)
 else:
     import bpy
     from io_xplane2blender import xplane_ui
@@ -49,6 +50,7 @@ else:
     from io_xplane2blender import xplane_export
     from io_xplane2blender import xplane_ops
     from io_xplane2blender import xplane_config
+    from io_xplane2blender import xplane_updater
 
 
 # Function: menu_func
