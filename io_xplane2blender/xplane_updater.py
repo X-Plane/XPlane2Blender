@@ -23,3 +23,12 @@ def load_handler(dummy):
         print('Your file was successfully updated to XPlane2Blender %s' % currentVersion)
 
 bpy.app.handlers.load_post.append(load_handler)
+
+@persistent
+def save_handler(dummy):
+    currentVersion = '.'.join(map(str,version))
+
+    # store currentVersion
+    bpy.data.worlds[0].xplane2blender_version = currentVersion
+
+bpy.app.handlers.save_pre.append(save_handler)
