@@ -6,12 +6,12 @@ import shutil
 
 blenderExecutable = 'blender'
 
-# empty temp directory
-shutil.rmtree('./tests/tmp')
+if os.path.exists('./tests/tmp'):
+    # empty temp directory
+    shutil.rmtree('./tests/tmp')
 
 # create temp dir if not exists
-if not os.path.exists('./tests/tmp'):
-    os.mkdir('./tests/tmp')
+os.mkdir('./tests/tmp')
 
 if len(sys.argv) > 1:
     blenderExecutable = sys.argv[1]
