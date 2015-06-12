@@ -76,7 +76,7 @@ class XPlaneFile():
         self.objects = {}
 
         # the root bone: origin for all animations/objects
-        self.rootBone = None
+        self.rootBone = XPlaneBone()
 
     # Method: collectFromBlenderLayerIndex
     # collects all objects in a given blender layer
@@ -95,14 +95,9 @@ class XPlaneFile():
                     blenderObjects.append(blenderObject)
 
         self.collectBlenderObjects(blenderObjects)
+        self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
     def collectBlenderObjects(self, blenderObjects):
-        # clear object dict
-        self.ubjects = {}
-
-        # clear root bone
-        self.rootBone = None
-
         for blenderObject in blenderObjects:
             xplaneObject = self.convertBlenderObject(blenderObject)
 
@@ -113,6 +108,49 @@ class XPlaneFile():
 
                 # store xplane object under same name as blender object in dict
                 self.objects[blenderObject.name] = xplaneObject
+
+    # collects all child bones for a given parent bone given a list of blender objects
+    def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True):
+        parentBlenderObject = parentBone.blenderObject
+
+        def objectFilter(blenderObject):
+            if parentBlenderObject:
+                return blenderObject.parent == parentBlenderObject
+            else:
+                return blenderObject.parent == None
+
+        # filter out all objects with given parent
+        if needsFilter:
+            blenderObjects = filter(objectFilter, blenderObjects)
+
+        for blenderObject in blenderObjects:
+            bone = XPlaneBone(blenderObject, self.objects[blenderObject.name] or None, parentBone)
+            parentBone.children.append(bone)
+
+            if blenderObject.type == 'ARMATURE':
+                self.collectBonesFromBlenderBones(bone, blenderObject, blenderObject.bones)
+
+            self.collectBonesFromBlenderObjects(bone, blenderObject.children, False)
+
+    def collectBonesFromBlenderBones(self, parentBone, blenderArmature, blenderBones, needsFilter = True):
+        parentBlenderBone = parentBone.blenderBone
+
+        def boneFilter(blenderBone):
+            if parentBlenderBone:
+                return blenderBone.parent == parentBlenderBone
+            else:
+                return blenderBone.parent == None
+
+        # filter out all objects with given parent
+        if needsFilter:
+            blenderBones = filter(boneFilter, blenderBones)
+
+        for blenderBone in blenderBones:
+            bone = XPlaneBone(blenderArmature, None, parentBone)
+            bone.blenderBone = blenderBone
+            parentBone.children.append(bone)
+
+            self.collectBonesFromBlenderBones(bone, blenderArmature, blenderBone.children, False)
 
     # Method: collectFromBlenderRootObject
     # collects all objects in a given blender root object

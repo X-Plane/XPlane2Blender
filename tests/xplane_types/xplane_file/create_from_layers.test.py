@@ -34,6 +34,10 @@ class TestCreateFromLayers(unittest.TestCase):
             self.assertTrue(isinstance(xplaneFile.objects[name], XPlanePrimitive))
             self.assertEquals(xplaneFile.objects[name].blenderObject, bpy.data.objects[name])
 
+        # print bone tree for now
+        print(xplaneFile.filename)
+        print(xplaneFile.rootBone)
+
         xplaneFile2 = xplane_file.createFileFromBlenderLayerIndex(1)
 
         # should contain 2 cubes
@@ -49,6 +53,9 @@ class TestCreateFromLayers(unittest.TestCase):
             self.assertTrue(isinstance(xplaneFile2.objects[name], XPlanePrimitive))
             self.assertEquals(xplaneFile2.objects[name].blenderObject, bpy.data.objects[name])
 
+        # print bone tree for now
+        print(xplaneFile2.filename)
+        print(xplaneFile2.rootBone)
 
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCreateFromLayers)
 unittest.TextTestRunner().run(suite)

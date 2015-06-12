@@ -17,6 +17,7 @@ class XPlaneBone():
     def __init__(self, blenderObject = None, xplaneObject = None, parent = None):
         self.xplaneObject = xplaneObject
         self.blenderObject = blenderObject
+        self.blenderBone = None
         self.parent = parent
         self.children = []
 
@@ -110,6 +111,26 @@ class XPlaneBone():
                         for i in range(0,len(keyframesSorted)):
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
 
+    def getName(self):
+        if self.parent == None:
+            return 'ROOT'
+        elif self.blenderBone:
+            return 'Blone: %s' % self.blenderBone.name
+        elif self.blenderObject:
+            return 'Object: %s' % self.blenderObject.name
+
+        return 'UNKNOWN'
+
+    def toString(self, indent = ''):
+        out = indent + self.getName() + '\n'
+
+        for bone in self.children:
+            out += bone.toString(indent + '\t')
+
+        return out
+
+    def __str__(self):
+        return self.toString()
 
     def write(self):
         # TODO: implement
