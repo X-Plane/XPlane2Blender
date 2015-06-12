@@ -11,7 +11,7 @@ class XPlaneDebugger():
     # Property: log
     # bool - Set to True to enable logfile. Default is False.
     log = False
-    
+
     # Constructor: __init__
     def __init__(self):
         pass
@@ -100,7 +100,7 @@ class XPlaneProfiler():
     #   string name - Name of the process.
     def start(self,name):
         from time import time
-        
+
         if name in self.times:
             if self.times[name][3]:
                 self.times[name][0] = time()
@@ -310,7 +310,7 @@ class XPlaneCoords():
         rot = matrix.to_euler("XYZ")
         # re-add 90° on x-axis
         rot.x=math.radians(math.degrees(rot.x)+90)
-        
+
         vx = Vector((1.0,0.0,0.0))
         vy = Vector((0.0,1.0,0.0))
         vz = Vector((0.0,0.0,1.0))
@@ -342,7 +342,7 @@ class XPlaneCoords():
     def scaleMatrix(object,convert = False, noParent = True):
         import mathutils
         if noParent:
-            if object.parent:
+            if object.blenderObject.parent:
                 if convert:
                     scale = XPlaneCoords.convertMatrix(object.getMatrix(True)).to_scale()
                 else:
@@ -353,7 +353,7 @@ class XPlaneCoords():
                 matrix[2][2] = scale.z
 
                 # FIXME: armature scale is not taken into account so add it, however this could be a Blender bug or a misunderstanding
-                if object.parent and object.parent.type=='BONE':
+                if object.blenderObject.parent and object.parent.type=='BONE':
                     if convert:
                         scale = XPlaneCoords.convertMatrix(object.parent.armature.getMatrix(True)).to_scale()
                     else:

@@ -1,7 +1,7 @@
 import bpy
 import os
 import unittest
-from io_xplane2blender import xplane_file
+from io_xplane2blender.xplane_types import xplane_file, XPlanePrimitive
 
 class TestCreateFromLayers(unittest.TestCase):
     def setUp(self):
@@ -23,14 +23,16 @@ class TestCreateFromLayers(unittest.TestCase):
         self.assertEqual(len(xplaneFile.objects), 4)
 
         objects = [
-            bpy.data.objects['Cube'],
-            bpy.data.objects['Cube.001'],
-            bpy.data.objects['Cube.002'],
-            bpy.data.objects['Cube.003']
+            'Cube',
+            'Cube.001',
+            'Cube.002',
+            'Cube.003'
         ]
 
-        for blenderObject in objects:
-            self.assertIn(blenderObject, xplaneFile.objects)
+        for name in objects:
+            self.assertIsNotNone(xplaneFile.objects[name])
+            self.assertTrue(isinstance(xplaneFile.objects[name], XPlanePrimitive))
+            self.assertEquals(xplaneFile.objects[name].blenderObject, bpy.data.objects[name])
 
         xplaneFile2 = xplane_file.createFileFromBlenderLayerIndex(1)
 
@@ -38,12 +40,14 @@ class TestCreateFromLayers(unittest.TestCase):
         self.assertEqual(len(xplaneFile2.objects), 2)
 
         objects = [
-            bpy.data.objects['Cube.004'],
-            bpy.data.objects['Cube.005']
+            'Cube.004',
+            'Cube.005'
         ]
 
-        for blenderObject in objects:
-            self.assertIn(blenderObject, xplaneFile2.objects)
+        for name in objects:
+            self.assertIsNotNone(xplaneFile2.objects[name])
+            self.assertTrue(isinstance(xplaneFile2.objects[name], XPlanePrimitive))
+            self.assertEquals(xplaneFile2.objects[name].blenderObject, bpy.data.objects[name])
 
 
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCreateFromLayers)
