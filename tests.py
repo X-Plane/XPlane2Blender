@@ -34,14 +34,17 @@ def inFilter(filepath):
 
     return (re.search(fileFilter, filepath))
 
-for pyFile in glob.glob('./tests/**/*.test.py'):
-    # skip files not within filter
-    if inFilter(pyFile):
-        blendFile = pyFile.replace('.py', '.blend')
+for root, dirs, files in os.walk('./tests'):
+    for pyFile in files:
+        pyFile = os.path.join(root, pyFile)
+        if pyFile.endswith('.test.py'):
+            # skip files not within filter
+            if inFilter(pyFile):
+                blendFile = pyFile.replace('.py', '.blend')
 
-        print('Running file %s' % pyFile)
+                print('Running file %s' % pyFile)
 
-        if os.path.exists(blendFile):
-            subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', blendFile, '--python', pyFile])
-        else:
-            subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', '--python', pyFile])
+                if os.path.exists(blendFile):
+                    subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', blendFile, '--python', pyFile])
+                else:
+                    subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', '--python', pyFile])
