@@ -25,14 +25,14 @@ def getOption(name, default):
 
     return default
 
-filter = getOption('--filter', None)
+fileFilter = getOption('--filter', None)
 blenderExecutable = getOption('--blender', 'blender')
 
-def inFilter(file):
-    if filter == None:
+def inFilter(filepath):
+    if fileFilter == None:
         return True
 
-    return (re.search(filter, file))
+    return (re.search(fileFilter, filepath))
 
 for pyFile in glob.glob('./tests/**/*.test.py'):
     # skip files not within filter
