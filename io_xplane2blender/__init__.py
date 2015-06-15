@@ -19,7 +19,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-from io_xplane2blender.xplane_config import *
+from .xplane_config import *
 
 # Variable: bl_info
 # Contains informations for Blender to recognize and categorize the addon.
@@ -45,12 +45,12 @@ if "bpy" in locals():
     imp.reload(xplane_updater)
 else:
     import bpy
-    from io_xplane2blender import xplane_ui
-    from io_xplane2blender import xplane_props
-    from io_xplane2blender import xplane_export
-    from io_xplane2blender import xplane_ops
-    from io_xplane2blender import xplane_config
-    from io_xplane2blender import xplane_updater
+    from . import xplane_ui
+    from . import xplane_props
+    from . import xplane_export
+    from . import xplane_ops
+    from . import xplane_config
+    from . import xplane_updater
 
 
 # Function: menu_func

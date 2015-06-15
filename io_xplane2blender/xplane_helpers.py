@@ -3,7 +3,7 @@
 
 import math
 from mathutils import Matrix,Vector,Euler
-from io_xplane2blender.xplane_config import *
+from .xplane_config import *
 
 # Class: XPlaneDebugger
 # Prints debugging information and optionally logs them to a file.

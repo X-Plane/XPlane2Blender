@@ -2,7 +2,7 @@
 # Defines Operators
 
 import bpy
-from io_xplane2blender.xplane_config import *
+from .xplane_config import *
 
 # Function: findFCurveByPath
 # Helper function to find an FCurve by an data-path.

@@ -1,7 +1,7 @@
 # File: xplane_config.py
 # Holds config variables that are used throughout the addon.
 
-from io_xplane2blender.xplane_helpers import XPlaneDebugger,XPlaneProfiler
+from .xplane_helpers import XPlaneDebugger,XPlaneProfiler
 
 # Variable: debug
 # Set to True for debugging output using <debugger>. Default is True, as we are still dealing with a development release.

@@ -2,7 +2,7 @@
 # Automagically updates blend data created with older XPlane2Blender Versions
 
 import bpy
-from io_xplane2blender.xplane_config import *
+from .xplane_config import *
 from bpy.app.handlers import persistent
 
 @persistent

@@ -2,8 +2,8 @@
 # Creates the User Interface for all X-Plane settings.
 
 import bpy
-from io_xplane2blender.xplane_ops import *
-from io_xplane2blender.xplane_config import *
+from .xplane_ops import *
+from .xplane_config import *
 
 # Class: LAMP_PT_xplane
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.

@@ -2,7 +2,7 @@
 # Defines X-Plane Properties attached to regular Blender data types.
 
 import bpy
-from io_xplane2blender.xplane_config import *
+from .xplane_config import *
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.

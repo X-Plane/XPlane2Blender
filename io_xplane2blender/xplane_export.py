@@ -5,9 +5,9 @@ import os.path
 import bpy
 import mathutils
 import os
-from io_xplane2blender.xplane_helpers import *
-from io_xplane2blender.xplane_types import *
-from io_xplane2blender.xplane_config import *
+from .xplane_helpers import *
+from .xplane_types import *
+from .xplane_config import *
 from operator import attrgetter
 
 # TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
