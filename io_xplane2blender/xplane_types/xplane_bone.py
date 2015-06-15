@@ -115,7 +115,7 @@ class XPlaneBone():
         if self.parent == None:
             return 'ROOT'
         elif self.blenderBone:
-            return 'Blone: %s' % self.blenderBone.name
+            return 'Bone: %s' % self.blenderBone.name
         elif self.blenderObject:
             return 'Object: %s' % self.blenderObject.name
 
