@@ -21,6 +21,13 @@ class XPlaneBone():
         self.parent = parent
         self.children = []
 
+        # nesting level of this bone (used for intendation)
+        # TODO: create a getter which dynamically climbs up the tree to get the level?
+        self.level = 0
+
+        if self.parent:
+            self.level = self.parent.level + 1
+
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframes>.
         self.animations = {}
 
@@ -113,11 +120,11 @@ class XPlaneBone():
 
     def getName(self):
         if self.parent == None:
-            return 'ROOT'
+            return '%d ROOT' % self.level
         elif self.blenderBone:
-            return 'Bone: %s' % self.blenderBone.name
+            return '%d Bone: %s' % (self.level, self.blenderBone.name)
         elif self.blenderObject:
-            return 'Object: %s' % self.blenderObject.name
+            return '%d Object: %s' % (self.level, self.blenderObject.name)
 
         return 'UNKNOWN'
 

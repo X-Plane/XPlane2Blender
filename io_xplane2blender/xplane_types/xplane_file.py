@@ -162,7 +162,7 @@ class XPlaneFile():
 
     def getChildBlenderObjectsForBlenderBone(self, blenderBone):
         blenderObjects = []
-
+        
         for name in self.objects:
             xplaneObject = self.objects[name]
             if xplaneObject.blenderObject.parent_bone == blenderBone.name:
