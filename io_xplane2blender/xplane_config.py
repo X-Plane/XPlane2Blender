@@ -86,3 +86,7 @@ def getErrors():
 def setErrors(err):
     global errors
     errors = err
+
+def setDebug(d):
+    global debug
+    debug = d

@@ -124,13 +124,17 @@ class XPlaneFile():
             blenderObjects = filter(objectFilter, blenderObjects)
 
         for blenderObject in blenderObjects:
-            bone = XPlaneBone(blenderObject, self.objects[blenderObject.name] or None, parentBone)
+            xplaneObject = None
+            if blenderObject.name in self.objects:
+                xplaneObject = self.objects[blenderObject.name]
+
+            bone = XPlaneBone(blenderObject, xplaneObject, parentBone)
             parentBone.children.append(bone)
 
             if blenderObject.type == 'ARMATURE':
-                self.collectBonesFromBlenderBones(bone, blenderObject, blenderObject.bones)
-
-            self.collectBonesFromBlenderObjects(bone, blenderObject.children, False)
+                self.collectBonesFromBlenderBones(bone, blenderObject, blenderObject.data.bones)
+            else:
+                self.collectBonesFromBlenderObjects(bone, blenderObject.children, False)
 
     def collectBonesFromBlenderBones(self, parentBone, blenderArmature, blenderBones, needsFilter = True):
         parentBlenderBone = parentBone.blenderBone
@@ -150,7 +154,21 @@ class XPlaneFile():
             bone.blenderBone = blenderBone
             parentBone.children.append(bone)
 
+            # collect child blender objects of this bone
+            childBlenderObjects = self.getChildBlenderObjectsForBlenderBone(blenderBone)
+
+            self.collectBonesFromBlenderObjects(bone, childBlenderObjects, False)
             self.collectBonesFromBlenderBones(bone, blenderArmature, blenderBone.children, False)
+
+    def getChildBlenderObjectsForBlenderBone(self, blenderBone):
+        blenderObjects = []
+
+        for name in self.objects:
+            xplaneObject = self.objects[name]
+            if xplaneObject.blenderObject.parent_bone == blenderBone.name:
+                blenderObjects.append(xplaneObject.blenderObject)
+
+        return blenderObjects
 
     # Method: collectFromBlenderRootObject
     # collects all objects in a given blender root object
