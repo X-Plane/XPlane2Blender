@@ -31,45 +31,38 @@ class XPlaneKeyframe():
     #   keyframe - A Blender keyframe
     #   int index - The index of this keyframe in the <object> keyframe list.
     #   string dataref - Path of the dataref this keyframe refers to.
-    #   XPlaneObject obj - A <XPlaneObject>.
-    def __init__(self,keyframe,index,dataref,obj):
+    #   XPlaneObject xplaneObject - A <XPlaneObject>.
+    def __init__(self, keyframe, index, dataref, xplaneBone):
         self.value = keyframe.co[1]
         self.dataref = dataref
         self.translation = [0.0,0.0,0.0]
         self.rotation = [0.0,0.0,0.0]
         self.scale = [0.0,0.0,0.0]
         self.index = index
-        self.blenderObject = obj
+        self.xplaneBone = xplaneBone
+
+        if self.xplaneBone.blenderBone:
+            blenderObject = self.xplaneBone.blenderBone
+        else:
+            blenderObject = self.xplaneBone.blenderObject
 
         # goto keyframe and read out object values
         # TODO: support subframes?
         self.frame = int(round(keyframe.co[0]))
-        bpy.context.scene.frame_set(frame=self.frame)
+        bpy.context.scene.frame_set(frame = self.frame)
 
         # update objects so we get values from the keyframe
-        #self.blenderObject.update()
+        #blenderObject.update()
 
-        local = self.blenderObject.getLocal(True)     #True parameter added by EagleIan
-        world = self.blenderObject.getWorld()
+        self.location = blenderObject.location
+        self.rotation = None
+        self.rotationMode = blenderObject.rotation_mode
 
-        self.location = world["location"]
-        self.angle = world["angle"]
-        self.scale = world["scale"]
+        if self.rotationMode == 'QUATERNION':
+            self.rotation = blenderObject.rotation_quaternion
+        elif self.rotationMode == 'AXIS_ANGLE':
+            self.rotation = blenderObject.rotation_axis_angle
+        else:
+            self.rotation = blenderObject.rotation_euler
 
-        self.locationLocal = local["location"]
-        self.angleLocal = local["angle"]
-        self.scaleLocal = local["scale"]
-        # TODO: multiply location with scale of parent?
-
-#        print(self.blenderObject.name)
-#        print(self.locationLocal)
-#        print(self.blenderObject.locationLocal)
-#        print(obj.name, self.angleLocal)
-#        print(self.blenderObject.angleLocal)
-
-        self.rotation = self.angleLocal
-
-        # local position will be applied by static translations right now
-        # so remove initial location to get offset
-        for i in range(0,3):
-            self.translation[i] = self.locationLocal[i]-self.blenderObject.locationLocal[i]
+        self.scale = blenderObject.scale

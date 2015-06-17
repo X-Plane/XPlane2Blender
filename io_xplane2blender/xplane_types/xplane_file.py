@@ -134,6 +134,8 @@ class XPlaneFile():
             bone = XPlaneBone(blenderObject, xplaneObject, parentBone)
             parentBone.children.append(bone)
 
+            bone.collectAnimations()
+
             if blenderObject.type == 'ARMATURE':
                 self.collectBonesFromBlenderBones(bone, blenderObject, blenderObject.data.bones)
             else:
@@ -156,6 +158,8 @@ class XPlaneFile():
             bone = XPlaneBone(blenderArmature, None, parentBone)
             bone.blenderBone = blenderBone
             parentBone.children.append(bone)
+
+            bone.collectAnimations()
 
             # collect child blender objects of this bone
             childBlenderObjects = self.getChildBlenderObjectsForBlenderBone(blenderBone)

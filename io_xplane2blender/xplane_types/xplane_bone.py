@@ -34,21 +34,20 @@ class XPlaneBone():
         # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
         self.datarefs = {}
 
-        # collect animations (root bone has none)
-        if self.parent != None:
-            self.collectAnimations()
-
     # Method: isAnimated
     # Checks if the object is animated.
     #
     # Returns:
     #   bool - True if bone is animated, False if not.
     def isAnimated(self):
-        return (hasattr(self,'animations') and len(self.animations)>0)
+        return (hasattr(self, 'animations') and len(self.animations) > 0)
 
     # Method: collectAnimations
     # Stores all animations in <animations>.
     def collectAnimations(self):
+        if not self.parent:
+            return None
+
         debug = getDebug()
         debugger = getDebugger()
 
@@ -62,14 +61,19 @@ class XPlaneBone():
 
         #check for animation
         if debug:
-            debugger.debug("\t\t checking animations of %s" % object.name)
-        if (object.animation_data != None and object.animation_data.action != None and len(object.animation_data.action.fcurves)>0):
+            if bone:
+                debugger.debug("\t\t checking animations of %s:%s" % (object.name, bone.name))
+            else:
+                debugger.debug("\t\t checking animations of %s" % object.name)
+
+        # FIXME: seems like this is not correctly dealing with armature animations stored in actions
+        if (object.animation_data != None and object.animation_data.action != None and len(object.animation_data.action.fcurves) > 0):
             if debug:
                 debugger.debug("\t\t animation found")
             #check for dataref animation by getting fcurves with the dataref group
             for fcurve in object.animation_data.action.fcurves:
                 if debug:
-                    debugger.debug("\t\t checking FCurve %s Group: %s" % (fcurve.data_path,fcurve.group))
+                    debugger.debug("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
                 #if (fcurve.group != None and fcurve.group.name == groupName): # since 2.61 group names are not set so we have to check the datapath
                 if ('xplane.datarefs' in fcurve.data_path):
                     # get dataref name
@@ -87,12 +91,12 @@ class XPlaneBone():
 
                     # FIXME: removed datarefs keep fcurves, so we have to check if dataref is still there. FCurves have to be deleted correctly.
                     if bone:
-                        if index<len(bone.xplane.datarefs):
+                        if index < len(bone.xplane.datarefs):
                             dataref = bone.xplane.datarefs[index].path
                         else:
                             return
                     else:
-                        if index<len(object.xplane.datarefs):
+                        if index < len(object.xplane.datarefs):
                             dataref = object.xplane.datarefs[index].path
                         else:
                             return
@@ -120,7 +124,7 @@ class XPlaneBone():
                         keyframesSorted = sorted(keyframes, key=lambda keyframe: keyframe.co[0])
 
                         for i in range(0,len(keyframesSorted)):
-                            self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i],i,dataref,self))
+                            self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i], i, dataref, self))
 
     def getName(self):
         if self.parent == None:
