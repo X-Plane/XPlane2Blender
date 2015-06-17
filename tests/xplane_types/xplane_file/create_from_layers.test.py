@@ -1,18 +1,11 @@
 import bpy
 import os
 import sys
-import unittest
+from io_xplane2blender.tests import *
 from io_xplane2blender.xplane_types import xplane_file, XPlanePrimitive
 from io_xplane2blender import xplane_config
 
-class TestCreateFromLayers(unittest.TestCase):
-    # Utility method to check if objects are contained in file
-    def objectsInXPlaneFile(self, objects, xplaneFile):
-        for name in objects:
-            self.assertIsNotNone(xplaneFile.objects[name])
-            self.assertTrue(isinstance(xplaneFile.objects[name], XPlanePrimitive))
-            self.assertEquals(xplaneFile.objects[name].blenderObject, bpy.data.objects[name])
-
+class TestCreateFromLayers(XPlaneTestCase):
     def setUp(self):
         # initially create xplane layers
         bpy.ops.scene.add_xplane_layers()
@@ -34,52 +27,64 @@ class TestCreateFromLayers(unittest.TestCase):
         # should contain 4 cubes
         self.assertEqual(len(xplaneFile.objects), 4)
 
-        objects = [
+        self.assertObjectsInXPlaneFile(
+            xplaneFile, [
             'Cube',
             'Cube.001',
             'Cube.002',
             'Cube.003'
-        ]
+        ])
 
-        self.objectsInXPlaneFile(objects, xplaneFile)
-
-        # print bone tree for now
-        print(xplaneFile.filename)
-        print(xplaneFile.rootBone)
+        self.assertXplaneFileHasBoneTree(
+            xplaneFile, [
+            '0 ROOT',
+                '1 Object: Cube',
+                    '2 Object: Cube.001',
+                        '3 Object: Cube.002',
+                            '4 Object: Cube.003'
+        ])
 
         xplaneFile2 = xplane_file.createFileFromBlenderLayerIndex(1)
 
         # should contain 2 cubes
         self.assertEqual(len(xplaneFile2.objects), 2)
 
-        objects = [
+        self.assertObjectsInXPlaneFile(
+            xplaneFile2, [
             'Cube.004',
             'Cube.005'
-        ]
+        ])
 
-        self.objectsInXPlaneFile(objects, xplaneFile2)
-
-        # print bone tree for now
-        print(xplaneFile2.filename)
-        print(xplaneFile2.rootBone)
+        self.assertXplaneFileHasBoneTree(
+            xplaneFile2, [
+            '0 ROOT',
+                '1 Object: Cube.005',
+                '1 Object: Cube.004'
+        ])
 
         xplaneFile3 = xplane_file.createFileFromBlenderLayerIndex(2)
 
         # should contain 4 cubes
         self.assertEqual(len(xplaneFile3.objects), 4)
 
-        objects = [
+        self.assertObjectsInXPlaneFile(
+            xplaneFile3, [
             'Cube_arm_root',
             'Cube_Bone',
             'Cube_Bone.child',
             'Cube_Bone.001'
-        ]
+        ])
 
-        self.objectsInXPlaneFile(objects, xplaneFile3)
+        self.assertXplaneFileHasBoneTree(
+            xplaneFile3, [
+            '0 ROOT',
+                '1 Object: Cube_arm_root',
+                    '2 Object: Armature',
+                        '3 Bone: Bone',
+                            '4 Object: Cube_Bone',
+                                '5 Object: Cube_Bone.child',
+                            '4 Bone: Bone.001',
+                                '5 Object: Cube_Bone.001'
+        ])
 
-        # print bone tree for now
-        print(xplaneFile3.filename)
-        print(xplaneFile3.rootBone)
-
-suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestCreateFromLayers)
-unittest.TextTestRunner().run(suite)
+runTestCases([TestCreateFromLayers])
