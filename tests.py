@@ -12,6 +12,9 @@ if os.path.exists('./tests/tmp'):
 # create temp dir if not exists
 os.mkdir('./tests/tmp')
 
+def getFlag(name):
+    return name in sys.argv
+
 def getOption(name, default):
     index = -1
 
@@ -27,6 +30,19 @@ def getOption(name, default):
 
 fileFilter = getOption('--filter', None)
 blenderExecutable = getOption('--blender', 'blender')
+debug = getFlag('--debug')
+showHelp = getFlag('--help')
+
+if showHelp:
+    print(
+        'Usage: python tests.py [options]\n\n' +
+        'Options:\n\n' +
+        '  --filter [regex]\tfilter test files with a regular expression\n' +
+        '  --debug\t\tenable debugging\n' +
+        '  --blender [path]\tProvide alternative path to blender executable\n' +
+        '  --help\t\tdisplay this help\n\n'
+    )
+    sys.exit(0)
 
 def inFilter(filepath):
     if fileFilter == None:
@@ -44,7 +60,15 @@ for root, dirs, files in os.walk('./tests'):
 
                 print('Running file %s' % pyFile)
 
+                args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
+
                 if os.path.exists(blendFile):
-                    subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', blendFile, '--python', pyFile])
-                else:
-                    subprocess.call([blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b', '--python', pyFile])
+                    args.append(blendFile)
+
+                args.append('--python')
+                args.append(pyFile)
+
+                if debug:
+                    args.append('--debug')
+
+                subprocess.call(args)

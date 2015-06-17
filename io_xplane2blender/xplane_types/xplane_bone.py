@@ -1,6 +1,7 @@
 import bpy
 import math
 import mathutils
+from .xplane_keyframe import XPlaneKeyframe
 from ..xplane_helpers import *
 from ..xplane_config import *
 
@@ -22,7 +23,6 @@ class XPlaneBone():
         self.children = []
 
         # nesting level of this bone (used for intendation)
-        # TODO: create a getter which dynamically climbs up the tree to get the level?
         self.level = 0
 
         if self.parent:
@@ -31,31 +31,35 @@ class XPlaneBone():
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframes>.
         self.animations = {}
 
-    # Method: animated
+        # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
+        self.datarefs = {}
+
+        # collect animations (root bone has none)
+        if self.parent != None:
+            self.collectAnimations()
+
+    # Method: isAnimated
     # Checks if the object is animated.
     #
     # Returns:
-    #   bool - True if object is animated, False if not.
-    def animated(self):
+    #   bool - True if bone is animated, False if not.
+    def isAnimated(self):
         return (hasattr(self,'animations') and len(self.animations)>0)
 
-    # Method: getAnimations
-    # Stores all animations of <object> or another Blender object in <animations>.
-    #
-    # Parameters:
-    #   object - (default=None) A Blender object. If given animation of this object will be stored.
-    def getAnimations(self,object = None, bone = None):
+    # Method: collectAnimations
+    # Stores all animations in <animations>.
+    def collectAnimations(self):
         debug = getDebug()
         debugger = getDebugger()
 
+        bone = self.blenderBone
+        object = self.blenderObject
+
         if bone:
-            groupName = "XPlane Datarefs "+bone.name
-            object = object.data
+            groupName = "XPlane Datarefs " + bone.name
         else:
             groupName = "XPlane Datarefs"
 
-        if object == None:
-            object = self.blenderObject
         #check for animation
         if debug:
             debugger.debug("\t\t checking animations of %s" % object.name)
@@ -71,7 +75,7 @@ class XPlaneBone():
                     # get dataref name
                     pos = fcurve.data_path.find('xplane.datarefs[')
                     if pos!=-1:
-                      index = fcurve.data_path[pos+len('xplane.datarefs[') : -len('].value')]
+                        index = fcurve.data_path[pos+len('xplane.datarefs[') : -len('].value')]
                     else:
                         return
 
@@ -135,6 +139,15 @@ class XPlaneBone():
             out += bone.toString(indent + '\t')
 
         return out
+
+    def getPreAnimationMatrix(self):
+        pass
+
+    def getPostAnimationMatrix(self):
+        pass
+
+    def getBakeMatrix(self):
+        pass
 
     def __str__(self):
         return self.toString()

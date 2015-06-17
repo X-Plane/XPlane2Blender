@@ -84,6 +84,9 @@ class XPlaneFile():
     # Parameters:
     #   layerIndex - int
     def collectFromBlenderLayerIndex(self, layerIndex):
+        debug = getDebug()
+        debugger = getDebugger()
+
         blenderObjects = []
 
         for blenderObject in bpy.context.scene.objects:
@@ -162,7 +165,7 @@ class XPlaneFile():
 
     def getChildBlenderObjectsForBlenderBone(self, blenderBone):
         blenderObjects = []
-        
+
         for name in self.objects:
             xplaneObject = self.objects[name]
             if xplaneObject.blenderObject.parent_bone == blenderBone.name:
@@ -184,6 +187,9 @@ class XPlaneFile():
     # Returns:
     #   <XPlaneObject> or None if object type is not supported
     def convertBlenderObject(self, blenderObject):
+        debug = getDebug()
+        debugger = getDebugger()
+
         xplaneObject = None
 
         # mesh: let's create a prim out of it

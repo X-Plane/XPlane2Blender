@@ -1,5 +1,6 @@
 import bpy
 import os
+import sys
 import unittest
 from io_xplane2blender.xplane_types import xplane_file, XPlanePrimitive
 from io_xplane2blender import xplane_config
@@ -15,6 +16,9 @@ class TestCreateFromLayers(unittest.TestCase):
     def setUp(self):
         # initially create xplane layers
         bpy.ops.scene.add_xplane_layers()
+
+        if '--debug' in sys.argv:
+            xplane_config.setDebug(True)
 
     def test_getActiveBlenderLayerIndexes(self):
         # blender by default only activates first layer
