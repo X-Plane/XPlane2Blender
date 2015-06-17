@@ -1,9 +1,8 @@
-import unittest
+from io_xplane2blender.tests import *
 import io_xplane2blender
 
-class TestAddon(unittest.TestCase):
+class TestAddon(XPlaneTestCase):
     def test_addon_enabled(self):
         self.assertIsNotNone(io_xplane2blender.bl_info)
 
-suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestAddon)
-unittest.TextTestRunner().run(suite)
+runTestCases([TestAddon])

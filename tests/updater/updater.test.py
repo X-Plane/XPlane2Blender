@@ -1,9 +1,9 @@
 import bpy
 import os
-import unittest
+from io_xplane2blender.tests import *
 import io_xplane2blender
 
-class TestUpdater(unittest.TestCase):
+class TestUpdater(XPlaneTestCase):
     def test_updater_stores_current_version(self):
         tmpDir = os.path.realpath(os.path.join(__file__, '../../tmp'))
         tmpFile = os.path.join(tmpDir, 'updater_stores_current_version.blend')
@@ -28,5 +28,4 @@ class TestUpdater(unittest.TestCase):
             '.'.join(map(str, io_xplane2blender.bl_info['version']))
         )
 
-suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestUpdater)
-unittest.TextTestRunner().run(suite)
+runTestCases([TestUpdater])
