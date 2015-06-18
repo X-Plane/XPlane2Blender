@@ -1,4 +1,5 @@
 import bpy
+import copy
 
 # Class: XPlaneKeyframe
 # A Keyframe.
@@ -41,8 +42,12 @@ class XPlaneKeyframe():
         self.index = index
         self.xplaneBone = xplaneBone
 
+        isBone = False
+
         if self.xplaneBone.blenderBone:
-            blenderObject = self.xplaneBone.blenderBone
+            # we need the pose bone
+            blenderObject = self.xplaneBone.blenderObject.pose.bones[self.xplaneBone.blenderBone.name]
+            isBone = True
         else:
             blenderObject = self.xplaneBone.blenderObject
 
@@ -54,15 +59,15 @@ class XPlaneKeyframe():
         # update objects so we get values from the keyframe
         #blenderObject.update()
 
-        self.location = blenderObject.location
+        self.location = copy.copy(blenderObject.location)
         self.rotation = None
         self.rotationMode = blenderObject.rotation_mode
 
         if self.rotationMode == 'QUATERNION':
-            self.rotation = blenderObject.rotation_quaternion
+            self.rotation = blenderObject.rotation_quaternion.copy()
         elif self.rotationMode == 'AXIS_ANGLE':
-            self.rotation = blenderObject.rotation_axis_angle
+            self.rotation = blenderObject.rotation_axis_angle.copy()
         else:
-            self.rotation = blenderObject.rotation_euler
+            self.rotation = blenderObject.rotation_euler.copy()
 
-        self.scale = blenderObject.scale
+        self.scale = copy.copy(blenderObject.scale)

@@ -66,12 +66,17 @@ class XPlaneBone():
             else:
                 debugger.debug("\t\t checking animations of %s" % object.name)
 
-        # FIXME: seems like this is not correctly dealing with armature animations stored in actions
-        if (object.animation_data != None and object.animation_data.action != None and len(object.animation_data.action.fcurves) > 0):
+        animationData = object.animation_data
+
+        # bone animation data resides in the armature objects .data block
+        if bone:
+            animationData = object.data.animation_data
+
+        if (animationData != None and animationData.action != None and len(animationData.action.fcurves) > 0):
             if debug:
                 debugger.debug("\t\t animation found")
             #check for dataref animation by getting fcurves with the dataref group
-            for fcurve in object.animation_data.action.fcurves:
+            for fcurve in animationData.action.fcurves:
                 if debug:
                     debugger.debug("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
                 #if (fcurve.group != None and fcurve.group.name == groupName): # since 2.61 group names are not set so we have to check the datapath
@@ -104,7 +109,7 @@ class XPlaneBone():
                     if debug:
                         debugger.debug("\t\t adding dataref animation: %s" % dataref)
 
-                    if len(fcurve.keyframe_points)>1:
+                    if len(fcurve.keyframe_points) > 1:
                         # time to add dataref to animations
                         self.animations[dataref] = []
                         if bone:
