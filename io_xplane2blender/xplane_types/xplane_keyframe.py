@@ -42,12 +42,9 @@ class XPlaneKeyframe():
         self.index = index
         self.xplaneBone = xplaneBone
 
-        isBone = False
-
         if self.xplaneBone.blenderBone:
             # we need the pose bone
             blenderObject = self.xplaneBone.blenderObject.pose.bones[self.xplaneBone.blenderBone.name]
-            isBone = True
         else:
             blenderObject = self.xplaneBone.blenderObject
 
@@ -55,9 +52,6 @@ class XPlaneKeyframe():
         # TODO: support subframes?
         self.frame = int(round(keyframe.co[0]))
         bpy.context.scene.frame_set(frame = self.frame)
-
-        # update objects so we get values from the keyframe
-        #blenderObject.update()
 
         self.location = copy.copy(blenderObject.location)
         self.rotation = None
