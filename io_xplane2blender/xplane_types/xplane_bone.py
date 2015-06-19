@@ -141,6 +141,14 @@ class XPlaneBone():
 
         return 'UNKNOWN'
 
+    def getBlenderName(self):
+        if self.blenderBone:
+            return self.blenderBone.name
+        elif self.blenderObject:
+            return self.blenderObject.name
+
+        return None
+
     def toString(self, indent = ''):
         out = indent + self.getName() + '\n'
 
@@ -149,14 +157,46 @@ class XPlaneBone():
 
         return out
 
+    def getFirstAnimatedParent(self):
+        if self.parent == None:
+            return None
+
+        if self.parent.isAnimated() or self.parent.parent == None:
+            return self.parent
+        else:
+            return self.parent.getFirstAnimatedParent()
+
+
+    def getBlenderWorldMatrix(self):
+        if self.parent == None:
+            return mathutils.Matrix.Identity(4)
+
+        if self.blenderBone:
+            # TODO: what is the world matrix of a bone?
+            return None
+        elif self.blenderObject:
+            return self.blenderObject.matrix_world.copy()
+
     def getPreAnimationMatrix(self):
-        pass
+        if not self.isAnimated() or self.parent == None:
+            # not animated objects have own world matrix
+            return self.getBlenderWorldMatrix()
+        else:
+            # animated objects have parents world matrix
+            return self.parent.getBlenderWorldMatrix()
 
     def getPostAnimationMatrix(self):
-        pass
+        # for non-animated or root bones, post = pre
+        if not self.isAnimated() or self.parent == None:
+            return self.getPreAnimationMatrix()
+        else:
+            return self.getBlenderWorldMatrix()
 
     def getBakeMatrix(self):
-        pass
+        if self.parent == None:
+            return self.getBlenderWorldMatrix()
+        else:
+            return self.getFirstAnimatedParent().getPostAnimationMatrix().inverted_safe() * self.getPreAnimationMatrix()
 
     def __str__(self):
         return self.toString()

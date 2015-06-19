@@ -87,6 +87,8 @@ class XPlaneFile():
         debug = getDebug()
         debugger = getDebugger()
 
+        currentFrame = bpy.context.scene.frame_current
+
         blenderObjects = []
 
         for blenderObject in bpy.context.scene.objects:
@@ -99,6 +101,9 @@ class XPlaneFile():
 
         self.collectBlenderObjects(blenderObjects)
         self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
+
+        # restore frame before export
+        bpy.context.scene.frame_set(frame = currentFrame)
 
     def collectBlenderObjects(self, blenderObjects):
         for blenderObject in blenderObjects:
@@ -183,7 +188,12 @@ class XPlaneFile():
     # Parameters:
     #   rootObject - blender object
     def collectFromBlenderRootObject(self, rootObject):
-        pass
+        currentFrame = bpy.context.scene.frame_current
+
+        # TODO: do stuff
+
+        # restore frame before export
+        bpy.context.scene.frame_set(frame = currentFrame)
 
     # Method: convertBlenderObject
     # Converts/wraps blender object into an <XPlaneObject> or subtype
@@ -209,6 +219,20 @@ class XPlaneFile():
             xplaneObject  = XPlaneLight(blenderObject)
 
         return xplaneObject
+
+    def getBoneByBlenderName(self, name, parent = None):
+        if not parent:
+            parent = self.rootBone
+
+        for bone in parent.children:
+            if bone.getBlenderName() == name:
+                return bone
+            else: # decsent to children
+                _bone = self.getBoneByBlenderName(name, bone)
+                if _bone:
+                    return _bone
+
+        return None
 
     # Method: write
     # Returns OBJ file code
