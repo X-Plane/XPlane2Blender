@@ -8,10 +8,6 @@ from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender import xplane_config
 
 class TestAnimations(XPlaneTestCase):
-    def setUp(self):
-        if '--debug' in sys.argv:
-            xplane_config.setDebug(True)
-
     def test_bone_animations(self):
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
 

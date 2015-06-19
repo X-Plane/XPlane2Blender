@@ -1,8 +1,13 @@
 import bpy
 import unittest
+import sys
 from ..xplane_types import XPlanePrimitive
 
 class XPlaneTestCase(unittest.TestCase):
+    def setUp(self):
+        if '--debug' in sys.argv:
+            xplane_config.setDebug(True)
+
     # Utility method to check if objects are contained in file
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
         for name in objectNames:
