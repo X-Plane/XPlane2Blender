@@ -2,9 +2,15 @@
 # Defines X-Plane file data type.
 
 import bpy
-from ..xplane_helpers import *
-from . import XPlaneBone, XPlaneLight, XPlaneLine, XPlaneObject, XPlanePrimitive, XPlaneLights
-from ..xplane_config import *
+from .xplane_bone import XPlaneBone
+from .xplane_light import XPlaneLight
+# from .xplane_line import XPlaneLine
+# from .xplane_object import XPlaneObject
+from .xplane_primitive import XPlanePrimitive
+from .xplane_lights import XPlaneLights
+from .xplane_mesh import XPlaneMesh
+from .xplane_header import XPlaneHeader
+from ..xplane_config import getDebug, getDebugger, version
 
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
@@ -47,7 +53,7 @@ def createFileFromBlenderLayerIndex(layerIndex):
     xplaneLayer = getXPlaneLayerForBlenderLayerIndex(layerIndex)
 
     if xplaneLayer:
-        xplaneFile = XPlaneFile(getFilenameFromXPlaneLayer(xplaneLayer))
+        xplaneFile = XPlaneFile(getFilenameFromXPlaneLayer(xplaneLayer), xplaneLayer)
 
         if xplaneFile:
             xplaneFile.collectFromBlenderLayerIndex(layerIndex)
@@ -58,16 +64,16 @@ def createFileFromBlenderLayerIndex(layerIndex):
 # X-Plane OBJ file
 class XPlaneFile():
 
-    def __init__(self, filename):
+    def __init__(self, filename, options):
         self.filename = filename
 
-        # TODO: use XPlaneHeader type here
-        self.header = None
+        self.options = options
 
-        # TODO: use XPlaneMesh type here
-        self.mesh = None
+        self.mesh = XPlaneMesh()
 
         self.lights = XPlaneLights()
+
+        self.header = XPlaneHeader(self, 8)
 
         # list of temporary objects that will be removed after export
         self.tempBlenderObjects = []
@@ -234,15 +240,46 @@ class XPlaneFile():
 
         return None
 
+    # Method: getObjectsList
+    # Returns objects as a list
+    def getObjectsList(self):
+        objects = []
+        for name in self.objects:
+            objects.append(self.objects[name])
+
+        return objects
+
+    def writeFooter(self):
+        build = 'unknown'
+
+        if hasattr(bpy.app, 'build_hash'):
+            build = bpy.app.build_hash
+        else:
+            build = bpy.app.build_revision
+
+        return "# Build with Blender %s (build %s) Exported with XPlane2Blender %d.%d.%d" % (bpy.app.version_string,build, version[0], version[1], version[2])
+
     # Method: write
     # Returns OBJ file code
     def write(self):
-        # TODO: implement it
-        pass
+        self.mesh.collectXPlaneObjects(self.getObjectsList())
+
+        o = ''
+        o += self.header.write()
+        o += '\n'
+        o += self.mesh.write()
+
+        o += '\n'
+        o += self.lights.write()
+
+        o += '\n'
+        o += self.writeFooter()        
+
+        return o
 
     # Method: cleanup
     # Removes temporary blender data
     def cleanup(self):
-        while(len(self.tempObjects) > 0):
-            tempObject = self.tempObjects.pop()
-            bpy.data.objects.remove(tempObject)
+        while(len(self.tempBlenderObjects) > 0):
+            tempBlenderObject = self.tempBlenderObjects.pop()
+            bpy.data.objects.remove(tempBlenderObject)

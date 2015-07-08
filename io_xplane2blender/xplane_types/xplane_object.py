@@ -63,7 +63,9 @@ class XPlaneObject():
     # Parameters:
     #   blenderObject - A Blender object
     def __init__(self, blenderObject):
+        self.type = ''
         self.blenderObject = blenderObject
+        self.xplaneBone = None
         self.name = blenderObject.name
         self.datarefs = {}
         self.bakeMatrix = None
@@ -93,7 +95,7 @@ class XPlaneObject():
     #
     # Parameters:
     #   bool world - (default=False) True if the world matrix should be returned.
-    def getMatrix(self,world = False):
+    def getMatrix(self, world = False):
         if world:
             return self.blenderObject.matrix_world
         else:
@@ -144,6 +146,7 @@ class XPlaneObject():
     #   int - The weight of this object.
     def getWeight(self):
         weight = 0
+
         if hasattr(self.blenderObject.xplane,'override_weight') and self.blenderObject.xplane.override_weight:
             weight = self.blenderObject.xplane.weight
         else:

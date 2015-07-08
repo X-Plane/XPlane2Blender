@@ -34,18 +34,18 @@ class XPlaneLight(XPlaneObject):
     #
     # Parameters:
     #   object - A Blender object
-    def __init__(self,object):
-        super(XPlaneLight,self).__init__(object)
+    def __init__(self, blenderObject):
+        super(XPlaneLight, self).__init__(blenderObject)
         self.indices = [0,0]
-        self.color = [object.data.color[0],object.data.color[1],object.data.color[2]]
-        self.energy = object.data.energy
+        self.color = [blenderObject.data.color[0], blenderObject.data.color[1], blenderObject.data.color[2]]
+        self.energy = blenderObject.data.energy
         self.type = 'LIGHT'
-        self.lightType = object.data.xplane.type
-        self.size = object.data.xplane.size
-        self.lightName = object.data.xplane.name
-        self.params = object.data.xplane.params
-        self.uv = object.data.xplane.uv
-        self.dataref = object.data.xplane.dataref
+        self.lightType = blenderObject.data.xplane.type
+        self.size = blenderObject.data.xplane.size
+        self.lightName = blenderObject.data.xplane.name
+        self.params = blenderObject.data.xplane.params
+        self.uv = blenderObject.data.xplane.uv
+        self.dataref = blenderObject.data.xplane.dataref
 
         # change color according to type
         if self.lightType=='flashing':
@@ -67,6 +67,3 @@ class XPlaneLight(XPlaneObject):
         self.getAnimAttributes()
 
         self.getWeight()
-
-        self.getCoordinates()
-        self.getAnimations()

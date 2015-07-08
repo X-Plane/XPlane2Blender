@@ -19,21 +19,20 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-from .xplane_config import *
-
 # Variable: bl_info
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
-    'name': 'Import/Export: XPlane',
-    'author': 'Ondrej Brinkel',
-    'version': version,
-    'blender': (2, 6, 9),
-    'api': 36273,
-    'location': 'File > Import/Export > XPlane ',
-    'description': 'Import and Export XPlane objects/planes (.obj,.aif format)',
-    'wiki_url': 'https://github.com/der-On/XPlane2Blender/wiki',
-    'tracker_url': 'https://github.com/der-On/XPlane2Blender/issues',
-    'category': 'Import-Export'}
+    "name": "Import/Export: XPlane",
+    "author": "Ondrej Brinkel",
+    "version": (3,3,0),
+    "blender": (2, 6, 9),
+    "api": 36273,
+    "location": "File > Import/Export > XPlane",
+    "description": "Import and Export XPlane objects/planes (.obj,.aif format)",
+    "wiki_url": "https://github.com/der-On/XPlane2Blender/wiki",
+    "tracker_url": "https://github.com/der-On/XPlane2Blender/issues",
+    "category": "Import-Export"
+}
 
 if "bpy" in locals():
     import imp
@@ -60,7 +59,7 @@ else:
 #   self - Instance to something
 #   context - The Blender context object
 def menu_func(self, context):
-    self.layout.operator(xplane_export.ExportXPlane9.bl_idname, text="XPlane Object (.obj)")
+    self.layout.operator(xplane_export.ExportXPlane9.bl_idname, text = "XPlane Object (.obj)")
 
 # Function: register
 # Registers the addon with all its classes and the menu function.

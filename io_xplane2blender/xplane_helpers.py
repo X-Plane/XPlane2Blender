@@ -3,7 +3,20 @@
 
 import math
 from mathutils import Matrix,Vector,Euler
-from .xplane_config import *
+
+FLOAT_PRECISION = 8
+
+def floatToStr(n):
+    s = '0'
+    n = round(n, FLOAT_PRECISION)
+    n_int = int(n)
+
+    if n_int == n:
+        s = '%d' % n_int
+    else:
+        s = (('%.' + str(FLOAT_PRECISION) + 'f') % n).rstrip('0')
+
+    return s
 
 # Class: XPlaneDebugger
 # Prints debugging information and optionally logs them to a file.
@@ -21,7 +34,7 @@ class XPlaneDebugger():
     #
     # Parameters:
     #   bool log - Set True if log file should be written, else False
-    def start(self,log):
+    def start(self, log):
         import time
         import os
         import bpy
@@ -31,12 +44,12 @@ class XPlaneDebugger():
         self.log = log
 
         if self.log:
-            (name,ext) = os.path.splitext(bpy.context.blend_data.filepath)
+            (name, ext) = os.path.splitext(bpy.context.blend_data.filepath)
             dir = os.path.dirname(bpy.context.blend_data.filepath)
             self.logfile = os.path.join(dir,name+'_'+time.strftime("%y-%m-%d-%H-%M-%S")+'_xplane2blender.log')
 
             # touch the file
-            file = open(self.logfile,"w");
+            file = open(self.logfile,"w")
             file.close()
 
 #            self.excepthook = sys.excepthook
@@ -51,8 +64,8 @@ class XPlaneDebugger():
     #
     # Parameters:
     #   string msg - The message to write.
-    def write(self,msg):
-        file = open(self.logfile,"a")
+    def write(self, msg):
+        file = open(self.logfile, "a")
         #file.seek(1,os.SEEK_END)
         file.write(msg)
         file.close()
@@ -62,17 +75,17 @@ class XPlaneDebugger():
     #
     # Parameters:
     #   string msg - The message to output.
-    def debug(self,msg):
+    def debug(self, msg):
         print(msg)
         if self.log:
-            self.write(msg+"\n")
+            self.write(msg + "\n")
 
     # Method: exception
     # Experimental exception handler. Not working yet.
-    def exception(self,type,value,traceback):
-        o = "Exception: "+type+"\n"
-        o += "\t"+value+"\n"
-        o += "\tTraceback: "+str(traceback)+"\n"
+    def exception(self, type, value, traceback):
+        o = "Exception: " + type + "\n"
+        o += "\t" + value + "\n"
+        o += "\tTraceback: " + str(traceback)+"\n"
         self.write(o)
 
     # Method: end
@@ -238,7 +251,7 @@ class XPlaneCoords():
     #
     # Returns:
     #   Matrix - A relative converted matrix.
-    def relativeConvertedMatrix(child_matrix,parent_matrix, invert = False):
+    def relativeConvertedMatrix(self, child_matrix,parent_matrix, invert = False):
         return XPlaneCoords.convertMatrix(parent_matrix.copy().inverted()*child_matrix,invert)
 
     # Method: conversionMatrix

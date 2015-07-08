@@ -1,9 +1,8 @@
-import bpy
-import math
+# import bpy
+# import math
 import mathutils
 from .xplane_keyframe import XPlaneKeyframe
-from ..xplane_helpers import *
-from ..xplane_config import *
+from ..xplane_config import getDebugger, getDebug
 
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
@@ -21,6 +20,9 @@ class XPlaneBone():
         self.blenderBone = None
         self.parent = parent
         self.children = []
+
+        if self.xplaneObject:
+            self.xplaneObject.xplaneBone = self
 
         # nesting level of this bone (used for intendation)
         self.level = 0
@@ -54,10 +56,10 @@ class XPlaneBone():
         bone = self.blenderBone
         object = self.blenderObject
 
-        if bone:
-            groupName = "XPlane Datarefs " + bone.name
-        else:
-            groupName = "XPlane Datarefs"
+        # if bone:
+        #     groupName = "XPlane Datarefs " + bone.name
+        # else:
+        #     groupName = "XPlane Datarefs"
 
         #check for animation
         if debug:

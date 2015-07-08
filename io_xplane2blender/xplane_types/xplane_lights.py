@@ -1,3 +1,5 @@
+from ..xplane_helpers import floatToStr
+
 # Class: XPlaneLights
 # Creates OBJ lights.
 class XPlaneLights():
@@ -32,14 +34,14 @@ class XPlaneLights():
         # we only write vlights here, all other lights go into the commands table directly
         if  light.lightType not in ('named','param','custom'):
             # get the location
+            co = light.blenderObject.location
 
-            matrix = XPlaneCoords.convertMatrix(light.getMatrix(True))
-            coords = XPlaneCoords.fromMatrix(matrix)
-            co = coords['location']
-
-            self.lines.append("VLIGHT\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f\t%6.8f" % (co[0],co[1],co[2],light.color[0],light.color[1],light.color[2]))
+            self.lines.append("VLIGHT\t%s\t%s\t%s\t%s\t%s\t%s" % (
+                floatToStr(co[0]), floatToStr(co[1]), floatToStr(co[2]),
+                floatToStr(light.color[0]), floatToStr(light.color[1]), floatToStr(light.color[2])
+            ))
             self.indices.append(self.globalindex)
-            self.globalindex+=1
+            self.globalindex += 1
 
             light.indices[1] = self.globalindex
 
@@ -49,7 +51,8 @@ class XPlaneLights():
     # Returns:
     #   string - The OBJ lights table.
     def write(self):
-        o=''
+        o= ''
         for l in self.lines:
-            o+=l+'\n'
+            o += l + '\n'
+
         return o

@@ -1,7 +1,8 @@
 # File: xplane_config.py
 # Holds config variables that are used throughout the addon.
 
-from .xplane_helpers import XPlaneDebugger,XPlaneProfiler
+from .xplane_helpers import XPlaneDebugger, XPlaneProfiler
+from . import bl_info
 
 # Variable: debug
 # Set to True for debugging output using <debugger>. Default is True, as we are still dealing with a development release.
@@ -17,7 +18,7 @@ profile = False
 
 # Variable: version
 # Integer containing the version number of the addon.
-version = (3,3,0)
+version = bl_info['version']
 
 # Variable: debugger
 # An instance of <XPlaneDebugger> which is used to output debug information.
@@ -27,9 +28,6 @@ debugger = XPlaneDebugger()
 # Instance of <XPlaneProfiler> which is used to profile processes.
 profiler = XPlaneProfiler()
 
-FLOAT_PRECISION = 8
-FLOAT_PRECISION_STR = "8"
-
 errors = False
 
 def initConfig():
@@ -38,7 +36,7 @@ def initConfig():
     global log
     import bpy
 
-    if hasattr(bpy.context.scene,"xplane") and bpy.context.scene.xplane.debug:
+    if hasattr(bpy.context.scene, "xplane") and bpy.context.scene.xplane.debug:
         debug = True
         if bpy.context.scene.xplane.profile:
             profile = True

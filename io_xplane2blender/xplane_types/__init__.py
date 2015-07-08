@@ -12,3 +12,4 @@ from .xplane_line import XPlaneLine
 from .xplane_material import XPlaneMaterial
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
+from .xplane_mesh import XPlaneMesh
