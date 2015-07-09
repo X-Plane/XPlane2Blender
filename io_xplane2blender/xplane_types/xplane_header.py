@@ -48,7 +48,7 @@ class XPlaneHeader():
     def init(self):
         # set slung load
         if self.xplaneFile.options.slungLoadWeight > 0:
-            self.attributes['slung_load_weight'] = self.xplaneFile.options.slungLoadWeight
+            self.attributes['slung_load_weight'] = floatToStr(self.xplaneFile.options.slungLoadWeight)
 
         # set Texture
         blenddir = os.path.dirname(bpy.context.blend_data.filepath)
@@ -92,13 +92,13 @@ class XPlaneHeader():
         if xplane_version >= 1000:
             # blend
             if self.xplaneFile.options.blend == "off":
-                self.attributes['GLOBAL_no_blend'] = '%s' % floatToStr(self.xplaneFile.options.blendRatio)
+                self.attributes['GLOBAL_no_blend'] = floatToStr(self.xplaneFile.options.blendRatio)
             elif self.xplaneFile.options.blend == 'shadow':
                 self.attributes['GLOBAL_shadow_blend'] = True
 
             # specular
             if self.xplaneFile.options.overrideSpecularity == True:
-                self.attributes['GLOBAL_specular'] = '%s' % floatToStr(self.xplaneFile.options.specular)
+                self.attributes['GLOBAL_specular'] = floatToStr(self.xplaneFile.options.specular)
 
             # tilted
             if self.xplaneFile.options.tilted == True:
