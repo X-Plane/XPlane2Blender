@@ -2,6 +2,7 @@ import bpy
 import os
 import platform
 from collections import OrderedDict
+from ..xplane_helpers import floatToStr
 
 # Class: XPlaneHeader
 # Create an OBJ header.
@@ -27,21 +28,21 @@ class XPlaneHeader():
 
         # TODO: use Attributes object instead
         self.attributes = OrderedDict([
-            ("TEXTURE",None),
-            ("TEXTURE_LIT",None),
-            ("TEXTURE_NORMAL",None),
-            ("POINT_COUNTS",None),
-            ("slung_load_weight",None),
-            ("COCKPIT_REGION",None),
-            ("GLOBAL_no_blend",None),
-            ("GLOBAL_shadow_blend",None),
-            ("GLOBAL_specular",None),
-            ("GLOBAL_no_shadow",None),
-            ("SLOPE_LIMIT",None),
-            ("TILTED",None),
-            ("REQUIRE_WET",None),
-            ("REQUIRE_DRY",None),
-            ("GLOBAL_cockpit_lit",None)
+            ("TEXTURE", None),
+            ("TEXTURE_LIT", None),
+            ("TEXTURE_NORMAL", None),
+            ("POINT_COUNTS", None),
+            ("slung_load_weight", None),
+            ("COCKPIT_REGION", None),
+            ("GLOBAL_no_blend", None),
+            ("GLOBAL_shadow_blend", None),
+            ("GLOBAL_specular", None),
+            ("GLOBAL_no_shadow", None),
+            ("SLOPE_LIMIT", None),
+            ("TILTED", None),
+            ("REQUIRE_WET", None),
+            ("REQUIRE_DRY", None),
+            ("GLOBAL_cockpit_lit", None)
         ])
 
     def init(self):
@@ -91,13 +92,13 @@ class XPlaneHeader():
         if xplane_version >= 1000:
             # blend
             if self.xplaneFile.options.blend == "off":
-                self.attributes['GLOBAL_no_blend'] = '%6.8f' % self.xplaneFile.options.blendRatio
+                self.attributes['GLOBAL_no_blend'] = '%s' % floatToStr(self.xplaneFile.options.blendRatio)
             elif self.xplaneFile.options.blend == 'shadow':
                 self.attributes['GLOBAL_shadow_blend'] = True
 
             # specular
             if self.xplaneFile.options.overrideSpecularity == True:
-                self.attributes['GLOBAL_specular'] = '%6.8f' % self.xplaneFile.options.specular
+                self.attributes['GLOBAL_specular'] = '%s' % floatToStr(self.xplaneFile.options.specular)
 
             # tilted
             if self.xplaneFile.options.tilted == True:
@@ -105,7 +106,12 @@ class XPlaneHeader():
 
             # slope_limit
             if self.xplaneFile.options.slope_limit == True:
-                self.attributes['SLOPE_LIMIT'] = '%6.8f\t%6.8f\t%6.8f\t%6.8f' % (self.xplaneFile.options.slope_limit_min_pitch, self.xplaneFile.options.slope_limit_max_pitch, self.xplaneFile.options.slope_limit_min_roll, self.xplaneFile.options.slope_limit_max_roll)
+                self.attributes['SLOPE_LIMIT'] = '%s\t%s\t%s\t%s' % (
+                    floatToStr(self.xplaneFile.options.slope_limit_min_pitch),
+                    floatToStr(self.xplaneFile.options.slope_limit_max_pitch),
+                    floatToStr(self.xplaneFile.options.slope_limit_min_roll),
+                    floatToStr(self.xplaneFile.options.slope_limit_max_roll)
+                )
 
             # require surface
             if self.xplaneFile.options.require_surface == 'wet':
