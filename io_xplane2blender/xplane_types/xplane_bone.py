@@ -3,6 +3,7 @@
 import mathutils
 from .xplane_keyframe import XPlaneKeyframe
 from ..xplane_config import getDebugger, getDebug
+from ..xplane_helpers import floatToStr
 
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
@@ -54,7 +55,7 @@ class XPlaneBone():
         debugger = getDebugger()
 
         bone = self.blenderBone
-        object = self.blenderObject
+        blenderObject = self.blenderObject
 
         # if bone:
         #     groupName = "XPlane Datarefs " + bone.name
@@ -64,15 +65,15 @@ class XPlaneBone():
         #check for animation
         if debug:
             if bone:
-                debugger.debug("\t\t checking animations of %s:%s" % (object.name, bone.name))
+                debugger.debug("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
             else:
-                debugger.debug("\t\t checking animations of %s" % object.name)
+                debugger.debug("\t\t checking animations of %s" % blenderObject.name)
 
-        animationData = object.animation_data
+        animationData = blenderObject.animation_data
 
         # bone animation data resides in the armature objects .data block
         if bone:
-            animationData = object.data.animation_data
+            animationData = blenderObject.data.animation_data
 
         if (animationData != None and animationData.action != None and len(animationData.action.fcurves) > 0):
             if debug:
@@ -103,8 +104,8 @@ class XPlaneBone():
                         else:
                             return
                     else:
-                        if index < len(object.xplane.datarefs):
-                            dataref = object.xplane.datarefs[index].path
+                        if index < len(blenderObject.xplane.datarefs):
+                            dataref = blenderObject.xplane.datarefs[index].path
                         else:
                             return
 
@@ -117,7 +118,7 @@ class XPlaneBone():
                         if bone:
                             self.datarefs[dataref] = bone.xplane.datarefs[index]
                         else:
-                            self.datarefs[dataref] = object.xplane.datarefs[index]
+                            self.datarefs[dataref] = blenderObject.xplane.datarefs[index]
 
                         # store keyframes temporary, so we can resort them
                         keyframes = []
@@ -150,6 +151,9 @@ class XPlaneBone():
             return self.blenderObject.name
 
         return None
+
+    def getIndent(self):
+        return ''.ljust(self.level, '\t')
 
     def toString(self, indent = ''):
         out = indent + self.getName() + '\n'
@@ -203,6 +207,43 @@ class XPlaneBone():
     def __str__(self):
         return self.toString()
 
-    def write(self):
-        # TODO: implement
-        pass
+    def writeAnimationPrefix(self):
+        debug = getDebug()
+        debugger = getDebugger
+
+        indent = self.getIndent()
+        o = ''
+
+        if debug:
+            o += indent + '# ' + self.getName() + '\n'
+
+        preMatrix = self.getPreAnimationMatrix()
+        postMatrix = self.getPostAnimationMatrix()
+
+        if postMatrix is not preMatrix:
+            # write out static translations of pre animation matrix
+            o += indent + 'ANIM_begin\n'
+            indent += '\t'
+
+            translation = postMatrix.to_translation()
+
+            o += indent + 'ANIM_translate\t%s\t%s\t%s\n' % (
+                floatToStr(translation[0]),
+                floatToStr(translation[1]),
+                floatToStr(translation[2])
+            )
+
+        return o
+
+    def writeAnimationSuffix(self):
+        o = ''
+
+        # unanimated bones do not export any suffix
+        preMatrix = self.getPreAnimationMatrix()
+        postMatrix = self.getPostAnimationMatrix()
+
+        if postMatrix is not preMatrix:
+            indent = self.getIndent()
+            o += indent + 'ANIM_end\n'
+
+        return o

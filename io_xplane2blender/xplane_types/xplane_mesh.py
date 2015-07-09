@@ -328,8 +328,8 @@ class XPlaneMesh():
             for i in v:
                 o += "\t%s" % floatToStr(i)
 
-                if debug:
-                    o += '\t# %d' % index
+            if debug:
+                o += '\t# %d' % index
 
             o += "\n"
             index += 1

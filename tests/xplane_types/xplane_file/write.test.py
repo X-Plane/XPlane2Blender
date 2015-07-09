@@ -9,8 +9,14 @@ class TestWriteXPlaneFiles(XPlaneTestCase):
     def setUp(self):
         super(TestWriteXPlaneFiles, self).setUp()
 
-    def test_write_layer1(self):
+    def test_write_static(self):
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
         print(xplaneFile.write())
 
+    '''
+    def test_write_animated(self):
+        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(1)
+        print(xplaneFile.write())
+    '''
+    
 runTestCases([TestWriteXPlaneFiles])

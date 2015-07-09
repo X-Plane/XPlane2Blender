@@ -10,6 +10,7 @@ from .xplane_primitive import XPlanePrimitive
 from .xplane_lights import XPlaneLights
 from .xplane_mesh import XPlaneMesh
 from .xplane_header import XPlaneHeader
+from .xplane_commands import XPlaneCommands
 from ..xplane_config import getDebug, getDebugger, version
 
 # Function: getActiveLayers
@@ -74,6 +75,8 @@ class XPlaneFile():
         self.lights = XPlaneLights()
 
         self.header = XPlaneHeader(self, 8)
+
+        self.commands = XPlaneCommands(self)
 
         # list of temporary objects that will be removed after export
         self.tempBlenderObjects = []
@@ -273,7 +276,10 @@ class XPlaneFile():
         o += self.lights.write()
 
         o += '\n'
-        o += self.writeFooter()        
+        o += self.commands.write()
+
+        o += '\n'
+        o += self.writeFooter()
 
         return o
 

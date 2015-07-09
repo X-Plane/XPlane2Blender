@@ -2,13 +2,14 @@ import bpy
 import unittest
 import sys
 from ..xplane_types import XPlanePrimitive
+from ..xplane_config import setDebug
 
 EPSILON = sys.float_info.epsilon
 
 class XPlaneTestCase(unittest.TestCase):
     def setUp(self):
         if '--debug' in sys.argv:
-            xplane_config.setDebug(True)
+            setDebug(True)
 
     # Utility method to check if objects are contained in file
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
