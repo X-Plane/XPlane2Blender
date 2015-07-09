@@ -8,9 +8,9 @@ before_install:
 install:
   - mkdir tmp && cd tmp
   - wget http://mirror.cs.umn.edu/blender.org/release/Blender2.75/blender-2.75-linux-glibc211-x86_64.tar.bz2
-  - tar jxf blender-2.74-linux-glibc211-x86_64.tar.bz2
-  - mv blender-2.74-linux-glibc211-x86_64 blender
-  - rm blender-2.74-linux-glibc211-x86_64.tar.bz2
+  - tar jxf blender-2.75-linux-glibc211-x86_64.tar.bz2
+  - mv blender-2.75-linux-glibc211-x86_64 blender
+  - rm blender-2.75-linux-glibc211-x86_64.tar.bz2
   - cd ..
-  - sudo ln -s ${PWD}/io_xplane2blender ${PWD}/tmp/blender/2.74/scripts/addons/io_xplane2blender
+  - sudo ln -s ${PWD}/io_xplane2blender ${PWD}/tmp/blender/2.75/scripts/addons/io_xplane2blender
 script: python tests.py --blender ./tmp/blender/blender
