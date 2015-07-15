@@ -68,18 +68,17 @@ class XPlaneCommands():
     def writeXPlaneBone(self, xplaneBone, lod):
         o = ''
         o += xplaneBone.writeAnimationPrefix()
-
         xplaneObject = xplaneBone.xplaneObject
 
         if xplaneObject:
             if lod == -1:
                 # only write objects that are in no lod
                 if xplaneObject.lod[0] == False and xplaneObject.lod[1] == False and xplaneObject.lod[2] == False:
-                    o += self.writeXPlaneObject(xplaneObject, lod)
+                    o += xplaneObject.write()
 
             # write objects that are within that lod and in no lod, as those should appear everywhere
             elif xplaneObject.lod[lod] == True or (xplaneObject.lod[0] == False and xplaneObject.lod[1] == False and xplaneObject.lod[2] == False):
-                o += self.writeXPlaneObject(xplaneObject, lod)
+                o += xplaneObject.write()
 
         # write bone children
         for childBone in xplaneBone.children:
@@ -99,13 +98,14 @@ class XPlaneCommands():
     #
     # Returns:
     #   string - OBJ Commands for the "obj".
+    '''
     def writeXPlaneObject(self, xplaneObject, lod = -1):
         debug = getDebug()
         debugger = getDebugger()
 
         o = ''
         return o
-        '''
+
         animationStarted = False
         tabs = self.getAnimTabs(animLevel)
 

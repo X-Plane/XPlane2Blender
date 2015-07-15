@@ -1,3 +1,4 @@
+from ..xplane_config import getDebug
 from .xplane_object import XPlaneObject
 from .xplane_material import XPlaneMaterial
 
@@ -33,7 +34,7 @@ class XPlanePrimitive(XPlaneObject):
     def __init__(self, blenderObject):
         super(XPlanePrimitive,self).__init__(blenderObject)
         self.type = 'PRIMITIVE'
-        self.indices = [0,0]
+        self.indices = [0, 0]
         self.material = XPlaneMaterial(self.blenderObject)
         self.export_mesh = blenderObject.xplane.export_mesh
         self.faces = None
@@ -95,3 +96,16 @@ class XPlanePrimitive(XPlaneObject):
 
         if attr is not None:
             self.cockpitAttributes.add(XPlaneAttribute(attr,value))
+
+    def write(self):
+        debug = getDebug()
+        indent = self.xplaneBone.getIndent()
+        o = super(XPlanePrimitive, self).write()
+
+        # rendering (do not render meshes/objects with no indices)
+        if self.indices[1] > self.indices[0]:
+            offset = self.indices[0]
+            count = self.indices[1] - self.indices[0]
+            o += "%sTRIS\t%d %d\n" % (indent, offset, count)
+
+        return o

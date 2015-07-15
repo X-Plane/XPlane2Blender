@@ -223,7 +223,6 @@ class XPlaneBone():
         if postMatrix is not preMatrix:
             # write out static translations of pre animation matrix
             o += indent + 'ANIM_begin\n'
-            indent += '\t'
 
             translation = postMatrix.to_translation()
 
@@ -232,6 +231,23 @@ class XPlaneBone():
                 floatToStr(translation[1]),
                 floatToStr(translation[2])
             )
+
+        for dataref in self.animations:
+            o += self.writeKeyframes(dataref)
+
+        return o
+
+    def writeKeyframes(self, dataref):
+        keyframes = self.animations[dataref]
+        o = ''
+        indent = self.getIndent()
+
+        o += "%sANIM_trans_begin\t%s\n" % (indent, dataref)
+
+        for keyframe in keyframes:
+            o += "%sANIM_trans_key\t%6.8f\t%6.8f\t%6.8f\t%6.8f\n" % (indent, keyframe.value, keyframe.translation[0], keyframe.translation[1], keyframe.translation[2])
+
+        o += "%sANIM_trans_end\n" % indent
 
         return o
 

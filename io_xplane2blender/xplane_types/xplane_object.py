@@ -1,4 +1,5 @@
 import bpy
+from ..xplane_config import getDebug
 from ..xplane_helpers import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
@@ -76,12 +77,12 @@ class XPlaneObject():
         self.animAttributes = XPlaneAttributes()
         self.conditions = []
 
-        if hasattr(self.blenderObject.xplane,'lod'):
+        if hasattr(self.blenderObject.xplane, 'lod'):
             self.lod = self.blenderObject.xplane.lod
         else:
-            self.lod = (False,False,False)
+            self.lod = (False, False, False)
 
-        if hasattr(self.blenderObject,'type'):
+        if hasattr(self.blenderObject, 'type'):
             self.type = self.blenderObject.type
         else:
             self.type = None
@@ -187,5 +188,11 @@ class XPlaneObject():
 
     # Returns OBJ code for this object
     def write(self):
-        # TODO: implement it
-        pass
+        debug = getDebug()
+        indent = self.xplaneBone.getIndent()
+        o = ''
+
+        if debug:
+            o+="%s# %s: %s\tweight: %d\n" % (indent, self.type, self.name, self.weight)
+
+        return o
