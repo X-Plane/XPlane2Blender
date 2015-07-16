@@ -221,12 +221,17 @@ class XPlaneBone():
         postMatrix = self.getPostAnimationMatrix()
 
         if postMatrix is not preMatrix:
+            # TODO: this is most probably wrong
+            bakeMatrix = self.getBakeMatrix()
             # write out static translations of pre animation matrix
             o += indent + 'ANIM_begin\n'
 
-            translation = postMatrix.to_translation()
+            translation = bakeMatrix.to_translation()
 
-            o += indent + 'ANIM_translate\t%s\t%s\t%s\n' % (
+            o += indent + 'ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n' % (
+                floatToStr(translation[0]),
+                floatToStr(translation[1]),
+                floatToStr(translation[2]),
                 floatToStr(translation[0]),
                 floatToStr(translation[1]),
                 floatToStr(translation[2])
