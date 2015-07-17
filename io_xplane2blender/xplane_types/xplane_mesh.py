@@ -104,14 +104,14 @@ class XPlaneMesh():
 
                             if f['original_face'].use_smooth: # use smoothed vertex normal
                                 vert = [
-                                    co[0], co[1], co[2],
-                                    v.normal[0], v.normal[1], v.normal[2],
+                                    co[0], co[2], -co[1],
+                                    v.normal[0], v.normal[2], -v.normal[1],
                                     f['uv'][i][0], f['uv'][i][1]
                                 ]
                             else: # use flat face normal
                                 vert = [
-                                    co[0], co[1], co[2],
-                                    f['original_face'].normal[0], f['original_face'].normal[1], f['original_face'].normal[2],
+                                    co[0], co[2], -co[1],
+                                    f['original_face'].normal[0], f['original_face'].normal[2], -f['original_face'].normal[1],
                                     f['uv'][i][0], f['uv'][i][1]
                                 ]
 

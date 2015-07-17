@@ -9,6 +9,7 @@ class TestWriteXPlaneFiles(XPlaneTestCase):
     def setUp(self):
         super(TestWriteXPlaneFiles, self).setUp()
 
+
     def test_write_static(self):
         tmpDir = os.path.realpath(os.path.join(__file__, '../../../tmp'))
         tmpFile = os.path.join(tmpDir, 'test_write_static.obj')
@@ -19,6 +20,7 @@ class TestWriteXPlaneFiles(XPlaneTestCase):
         outFile = open(tmpFile, 'w')
         outFile.write(out)
         outFile.close()
+
 
     def test_write_animated(self):
         tmpDir = os.path.realpath(os.path.join(__file__, '../../../tmp'))

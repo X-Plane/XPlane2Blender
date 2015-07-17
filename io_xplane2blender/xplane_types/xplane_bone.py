@@ -1,6 +1,7 @@
 # import bpy
 # import math
 import mathutils
+import math
 from .xplane_keyframe import XPlaneKeyframe
 from ..xplane_config import getDebugger, getDebug
 from ..xplane_helpers import floatToStr
@@ -217,6 +218,9 @@ class XPlaneBone():
         if debug:
             o += indent + '# ' + self.getName() + '\n'
 
+        if not self.isAnimated():
+            return o
+
         preMatrix = self.getPreAnimationMatrix()
         postMatrix = self.getPostAnimationMatrix()
 
@@ -230,11 +234,11 @@ class XPlaneBone():
 
             o += indent + 'ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n' % (
                 floatToStr(translation[0]),
-                floatToStr(translation[1]),
                 floatToStr(translation[2]),
+                floatToStr(-translation[1]),
                 floatToStr(translation[0]),
-                floatToStr(translation[1]),
-                floatToStr(translation[2])
+                floatToStr(translation[2]),
+                floatToStr(-translation[1])
             )
 
         for dataref in self.animations:
@@ -250,9 +254,46 @@ class XPlaneBone():
         o += "%sANIM_trans_begin\t%s\n" % (indent, dataref)
 
         for keyframe in keyframes:
-            o += "%sANIM_trans_key\t%6.8f\t%6.8f\t%6.8f\t%6.8f\n" % (indent, keyframe.value, keyframe.translation[0], keyframe.translation[1], keyframe.translation[2])
+            o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
+                indent, floatToStr(keyframe.value),
+                floatToStr(keyframe.location[0]),
+                floatToStr(keyframe.location[2]),
+                floatToStr(-keyframe.location[1])
+            )
 
         o += "%sANIM_trans_end\n" % indent
+
+        eulerAxisMap = {
+            'ZYX': (2, 1, 0),
+            'ZXY': (2, 0, 1),
+            'YZX': (1, 2, 0),
+            'YXZ': (1, 0, 2),
+            'XZY': (0, 2, 1),
+            'XYZ': (0, 1, 2)
+        }
+
+        eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
+
+        rotationMode = keyframes[0].rotationMode
+        axes = eulerAxisMap[rotationMode]
+
+        for axis in axes:
+            o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
+                indent,
+                floatToStr(eulerAxes[axis][0]),
+                floatToStr(eulerAxes[axis][2]),
+                floatToStr(-eulerAxes[axis][1]),
+                dataref
+            )
+
+            for keyframe in keyframes:
+                o += "%sANIM_rotate_key\t%s\t%s\n" % (
+                    indent,
+                    floatToStr(keyframe.value),
+                    floatToStr(math.degrees(keyframe.rotation[axis]))
+                )
+
+            o += "%sANIM_rotate_end\n" % indent
 
         return o
 

@@ -37,7 +37,7 @@ class XPlaneLights():
             co = light.blenderObject.location
 
             self.lines.append("VLIGHT\t%s\t%s\t%s\t%s\t%s\t%s" % (
-                floatToStr(co[0]), floatToStr(co[1]), floatToStr(co[2]),
+                floatToStr(co[0]), floatToStr(co[2]), floatToStr(-co[1]),
                 floatToStr(light.color[0]), floatToStr(light.color[1]), floatToStr(light.color[2])
             ))
             self.indices.append(self.globalindex)

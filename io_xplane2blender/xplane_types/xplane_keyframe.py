@@ -57,6 +57,7 @@ class XPlaneKeyframe():
         self.rotation = None
         self.rotationMode = blenderObject.rotation_mode
 
+        # TODO: rotationMode should reside in keyframes collection as it is the same for each keyframe
         if self.rotationMode == 'QUATERNION':
             self.rotation = blenderObject.rotation_quaternion.copy()
         elif self.rotationMode == 'AXIS_ANGLE':
