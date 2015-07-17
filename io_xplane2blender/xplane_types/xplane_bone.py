@@ -179,8 +179,8 @@ class XPlaneBone():
             return mathutils.Matrix.Identity(4)
 
         if self.blenderBone:
-            # TODO: what is the world matrix of a bone?
-            return None
+            # TODO: is this the correct multi order?
+            return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
         elif self.blenderObject:
             return self.blenderObject.matrix_world.copy()
 
@@ -225,9 +225,8 @@ class XPlaneBone():
         postMatrix = self.getPostAnimationMatrix()
 
         if postMatrix is not preMatrix:
-            # TODO: this is most probably wrong
             bakeMatrix = self.getBakeMatrix()
-            # write out static translations of pre animation matrix
+            # write out static translations of bake
             o += indent + 'ANIM_begin\n'
 
             translation = bakeMatrix.to_translation()
@@ -240,6 +239,9 @@ class XPlaneBone():
                 floatToStr(translation[2]),
                 floatToStr(-translation[1])
             )
+
+            # TODO - convert rotation of bakeMatrix to known
+            # order EULER and write static rotations - up to 3 of them.
 
         for dataref in self.animations:
             o += self.writeKeyframes(dataref)
@@ -263,6 +265,8 @@ class XPlaneBone():
 
         o += "%sANIM_trans_end\n" % indent
 
+        rotationMode = keyframes[0].rotationMode
+
         eulerAxisMap = {
             'ZYX': (2, 1, 0),
             'ZXY': (2, 0, 1),
@@ -271,18 +275,17 @@ class XPlaneBone():
             'XZY': (0, 2, 1),
             'XYZ': (0, 1, 2)
         }
-
         eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
 
-        rotationMode = keyframes[0].rotationMode
-        axes = eulerAxisMap[rotationMode]
+        if rotationMode == 'AXIS_ANGLE':
+            # TODO: be sure, axis angle axis does not change during keyframes
+            axisAngle = (keyframes[0].rotation[1], keyframes[0].rotation[2], keyframes[0].rotation[3])
 
-        for axis in axes:
             o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
                 indent,
-                floatToStr(eulerAxes[axis][0]),
-                floatToStr(eulerAxes[axis][2]),
-                floatToStr(-eulerAxes[axis][1]),
+                floatToStr(axisAngle[0]),
+                floatToStr(axisAngle[2]),
+                floatToStr(-axisAngle[1]),
                 dataref
             )
 
@@ -290,10 +293,50 @@ class XPlaneBone():
                 o += "%sANIM_rotate_key\t%s\t%s\n" % (
                     indent,
                     floatToStr(keyframe.value),
-                    floatToStr(math.degrees(keyframe.rotation[axis]))
+                    floatToStr(math.degrees(keyframe.rotation[0]))
                 )
 
             o += "%sANIM_rotate_end\n" % indent
+
+        elif rotationMode == 'QUATERNION':
+            # TODO: convert to axis angle
+            # http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
+            # public void set(Quat4d q1) {
+            #    if (q1.w > 1) q1.normalise(); // if w>1 acos and sqrt will produce errors, this cant happen if quaternion is normalised
+            #    angle = 2 * Math.acos(q1.w);
+            #    double s = Math.sqrt(1-q1.w*q1.w); // assuming quaternion normalised then w is less than 1, so term always positive.
+            #    if (s < 0.001) { // test to avoid divide by zero, s is always positive due to sqrt
+            #      // if s close to zero then direction of axis not important
+            #      x = q1.x; // if it is important that axis is normalised then replace with x=1; y=z=0;
+            #      y = q1.y;
+            #      z = q1.z;
+            #    } else {
+            #      x = q1.x / s; // normalise axis
+            #      y = q1.y / s;
+            #      z = q1.z / s;
+            #    }
+            # }
+            pass
+        else:
+            axes = eulerAxisMap[rotationMode]
+
+            for axis in axes:
+                o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
+                    indent,
+                    floatToStr(eulerAxes[axis][0]),
+                    floatToStr(eulerAxes[axis][2]),
+                    floatToStr(-eulerAxes[axis][1]),
+                    dataref
+                )
+
+                for keyframe in keyframes:
+                    o += "%sANIM_rotate_key\t%s\t%s\n" % (
+                        indent,
+                        floatToStr(keyframe.value),
+                        floatToStr(math.degrees(keyframe.rotation[axis]))
+                    )
+
+                o += "%sANIM_rotate_end\n" % indent
 
         return o
 

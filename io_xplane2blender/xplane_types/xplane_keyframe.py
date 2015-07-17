@@ -61,7 +61,8 @@ class XPlaneKeyframe():
         if self.rotationMode == 'QUATERNION':
             self.rotation = blenderObject.rotation_quaternion.copy()
         elif self.rotationMode == 'AXIS_ANGLE':
-            self.rotation = blenderObject.rotation_axis_angle.copy()
+            rot = blenderObject.rotation_axis_angle
+            self.rotation = (rot[0], rot[1], rot[2], rot[3])
         else:
             self.rotation = blenderObject.rotation_euler.copy()
 
