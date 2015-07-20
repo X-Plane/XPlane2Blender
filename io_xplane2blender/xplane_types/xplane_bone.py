@@ -231,6 +231,9 @@ class XPlaneBone():
 
             translation = bakeMatrix.to_translation()
 
+            if debug:
+                o += indent + '# static translation\n'
+
             o += indent + 'ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n' % (
                 floatToStr(translation[0]),
                 floatToStr(translation[2]),
@@ -240,18 +243,38 @@ class XPlaneBone():
                 floatToStr(-translation[1])
             )
 
-            # TODO - convert rotation of bakeMatrix to known
-            # order EULER and write static rotations - up to 3 of them.
+            if debug:
+                o += indent + '# static rotation\n'
+
+            rotation = bakeMatrix.to_euler('XYZ')
+            axes = (0, 2, 1)
+            eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
+            i = 0
+
+            for axis in eulerAxes:
+                deg = math.degrees(rotation[axes[i]])
+                o += indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
+                    floatToStr(axis[0]),
+                    floatToStr(axis[2]),
+                    floatToStr(-axis[1]),
+                    floatToStr(deg), floatToStr(deg)
+                )
+
+                i += 1
 
         for dataref in self.animations:
             o += self.writeKeyframes(dataref)
 
         return o
 
-    def writeKeyframes(self, dataref):
+    def writeTranslationKeyframes(self, dataref):
+        debug = getDebug()
         keyframes = self.animations[dataref]
         o = ''
         indent = self.getIndent()
+
+        if debug:
+            o += indent + '# translation keyframes\n'
 
         o += "%sANIM_trans_begin\t%s\n" % (indent, dataref)
 
@@ -265,8 +288,66 @@ class XPlaneBone():
 
         o += "%sANIM_trans_end\n" % indent
 
-        rotationMode = keyframes[0].rotationMode
+        return o
 
+    def _writeAxisAngleRotationKeyframes(self, dataref):
+        o = ''
+        indent = self.getIndent()
+        keyframes = self.animations[dataref]
+
+        # TODO: be sure, axis angle axis does not change during keyframes
+        axisAngle = (keyframes[0].rotation[1], keyframes[0].rotation[2], keyframes[0].rotation[3])
+
+        o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
+            indent,
+            floatToStr(axisAngle[0]),
+            floatToStr(axisAngle[2]),
+            floatToStr(-axisAngle[1]),
+            dataref
+        )
+
+        for keyframe in keyframes:
+            o += "%sANIM_rotate_key\t%s\t%s\n" % (
+                indent,
+                floatToStr(keyframe.value),
+                floatToStr(math.degrees(keyframe.rotation[0]))
+            )
+
+        o += "%sANIM_rotate_end\n" % indent
+
+        return o
+
+    def _writeQuaternionRotationKeyframes(self, dataref):
+        debug = getDebug()
+        keyframes = self.animations[dataref]
+        o = ''
+        indent = self.getIndent()
+
+        # TODO: convert to axis angle
+        # http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
+        # public void set(Quat4d q1) {
+        #    if (q1.w > 1) q1.normalise(); // if w>1 acos and sqrt will produce errors, this cant happen if quaternion is normalised
+        #    angle = 2 * Math.acos(q1.w);
+        #    double s = Math.sqrt(1-q1.w*q1.w); // assuming quaternion normalised then w is less than 1, so term always positive.
+        #    if (s < 0.001) { // test to avoid divide by zero, s is always positive due to sqrt
+        #      // if s close to zero then direction of axis not important
+        #      x = q1.x; // if it is important that axis is normalised then replace with x=1; y=z=0;
+        #      y = q1.y;
+        #      z = q1.z;
+        #    } else {
+        #      x = q1.x / s; // normalise axis
+        #      y = q1.y / s;
+        #      z = q1.z / s;
+        #    }
+        # }
+        return o
+
+    def _writeEulerRotationKeyframes(self, dataref):
+        debug = getDebug()
+        keyframes = self.animations[dataref]
+        o = ''
+        indent = self.getIndent()
+        rotationMode = keyframes[0].rotationMode
         eulerAxisMap = {
             'ZYX': (2, 1, 0),
             'ZXY': (2, 0, 1),
@@ -276,16 +357,14 @@ class XPlaneBone():
             'XYZ': (0, 1, 2)
         }
         eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
+        axes = eulerAxisMap[rotationMode]
 
-        if rotationMode == 'AXIS_ANGLE':
-            # TODO: be sure, axis angle axis does not change during keyframes
-            axisAngle = (keyframes[0].rotation[1], keyframes[0].rotation[2], keyframes[0].rotation[3])
-
+        for axis in axes:
             o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
                 indent,
-                floatToStr(axisAngle[0]),
-                floatToStr(axisAngle[2]),
-                floatToStr(-axisAngle[1]),
+                floatToStr(eulerAxes[axis][0]),
+                floatToStr(eulerAxes[axis][2]),
+                floatToStr(-eulerAxes[axis][1]),
                 dataref
             )
 
@@ -293,50 +372,37 @@ class XPlaneBone():
                 o += "%sANIM_rotate_key\t%s\t%s\n" % (
                     indent,
                     floatToStr(keyframe.value),
-                    floatToStr(math.degrees(keyframe.rotation[0]))
+                    floatToStr(math.degrees(keyframe.rotation[axis]))
                 )
 
             o += "%sANIM_rotate_end\n" % indent
 
+        return o
+
+    def writeRotationKeyframes(self, dataref):
+        debug = getDebug()
+        keyframes = self.animations[dataref]
+        o = ''
+        indent = self.getIndent()
+
+        if debug:
+            o += indent + '# rotation keyframes\n'
+
+        rotationMode = keyframes[0].rotationMode
+
+        if rotationMode == 'AXIS_ANGLE':
+            o += self._writeAxisAngleRotationKeyframes(dataref)
         elif rotationMode == 'QUATERNION':
-            # TODO: convert to axis angle
-            # http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
-            # public void set(Quat4d q1) {
-            #    if (q1.w > 1) q1.normalise(); // if w>1 acos and sqrt will produce errors, this cant happen if quaternion is normalised
-            #    angle = 2 * Math.acos(q1.w);
-            #    double s = Math.sqrt(1-q1.w*q1.w); // assuming quaternion normalised then w is less than 1, so term always positive.
-            #    if (s < 0.001) { // test to avoid divide by zero, s is always positive due to sqrt
-            #      // if s close to zero then direction of axis not important
-            #      x = q1.x; // if it is important that axis is normalised then replace with x=1; y=z=0;
-            #      y = q1.y;
-            #      z = q1.z;
-            #    } else {
-            #      x = q1.x / s; // normalise axis
-            #      y = q1.y / s;
-            #      z = q1.z / s;
-            #    }
-            # }
-            pass
+            o += self._writeQuaternionRotationKeyframes(dataref)
         else:
-            axes = eulerAxisMap[rotationMode]
+            o += self._writeEulerRotationKeyframes(dataref)
 
-            for axis in axes:
-                o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
-                    indent,
-                    floatToStr(eulerAxes[axis][0]),
-                    floatToStr(eulerAxes[axis][2]),
-                    floatToStr(-eulerAxes[axis][1]),
-                    dataref
-                )
+        return o
 
-                for keyframe in keyframes:
-                    o += "%sANIM_rotate_key\t%s\t%s\n" % (
-                        indent,
-                        floatToStr(keyframe.value),
-                        floatToStr(math.degrees(keyframe.rotation[axis]))
-                    )
-
-                o += "%sANIM_rotate_end\n" % indent
+    def writeKeyframes(self, dataref):
+        o = ''
+        o += self.writeTranslationKeyframes(dataref)
+        o += self.writeRotationKeyframes(dataref)
 
         return o
 
