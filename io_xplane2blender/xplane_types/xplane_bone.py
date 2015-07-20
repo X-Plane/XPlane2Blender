@@ -154,7 +154,10 @@ class XPlaneBone():
         return None
 
     def getIndent(self):
-        return ''.ljust(self.level, '\t')
+        if self.level == 0:
+            return  ''
+
+        return ''.ljust(self.level - 1, '\t')
 
     def toString(self, indent = ''):
         out = indent + self.getName() + '\n'
@@ -436,6 +439,9 @@ class XPlaneBone():
 
     def writeAnimationSuffix(self):
         o = ''
+
+        if not self.isAnimated():
+            return o
 
         # unanimated bones do not export any suffix
         preMatrix = self.getPreAnimationMatrix()
