@@ -210,8 +210,6 @@ class XPlaneBone():
 
     def writeAnimationPrefix(self):
         debug = getDebug()
-        debugger = getDebugger
-
         indent = self.getIndent()
         o = ''
 
@@ -229,45 +227,72 @@ class XPlaneBone():
             # write out static translations of bake
             o += indent + 'ANIM_begin\n'
 
-            translation = bakeMatrix.to_translation()
-
-            if debug:
-                o += indent + '# static translation\n'
-
-            o += indent + 'ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n' % (
-                floatToStr(translation[0]),
-                floatToStr(translation[2]),
-                floatToStr(-translation[1]),
-                floatToStr(translation[0]),
-                floatToStr(translation[2]),
-                floatToStr(-translation[1])
-            )
-
-            if debug:
-                o += indent + '# static rotation\n'
-
-            rotation = bakeMatrix.to_euler('XYZ')
-            axes = (0, 2, 1)
-            eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
-            i = 0
-
-            for axis in eulerAxes:
-                deg = math.degrees(rotation[axes[i]])
-                o += indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
-                    floatToStr(axis[0]),
-                    floatToStr(axis[2]),
-                    floatToStr(-axis[1]),
-                    floatToStr(deg), floatToStr(deg)
-                )
-
-                i += 1
+            o += self._writeStaticTranslation(bakeMatrix)
+            o += self._writeStaticRotation(bakeMatrix)
 
         for dataref in self.animations:
             o += self.writeKeyframes(dataref)
 
         return o
 
-    def writeTranslationKeyframes(self, dataref):
+    def _writeStaticTranslation(self, bakeMatrix):
+        debug = getDebug()
+        indent = self.getIndent()
+        o = ''
+        bakeMatrix = bakeMatrix or self.getBakeMatrix()
+
+        translation = bakeMatrix.to_translation()
+
+        # ignore noop translations
+        if translation[0] == 0 and translation[1] == 0 and translation[2] == 0:
+           return o
+
+        if debug:
+            o += indent + '# static translation\n'
+
+        o += indent + 'ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n' % (
+            floatToStr(translation[0]),
+            floatToStr(translation[2]),
+            floatToStr(-translation[1]),
+            floatToStr(translation[0]),
+            floatToStr(translation[2]),
+            floatToStr(-translation[1])
+        )
+
+        return o
+
+    def _writeStaticRotation(self, bakeMatrix):
+        debug = getDebug()
+        indent = self.getIndent()
+        o = ''
+        bakeMatrix = bakeMatrix or self.getBakeMatrix()
+        rotation = bakeMatrix.to_euler('XYZ')
+
+        # ignore noop rotations
+        if rotation[0] == 0 and rotation[1] == 0 and rotation[2] == 0:
+            return o
+
+        if debug:
+            o += indent + '# static rotation\n'
+
+        axes = (0, 2, 1)
+        eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
+        i = 0
+
+        for axis in eulerAxes:
+            deg = math.degrees(rotation[axes[i]])
+            o += indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
+                floatToStr(axis[0]),
+                floatToStr(axis[2]),
+                floatToStr(-axis[1]),
+                floatToStr(deg), floatToStr(deg)
+            )
+
+            i += 1
+
+        return o
+
+    def _writeTranslationKeyframes(self, dataref):
         debug = getDebug()
         keyframes = self.animations[dataref]
         o = ''
@@ -322,6 +347,9 @@ class XPlaneBone():
         keyframes = self.animations[dataref]
         o = ''
         indent = self.getIndent()
+
+        if debug:
+            o += indent + '# WARNING: Quaternion rotations are not supported yet (Please use Axis Angle or Euler instead)\n'
 
         # TODO: convert to axis angle
         # http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
@@ -379,7 +407,7 @@ class XPlaneBone():
 
         return o
 
-    def writeRotationKeyframes(self, dataref):
+    def _writeRotationKeyframes(self, dataref):
         debug = getDebug()
         keyframes = self.animations[dataref]
         o = ''
@@ -401,8 +429,8 @@ class XPlaneBone():
 
     def writeKeyframes(self, dataref):
         o = ''
-        o += self.writeTranslationKeyframes(dataref)
-        o += self.writeRotationKeyframes(dataref)
+        o += self._writeTranslationKeyframes(dataref)
+        o += self._writeRotationKeyframes(dataref)
 
         return o
 
