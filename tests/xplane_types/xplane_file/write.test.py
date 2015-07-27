@@ -20,9 +20,9 @@ class TestWriteXPlaneFiles(XPlaneTestCase):
         outFile.write(out)
         outFile.close()
 
-    def test_write_animated(self):
+    def test_write_trans_animated(self):
         tmpDir = os.path.realpath(os.path.join(__file__, '../../../tmp'))
-        tmpFile = os.path.join(tmpDir, 'test_write_anim.obj')
+        tmpFile = os.path.join(tmpDir, 'test_write_trans_anim.obj')
 
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(1)
         out = xplaneFile.write()
@@ -30,5 +30,17 @@ class TestWriteXPlaneFiles(XPlaneTestCase):
         outFile = open(tmpFile, 'w')
         outFile.write(out)
         outFile.close()
+
+    def test_write_transrot_animated(self):
+        tmpDir = os.path.realpath(os.path.join(__file__, '../../../tmp'))
+        tmpFile = os.path.join(tmpDir, 'test_write_transrot_anim.obj')
+
+        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(2)
+        out = xplaneFile.write()
+        print(out)
+        outFile = open(tmpFile, 'w')
+        outFile.write(out)
+        outFile.close()
+
 
 runTestCases([TestWriteXPlaneFiles])

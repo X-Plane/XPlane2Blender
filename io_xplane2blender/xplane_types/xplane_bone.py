@@ -192,8 +192,8 @@ class XPlaneBone():
             # not animated objects have own world matrix
             return self.getBlenderWorldMatrix()
         else:
-            # animated objects have parents world matrix
-            return self.parent.getBlenderWorldMatrix()
+            # animated objects have parents world matrix * inverse of parents matrix
+            return self.parent.getBlenderWorldMatrix() * self.blenderObject.matrix_parent_inverse
 
     def getPostAnimationMatrix(self):
         # for non-animated or root bones, post = pre
@@ -224,9 +224,9 @@ class XPlaneBone():
 
         preMatrix = self.getPreAnimationMatrix()
         postMatrix = self.getPostAnimationMatrix()
+        bakeMatrix = self.getBakeMatrix()
 
         if postMatrix is not preMatrix:
-            bakeMatrix = self.getBakeMatrix()
             # write out static translations of bake
             o += indent + 'ANIM_begin\n'
 
@@ -236,19 +236,28 @@ class XPlaneBone():
         for dataref in self.animations:
             o += self.writeKeyframes(dataref)
 
+        if postMatrix is not preMatrix:
+            # revert static translations needed for correct rotation origin
+            o += self._writeStaticTranslation(bakeMatrix, True)
+
         return o
 
-    def _writeStaticTranslation(self, bakeMatrix):
+    def _writeStaticTranslation(self, bakeMatrix, reverse = False):
         debug = getDebug()
         indent = self.getIndent()
         o = ''
+
         bakeMatrix = bakeMatrix or self.getBakeMatrix()
 
         translation = bakeMatrix.to_translation()
 
         # ignore noop translations
         if translation[0] == 0 and translation[1] == 0 and translation[2] == 0:
-           return o
+            return o
+
+        if reverse:
+            for i in range(0, 3):
+               translation[i] = -translation[i]
 
         if debug:
             o += indent + '# static translation\n'
@@ -284,6 +293,7 @@ class XPlaneBone():
 
         for axis in eulerAxes:
             deg = math.degrees(rotation[axes[i]])
+
             o += indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
                 floatToStr(axis[0]),
                 floatToStr(axis[2]),
