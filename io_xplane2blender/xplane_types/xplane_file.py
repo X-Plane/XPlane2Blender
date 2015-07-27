@@ -101,10 +101,10 @@ class XPlaneFile():
         blenderObjects = []
 
         for blenderObject in bpy.context.scene.objects:
-            for i in range(len(blenderObject.layers)):
-                if debug:
-                    debugger.debug("scanning %s" % blenderObject.name)
+            if debug:
+                debugger.debug("scanning %s" % blenderObject.name)
 
+            for i in range(len(blenderObject.layers)):
                 if blenderObject.layers[i] == True and i == layerIndex and blenderObject.hide == False:
                     blenderObjects.append(blenderObject)
 
