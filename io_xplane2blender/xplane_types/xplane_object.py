@@ -87,29 +87,11 @@ class XPlaneObject():
         else:
             self.type = None
 
+        if hasattr(self.blenderObject.xplane, 'datarefs'):
+            for i, dataref in self.blenderObject.xplane.datarefs.items():
+                self.datarefs[dataref.path] = dataref
+
         self.getWeight()
-
-    # Method: getMatrix
-    # Returns the matrix of <object>.
-    # This is a simple wrapper function and becomes more complex in inheritted classes.
-    # So please use it instead of directly accessing object matrices.
-    #
-    # Parameters:
-    #   bool world - (default=False) True if the world matrix should be returned.
-    def getMatrix(self, world = False):
-        if world:
-            return self.blenderObject.matrix_world
-        else:
-            return self.blenderObject.matrix_local
-
-    # Method: update
-    # A wrapper function to update the display/coordinates of the <object> after switching of frames.
-    # Since Blender r35028 this function does nothing anymore, as updating seems to be done by Blender already.
-    def update(self):
-        pass
-#        if self.parent!=None and self.parent.type!='BONE':
-#            self.parent.object.update()
-#        self.blenderObject.update()
 
     # Method: hasAnimAttributes
     # Checks if the object has animation attributes.
@@ -117,13 +99,14 @@ class XPlaneObject():
     # Returns:
     #   bool - True if object has animtaion attributes, False if not.
     def hasAnimAttributes(self):
-        return (hasattr(self,'animAttributes') and len(self.animAttributes)>0)
+        return (hasattr(self, 'animAttributes') and len(self.animAttributes) > 0)
 
     def getCustomAttributes(self):
         for attr in self.blenderObject.xplane.customAttributes:
-            self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
+            self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
             self.reseters[attr.name] = attr.reset
-        if hasattr(self.blenderObject,"data") and hasattr(self.blenderObject.data,"xplane") and hasattr(self.blenderObject.data.xplane,"customAttributes"):
+
+        if hasattr(self.blenderObject, "data") and hasattr(self.blenderObject.data, "xplane") and hasattr(self.blenderObject.data.xplane, "customAttributes"):
             for attr in self.blenderObject.data.xplane.customAttributes:
                 self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
                 self.reseters[attr.name] = attr.reset
@@ -131,15 +114,15 @@ class XPlaneObject():
     def getAnimAttributes(self):
         # add custom anim attributes
         for attr in self.blenderObject.xplane.customAnimAttributes:
-            self.animAttributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
+            self.animAttributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
 
         # add anim attributes from datarefs
         for dataref in self.blenderObject.xplane.datarefs:
             # show/hide animation
-            if dataref.anim_type in ("show","hide"):
+            if dataref.anim_type in ("show", "hide"):
                 name = 'ANIM_'+dataref.anim_type
-                value = "%6.8f\t%6.8f\t%s" % (dataref.show_hide_v1,dataref.show_hide_v2,dataref.path)
-                self.animAttributes.add(XPlaneAttribute(name,value))
+                value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
+                self.animAttributes.add(XPlaneAttribute(name, value))
 
     # Method: getWeight
     #
@@ -148,31 +131,32 @@ class XPlaneObject():
     def getWeight(self):
         weight = 0
 
-        if hasattr(self.blenderObject.xplane,'override_weight') and self.blenderObject.xplane.override_weight:
+        if hasattr(self.blenderObject.xplane, 'override_weight') and self.blenderObject.xplane.override_weight:
             weight = self.blenderObject.xplane.weight
         else:
+            # TODO: set initial weight in constructor
             if self.type=='LIGHT':
                 weight = 10000
             elif self.type=='LINE':
                 weight = 9000
             else:
-                if hasattr(self,'material'):
-                    for i in range(0,len(bpy.data.materials)):
-                        if len(self.blenderObject.data.materials)>0 and self.blenderObject.data.materials[0] == bpy.data.materials[i]:
+                if hasattr(self, 'material'):
+                    for i in range(0, len(bpy.data.materials)):
+                        if len(self.blenderObject.data.materials) > 0 and self.blenderObject.data.materials[0] == bpy.data.materials[i]:
                             weight = i
 
             # add max weight of attributes
             max_attr_weight = 0
 
             for attr in self.attributes:
-                if self.attributes[attr].weight>max_attr_weight:
+                if self.attributes[attr].weight > max_attr_weight:
                     max_attr_weight = self.attributes[attr].weight
 
             for attr in self.cockpitAttributes:
-                if self.cockpitAttributes[attr].weight>max_attr_weight:
+                if self.cockpitAttributes[attr].weight > max_attr_weight:
                     max_attr_weight = self.cockpitAttributes[attr].weight
 
-            weight+=max_attr_weight
+            weight += max_attr_weight
 
             # add 1000 to weight on animated objects, so they are all grouped
             # TODO: decide if this is neccessary as it would interrupt grouping by material and animations are fairly cheap.
@@ -180,7 +164,6 @@ class XPlaneObject():
 #                weight+=1000
 
         self.weight = weight
-
 
     def getConditions(self):
         if self.blenderObject.xplane.conditions:
@@ -193,6 +176,6 @@ class XPlaneObject():
         o = ''
 
         if debug:
-            o+="%s# %s: %s\tweight: %d\n" % (indent, self.type, self.name, self.weight)
+            o += "%s# %s: %s\tweight: %d\n" % (indent, self.type, self.name, self.weight)
 
         return o

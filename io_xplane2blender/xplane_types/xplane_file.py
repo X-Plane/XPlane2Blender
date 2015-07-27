@@ -146,6 +146,7 @@ class XPlaneFile():
                 xplaneObject = self.objects[blenderObject.name]
 
             bone = XPlaneBone(blenderObject, xplaneObject, parentBone)
+            bone.xplaneFile = self
             parentBone.children.append(bone)
 
             bone.collectAnimations()
@@ -170,6 +171,7 @@ class XPlaneFile():
 
         for blenderBone in blenderBones:
             bone = XPlaneBone(blenderArmature, None, parentBone)
+            bone.xplaneFile = self
             bone.blenderBone = blenderBone
             parentBone.children.append(bone)
 

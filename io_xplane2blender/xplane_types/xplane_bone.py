@@ -21,6 +21,7 @@ class XPlaneBone():
         self.blenderObject = blenderObject
         self.blenderBone = None
         self.parent = parent
+        self.xplaneFile = None
         self.children = []
 
         if self.xplaneObject:
@@ -305,6 +306,18 @@ class XPlaneBone():
 
         return o
 
+    def _writeKeyframesLoop(self, dataref):
+        o = ''
+
+        if self.xplaneObject and self.xplaneObject.datarefs[dataref].loop > 0:
+            indent = self.getIndent()
+            o += "%s\tANIM_keyframe_loop\t%s\n" % (
+                indent,
+                self.xplaneObject.datarefs[dataref].loop
+            )
+
+        return o
+
     def _writeTranslationKeyframes(self, dataref):
         debug = getDebug()
         keyframes = self.animations[dataref]
@@ -324,6 +337,7 @@ class XPlaneBone():
                 floatToStr(-keyframe.location[1])
             )
 
+        o += self._writeKeyframesLoop(dataref)
         o += "%sANIM_trans_end\n" % indent
 
         return o
@@ -351,6 +365,7 @@ class XPlaneBone():
                 floatToStr(math.degrees(keyframe.rotation[0]))
             )
 
+        o += self._writeKeyframesLoop(dataref)
         o += "%sANIM_rotate_end\n" % indent
 
         return o
@@ -416,6 +431,7 @@ class XPlaneBone():
                     floatToStr(math.degrees(keyframe.rotation[axis]))
                 )
 
+            o += self._writeKeyframesLoop(dataref)
             o += "%sANIM_rotate_end\n" % indent
 
         return o

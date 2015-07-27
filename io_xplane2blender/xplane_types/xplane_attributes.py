@@ -4,15 +4,15 @@ from collections import OrderedDict
 # A Wrapper for OrderedDict that stores a collection of <XPlaneAttribute>.
 class XPlaneAttributes(OrderedDict):
     def __init__(self):
-        super(XPlaneAttributes,self).__init__()
+        super(XPlaneAttributes, self).__init__()
 
     # Method: order
     # Sorts items by weight.
     def order(self):
         max_weight = 0
         for name in self:
-            if self[name].weight>max_weight:
-                self.move_to_end(name,True)
+            if self[name].weight > max_weight:
+                self.move_to_end(name, True)
                 max_weight = self[name].weight
 
     # Method: add
@@ -20,7 +20,7 @@ class XPlaneAttributes(OrderedDict):
     #
     # Parameters:
     #   attr - A <XPlaneAttribute>
-    def add(self,attr):
+    def add(self, attr):
         if attr.name in self:
             self[attr.name].addValues(attr.getValues())
         else:
@@ -34,7 +34,7 @@ class XPlaneAttributes(OrderedDict):
     #
     # Returns:
     #   a <XPlaneAttribute> or None
-    def get(self,name):
+    def get(self, name):
         if name in self:
             return self[name]
         else:
@@ -45,6 +45,6 @@ class XPlaneAttributes(OrderedDict):
     #
     # Paramters:
     #   attr - A <XPlaneAttribute>
-    def set(self,attr):
+    def set(self, attr):
         if attr.name in self:
             self[attr.name] = attr
