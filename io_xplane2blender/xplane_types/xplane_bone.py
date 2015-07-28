@@ -192,7 +192,17 @@ class XPlaneBone():
         if not self.isAnimated() or self.parent == None:
             # not animated objects have own world matrix
             return self.getBlenderWorldMatrix()
-        else:
+        elif self.blenderBone:
+            # TODO: what is the equivalent to .parent.matrix_parent_inverse for bones?
+            parent_matrix = None
+            
+            if self.blenderBone.parent:
+                parent_matrix = self.blenderBone.parent.matrix
+            else:
+                parent_matrix = self.blenderObject.matrix_local
+
+            return self.parent.getBlenderWorldMatrix() * parent_matrix.inverted_safe()
+        elif self.blenderObject:
             # animated objects have parents world matrix * inverse of parents matrix
             return self.parent.getBlenderWorldMatrix() * self.blenderObject.matrix_parent_inverse
 
