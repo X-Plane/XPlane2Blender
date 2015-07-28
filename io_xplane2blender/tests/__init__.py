@@ -1,8 +1,10 @@
 import bpy
 import unittest
 import sys
-from ..xplane_types import XPlanePrimitive
-from ..xplane_config import setDebug
+import os
+from ..xplane_types import xplane_file, XPlanePrimitive
+from ..xplane_config import setDebug, getDebug
+from .animation_file_mappings import mappings
 
 EPSILON = sys.float_info.epsilon
 
@@ -90,8 +92,8 @@ class XPlaneTestCase(unittest.TestCase):
 
         # if a filter function is provided, additionally filter lines with it
         if filterCallback:
-            linesA = filter(filterCallback, linesA)
-            linesB = filter(filterCallback, linesB)
+            linesA = list(filter(filterCallback, linesA))
+            linesB = list(filter(filterCallback, linesB))
 
         # ensure same number of lines
         self.assertEquals(len(linesA), len(linesB))
@@ -119,6 +121,30 @@ class XPlaneTestCase(unittest.TestCase):
         fixtureFile.close()
 
         return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
+
+class XPlaneAnimationTestCase(XPlaneTestCase):
+    def setUp(self):
+        super(XPlaneAnimationTestCase, self).setUp()
+
+    def runAnimationTestCase(self, name, __dirname__):
+        self.assertTrue(mappings[name])
+
+        def filterLine(line):
+            # only keep ANIM_ lines
+            return isinstance(line[0], str) and line[0].find('ANIM_') == 0
+
+        for layer in mappings[name]:
+            print('Testing animations against fixture "%s"' % mappings[name][layer])
+
+            xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+
+            self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))
+
+            out = xplaneFile.write()
+            fixtureFile = os.path.join(__dirname__, mappings[name][layer])
+
+            self.assertTrue(os.path.exists(fixtureFile), 'File "%s" does not exits' % fixtureFile)
+            self.assertFileEqualsFixture(out, fixtureFile, filterLine)
 
 def runTestCases(testCases):
     for testCase in testCases:
