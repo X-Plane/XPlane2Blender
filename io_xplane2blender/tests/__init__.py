@@ -126,6 +126,23 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
     def setUp(self):
         super(XPlaneAnimationTestCase, self).setUp()
 
+    def exportAnimationTestCase(self, name, dest):
+        self.assertTrue(mappings[name])
+
+        for layer in mappings[name]:
+            outFile = os.path.join(dest, os.path.basename(mappings[name][layer]))
+            print('Exporting to "%s"' % outFile)
+
+            xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+
+            self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))
+
+            out = xplaneFile.write()
+
+            outFile = open(outFile, 'w')
+            outFile.write(out)
+            outFile.close()
+
     def runAnimationTestCase(self, name, __dirname__):
         self.assertTrue(mappings[name])
 

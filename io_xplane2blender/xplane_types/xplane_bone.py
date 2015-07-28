@@ -322,6 +322,8 @@ class XPlaneBone():
         debug = getDebug()
         keyframes = self.animations[dataref]
         o = ''
+        lastValue = [None, None, None]
+        totalTrans = 0
         indent = self.getIndent()
 
         if debug:
@@ -330,15 +332,23 @@ class XPlaneBone():
         o += "%sANIM_trans_begin\t%s\n" % (indent, dataref)
 
         for keyframe in keyframes:
-            o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
-                indent, floatToStr(keyframe.value),
-                floatToStr(keyframe.location[0]),
-                floatToStr(keyframe.location[2]),
-                floatToStr(-keyframe.location[1])
-            )
+            totalTrans += abs(keyframe.location[0]) + abs(keyframe.location[1]) + abs(keyframe.location[2])
+
+            if lastValue[0] != keyframe.location[0] or lastValue[1] != keyframe.location[1] or lastValue[2] != keyframe.location[2]:
+                o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
+                    indent, floatToStr(keyframe.value),
+                    floatToStr(keyframe.location[0]),
+                    floatToStr(keyframe.location[2]),
+                    floatToStr(-keyframe.location[1])
+                )
+                lastValue = keyframe.location
 
         o += self._writeKeyframesLoop(dataref)
         o += "%sANIM_trans_end\n" % indent
+
+        # do not write zero translations
+        if totalTrans == 0:
+            return ''
 
         return o
 
@@ -346,6 +356,8 @@ class XPlaneBone():
         o = ''
         indent = self.getIndent()
         keyframes = self.animations[dataref]
+        lastValue = None
+        totalRot = 0
 
         # TODO: be sure, axis angle axis does not change during keyframes
         axisAngle = (keyframes[0].rotation[1], keyframes[0].rotation[2], keyframes[0].rotation[3])
@@ -359,14 +371,22 @@ class XPlaneBone():
         )
 
         for keyframe in keyframes:
-            o += "%sANIM_rotate_key\t%s\t%s\n" % (
-                indent,
-                floatToStr(keyframe.value),
-                floatToStr(math.degrees(keyframe.rotation[0]))
-            )
+            totalRot += abs(keyframe.value)
+
+            if lastValue != keyframe.value:
+                o += "%sANIM_rotate_key\t%s\t%s\n" % (
+                    indent,
+                    floatToStr(keyframe.value),
+                    floatToStr(math.degrees(keyframe.rotation[0]))
+                )
+                lastValue = keyframe.value
 
         o += self._writeKeyframesLoop(dataref)
         o += "%sANIM_rotate_end\n" % indent
+
+        # do not write zero rotations
+        if totalRot == 0:
+            return ''
 
         return o
 
@@ -414,8 +434,11 @@ class XPlaneBone():
         }
         eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
         axes = eulerAxisMap[rotationMode]
+        totalRot = 0
 
         for axis in axes:
+            lastValue = None
+
             o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
                 indent,
                 floatToStr(eulerAxes[axis][0]),
@@ -425,14 +448,22 @@ class XPlaneBone():
             )
 
             for keyframe in keyframes:
-                o += "%sANIM_rotate_key\t%s\t%s\n" % (
-                    indent,
-                    floatToStr(keyframe.value),
-                    floatToStr(math.degrees(keyframe.rotation[axis]))
-                )
+                totalRot += abs(keyframe.value)
+
+                if lastValue != keyframe.value:
+                    o += "%sANIM_rotate_key\t%s\t%s\n" % (
+                        indent,
+                        floatToStr(keyframe.value),
+                        floatToStr(math.degrees(keyframe.rotation[axis]))
+                    )
+                    lastValue = keyframe.value
 
             o += self._writeKeyframesLoop(dataref)
             o += "%sANIM_rotate_end\n" % indent
+
+        # do not write zero rotations
+        if totalRot == 0:
+            return ''
 
         return o
 
