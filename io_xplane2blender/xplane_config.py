@@ -12,10 +12,6 @@ debug = False
 # Set to True, to log debug output in a file. This is still experimental.
 log = False
 
-# Variable: profile
-# Set to True to use profiling processes using the <profiler>. Profiling results will be printed to the console.
-profile = False
-
 # Variable: version
 # Integer containing the version number of the addon.
 version = bl_info['version']
@@ -24,24 +20,15 @@ version = bl_info['version']
 # An instance of <XPlaneDebugger> which is used to output debug information.
 debugger = XPlaneDebugger()
 
-# Variable: profiler
-# Instance of <XPlaneProfiler> which is used to profile processes.
-profiler = XPlaneProfiler()
-
 errors = False
 
 def initConfig():
     global debug
-    global profile
     global log
     import bpy
 
     if hasattr(bpy.context.scene, "xplane") and bpy.context.scene.xplane.debug:
         debug = True
-        if bpy.context.scene.xplane.profile:
-            profile = True
-        else:
-            profile = False
 
         if bpy.context.scene.xplane.log:
             log = True
@@ -49,17 +36,12 @@ def initConfig():
             log = False
     else:
         debug = False
-        profile = False
         log = False
 
 
 def getDebugger():
     global debugger
     return debugger
-
-def getProfiler():
-    global profiler
-    return profiler
 
 def getDebug():
     global debug
@@ -68,10 +50,6 @@ def getDebug():
 def getLog():
     global log
     return log
-
-def getProfile():
-    global profile
-    return profile
 
 def getVersion():
     global version
