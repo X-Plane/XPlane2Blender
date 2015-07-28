@@ -103,8 +103,6 @@ class XPlaneTestCase(unittest.TestCase):
             # ensure same number of line segments
             self.assertEquals(len(lineA), len(lineB))
 
-            print('comparing ' + str(lineA) + ' with ' + str(lineB))
-
             for linePos in range(0, len(lineA)):
                 segmentA = lineA[linePos]
                 segmentB = lineB[linePos]
