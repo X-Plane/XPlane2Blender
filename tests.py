@@ -71,4 +71,10 @@ for root, dirs, files in os.walk('./tests'):
                 if debug:
                     args.append('--debug')
 
-                subprocess.call(args)
+                out = subprocess.check_output(args, stderr = subprocess.STDOUT)
+
+                print(out)
+
+                # tests raised an error
+                if out.find('FAILED') != -1 or out.find('Error') != -1:
+                    exit(1)
