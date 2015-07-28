@@ -181,7 +181,7 @@ class XPlaneMesh():
     #
     # Returns:
     #   int - Index of the duplicate or -1 if none was found.
-    def getDupliVerticeIndex(self,v,startIndex = 0):
+    def getDupliVerticeIndex(self, v, startIndex = 0):
         l = len(self.vertices)
 
         for i in range(startIndex, l):
@@ -210,7 +210,7 @@ class XPlaneMesh():
     #
     # Returns:
     #   None if no UV faces could be found or the Blender UV Faces.
-    def getUVFaces(self,mesh,uv_name):
+    def getUVFaces(self, mesh, uv_name):
         # get the uv_texture
         if hasattr(mesh,'polygons'): # BMesh
             uv_textures = mesh.tessface_uv_textures
@@ -261,11 +261,11 @@ class XPlaneMesh():
 
         me_ob.select = True
         bpy.context.scene.objects.active = me_ob #set the mesh xplaneObjectect to current
-        bpy.ops.object.mode_set(mode='EDIT') #Operators
-        bpy.ops.mesh.select_all(action='SELECT')#select all the face/vertex/edge
+        bpy.ops.object.mode_set(mode = 'EDIT') #Operators
+        bpy.ops.mesh.select_all(action = 'SELECT')#select all the face/vertex/edge
         bpy.ops.mesh.quads_convert_to_tris() #Operators
         bpy.context.scene.update()
-        bpy.ops.object.mode_set(mode='OBJECT') # set it in xplaneObjectect
+        bpy.ops.object.mode_set(mode = 'OBJECT') # set it in xplaneObjectect
 
         mesh = me_ob.to_mesh(bpy.context.scene, True, "PREVIEW")
 
