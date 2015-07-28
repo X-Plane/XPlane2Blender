@@ -46,7 +46,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
             debugger.start(log)
 
         filepath = self.properties.filepath
-        if filepath=='':
+        if filepath == '':
             filepath = bpy.context.blend_data.filepath
 
         filepath = os.path.dirname(filepath)
@@ -99,7 +99,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         # write the file
         if debug:
-            debugger.debug("Writing %s" % xplaneFile.filename)
+            debugger.debug("Writing %s.obj" % fullpath)
 
         file = open(fullpath, "w")
         file.write(xplaneFile.write())
