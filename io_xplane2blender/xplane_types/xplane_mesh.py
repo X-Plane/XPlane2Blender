@@ -36,6 +36,13 @@ class XPlaneMesh():
         debug = getDebug()
         debugger = getDebugger()
 
+        def getSortKey(xplaneObject):
+            return xplaneObject.name
+
+        # sort objects by name for consitent vertex and indices table output
+        # this is usefull for unit tests and version control, as file changes are kept at a minimum
+        xplaneObjects = sorted(xplaneObjects, key = getSortKey)
+
         for xplaneObject in xplaneObjects:
             if xplaneObject.type == 'PRIMITIVE':
                 xplaneObject.indices[0] = len(self.indices)

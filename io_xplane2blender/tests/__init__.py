@@ -61,6 +61,66 @@ class XPlaneTestCase(unittest.TestCase):
 
             equals = abs(a[i] - b[i]) < tolerance
 
+    def parseFileToLines(self, data):
+        def parseNumbersInLine(part):
+            if part.isnumeric():
+                return float(part)
+
+            return part
+
+        def parseLine(line):
+            # remove trailing comments
+            line = line.split('#')[0]
+            return list(map(parseNumbersInLine, line.strip().split()))
+
+        def filterLine(line):
+            return len(line) > 0 and line[0] != '#'
+
+        return list(map(parseLine, filter(filterLine, map(str.strip, data.strip().split('\n')))))
+
+    def assertFilesEqual(self, a, b, filterCallback = None, floatTolerance = 0.000001):
+        def isnumber(d):
+            return isinstance(d, float) or isinstance(d, int)
+
+        if floatTolerance == None:
+            floatTolerance = EPSILON
+
+        linesA = self.parseFileToLines(a)
+        linesB = self.parseFileToLines(b)
+
+        # if a filter function is provided, additionally filter lines with it
+        if filterCallback:
+            linesA = filter(filterCallback, linesA)
+            linesB = filter(filterCallback, linesB)
+
+        # ensure same number of lines
+        self.assertEquals(len(linesA), len(linesB))
+
+        for lineIndex in range(0, len(linesA)):
+            lineA = linesA[lineIndex]
+            lineB = linesB[lineIndex]
+
+            # ensure same number of line segments
+            self.assertEquals(len(lineA), len(lineB))
+
+            print('comparing ' + str(lineA) + ' with ' + str(lineB))
+
+            for linePos in range(0, len(lineA)):
+                segmentA = lineA[linePos]
+                segmentB = lineB[linePos]
+
+                # assure same values (floats must be compared with tolerance)
+                if isnumber(segmentA) and isnumber(segmentB):
+                    self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
+                else:
+                    self.assertEquals(segmentA, segmentB)
+
+    def assertFileEqualsFixture(self, fileOutput, fixturePath, filterCallback = None, floatTolerance = None):
+        fixtureFile = open(fixturePath, 'r')
+        fixtureOutput = fixtureFile.read()
+        fixtureFile.close()
+
+        return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
 
 def runTestCases(testCases):
     for testCase in testCases:

@@ -64,7 +64,6 @@ def createFileFromBlenderLayerIndex(layerIndex):
 # Class: XPlaneFile
 # X-Plane OBJ file
 class XPlaneFile():
-
     def __init__(self, filename, options):
         self.filename = filename
 
