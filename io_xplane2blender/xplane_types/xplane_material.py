@@ -87,11 +87,10 @@ class XPlaneMaterial():
                 self.collectConditions(mat)
 
                 # polygon offsett attribute
-                if mat.xplane.poly_os>0:
+                if mat.xplane.poly_os > 0:
                     self.attributes['ATTR_poly_os'].setValue(mat.xplane.poly_os)
 
-                if mat.xplane.panel==False:
-
+                if mat.xplane.panel == False:
                     self.attributes['ATTR_draw_enable'].setValue(True)
 
                     # diffuse

@@ -122,6 +122,30 @@ class XPlaneTestCase(unittest.TestCase):
 
         return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
 
+    # asserts that an attributes object equals a dict
+    def assertAttributesEqualDict(self, attrs, d, floatTolerance = None):
+        self.assertEquals(len(d), len(attrs), 'Attribute lists have different length')
+
+        for name in attrs:
+            attr = attrs[name]
+            value = attr.getValue()
+            expectedValue = d[name]
+
+            if isinstance(expectedValue, list) or isinstance(expectedValue, tuple):
+                self.assertTrue(isinstance(value, list) or isinstance(value, tuple), 'Attribute value for "%s" is no list or tuple but: %s' % (name, str(value)))
+                self.assertEquals(len(expectedValue), len(value), 'Attribute values for "%s" have different length' % name)
+
+                for i in range(0, len(expectedValue)):
+                    v = value[i]
+                    expectedV = expectedValue[i]
+
+                    if isinstance(expectedV, float) or isinstance(expectedV, int):
+                        self.assertFloatsEqual(expectedV, v, floatTolerance)
+                    else:
+                        self.assertEquals(expectedV, v, 'Attribute list value %d for "%s" is different' % (i, name))
+            else:
+                self.assertEquals(expectedValue, value, 'Attribute "%s" is not equal' % name)
+
 class XPlaneAnimationTestCase(XPlaneTestCase):
     def setUp(self):
         super(XPlaneAnimationTestCase, self).setUp()

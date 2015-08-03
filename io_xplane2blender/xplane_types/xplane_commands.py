@@ -40,7 +40,23 @@ class XPlaneCommands():
             'ATTR_no_depth':'ATTR_depth',
             'ATTR_no_blend':'ATTR_blend'
         }
-        self.written = {}
+        # add default X-Plane states to presve writing them in the obj
+        self.written = {
+            'ATTR_no_hard': True,
+            'ATTR_shade_smooth': True,
+            'ATTR_depth': True,
+            'ATTR_cull': True,
+            'ATTR_blend': True,
+            'ATTR_poly_os': None,
+            'ATTR_no_cockpit': True,
+            'ATTR_no_solid_camera': True,
+            'ATTR_draw_enable': True,
+            'ATTR_no_solid_camera': True,
+            'ATTR_light_level': None,
+            'ATTR_cockpit': None,
+            'ATTR_no_cockpit': True,
+            'ATTR_cockpit_region': None
+        }
 
     # Method: write
     # Returns the OBJ commands table.
@@ -160,6 +176,10 @@ class XPlaneCommands():
                 for reseter in self.reseters:
                     if self.reseters[reseter] == name and reseter in self.written:
                         del self.written[reseter]
+
+            # store this in the written attributes
+            if value != False:
+                self.written[name] = value
 
         return o
 
