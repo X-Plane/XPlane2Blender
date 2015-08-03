@@ -111,15 +111,17 @@ class TestMaterials(XPlaneTestCase):
 
     def test_export_materials(self):
         filename = 'test_materials'
-        bpy.context.scene.xplane.layers[0].name = filename
-        bpy.context.scene.xplane.debug = getDebug()
+        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
 
         tmpDir = os.path.realpath(os.path.join(__dirname__, '../tmp'))
         tmpFile = os.path.join(tmpDir, filename + '.obj')
 
-        bpy.ops.export.xplane_obj(filepath = os.path.join(tmpDir, filename + '.obj'))
+        out = xplaneFile.write()
 
-        self.assertTrue(os.path.exists(tmpFile))
+        fh = open(tmpFile, 'w')
+        fh.write(out)
+        fh.close()
 
+        self.assertFileEqualsFixture(out, os.path.join(__dirname__, 'fixtures', filename + '.obj'))
 
 runTestCases([TestMaterials])
