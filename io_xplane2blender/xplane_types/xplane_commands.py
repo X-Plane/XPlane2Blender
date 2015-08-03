@@ -47,15 +47,11 @@ class XPlaneCommands():
             'ATTR_depth': True,
             'ATTR_cull': True,
             'ATTR_blend': True,
-            'ATTR_poly_os': None,
+            'ATTR_no_hard': True,
             'ATTR_no_cockpit': True,
             'ATTR_no_solid_camera': True,
             'ATTR_draw_enable': True,
-            'ATTR_no_solid_camera': True,
-            'ATTR_light_level': None,
-            'ATTR_cockpit': None,
-            'ATTR_no_cockpit': True,
-            'ATTR_cockpit_region': None
+            'ATTR_no_cockpit': True
         }
 
     # Method: write
