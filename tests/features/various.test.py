@@ -76,4 +76,22 @@ class TestMaterials(XPlaneTestCase):
             filterLines
         )
 
+    def test_export_in_layers_export(self):
+        def filterLines(line):
+            return isinstance(line[0], str) and (line[0] == 'VT' or line[0] == 'ID' or line[0] == 'IDX' or line[0] == 'TRIS')
+
+        filename = 'test_export_in_layers_enabled'
+        self.assertLayerExportEqualsFixture(
+            6, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
+
+        filename = 'test_export_in_layers_disabled'
+        self.assertLayerExportEqualsFixture(
+            7, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
+
 runTestCases([TestMaterials])

@@ -110,7 +110,8 @@ class XPlaneFile():
 
             for i in range(len(blenderObject.layers)):
                 if blenderObject.layers[i] == True and i == layerIndex and blenderObject.hide == False:
-                    blenderObjects.append(blenderObject)
+                    if not hasattr(blenderObject.xplane, 'export_mesh') or blenderObject.xplane.export_mesh[layerIndex] == True:
+                        blenderObjects.append(blenderObject)
 
         self.collectBlenderObjects(blenderObjects)
         self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)

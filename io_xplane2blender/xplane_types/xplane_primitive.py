@@ -34,7 +34,6 @@ class XPlanePrimitive(XPlaneObject):
         self.type = 'PRIMITIVE'
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
-        self.export_mesh = blenderObject.xplane.export_mesh
         self.faces = None
 
         self.getWeight()
