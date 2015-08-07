@@ -215,6 +215,9 @@ class XPlaneCommands():
         else:
             return True
 
+    def addReseter(self, attr, reseter):
+        self.reseters[attr] = reseter
+
     # Method: attributeIsReseter
     # Determines if a given attribute is a resetter.
     #

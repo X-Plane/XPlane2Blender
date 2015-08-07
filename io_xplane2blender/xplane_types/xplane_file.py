@@ -148,7 +148,7 @@ class XPlaneFile():
             bone.xplaneFile = self
             parentBone.children.append(bone)
 
-            # xplaneObject is now complete and can collect all dat
+            # xplaneObject is now complete and can collect all data
             if xplaneObject:
                 xplaneObject.collect()
 

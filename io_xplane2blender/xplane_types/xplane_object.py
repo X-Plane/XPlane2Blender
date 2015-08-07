@@ -72,7 +72,6 @@ class XPlaneObject():
         self.bakeMatrix = None
         self.id = int(blenderObject.as_pointer())
         self.attributes = XPlaneAttributes()
-        self.reseters = {}
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
         self.conditions = []
@@ -105,9 +104,13 @@ class XPlaneObject():
         return (hasattr(self, 'animAttributes') and len(self.animAttributes) > 0)
 
     def collectCustomAttributes(self):
+        xplaneFile = self.xplaneBone.xplaneFile
+        commands =  xplaneFile.commands
+
         for attr in self.blenderObject.xplane.customAttributes:
+            if attr.reset:
+                commands.addReseter(attr.name, attr.reset)
             self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
-            self.reseters[attr.name] = attr.reset
 
         if hasattr(self.blenderObject, "data") and hasattr(self.blenderObject.data, "xplane") and hasattr(self.blenderObject.data.xplane, "customAttributes"):
             for attr in self.blenderObject.data.xplane.customAttributes:

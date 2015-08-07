@@ -19,10 +19,7 @@ class XPlanePrimitive(XPlaneObject):
 
     # Property: attributes
     # dict - Object attributes that will be turned into commands with <XPlaneCommands>.
-
-    # Property: reseters
-    # dict - Object attribute reseters that will be turned into commands with <XPlaneCommands>.
-
+    
     # Property: cockpitAttributes
     # dict - Object attributes for cockpit settings, that will be turned into commands with <XPlaneCommands>.
 
@@ -60,10 +57,6 @@ class XPlanePrimitive(XPlaneObject):
 
         if self.material:
             self.material.collect()
-
-    def collectMaterialAttributes(self):
-        for attr in self.material.attributes:
-            self.attributes.add(self.material.attributes[attr])
 
     # Method: collectManipulatorAttributes
     # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.

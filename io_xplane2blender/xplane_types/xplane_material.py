@@ -190,7 +190,7 @@ class XPlaneMaterial():
         if mat.xplane.customAttributes:
             for attr in mat.xplane.customAttributes:
                 if attr.reset:
-                    commands.reseters[attr.name] = attr.reset
+                    commands.addReseter(attr.name, attr.reset)
                 self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
 
 
@@ -229,13 +229,16 @@ class XPlaneMaterial():
 
         for attr in self.attributes:
             # do not write own reseters just now
-            if commands.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
-                o += xplaneFile.commands.writeAttribute(self.attributes[attr], self.xplaneObject)
+            # FIXME: why have we been doing this at all?
+            #if commands.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
+            o += xplaneFile.commands.writeAttribute(self.attributes[attr], self.xplaneObject)
 
+        # if the file is a cockpit file write all cockpit attributes
         if hasattr(xplaneFile.options, 'cockpit') and xplaneFile.options.cockpit:
             for attr in self.material.cockpitAttributes:
                 # do not write own reseters just now
-                if self.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
-                  o += self.writeAttribute(self.xplaneObject.material.cockpitAttributes[attr], self.xplaneObject)
+                # FIXME: why have we been doing this at all?
+                # if self.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
+                o += self.writeAttribute(self.xplaneObject.material.cockpitAttributes[attr], self.xplaneObject)
 
         return o
