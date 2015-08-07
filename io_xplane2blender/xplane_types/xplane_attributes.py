@@ -48,3 +48,10 @@ class XPlaneAttributes(OrderedDict):
     def set(self, attr):
         if attr.name in self:
             self[attr.name] = attr
+
+    def asString(self):
+        o = ''
+        for name in self:
+            o += name + ': ' + self[name].getValuesAsString() + '\n'
+
+        return o

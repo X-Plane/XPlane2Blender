@@ -57,7 +57,7 @@ class TestMaterials(XPlaneTestCase):
 
         blueAttrs = defaultAttrs.copy()
         blueAttrs['ATTR_diffuse_rgb'] = [0, 0, 1]
-
+        
         emissiveAttrs = defaultAttrs.copy()
         emissiveAttrs['ATTR_diffuse_rgb'] = [0.5, 0.5, 0.5]
         emissiveAttrs['ATTR_emission_rgb'] = [0.5, 0.5, 0.5]

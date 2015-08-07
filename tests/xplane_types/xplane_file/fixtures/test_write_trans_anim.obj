@@ -299,9 +299,6 @@ TRIS	0 36
 	ANIM_rotate_end
 	# PRIMITIVE: Cube.child.anim.001	weight: 0
 	# MATERIAL: Material
-	ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-	ATTR_emission_rgb	0	0	0
-	ATTR_shiny_rat	0.5
 	TRIS	36 36
 		# 3 Object: Cube.child.anim.anim.001
 		ANIM_begin
@@ -329,25 +326,16 @@ TRIS	0 36
 		ANIM_trans	-0.00000012	2	2	-0.00000012	2	2
 		# PRIMITIVE: Cube.child.anim.anim.001	weight: 0
 		# MATERIAL: Material
-		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_emission_rgb	0	0	0
-		ATTR_shiny_rat	0.5
 		TRIS	72 36
 		ANIM_end
 		# 3 Object: Cube.child.anim.static.001
 		# PRIMITIVE: Cube.child.anim.static.001	weight: 0
 		# MATERIAL: Material
-		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_emission_rgb	0	0	0
-		ATTR_shiny_rat	0.5
 		TRIS	108 36
 	ANIM_end
 	# 2 Object: Cube.child.static.001
 	# PRIMITIVE: Cube.child.static.001	weight: 0
 	# MATERIAL: Material
-	ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-	ATTR_emission_rgb	0	0	0
-	ATTR_shiny_rat	0.5
 	TRIS	144 36
 		# 3 Object: Cube.child.static.anim.001
 		ANIM_begin
@@ -379,9 +367,6 @@ TRIS	0 36
 		ANIM_trans	0.00000003	0.00000024	0.00000006	0.00000003	0.00000024	0.00000006
 		# PRIMITIVE: Cube.child.static.anim.001	weight: 0
 		# MATERIAL: Material
-		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_emission_rgb	0	0	0
-		ATTR_shiny_rat	0.5
 		TRIS	180 36
 		ANIM_end
 ANIM_end

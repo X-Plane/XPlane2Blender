@@ -152,9 +152,15 @@ class XPlaneCommands():
         indent = xplaneObject.xplaneBone.getIndent()
 
         if value != None and self.canWriteAttribute(name, value):
-            if value == True:
-                o += indent + '%s\n' % name
-            elif value != False:
+            if isinstance(value, bool):
+                if value:
+                    o += indent + '%s\n' % name
+
+                    # store this in the written attributes
+                    self.written[name] = value
+            else:
+                # store this in the written attributes
+                self.written[name] = value
                 value = attr.getValueAsString()
                 value = self.parseAttributeValue(value, xplaneObject.blenderObject)
                 o += indent + '%s\t%s\n' % (name, value)
@@ -173,10 +179,6 @@ class XPlaneCommands():
 
                     if self.reseters[reseter] == name and matchingWritten:
                         del self.written[matchingWritten]
-
-            # store this in the written attributes
-            if value != False:
-                self.written[name] = value
 
         return o
 
