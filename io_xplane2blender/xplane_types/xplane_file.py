@@ -2,6 +2,7 @@
 # Defines X-Plane file data type.
 
 import bpy
+import mathutils
 from .xplane_bone import XPlaneBone
 from .xplane_light import XPlaneLight
 # from .xplane_line import XPlaneLine
@@ -79,7 +80,10 @@ class XPlaneFile():
         self.commands = XPlaneCommands(self)
 
         # list of temporary objects that will be removed after export
-        self.tempBlenderObjects = []
+        self._tempBlenderObjects = []
+
+        # list of already expanded/resolved blender group instances
+        self._resolvedBlenderGroupInstances = []
 
         # dict of xplane objects within the file
         self.objects = {}
@@ -126,6 +130,30 @@ class XPlaneFile():
                 # store xplane object under same name as blender object in dict
                 self.objects[blenderObject.name] = xplaneObject
 
+    def _resolveBlenderGroupInstance(self, blenderObject):
+        tempBlenderObjects = []
+        blenderGroupObjects = blenderObject.dupli_group.objects
+        groupOffset = blenderObject.dupli_group.dupli_offset
+
+        for blenderGroupObject in blenderGroupObjects:
+            # create a copy
+            blenderObjectCopy = blenderGroupObject.copy()
+            self._tempBlenderObjects.append(blenderObjectCopy)
+            tempBlenderObjects.append(blenderObjectCopy)
+
+            # make it a child of the parent, to keep hierachy and transforms
+            blenderObjectCopy.parent = blenderObject
+
+            # set same layer as the parent
+            blenderObjectCopy.layers = blenderObject.layers
+
+            # set correct matrix
+            blenderObjectCopy.matrix_world = blenderObject.matrix_world * mathutils.Matrix.Translation(-groupOffset) * blenderGroupObject.matrix_world
+
+        self._resolvedBlenderGroupInstances.append(blenderObject.name)
+
+        return tempBlenderObjects
+
     # collects all child bones for a given parent bone given a list of blender objects
     def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True):
         parentBlenderObject = parentBone.blenderObject
@@ -155,8 +183,17 @@ class XPlaneFile():
 
             bone.collectAnimations()
 
-            if blenderObject.type == 'ARMATURE':
+            # expand group objects to temporary objects
+            if blenderObject.dupli_type == 'GROUP' and blenderObject.name not in self._resolvedBlenderGroupInstances:
+                tempBlenderObjects = self._resolveBlenderGroupInstance(blenderObject)
+                self.collectBlenderObjects(tempBlenderObjects)
+                self.collectBonesFromBlenderObjects(bone, blenderObject.children, False)
+
+            # collect armature bones
+            elif blenderObject.type == 'ARMATURE':
                 self.collectBonesFromBlenderBones(bone, blenderObject, blenderObject.data.bones)
+
+            # collect regular children
             else:
                 self.collectBonesFromBlenderObjects(bone, blenderObject.children, False)
 
@@ -291,6 +328,8 @@ class XPlaneFile():
         o += '\n'
         o += self.writeFooter()
 
+        self.cleanup()
+
         return o
 
     def _writeLods(self):
@@ -337,6 +376,6 @@ class XPlaneFile():
     # Method: cleanup
     # Removes temporary blender data
     def cleanup(self):
-        while(len(self.tempBlenderObjects) > 0):
-            tempBlenderObject = self.tempBlenderObjects.pop()
+        while(len(self._tempBlenderObjects) > 0):
+            tempBlenderObject = self._tempBlenderObjects.pop()
             bpy.data.objects.remove(tempBlenderObject)
