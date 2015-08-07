@@ -43,7 +43,7 @@ class TestMaterials(XPlaneTestCase):
 
     def test_optimize_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and line[0] == 'VT'
+            return isinstance(line[0], str) and (line[0] == 'VT' or line[0] == 'ID' or line[0] == 'IDX' or line[0] == 'TRIS')
 
         filename = 'test_optimize'
         self.assertLayerExportEqualsFixture(
