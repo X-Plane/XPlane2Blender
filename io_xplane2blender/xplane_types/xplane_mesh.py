@@ -57,7 +57,7 @@ class XPlaneMesh():
                 mesh.transform(xplaneObject.bakeMatrix)
 
                 if hasattr(mesh, 'polygons'): # BMesh
-                    mesh.update(calc_tessface=True)
+                    mesh.update(calc_tessface = True)
                     mesh.calc_tessface()
                     mesh_faces = mesh.tessfaces
                 else:
