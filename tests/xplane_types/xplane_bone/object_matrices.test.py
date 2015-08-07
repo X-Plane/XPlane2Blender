@@ -82,8 +82,8 @@ class TestMatrices(XPlaneTestCase):
         # post matrix should be world matrix
         self.assertEquals(postMatrix, cubeStaticChildAnimated.blenderObject.matrix_world)
 
-        # bake matrix should be parents world matrix
-        self.assertEquals(bakeMatrix, cubeStatic.blenderObject.matrix_world)
+        # bake matrix should be inverted identity matrix *  own preanimation matrix
+        self.assertEquals(bakeMatrix, identityMatrix.inverted_safe() * preMatrix)
 
         cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated')
         cubeAnimatedChildStatic = xplaneFile.getBoneByBlenderName('Cube_animated.child_static')
