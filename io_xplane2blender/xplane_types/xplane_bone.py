@@ -195,7 +195,7 @@ class XPlaneBone():
         elif self.blenderBone:
             # TODO: what is the equivalent to .parent.matrix_parent_inverse for bones?
             parent_matrix = None
-            
+
             if self.blenderBone.parent:
                 parent_matrix = self.blenderBone.parent.matrix
             else:

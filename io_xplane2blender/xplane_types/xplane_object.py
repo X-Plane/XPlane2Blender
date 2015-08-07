@@ -93,6 +93,9 @@ class XPlaneObject():
 
         self.getWeight()
 
+    def collect():
+        pass
+
     # Method: hasAnimAttributes
     # Checks if the object has animation attributes.
     #
@@ -101,7 +104,7 @@ class XPlaneObject():
     def hasAnimAttributes(self):
         return (hasattr(self, 'animAttributes') and len(self.animAttributes) > 0)
 
-    def getCustomAttributes(self):
+    def collectCustomAttributes(self):
         for attr in self.blenderObject.xplane.customAttributes:
             self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
             self.reseters[attr.name] = attr.reset
@@ -111,7 +114,7 @@ class XPlaneObject():
                 self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
                 self.reseters[attr.name] = attr.reset
 
-    def getAnimAttributes(self):
+    def collectAnimAttributes(self):
         # add custom anim attributes
         for attr in self.blenderObject.xplane.customAnimAttributes:
             self.animAttributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
@@ -165,7 +168,7 @@ class XPlaneObject():
 
         self.weight = weight
 
-    def getConditions(self):
+    def collectConditions(self):
         if self.blenderObject.xplane.conditions:
             self.conditions = self.blenderObject.xplane.conditions
 

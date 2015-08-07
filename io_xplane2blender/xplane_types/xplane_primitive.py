@@ -39,33 +39,35 @@ class XPlanePrimitive(XPlaneObject):
         self.export_mesh = blenderObject.xplane.export_mesh
         self.faces = None
 
-        #self.getMaterialAttributes()
+        self.getWeight()
 
+    def collect(self):
         # add custom attributes
-        self.getCustomAttributes()
+        self.collectCustomAttributes()
 
         # add anim attributes from datarefs and custom anim attributes
-        self.getAnimAttributes()
+        self.collectAnimAttributes()
 
         # add manipulator attributes
-        self.getManipulatorAttributes()
+        self.collectManipulatorAttributes()
 
         # add conditions
-        self.getConditions()
+        self.collectConditions()
 
         self.attributes.order()
         self.animAttributes.order()
         self.cockpitAttributes.order()
 
-        self.getWeight()
+        if self.material:
+            self.material.collect()
 
-    def getMaterialAttributes(self):
+    def collectMaterialAttributes(self):
         for attr in self.material.attributes:
             self.attributes.add(self.material.attributes[attr])
 
-    # Method: getManipulatorAttributes
+    # Method: collectManipulatorAttributes
     # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.
-    def getManipulatorAttributes(self):
+    def collectManipulatorAttributes(self):
         attr = 'ATTR_manip_'
         value = True
 

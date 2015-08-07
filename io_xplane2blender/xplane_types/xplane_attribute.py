@@ -85,7 +85,7 @@ class XPlaneAttribute():
                     _value.append(str(value[i]))
 
             value = '\t'.join(_value)
-        else:
+        elif not isinstance(value, str):
             value = ''
 
         return value

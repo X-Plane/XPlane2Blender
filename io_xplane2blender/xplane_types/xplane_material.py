@@ -72,6 +72,7 @@ class XPlaneMaterial():
 
         self.conditions = []
 
+    def collect(self):
         if (len(self.blenderObject.data.materials) > 0 and hasattr(self.blenderObject.data.materials[0], 'name')):
             mat = self.blenderObject.data.materials[0]
             self.name = mat.name
@@ -175,15 +176,25 @@ class XPlaneMaterial():
                 self.uv_name = self.blenderObject.data.uv_textures.active.name
 
             # add custom attributes
-            for attr in mat.xplane.customAttributes:
-                self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
+            self.collectCustomAttributes(mat)
 
         else:
             showError('%s: No Material found.' % self.blenderObject.name)
 
         self.attributes.order()
 
-    def collectCockpitAttributes(self,mat):
+    def collectCustomAttributes(self, mat):
+        xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
+        commands =  xplaneFile.commands
+
+        if mat.xplane.customAttributes:
+            for attr in mat.xplane.customAttributes:
+                if attr.reset:
+                    commands.reseters[attr.name] = attr.reset
+                self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
+
+
+    def collectCockpitAttributes(self, mat):
         if mat.xplane.panel:
             self.cockpitAttributes['ATTR_cockpit'].setValue(True)
             self.cockpitAttributes['ATTR_no_cockpit'].setValue(None)
@@ -193,7 +204,7 @@ class XPlaneMaterial():
 
     # Method: collectLightLevelAttributes
     # Defines light level attributes in <attributes> based on settings in <XPlaneObjectSettings>.
-    def collectLightLevelAttributes(self,mat):
+    def collectLightLevelAttributes(self, mat):
         if mat.xplane.lightLevel:
             self.attributes['ATTR_light_level'].setValue((
                 mat.xplane.lightLevel_v1,
