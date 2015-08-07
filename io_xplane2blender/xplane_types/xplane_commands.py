@@ -89,8 +89,8 @@ class XPlaneCommands():
         for childBone in xplaneBone.children:
             o += self.writeXPlaneBone(childBone, lod)
 
-            if xplaneObject and xplaneObjectWritten:
-                o += self._writeXPlaneObjectSuffix(xplaneObject)
+        if xplaneObject and xplaneObjectWritten:
+            o += self._writeXPlaneObjectSuffix(xplaneObject)
 
         o += xplaneBone.writeAnimationSuffix()
 
@@ -110,10 +110,11 @@ class XPlaneCommands():
     def _writeXPlaneObjectPrefix(self, xplaneObject):
         o = ''
 
-        # open conditions
+        # open material conditions
         if hasattr(xplaneObject, 'material'):
             o += self._writeConditions(xplaneObject.material.conditions, xplaneObject)
 
+        # open object conditions
         o += self._writeConditions(xplaneObject.conditions, xplaneObject)
 
         if xplaneObject.hasAnimAttributes():
@@ -126,10 +127,11 @@ class XPlaneCommands():
     def _writeXPlaneObjectSuffix(self, xplaneObject):
         o = ''
 
-        # close conditions
+        # close material conditions
         if hasattr(xplaneObject, 'material'):
             o += self._writeConditions(xplaneObject.material.conditions, xplaneObject, True)
 
+        # close object conditions
         o += self._writeConditions(xplaneObject.conditions, xplaneObject, True)
 
         return o

@@ -12,6 +12,7 @@ from .xplane_mesh import XPlaneMesh
 from .xplane_header import XPlaneHeader
 from .xplane_commands import XPlaneCommands
 from ..xplane_config import getDebug, getDebugger, version
+from ..xplane_helpers import floatToStr
 
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
@@ -285,10 +286,51 @@ class XPlaneFile():
         o += self.lights.write()
 
         o += '\n'
-        o += self.commands.write()
+        o += self._writeLods()
 
         o += '\n'
         o += self.writeFooter()
+
+        return o
+
+    def _writeLods(self):
+        o = ''
+        numLods = int(self.options.lods)
+
+        # if lods are present we need one base lod containing all objects
+        # not in a lod that should always be visible
+        if numLods > 0:
+            smallestNear = float(self.options.lod[0].near)
+            tallestFar = float(self.options.lod[0].far)
+
+            for lod in self.options.lod:
+                near = float(lod.near)
+                far = float(lod.far)
+
+                if smallestNear > near:
+                    smallestNnear = near
+
+                if tallestFar < far:
+                    tallestFar = far
+
+            o += "ATTR_LOD 0.0 %s\n" % floatToStr(smallestNear)
+
+        o += self.commands.write()
+
+        # write commands for each additional LOD
+        for lodIndex in range(0,numLods):
+            if lodIndex < len(self.options.lod):
+                o += "ATTR_LOD %s %s\n" % (
+                    floatToStr(self.options.lod[lodIndex].near),
+                    floatToStr(self.options.lod[lodIndex].far)
+                )
+                o += self.commands.write(lodIndex)
+
+        # if lods are present we need to attach a closing lod
+        # containing all objects not in a lod that should always be visible
+        if numLods > 0:
+            o += "ATTR_LOD %s 100000\n" % floatToStr(tallestFar)
+            o += self.commands.write()
 
         return o
 
