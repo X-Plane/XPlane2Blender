@@ -76,8 +76,8 @@ class TestMatrices(XPlaneTestCase):
         postMatrix = cubeStaticChildAnimated.getPostAnimationMatrix()
         bakeMatrix = cubeStaticChildAnimated.getBakeMatrix()
 
-        # pre matrix should be parents world matrix
-        self.assertEquals(preMatrix, cubeStaticChildAnimated.blenderObject.parent.matrix_world)
+        # pre matrix should be parents world matrix * inverted matrix relative to parent
+        self.assertEquals(preMatrix, cubeStaticChildAnimated.blenderObject.parent.matrix_world * cubeStaticChildAnimated.blenderObject.matrix_parent_inverse)
 
         # post matrix should be world matrix
         self.assertEquals(postMatrix, cubeStaticChildAnimated.blenderObject.matrix_world)

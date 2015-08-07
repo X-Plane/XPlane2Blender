@@ -29,6 +29,7 @@ def getOption(name, default):
     return default
 
 fileFilter = getOption('--filter', None)
+exclude = getOption('--exclude', None)
 blenderExecutable = getOption('--blender', 'blender')
 debug = getFlag('--debug')
 showHelp = getFlag('--help')
@@ -38,6 +39,7 @@ if showHelp:
         'Usage: python tests.py [options]\n\n' +
         'Options:\n\n' +
         '  --filter [regex]\tfilter test files with a regular expression\n' +
+        '  --exclude [regex]\texclude test files with a regular expression\n' +
         '  --debug\t\tenable debugging\n' +
         '  --blender [path]\tProvide alternative path to blender executable\n' +
         '  --help\t\tdisplay this help\n\n'
@@ -45,10 +47,17 @@ if showHelp:
     sys.exit(0)
 
 def inFilter(filepath):
-    if fileFilter == None:
-        return True
+    passes = False
 
-    return (re.search(fileFilter, filepath))
+    if fileFilter != None:
+        passes = (re.search(fileFilter, filepath))
+    else:
+        passes = True
+
+    if exclude != None:
+        passes = not (re.search(exclude, filepath))
+
+    return passes
 
 for root, dirs, files in os.walk('./tests'):
     for pyFile in files:

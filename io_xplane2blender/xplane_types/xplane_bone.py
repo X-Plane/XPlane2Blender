@@ -41,7 +41,10 @@ class XPlaneBone():
 
     def sortChildren(self):
         def getWeight(xplaneBone):
-            return xplaneBone.xplaneObject.weight
+            if xplaneBone.xplaneObject:
+                return xplaneBone.xplaneObject.weight
+
+            return 0
 
         self.children.sort(key = getWeight)
 
