@@ -18,6 +18,7 @@ class TestMaterials(XPlaneTestCase):
         cockpit = xplaneFile.objects['cockpit'].material
         invisible = xplaneFile.objects['invisible'].material
         surface = xplaneFile.objects['surface'].material
+        conditions = xplaneFile.objects['conditions'].material
 
         defaultAttrs = {
             'ATTR_diffuse_rgb': [0.5, 0.5, 0.5],
@@ -88,6 +89,9 @@ class TestMaterials(XPlaneTestCase):
         surfaceAttrs['ATTR_hard_deck'] = 'asphalt'
         surfaceAttrs['ATTR_poly_os'] = 2
 
+        conditionsAttrs = defaultAttrs.copy()
+        conditionsAttrs['custom_prop'] = '10'
+
         self.assertAttributesEqualDict(red.attributes, redAttrs)
         self.assertAttributesEqualDict(red.cockpitAttributes, defaultCockpitAttrs)
 
@@ -109,19 +113,11 @@ class TestMaterials(XPlaneTestCase):
         self.assertAttributesEqualDict(surface.attributes, surfaceAttrs)
         self.assertAttributesEqualDict(surface.cockpitAttributes, defaultCockpitAttrs)
 
+        self.assertAttributesEqualDict(conditions.attributes, conditionsAttrs)
+        self.assertAttributesEqualDict(conditions.cockpitAttributes, defaultCockpitAttrs)
+
     def test_export_materials(self):
         filename = 'test_materials'
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
-
-        tmpDir = os.path.realpath(os.path.join(__dirname__, '../tmp'))
-        tmpFile = os.path.join(tmpDir, filename + '.obj')
-
-        out = xplaneFile.write()
-
-        fh = open(tmpFile, 'w')
-        fh.write(out)
-        fh.close()
-
-        self.assertFileEqualsFixture(out, os.path.join(__dirname__, 'fixtures', filename + '.obj'))
+        self.assertLayerExportEqualsFixture(0, os.path.join(__dirname__, 'fixtures', filename + '.obj'), filename)
 
 runTestCases([TestMaterials])

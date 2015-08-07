@@ -64,9 +64,6 @@ class XPlaneLight(XPlaneObject):
             self.color[1] = 9.7
             self.color[2] = 9.7
 
-        self.getCustomAttributes()
-        self.getAnimAttributes()
-
         self.getWeight()
 
     def write(self):

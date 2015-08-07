@@ -39,6 +39,12 @@ class XPlaneBone():
         # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
         self.datarefs = {}
 
+    def sortChildren(self):
+        def getWeight(xplaneBone):
+            return xplaneBone.xplaneObject.weight
+
+        self.children.sort(key = getWeight)
+
     # Method: isAnimated
     # Checks if the object is animated.
     #

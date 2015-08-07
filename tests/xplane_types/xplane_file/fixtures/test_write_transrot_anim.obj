@@ -289,11 +289,6 @@ IDX	251
 # 0 ROOT
 # 1 Object: Cube.anim
 ANIM_begin
-# translation keyframes
-ANIM_trans_begin	test
-ANIM_trans_key	0	0	0	0
-ANIM_trans_key	1	0	0	0
-ANIM_trans_end
 # rotation keyframes
 ANIM_rotate_begin	1	0	0	test
 ANIM_rotate_key	0	0
@@ -310,15 +305,8 @@ ANIM_rotate_end
 # PRIMITIVE: Cube.anim	weight: 0
 # MATERIAL: Material
 ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-ATTR_shade_smooth
 ATTR_emission_rgb	0	0	0
 ATTR_shiny_rat	0.5
-ATTR_no_hard
-ATTR_cull
-ATTR_depth
-ATTR_blend
-ATTR_draw_enable
-ATTR_no_solid_camera
 TRIS	0 36
 	# 2 Object: Cube.child.anim
 	ANIM_begin
@@ -343,15 +331,8 @@ TRIS	0 36
 	# PRIMITIVE: Cube.child.anim	weight: 0
 	# MATERIAL: Material
 	ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-	ATTR_shade_smooth
 	ATTR_emission_rgb	0	0	0
 	ATTR_shiny_rat	0.5
-	ATTR_no_hard
-	ATTR_cull
-	ATTR_depth
-	ATTR_blend
-	ATTR_draw_enable
-	ATTR_no_solid_camera
 	TRIS	36 36
 		# 3 Object: Cube.child.anim.anim
 		ANIM_begin
@@ -380,15 +361,8 @@ TRIS	0 36
 		# PRIMITIVE: Cube.child.anim.anim	weight: 0
 		# MATERIAL: Material
 		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_shade_smooth
 		ATTR_emission_rgb	0	0	0
 		ATTR_shiny_rat	0.5
-		ATTR_no_hard
-		ATTR_cull
-		ATTR_depth
-		ATTR_blend
-		ATTR_draw_enable
-		ATTR_no_solid_camera
 		TRIS	72 36
 		ANIM_end
 		# 3 Object: Cube.child.anim.anim.002
@@ -398,7 +372,6 @@ TRIS	0 36
 		# translation keyframes
 		ANIM_trans_begin	test
 		ANIM_trans_key	0	0	5	8
-		ANIM_trans_key	1	0	5	8
 		ANIM_trans_end
 		# rotation keyframes
 		ANIM_rotate_begin	1	0	0	test
@@ -418,45 +391,24 @@ TRIS	0 36
 		# PRIMITIVE: Cube.child.anim.anim.002	weight: 0
 		# MATERIAL: Material
 		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_shade_smooth
 		ATTR_emission_rgb	0	0	0
 		ATTR_shiny_rat	0.5
-		ATTR_no_hard
-		ATTR_cull
-		ATTR_depth
-		ATTR_blend
-		ATTR_draw_enable
-		ATTR_no_solid_camera
 		TRIS	108 36
 		ANIM_end
 		# 3 Object: Cube.child.anim.static
 		# PRIMITIVE: Cube.child.anim.static	weight: 0
 		# MATERIAL: Material
 		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_shade_smooth
 		ATTR_emission_rgb	0	0	0
 		ATTR_shiny_rat	0.5
-		ATTR_no_hard
-		ATTR_cull
-		ATTR_depth
-		ATTR_blend
-		ATTR_draw_enable
-		ATTR_no_solid_camera
 		TRIS	144 36
 	ANIM_end
 	# 2 Object: Cube.child.static
 	# PRIMITIVE: Cube.child.static	weight: 0
 	# MATERIAL: Material
 	ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-	ATTR_shade_smooth
 	ATTR_emission_rgb	0	0	0
 	ATTR_shiny_rat	0.5
-	ATTR_no_hard
-	ATTR_cull
-	ATTR_depth
-	ATTR_blend
-	ATTR_draw_enable
-	ATTR_no_solid_camera
 	TRIS	180 36
 		# 3 Object: Cube.child.static.anim
 		ANIM_begin
@@ -489,15 +441,8 @@ TRIS	0 36
 		# PRIMITIVE: Cube.child.static.anim	weight: 0
 		# MATERIAL: Material
 		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_shade_smooth
 		ATTR_emission_rgb	0	0	0
 		ATTR_shiny_rat	0.5
-		ATTR_no_hard
-		ATTR_cull
-		ATTR_depth
-		ATTR_blend
-		ATTR_draw_enable
-		ATTR_no_solid_camera
 		TRIS	216 36
 		ANIM_end
 ANIM_end

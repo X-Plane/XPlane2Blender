@@ -231,14 +231,14 @@ class XPlaneMaterial():
             # do not write own reseters just now
             # FIXME: why have we been doing this at all?
             #if commands.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
-            o += xplaneFile.commands.writeAttribute(self.attributes[attr], self.xplaneObject)
+            o += commands.writeAttribute(self.attributes[attr], self.xplaneObject)
 
         # if the file is a cockpit file write all cockpit attributes
         if hasattr(xplaneFile.options, 'cockpit') and xplaneFile.options.cockpit:
-            for attr in self.material.cockpitAttributes:
+            for attr in self.cockpitAttributes:
                 # do not write own reseters just now
                 # FIXME: why have we been doing this at all?
                 # if self.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
-                o += self.writeAttribute(self.xplaneObject.material.cockpitAttributes[attr], self.xplaneObject)
+                o += commands.writeAttribute(self.cockpitAttributes[attr], self.xplaneObject)
 
         return o

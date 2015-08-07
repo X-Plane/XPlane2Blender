@@ -159,6 +159,8 @@ class XPlaneFile():
             else:
                 self.collectBonesFromBlenderObjects(bone, blenderObject.children, False)
 
+        parentBone.sortChildren()
+
     def collectBonesFromBlenderBones(self, parentBone, blenderArmature, blenderBones, needsFilter = True):
         parentBlenderBone = parentBone.blenderBone
 
@@ -185,6 +187,8 @@ class XPlaneFile():
 
             self.collectBonesFromBlenderObjects(bone, childBlenderObjects, False)
             self.collectBonesFromBlenderBones(bone, blenderArmature, blenderBone.children, False)
+
+        parentBone.sortChildren()
 
     def getChildBlenderObjectsForBlenderBone(self, blenderBone):
         blenderObjects = []

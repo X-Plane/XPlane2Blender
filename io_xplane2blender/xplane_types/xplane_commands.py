@@ -1,5 +1,7 @@
 from ..xplane_config import getDebug, getDebugger
+from ..xplane_helpers import firstMatchInList
 from .xplane_attributes import XPlaneAttributes
+import re
 
 # Class: XPlaneCommands
 # Creates the OBJ commands table.
@@ -23,15 +25,7 @@ class XPlaneCommands():
             'ATTR_light_level':'ATTR_light_level_reset',
             'ATTR_cockpit':'ATTR_no_cockpit',
 #            'ATTR_cockpit_region':'ATTR_no_cockpit',
-            'ATTR_manip_drag_xy':'ATTR_manip_none',
-            'ATTR_manip_drag_axis':'ATTR_manip_none',
-            'ATTR_manip_command':'ATTR_manip_none',
-            'ATTR_manip_command_axis':'ATTR_manip_none',
-            'ATTR_manip_push':'ATTR_manip_none',
-            'ATTR_manip_radio':'ATTR_manip_none',
-            'ATTR_manip_toggle':'ATTR_manip_none',
-            'ATTR_manip_delta':'ATTR_manip_none',
-            'ATTR_manip_wrap':'ATTR_manip_none',
+            'ATTR_manip_(.*)':'ATTR_manip_none',
             'ATTR_draw_disable':'ATTR_draw_enable',
             'ATTR_poly_os':'ATTR_poly_os 0',
             'ATTR_no_cull':'ATTR_cull',
@@ -102,6 +96,17 @@ class XPlaneCommands():
 
         return o
 
+    def _writeAnimAttributes(self, xplaneObject):
+        indent = xplaneObject.xplaneBone.getIndent()
+        o = ''
+
+        if xplaneObject.hasAnimAttributes():
+            for attr in xplaneObject.animAttributes:
+                for value in xplaneObject.animAttributes[attr].getValuesAsString():
+                    o += indent +"%s\t%s\n" % (attr, value)
+
+        return o
+
     def _writeXPlaneObjectPrefix(self, xplaneObject):
         o = ''
 
@@ -113,16 +118,6 @@ class XPlaneCommands():
 
         if xplaneObject.hasAnimAttributes():
             o += self._writeAnimAttributes(xplaneObject)
-
-        o += self._writeReseters(xplaneObject)
-
-        # write custom attributes
-        if hasattr(xplaneObject, 'attributes'):
-            o += self._writeCustomAttributes(xplaneObject)
-
-        # write cockpit attributes
-        if self.xplaneFile.options.cockpit and hasattr(xplaneObject, 'cockpitAttributes'):
-            o += self._writeCockpitAttributes(xplaneObject)
 
         o += xplaneObject.write()
 
@@ -165,13 +160,19 @@ class XPlaneCommands():
                 o += indent + '%s\t%s\n' % (name, value)
 
                 # check if this thing has a reseter and remove counterpart if any
-                if name in self.reseters and self.reseters[name] in self.written:
-                    del self.written[self.reseters[name]]
+                reseter = self.getAttributeReseter(name)
+
+                if reseter and reseter in self.written:
+                    del self.written[reseter]
+
+                writtenNames = list(self.written.keys())
 
                 # check if a reseter counterpart has been written and if so delete its reseter
                 for reseter in self.reseters:
-                    if self.reseters[reseter] == name and reseter in self.written:
-                        del self.written[reseter]
+                    matchingWritten = firstMatchInList(re.compile(reseter), writtenNames)
+
+                    if self.reseters[reseter] == name and matchingWritten:
+                        del self.written[matchingWritten]
 
             # store this in the written attributes
             if value != False:
@@ -228,50 +229,24 @@ class XPlaneCommands():
     # Returns:
     #  bool - True if attribute is a reseter, else False
     def attributeIsReseter(self, attr, reseters = None):
-      if reseters == None: reseters = self.reseters
+        if reseters == None: reseters = self.reseters
 
-      for reseter_attr in reseters:
-        if attr == reseters[reseter_attr]: return True
+        for reseter in reseters:
+            if reseters[reseter] == attr:
+                return True
 
-      return False
+        return False
 
-    # Method: writeCustomAttributes
-    # Returns the commands for custom attributes of a <XPlaneObject>.
-    #
-    # Parameters:
-    #   xplaneObject - A <XPlaneObject>
-    #   string tabs - The indentation tabs.
-    #
-    # Returns:
-    #   string - Commands
-    def _writeCustomAttributes(self, xplaneObject):
-        o = ''
+    def getAttributeReseter(self, attr):
+        reseterNames = list(self.reseters.keys())
 
-        for attr in xplaneObject.attributes:
-            o += self.writeAttribute(xplaneObject.attributes[attr], xplaneObject)
+        for reseter in reseterNames:
+            pattern = re.compile(reseter)
 
-            # add reseter to own reseters list
-            if attr in xplaneObject.reseters and xplaneObject.reseters[attr] != '':
-                self.reseters[attr] = xplaneObject.reseters[attr]
+            if pattern.fullmatch(attr):
+                return self.reseters[reseter]
 
-        return o
-
-    # Method: writeCockpitAttributes
-    # Returns the commands for a <XPlaneObject> cockpit related attributes (e.g. Manipulators).
-    #
-    # Parameters:
-    #   xplaneObject - A <XPlaneObject>
-    #   string tabs - The indentation tabs.
-    #
-    # Returns:
-    #   string - Commands
-    def _writeCockpitAttributes(self, xplaneObject):
-        o = ''
-
-        for attr in xplaneObject.cockpitAttributes:
-            o += self.writeAttribute(xplaneObject.cockpitAttributes[attr], xplaneObject)
-
-        return o
+        return None
 
     # Method: writeReseters
     # Returns the commands for a <XPlaneObject> needed to reset previous commands.
@@ -282,7 +257,7 @@ class XPlaneCommands():
     #
     # Returns:
     #   string - Commands
-    def _writeReseters(self, xplaneObject):
+    def writeReseters(self, xplaneObject):
         debug = getDebug()
         debugger = getDebugger()
         o = ''
@@ -304,36 +279,27 @@ class XPlaneCommands():
             if xplaneObject.cockpitAttributes[attr]:
                 attributes.add(xplaneObject.cockpitAttributes[attr])
 
-        for attr in self.reseters:
+        attributeNames = list(attributes.keys())
+        writtenNames = list(self.written.keys())
+
+        for reseter in self.reseters:
+            resetingAttr = self.reseters[reseter]
+            pattern = re.compile(reseter)
+
+            matchingWritten = firstMatchInList(pattern, writtenNames)
+            matchingAttribute = firstMatchInList(pattern, attributeNames)
+
             # only reset attributes that wont be written with this object again
-            if attr not in attributes and attr in self.written:
+            if not matchingAttribute and matchingWritten:
 #                if debug:
 #                    debugger.debug('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
 
                 # write reseter and add it to written
-                o += indent + self.reseters[attr] + "\n"
-                self.written[self.reseters[attr]] = True
+                o += indent + resetingAttr + "\n"
+                self.written[resetingAttr] = True
 
                 # we've reset an attribute so remove it from written as it will need rewrite with next object
-                del self.written[attr]
-        return o
-
-    # Method: writeAnimAttributes
-    # Returns the commands for animation attributes of a <XPlaneObject>.
-    #
-    # Parameters:
-    #   xplaneObject - A <XPlaneObject>
-    #   string tabs - The indentation tabs.
-    #
-    # Returns:
-    #   string - Commands
-    def _writeAnimAttributes(self, xplaneObject):
-        o = ''
-        indent = xplaneObject.xplaneBone.getIndent()
-
-        for attr in xplaneObject.animAttributes:
-            for value in xplaneObject.animAttributes[attr].getValuesAsString():
-                o += indent +"%s\t%s\n" % (attr, value)
+                del self.written[matchingWritten]
         return o
 
     def _writeConditions(self, conditions, xplaneObject, close = False):

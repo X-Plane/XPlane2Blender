@@ -92,8 +92,19 @@ class XPlaneObject():
 
         self.getWeight()
 
-    def collect():
-        pass
+    def collect(self):
+        # add custom attributes
+        self.collectCustomAttributes()
+
+        # add anim attributes from datarefs and custom anim attributes
+        self.collectAnimAttributes()
+
+        # add conditions
+        self.collectConditions()
+
+        self.attributes.order()
+        self.animAttributes.order()
+        self.cockpitAttributes.order()
 
     # Method: hasAnimAttributes
     # Checks if the object has animation attributes.
@@ -114,8 +125,9 @@ class XPlaneObject():
 
         if hasattr(self.blenderObject, "data") and hasattr(self.blenderObject.data, "xplane") and hasattr(self.blenderObject.data.xplane, "customAttributes"):
             for attr in self.blenderObject.data.xplane.customAttributes:
+                if attr.reset:
+                    commands.addReseter(attr.name, attr.reset)
                 self.attributes.add(XPlaneAttribute(attr.name,attr.value,attr.weight))
-                self.reseters[attr.name] = attr.reset
 
     def collectAnimAttributes(self):
         # add custom anim attributes
@@ -181,7 +193,20 @@ class XPlaneObject():
         indent = self.xplaneBone.getIndent()
         o = ''
 
+        xplaneFile = self.xplaneBone.xplaneFile
+        commands =  xplaneFile.commands
+
         if debug:
             o += "%s# %s: %s\tweight: %d\n" % (indent, self.type, self.name, self.weight)
+
+        o += commands.writeReseters(self)
+
+        for attr in self.attributes:
+            o += commands.writeAttribute(self.attributes[attr], self)
+
+        # if the file is a cockpit file write all cockpit attributes
+        if hasattr(xplaneFile.options, 'cockpit') and xplaneFile.options.cockpit:
+            for attr in self.cockpitAttributes:
+                o += commands.writeAttribute(self.cockpitAttributes[attr], self)
 
         return o

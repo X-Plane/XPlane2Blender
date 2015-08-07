@@ -8,6 +8,8 @@ from .animation_file_mappings import mappings
 
 EPSILON = sys.float_info.epsilon
 
+__dirname__ = os.path.dirname(__file__)
+
 class XPlaneTestCase(unittest.TestCase):
     def setUp(self):
         if '--debug' in sys.argv:
@@ -121,6 +123,20 @@ class XPlaneTestCase(unittest.TestCase):
         fixtureFile.close()
 
         return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
+
+    def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None):
+        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+
+        out = xplaneFile.write()
+
+        if tmpFilename:
+            tmpDir = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
+            tmpFile = os.path.join(tmpDir, tmpFilename + '.obj')
+            fh = open(tmpFile, 'w')
+            fh.write(out)
+            fh.close()
+
+        self.assertFileEqualsFixture(out, fixturePath)
 
     # asserts that an attributes object equals a dict
     def assertAttributesEqualDict(self, attrs, d, floatTolerance = None):

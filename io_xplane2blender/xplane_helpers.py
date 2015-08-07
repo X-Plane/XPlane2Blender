@@ -18,6 +18,15 @@ def floatToStr(n):
 
     return s
 
+def firstMatchInList(pattern, items):
+    for i in range(0, len(items)):
+        item = items[i]
+
+        if pattern.fullmatch(item):
+            return item
+
+    return False
+
 # Class: XPlaneDebugger
 # Prints debugging information and optionally logs them to a file.
 class XPlaneDebugger():
