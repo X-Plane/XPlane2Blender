@@ -187,11 +187,12 @@ class XPlaneMesh():
         for i in range(startIndex, l):
             match = True
             ii = 0
+            vl = len(v)
 
-            while ii < l:
+            while ii < vl:
                 if self.vertices[i][ii] != v[ii]:
                     match = False
-                    ii = l
+                    ii = vl
 
                 ii += 1
 
