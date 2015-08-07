@@ -57,7 +57,7 @@ class TestMaterials(XPlaneTestCase):
 
         blueAttrs = defaultAttrs.copy()
         blueAttrs['ATTR_diffuse_rgb'] = [0, 0, 1]
-        
+
         emissiveAttrs = defaultAttrs.copy()
         emissiveAttrs['ATTR_diffuse_rgb'] = [0.5, 0.5, 0.5]
         emissiveAttrs['ATTR_emission_rgb'] = [0.5, 0.5, 0.5]
@@ -117,7 +117,14 @@ class TestMaterials(XPlaneTestCase):
         self.assertAttributesEqualDict(conditions.cockpitAttributes, defaultCockpitAttrs)
 
     def test_export_materials(self):
+        def filterLines(line):
+            return isinstance(line[0], str) and line[0].find('ATTR_') == 0
+
         filename = 'test_materials'
-        self.assertLayerExportEqualsFixture(0, os.path.join(__dirname__, 'fixtures', filename + '.obj'), filename)
+        self.assertLayerExportEqualsFixture(
+            0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
 
 runTestCases([TestMaterials])

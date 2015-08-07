@@ -116,7 +116,14 @@ class TestMaterials(XPlaneTestCase):
         })
 
     def test_export_manipulators(self):
+        def filterLines(line):
+            return isinstance(line[0], str) and line[0].find('ATTR_manip_') == 0
+
         filename = 'test_manipulators'
-        self.assertLayerExportEqualsFixture(0, os.path.join(__dirname__, 'fixtures', filename + '.obj'), filename)
+        self.assertLayerExportEqualsFixture(
+            0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
 
 runTestCases([TestMaterials])
