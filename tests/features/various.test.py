@@ -56,7 +56,7 @@ class TestMaterials(XPlaneTestCase):
 
     def test_texture_coords_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and line[0] == 'VT'
+            return isinstance(line[0], str) and (line[0] == 'VT' or line[0].find('TEXTURE') == 0)
 
         filename = 'test_texture_coords'
         self.assertLayerExportEqualsFixture(
