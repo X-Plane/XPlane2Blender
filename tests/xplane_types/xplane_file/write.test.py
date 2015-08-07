@@ -12,39 +12,15 @@ class TestWriteXPlaneFiles(XPlaneTestCase):
         super(TestWriteXPlaneFiles, self).setUp()
 
     def test_write_static(self):
-        tmpDir = os.path.realpath(os.path.join(__file__, '../../../tmp'))
-        tmpFile = os.path.join(tmpDir, 'test_write_static.obj')
-
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
-        out = xplaneFile.write()
-        outFile = open(tmpFile, 'w')
-        outFile.write(out)
-        outFile.close()
-
-        self.assertFileEqualsFixture(out, os.path.join(__dirname__, './fixtures/test_write_static.obj'))
+        filename = 'test_write_static'
+        self.assertLayerExportEqualsFixture(0, os.path.join(__dirname__, 'fixtures', filename + '.obj'), filename)
 
     def test_write_trans_animated(self):
-        tmpDir = os.path.realpath(os.path.join(__file__, '../../../tmp'))
-        tmpFile = os.path.join(tmpDir, 'test_write_trans_anim.obj')
-
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(1)
-        out = xplaneFile.write()
-        outFile = open(tmpFile, 'w')
-        outFile.write(out)
-        outFile.close()
-
-        self.assertFileEqualsFixture(out, os.path.join(__dirname__, './fixtures/test_write_trans_anim.obj'))
+        filename = 'test_write_trans_anim'
+        self.assertLayerExportEqualsFixture(1, os.path.join(__dirname__, 'fixtures', filename + '.obj'), filename)
 
     def test_write_transrot_animated(self):
-        tmpDir = os.path.realpath(os.path.join(__file__, '../../../tmp'))
-        tmpFile = os.path.join(tmpDir, 'test_write_transrot_anim.obj')
-
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(2)
-        out = xplaneFile.write()
-        outFile = open(tmpFile, 'w')
-        outFile.write(out)
-        outFile.close()
-
-        self.assertFileEqualsFixture(out, os.path.join(__dirname__, './fixtures/test_write_transrot_anim.obj'))
+        filename = 'test_write_transrot_anim'
+        self.assertLayerExportEqualsFixture(2, os.path.join(__dirname__, 'fixtures', filename + '.obj'), filename)
 
 runTestCases([TestWriteXPlaneFiles])
