@@ -1,3 +1,4 @@
+import bpy
 from ..xplane_config import getDebug
 from .xplane_object import XPlaneObject
 from .xplane_material import XPlaneMaterial
@@ -37,6 +38,18 @@ class XPlanePrimitive(XPlaneObject):
         self.faces = None
 
         self.getWeight()
+
+    def getWeight(self, defaultWeight = 0):
+        super(XPlanePrimitive, self).getWeight(defaultWeight)
+
+        if not hasattr(self.blenderObject.xplane, 'override_weight') or not self.blenderObject.xplane.override_weight:
+            mat_weight = 0
+
+            for i in range(0, len(bpy.data.materials)):
+                if len(self.blenderObject.data.materials) > 0 and self.blenderObject.data.materials[0] == bpy.data.materials[i]:
+                    mat_weight = i
+
+            self.weight += mat_weight
 
     def collect(self):
         super(XPlanePrimitive, self).collect()

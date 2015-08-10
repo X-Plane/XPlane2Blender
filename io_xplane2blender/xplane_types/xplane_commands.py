@@ -60,11 +60,6 @@ class XPlaneCommands():
         o = ''
         o += self.writeXPlaneBone(self.xplaneFile.rootBone, lod)
 
-        # write down all lights
-        # TODO: write them in writeObjects instead to allow light animation and nesting
-#        if len(self.file['lights'])>0:
-#            o+="LIGHTS\t0 %d\n" % len(self.file['lights'])
-
         return o
 
     def writeXPlaneBone(self, xplaneBone, lod):

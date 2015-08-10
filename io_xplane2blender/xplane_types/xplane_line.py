@@ -12,4 +12,4 @@ class XPlaneLine(XPlaneObject):
         self.indices = [0,0]
         self.type = 'LINE'
 
-        self.getWeight()
+        self.getWeight(9000)

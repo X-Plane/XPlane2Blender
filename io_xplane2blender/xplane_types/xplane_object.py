@@ -144,25 +144,17 @@ class XPlaneObject():
 
     # Method: getWeight
     #
+    # Parameters:
+    #   defaultWeight - (default = 0)
+    #
     # Returns:
     #   int - The weight of this object.
-    def getWeight(self):
-        weight = 0
+    def getWeight(self, defaultWeight = 0):
+        weight = defaultWeight
 
         if hasattr(self.blenderObject.xplane, 'override_weight') and self.blenderObject.xplane.override_weight:
             weight = self.blenderObject.xplane.weight
         else:
-            # TODO: set initial weight in constructor
-            if self.type=='LIGHT':
-                weight = 10000
-            elif self.type=='LINE':
-                weight = 9000
-            else:
-                if hasattr(self, 'material'):
-                    for i in range(0, len(bpy.data.materials)):
-                        if len(self.blenderObject.data.materials) > 0 and self.blenderObject.data.materials[0] == bpy.data.materials[i]:
-                            weight = i
-
             # add max weight of attributes
             max_attr_weight = 0
 
@@ -175,12 +167,7 @@ class XPlaneObject():
                     max_attr_weight = self.cockpitAttributes[attr].weight
 
             weight += max_attr_weight
-
-            # add 1000 to weight on animated objects, so they are all grouped
-            # TODO: decide if this is neccessary as it would interrupt grouping by material and animations are fairly cheap.
-#            if self.animated():
-#                weight+=1000
-
+        
         self.weight = weight
 
     def collectConditions(self):

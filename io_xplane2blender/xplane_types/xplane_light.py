@@ -64,7 +64,7 @@ class XPlaneLight(XPlaneObject):
             self.color[1] = 9.7
             self.color[2] = 9.7
 
-        self.getWeight()
+        self.getWeight(10000)
 
     def write(self):
         indent = self.xplaneBone.getIndent()
