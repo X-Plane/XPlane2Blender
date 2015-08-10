@@ -51,13 +51,15 @@ def getFileNameFromBlenderObject(blenderObject, xplaneLayer):
     return filename
 
 def createFilesFromBlenderLayers():
-    files = []
+    xplaneFiles = []
 
     for layerIndex in getActiveBlenderLayerIndexes():
         xplaneFile = createFileFromBlenderLayerIndex(layerIndex)
-        if xplaneFile:
-            files.append(xplaneFile)
 
+        if xplaneFile:
+            xplaneFiles.append(xplaneFile)
+
+    return xplaneFiles
 
 def createFileFromBlenderLayerIndex(layerIndex):
     xplaneFile = None
@@ -82,6 +84,18 @@ def createFileFromBlenderRootObject(blenderObject):
             xplaneFile.collectFromBlenderRootObject(blenderObject)
 
     return xplaneFile
+
+def createFilesFromBlenderRootObjects(scene):
+    xplaneFiles = []
+
+    for blenderObject in scene.objects:
+        if blenderObject.xplane.isExportableRoot and blenderObject.xplane.layer.export:
+            xplaneFile = createFileFromBlenderRootObject(blenderObject)
+
+            if xplaneFile:
+                xplaneFiles.append(xplaneFile)
+
+    return xplaneFiles
 
 # Class: XPlaneFile
 # X-Plane OBJ file
@@ -264,10 +278,25 @@ class XPlaneFile():
     #
     # Parameters:
     #   rootObject - blender object
-    def collectFromBlenderRootObject(self, rootObject):
+    def collectFromBlenderRootObject(self, blenderRootObject):
+        debug = getDebug()
+        debugger = getDebugger()
+
         currentFrame = bpy.context.scene.frame_current
 
-        # TODO: do stuff
+        blenderObjects = [blenderRootObject]
+
+        def collectChildren(parentObject):
+            for blenderObject in parentObject.children:
+                if debug:
+                    debugger.debug("scanning %s" % blenderObject.name)
+
+                blenderObjects.append(blenderObject)
+                collectChildren(blenderObject)
+
+        collectChildren(blenderRootObject)
+        self.collectBlenderObjects(blenderObjects)
+        self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
         # restore frame before export
         bpy.context.scene.frame_set(frame = currentFrame)

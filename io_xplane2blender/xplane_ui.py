@@ -405,8 +405,11 @@ def mesh_layout(self, obj):
     layout = self.layout
     row = layout.row()
     row.prop(obj.xplane, "depth", text = "Use depth culling")
-    row = layout.row()
-    row.prop(obj.xplane, "export_mesh", text = "Export mesh in layers")
+
+    if bpy.context.scene.xplane.exportMode == 'layers':
+        row = layout.row()
+        row.prop(obj.xplane, "export_mesh", text = "Export mesh in layers")
+
     row = layout.row()
 
 # Function: lamp_layout

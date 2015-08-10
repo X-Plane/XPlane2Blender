@@ -52,12 +52,15 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         filepath = os.path.dirname(filepath)
         # filepath = bpy.path.ensure_ext(filepath, ".obj")
 
-        # check if X-Plane layers have been created
-        # TODO: only check if user selected the export from layers option, instead the export from root objects
-        if len(bpy.context.scene.xplane.layers) == 0:
-            errors = True
-            # showError('You must create X-Plane layers first.')
-            return {'FINISHED'}
+        exportMode = bpy.context.scene.xplane.exportMode
+
+        if exportMode == 'layers':
+            # check if X-Plane layers have been created
+            # TODO: only check if user selected the export from layers option, instead the export from root objects
+            if len(bpy.context.scene.xplane.layers) == 0:
+                errors = True
+                # showError('You must create X-Plane layers first.')
+                return {'FINISHED'}
 
         # store current frame as we will go back to it
         currentFrame = bpy.context.scene.frame_current
@@ -66,14 +69,16 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.scene.frame_set(frame = 1)
         bpy.context.scene.update()
 
-        xplaneLayers = bpy.context.scene.xplane.layers.items()
+        xplaneFiles = []
 
-        # create files for each exportable layer
-        for layer in range(0, len(xplaneLayers)):
-            xplaneLayer = bpy.context.scene.xplane.layers[layer]
-            if xplaneLayer.export:
-                xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
-                self._writeXPlaneFile(xplaneFile, filepath)
+        if exportMode == 'layers':
+            xplaneFiles = xplane_file.createFilesFromBlenderLayers()
+
+        elif exportMode == 'root_objects':
+            xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
+
+        for xplaneFile in xplaneFiles:
+            self._writeXPlaneFile(xplaneFile, filepath)
 
         # return to stored frame
         bpy.context.scene.frame_set(frame = currentFrame)
