@@ -558,7 +558,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         items = [
             ("0", "none", "none"),
             ("2", "2", "2"),
-            ("3", "3", "3")
+            ("3", "3", "3"),
+            ("4", "4", "4")
         ]
     )
 

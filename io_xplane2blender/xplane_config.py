@@ -22,6 +22,9 @@ debugger = XPlaneDebugger()
 
 errors = False
 
+MAX_LODS = 4
+MAX_COCKPIT_REGIONS = 4
+
 def initConfig():
     global debug
     global log

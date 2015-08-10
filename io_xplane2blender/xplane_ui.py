@@ -216,7 +216,7 @@ def object_layer_layout(self, obj):
             box.prop(layerObj, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
 
             if expanded:
-                layer_layout(self, box, layerObj, version)
+                layer_layout(self, box, layerObj, version, 'object')
                 custom_layer_layout(self, box, layerObj, version, 'object')
 
 # Function: layer_layout
@@ -227,7 +227,7 @@ def object_layer_layout(self, obj):
 #   scene - Blender scene
 #   UILayout layout - Instance of sublayout to use.
 #   int layer - <XPlaneLayer> index.
-def layer_layout(self, layout, layerObj, version):
+def layer_layout(self, layout, layerObj, version, context = 'scene'):
     column = layout.column()
     column.prop(layerObj, "export", text = "Export")
     column.prop(layerObj, "name", text = "Name")
@@ -254,7 +254,12 @@ def layer_layout(self, layout, layerObj, version):
         if num_regions > 0:
             if len(layerObj.cockpit_region) < num_regions:
                 region_box = cockpit_box.box()
-                region_box.operator("scene.add_xplane_layer_cockpit_regions").index = layerObj.index
+
+                if context == 'scene':
+                    region_box.operator("scene.add_xplane_layer_cockpit_regions").index = layerObj.index
+                elif context == 'object':
+                    region_box.operator("object.add_xplane_layer_cockpit_regions")
+
             else:
                 for i in range(0, num_regions):
                     # get cockpit region or create it if not present
@@ -294,7 +299,12 @@ def layer_layout(self, layout, layerObj, version):
 
             if len(layerObj.lod) < num_lods:
                 lod_box = lods_box.box()
-                lod_box.operator("scene.add_xplane_layer_lods").index = layer
+
+                if context == 'scene':
+                    lod_box.operator("scene.add_xplane_layer_lods").index = layer
+                elif context == 'object':
+                    lod_box.operator("object.add_xplane_layer_lods")
+
             else:
                 for i in range(0, num_lods):
                     if len(layerObj.lod)>i:

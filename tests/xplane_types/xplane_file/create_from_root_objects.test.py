@@ -49,8 +49,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
             os.path.join(__dirname__, 'fixtures',  'test_export_root_objects_1.obj')
         )
 
-        xplaneFile2 = xplane_file.createFileFromBlenderRootObject(bpy.data.objects['root_2'])
-
+        xplaneFile2 = xplane_file.createFileFromBlenderRootObject(bpy.data.objects['root_2']
 
         out = xplaneFile2.write()
 

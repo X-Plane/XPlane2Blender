@@ -136,6 +136,21 @@ class SCENE_OT_add_xplane_layer_lods(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class OBJECT_OT_add_xplane_layer_lods(bpy.types.Operator):
+    bl_label = 'Add levels of detail'
+    bl_idname = 'object.add_xplane_layer_lods'
+    bl_description = 'Add X-Plane layer LODs'
+
+    def execute(self,context):
+        obj = context.object
+
+        num_lods = int(obj.xplane.layer.lods)
+
+        while len(obj.xplane.layer.lod) < MAX_LODS:
+            obj.xplane.layer.lod.add()
+
+        return {'FINISHED'}
+
 class SCENE_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
     bl_label = 'Add cockpit regions'
     bl_idname = 'scene.add_xplane_layer_cockpit_regions'
@@ -150,6 +165,21 @@ class SCENE_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
 
         while len(scene.xplane.layers[self.index].cockpit_region) < 4:
             scene.xplane.layers[self.index].cockpit_region.add()
+
+        return {'FINISHED'}
+
+class OBJECT_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
+    bl_label = 'Add cockpit regions'
+    bl_idname = 'object.add_xplane_layer_cockpit_regions'
+    bl_description = 'Add X-Plane layer Cockpit Regions'
+
+    def execute(self,context):
+        obj = context.object
+
+        num_regions = int(obj.xplane.layer.cockpit_regions)
+
+        while len(obj.xplane.layer.cockpit_region) < MAX_COCKPIT_REGIONS:
+            obj.xplane.layer.cockpit_region.add()
 
         return {'FINISHED'}
 
