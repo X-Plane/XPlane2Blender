@@ -24,7 +24,7 @@ class XPlaneAttribute():
     # Parameters:
     #   mixed value - Either a string or boolean
     def addValue(self, value):
-        if value not in self.values:
+        if value not in self.value:
             self.value.append(value)
 
     # Method: addValues
@@ -107,3 +107,6 @@ class XPlaneAttribute():
             o += self.getValueAsString(i)
 
         return o
+
+    def removeValues(self):
+        self.value = []
