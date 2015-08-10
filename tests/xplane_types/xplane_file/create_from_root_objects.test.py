@@ -18,12 +18,13 @@ class TestCreateFromRootObjects(XPlaneTestCase):
         self.assertEqual(xplaneFile.filename, 'root_1')
 
         # should contain 3 cubes
-        self.assertEqual(len(xplaneFile.objects), 3)
+        self.assertEqual(len(xplaneFile.objects), 4)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile, [
             'root_1',
             'root_1_child_1',
+            'root_1_child_1_child',
             'root_1_child_2'
         ])
 
@@ -32,6 +33,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
             '0 ROOT',
                 '1 Object: root_1',
                     '2 Object: root_1_child_1',
+                        '3 Object: root_1_child_1_child',
                     '2 Object: root_1_child_2'
         ])
 
