@@ -331,27 +331,14 @@ IDX	286
 IDX	287
 
 
-ATTR_LOD 0.0 0
-# 0 ROOT
-# 1 Object: lod_1
-# 1 Object: lod_1_2
-# 1 Object: lod_1_2_3
-# 1 Object: lod_none
-# PRIMITIVE: lod_none	weight: 3
-# MATERIAL: Material
-ATTR_diffuse_rgb	0.5	0.5	0.5
-ATTR_emission_rgb	0	0	0
-ATTR_shiny_rat	0
-TRIS	252 36
-# 1 Object: lod_2
-# 1 Object: lod_3
-# 1 Object: lod_2_3
-# 1 Object: lod_1_3
 ATTR_LOD 0 1000
 # 0 ROOT
 # 1 Object: lod_1
 # PRIMITIVE: lod_1	weight: 0
 # MATERIAL: Material
+ATTR_diffuse_rgb	0.5	0.5	0.5
+ATTR_emission_rgb	0	0	0
+ATTR_shiny_rat	0
 TRIS	0 36
 # 1 Object: lod_1_2
 # PRIMITIVE: lod_1_2	weight: 1

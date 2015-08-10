@@ -1,7 +1,8 @@
-from ..xplane_config import getDebug, getDebugger
+from ..xplane_config import getDebug, getDebugger, MAX_LODS
 from ..xplane_helpers import firstMatchInList
 from .xplane_attributes import XPlaneAttributes
 import re
+import bpy
 
 # Class: XPlaneCommands
 # Creates the OBJ commands table.
@@ -67,16 +68,32 @@ class XPlaneCommands():
         o += xplaneBone.writeAnimationPrefix()
         xplaneObject = xplaneBone.xplaneObject
         xplaneObjectWritten = False
+        exportMode = self.xplaneFile.exportMode
+        numLods = int(self.xplaneFile.options.lods)
 
         if xplaneObject:
+            lods = []
+
+            if exportMode == 'layers':
+                lods = xplaneObject.lod
+            elif exportMode == 'root_objects':
+                lods = xplaneObject.blenderObject.layers
+
+            isInLod = False
+
+            for lodIndex in range(0, MAX_LODS):
+                if len(lods) > lodIndex and lods[lodIndex] == True:
+                    isInLod = True
+                    break
+
             if lod == -1:
                 # only write objects that are in no lod
-                if xplaneObject.lod[0] == False and xplaneObject.lod[1] == False and xplaneObject.lod[2] == False:
+                if not isInLod or (exportMode == 'root_objects' and numLods <= 0):
                     o += self._writeXPlaneObjectPrefix(xplaneObject)
                     xplaneObjectWritten = True
 
             # write objects that are within that lod and in no lod, as those should appear everywhere
-            elif xplaneObject.lod[lod] == True or (xplaneObject.lod[0] == False and xplaneObject.lod[1] == False and xplaneObject.lod[2] == False):
+            elif lods[lod] == True or not isInLod:
                 o += self._writeXPlaneObjectPrefix(xplaneObject)
                 xplaneObjectWritten = True
 

@@ -735,9 +735,10 @@ def conditions_layout(self, obj, type):
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
 def lod_layout(self, obj):
-    layout = self.layout
-    row = layout.row()
-    row.prop(obj.xplane, "lod", text = "LOD")
+    if bpy.context.scene.xplane.exportMode == 'layers':
+        layout = self.layout
+        row = layout.row()
+        row.prop(obj.xplane, "lod", text = "LOD")
 
 # Function: weight_layout
 # Draws the UI for Object weight

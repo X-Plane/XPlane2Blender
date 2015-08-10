@@ -79,7 +79,7 @@ class XPlaneObject():
         if hasattr(self.blenderObject.xplane, 'lod'):
             self.lod = self.blenderObject.xplane.lod
         else:
-            self.lod = (False, False, False)
+            self.lod = (False, False, False, False)
 
         if hasattr(self.blenderObject, 'type'):
             self.type = self.blenderObject.type
@@ -167,7 +167,7 @@ class XPlaneObject():
                     max_attr_weight = self.cockpitAttributes[attr].weight
 
             weight += max_attr_weight
-        
+
         self.weight = weight
 
     def collectConditions(self):

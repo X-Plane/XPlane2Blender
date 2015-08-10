@@ -69,6 +69,7 @@ def createFileFromBlenderLayerIndex(layerIndex):
         xplaneFile = XPlaneFile(getFilenameFromXPlaneLayer(xplaneLayer), xplaneLayer)
 
         if xplaneFile:
+            xplaneFile.exportMode = bpy.context.scene.xplane.exportMode
             xplaneFile.collectFromBlenderLayerIndex(layerIndex)
 
     return xplaneFile
@@ -81,6 +82,7 @@ def createFileFromBlenderRootObject(blenderObject):
         xplaneFile = XPlaneFile(getFileNameFromBlenderObject(blenderObject, xplaneLayer), xplaneLayer)
 
         if xplaneFile:
+            xplaneFile.exportMode = bpy.context.scene.xplane.exportMode
             xplaneFile.collectFromBlenderRootObject(blenderObject)
 
     return xplaneFile
@@ -121,6 +123,8 @@ class XPlaneFile():
 
         # dict of xplane objects within the file
         self.objects = {}
+
+        self.exportMode = 'layers'
 
         # the root bone: origin for all animations/objects
         self.rootBone = None
@@ -413,12 +417,14 @@ class XPlaneFile():
                 if tallestFar < far:
                     tallestFar = far
 
-            o += "ATTR_LOD 0.0 %s\n" % floatToStr(smallestNear)
-
-        o += self.commands.write()
+            if smallestNear > 0:
+                o += "ATTR_LOD 0.0 %s\n" % floatToStr(smallestNear)
+                o += self.commands.write()
+        else:
+            o += self.commands.write()
 
         # write commands for each additional LOD
-        for lodIndex in range(0,numLods):
+        for lodIndex in range(0, numLods):
             if lodIndex < len(self.options.lod):
                 o += "ATTR_LOD %s %s\n" % (
                     floatToStr(self.options.lod[lodIndex].near),
@@ -428,7 +434,7 @@ class XPlaneFile():
 
         # if lods are present we need to attach a closing lod
         # containing all objects not in a lod that should always be visible
-        if numLods > 0:
+        if numLods > 0 and tallestFar < 100000:
             o += "ATTR_LOD %s 100000\n" % floatToStr(tallestFar)
             o += self.commands.write()
 

@@ -172,6 +172,7 @@ IDX	142
 IDX	143
 
 
+ATTR_LOD 0 1000
 # 0 Object: root_1
 # PRIMITIVE: root_1	weight: 0
 # MATERIAL: Material
@@ -180,16 +181,31 @@ ATTR_emission_rgb	0	0	0
 ATTR_shiny_rat	0.5
 TRIS	0 36
 # 1 Object: root_1_child_1
-# PRIMITIVE: root_1_child_1	weight: 0
-# MATERIAL: Material
-TRIS	36 36
 	# 2 Object: root_1_child_1_child
 	# PRIMITIVE: root_1_child_1_child	weight: 0
 	# MATERIAL: Material
 	TRIS	72 36
 # 1 Object: root_1_child_2
+ATTR_LOD 1000 2000
+# 0 Object: root_1
+# 1 Object: root_1_child_1
+# PRIMITIVE: root_1_child_1	weight: 0
+# MATERIAL: Material
+TRIS	36 36
+	# 2 Object: root_1_child_1_child
+# 1 Object: root_1_child_2
+ATTR_LOD 3000 4000
+# 0 Object: root_1
+# 1 Object: root_1_child_1
+	# 2 Object: root_1_child_1_child
+# 1 Object: root_1_child_2
 # PRIMITIVE: root_1_child_2	weight: 0
 # MATERIAL: Material
 TRIS	108 36
+ATTR_LOD 4000 100000
+# 0 Object: root_1
+# 1 Object: root_1_child_1
+	# 2 Object: root_1_child_1_child
+# 1 Object: root_1_child_2
 
 # Build with Blender 2.75 (sub 0) (build b'c27589e') Exported with XPlane2Blender 3.3.0
