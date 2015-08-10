@@ -778,7 +778,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "Export Mode",
         default = "layers",
         items = [
-            ("layers", "Layers", "Layers"),
+            ("layers", "Layers", "Allows to export an .obj file for each layer."),
             ("root_objects", "Root Objects", "Allows to export all objects below a root object into a single .obj file.")
         ]
     )
