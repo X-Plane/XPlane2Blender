@@ -42,6 +42,14 @@ def getFilenameFromXPlaneLayer(xplaneLayer):
 
     return filename
 
+def getFileNameFromBlenderObject(blenderObject, xplaneLayer):
+    if xplaneLayer.name == "":
+        filename = blenderObject.name
+    else:
+        filename = xplaneLayer.name
+
+    return filename
+
 def createFilesFromBlenderLayers():
     files = []
 
@@ -60,6 +68,18 @@ def createFileFromBlenderLayerIndex(layerIndex):
 
         if xplaneFile:
             xplaneFile.collectFromBlenderLayerIndex(layerIndex)
+
+    return xplaneFile
+
+def createFileFromBlenderRootObject(blenderObject):
+    xplaneFile = None
+    xplaneLayer = blenderObject.xplane.layer
+
+    if xplaneLayer:
+        xplaneFile = XPlaneFile(getFileNameFromBlenderObject(blenderObject, xplaneLayer), xplaneLayer)
+
+        if xplaneFile:
+            xplaneFile.collectFromBlenderRootObject(blenderObject)
 
     return xplaneFile
 

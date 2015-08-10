@@ -16,7 +16,7 @@ from .xplane_config import *
 def findFCurveByPath(fcurves,path):
     i = 0
     fcurve = None
-    
+
     # find fcurve
     while i<len(fcurves):
         if fcurves[i].data_path == path:
@@ -36,7 +36,7 @@ def findFCurveByPath(fcurves,path):
 #   - not working
 def makeKeyframesLinear(obj,path):
     fcurve = None
-    
+
     if (obj.animation_data != None and obj.animation_data.action != None and len(obj.animation_data.action.fcurves)>0):
         fcurve = findFCurveByPath(obj.animation_data.action.fcurves,path)
 
@@ -179,6 +179,34 @@ class SCENE_OT_remove_xplane_layer_attribute(bpy.types.Operator):
     def execute(self,context):
         scene = context.scene
         scene.xplane.layers[self.index[0]].customAttributes.remove(self.index[1])
+        return {'FINISHED'}
+
+# Class: SCENE_OT_add_xplane_layer_attribute
+# Adds a custom attribute to a <XPlaneLayer>.
+class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
+    bl_label = 'Add Attribute'
+    bl_idname = 'object.add_xplane_layer_attribute'
+    bl_description = 'Add a custom X-Plane Property'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.layer.customAttributes.add()
+        return {'FINISHED'}
+
+# Class: OBJECT_OT_remove_xplane_layer_attribute
+# Removes a custom attribute from a <XPlaneLayer>.
+class OBJECT_OT_remove_xplane_layer_attribute(bpy.types.Operator):
+    bl_label = 'Remove Attribute'
+    bl_idname = 'object.remove_xplane_layer_attribute'
+    bl_description = 'Remove the custom X-Plane Property'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self,context):
+        obj = context.object
+        obj.xplane.layer.customAttributes.remove(self.index)
         return {'FINISHED'}
 
 # Class: OBJECT_OT_add_xplane_object_attribute
@@ -333,13 +361,13 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
         obj = context.object
         path = getDatarefValuePath(self.index)
         value = obj.xplane.datarefs[self.index].value
-        
+
         if "XPlane Datarefs" not in obj.animation_data.action.groups:
             obj.animation_data.action.groups.new('XPlane Datarefs')
-            
+
         obj.xplane.datarefs[self.index].keyframe_insert(data_path="value",group="XPlane Datarefs")
         makeKeyframesLinear(obj,path)
-        
+
         return {'FINISHED'}
 
 # Class: OBJECT_OT_remove_xplane_dataref_keyframe
@@ -355,7 +383,7 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
         obj = context.object
         path = getDatarefValuePath(self.index)
         obj.xplane.datarefs[self.index].keyframe_delete(data_path="value",group="XPlane Datarefs")
-            
+
         return {'FINISHED'}
 
 # Class: BONE_OT_add_xplane_dataref
@@ -415,7 +443,7 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
             armature.animation_data.action.groups.new(groupName)
 
         armature.data.keyframe_insert(data_path=path, group=groupName)
-        
+
         return {'FINISHED'}
 
 # Class: BONE_OT_remove_xplane_dataref_keyframe

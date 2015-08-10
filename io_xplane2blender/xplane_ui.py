@@ -166,12 +166,13 @@ def scene_layout(self, scene):
 
     row = layout.row()
 
-    if len(scene.xplane.layers) != 0:
-        for i in range(0, len(scene.layers)):
-            row = layout.row()
-            scene_layer_layout(self, scene, row, i)
-    else:
-        row.operator('scene.add_xplane_layers')
+    if scene.xplane.exportMode == 'layers':
+        if len(scene.xplane.layers) != 0:
+            for i in range(0, len(scene.layers)):
+                row = layout.row()
+                scene_layer_layout(self, scene, row, i)
+        else:
+            row.operator('scene.add_xplane_layers')
 
 def scene_layer_layout(self, scene, layout, layer):
     version = int(scene.xplane.version)
@@ -194,27 +195,29 @@ def scene_layer_layout(self, scene, layout, layer):
         custom_layer_layout(self, box, layerObj, version)
 
 def object_layer_layout(self, obj):
-    version = int(bpy.context.scene.xplane.version)
-    layerObj = obj.xplane.layer
-    row = self.layout.row()
-
-    row.prop(obj.xplane, 'isExportableRoot', text = 'Root Object')
-
-    if obj.xplane.isExportableRoot:
+    if bpy.context.scene.xplane.exportMode == 'root_objects':
+        version = int(bpy.context.scene.xplane.version)
+        layerObj = obj.xplane.layer
         row = self.layout.row()
-        box = row.box()
 
-        if layerObj.expanded:
-            expandIcon = "TRIA_DOWN"
-            expanded = True
-        else:
-            expandIcon = "TRIA_RIGHT"
-            expanded = False
+        row.prop(obj.xplane, 'isExportableRoot', text = 'Root Object')
 
-        box.prop(layerObj, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
+        if obj.xplane.isExportableRoot:
+            row = self.layout.row()
+            box = row.box()
 
-        if expanded:
-            layer_layout(self, box, layerObj, version)
+            if layerObj.expanded:
+                expandIcon = "TRIA_DOWN"
+                expanded = True
+            else:
+                expandIcon = "TRIA_RIGHT"
+                expanded = False
+
+            box.prop(layerObj, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
+
+            if expanded:
+                layer_layout(self, box, layerObj, version)
+                custom_layer_layout(self, box, layerObj, version, 'object')
 
 # Function: layer_layout
 # Draws the UI layout for <XPlaneLayers>. Uses <custom_layer_layout>.
@@ -365,11 +368,16 @@ def layer_layout(self, layout, layerObj, version):
 #   UILayout self - Instance of current UILayout.
 #   UILayout layout - Instance of sublayout to use.
 #   layerObj - <XPlaneLayer> .
-def custom_layer_layout(self, layout, layerObj, version):
+def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
     layout.separator()
     row = layout.row()
     row.label("Custom Properties")
-    row.operator("scene.add_xplane_layer_attribute", text = "Add Property").index = layerObj.index
+
+    if context == 'scene':
+        row.operator("scene.add_xplane_layer_attribute", text = "Add Property").index = layerObj.index
+    elif context == 'object':
+        row.operator("object.add_xplane_layer_attribute", text = "Add Property")
+
     box = layout.box()
 
     for i, attr in enumerate(layerObj.customAttributes):
@@ -377,7 +385,11 @@ def custom_layer_layout(self, layout, layerObj, version):
         subrow = subbox.row()
         subrow.prop(attr, "name")
         subrow.prop(attr, "value")
-        subrow.operator("scene.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = (layerObj.index, i)
+
+        if context == 'scene':
+            subrow.operator("scene.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = (layerObj.index, i)
+        elif context == 'object':
+            subrow.operator("object.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = i
 
         if type in ("MATERIAL", "MESH"):
             subrow = subbox.row()
