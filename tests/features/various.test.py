@@ -94,4 +94,11 @@ class TestMaterials(XPlaneTestCase):
             filterLines
         )
 
+    def test_custom_header_props_export(self):
+        filename = 'test_custom_header_props'
+        self.assertLayerExportEqualsFixture(
+            8, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename
+        )
+
 runTestCases([TestMaterials])
