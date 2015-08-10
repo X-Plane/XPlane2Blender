@@ -828,7 +828,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     manip = bpy.props.PointerProperty(
         attr = "manip",
         name = "Manipulator",
-        description = "XPlane Manipulator Settings.",
+        description = "X-Plane Manipulator Settings.",
         type = XPlaneManipulator
     )
 
@@ -869,6 +869,20 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         name = "Conditions",
         description = "Hide/show object depending on rendering settings",
         type = XPlaneCondition
+    )
+
+    isExportableRoot = bpy.props.BoolProperty(
+        attr = 'isExportableRoot',
+        name = 'Root Object',
+        description = 'Activate to export this object and all its children into it\'s own .obj file.',
+        default = False
+    )
+
+    layer = bpy.props.PointerProperty(
+        attr = "layer",
+        name = "X-Plane Layer",
+        description = "X-Plane Layer/File Settings",
+        type = XPlaneLayer
     )
 
 # Class: XPlaneBoneSettings

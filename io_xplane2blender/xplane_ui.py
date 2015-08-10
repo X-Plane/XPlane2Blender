@@ -88,6 +88,8 @@ class OBJECT_PT_xplane(bpy.types.Panel):
         version = int(context.scene.xplane.version)
 
         if obj.type in ("MESH", "EMPTY", "ARMATURE", "LAMP"):
+            object_layer_layout(self, obj)
+
             animation_layout(self, obj)
             if obj.type == "MESH":
                 mesh_layout(self, obj)
@@ -167,9 +169,52 @@ def scene_layout(self, scene):
     if len(scene.xplane.layers) != 0:
         for i in range(0, len(scene.layers)):
             row = layout.row()
-            layer_layout(self, scene, row, i)
+            scene_layer_layout(self, scene, row, i)
     else:
         row.operator('scene.add_xplane_layers')
+
+def scene_layer_layout(self, scene, layout, layer):
+    version = int(scene.xplane.version)
+    li = str(layer + 1)
+    layerObj = scene.xplane.layers[layer]
+    box = layout.box()
+    li = str(layer + 1)
+
+    if layerObj.expanded:
+        expandIcon = "TRIA_DOWN"
+        expanded = True
+    else:
+        expandIcon = "TRIA_RIGHT"
+        expanded = False
+
+    box.prop(layerObj, "expanded", text = "Layer " + li, expand = True, emboss = False, icon = expandIcon)
+
+    if expanded:
+        layer_layout(self, box, layerObj, version)
+        custom_layer_layout(self, box, layerObj, version)
+
+def object_layer_layout(self, obj):
+    version = int(bpy.context.scene.xplane.version)
+    layerObj = obj.xplane.layer
+    row = self.layout.row()
+
+    row.prop(obj.xplane, 'isExportableRoot', text = 'Root Object')
+
+    if obj.xplane.isExportableRoot:
+        row = self.layout.row()
+        box = row.box()
+
+        if layerObj.expanded:
+            expandIcon = "TRIA_DOWN"
+            expanded = True
+        else:
+            expandIcon = "TRIA_RIGHT"
+            expanded = False
+
+        box.prop(layerObj, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
+
+        if expanded:
+            layer_layout(self, box, layerObj, version)
 
 # Function: layer_layout
 # Draws the UI layout for <XPlaneLayers>. Uses <custom_layer_layout>.
@@ -179,156 +224,139 @@ def scene_layout(self, scene):
 #   scene - Blender scene
 #   UILayout layout - Instance of sublayout to use.
 #   int layer - <XPlaneLayer> index.
-def layer_layout(self, scene, layout, layer):
-    version = int(scene.xplane.version)
-    box = layout.box()
-    li = str(layer+1)
+def layer_layout(self, layout, layerObj, version):
+    column = layout.column()
+    column.prop(layerObj, "export", text = "Export")
+    column.prop(layerObj, "name", text = "Name")
 
-    if scene.xplane.layers[layer].expanded:
-        expandIcon = "TRIA_DOWN"
-        expanded = True
+    if layerObj.cockpit:
+        checkboxIcon = "CHECKBOX_HLT"
     else:
-        expandIcon = "TRIA_RIGHT"
-        expanded = False
+        checkboxIcon = "CHECKBOX_DEHLT"
 
-    box.prop(scene.xplane.layers[layer], "expanded", text = "Layer "+li, expand = True, emboss = False, icon = expandIcon)
+    column.label('Textures')
+    tex_box = column.box()
+    tex_box.prop(layerObj, "texture", text = "Default")
+    tex_box.prop(layerObj, "texture_lit", text = "Night")
+    tex_box.prop(layerObj, "texture_normal", text = "Normal / Specular")
+    column.prop(layerObj, "cockpit", text = "Cockpit", icon = checkboxIcon, toggle = True)
 
-    if expanded:
-        column = box.column()
-        column.prop(scene.xplane.layers[layer], "export", text = "Export")
-        column.prop(scene.xplane.layers[layer], "name", text = "Name")
+    # cockpit regions
+    if layerObj.cockpit:
+        cockpit_box = column.box()
+        #cockpit_box.prop(layerObj, "panel_texture", text = "Panel Texture")
+        cockpit_box.prop(layerObj, "cockpit_regions", text = "Cockpit regions")
+        num_regions = int(layerObj.cockpit_regions)
 
-        if scene.xplane.layers[layer].cockpit:
-            checkboxIcon = "CHECKBOX_HLT"
-        else:
-            checkboxIcon = "CHECKBOX_DEHLT"
+        if num_regions > 0:
+            if len(layerObj.cockpit_region) < num_regions:
+                region_box = cockpit_box.box()
+                region_box.operator("scene.add_xplane_layer_cockpit_regions").index = layerObj.index
+            else:
+                for i in range(0, num_regions):
+                    # get cockpit region or create it if not present
+                    if len(layerObj.cockpit_region)>i:
+                        cockpit_region = layerObj.cockpit_region[i]
 
-        column.label('Textures')
-        tex_box = column.box()
-        tex_box.prop(scene.xplane.layers[layer], "texture", text = "Default")
-        tex_box.prop(scene.xplane.layers[layer], "texture_lit", text = "Night")
-        tex_box.prop(scene.xplane.layers[layer], "texture_normal", text = "Normal / Specular")
-        column.prop(scene.xplane.layers[layer], "cockpit", text = "Cockpit", icon = checkboxIcon, toggle = True)
+                        if cockpit_region.expanded:
+                            expandIcon = "TRIA_DOWN"
+                        else:
+                            expandIcon = "TRIA_RIGHT"
 
-        # cockpit regions
-        if scene.xplane.layers[layer].cockpit:
-            cockpit_box = column.box()
-            #cockpit_box.prop(scene.xplane.layers[layer], "panel_texture", text = "Panel Texture")
-            cockpit_box.prop(scene.xplane.layers[layer], "cockpit_regions", text = "Cockpit regions")
-            num_regions = int(scene.xplane.layers[layer].cockpit_regions)
+                        region_box = cockpit_box.box()
+                        region_box.prop(cockpit_region, "expanded", text = "Cockpit region %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
 
-            if num_regions>0:
-                if len(scene.xplane.layers[layer].cockpit_region) < num_regions:
-                    region_box = cockpit_box.box()
-                    region_box.operator("scene.add_xplane_layer_cockpit_regions").index = layer
-                else:
-                    for i in range(0, num_regions):
-                        # get cockpit region or create it if not present
-                        if len(scene.xplane.layers[layer].cockpit_region)>i:
-                            cockpit_region = scene.xplane.layers[layer].cockpit_region[i]
-
-                            if cockpit_region.expanded:
-                                expandIcon = "TRIA_DOWN"
-                            else:
-                                expandIcon = "TRIA_RIGHT"
-
-                            region_box = cockpit_box.box()
-                            region_box.prop(cockpit_region, "expanded", text = "Cockpit region %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
-
-                            if cockpit_region.expanded:
-                                region_box.prop(cockpit_region, "left")
-                                region_box.prop(cockpit_region, "top")
-                                region_split = region_box.split(percentage = 0.5)
-                                region_split.prop(cockpit_region, "width")
-                                region_split.label("= %d" % (2 ** cockpit_region.width))
-                                region_split = region_box.split(percentage = 0.5)
-                                region_split.prop(cockpit_region, "height")
-                                region_split.label("= %d" % (2 ** cockpit_region.height))
-
-            # v1010
-            # cockpit_lit
-            cockpit_lit_box = column.row()
-            cockpit_lit_box.prop(scene.xplane.layers[layer], "cockpit_lit", "3D-Cockpit lighting")
-
-        # LODs
-        else:
-            lods_box = column.box()
-            lods_box.prop(scene.xplane.layers[layer], "lods", text = "Levels of detail")
-            num_lods = int(scene.xplane.layers[layer].lods)
-
-            if num_lods > 0:
-
-                if len(scene.xplane.layers[layer].lod) < num_lods:
-                    lod_box = lods_box.box()
-                    lod_box.operator("scene.add_xplane_layer_lods").index = layer
-                else:
-                    for i in range(0, num_lods):
-                        if len(scene.xplane.layers[layer].lod)>i:
-                            lod = scene.xplane.layers[layer].lod[i]
-
-                            if lod.expanded:
-                                expandIcon = "TRIA_DOWN"
-                            else:
-                                expandIcon = "TRIA_RIGHT"
-
-                            lod_box = lods_box.box()
-                            lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
-
-                            if lod.expanded:
-                                lod_box.prop(lod, "near")
-                                lod_box.prop(lod, "far")
-
-        column.separator()
-        column.prop(scene.xplane.layers[layer], "slungLoadWeight", text = "Slung Load weight")
-
-        # v1000
-        if version >= 1000:
-            # blend
-            blend_box = column.box()
-            blend_box.prop(scene.xplane.layers[layer], "blend", text = "Blend")
-
-            if  (scene.xplane.layers[layer].blend == "off"):
-                row = blend_box.row()
-                row.prop(scene.xplane.layers[layer], "blendRatio", text = "Alpha cutoff ratio")
-
-            # slope_limit
-            slope_box = column.box()
-            slope_box.prop(scene.xplane.layers[layer], "slope_limit", text = "Slope limit")
-
-            if (scene.xplane.layers[layer].slope_limit == True):
-                row = slope_box.row()
-                row.prop(scene.xplane.layers[layer], "slope_limit_min_pitch", text = "Min. pitch")
-                row = slope_box.row()
-                row.prop(scene.xplane.layers[layer], "slope_limit_max_pitch", text = "Max. pitch")
-                row = slope_box.row()
-                row.prop(scene.xplane.layers[layer], "slope_limit_min_roll", text = "Min. roll")
-                row = slope_box.row()
-                row.prop(scene.xplane.layers[layer], "slope_limit_max_roll", text = "Max. roll")
-
-            # tilted
-            tilted_box = column.row()
-            tilted_box.prop(scene.xplane.layers[layer], "tilted", text = "Tilted")
-
-            # require surface
-            require_box = column.row()
-            require_box.prop(scene.xplane.layers[layer], "require_surface", "Require surface")
-
-            # specular
-            specular_box = column.box()
-            specular_box.prop(scene.xplane.layers[layer], "overrideSpecularity", "Override specularity")
-
-            if scene.xplane.layers[layer].overrideSpecularity == True:
-                row = specular_box.row()
-                row.prop(scene.xplane.layers[layer], "specular", "Specularity")
+                        if cockpit_region.expanded:
+                            region_box.prop(cockpit_region, "left")
+                            region_box.prop(cockpit_region, "top")
+                            region_split = region_box.split(percentage = 0.5)
+                            region_split.prop(cockpit_region, "width")
+                            region_split.label("= %d" % (2 ** cockpit_region.width))
+                            region_split = region_box.split(percentage = 0.5)
+                            region_split.prop(cockpit_region, "height")
+                            region_split.label("= %d" % (2 ** cockpit_region.height))
 
         # v1010
-        if version >= 1010:
-            # shadow
-            shadow_box = column.row()
-            shadow_box.prop(scene.xplane.layers[layer], "shadow", "Cast shadows")
+        # cockpit_lit
+        cockpit_lit_box = column.row()
+        cockpit_lit_box.prop(layerObj, "cockpit_lit", "3D-Cockpit lighting")
 
+    # LODs
+    else:
+        lods_box = column.box()
+        lods_box.prop(layerObj, "lods", text = "Levels of detail")
+        num_lods = int(layerObj.lods)
 
-        custom_layer_layout(self, box, scene, layer)
+        if num_lods > 0:
+
+            if len(layerObj.lod) < num_lods:
+                lod_box = lods_box.box()
+                lod_box.operator("scene.add_xplane_layer_lods").index = layer
+            else:
+                for i in range(0, num_lods):
+                    if len(layerObj.lod)>i:
+                        lod = layerObj.lod[i]
+
+                        if lod.expanded:
+                            expandIcon = "TRIA_DOWN"
+                        else:
+                            expandIcon = "TRIA_RIGHT"
+
+                        lod_box = lods_box.box()
+                        lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
+
+                        if lod.expanded:
+                            lod_box.prop(lod, "near")
+                            lod_box.prop(lod, "far")
+
+    column.separator()
+    column.prop(layerObj, "slungLoadWeight", text = "Slung Load weight")
+
+    # v1000
+    if version >= 1000:
+        # blend
+        blend_box = column.box()
+        blend_box.prop(layerObj, "blend", text = "Blend")
+
+        if  (layerObj.blend == "off"):
+            row = blend_box.row()
+            row.prop(layerObj, "blendRatio", text = "Alpha cutoff ratio")
+
+        # slope_limit
+        slope_box = column.box()
+        slope_box.prop(layerObj, "slope_limit", text = "Slope limit")
+
+        if (layerObj.slope_limit == True):
+            row = slope_box.row()
+            row.prop(layerObj, "slope_limit_min_pitch", text = "Min. pitch")
+            row = slope_box.row()
+            row.prop(layerObj, "slope_limit_max_pitch", text = "Max. pitch")
+            row = slope_box.row()
+            row.prop(layerObj, "slope_limit_min_roll", text = "Min. roll")
+            row = slope_box.row()
+            row.prop(layerObj, "slope_limit_max_roll", text = "Max. roll")
+
+        # tilted
+        tilted_box = column.row()
+        tilted_box.prop(layerObj, "tilted", text = "Tilted")
+
+        # require surface
+        require_box = column.row()
+        require_box.prop(layerObj, "require_surface", "Require surface")
+
+        # specular
+        specular_box = column.box()
+        specular_box.prop(layerObj, "overrideSpecularity", "Override specularity")
+
+        if layerObj.overrideSpecularity == True:
+            row = specular_box.row()
+            row.prop(layerObj, "specular", "Specularity")
+
+    # v1010
+    if version >= 1010:
+        # shadow
+        shadow_box = column.row()
+        shadow_box.prop(layerObj, "shadow", "Cast shadows")
 
 # Function: custom_layer_layout
 # Draws the UI layout for the custom attributes of a <XPlaneLayer>.
@@ -336,20 +364,21 @@ def layer_layout(self, scene, layout, layer):
 # Parameters:
 #   UILayout self - Instance of current UILayout.
 #   UILayout layout - Instance of sublayout to use.
-#   scene - Blender scene
-#   int layer - <XPlaneLayer> index.
-def custom_layer_layout(self, layout, scene, layer):
+#   layerObj - <XPlaneLayer> .
+def custom_layer_layout(self, layout, layerObj, version):
     layout.separator()
     row = layout.row()
     row.label("Custom Properties")
-    row.operator("scene.add_xplane_layer_attribute", text = "Add Property").index = layer
+    row.operator("scene.add_xplane_layer_attribute", text = "Add Property").index = layerObj.index
     box = layout.box()
-    for i, attr in enumerate(scene.xplane.layers[layer].customAttributes):
+
+    for i, attr in enumerate(layerObj.customAttributes):
         subbox = box.box()
         subrow = subbox.row()
         subrow.prop(attr, "name")
         subrow.prop(attr, "value")
-        subrow.operator("scene.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = (layer, i)
+        subrow.operator("scene.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = (layerObj.index, i)
+
         if type in ("MATERIAL", "MESH"):
             subrow = subbox.row()
             subrow.prop(attr, "reset")
