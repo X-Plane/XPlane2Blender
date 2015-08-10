@@ -123,7 +123,7 @@ class XPlaneFile():
         self.objects = {}
 
         # the root bone: origin for all animations/objects
-        self.rootBone = XPlaneBone()
+        self.rootBone = None
 
     # Method: collectFromBlenderLayerIndex
     # collects all objects in a given blender layer
@@ -148,6 +148,8 @@ class XPlaneFile():
                         blenderObjects.append(blenderObject)
 
         self.collectBlenderObjects(blenderObjects)
+        self.rootBone = XPlaneBone()
+        self.rootBone.xplaneFile = self
         self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
         # restore frame before export
@@ -296,6 +298,15 @@ class XPlaneFile():
 
         collectChildren(blenderRootObject)
         self.collectBlenderObjects(blenderObjects)
+
+        # setup root bone and root xplane object
+        rootXPlaneObject = self.objects[blenderRootObject.name]
+        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject)
+        self.rootBone.xplaneFile = self
+
+        # need to collect data
+        rootXPlaneObject.collect()
+
         self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
         # restore frame before export

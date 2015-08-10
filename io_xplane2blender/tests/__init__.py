@@ -33,7 +33,7 @@ class XPlaneTestCase(unittest.TestCase):
                 collect(bone)
 
         collect(xplaneFile.rootBone)
-
+        
         self.assertEquals(len(tree), len(bones))
 
         index = 0

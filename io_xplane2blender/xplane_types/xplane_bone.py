@@ -146,12 +146,12 @@ class XPlaneBone():
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i], i, dataref, self))
 
     def getName(self):
-        if self.parent == None:
-            return '%d ROOT' % self.level
-        elif self.blenderBone:
+        if self.blenderBone:
             return '%d Bone: %s' % (self.level, self.blenderBone.name)
         elif self.blenderObject:
             return '%d Object: %s' % (self.level, self.blenderObject.name)
+        elif self.parent == None:
+            return '%d ROOT' % self.level
 
         return 'UNKNOWN'
 
