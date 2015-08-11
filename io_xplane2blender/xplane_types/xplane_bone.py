@@ -108,7 +108,8 @@ class XPlaneBone():
                     except:
                         return
 
-                    # FIXME: removed datarefs keep fcurves, so we have to check if dataref is still there. FCurves have to be deleted correctly.
+                    # FIXME: removed datarefs keep fcurves, so we have to check if dataref is still there.
+                    # FCurves have to be deleted correctly.
                     if bone:
                         if index < len(bone.xplane.datarefs):
                             dataref = bone.xplane.datarefs[index].path
@@ -126,6 +127,7 @@ class XPlaneBone():
                     if len(fcurve.keyframe_points) > 1:
                         # time to add dataref to animations
                         self.animations[dataref] = []
+
                         if bone:
                             self.datarefs[dataref] = bone.xplane.datarefs[index]
                         else:
@@ -140,9 +142,9 @@ class XPlaneBone():
                             keyframes.append(keyframe)
 
                         # sort keyframes by frame number
-                        keyframesSorted = sorted(keyframes, key=lambda keyframe: keyframe.co[0])
+                        keyframesSorted = sorted(keyframes, key = lambda keyframe: keyframe.co[0])
 
-                        for i in range(0,len(keyframesSorted)):
+                        for i in range(0, len(keyframesSorted)):
                             self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i], i, dataref, self))
 
     def getName(self):
@@ -192,7 +194,13 @@ class XPlaneBone():
             return mathutils.Matrix.Identity(4)
 
         if self.blenderBone:
-            # TODO: is this the correct multi order?
+            '''
+            poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
+            if poseBone:
+                return self.blenderObject.matrix_world.copy() * poseBone.matrix.copy()
+            else:
+                return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
+            '''
             return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
         elif self.blenderObject:
             return self.blenderObject.matrix_world.copy()
@@ -202,15 +210,20 @@ class XPlaneBone():
             # not animated objects have own world matrix
             return self.getBlenderWorldMatrix()
         elif self.blenderBone:
-            # TODO: what is the equivalent to .matrix_parent_inverse for bones?
+            '''
             parent_matrix = None
 
+            poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
+
             if self.blenderBone.parent:
-                parent_matrix = self.blenderObject.matrix_world.copy() * self.blenderBone.parent.matrix_local.copy()
+                if poseBone and poseBone.parent:
+                    parent_matrix = self.blenderObject.matrix_world.copy() * poseBone.parent.matrix.copy()
+                else:
+                    parent_matrix = self.blenderObject.matrix_world.copy() * self.blenderBone.parent.matrix_local.copy()
             else:
                 parent_matrix = self.blenderObject.matrix_world
-
-            return self.parent.getBlenderWorldMatrix() * parent_matrix.inverted_safe()
+            '''
+            return self.parent.getBlenderWorldMatrix() * self.parent.getBlenderWorldMatrix().inverted_safe()
         elif self.blenderObject:
             # animated objects have parents world matrix * inverse of parents matrix
             return self.parent.getBlenderWorldMatrix() * self.blenderObject.matrix_parent_inverse
