@@ -5,6 +5,7 @@ import bpy
 import mathutils
 from .xplane_bone import XPlaneBone
 from .xplane_light import XPlaneLight
+from .xplane_object import XPlaneObject
 # from .xplane_line import XPlaneLine
 # from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
@@ -198,16 +199,21 @@ class XPlaneFile():
     # collects all child bones for a given parent bone given a list of blender objects
     def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True):
         parentBlenderObject = parentBone.blenderObject
+        parentBlenderBone = parentBone.blenderBone
 
         def objectFilter(blenderObject):
             if parentBlenderObject:
                 return blenderObject.parent == parentBlenderObject
-            else:
+            elif parentBlenderBone:
+                return blenderObject.parent_type == 'Bone' and blenderObject.parent_bone == parentBlenberBone
+            elif blenderObject.parent_type == 'OBJECT':
                 return blenderObject.parent == None
+            elif blenderObject.parent_type == 'BONE':
+                return blenderObject.parent_bone == ""
 
         # filter out all objects with given parent
         if needsFilter:
-            blenderObjects = filter(objectFilter, blenderObjects)
+            blenderObjects = list(filter(objectFilter, blenderObjects))
 
         for blenderObject in blenderObjects:
             xplaneObject = None
@@ -274,7 +280,8 @@ class XPlaneFile():
 
         for name in self.objects:
             xplaneObject = self.objects[name]
-            if xplaneObject.blenderObject.parent_bone == blenderBone.name:
+
+            if xplaneObject.blenderObject.parent_type == 'BONE' and xplaneObject.blenderObject.parent_bone == blenderBone.name:
                 blenderObjects.append(xplaneObject.blenderObject)
 
         return blenderObjects

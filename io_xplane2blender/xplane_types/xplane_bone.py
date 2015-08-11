@@ -4,7 +4,7 @@ import mathutils
 import math
 from .xplane_keyframe import XPlaneKeyframe
 from ..xplane_config import getDebugger, getDebug
-from ..xplane_helpers import floatToStr
+from ..xplane_helpers import floatToStr, FLOAT_PRECISION
 
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
@@ -202,13 +202,13 @@ class XPlaneBone():
             # not animated objects have own world matrix
             return self.getBlenderWorldMatrix()
         elif self.blenderBone:
-            # TODO: what is the equivalent to .parent.matrix_parent_inverse for bones?
+            # TODO: what is the equivalent to .matrix_parent_inverse for bones?
             parent_matrix = None
 
             if self.blenderBone.parent:
-                parent_matrix = self.blenderBone.parent.matrix
+                parent_matrix = self.blenderObject.matrix_world.copy() * self.blenderBone.parent.matrix_local.copy()
             else:
-                parent_matrix = self.blenderObject.matrix_local
+                parent_matrix = self.blenderObject.matrix_world
 
             return self.parent.getBlenderWorldMatrix() * parent_matrix.inverted_safe()
         elif self.blenderObject:
@@ -390,13 +390,14 @@ class XPlaneBone():
         )
 
         for keyframe in keyframes:
-            totalRot += abs(keyframe.value)
+            deg = math.degrees(keyframe.rotation[0])
+            totalRot += abs(deg)
 
             if lastValue != keyframe.value:
                 o += "%sANIM_rotate_key\t%s\t%s\n" % (
                     indent,
                     floatToStr(keyframe.value),
-                    floatToStr(math.degrees(keyframe.rotation[0]))
+                    floatToStr(deg)
                 )
                 lastValue = keyframe.value
 
@@ -404,7 +405,7 @@ class XPlaneBone():
         o += "%sANIM_rotate_end\n" % indent
 
         # do not write zero rotations
-        if totalRot == 0:
+        if round(totalRot, FLOAT_PRECISION) == 0:
             return ''
 
         return o
@@ -456,9 +457,11 @@ class XPlaneBone():
         totalRot = 0
 
         for axis in axes:
+            ao = ''
             lastValue = None
+            totalAxisRot = 0
 
-            o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
+            ao += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
                 indent,
                 floatToStr(eulerAxes[axis][0]),
                 floatToStr(eulerAxes[axis][2]),
@@ -467,21 +470,27 @@ class XPlaneBone():
             )
 
             for keyframe in keyframes:
-                totalRot += abs(keyframe.value)
+                deg = math.degrees(keyframe.rotation[axis])
+                totalRot += abs(deg)
+                totalAxisRot += abs(deg)
 
                 if lastValue != keyframe.value:
-                    o += "%sANIM_rotate_key\t%s\t%s\n" % (
+                    ao += "%sANIM_rotate_key\t%s\t%s\n" % (
                         indent,
                         floatToStr(keyframe.value),
-                        floatToStr(math.degrees(keyframe.rotation[axis]))
+                        floatToStr(deg)
                     )
                     lastValue = keyframe.value
 
-            o += self._writeKeyframesLoop(dataref)
-            o += "%sANIM_rotate_end\n" % indent
+            ao += self._writeKeyframesLoop(dataref)
+            ao += "%sANIM_rotate_end\n" % indent
+
+            # do not write non-animated axis
+            if round(totalAxisRot, FLOAT_PRECISION) > 0:
+                o += ao
 
         # do not write zero rotations
-        if totalRot == 0:
+        if round(totalRot, FLOAT_PRECISION) == 0:
             return ''
 
         return o
