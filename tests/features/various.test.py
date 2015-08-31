@@ -10,7 +10,9 @@ __dirname__ = os.path.dirname(__file__)
 class TestMaterials(XPlaneTestCase):
     def test_lod_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0].find('ATTR_LOD_') == 0 or line[0] == 'TRIS')
+            return isinstance(line[0], str) and \
+                   (line[0].find('ATTR_LOD_') == 0 or \
+                   line[0] == 'TRIS')
 
         filename = 'test_lod'
         self.assertLayerExportEqualsFixture(
@@ -21,7 +23,9 @@ class TestMaterials(XPlaneTestCase):
 
     def test_custom_prop_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0].find('custom_prop') == 0 or line[0] == 'TRIS')
+            return isinstance(line[0], str) and \
+                   (line[0].find('custom_prop') == 0 or \
+                   line[0] == 'TRIS')
 
         filename = 'test_custom_prop'
         self.assertLayerExportEqualsFixture(
@@ -32,7 +36,10 @@ class TestMaterials(XPlaneTestCase):
 
     def test_conditions_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0].find('IF') == 0 or line[0] == 'ENDIF' or line[0] == 'TRIS')
+            return isinstance(line[0], str) and \
+                   (line[0].find('IF') == 0 or \
+                   line[0] == 'ENDIF' or \
+                   line[0] == 'TRIS')
 
         filename = 'test_conditions'
         self.assertLayerExportEqualsFixture(
@@ -43,7 +50,11 @@ class TestMaterials(XPlaneTestCase):
 
     def test_optimize_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0] == 'VT' or line[0] == 'ID' or line[0] == 'IDX' or line[0] == 'TRIS')
+            return isinstance(line[0], str) and \
+                   (line[0] == 'VT' or \
+                   line[0] == 'ID' or \
+                   line[0] == 'IDX' or \
+                   line[0] == 'TRIS')
 
         bpy.context.scene.xplane.optimize = True
 
@@ -56,7 +67,9 @@ class TestMaterials(XPlaneTestCase):
 
     def test_texture_coords_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0] == 'VT' or line[0].find('TEXTURE') == 0)
+            return isinstance(line[0], str) and \
+                   (line[0] == 'VT' or \
+                   line[0].find('TEXTURE') == 0)
 
         filename = 'test_texture_coords'
         self.assertLayerExportEqualsFixture(
@@ -67,7 +80,11 @@ class TestMaterials(XPlaneTestCase):
 
     def test_group_instances_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0] == 'VT' or line[0] == 'ID' or line[0] == 'IDX' or line[0] == 'TRIS')
+            return isinstance(line[0], str) and \
+                   (line[0] == 'VT' or \
+                   line[0] == 'ID' or \
+                   line[0] == 'IDX' or \
+                   line[0] == 'TRIS')
 
         filename = 'test_group_instances'
         self.assertLayerExportEqualsFixture(
@@ -78,7 +95,11 @@ class TestMaterials(XPlaneTestCase):
 
     def test_export_in_layers_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0] == 'VT' or line[0] == 'ID' or line[0] == 'IDX' or line[0] == 'TRIS')
+            return isinstance(line[0], str) and \
+                   (line[0] == 'VT' or \
+                   line[0] == 'ID' or \
+                   line[0] == 'IDX' or \
+                   line[0] == 'TRIS')
 
         filename = 'test_export_in_layers_enabled'
         self.assertLayerExportEqualsFixture(
@@ -99,6 +120,32 @@ class TestMaterials(XPlaneTestCase):
         self.assertLayerExportEqualsFixture(
             8, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename
+        )
+
+    def test_custom_anim_prop_export(self):
+        def filterLines(line):
+            return isinstance(line[0], str) and \
+                   (line[0].find('ANIM') == 0 or \
+                   line[0] == 'TRIS')
+
+        filename = 'test_custom_anim_prop'
+        self.assertLayerExportEqualsFixture(
+            9, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
+
+    def test_show_hide_animation_export(self):
+        def filterLines(line):
+            return isinstance(line[0], str) and \
+                   (line[0].find('ANIM') == 0 or \
+                   line[0] == 'TRIS')
+
+        filename = 'test_show_hide_animation'
+        self.assertLayerExportEqualsFixture(
+            10, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
         )
 
 runTestCases([TestMaterials])

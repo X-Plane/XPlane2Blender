@@ -138,10 +138,10 @@ class XPlaneObject():
         for dataref in self.blenderObject.xplane.datarefs:
             # show/hide animation
             if dataref.anim_type in ("show", "hide"):
-                name = 'ANIM_'+dataref.anim_type
+                name = 'ANIM_' + dataref.anim_type
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
-
+                
     # Method: getWeight
     #
     # Parameters:

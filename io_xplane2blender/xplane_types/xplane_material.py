@@ -73,7 +73,8 @@ class XPlaneMaterial():
         self.conditions = []
 
     def collect(self):
-        if (len(self.blenderObject.data.materials) > 0 and hasattr(self.blenderObject.data.materials[0], 'name')):
+        if len(self.blenderObject.data.materials) > 0 and \
+           hasattr(self.blenderObject.data.materials[0], 'name'):
             mat = self.blenderObject.data.materials[0]
             self.name = mat.name
 

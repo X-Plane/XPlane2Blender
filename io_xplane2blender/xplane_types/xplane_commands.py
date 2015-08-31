@@ -108,17 +108,6 @@ class XPlaneCommands():
 
         return o
 
-    def _writeAnimAttributes(self, xplaneObject):
-        indent = xplaneObject.xplaneBone.getIndent()
-        o = ''
-
-        if xplaneObject.hasAnimAttributes():
-            for attr in xplaneObject.animAttributes:
-                for value in xplaneObject.animAttributes[attr].getValuesAsString():
-                    o += indent +"%s\t%s\n" % (attr, value)
-
-        return o
-
     def _writeXPlaneObjectPrefix(self, xplaneObject):
         o = ''
 
@@ -128,9 +117,6 @@ class XPlaneCommands():
 
         # open object conditions
         o += self._writeConditions(xplaneObject.conditions, xplaneObject)
-
-        if xplaneObject.hasAnimAttributes():
-            o += self._writeAnimAttributes(xplaneObject)
 
         o += xplaneObject.write()
 

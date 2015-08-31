@@ -54,7 +54,8 @@ class XPlaneBone():
     # Returns:
     #   bool - True if bone is animated, False if not.
     def isAnimated(self):
-        return (hasattr(self, 'animations') and len(self.animations) > 0)
+        return (hasattr(self, 'animations') and len(self.animations) > 0) or \
+               (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
 
     # Method: collectAnimations
     # Stores all animations in <animations>.
@@ -272,6 +273,8 @@ class XPlaneBone():
         if postMatrix is not preMatrix:
             # revert static translations needed for correct rotation origin
             o += self._writeStaticTranslation(bakeMatrix, True)
+
+        o += self._writeAnimAttributes()
 
         return o
 
@@ -525,6 +528,16 @@ class XPlaneBone():
             o += self._writeQuaternionRotationKeyframes(dataref)
         else:
             o += self._writeEulerRotationKeyframes(dataref)
+
+        return o
+
+    def _writeAnimAttributes(self):
+        o = ''
+        indent = self.getIndent()
+
+        for name in self.xplaneObject.animAttributes:
+            attr = self.xplaneObject.animAttributes[name]
+            o += indent + '%s\t%s\n' % (attr.name, attr.getValueAsString())
 
         return o
 
