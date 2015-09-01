@@ -722,6 +722,13 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         type = XPlaneCustomAttribute
     )
 
+    autodetectTextures = bpy.props.BoolProperty(
+        attr = "autodetectTextures",
+        name = "Autodetect Textures",
+        description = "Automaticly determines textures based on materials.",
+        default = True
+    )
+
 # Class: XPlaneSceneSettings
 # Settings for Blender scenes.
 #

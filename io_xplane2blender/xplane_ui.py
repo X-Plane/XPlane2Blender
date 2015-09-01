@@ -239,9 +239,14 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 
     column.label('Textures')
     tex_box = column.box()
-    tex_box.prop(layerObj, "texture", text = "Default")
-    tex_box.prop(layerObj, "texture_lit", text = "Night")
-    tex_box.prop(layerObj, "texture_normal", text = "Normal / Specular")
+
+    tex_box.prop(layerObj, "autodetectTextures", text = "Autodetect Textures")
+
+    if not layerObj.autodetectTextures:
+        tex_box.prop(layerObj, "texture", text = "Default")
+        tex_box.prop(layerObj, "texture_lit", text = "Night")
+        tex_box.prop(layerObj, "texture_normal", text = "Normal / Specular")
+
     column.prop(layerObj, "cockpit", text = "Cockpit", icon = checkboxIcon, toggle = True)
 
     # cockpit regions
