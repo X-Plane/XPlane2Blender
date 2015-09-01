@@ -20,7 +20,7 @@ version = bl_info['version']
 # An instance of <XPlaneDebugger> which is used to output debug information.
 debugger = XPlaneDebugger()
 
-errors = False
+errors = []
 
 MAX_LODS = 4
 MAX_COCKPIT_REGIONS = 4
@@ -58,13 +58,30 @@ def getVersion():
     global version
     return version
 
+def hasErrors():
+    global errors
+    return len(errors) > 0
+
 def getErrors():
     global errors
     return errors
 
-def setErrors(err):
+def getErrorsAsString():
     global errors
-    errors = err
+    o = ''
+    for i in range(0, len(errors)):
+        o += errors[i] + '\n'
+    return o
+
+def clearErrors():
+    global errors
+    del errors[:]
+
+def addError(err):
+    global errors
+    errors.append(err)
+    if debug:
+        debugger.debug(err)
 
 def setDebug(d):
     global debug

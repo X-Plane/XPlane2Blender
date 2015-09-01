@@ -6,13 +6,33 @@ import bpy
 import mathutils
 import os
 from .xplane_types import xplane_file
-from .xplane_config import getDebug, getDebugger, getLog, initConfig, setErrors, getErrors
+from .xplane_config import getDebug, getDebugger, getLog, initConfig, clearErrors, getErrors, hasErrors
 
 # TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
 try:
     from bpy_extras.io_utils import ImportHelper, ExportHelper
 except ImportError:
     from io_utils import ImportHelper, ExportHelper
+
+
+class ExportErrorsDialog(bpy.types.Menu):
+    bl_idname = "SCENE_MT_xplane_export_errors"
+    bl_label = "XPlane Export Errors"
+
+    errors = bpy.props.StringProperty(
+        name = "errors",
+        default = ""
+    )
+
+    def draw(self, context):
+        errors = getErrors()
+
+        for error in errors:
+            row = self.layout.row()
+            row.label(error)
+
+def showErrorsDialog():
+    bpy.ops.wm.call_menu(name = "SCENE_MT_xplane_export_errors")
 
 # Class: ExportXPlane
 # Main Export class. Brings all parts together and creates the OBJ files.
@@ -40,7 +60,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         debug = getDebug()
         debugger = getDebugger()
 
-        setErrors(False)
+        clearErrors()
 
         if debug:
             debugger.start(log)
@@ -58,9 +78,9 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
             # check if X-Plane layers have been created
             # TODO: only check if user selected the export from layers option, instead the export from root objects
             if len(bpy.context.scene.xplane.layers) == 0:
-                errors = True
-                # showError('You must create X-Plane layers first.')
-                return {'FINISHED'}
+                addError('You must create X-Plane layers first.')
+                showErrorsDialog()
+                return {'CANCELLED'}
 
         # store current frame as we will go back to it
         currentFrame = bpy.context.scene.frame_current
@@ -78,7 +98,11 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
             xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
 
         for xplaneFile in xplaneFiles:
-            self._writeXPlaneFile(xplaneFile, filepath)
+            if self._writeXPlaneFile(xplaneFile, filepath) == False:
+                if hasErrors():
+                    showErrorsDialog()
+
+                return {'CANCELLED'}
 
         # return to stored frame
         bpy.context.scene.frame_set(frame = currentFrame)
@@ -86,9 +110,6 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         if debug:
             debugger.end()
-
-        # if getErrors() == False:
-        #    showProgress(1.0, 'Done!')
 
         return {'FINISHED'}
 
@@ -102,12 +123,17 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         fullpath = os.path.join(dir, xplaneFile.filename) + '.obj'
 
+        out = xplaneFile.write()
+
+        if hasErrors():
+            return False
+
         # write the file
         if debug:
             debugger.debug("Writing %s.obj" % fullpath)
 
         file = open(fullpath, "w")
-        file.write(xplaneFile.write())
+        file.write(out)
         file.close()
 
     # Method: invoke

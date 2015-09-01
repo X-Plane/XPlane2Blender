@@ -36,6 +36,8 @@ class XPlaneMaterial():
         self.xplaneObject = xplaneObject
         self.blenderObject = self.xplaneObject.blenderObject
         self.texture = None
+        self.textureLit = None
+        self.textureNormal = None
         self.uv_name = None
         self.name = None
 
@@ -173,8 +175,11 @@ class XPlaneMaterial():
                 self.attributes['ATTR_no_solid_camera'].setValue(True)
 
             # try to find uv layer
-            if(len(self.blenderObject.data.uv_textures) > 0):
+            if len(self.blenderObject.data.uv_textures) > 0:
                 self.uv_name = self.blenderObject.data.uv_textures.active.name
+
+            # try to detect textures
+            self._detectTextures(mat)
 
             # add custom attributes
             self.collectCustomAttributes(mat)
@@ -183,6 +188,18 @@ class XPlaneMaterial():
             showError('%s: No Material found.' % self.blenderObject.name)
 
         self.attributes.order()
+
+    def _detectTextures(self, mat):
+        for i in range(0, len(mat.texture_slots)):
+            slot = mat.texture_slots[i]
+
+            if slot and slot.use and slot.texture.type == 'IMAGE':
+                if slot.use_map_color_diffuse and self.texture == None:
+                    self.texture = slot.texture.image.filepath
+                elif slot.use_map_emit and self.textureLit == None:
+                    self.textureLit = slot.texture.image.filepath
+                elif slot.use_map_normal and self.textureNormal == None:
+                    self.textureNormal = slot.texture.image.filepath
 
     def collectCustomAttributes(self, mat):
         xplaneFile = self.xplaneObject.xplaneBone.xplaneFile

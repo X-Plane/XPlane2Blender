@@ -2,6 +2,7 @@ import bpy
 import os
 import platform
 from collections import OrderedDict
+from ..xplane_config import addError
 from ..xplane_helpers import floatToStr
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
@@ -59,6 +60,9 @@ class XPlaneHeader():
             exportdir = os.path.dirname(os.path.normpath(self.xplaneFile.filename))
         else:
             exportdir = os.path.dirname(os.path.abspath(os.path.normpath(os.path.join(blenddir, self.xplaneFile.filename))))
+
+        if self.xplaneFile.options.autodetectTextures:
+            self._autodetectTextures()
 
         if self.xplaneFile.options.texture != '':
             self.attributes['TEXTURE'].setValue(self.getTexturePath(self.xplaneFile.options.texture, exportdir, blenddir))
@@ -137,6 +141,47 @@ class XPlaneHeader():
         # add custom attributes
         for attr in self.xplaneFile.options.customAttributes:
             self.attributes.add(XPlaneAttribute(attr.name, attr.value))
+
+    def _autodetectTextures(self):
+        texture = None
+        textureLit = None
+        textureNormal = None
+        xplaneObjects = self.xplaneFile.getObjectsList()
+
+        for xplaneObject in xplaneObjects:
+            if xplaneObject.type == 'PRIMITIVE':
+                mat = xplaneObject.material
+
+                if mat.uv_name == None:
+                    addError('Object %s has no UV-Map.' % xplaneObject.name)
+
+                if texture == None and mat.texture:
+                    texture = mat.texture
+
+                if textureLit == None and mat.textureLit:
+                    textureLit = mat.textureLit
+
+                if textureNormal == None and mat.textureNormal:
+                    textureNormal = mat.textureNormal
+
+        # now go through all textures again and list any objects with different textures
+        for xplaneObject in xplaneObjects:
+            if xplaneObject.type == 'PRIMITIVE':
+                mat = xplaneObject.material
+
+                if texture and texture != mat.texture:
+                    addError('Object %s has a different or missing color texture.' % xplaneObject.name)
+
+                if textureLit and textureLit != mat.textureLit:
+                    addError('Object %s has a different or missing night/lit texture.' % xplaneObject.name)
+
+                if textureNormal and textureNormal != mat.textureNormal:
+                    addError('Object %s has a different or missing normal/specular texture.' % xplaneObject.name)
+
+        self.xplaneFile.options.texture = texture or ''
+        self.xplaneFile.options.texture_normal = textureNormal or ''
+        self.xplaneFile.options.texture_lit = textureLit or ''
+
 
     # Method: getTexturePath
     # Returns the texture path relative to the exported OBJ
