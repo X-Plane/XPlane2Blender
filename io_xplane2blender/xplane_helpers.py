@@ -27,6 +27,20 @@ def firstMatchInList(pattern, items):
 
     return False
 
+def getColorAndLitTextureSlots(mat):
+    texture = None
+    textureLit = None
+
+    for slot in mat.texture_slots:
+        if slot and slot.use and slot.texture and slot.texture.type == 'IMAGE':
+            if slot.use_map_color_diffuse:
+                texture = slot
+            elif slot.use_map_emit:
+                textureLit = slot
+
+    return texture, textureLit
+
+
 # Class: XPlaneDebugger
 # Prints debugging information and optionally logs them to a file.
 class XPlaneDebugger():

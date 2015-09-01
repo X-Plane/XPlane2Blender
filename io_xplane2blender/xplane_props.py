@@ -1099,6 +1099,16 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         type = XPlaneCustomAttribute
     )
 
+    litFactor = bpy.props.FloatProperty(
+        attr = "litFactor",
+        name = "Lit-Factor",
+        description = "Previews the night texture.",
+        default = 0,
+        min = 0,
+        max = 1,
+        step = 0.1
+    )
+
 # Class: XPlaneLampSettings
 # Settings for Blender lamps.
 #

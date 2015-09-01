@@ -4,6 +4,7 @@
 import bpy
 from .xplane_ops import *
 from .xplane_config import *
+from .xplane_helpers import getColorAndLitTextureSlots
 
 # Class: LAMP_PT_xplane
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
@@ -514,6 +515,24 @@ def material_layout(self, obj):
         row.prop(obj.xplane, "lightLevel_dataref", text = "Dataref")
         row = box.row()
         row.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
+
+    row = layout.row()
+    box = row.box()
+    box.prop(obj.xplane, "litFactor", text = "Night texture preview", slider = True)
+    row = box.row()
+
+    if not canPreviewEmit(obj):
+        row.label("Add one texture affecting color and one affecting ambient and emit.", icon = "INFO")
+    else:
+        row = box.row()
+        row.operator('material.update_xplane_lit_texture_preview')
+
+def canPreviewEmit(mat):
+    hasTexture = False
+    hasTextureLit = False
+    texture, textureLit = getColorAndLitTextureSlots(mat)
+
+    return (texture != None and textureLit != None)
 
 # Function: custom_layout
 # Draws the additional UI layout for custom attributes.
