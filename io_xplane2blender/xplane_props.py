@@ -3,6 +3,7 @@
 
 import bpy
 from .xplane_config import *
+from .xplane_helpers import getColorAndLitTextureSlots
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
@@ -933,6 +934,15 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
         min = 0
     )
 
+def updateMaterialLitPreview(self, context):
+    texture, textureLit = getColorAndLitTextureSlots(context.material)
+
+    if texture and textureLit:
+        factor = context.material.xplane.litFactor
+
+        texture.diffuse_color_factor = 1 - factor
+        textureLit.emit_factor = factor
+
 # Class: XPlaneMaterialSettings
 # Settings for Blender materials.
 #
@@ -1106,7 +1116,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = 0,
         min = 0,
         max = 1,
-        step = 0.1
+        step = 0.1,
+        update = updateMaterialLitPreview
     )
 
 # Class: XPlaneLampSettings

@@ -523,9 +523,6 @@ def material_layout(self, obj):
 
     if not canPreviewEmit(obj):
         row.label("Add one texture affecting color and one affecting ambient and emit.", icon = "INFO")
-    else:
-        row = box.row()
-        row.operator('material.update_xplane_lit_texture_preview')
 
 def canPreviewEmit(mat):
     hasTexture = False

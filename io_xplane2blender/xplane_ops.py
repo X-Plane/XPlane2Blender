@@ -3,7 +3,6 @@
 
 import bpy
 from .xplane_config import *
-from .xplane_helpers import getColorAndLitTextureSlots
 
 # Function: findFCurveByPath
 # Helper function to find an FCurve by an data-path.
@@ -547,20 +546,6 @@ class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
         obj.xplane.conditions.remove(self.index)
         return {'FINISHED'}
 
-class MATERIAL_OT_update_xplane_lit_texture_preview(bpy.types.Operator):
-    bl_label = 'Update night texture preview'
-    bl_idname = 'material.update_xplane_lit_texture_preview'
-    bl_description = 'Updates emit and color values of textures for a night texture preview'
-
-    def execute(self, context):
-        texture, textureLit = getColorAndLitTextureSlots(context.material)
-        factor = context.material.xplane.litFactor
-
-        texture.diffuse_color_factor = 1 - factor
-        textureLit.emit_factor = factor
-        return {'FINISHED'}
-
-
 # Function: addXPlaneOps
 # Registers all Operators.
 def addXPlaneOps():
@@ -591,8 +576,6 @@ def addXPlaneOps():
     bpy.utils.register_class(OBJECT_OT_remove_xplane_object_condition)
     bpy.utils.register_class(OBJECT_OT_add_xplane_material_condition)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_material_condition)
-
-    bpy.utils.register_class(MATERIAL_OT_update_xplane_lit_texture_preview)
 
 
 # Function: removeXPlaneOps
@@ -625,5 +608,3 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_condition)
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_condition)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_condition)
-
-    bpy.utils.unregister_class(MATERIAL_OT_update_xplane_lit_texture_preview)
