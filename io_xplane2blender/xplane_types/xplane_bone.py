@@ -3,8 +3,8 @@
 import mathutils
 import math
 from .xplane_keyframe import XPlaneKeyframe
-from ..xplane_config import getDebugger, getDebug
-from ..xplane_helpers import floatToStr, FLOAT_PRECISION
+from ..xplane_config import getDebug
+from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
 
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
@@ -64,7 +64,6 @@ class XPlaneBone():
             return None
 
         debug = getDebug()
-        debugger = getDebugger()
 
         bone = self.blenderBone
         blenderObject = self.blenderObject
@@ -75,11 +74,10 @@ class XPlaneBone():
         #     groupName = "XPlane Datarefs"
 
         #check for animation
-        if debug:
-            if bone:
-                debugger.debug("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
-            else:
-                debugger.debug("\t\t checking animations of %s" % blenderObject.name)
+        if bone:
+            logger.info("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
+        else:
+            logger.info("\t\t checking animations of %s" % blenderObject.name)
 
         animationData = blenderObject.animation_data
 
@@ -88,12 +86,10 @@ class XPlaneBone():
             animationData = blenderObject.data.animation_data
 
         if (animationData != None and animationData.action != None and len(animationData.action.fcurves) > 0):
-            if debug:
-                debugger.debug("\t\t animation found")
+            logger.info("\t\t animation found")
             #check for dataref animation by getting fcurves with the dataref group
             for fcurve in animationData.action.fcurves:
-                if debug:
-                    debugger.debug("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
+                logger.info("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
                 #if (fcurve.group != None and fcurve.group.name == groupName): # since 2.61 group names are not set so we have to check the datapath
                 if ('xplane.datarefs' in fcurve.data_path):
                     # get dataref name
@@ -122,8 +118,7 @@ class XPlaneBone():
                         else:
                             return
 
-                    if debug:
-                        debugger.debug("\t\t adding dataref animation: %s" % dataref)
+                    logger.info("\t\t adding dataref animation: %s" % dataref)
 
                     if len(fcurve.keyframe_points) > 1:
                         # time to add dataref to animations
@@ -138,8 +133,7 @@ class XPlaneBone():
                         keyframes = []
 
                         for keyframe in fcurve.keyframe_points:
-                            if debug:
-                                debugger.debug("\t\t adding keyframe: %6.3f" % keyframe.co[0])
+                            logger.info("\t\t adding keyframe: %6.3f" % keyframe.co[0])
                             keyframes.append(keyframe)
 
                         # sort keyframes by frame number

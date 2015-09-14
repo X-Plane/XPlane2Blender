@@ -4,6 +4,7 @@ import sys
 import os
 from ..xplane_types import xplane_file, XPlanePrimitive
 from ..xplane_config import setDebug, getDebug
+from ..xplane_helpers import logger, XPlaneLogger
 from .animation_file_mappings import mappings
 
 EPSILON = sys.float_info.epsilon
@@ -11,9 +12,23 @@ EPSILON = sys.float_info.epsilon
 __dirname__ = os.path.dirname(__file__)
 
 class XPlaneTestCase(unittest.TestCase):
-    def setUp(self):
+    def setUp(self, useLogger = True):
         if '--debug' in sys.argv:
             setDebug(True)
+
+        if useLogger:
+            self.useLogger()
+
+    def useLogger(self):
+        debug = getDebug()
+        logLevels = ['error', 'warning']
+
+        if debug:
+            logLevels.append('info')
+            logLevels.append('success')
+
+        logger.clearTransports()
+        logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
 
     # Utility method to check if objects are contained in file
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
@@ -33,7 +48,7 @@ class XPlaneTestCase(unittest.TestCase):
                 collect(bone)
 
         collect(xplaneFile.rootBone)
-        
+
         self.assertEquals(len(tree), len(bones))
 
         index = 0

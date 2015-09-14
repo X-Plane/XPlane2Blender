@@ -1,5 +1,5 @@
-from ..xplane_config import getDebug, getDebugger, MAX_LODS
-from ..xplane_helpers import firstMatchInList
+from ..xplane_config import getDebug, MAX_LODS
+from ..xplane_helpers import firstMatchInList, logger
 from .xplane_attributes import XPlaneAttributes
 import re
 import bpy
@@ -261,7 +261,6 @@ class XPlaneCommands():
     #   string - Commands
     def writeReseters(self, xplaneObject):
         debug = getDebug()
-        debugger = getDebugger()
         o = ''
         indent = xplaneObject.xplaneBone.getIndent()
 
@@ -293,8 +292,7 @@ class XPlaneCommands():
 
             # only reset attributes that wont be written with this object again
             if not matchingAttribute and matchingWritten:
-#                if debug:
-#                    debugger.debug('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
+#                logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
 
                 # write reseter and add it to written
                 o += indent + resetingAttr + "\n"

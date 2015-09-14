@@ -13,8 +13,8 @@ from .xplane_lights import XPlaneLights
 from .xplane_mesh import XPlaneMesh
 from .xplane_header import XPlaneHeader
 from .xplane_commands import XPlaneCommands
-from ..xplane_config import getDebug, getDebugger, version
-from ..xplane_helpers import floatToStr
+from ..xplane_config import getDebug, version
+from ..xplane_helpers import floatToStr, logger
 
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
@@ -137,15 +137,13 @@ class XPlaneFile():
     #   layerIndex - int
     def collectFromBlenderLayerIndex(self, layerIndex):
         debug = getDebug()
-        debugger = getDebugger()
 
         currentFrame = bpy.context.scene.frame_current
 
         blenderObjects = []
 
         for blenderObject in bpy.context.scene.objects:
-            if debug:
-                debugger.debug("scanning %s" % blenderObject.name)
+            logger.info("scanning %s" % blenderObject.name)
 
             for i in range(len(blenderObject.layers)):
                 if blenderObject.layers[i] == True and i == layerIndex and blenderObject.hide == False:
@@ -293,7 +291,6 @@ class XPlaneFile():
     #   rootObject - blender object
     def collectFromBlenderRootObject(self, blenderRootObject):
         debug = getDebug()
-        debugger = getDebugger()
 
         currentFrame = bpy.context.scene.frame_current
 
@@ -301,8 +298,7 @@ class XPlaneFile():
 
         def collectChildren(parentObject):
             for blenderObject in parentObject.children:
-                if debug:
-                    debugger.debug("scanning %s" % blenderObject.name)
+                logger.info("scanning %s" % blenderObject.name)
 
                 blenderObjects.append(blenderObject)
                 collectChildren(blenderObject)
@@ -330,20 +326,17 @@ class XPlaneFile():
     #   <XPlaneObject> or None if object type is not supported
     def convertBlenderObject(self, blenderObject):
         debug = getDebug()
-        debugger = getDebugger()
 
         xplaneObject = None
 
         # mesh: let's create a prim out of it
         if blenderObject.type == "MESH":
-            if debug:
-                debugger.debug("\t %s: adding to list" % blenderObject.name)
+            logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject = XPlanePrimitive(blenderObject)
 
         # lamp: let's create a XPlaneLight. Those cannot have children (yet).
         elif blenderObject.type == "LAMP":
-            if debug:
-                debugger.debug("\t %s: adding to list" % blenderObject.name)
+            logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject  = XPlaneLight(blenderObject)
 
         return xplaneObject

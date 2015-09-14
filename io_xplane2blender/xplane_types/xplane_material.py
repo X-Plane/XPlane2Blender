@@ -1,7 +1,6 @@
 import bpy
 from ..xplane_config import getDebug
-from ..xplane_helpers import floatToStr
-from ..xplane_ui import showError
+from ..xplane_helpers import floatToStr, logger
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 
@@ -185,7 +184,7 @@ class XPlaneMaterial():
             self.collectCustomAttributes(mat)
 
         else:
-            showError('%s: No Material found.' % self.blenderObject.name)
+            logger.warn('%s: No Material found.' % self.blenderObject.name)
 
         self.attributes.order()
 

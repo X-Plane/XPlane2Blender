@@ -259,18 +259,6 @@ ANIM_trans_key	0	0	0	0
 ANIM_trans_key	1	0	0	1
 ANIM_trans_end
 # rotation keyframes
-ANIM_rotate_begin	1	0	0	test
-ANIM_rotate_key	0	0
-ANIM_rotate_key	1	0
-ANIM_rotate_end
-ANIM_rotate_begin	0	0	-1	test
-ANIM_rotate_key	0	0
-ANIM_rotate_key	1	0
-ANIM_rotate_end
-ANIM_rotate_begin	0	1	0	test
-ANIM_rotate_key	0	0
-ANIM_rotate_key	1	0
-ANIM_rotate_end
 # PRIMITIVE: Cube.anim.001	weight: 0
 # MATERIAL: Material
 ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
@@ -285,17 +273,9 @@ TRIS	0 36
 	ANIM_trans_key	1	0	4	2
 	ANIM_trans_end
 	# rotation keyframes
-	ANIM_rotate_begin	1	0	0	test
-	ANIM_rotate_key	0	0
-	ANIM_rotate_key	1	0
-	ANIM_rotate_end
 	ANIM_rotate_begin	0	0	-1	test
 	ANIM_rotate_key	0	45.00000125
 	ANIM_rotate_key	1	45.00000125
-	ANIM_rotate_end
-	ANIM_rotate_begin	0	1	0	test
-	ANIM_rotate_key	0	0
-	ANIM_rotate_key	1	0
 	ANIM_rotate_end
 	# PRIMITIVE: Cube.child.anim.001	weight: 0
 	# MATERIAL: Material
@@ -310,18 +290,6 @@ TRIS	0 36
 		ANIM_trans_key	1	0	2	5
 		ANIM_trans_end
 		# rotation keyframes
-		ANIM_rotate_begin	1	0	0	test
-		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	0
-		ANIM_rotate_end
-		ANIM_rotate_begin	0	0	-1	test
-		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	0
-		ANIM_rotate_end
-		ANIM_rotate_begin	0	1	0	test
-		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	0
-		ANIM_rotate_end
 		# static translation
 		ANIM_trans	-0.00000012	2	2	-0.00000012	2	2
 		# PRIMITIVE: Cube.child.anim.anim.001	weight: 0
@@ -351,18 +319,6 @@ TRIS	0 36
 		ANIM_trans_key	1	2	6	0
 		ANIM_trans_end
 		# rotation keyframes
-		ANIM_rotate_begin	1	0	0	test
-		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	0
-		ANIM_rotate_end
-		ANIM_rotate_begin	0	0	-1	test
-		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	0
-		ANIM_rotate_end
-		ANIM_rotate_begin	0	1	0	test
-		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	0
-		ANIM_rotate_end
 		# static translation
 		ANIM_trans	0.00000003	0.00000024	0.00000006	0.00000003	0.00000024	0.00000006
 		# PRIMITIVE: Cube.child.static.anim.001	weight: 0

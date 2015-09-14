@@ -2,8 +2,7 @@ import bpy
 import os
 import platform
 from collections import OrderedDict
-from ..xplane_config import addError
-from ..xplane_helpers import floatToStr
+from ..xplane_helpers import floatToStr, logger
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 
@@ -153,7 +152,7 @@ class XPlaneHeader():
                 mat = xplaneObject.material
 
                 if mat.uv_name == None:
-                    addError('Object %s has no UV-Map.' % xplaneObject.name)
+                    logger.warn('Object "%s" has no UV-Map.' % xplaneObject.name)
 
                 if texture == None and mat.texture:
                     texture = mat.texture
@@ -170,13 +169,13 @@ class XPlaneHeader():
                 mat = xplaneObject.material
 
                 if texture and texture != mat.texture:
-                    addError('Object %s has a different or missing color texture.' % xplaneObject.name)
+                    logger.warn('Object "%s" has a different or missing color texture.' % xplaneObject.name)
 
                 if textureLit and textureLit != mat.textureLit:
-                    addError('Object %s has a different or missing night/lit texture.' % xplaneObject.name)
+                    logger.warn('Object "%s" has a different or missing night/lit texture.' % xplaneObject.name)
 
                 if textureNormal and textureNormal != mat.textureNormal:
-                    addError('Object %s has a different or missing normal/specular texture.' % xplaneObject.name)
+                    logger.warn('Object "%s" has a different or missing normal/specular texture.' % xplaneObject.name)
 
         self.xplaneFile.options.texture = texture or ''
         self.xplaneFile.options.texture_normal = textureNormal or ''

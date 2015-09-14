@@ -797,37 +797,6 @@ def weight_layout(self, obj):
 #            file.close()
 #    return search_data
 
-
-# Function: showError
-# Draws a window displaying an error message.
-#
-# Parameters:
-#   string message - The message to display.
-#
-# Todos:
-#   - Not working at all.
-def showError(message):
-    bpy.ops.xplane.error(
-        'INVOKE_DEFAULT',
-        msg_text = message
-    )
-    setErrors(True)
-
-# Function: showProgress
-# Draws a progress bar together with a message.
-#
-# Parameters:
-#   float progress - value between 0 and 1 indicating the current progress.
-#   string message - An aditional message to display.
-#
-# Todos:
-#   - Not working at all.
-def showProgress(progress, message):
-    bpy.ops.xplane.msg(
-        'INVOKE_DEFAULT',
-        msg_text = '%s - %s' % (str(round(progress*100))+'%', message)
-    )
-
 class XPlaneMessage(bpy.types.Operator):
     bl_idname = 'xplane.msg'
     bl_label = 'XPlane2Blender message'

@@ -2,6 +2,7 @@
 # Defines Helpers
 
 import math
+import bpy
 from mathutils import Matrix,Vector,Euler
 
 FLOAT_PRECISION = 8
@@ -40,6 +41,105 @@ def getColorAndLitTextureSlots(mat):
 
     return texture, textureLit
 
+class XPlaneLogger():
+    def __init__(self):
+        self.transports = []
+        self.messages = []
+
+    def addTransport(self, transport, messageTypes = ['error', 'warning', 'info', 'success']):
+        self.transports.append({
+            'fn': transport,
+            'types': messageTypes
+        })
+
+    def clearTransports(self):
+        del self.transports[:]
+
+    def log(self, messageType, message, context = None):
+        self.messages.append({
+            'type': messageType,
+            'message': message,
+            'context': context
+        })
+
+        for transport in self.transports:
+            if messageType in transport['types']:
+                transport['fn'](messageType, message, context)
+
+    def error(self, message, context = None):
+        self.log('error', message, context)
+
+    def warn(self, message, context = None):
+        self.log('warning', message, context)
+
+    def info(self, message, context = None):
+        self.log('info', message, context)
+
+    def success(self, message, context = None):
+        self.log('success', message, context)
+
+    def findOfType(self, messageType):
+        messages = []
+
+        for message in self.messages:
+            if message['type'] == messageType:
+                messages.append(message)
+
+        return messages
+
+    def hasOfType(self, messageType):
+        for message in self.messages:
+            if message['type'] == messageType:
+                return True
+
+        return False
+
+    def findErrors(self):
+        return self.findOfType('error')
+
+    def hasErrors(self):
+        return self.hasOfType('error')
+
+    def findWarnings(self):
+        return self.findOfType('warning')
+
+    def hasWarnings(self):
+        return self.hasOfType('warning')
+
+    def findInfos(self):
+        return self.findOfType('info')
+
+    @staticmethod
+    def messageToString(messageType, message, context = None):
+        return '%s: %s' % (messageType.upper(), message)
+
+    @staticmethod
+    def InternalTextTransport(name = 'XPlane2Blender.log'):
+        if bpy.data.texts.find(name) == -1:
+            log = bpy.data.texts.new(name)
+        else:
+            log = bpy.data.texts[name]
+
+        log.clear()
+
+        def transport(messageType, message, context = None):
+            log.write(XPlaneLogger.messageToString(messageType, message, context) + '\n')
+
+        return transport
+
+    @staticmethod
+    def ConsoleTransport():
+        def transport(messageType, message, context = None):
+            print(XPlaneLogger.messageToString(messageType, message, context))
+
+        return transport
+
+    @staticmethod
+    def FileTransport(filehandle):
+        def transport(messageType, message, context = None):
+            filehandle.write(XPlaneLogger.messageToString(messageType, message, context) + '\n')
+
+        return transport
 
 # Class: XPlaneDebugger
 # Prints debugging information and optionally logs them to a file.
@@ -180,3 +280,6 @@ class XPlaneProfiler():
             _times+=self.getTime(name)+"\n"
 
         return _times
+
+
+logger = XPlaneLogger()

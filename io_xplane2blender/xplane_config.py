@@ -1,7 +1,6 @@
 # File: xplane_config.py
 # Holds config variables that are used throughout the addon.
 
-from .xplane_helpers import XPlaneDebugger, XPlaneProfiler
 from . import bl_info
 
 # Variable: debug
@@ -15,12 +14,6 @@ log = False
 # Variable: version
 # Integer containing the version number of the addon.
 version = bl_info['version']
-
-# Variable: debugger
-# An instance of <XPlaneDebugger> which is used to output debug information.
-debugger = XPlaneDebugger()
-
-errors = []
 
 MAX_LODS = 4
 MAX_COCKPIT_REGIONS = 4
@@ -41,11 +34,6 @@ def initConfig():
         debug = False
         log = False
 
-
-def getDebugger():
-    global debugger
-    return debugger
-
 def getDebug():
     global debug
     return debug
@@ -57,31 +45,6 @@ def getLog():
 def getVersion():
     global version
     return version
-
-def hasErrors():
-    global errors
-    return len(errors) > 0
-
-def getErrors():
-    global errors
-    return errors
-
-def getErrorsAsString():
-    global errors
-    o = ''
-    for i in range(0, len(errors)):
-        o += errors[i] + '\n'
-    return o
-
-def clearErrors():
-    global errors
-    del errors[:]
-
-def addError(err):
-    global errors
-    errors.append(err)
-    if debug:
-        debugger.debug(err)
 
 def setDebug(d):
     global debug

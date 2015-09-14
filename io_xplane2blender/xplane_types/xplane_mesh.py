@@ -1,6 +1,6 @@
 import bpy
-from ..xplane_config import getDebug, getDebugger
-from ..xplane_helpers import floatToStr
+from ..xplane_config import getDebug
+from ..xplane_helpers import floatToStr, logger
 from .xplane_face import XPlaneFace
 
 # Class: XPlaneMesh
@@ -34,7 +34,6 @@ class XPlaneMesh():
     #   list xplaneObjects - list of <XPlaneObjects>.
     def collectXPlaneObjects(self, xplaneObjects):
         debug = getDebug()
-        debugger = getDebugger()
 
         def getSortKey(xplaneObject):
             return xplaneObject.name
@@ -68,8 +67,7 @@ class XPlaneMesh():
 
                 faces = []
 
-                if debug:
-                    d = {'name': xplaneObject.name,'obj_face': 0,'faces': len(mesh_faces),'quads': 0,'vertices': len(mesh.vertices),'uvs': 0}
+                d = {'name': xplaneObject.name,'obj_face': 0,'faces': len(mesh_faces),'quads': 0,'vertices': len(mesh.vertices),'uvs': 0}
 
                 # convert faces to triangles
                 if len(mesh_faces) > 0:
@@ -80,22 +78,19 @@ class XPlaneMesh():
                             f = self.faceToTrianglesWithUV(mesh_faces[i], uvFaces[i])
                             tempfaces.extend(f)
 
-                            if debug:
-                                d['uvs'] += 1
+                            d['uvs'] += 1
 
-                                if len(f) > 1:
-                                    d['quads'] += 1
+                            if len(f) > 1:
+                                d['quads'] += 1
 
                         else:
                             f = self.faceToTrianglesWithUV(mesh_faces[i], None)
                             tempfaces.extend(f)
 
-                            if debug:
-                                if len(f) > 1:
-                                    d['quads']+=1
+                            if len(f) > 1:
+                                d['quads']+=1
 
-                    if debug:
-                        d['obj_faces'] = len(tempfaces)
+                    d['obj_faces'] = len(tempfaces)
 
                     for f in tempfaces:
                         xplaneFace = XPlaneFace()
@@ -148,10 +143,9 @@ class XPlaneMesh():
                     xplaneObject.indices[1] = len(self.indices)
                     self.faces.extend(faces)
 
-                if debug:
-                    d['start_index'] = xplaneObject.indices[0]
-                    d['end_index'] = xplaneObject.indices[1]
-                    self.debug.append(d)
+                d['start_index'] = xplaneObject.indices[0]
+                d['end_index'] = xplaneObject.indices[1]
+                self.debug.append(d)
 
         if debug:
             try:
@@ -168,9 +162,9 @@ class XPlaneMesh():
                 if d['faces'] > 0:
                     tris_to_quads = d['obj_faces'] / d['faces']
 
-                debugger.debug('%s: faces %d | xplaneObject-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],tris_to_quads,d['end_index']-d['start_index'],d['vertices']))
+                logger.info('%s: faces %d | xplaneObject-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],tris_to_quads,d['end_index']-d['start_index'],d['vertices']))
 
-            debugger.debug('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
+            logger.info('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
 
     # Method: getDupliVerticeIndex
     # Returns the index of a vertice duplicate if any.

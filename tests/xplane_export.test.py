@@ -8,7 +8,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestExportXPlaneFiles(XPlaneTestCase):
     def setUp(self):
-        super(TestExportXPlaneFiles, self).setUp()
+        super(TestExportXPlaneFiles, self).setUp(False)
 
     def beforeEach(self):
         bpy.ops.wm.revert_mainfile()

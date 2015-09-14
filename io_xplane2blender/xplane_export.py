@@ -5,8 +5,9 @@ import os.path
 import bpy
 import mathutils
 import os
+from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
-from .xplane_config import getDebug, getDebugger, getLog, initConfig, clearErrors, getErrors, hasErrors
+from .xplane_config import getDebug, getLog, initConfig
 
 # TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
 try:
@@ -15,24 +16,18 @@ except ImportError:
     from io_utils import ImportHelper, ExportHelper
 
 
-class ExportErrorsDialog(bpy.types.Menu):
-    bl_idname = "SCENE_MT_xplane_export_errors"
-    bl_label = "XPlane Export Errors"
-
-    errors = bpy.props.StringProperty(
-        name = "errors",
-        default = ""
-    )
+class ExportLogDialog(bpy.types.Menu):
+    bl_idname = "SCENE_MT_xplane_export_log"
+    bl_label = "XPlane Export Log"
 
     def draw(self, context):
-        errors = getErrors()
+        row = self.layout.row()
+        row.label('Export produces errors or warnings.')
+        row = self.layout.row()
+        row.label('Please take a look into the internall text file XPlane2Blender.log')
 
-        for error in errors:
-            row = self.layout.row()
-            row.label(error)
-
-def showErrorsDialog():
-    bpy.ops.wm.call_menu(name = "SCENE_MT_xplane_export_errors")
+def showLogDialog():
+    bpy.ops.wm.call_menu(name = "SCENE_MT_xplane_export_log")
 
 # Class: ExportXPlane
 # Main Export class. Brings all parts together and creates the OBJ files.
@@ -58,12 +53,6 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         initConfig()
         log = getLog()
         debug = getDebug()
-        debugger = getDebugger()
-
-        clearErrors()
-
-        if debug:
-            debugger.start(log)
 
         filepath = self.properties.filepath
         if filepath == '':
@@ -72,14 +61,18 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         filepath = os.path.dirname(filepath)
         # filepath = bpy.path.ensure_ext(filepath, ".obj")
 
+        # prepare logging
+        self._startLogging()
+
         exportMode = bpy.context.scene.xplane.exportMode
 
         if exportMode == 'layers':
             # check if X-Plane layers have been created
             # TODO: only check if user selected the export from layers option, instead the export from root objects
             if len(bpy.context.scene.xplane.layers) == 0:
-                addError('You must create X-Plane layers first.')
-                showErrorsDialog()
+                logger.error('You must create X-Plane layers first.')
+                self._endLogging()
+                showLogDialog()
                 return {'CANCELLED'}
 
         # store current frame as we will go back to it
@@ -99,8 +92,9 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         for xplaneFile in xplaneFiles:
             if self._writeXPlaneFile(xplaneFile, filepath) == False:
-                if hasErrors():
-                    showErrorsDialog()
+                if logger.hasErrors():
+                    self._endLogging()
+                    showLogDialog()
 
                 return {'CANCELLED'}
 
@@ -108,14 +102,40 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.scene.frame_set(frame = currentFrame)
         bpy.context.scene.update()
 
-        if debug:
-            debugger.end()
+        self._endLogging()
 
         return {'FINISHED'}
 
+    def _startLogging(self):
+        log = getLog()
+        debug = getDebug()
+        filepath = os.path.dirname(bpy.context.blend_data.filepath)
+        logLevels = ['error', 'warning']
+
+        self.logFile = None
+
+        logger.clearTransports()
+
+        # in debug mode, we log everything
+        if debug:
+            logLevels.append('info')
+            logLevels.append('success')
+
+        # log out to a file if logging is enabled
+        if log:
+            self.logFile = open(os.path.join(filepath, 'xplane2blender.log'), 'w')
+            logger.addTransport(XPlaneLogger.FileTransport(self.logFile), logLevels)
+
+        # always log to internal text file and console
+        logger.addTransport(XPlaneLogger.InternalTextTransport('xplane2blender.log'), logLevels)
+        logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
+
+    def _endLogging(self):
+        if self.logFile:
+            self.logFile.close()
+
     def _writeXPlaneFile(self, xplaneFile, dir):
         debug = getDebug()
-        debugger = getDebugger()
 
         # only write layers that contain objects
         if len(xplaneFile.objects) == 0:
@@ -125,16 +145,15 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         out = xplaneFile.write()
 
-        if hasErrors():
+        if logger.hasErrors():
             return False
 
         # write the file
-        if debug:
-            debugger.debug("Writing %s.obj" % fullpath)
+        logger.info("Writing %s.obj" % fullpath)
 
-        file = open(fullpath, "w")
-        file.write(out)
-        file.close()
+        objFile = open(fullpath, "w")
+        objFile.write(out)
+        objFile.close()
 
     # Method: invoke
     # Used from Blender when user hits the Export-Entry in the File>Export menu.
