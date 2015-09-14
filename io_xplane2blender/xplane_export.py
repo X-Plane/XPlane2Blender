@@ -22,7 +22,7 @@ class ExportLogDialog(bpy.types.Menu):
 
     def draw(self, context):
         row = self.layout.row()
-        row.label('Export produces errors or warnings.')
+        row.label('Export produced errors or warnings.')
         row = self.layout.row()
         row.label('Please take a look into the internall text file XPlane2Blender.log')
 
