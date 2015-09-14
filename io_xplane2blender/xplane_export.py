@@ -104,6 +104,9 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         self._endLogging()
 
+        if logger.hasErrors() or logger.hasWarnings():
+            showLogDialog()
+
         return {'FINISHED'}
 
     def _startLogging(self):
