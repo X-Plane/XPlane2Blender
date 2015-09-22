@@ -189,14 +189,17 @@ class XPlaneBone():
             return mathutils.Matrix.Identity(4)
 
         if self.blenderBone:
-            '''
+        
+            # The post-animation matrix is just the transform "of this bone" - 
+            # Fortunately, the pose bone's matrix field gives us the transform
+            # in what I _think_ is armature space.
             poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
             if poseBone:
                 return self.blenderObject.matrix_world.copy() * poseBone.matrix.copy()
             else:
-                return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
-            '''
-            return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
+                return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()        # When is this case ever hit!?!
+
+            #return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
         elif self.blenderObject:
             return self.blenderObject.matrix_world.copy()
 
@@ -205,6 +208,12 @@ class XPlaneBone():
             # not animated objects have own world matrix
             return self.getBlenderWorldMatrix()
         elif self.blenderBone:
+
+            # The pre-animation matrix of a bone is defined by the matrix of the blender bone (which 
+            # contains rest transforms but not pose transforms) applied on top of the coordinate
+            # system of the parent armature.
+            return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
+
             '''
             parent_matrix = None
 
@@ -217,10 +226,14 @@ class XPlaneBone():
                     parent_matrix = self.blenderObject.matrix_world.copy() * self.blenderBone.parent.matrix_local.copy()
             else:
                 parent_matrix = self.blenderObject.matrix_world
-            '''
+
+            return parent_matrix
             return self.parent.getBlenderWorldMatrix() * self.parent.getBlenderWorldMatrix().inverted_safe()
+            '''
         elif self.blenderObject:
             # animated objects have parents world matrix * inverse of parents matrix
+            # matrix_parent_inverse is a static arbitrary transform applied at parenting time to keep
+            # objets from "jumping".  Without this, Blender would have to edit key frame tables on parenting.
             return self.parent.getBlenderWorldMatrix() * self.blenderObject.matrix_parent_inverse
 
     def getPostAnimationMatrix(self):
@@ -232,6 +245,8 @@ class XPlaneBone():
 
     def getBakeMatrix(self):
         if self.parent == None:
+            # If our pre-animation matrix contains a static transform we still need it?
+            #return self.getPreAnimationMatrix()
             return self.getBlenderWorldMatrix()
         else:
             return self.getFirstAnimatedParent().getPostAnimationMatrix().inverted_safe() * self.getPreAnimationMatrix()
@@ -247,13 +262,24 @@ class XPlaneBone():
         if debug:
             o += indent + '# ' + self.getName() + '\n'
 
+            '''
+            # Debug code -t his dumps the pre/post/bake matrix for every single xplane bone into the file.
+            p = self
+            while p != None:
+               o += indent + '#   ' + p.getName() + '\n'
+               o += str(p.getPreAnimationMatrix()) + '\n'
+               o += str(p.getPostAnimationMatrix()) + '\n'
+               o += str(p.getBakeMatrix()) + '\n'
+               p = None
+            '''
+            
         if not self.isAnimated():
             return o
 
         preMatrix = self.getPreAnimationMatrix()
         postMatrix = self.getPostAnimationMatrix()
         bakeMatrix = self.getBakeMatrix()
-
+        
         if postMatrix is not preMatrix:
             # write out static translations of bake
             o += indent + 'ANIM_begin\n'
@@ -264,9 +290,13 @@ class XPlaneBone():
         for dataref in self.animations:
             o += self.writeKeyframes(dataref)
 
-        if postMatrix is not preMatrix:
-            # revert static translations needed for correct rotation origin
-            o += self._writeStaticTranslation(bakeMatrix, True)
+        # IMPORTANT: we _do not_ invert out the static translation!  All children of this
+        # bone will be taken relative to our final transform, wihch is around the rotation
+        # origin!
+        
+        #if postMatrix is not preMatrix:
+        #    # revert static translations needed for correct rotation origin
+        #    o += self._writeStaticTranslation(bakeMatrix, True)
 
         o += self._writeAnimAttributes()
 
