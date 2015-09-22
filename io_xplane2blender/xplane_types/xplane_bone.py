@@ -529,6 +529,9 @@ class XPlaneBone():
         o = ''
         indent = self.getIndent()
 
+        if self.xplaneObject == None:
+            return o
+
         for name in self.xplaneObject.animAttributes:
             attr = self.xplaneObject.animAttributes[name]
             o += indent + '%s\t%s\n' % (attr.name, attr.getValueAsString())
