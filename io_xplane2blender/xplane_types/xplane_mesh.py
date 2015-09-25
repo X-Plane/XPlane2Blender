@@ -52,7 +52,7 @@ class XPlaneMesh():
 
                 # now get the bake matrix
                 # and bake it to the mesh
-                xplaneObject.bakeMatrix = xplaneObject.xplaneBone.getBakeMatrix()
+                xplaneObject.bakeMatrix = xplaneObject.xplaneBone.getBakeMatrixForAttached()
                 mesh.transform(xplaneObject.bakeMatrix)
 
                 if hasattr(mesh, 'polygons'): # BMesh

@@ -72,10 +72,17 @@ class XPlaneLight(XPlaneObject):
 
         # rendering (do not render lights with no indices)
         if self.indices[1] > self.indices[0]:
-            bakeMatrix = self.xplaneBone.getBakeMatrix()
+            bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
 
             translation = bakeMatrix.to_translation()
-
+			# TODO: the bake matrix may have a rotation component.
+			# in this case we need to emit static rotations to get the light
+			# pointing in the right direction.  
+			#
+			# Ideally we'd know whether the light has some kind of symetry (E.g.
+			# axial around a given axis for Z or omni) and throw out unnecessary
+			# transforms, since they are toxic to instancing.
+			
             if self.lightType == "named":
                 o += "%sLIGHT_NAMED\t%s\t%s\t%s\t%s\n" % (
                     indent, self.lightName,
