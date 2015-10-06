@@ -80,6 +80,10 @@ for root, dirs, files in os.walk('./tests'):
                 if debug:
                     args.append('--debug')
 
+                    # print the command used to execute the script
+                    # to be able to easily re-run it manually to get better error output
+                    print(' '.join(args))
+
                 out = subprocess.check_output(args, stderr = subprocess.STDOUT)
 
                 print(out)
