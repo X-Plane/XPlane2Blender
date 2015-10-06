@@ -21,7 +21,7 @@ class TestMatrices(XPlaneTestCase):
 
         preMatrix = cubeStatic.getPreAnimationMatrix()
         postMatrix = cubeStatic.getPostAnimationMatrix()
-        bakeMatrix = cubeStatic.getBakeMatrix()
+        bakeMatrix = cubeStatic.getBakeMatrixForMyAnimations()
 
         self.assertFloatVectorsEqual(preMatrix.to_translation(), cubeStatic.blenderObject.location, FLOAT_TOLERANCE)
         self.assertFloatVectorsEqual(preMatrix.to_scale(), cubeStatic.blenderObject.scale, FLOAT_TOLERANCE)
@@ -38,7 +38,7 @@ class TestMatrices(XPlaneTestCase):
 
         preMatrix = cubeAnimated.getPreAnimationMatrix()
         postMatrix = cubeAnimated.getPostAnimationMatrix()
-        bakeMatrix = cubeAnimated.getBakeMatrix()
+        bakeMatrix = cubeAnimated.getBakeMatrixForMyAnimations()
 
         # animated object should have identity matrix as pre animation
         self.assertEquals(preMatrix, identityMatrix)
@@ -61,7 +61,7 @@ class TestMatrices(XPlaneTestCase):
 
         preMatrix = cubeStaticChildStatic.getPreAnimationMatrix()
         postMatrix = cubeStaticChildStatic.getPostAnimationMatrix()
-        bakeMatrix = cubeStaticChildStatic.getBakeMatrix()
+        bakeMatrix = cubeStaticChildStatic.getBakeMatrixForMyAnimations()
 
         self.assertEquals(preMatrix, cubeStaticChildStatic.blenderObject.matrix_world)
         self.assertEquals(postMatrix, preMatrix)
@@ -74,7 +74,7 @@ class TestMatrices(XPlaneTestCase):
 
         preMatrix = cubeStaticChildAnimated.getPreAnimationMatrix()
         postMatrix = cubeStaticChildAnimated.getPostAnimationMatrix()
-        bakeMatrix = cubeStaticChildAnimated.getBakeMatrix()
+        bakeMatrix = cubeStaticChildAnimated.getBakeMatrixForMyAnimations()
 
         # pre matrix should be parents world matrix * inverted matrix relative to parent
         self.assertEquals(preMatrix, cubeStaticChildAnimated.blenderObject.parent.matrix_world * cubeStaticChildAnimated.blenderObject.matrix_parent_inverse)
@@ -90,7 +90,7 @@ class TestMatrices(XPlaneTestCase):
 
         preMatrix = cubeAnimatedChildStatic.getPreAnimationMatrix()
         postMatrix = cubeAnimatedChildStatic.getPostAnimationMatrix()
-        bakeMatrix = cubeAnimatedChildStatic.getBakeMatrix()
+        bakeMatrix = cubeAnimatedChildStatic.getBakeMatrixForMyAnimations()
 
         self.assertEquals(preMatrix, cubeAnimatedChildStatic.blenderObject.matrix_world)
         self.assertEquals(postMatrix, preMatrix)

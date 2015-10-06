@@ -189,15 +189,15 @@ class XPlaneBone():
             return mathutils.Matrix.Identity(4)
 
         if self.blenderBone:
-            # Blender bones in their current pose (which matches the shape of all data 
-            # blocks 'right now') are stored as a transform in the pose bone relative 
+            # Blender bones in their current pose (which matches the shape of all data
+            # blocks 'right now') are stored as a transform in the pose bone relative
             # to the parent armature.  So it's easy to export them:
             poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
             if poseBone:
                 return self.blenderObject.matrix_world.copy() * poseBone.matrix.copy()
             else:
                 # FIXME: is there ever not a pose bone for a bone?  Should this be some kind of assert?
-                return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()    
+                return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
         elif self.blenderObject:
             # Data blocks simply know their world-space location post-transform.
             return self.blenderObject.matrix_world.copy()
@@ -224,12 +224,12 @@ class XPlaneBone():
                 # 3. The bake matrix from our parent's pose to us.
                 # This gets us up to right before our transform.
                 return (self.blenderObject.matrix_world.copy() * poseBone.parent.matrix.copy() * r2r)
-            
+
             # This is the unparented bone case (and any fall-throughs from crazy objects):
             # Simply apply our rest position (relative to the armature) to the armature's current world-space
             # position.
             return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
-            
+
         elif self.blenderObject:
             # animated objects have parents world matrix * inverse of parents matrix
             # matrix_parent_inverse is a static arbitrary transform applied at parenting time to keep
@@ -239,7 +239,7 @@ class XPlaneBone():
     def getPostAnimationMatrix(self):
         # for non-animated or root bones, post = pre
         if not self.isAnimated() or self.parent == None:
-            # FIXME: Ben syas - this is just calling getBlenderWorldMatrix.  I think getBlenderWorldMatrix 
+            # FIXME: Ben syas - this is just calling getBlenderWorldMatrix.  I think getBlenderWorldMatrix
             # _is_ the post-animation matrix in pretty much all cases; we should merge these routines.
             return self.getPreAnimationMatrix()
         else:
@@ -251,7 +251,7 @@ class XPlaneBone():
         if self.parent == None:
             # If our pre-animation matrix contains a static transform we still need it?
             return self.getBlenderWorldMatrix()
-        else:            
+        else:
             return self.getFirstAnimatedParent().getPostAnimationMatrix().inverted_safe() * self.getPreAnimationMatrix()
 
     #
@@ -263,16 +263,16 @@ class XPlaneBone():
         #  From: the end of the last animation we output
         #  To: the transform of the actual 'thing' we are going to output.
         #
-        # This code assumes that the data block that the primitive sits in _is_ its parent bone. 
+        # This code assumes that the data block that the primitive sits in _is_ its parent bone.
         # In the future, maybe we pass in the data block of the exportable primitive.
         if self.isAnimated():
-            my_anchor_bone = self                           # The anchor bone is the last bone to be animated - 
+            my_anchor_bone = self                           # The anchor bone is the last bone to be animated -
         else:                                               # We are 'in' its post-animation coordinate system
             my_anchor_bone = self.getFirstAnimatedParent()
 
         if my_anchor_bone == None:
             # If there's no animation, just get to our post-animation xform.
-            return getPostAnimationMatrix()                 
+            return self.getPostAnimationMatrix()
         else:
             # Find the relative matrix from the post-animation of our last animated bone to our final post animation transform.
             return my_anchor_bone.getPostAnimationMatrix().inverted_safe() * self.getPostAnimationMatrix()
@@ -304,9 +304,9 @@ class XPlaneBone():
                     o += "#   pose delta\n" + str(self.blenderBone.matrix_local.inverted_safe() * poseBone.matrix) + "\n"
             elif self.blenderObject != None:
                 o += "# Data block\n" + str(self.blenderObject.matrix_world) + "\n"
-            
+
             # Debug code - this dumps the pre/post/bake matrix for every single xplane bone into the file.
-            
+
             p = self
             while p != None:
                o += indent + '#   ' + p.getName() + '\n'
@@ -315,14 +315,14 @@ class XPlaneBone():
                o += str(p.getBakeMatrixForMyAnimations()) + '\n'
                p = None
             '''
-            
+
         if not self.isAnimated():
             return o
 
         preMatrix = self.getPreAnimationMatrix()
         postMatrix = self.getPostAnimationMatrix()
         bakeMatrix = self.getBakeMatrixForMyAnimations()
-        
+
         if postMatrix is not preMatrix:
             # write out static translations of bake
             o += indent + 'ANIM_begin\n'
@@ -336,7 +336,7 @@ class XPlaneBone():
         # IMPORTANT: we _do not_ invert out the static translation!  All children of this
         # bone will be taken relative to our final transform, wihch is around the rotation
         # origin!
-        
+
         #if postMatrix is not preMatrix:
         #    # revert static translations needed for correct rotation origin
         #    o += self._writeStaticTranslation(bakeMatrix, True)
