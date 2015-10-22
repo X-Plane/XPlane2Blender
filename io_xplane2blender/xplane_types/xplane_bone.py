@@ -397,12 +397,14 @@ class XPlaneBone():
         for axis in eulerAxes:
             deg = math.degrees(rotation[axes[i]])
 
-            o += indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
-                floatToStr(axis[0]),
-                floatToStr(axis[2]),
-                floatToStr(-axis[1]),
-                floatToStr(deg), floatToStr(deg)
-            )
+            # ignore zero rotation
+            if not deg == 0:
+                o += indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
+                    floatToStr(axis[0]),
+                    floatToStr(axis[2]),
+                    floatToStr(-axis[1]),
+                    floatToStr(deg), floatToStr(deg)
+                )
 
             i += 1
 
