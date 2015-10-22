@@ -364,8 +364,6 @@ TRIS	0 36
 		# static translation
 		ANIM_trans	0	-0.00000024	-0.00000008	0	-0.00000024	-0.00000008
 		# static rotation
-		ANIM_rotate	1	0	0	0	0
-		ANIM_rotate	0	0	-1	0	0
 		ANIM_rotate	0	1	0	0.0000025	0.0000025
 		# translation keyframes
 		ANIM_trans_begin	test
@@ -383,4 +381,4 @@ TRIS	0 36
 		ANIM_end
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'fb78f6d') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'48f7dd6') Exported with XPlane2Blender 3.3.0
