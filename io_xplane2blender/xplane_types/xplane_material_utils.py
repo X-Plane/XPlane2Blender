@@ -10,13 +10,13 @@ def compareScenery(refMat, mat):
     errors = []
 
     if mat.texture != refMat.texture:
-        errors.push('Texture must be %s.' % refMat.texture)
+        errors.append('Texture must be %s.' % refMat.texture)
 
     if mat.textureLit != refMat.textureLit:
-        errors.push('Lit/Emissive texture must be %s.' % refMat.textureLit)
+        errors.append('Lit/Emissive texture must be %s.' % refMat.textureLit)
 
     if mat.textureNormal != refMat.textureNormal:
-        errors.push('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
+        errors.append('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
 
     return len(errors) == 0, errors
 
@@ -24,27 +24,27 @@ def compareInstanced(refMat, mat):
     errors = []
 
     if mat.texture != refMat.texture:
-        errors.push('Texture must be %s.' % refMat.texture)
+        errors.append('Texture must be %s.' % refMat.texture)
 
     if mat.textureLit != refMat.textureLit:
-        errors.push('Lit/Emissive texture must be %s.' % refMat.textureLit)
+        errors.append('Lit/Emissive texture must be %s.' % refMat.textureLit)
 
     if mat.textureNormal != refMat.textureNormal:
-        errors.push('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
+        errors.append('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
 
     if mat.options.overrideSpecularity:
         if mat.options.shinyRatio != refMat.options.shinyRatio:
-            errors.push('Specularity must be %f.' % refMat.options.shinyRatio)
+            errors.append('Specularity must be %f.' % refMat.options.shinyRatio)
     elif mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
-        errors.push('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
+        errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
 
     if mat.options.blend != refMat.options.blend:
         if refMat.options.blend:
-            errors.push('Alpha cutoff must be enabled.')
+            errors.append('Alpha cutoff must be enabled.')
         else:
-            errors.push('Alpha cutoff must be disabled.')
+            errors.append('Alpha cutoff must be disabled.')
     elif mat.options.blendRatio != refMat.options.blendRatio:
-        errors.push('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
+        errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
 
     return len(errors) == 0, errors
 
@@ -52,13 +52,13 @@ def compareAircraft(refMat, mat):
     errors = []
 
     if mat.texture != refMat.texture:
-        errors.push('Texture must be %s.' % refMat.texture)
+        errors.append('Texture must be %s.' % refMat.texture)
 
     if mat.textureLit != refMat.textureLit:
-        errors.push('Lit/Emissive texture must be %s.' % refMat.textureLit)
+        errors.append('Lit/Emissive texture must be %s.' % refMat.textureLit)
 
     if mat.textureNormal != refMat.textureNormal:
-        errors.push('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
+        errors.append('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
 
     return len(errors) == 0, errors
 
