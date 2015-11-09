@@ -1,9 +1,7 @@
 # File: xplane_helpers.py
 # Defines Helpers
 
-import math
 import bpy
-from mathutils import Matrix,Vector,Euler
 
 FLOAT_PRECISION = 8
 

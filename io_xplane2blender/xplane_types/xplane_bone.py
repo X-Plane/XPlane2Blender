@@ -463,14 +463,40 @@ class XPlaneBone():
         lastValue = None
         totalRot = 0
 
-        # TODO: be sure, axis angle axis does not change during keyframes
-        axisAngle = (keyframes[0].rotation[1], keyframes[0].rotation[2], keyframes[0].rotation[3])
+        # our reference axis
+        refAxis = None
+        refAxisInv = None
+
+        # find reference axis
+        for keyframe in keyframes:
+            rotation = keyframe.rotation
+
+            axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
+
+            if rotation[0] == 0:
+                continue
+            elif refAxis == None:
+                refAxis = axis
+                refAxisInv = refAxis * -1
+            elif refAxis.x == axis.x and \
+                 refAxis.y == axis.y and \
+                 refAxis.z == axis.z:
+                continue
+            elif refAxisInv.x == axis.x and \
+                 refAxisInv.y == axis.y and \
+                 refAxisInv.z == axis.z:
+                keyframe.rotation = rotation * -1
+            else:
+                logger.warn("%s: axis angle animation contains more then one axis." % self.getBlenderName())
+
+        if refAxis == None:
+            refAxis = mathutils.Vector((0, 0, 1))
 
         o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
             indent,
-            floatToStr(axisAngle[0]),
-            floatToStr(axisAngle[2]),
-            floatToStr(-axisAngle[1]),
+            floatToStr(refAxis[0]),
+            floatToStr(refAxis[2]),
+            floatToStr(-refAxis[1]),
             dataref
         )
 
@@ -496,32 +522,15 @@ class XPlaneBone():
         return o
 
     def _writeQuaternionRotationKeyframes(self, dataref):
-        debug = getDebug()
         keyframes = self.animations[dataref]
-        o = ''
-        indent = self.getIndent()
 
-        if debug:
-            o += indent + '# WARNING: Quaternion rotations are not supported yet (Please use Axis Angle or Euler instead)\n'
+        # convert rotations to axis angle
+        for keyframe in keyframes:
+            axisAngle = keyframe.rotation.normalized().to_axis_angle()
+            keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
 
-        # TODO: convert to axis angle
-        # http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
-        # public void set(Quat4d q1) {
-        #    if (q1.w > 1) q1.normalise(); // if w>1 acos and sqrt will produce errors, this cant happen if quaternion is normalised
-        #    angle = 2 * Math.acos(q1.w);
-        #    double s = Math.sqrt(1-q1.w*q1.w); // assuming quaternion normalised then w is less than 1, so term always positive.
-        #    if (s < 0.001) { // test to avoid divide by zero, s is always positive due to sqrt
-        #      // if s close to zero then direction of axis not important
-        #      x = q1.x; // if it is important that axis is normalised then replace with x=1; y=z=0;
-        #      y = q1.y;
-        #      z = q1.z;
-        #    } else {
-        #      x = q1.x / s; // normalise axis
-        #      y = q1.y / s;
-        #      z = q1.z / s;
-        #    }
-        # }
-        return o
+        # now simply write axis angle
+        return self._writeAxisAngleRotationKeyframes(dataref)
 
     def _writeEulerRotationKeyframes(self, dataref):
         debug = getDebug()

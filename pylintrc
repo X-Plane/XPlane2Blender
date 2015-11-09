@@ -1,2 +1,2 @@
 [BASIC]
-disable=W0141, W0401
+disable=W0141, W0401, C0103
