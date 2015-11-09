@@ -46,6 +46,8 @@ class XPlaneCommands():
             'ATTR_no_cockpit': True,
             'ATTR_no_solid_camera': True,
             'ATTR_draw_enable': True,
+            'ATTR_draped': True,
+            'ATTR_no_drape': True,
             'ATTR_no_cockpit': True
         }
 

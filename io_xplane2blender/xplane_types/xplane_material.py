@@ -3,6 +3,7 @@ from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
+from .xplane_material_utils import validate, compare
 
 # Class: XPlaneMaterial
 # A Material
@@ -34,6 +35,8 @@ class XPlaneMaterial():
 
         self.xplaneObject = xplaneObject
         self.blenderObject = self.xplaneObject.blenderObject
+        self.blenderMaterial = None
+        self.options = None
         self.texture = None
         self.textureLit = None
         self.textureNormal = None
@@ -65,6 +68,8 @@ class XPlaneMaterial():
 
         self.attributes.add(XPlaneAttribute('ATTR_light_level', None, 1000))
         self.attributes.add(XPlaneAttribute('ATTR_poly_os', None, 1000))
+        self.attributes.add(XPlaneAttribute('ATTR_draped', False, 1000))
+        self.attributes.add(XPlaneAttribute('ATTR_no_draped', True, 1000))
 
         self.cockpitAttributes = XPlaneAttributes()
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit', None, 2000))
@@ -78,7 +83,9 @@ class XPlaneMaterial():
            hasattr(self.blenderObject.data.materials[0], 'name'):
             mat = self.blenderObject.data.materials[0]
             self.name = mat.name
-
+            self.blenderMaterial = mat
+            self.options = mat.xplane
+            
             if mat.xplane.draw:
                 # add cockpit attributes
                 self.collectCockpitAttributes(mat)
@@ -216,7 +223,7 @@ class XPlaneMaterial():
             self.cockpitAttributes['ATTR_cockpit'].setValue(True)
             self.cockpitAttributes['ATTR_no_cockpit'].setValue(None)
             cockpit_region = int(mat.xplane.cockpit_region)
-            if cockpit_region>0:
+            if cockpit_region > 0:
                 self.cockpitAttributes['ATTR_cockpit_region'].setValue(cockpit_region - 1)
 
     # Method: collectLightLevelAttributes
@@ -259,3 +266,28 @@ class XPlaneMaterial():
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self.xplaneObject)
 
         return o
+
+    # Method: isCompatibleTo
+    # Checks if a material is compatible to other material based on an export type.
+    #
+    # Parameters:
+    # refMat <XPlaneMaterial> - reference material to compare against
+    # mat <XPlaneMaterial> - material to check compatiblity to refMat
+    # exportType <string> - one of "aircraft", "cockpit", "scenery", "instanced_scenery"
+    #
+    # Returns:
+    #   bool, list - True if Material is compatible to reference Material, else False + a list of errors/conflicts
+    @staticmethod
+    def isCompatibleTo(refMat, mat, exportType):
+        return compare(refMat, mat, exportType)
+
+    # Method: isValid
+    # Checks if material is valid based on an export type.
+    #
+    # Parameters:
+    # exportType <string> - one of "aircraft", "cockpit", "scenery", "instanced_scenery"
+    #
+    # Returns:
+    #   bool, list - True if Material is valid, else False + a list of errors
+    def isValid(self, exportType):
+        return validate(self, exportType)

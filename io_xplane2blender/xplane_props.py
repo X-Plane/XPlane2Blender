@@ -1140,6 +1140,14 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         update = updateMaterialLitPreview
     )
 
+    # v1000
+    draped = bpy.props.BoolProperty(
+        attr = "draped",
+        name = "Draped",
+        description = "Will perfectly match with the ground.",
+        default = False
+    )
+
 # Class: XPlaneLampSettings
 # Settings for Blender lamps.
 #
