@@ -141,7 +141,7 @@ class XPlaneObject():
                 name = 'ANIM_' + dataref.anim_type
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
-                
+
     # Method: getWeight
     #
     # Parameters:
@@ -192,7 +192,7 @@ class XPlaneObject():
             o += commands.writeAttribute(self.attributes[attr], self)
 
         # if the file is a cockpit file write all cockpit attributes
-        if hasattr(xplaneFile.options, 'cockpit') and xplaneFile.options.cockpit:
+        if xplaneFile.options.export_type == 'cockpit':
             for attr in self.cockpitAttributes:
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self)
 

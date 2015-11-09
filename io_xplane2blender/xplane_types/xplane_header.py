@@ -134,7 +134,7 @@ class XPlaneHeader():
                 self.attributes['GLOBAL_no_shadow'].setValue(True)
 
             # cockpit_lit
-            if self.xplaneFile.options.cockpit == True and self.xplaneFile.options.cockpit_lit == True:
+            if self.xplaneFile.options.export_type == 'cockpit' and self.xplaneFile.options.cockpit_lit == True:
                 self.attributes['GLOBAL_cockpit_lit'].setValue(True)
 
         # add custom attributes

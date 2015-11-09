@@ -492,6 +492,26 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = ""
     )
 
+    # Deprecated: This will be removed in v3.4
+    cockpit = bpy.props.BoolProperty(
+        attr = "cockpit",
+        name = "Cockpit",
+        default = False
+    )
+
+    export_type = bpy.props.EnumProperty(
+        attr = "export_type",
+        name = "Type",
+        description = "What kind of thing are you going to export?",
+        default = "aircraft",
+        items = [
+            ("aircraft", "Aircraft (Part)", "Aircraft (Part)"),
+            ("cockpit", "Cockpit", "Cockpit"),
+            ("scenery", "Scenery Object", "Scenery Object"),
+            ("instanced_scenery", "Instanced Scenery Object", "Instanced Scenery Object")
+        ]
+    )
+
     cockpit = bpy.props.BoolProperty(
         attr = "cockpit",
         name = "Cockpit",

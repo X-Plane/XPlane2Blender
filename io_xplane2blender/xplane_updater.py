@@ -7,12 +7,19 @@ from bpy.app.handlers import persistent
 
 def update(fromVersion):
     if fromVersion == '<3.3.0':
-        # set autodetectTextures to False for each scene
         for scene in bpy.data.scenes:
             if scene.xplane and scene.xplane.layers and len(scene.xplane.layers) > 0:
                 for layer in scene.xplane.layers:
+                    # set autodetectTextures to False
                     layer.autodetectTextures = False
 
+                    # set export mode to cockpit, if cockpit was previously enabled
+                    # TODO: Have users actually exwported scenery objects before?
+                    # Do we need to care about non-aircraft export types?
+                    if layer.cockpit:
+                        layer.export_type = 'cockpit'
+                    else:
+                        layer.export_type = 'aircraft'
 
 @persistent
 def load_handler(dummy):

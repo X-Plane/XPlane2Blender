@@ -251,7 +251,7 @@ class XPlaneMaterial():
             o += commands.writeAttribute(self.attributes[attr], self.xplaneObject)
 
         # if the file is a cockpit file write all cockpit attributes
-        if hasattr(xplaneFile.options, 'cockpit') and xplaneFile.options.cockpit:
+        if xplaneFile.options.export_type == 'cockpit':
             for attr in self.cockpitAttributes:
                 # do not write own reseters just now
                 # FIXME: why have we been doing this at all?

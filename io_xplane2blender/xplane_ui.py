@@ -232,11 +232,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     column = layout.column()
     column.prop(layerObj, "export", text = "Export")
     column.prop(layerObj, "name", text = "Name")
-
-    if layerObj.cockpit:
-        checkboxIcon = "CHECKBOX_HLT"
-    else:
-        checkboxIcon = "CHECKBOX_DEHLT"
+    column.prop(layerObj, "export_type", text = "Type")
 
     column.label('Textures')
     tex_box = column.box()
@@ -248,10 +244,8 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         tex_box.prop(layerObj, "texture_lit", text = "Night")
         tex_box.prop(layerObj, "texture_normal", text = "Normal / Specular")
 
-    column.prop(layerObj, "cockpit", text = "Cockpit", icon = checkboxIcon, toggle = True)
-
     # cockpit regions
-    if layerObj.cockpit:
+    if layerObj.export_type == 'cockpit':
         cockpit_box = column.box()
         #cockpit_box.prop(layerObj, "panel_texture", text = "Panel Texture")
         cockpit_box.prop(layerObj, "cockpit_regions", text = "Cockpit regions")
