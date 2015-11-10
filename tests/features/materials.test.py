@@ -41,7 +41,9 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_solid_camera': None,
             'ATTR_no_solid_camera': True,
             'ATTR_light_level': None,
-            'ATTR_poly_os': None
+            'ATTR_poly_os': None,
+            'ATTR_draped': None,
+            'ATTR_no_draped': True
         }
         defaultCockpitAttrs = {
             'ATTR_cockpit': None,

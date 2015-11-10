@@ -68,7 +68,7 @@ class XPlaneMaterial():
 
         self.attributes.add(XPlaneAttribute('ATTR_light_level', None, 1000))
         self.attributes.add(XPlaneAttribute('ATTR_poly_os', None, 1000))
-        self.attributes.add(XPlaneAttribute('ATTR_draped', False, 1000))
+        self.attributes.add(XPlaneAttribute('ATTR_draped', None, 1000))
         self.attributes.add(XPlaneAttribute('ATTR_no_draped', True, 1000))
 
         self.cockpitAttributes = XPlaneAttributes()
@@ -85,7 +85,7 @@ class XPlaneMaterial():
             self.name = mat.name
             self.blenderMaterial = mat
             self.options = mat.xplane
-            
+
             if mat.xplane.draw:
                 # add cockpit attributes
                 self.collectCockpitAttributes(mat)

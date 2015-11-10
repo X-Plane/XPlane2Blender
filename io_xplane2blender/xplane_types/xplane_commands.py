@@ -33,7 +33,8 @@ class XPlaneCommands():
             'ATTR_hard':'ATTR_no_hard',
             'ATTR_hard_deck':'ATTR_no_hard',
             'ATTR_no_depth':'ATTR_depth',
-            'ATTR_no_blend':'ATTR_blend'
+            'ATTR_no_blend':'ATTR_blend',
+            'ATTR_draped': 'ATTR_no_draped'
         }
         # add default X-Plane states to presve writing them in the obj
         self.written = {
@@ -46,9 +47,7 @@ class XPlaneCommands():
             'ATTR_no_cockpit': True,
             'ATTR_no_solid_camera': True,
             'ATTR_draw_enable': True,
-            'ATTR_draped': True,
-            'ATTR_no_drape': True,
-            'ATTR_no_cockpit': True
+            'ATTR_no_draped': True
         }
 
     # Method: write
