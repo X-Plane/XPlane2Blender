@@ -280,6 +280,15 @@ class XPlaneBone():
     def __str__(self):
         return self.toString()
 
+    def _axisAngleRotationKeyframesToEuler(self, keyframes):
+        for keyframe in keyframes:
+            rotation = keyframe.rotation
+            axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
+            keyframe.rotationMode = 'XYZ'
+            keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XYZ')
+
+        return keyframes
+
     def writeAnimationPrefix(self):
         debug = getDebug()
         indent = self.getIndent()
@@ -470,7 +479,6 @@ class XPlaneBone():
         # find reference axis
         for keyframe in keyframes:
             rotation = keyframe.rotation
-
             axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
 
             if rotation[0] == 0:
@@ -487,7 +495,10 @@ class XPlaneBone():
                  refAxisInv.z == axis.z:
                 keyframe.rotation = rotation * -1
             else:
-                logger.warn("%s: axis angle animation contains more then one axis." % self.getBlenderName())
+                # decompose to eulers and return euler rotation instead
+                self._axisAngleRotationKeyframesToEuler(keyframes)
+                o = self._writeEulerRotationKeyframes(dataref)
+                return o
 
         if refAxis == None:
             refAxis = mathutils.Vector((0, 0, 1))
