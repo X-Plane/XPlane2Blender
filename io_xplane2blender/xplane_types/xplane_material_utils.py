@@ -18,7 +18,7 @@ def compareScenery(refMat, mat):
     if mat.textureNormal != refMat.textureNormal:
         errors.append('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
 
-    return len(errors) == 0, errors
+    return errors
 
 def compareInstanced(refMat, mat):
     errors = []
@@ -46,7 +46,7 @@ def compareInstanced(refMat, mat):
     elif mat.options.blendRatio != refMat.options.blendRatio:
         errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
 
-    return len(errors) == 0, errors
+    return errors
 
 def compareAircraft(refMat, mat):
     errors = []
@@ -60,10 +60,16 @@ def compareAircraft(refMat, mat):
     if mat.textureNormal != refMat.textureNormal:
         errors.append('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
 
-    return len(errors) == 0, errors
+    return errors
 
 
 def validate(mat, exportType):
+    errors = []
+
+    if mat.options == None:
+        errors.append('Is invalid.')
+        return errors
+
     if exportType == 'scenery':
         return validateScenery(mat)
     elif exportType == 'instanced_scenery':
@@ -77,6 +83,7 @@ def validate(mat, exportType):
     elif (exportType == 'scenery' or exportType == 'instanced_scenery') and mat.options.draped:
         return validateDraped(mat)
 
+    return errors
 
 def validateScenery(mat):
     errors = []
@@ -96,7 +103,7 @@ def validateScenery(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
-    return len(errors) == 0, errors
+    return errors
 
 
 def validateInstanced(mat):
@@ -120,7 +127,7 @@ def validateInstanced(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
-    return len(errors) == 0, errors
+    return errors
 
 
 def validatePanel(mat):
@@ -144,7 +151,7 @@ def validatePanel(mat):
     if mat.options.surfaceType != 'none':
         errors.append('Must have the surface type "none".')
 
-    return len(errors) == 0, errors
+    return errors
 
 
 def validateCockpit(mat):
@@ -159,7 +166,7 @@ def validateCockpit(mat):
     if mat.options.poly_os > 0:
         errors.append('Must not have polygon offset.')
 
-    return len(errors) == 0, errors
+    return errors
 
 
 def validateAircraft(mat):
@@ -177,7 +184,7 @@ def validateAircraft(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
-    return len(errors) == 0, errors
+    return errors
 
 
 def validateDraped(mat):
@@ -207,4 +214,4 @@ def validateDraped(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
-    return len(errors) == 0, errors
+    return errors

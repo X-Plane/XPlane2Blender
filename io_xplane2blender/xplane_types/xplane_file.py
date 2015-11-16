@@ -364,6 +364,18 @@ class XPlaneFile():
 
         return objects
 
+    def validateMaterials(self):
+        objects = self.getObjectsList()
+
+        for xplaneObject in objects:
+            if xplaneObject.type == 'PRIMITIVE' and xplaneObject.material.options:
+                errors = xplaneObject.material.isValid(self.options.export_type)
+
+                if errors and len(errors):
+                    for error in errors:
+                        logger.error('Material in object "%s" %s' % (xplaneObject.blenderObject.name, error))
+
+
     def writeFooter(self):
         build = 'unknown'
 
@@ -378,6 +390,9 @@ class XPlaneFile():
     # Returns OBJ file code
     def write(self):
         self.mesh.collectXPlaneObjects(self.getObjectsList())
+
+        # validate materials
+        self.validateMaterials()
 
         o = ''
         o += self.header.write()
