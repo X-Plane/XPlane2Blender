@@ -375,6 +375,10 @@ class XPlaneFile():
                     for error in errors:
                         logger.error('Material in object "%s" %s' % (xplaneObject.blenderObject.name, error))
 
+        if logger.hasErrors():
+            return False
+
+        return True
 
     def writeFooter(self):
         build = 'unknown'
@@ -392,7 +396,8 @@ class XPlaneFile():
         self.mesh.collectXPlaneObjects(self.getObjectsList())
 
         # validate materials
-        self.validateMaterials()
+        if not self.validateMaterials():
+            return ''
 
         o = ''
         o += self.header.write()

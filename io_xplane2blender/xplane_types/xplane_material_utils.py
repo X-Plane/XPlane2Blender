@@ -97,9 +97,6 @@ def validateScenery(mat):
     if mat.options.solid_camera:
         errors.append('Must have camera collision disabled.')
 
-    if mat.options.poly_os > 0:
-        errors.append('Must not have polygon offset.')
-
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
@@ -163,9 +160,6 @@ def validateCockpit(mat):
     if mat.options.draped:
         errors.append('Must not be draped.')
 
-    if mat.options.poly_os > 0:
-        errors.append('Must not have polygon offset.')
-
     return errors
 
 
@@ -177,9 +171,6 @@ def validateAircraft(mat):
 
     if mat.options.draped:
         errors.append('Must not be draped.')
-
-    if mat.options.poly_os > 0:
-        errors.append('Must not have polygon offset.')
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')

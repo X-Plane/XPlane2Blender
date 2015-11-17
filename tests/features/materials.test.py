@@ -16,6 +16,7 @@ class TestMaterials(XPlaneTestCase):
         blue = xplaneFile.objects['blue'].material
         emissive = xplaneFile.objects['emissive'].material
         cockpit = xplaneFile.objects['cockpit'].material
+        cockpitPanel = xplaneFile.objects['cockpit_panel'].material
         invisible = xplaneFile.objects['invisible'].material
         surface = xplaneFile.objects['surface'].material
         conditions = xplaneFile.objects['conditions'].material
@@ -65,18 +66,31 @@ class TestMaterials(XPlaneTestCase):
         emissiveAttrs['ATTR_emission_rgb'] = [0.5, 0.5, 0.5]
 
         cockpitAttrs = defaultAttrs.copy()
-        cockpitAttrs['ATTR_diffuse_rgb'] = None
-        cockpitAttrs['ATTR_emission_rgb'] = None
-        cockpitAttrs['ATTR_shiny_rat'] = None
-        cockpitAttrs['ATTR_blend'] = None
-        cockpitAttrs['ATTR_draw_enable'] = None
+        cockpitAttrs['ATTR_diffuse_rgb'] = [0.5, 0.5, 0.5]
+        cockpitAttrs['ATTR_emission_rgb'] = [0.0, 0.0, 0.0]
+        cockpitAttrs['ATTR_shiny_rat'] = 1.0
+        cockpitAttrs['ATTR_blend'] = True
+        cockpitAttrs['ATTR_draw_enable'] = True
         cockpitAttrs['ATTR_solid_camera'] = True
         cockpitAttrs['ATTR_no_solid_camera'] = None
         cockpitAttrs['ATTR_light_level'] = [1.0, 2.0, 'light-level-test']
         cockpitCockpitAttrs = defaultCockpitAttrs.copy()
-        cockpitCockpitAttrs['ATTR_cockpit'] = True
-        cockpitCockpitAttrs['ATTR_no_cockpit'] = None
-        cockpitCockpitAttrs['ATTR_cockpit_region'] = 0
+        cockpitCockpitAttrs['ATTR_cockpit'] = None
+        cockpitCockpitAttrs['ATTR_no_cockpit'] = True
+        cockpitCockpitAttrs['ATTR_cockpit_region'] = None
+
+        cockpitPanelAttrs = defaultAttrs.copy()
+        cockpitPanelAttrs['ATTR_diffuse_rgb'] = None
+        cockpitPanelAttrs['ATTR_emission_rgb'] = None
+        cockpitPanelAttrs['ATTR_shiny_rat'] = None
+        cockpitPanelAttrs['ATTR_blend'] = None
+        cockpitPanelAttrs['ATTR_draw_enable'] = None
+        cockpitPanelAttrs['ATTR_solid_camera'] = True
+        cockpitPanelAttrs['ATTR_no_solid_camera'] = None
+        cockpitPanelCockpitAttrs = defaultCockpitAttrs.copy()
+        cockpitPanelCockpitAttrs['ATTR_cockpit'] = True
+        cockpitPanelCockpitAttrs['ATTR_no_cockpit'] = None
+        cockpitPanelCockpitAttrs['ATTR_cockpit_region'] = 0
 
         invisibleAttrs = defaultAttrs.copy()
         invisibleAttrs['ATTR_diffuse_rgb'] = None
@@ -108,6 +122,9 @@ class TestMaterials(XPlaneTestCase):
 
         self.assertAttributesEqualDict(cockpit.attributes, cockpitAttrs)
         self.assertAttributesEqualDict(cockpit.cockpitAttributes, cockpitCockpitAttrs)
+
+        self.assertAttributesEqualDict(cockpitPanel.attributes, cockpitPanelAttrs)
+        self.assertAttributesEqualDict(cockpitPanel.cockpitAttributes, cockpitPanelCockpitAttrs)
 
         self.assertAttributesEqualDict(invisible.attributes, invisibleAttrs)
         self.assertAttributesEqualDict(invisible.cockpitAttributes, defaultCockpitAttrs)
