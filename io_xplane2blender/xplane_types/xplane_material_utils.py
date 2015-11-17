@@ -206,3 +206,30 @@ def validateDraped(mat):
         errors.append('Must not be a manipulator.')
 
     return errors
+
+def getFirstMatchingMaterial(materials, validation):
+    for mat in materials:
+        errors = validation(mat)
+
+        if len(errors) == 0:
+            return mat
+
+    return None
+
+def getReferenceMaterials(materials, exportType):
+    refMats = []
+
+    if exportType == 'cockpit':
+        refMats.append(getFirstMatchingMaterial(materials, validateCockpit))
+        refMats.append(getFirstMatchingMaterial(materials, validatePanel))
+    elif exportType == 'aircraft':
+        refMats.append(getFirstMatchingMaterial(materials, validateAircraft))
+        refMats.append(getFirstMatchingMaterial(materials, validatePanel))
+    elif exportType == 'scenerey':
+        refMats.append(getFirstMatchingMaterial(materials, validateScenery))
+        refMats.append(getFirstMatchingMaterial(materials, validateDraped))
+    elif exportType == 'instanced_scenery':
+        refMats.append(getFirstMatchingMaterial(materials, validateInstanced))
+        refMats.append(getFirstMatchingMaterial(materials, validateDraped))
+
+    return refMats

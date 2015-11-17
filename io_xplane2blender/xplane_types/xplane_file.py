@@ -5,7 +5,6 @@ import bpy
 import mathutils
 from .xplane_bone import XPlaneBone
 from .xplane_light import XPlaneLight
-from .xplane_object import XPlaneObject
 # from .xplane_line import XPlaneLine
 # from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
@@ -13,8 +12,9 @@ from .xplane_lights import XPlaneLights
 from .xplane_mesh import XPlaneMesh
 from .xplane_header import XPlaneHeader
 from .xplane_commands import XPlaneCommands
-from ..xplane_config import getDebug, version
+from ..xplane_config import version
 from ..xplane_helpers import floatToStr, logger
+from .xplane_material_utils import getReferenceMaterials
 
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
@@ -136,8 +136,6 @@ class XPlaneFile():
     # Parameters:
     #   layerIndex - int
     def collectFromBlenderLayerIndex(self, layerIndex):
-        debug = getDebug()
-
         currentFrame = bpy.context.scene.frame_current
 
         blenderObjects = []
@@ -203,7 +201,7 @@ class XPlaneFile():
             if parentBlenderObject:
                 return blenderObject.parent == parentBlenderObject
             elif parentBlenderBone:
-                return blenderObject.parent_type == 'Bone' and blenderObject.parent_bone == parentBlenberBone
+                return blenderObject.parent_type == 'Bone' and blenderObject.parent_bone == parentBlenderBone
             elif blenderObject.parent_type == 'OBJECT':
                 return blenderObject.parent == None
             elif blenderObject.parent_type == 'BONE':
@@ -290,8 +288,6 @@ class XPlaneFile():
     # Parameters:
     #   rootObject - blender object
     def collectFromBlenderRootObject(self, blenderRootObject):
-        debug = getDebug()
-
         currentFrame = bpy.context.scene.frame_current
 
         blenderObjects = [blenderRootObject]
@@ -325,8 +321,6 @@ class XPlaneFile():
     # Returns:
     #   <XPlaneObject> or None if object type is not supported
     def convertBlenderObject(self, blenderObject):
-        debug = getDebug()
-
         xplaneObject = None
 
         # mesh: let's create a prim out of it
@@ -380,6 +374,33 @@ class XPlaneFile():
 
         return True
 
+    def getMaterials(self):
+        materials = []
+        objects = self.getObjectsList()
+
+        for xplaneObject in objects:
+            if xplaneObject.type == 'PRIMITIVE' and xplaneObject.material and xplaneObject.material.options:
+                materials.append(xplaneObject.material)
+
+        return materials
+
+    def compareMaterials(self, refMaterials):
+        materials = self.getMaterials()
+
+        for refMaterial in refMaterials:
+            if refMaterial is not None:
+                for material in materials:
+                    errors = material.isCompatibleTo(refMaterial, self.options.export_type)
+
+                    if errors and len(errors):
+                        for error in errors:
+                            logger.error('Material in object "%s" %s.' % (material.xplaneObject.blenderObject.name, error))
+
+        if logger.hasErrors():
+            return False
+
+        return True
+
     def writeFooter(self):
         build = 'unknown'
 
@@ -397,6 +418,12 @@ class XPlaneFile():
 
         # validate materials
         if not self.validateMaterials():
+            return ''
+
+        # validation was successful
+        # retrieve reference materials
+        # and compare all materials against reference materials
+        if not self.compareMaterials(getReferenceMaterials(self.getMaterials(), self.options.export_type)):
             return ''
 
         o = ''
@@ -432,7 +459,7 @@ class XPlaneFile():
                 far = float(lod.far)
 
                 if smallestNear > near:
-                    smallestNnear = near
+                    smallestNear = near
 
                 if tallestFar < far:
                     tallestFar = far

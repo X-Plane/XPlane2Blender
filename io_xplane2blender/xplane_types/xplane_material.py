@@ -272,14 +272,12 @@ class XPlaneMaterial():
     #
     # Parameters:
     # refMat <XPlaneMaterial> - reference material to compare against
-    # mat <XPlaneMaterial> - material to check compatiblity to refMat
     # exportType <string> - one of "aircraft", "cockpit", "scenery", "instanced_scenery"
     #
     # Returns:
     #   bool, list - True if Material is compatible to reference Material, else False + a list of errors/conflicts
-    @staticmethod
-    def isCompatibleTo(refMat, mat, exportType):
-        return compare(refMat, mat, exportType)
+    def isCompatibleTo(self, refMat, exportType):
+        return compare(refMat, self, exportType)
 
     # Method: isValid
     # Checks if material is valid based on an export type.
