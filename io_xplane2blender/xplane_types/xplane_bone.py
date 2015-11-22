@@ -284,8 +284,8 @@ class XPlaneBone():
         for keyframe in keyframes:
             rotation = keyframe.rotation
             axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
-            keyframe.rotationMode = 'XYZ'
-            keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XYZ')
+            keyframe.rotationMode = 'XZY'
+            keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XZY')
 
         return keyframes
 
@@ -550,12 +550,12 @@ class XPlaneBone():
         indent = self.getIndent()
         rotationMode = keyframes[0].rotationMode
         eulerAxisMap = {
-            'ZYX': (2, 1, 0),
-            'ZXY': (2, 0, 1),
-            'YZX': (1, 2, 0),
-            'YXZ': (1, 0, 2),
-            'XZY': (0, 2, 1),
-            'XYZ': (0, 1, 2)
+            'ZYX': (0, 1, 2),
+            'ZXY': (1, 0, 2),
+            'YZX': (0, 2, 1),
+            'YXZ': (2, 0, 1),
+            'XZY': (1, 2, 0),
+            'XYZ': (2, 1, 0)
         }
         eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
         axes = eulerAxisMap[rotationMode]
