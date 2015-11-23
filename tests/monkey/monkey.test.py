@@ -12,6 +12,7 @@ class MonkeyTest(XPlaneTestCase):
         # only keep ANIM_ lines
         return isinstance(line[0], str) and line[0].find('ANIM_') == 0
 
+    '''
     def test_monkey_against_249_export(self):
         filename = 'test_monkey_249'
         self.assertLayerExportEqualsFixture(
@@ -19,6 +20,7 @@ class MonkeyTest(XPlaneTestCase):
             filename,
             self.filterLine
         )
+    '''
 
     def test_monkey_export(self):
         filename = 'test_monkey'
