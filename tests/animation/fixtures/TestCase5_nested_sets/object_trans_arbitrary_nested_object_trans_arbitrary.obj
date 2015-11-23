@@ -98,7 +98,10 @@ ANIM_trans_key	0	0	0	0
 ANIM_trans_key	1	2	1	-3
 ANIM_trans_end
 # rotation keyframes
-# WARNING: Quaternion rotations are not supported yet (Please use Axis Angle or Euler instead)
+ANIM_rotate_begin	-0.31358531	-0.51582175	-0.79724115	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	1	39.82038194
+ANIM_rotate_end
 # PRIMITIVE: Cube.006	weight: 0
 # MATERIAL: Material
 ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
@@ -113,11 +116,14 @@ TRIS	36 36
 	ANIM_trans_key	1	-3	1	2
 	ANIM_trans_end
 	# rotation keyframes
-	# WARNING: Quaternion rotations are not supported yet (Please use Axis Angle or Euler instead)
+	ANIM_rotate_begin	0.77040344	-0.03223677	-0.63674116	sim/cockpit2/engine/actuators/throttle_ratio[1]
+	ANIM_rotate_key	0	0
+	ANIM_rotate_key	1	87.34189095
+	ANIM_rotate_end
 	# PRIMITIVE: Cube.005	weight: 0
 	# MATERIAL: Material
 	TRIS	0 36
 	ANIM_end
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'48f7dd6') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

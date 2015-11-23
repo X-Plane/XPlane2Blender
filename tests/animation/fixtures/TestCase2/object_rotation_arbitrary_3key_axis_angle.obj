@@ -59,8 +59,18 @@ ANIM_begin
 # rotation keyframes
 ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
-ANIM_rotate_key	0.33000001	40.99894815
-ANIM_rotate_key	1	81.99789631
+ANIM_rotate_key	0.33000001	38.40703138
+ANIM_rotate_key	1	67.97341424
+ANIM_rotate_end
+ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.33000001	-9.1825584
+ANIM_rotate_key	1	-19.48724346
+ANIM_rotate_end
+ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.33000001	15.0401107
+ANIM_rotate_key	1	60.10603353
 ANIM_rotate_end
 # PRIMITIVE: Cube.011	weight: 0
 # MATERIAL: Material
@@ -70,4 +80,4 @@ ATTR_shiny_rat	0.5
 TRIS	0 36
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'48f7dd6') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

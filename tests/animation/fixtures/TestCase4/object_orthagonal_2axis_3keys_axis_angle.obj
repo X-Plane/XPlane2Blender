@@ -57,20 +57,20 @@ IDX	35
 # 1 Object: Cube.003
 ANIM_begin
 # rotation keyframes
-ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
-ANIM_rotate_key	0	0
-ANIM_rotate_key	0.5	0
-ANIM_rotate_key	1	14.4327515
-ANIM_rotate_end
 ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
 ANIM_rotate_key	0.5	0
-ANIM_rotate_key	1	13.9954401
+ANIM_rotate_key	1	19.99999088
 ANIM_rotate_end
 ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
 ANIM_rotate_key	0.5	45.00000467
-ANIM_rotate_key	1	46.7808194
+ANIM_rotate_key	1	45.00000125
+ANIM_rotate_end
+ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.5	0
+ANIM_rotate_key	1	0.00000206
 ANIM_rotate_end
 # PRIMITIVE: Cube.003	weight: 0
 # MATERIAL: Material

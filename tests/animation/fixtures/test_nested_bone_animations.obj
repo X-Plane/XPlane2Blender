@@ -118,17 +118,17 @@ IDX	71
 		ANIM_rotate	1	0	0	-90.0000025	-90.0000025
 		ANIM_rotate	0	1	0	-89.99999567	-89.99999567
 		# rotation keyframes
-		ANIM_rotate_begin	1	0	0	test
+		ANIM_rotate_begin	0	1	0	test
 		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	-0.00000592
+		ANIM_rotate_key	1	-89.99999567
 		ANIM_rotate_end
 		ANIM_rotate_begin	0	0	-1	test
 		ANIM_rotate_key	0	0
 		ANIM_rotate_key	1	0.00000091
 		ANIM_rotate_end
-		ANIM_rotate_begin	0	1	0	test
+		ANIM_rotate_begin	1	0	0	test
 		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	-89.99999567
+		ANIM_rotate_key	1	-0.00000592
 		ANIM_rotate_end
 			# 4 Object: Cube.002
 			# PRIMITIVE: Cube.002	weight: 0
@@ -137,4 +137,4 @@ IDX	71
 		ANIM_end
 	ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'48f7dd6') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

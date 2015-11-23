@@ -65,7 +65,10 @@ IDX	35
 	ANIM_trans_key	1	-3	-1	-2
 	ANIM_trans_end
 	# rotation keyframes
-	# WARNING: Quaternion rotations are not supported yet (Please use Axis Angle or Euler instead)
+	ANIM_rotate_begin	-0.07032774	-0.80384862	0.5906617	sim/cockpit2/engine/actuators/throttle_ratio[0]
+	ANIM_rotate_key	0	0
+	ANIM_rotate_key	1	76.5798146
+	ANIM_rotate_end
 		# 3 Object: Cube.002
 		# PRIMITIVE: Cube.002	weight: 0
 		# MATERIAL: Material
@@ -75,4 +78,4 @@ IDX	35
 		TRIS	0 36
 	ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'48f7dd6') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

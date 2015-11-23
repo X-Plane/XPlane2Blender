@@ -62,17 +62,17 @@ ANIM_trans_key	0	0	0	0
 ANIM_trans_key	1	1	2	-3
 ANIM_trans_end
 # rotation keyframes
-ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
-ANIM_rotate_key	0	179.99999135
-ANIM_rotate_key	1	-15.22516273
-ANIM_rotate_end
 ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
-ANIM_rotate_key	1	17.82954801
+ANIM_rotate_key	1	40.8934149
 ANIM_rotate_end
 ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
-ANIM_rotate_key	1	-68.19859875
+ANIM_rotate_key	1	-62.11443699
+ANIM_rotate_end
+ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	179.99999135
+ANIM_rotate_key	1	22.20766853
 ANIM_rotate_end
 # PRIMITIVE: Cube.003	weight: 0
 # MATERIAL: Material

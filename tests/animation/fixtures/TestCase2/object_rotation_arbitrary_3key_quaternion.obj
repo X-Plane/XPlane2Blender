@@ -57,7 +57,21 @@ IDX	35
 # 1 Object: Cube.017
 ANIM_begin
 # rotation keyframes
-# WARNING: Quaternion rotations are not supported yet (Please use Axis Angle or Euler instead)
+ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.33000001	30.50979932
+ANIM_rotate_key	1	67.97338692
+ANIM_rotate_end
+ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.33000001	-18.75462712
+ANIM_rotate_key	1	-19.48725199
+ANIM_rotate_end
+ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.33000001	26.29338182
+ANIM_rotate_key	1	60.10601304
+ANIM_rotate_end
 # PRIMITIVE: Cube.017	weight: 0
 # MATERIAL: Material
 ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
@@ -66,4 +80,4 @@ ATTR_shiny_rat	0.5
 TRIS	0 36
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'48f7dd6') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
