@@ -2,10 +2,10 @@ I
 800
 OBJ
 
+POINT_COUNTS	144	0	0	144
 TEXTURE	root_1_tex.png
 TEXTURE_LIT	root_1_tex_lit.png
 TEXTURE_NORMAL	root_1_tex_nm.png
-POINT_COUNTS	144	0	0	144
 
 VT	-1.00000012	-1	0.99999982	0	-1	0	0	0	# 0
 VT	1	-1	1	0	-1	0	0	0	# 1
@@ -208,4 +208,4 @@ ATTR_LOD 4000 100000
 	# 2 Object: root_1_child_1_child
 # 1 Object: root_1_child_2
 
-# Build with Blender 2.75 (sub 0) (build b'c27589e') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

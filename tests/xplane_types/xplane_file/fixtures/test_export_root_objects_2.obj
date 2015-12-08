@@ -2,10 +2,10 @@ I
 800
 OBJ
 
+POINT_COUNTS	36	0	0	36
 TEXTURE	root_2_tex.png
 TEXTURE_LIT	root_2_tex_lit.png
 TEXTURE_NORMAL	root_2_tex_nm.png
-POINT_COUNTS	36	0	0	36
 
 VT	-1.00000012	-1	0.99999982	0	-1	0	0	0	# 0
 VT	1	-1	1	0	-1	0	0	0	# 1
@@ -63,4 +63,4 @@ ATTR_emission_rgb	0	0	0
 ATTR_shiny_rat	0.5
 TRIS	0 36
 
-# Build with Blender 2.75 (sub 0) (build b'c27589e') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

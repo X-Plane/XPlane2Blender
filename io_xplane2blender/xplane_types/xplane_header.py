@@ -29,22 +29,40 @@ class XPlaneHeader():
         self.xplaneFile = xplaneFile
 
         self.attributes = XPlaneAttributes()
+
+        # object attributes
+        self.attributes.add(XPlaneAttribute("ATTR_layer_group", None))
+        self.attributes.add(XPlaneAttribute("COCKPIT_REGION", None))
+        self.attributes.add(XPlaneAttribute("DEBUG", None))
+        self.attributes.add(XPlaneAttribute("GLOBAL_cockpit_lit", None))
+        self.attributes.add(XPlaneAttribute("GLOBAL_tint", None))
+        self.attributes.add(XPlaneAttribute("POINT_COUNTS", None))
+        self.attributes.add(XPlaneAttribute("REQUIRE_WET", None))
+        self.attributes.add(XPlaneAttribute("REQUIRE_DRY", None))
+        self.attributes.add(XPlaneAttribute("SLOPE_LIMIT", None))
+        self.attributes.add(XPlaneAttribute("slung_load_weight", None))
+        self.attributes.add(XPlaneAttribute("TILTED", None))
+
+        # shader attributes
+        self.attributes.add(XPlaneAttribute("GLOBAL_no_blend", None))
+        self.attributes.add(XPlaneAttribute("GLOBAL_no_shadow", None))
+        self.attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
+        self.attributes.add(XPlaneAttribute("GLOBAL_specular", None))
         self.attributes.add(XPlaneAttribute("TEXTURE", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_LIT", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_NORMAL", None))
-        self.attributes.add(XPlaneAttribute("POINT_COUNTS", None))
-        self.attributes.add(XPlaneAttribute("slung_load_weight", None))
-        self.attributes.add(XPlaneAttribute("COCKPIT_REGION", None))
-        self.attributes.add(XPlaneAttribute("GLOBAL_no_blend", None))
-        self.attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
-        self.attributes.add(XPlaneAttribute("GLOBAL_specular", None))
-        self.attributes.add(XPlaneAttribute("GLOBAL_no_shadow", None))
-        self.attributes.add(XPlaneAttribute("SLOPE_LIMIT", None))
-        self.attributes.add(XPlaneAttribute("TILTED", None))
-        self.attributes.add(XPlaneAttribute("REQUIRE_WET", None))
-        self.attributes.add(XPlaneAttribute("REQUIRE_DRY", None))
-        self.attributes.add(XPlaneAttribute("GLOBAL_cockpit_lit", None))
-        self.attributes.add(XPlaneAttribute("COCKPIT_REGION", None))
+
+        # draped shader attributes
+        self.attributes.add(XPlaneAttribute("BUMP_LEVEL", None))
+        self.attributes.add(XPlaneAttribute("NO_BLEND", None))
+        self.attributes.add(XPlaneAttribute("SPECULAR", None))
+        self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED", None))
+        self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED_NORMAL", None))
+        self.attributes.add(XPlaneAttribute("ATTR_layer_group_draped", None))
+
+        # draped general attributes
+        self.attributes.add(XPlaneAttribute("ATTR_LOD_draped", None))
+
 
     def init(self):
         # set slung load

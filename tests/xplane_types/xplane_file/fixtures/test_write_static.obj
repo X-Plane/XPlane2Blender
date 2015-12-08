@@ -2,16 +2,16 @@ I
 800
 OBJ
 
+POINT_COUNTS	72	0	1	72
+REQUIRE_DRY
+SLOPE_LIMIT	0	50	10	20
+slung_load_weight	10
+TILTED
+GLOBAL_shadow_blend
+GLOBAL_specular	50
 TEXTURE	default_texture
 TEXTURE_LIT	night_texture
 TEXTURE_NORMAL	normal_spec_texture
-POINT_COUNTS	72	0	1	72
-slung_load_weight	10
-GLOBAL_shadow_blend
-GLOBAL_specular	50
-SLOPE_LIMIT	0	50	10	20
-TILTED
-REQUIRE_DRY
 
 VT	-1.00000012	-1	0.99999982	0	-1	0	0.33333331	1	# 0
 VT	1	-1	1	0	-1	0	0.33333328	0.66666675	# 1
@@ -114,4 +114,4 @@ TRIS	0 36
 # LIGHT: Point	weight: 10000
 LIGHTS	0 1
 
-# Build with Blender 2.75 (sub 0) (build b'c27589e') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

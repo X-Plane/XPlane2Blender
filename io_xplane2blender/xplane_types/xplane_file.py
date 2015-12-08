@@ -423,7 +423,10 @@ class XPlaneFile():
         # validation was successful
         # retrieve reference materials
         # and compare all materials against reference materials
-        if not self.compareMaterials(getReferenceMaterials(self.getMaterials(), self.options.export_type)):
+        if not self.compareMaterials(
+            getReferenceMaterials(self.getMaterials(),
+            self.options.export_type)
+        ):
             return ''
 
         o = ''
