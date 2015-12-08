@@ -229,8 +229,12 @@ def object_layer_layout(self, obj):
 #   UILayout layout - Instance of sublayout to use.
 #   int layer - <XPlaneLayer> index.
 def layer_layout(self, layout, layerObj, version, context = 'scene'):
+    canHaveDraped = version >= 1000 and layerObj.export_type not in ['aircraft', 'cockpit']
+    isInstanced = version >= 1000 and layerObj.export_type == 'instanced_scenery'
+
     column = layout.column()
     column.prop(layerObj, "export", text = "Export")
+    column.prop(layerObj, "debug", text = "Debug")
     column.prop(layerObj, "name", text = "Name")
     column.prop(layerObj, "export_type", text = "Type")
 
@@ -243,6 +247,10 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         tex_box.prop(layerObj, "texture", text = "Default")
         tex_box.prop(layerObj, "texture_lit", text = "Night")
         tex_box.prop(layerObj, "texture_normal", text = "Normal / Specular")
+
+        if canHaveDraped:
+            tex_box.prop(layerObj, "texture_draped", text = "Draped")
+            tex_box.prop(layerObj, "texture_draped_normal", text = "Draped Normal / Specular")
 
     # cockpit regions
     if layerObj.export_type == 'cockpit':
@@ -301,7 +309,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
                 lod_box = lods_box.box()
 
                 if context == 'scene':
-                    lod_box.operator("scene.add_xplane_layer_lods").index = layer
+                    lod_box.operator("scene.add_xplane_layer_lods").index = layerObj.index
                 elif context == 'object':
                     lod_box.operator("object.add_xplane_layer_lods")
 
@@ -322,12 +330,16 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
                             lod_box.prop(lod, "near")
                             lod_box.prop(lod, "far")
 
+        if canHaveDraped:
+            lods_box.prop(layerObj, "lod_draped")
+
     column.separator()
     column.prop(layerObj, "slungLoadWeight", text = "Slung Load weight")
 
     # v1000
     if version >= 1000:
         # blend
+        # TODO: this should be autodetected using reference materials
         blend_box = column.box()
         blend_box.prop(layerObj, "blend", text = "Blend")
 
@@ -358,6 +370,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         require_box.prop(layerObj, "require_surface", "Require surface")
 
         # specular
+        # TODO: this should be autodetected using reference material
         specular_box = column.box()
         specular_box.prop(layerObj, "overrideSpecularity", "Override specularity")
 
@@ -368,8 +381,21 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     # v1010
     if version >= 1010:
         # shadow
-        shadow_box = column.row()
+        shadow_box = column.box()
         shadow_box.prop(layerObj, "shadow", "Cast shadows")
+        row = shadow_box.row()
+        row.prop(layerObj, "shadow_blend", "Shadow cutoff")
+
+        if layerObj.shadow_blend:
+            row = shadow_box.row()
+            row.prop(layerObj, "shadow_blend_ratio", "Cutoff Ratio")
+
+    layer_group_box = column.box()
+    layer_group_box.prop(layerObj, "layer_group")
+    layer_group_box.prop(layerObj, "layer_group_offset")
+
+    if canHaveDraped:
+        layer_group_box.prop(layerObj, "layer_group_draped")
 
 # Function: custom_layer_layout
 # Draws the UI layout for the custom attributes of a <XPlaneLayer>.

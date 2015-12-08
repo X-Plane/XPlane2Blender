@@ -485,18 +485,18 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = False
     )
 
+    debug = bpy.props.BoolProperty(
+        attr = "debug",
+        name = "Debug",
+        description = "If checked, this OBJ file will put diagnostics in Plane's log.txt.",
+        default = False
+    )
+
     name = bpy.props.StringProperty(
         attr = "name",
         name = "Name",
         description = "This name will be used as a filename hint for OBJ file(s).",
         default = ""
-    )
-
-    # Deprecated: This will be removed in v3.4
-    cockpit = bpy.props.BoolProperty(
-        attr = "cockpit",
-        name = "Cockpit",
-        default = False
     )
 
     export_type = bpy.props.EnumProperty(
@@ -512,6 +512,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         ]
     )
 
+    # Deprecated: This will be removed in v3.4
     cockpit = bpy.props.BoolProperty(
         attr = "cockpit",
         name = "Cockpit",
@@ -550,6 +551,34 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Normal/Specular Texture",
         description = "Normal/Specular Texture to use for objects on this layer.",
         default = ""
+    )
+
+    # v1000
+    texture_draped = bpy.props.StringProperty(
+        attr = "texture_draped",
+        subtype = "FILE_PATH",
+        name = "Draped Texture",
+        description = "Texture to use for draped objects on this layer.",
+        default = ""
+    )
+
+    # v1000
+    texture_draped_normal = bpy.props.StringProperty(
+        attr = "texture_draped_normal",
+        subtype = "FILE_PATH",
+        name = "Normal/Specular Texture Draped Texture",
+        description = "Normal/Specular Texture to use for draped objects on this layer.",
+        default = ""
+    )
+
+    # v1000
+    bump_level = bpy.props.FloatProperty(
+        attr = "bump_level",
+        name = "Draped Bump Level",
+        description = "Scales the Bump for draped geometry up or down.",
+        default = 1.0,
+        min = -2.0,
+        max = 2.0
     )
 
     cockpit_regions = bpy.props.EnumProperty(
@@ -591,6 +620,16 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
+    lod_draped = bpy.props.FloatProperty(
+        attr = "lod_draped",
+        name = "Max. Draped LOD",
+        description = "Maximum LOD distance for draped geometry. Set to 0 to use farest LOD.",
+        default = 0,
+        min = 0
+    )
+
+    # v1000
+    # TODO: this should be autodetected using reference materials
     blend = bpy.props.EnumProperty(
         attr = "blend",
         name = "Blend",
@@ -604,6 +643,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
+    # TODO: this should be autodetected using reference materials
     blendRatio = bpy.props.FloatProperty(
         attr = "blendRatio",
         name = "Alpha cutoff ratio",
@@ -616,6 +656,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
+    # TODO: this should be deprecated
     overrideSpecularity = bpy.props.BoolProperty(
         attr = "overrideSpecularity",
         name = "Override specularity",
@@ -633,6 +674,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000 (only for instances)
+    # TODO: this should be autodetected using reference materials
     tint = bpy.props.BoolProperty(
         attr = "tint",
         name = "Tint",
@@ -641,6 +683,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000 (only for instances)
+    # TODO: this should be autodetected using reference materials
     tint_albedo = bpy.props.FloatProperty(
         attr = "tint_albedo",
         name = "Albedo",
@@ -651,6 +694,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000 (only for instances)
+    # TODO: this should be autodetected using reference materials
     tint_emissive = bpy.props.FloatProperty(
         attr = "tint_emissive",
         name = "Emissive",
@@ -730,10 +774,69 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1010
+    shadow_blend = bpy.props.BoolProperty(
+        attr = "shadow_blend",
+        name = "Shadow cutoff",
+        description = "If enabled, shadow blending will be done with a cutoff.",
+        default = False
+    )
+
+    # v1010
+    shadow_blend_ratio = bpy.props.FloatProperty(
+        attr = "shadow_blend_ratio",
+        name = "Shadow cutoff ratio",
+        description = "Shadow cutoff ratio",
+        default = 0.5,
+        min = 0.0,
+        max = 1.0
+    )
+
+    # v1010
     cockpit_lit = bpy.props.BoolProperty(
         attr = "cockpit_lit",
         name = "3D-Cockpit lighting",
         default = True
+    )
+
+    # v1000
+    layerGroups = [
+        ("none", "None", "Does not draws this OBJ in any group."),
+        ("terrain", "Terrain", "Terrain"),
+        ("beaches", "Beaches", "Beaches"),
+        ("shoulders", "Shoulders", "Shoulders"),
+        ("taxiways", "Taxiways", "Taxiways"),
+        ("runways", "Runways", "Runways"),
+        ("markings", "Markings", "Markings"),
+        ("airports", "Airports", "Airports"),
+        ("roads", "Roads", "Roads"),
+        ("objects", "Objects", "Objects"),
+        ("light_objects", "Light Objects", "Light Objects"),
+        ("cars", "Cars", "Cars")
+    ]
+
+    layer_group = bpy.props.EnumProperty(
+        attr = "layer_group",
+        name = "Layer Group",
+        description = "Draw this OBJ in a special group.",
+        default = "none",
+        items = layerGroups
+    )
+
+    layer_group_offset = bpy.props.IntProperty(
+        attr = "layer_group_offset",
+        name = "Layer Group Offset",
+        description = "Use to fine tune drawing order.",
+        default = 0,
+        min = -5,
+        max = 5
+    )
+
+    layer_group_draped = bpy.props.EnumProperty(
+        attr = "layer_group_draped",
+        name = "Draped Layer Group",
+        description = "Draws draped geometry in a special group.",
+        default = "none",
+        items = layerGroups
     )
 
     customAttributes = bpy.props.CollectionProperty(
@@ -794,7 +897,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
-        default = "900",
+        default = "1010",
         items = [
             ("900", "9.x", "9.x"),
             ("1000", "10.0x", "10.0x"),
