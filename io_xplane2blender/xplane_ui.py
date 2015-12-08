@@ -396,6 +396,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 
     if canHaveDraped:
         layer_group_box.prop(layerObj, "layer_group_draped")
+        layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
 # Function: custom_layer_layout
 # Draws the UI layout for the custom attributes of a <XPlaneLayer>.

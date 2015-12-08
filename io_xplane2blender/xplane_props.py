@@ -839,6 +839,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         items = layerGroups
     )
 
+    layer_group_draped_offset = bpy.props.IntProperty(
+        attr = "layer_group_draped_offset",
+        name = "Draped Layer Group Offset",
+        description = "Use to fine tune drawing order of draped geometry.",
+        default = 0,
+        min = -5,
+        max = 5
+    )
+
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
         name = "Custom X-Plane header attributes",
