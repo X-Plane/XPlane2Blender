@@ -1273,6 +1273,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 #   string dataref - Dataref driving the light, if "type" is 'custom'.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneLampSettings(bpy.types.PropertyGroup):
+    # TODO: deprecate named, flashing, pulising, strobe, traffic lights in v3.4
     type = bpy.props.EnumProperty(
         attr = "type",
         name = "Type",
@@ -1284,7 +1285,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
             ("pulsing", "pulsing (deprecated)", "pulsing (deprecated)"),
             ("strobe", "strobe (deprecated)", "strobe (deprecated)"),
             ("traffic", "traffic (deprecated)", "traffic (deprecated)"),
-            ("named", "named", "named"),
+            ("named", "named (deprecated)", "named (deprecated)"),
             ("custom", "custom", "custom"),
             ("param", "param", "param")
         ]

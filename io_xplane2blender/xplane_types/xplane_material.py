@@ -45,19 +45,33 @@ class XPlaneMaterial():
 
         # Material
         self.attributes = XPlaneAttributes()
+
+        # TODO: deprecate in v3.4
         self.attributes.add(XPlaneAttribute("ATTR_diffuse_rgb"))
-        #self.attributes.add(XPlaneAttribute("ATTR_specular_rgb")) # useless according to Ben Supnik
+
+        # useless according to Ben Supnik
+        # self.attributes.add(XPlaneAttribute("ATTR_specular_rgb"))
+
+        # TODO: deprecate in v3.4
         self.attributes.add(XPlaneAttribute("ATTR_shade_smooth", True))
         self.attributes.add(XPlaneAttribute("ATTR_shade_flat"))
+
+        # TODO: deprecate in v3.4
         self.attributes.add(XPlaneAttribute("ATTR_emission_rgb"))
+
         self.attributes.add(XPlaneAttribute("ATTR_shiny_rat"))
         self.attributes.add(XPlaneAttribute("ATTR_hard"))
         self.attributes.add(XPlaneAttribute("ATTR_hard_deck"))
         self.attributes.add(XPlaneAttribute("ATTR_no_hard"))
+
+        # TODO: deprecate in v3.4
         self.attributes.add(XPlaneAttribute("ATTR_cull"))
         self.attributes.add(XPlaneAttribute("ATTR_no_cull"))
+
+        # TODO: deprecate in v3.4
         self.attributes.add(XPlaneAttribute("ATTR_depth"))
         self.attributes.add(XPlaneAttribute("ATTR_no_depth"))
+
         self.attributes.add(XPlaneAttribute("ATTR_blend"))
         self.attributes.add(XPlaneAttribute("ATTR_shadow_blend"))
         self.attributes.add(XPlaneAttribute("ATTR_no_blend"))
@@ -104,7 +118,7 @@ class XPlaneMaterial():
                     self.attributes['ATTR_draw_enable'].setValue(True)
 
                     # diffuse
-                    #if mat.diffuse_intensity>0:
+                    # TODO: deprecate in v3.4
                     diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
                                 mat.diffuse_intensity*mat.diffuse_color[1],
                                 mat.diffuse_intensity*mat.diffuse_color[2]]
@@ -115,19 +129,13 @@ class XPlaneMaterial():
                     ))
 
                     # specular
-                    #if mat.specular_intensity>0:
-                    # specular color is useless according to Ben Supnik
-    #                specular = [mat.specular_color[0],
-    #                            mat.specular_color[1],
-    #                            mat.specular_color[2]]
-                    #self.attributes['ATTR_specular_rgb'] = "%6.3f %6.3f %6.3f" % (specular[0], specular[1], specular[2])
                     if mat.xplane.overrideSpecularity:
                         self.attributes['ATTR_shiny_rat'].setValue(mat.xplane.shinyRatio)
                     else:
                         self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity)
 
                     # emission
-                    #if mat.emit>0:
+                    # TODO: deprecate in v3.4
                     emission = [mat.emit*mat.diffuse_color[0],
                                 mat.emit*mat.diffuse_color[1],
                                 mat.emit*mat.diffuse_color[2]]
@@ -154,6 +162,7 @@ class XPlaneMaterial():
                 self.attributes['ATTR_draw_disable'].setValue(True)
 
             # depth check
+            # TODO: deprecate in v3.4
             if self.blenderObject.xplane.depth == False:
                 self.attributes['ATTR_no_depth'].setValue(True);
             else:
@@ -169,6 +178,7 @@ class XPlaneMaterial():
                 self.attributes['ATTR_no_hard'].setValue(True)
 
             # backface culling
+            # TODO: deprecate in v3.4
             if self.blenderObject.data.show_double_sided:
                 self.attributes['ATTR_no_cull'].setValue(True)
             else:

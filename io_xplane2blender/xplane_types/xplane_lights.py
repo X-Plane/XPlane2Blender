@@ -2,6 +2,7 @@ from ..xplane_helpers import floatToStr
 
 # Class: XPlaneLights
 # Creates OBJ lights.
+# TODO: deprecate in v3.4
 class XPlaneLights():
     items = []
 

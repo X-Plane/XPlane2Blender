@@ -460,6 +460,7 @@ def lamp_layout(self, obj):
     row = layout.row()
     row.prop(obj.xplane, "type", text = "Type")
 
+    # TODO: deprecate named lights in v3.4
     if obj.xplane.type in ("named", "param"):
         row = layout.row()
         row.prop(obj.xplane, "name", text = "Name")
@@ -496,12 +497,13 @@ def material_layout(self, obj):
         row = layout.row()
         row.prop(obj.xplane, "draped")
 
+        # TODO: deprecate in v3.4
         row = layout.row()
-        row.prop(obj.xplane, "overrideSpecularity", text = "Override specularity")
+        row.prop(obj.xplane, "overrideSpecularity", text = "Override specularity (deprecated)")
 
         if obj.xplane.overrideSpecularity:
             row = layout.row()
-            row.prop(obj.xplane, "shinyRatio", text = "Shiny ratio")
+            row.prop(obj.xplane, "shinyRatio", text = "Shiny ratio (deprecated)")
 
         row = layout.row()
 

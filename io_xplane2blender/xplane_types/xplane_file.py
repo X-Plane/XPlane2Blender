@@ -434,6 +434,7 @@ class XPlaneFile():
         o += '\n'
         o += self.mesh.write()
 
+        # TODO: deprecate in v3.4
         o += '\n'
         o += self.lights.write()
 
