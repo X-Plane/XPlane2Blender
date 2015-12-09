@@ -147,6 +147,8 @@ class XPlaneHeader():
         if xplane_version >= 1000:
             # blend
             # TODO: this should be autodetected using reference materials
+            # TODO: when detected set ATTR_no_blend/ATTR_blend to written
+            # to prevent rewriting it in commands table
             if self.xplaneFile.options.blend == "off":
                 self.attributes['GLOBAL_no_blend'].setValue(self.xplaneFile.options.blendRatio)
             elif self.xplaneFile.options.blend == 'shadow':
@@ -154,6 +156,8 @@ class XPlaneHeader():
 
             # specular
             # TODO: this should be autodetected using reference materials
+            # TODO: when detected set ATTR_shiny_rat to written
+            # to prevent rewriting it in commands table
             if self.xplaneFile.options.overrideSpecularity == True:
                 self.attributes['GLOBAL_specular'].setValue(self.xplaneFile.options.specular)
 

@@ -571,16 +571,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = ""
     )
 
-    # v1000
-    bump_level = bpy.props.FloatProperty(
-        attr = "bump_level",
-        name = "Draped Bump Level",
-        description = "Scales the Bump for draped geometry up or down.",
-        default = 1.0,
-        min = -2.0,
-        max = 2.0
-    )
-
     cockpit_regions = bpy.props.EnumProperty(
         attr = "cockpit_regions",
         name = "Cockpit regions",
@@ -626,82 +616,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "Maximum LOD distance for draped geometry. Set to 0 to use farest LOD.",
         default = 0,
         min = 0
-    )
-
-    # v1000
-    # TODO: this should be autodetected using reference materials
-    blend = bpy.props.EnumProperty(
-        attr = "blend",
-        name = "Blend",
-        description = "Controls texture alpha/blending",
-        default = "on",
-        items = [
-            ('off', 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
-            ('on', 'Alpha blend', 'Textures alpha channel will blended.'),
-            ('shadow', 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
-        ]
-    )
-
-    # v1000
-    # TODO: this should be autodetected using reference materials
-    blendRatio = bpy.props.FloatProperty(
-        attr = "blendRatio",
-        name = "Alpha cutoff ratio",
-        description = "Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque.",
-        default = 0.5,
-        step = 0.1,
-        precision = 2,
-        max = 1.0,
-        min = 0.0
-    )
-
-    # v1000
-    # TODO: this should be deprecated
-    overrideSpecularity = bpy.props.BoolProperty(
-        attr = "overrideSpecularity",
-        name = "Override specularity",
-        description = "If checked you will enable control over overall amount of specularity.",
-        default = False
-    )
-
-    # v1000
-    specular = bpy.props.FloatProperty(
-        attr = 'specular',
-        name = 'Specularity',
-        description = 'Controls the overall amount of specularity of the materials in X-Plane.',
-        default = 0.0,
-        min = 0.0
-    )
-
-    # v1000 (only for instances)
-    # TODO: this should be autodetected using reference materials
-    tint = bpy.props.BoolProperty(
-        attr = "tint",
-        name = "Tint",
-        description = "If active you can set the albedo and emissive tint.",
-        default = False
-    )
-
-    # v1000 (only for instances)
-    # TODO: this should be autodetected using reference materials
-    tint_albedo = bpy.props.FloatProperty(
-        attr = "tint_albedo",
-        name = "Albedo",
-        description = "Albedo tint. 0.0 no darkening, 1.0 total darkening.",
-        min = 0.0,
-        max = 1.0,
-        default = 0.0
-    )
-
-    # v1000 (only for instances)
-    # TODO: this should be autodetected using reference materials
-    tint_emissive = bpy.props.FloatProperty(
-        attr = "tint_emissive",
-        name = "Emissive",
-        description = "Emissive tint. 0.0 no darkening, 1.0 total darkening.",
-        min = 0.0,
-        max = 1.0,
-        default = 0.0
     )
 
     # v1000
@@ -1094,7 +1008,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     # TODO: deprecate in v3.4
     overrideSpecularity = bpy.props.BoolProperty(
         attr = "overrideSpecularity",
-        name = "Override specularity",
+        name = "Override specularity (deprecated)",
         description = "If checked you will override Blenders specularity with the 'Shiny Ratio'.",
         default = False
     )
@@ -1102,7 +1016,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     # TODO: deprecate in v3.4
     shinyRatio = bpy.props.FloatProperty(
         attr = 'shinyRatio',
-        name = 'Shiny ratio',
+        name = 'Shiny ratio (deprecated)',
         description = 'Controls the amount of specularity of the material in X-Plane.',
         default = 0.0,
         min = 0.0
@@ -1262,6 +1176,45 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    # v1000 (draped only)
+    bump_level = bpy.props.FloatProperty(
+        attr = "bump_level",
+        name = "Draped Bump Level",
+        description = "Scales the Bump for draped geometry up or down.",
+        default = 1.0,
+        min = -2.0,
+        max = 2.0
+    )
+
+
+    # v1000 (only for instances)
+    tint = bpy.props.BoolProperty(
+        attr = "tint",
+        name = "Tint",
+        description = "If active you can set the albedo and emissive tint.",
+        default = False
+    )
+
+    # v1000 (only for instances)
+    tint_albedo = bpy.props.FloatProperty(
+        attr = "tint_albedo",
+        name = "Albedo",
+        description = "Albedo tint. 0.0 no darkening, 1.0 total darkening.",
+        min = 0.0,
+        max = 1.0,
+        default = 0.0
+    )
+
+    # v1000 (only for instances)
+    tint_emissive = bpy.props.FloatProperty(
+        attr = "tint_emissive",
+        name = "Emissive",
+        description = "Emissive tint. 0.0 no darkening, 1.0 total darkening.",
+        min = 0.0,
+        max = 1.0,
+        default = 0.0
+    )
+
 # Class: XPlaneLampSettings
 # Settings for Blender lamps.
 #
@@ -1395,20 +1348,6 @@ def addXPlaneRNA():
         name = "XPlane",
         description = "XPlane Export Settings"
     )
-#    bpy.types.Scene.xplane_datarefs = bpy.props.CollectionProperty(attr = "xplane_datarefs",
-#                                                                    name = "XPlane Datarefs",
-#                                                                    description = "XPlane Datarefs",
-#                                                                    type = XPlaneDatarefSearch)
-
-
-#    XPlaneLayerSettings.exportChildren = bpy.props.BoolProperty(attr = "exportChildren",
-#                                name = "Export Children",
-#                                description = "Export children of this to X-Plane.",
-#                                default = False)
-
-    # TODO: cockpit region
-
-
 
 # Function: removeXPlaneRNA
 # Unregisters all properties.

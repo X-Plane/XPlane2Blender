@@ -338,15 +338,6 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 
     # v1000
     if version >= 1000:
-        # blend
-        # TODO: this should be autodetected using reference materials
-        blend_box = column.box()
-        blend_box.prop(layerObj, "blend", text = "Blend")
-
-        if  (layerObj.blend == "off"):
-            row = blend_box.row()
-            row.prop(layerObj, "blendRatio", text = "Alpha cutoff ratio")
-
         # slope_limit
         slope_box = column.box()
         slope_box.prop(layerObj, "slope_limit", text = "Slope limit")
@@ -368,15 +359,6 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         # require surface
         require_box = column.row()
         require_box.prop(layerObj, "require_surface", "Require surface")
-
-        # specular
-        # TODO: this should be autodetected using reference material
-        specular_box = column.box()
-        specular_box.prop(layerObj, "overrideSpecularity", "Override specularity")
-
-        if layerObj.overrideSpecularity == True:
-            row = specular_box.row()
-            row.prop(layerObj, "specular", "Specularity")
 
     # v1010
     if version >= 1010:
@@ -487,6 +469,7 @@ def lamp_layout(self, obj):
 #   obj - Blender object.
 def material_layout(self, obj):
     # TODO: hide stuff for draped materials
+    isDraped = obj.xplane.draped
     version = int(bpy.context.scene.xplane.version)
     layout = self.layout
 
@@ -550,6 +533,14 @@ def material_layout(self, obj):
 
     if not canPreviewEmit(obj):
         row.label("Add one texture affecting color and one affecting ambient and emit.", icon = "INFO")
+
+    # instancing effects
+    instanced_box = layout.box()
+    instanced_box.prop(obj.xplane, 'tint', 'Tint (Instanced Scenery only)')
+
+    if obj.xplane.tint:
+        instanced_box.prop(obj.xplane, 'tint_albedo')
+        instanced_box.prop(obj.xplane, 'tint_emissive')
 
 def canPreviewEmit(mat):
     hasTexture = False

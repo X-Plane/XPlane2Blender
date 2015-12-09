@@ -8,13 +8,7 @@ import os
 from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
 from .xplane_config import getDebug, getLog, initConfig
-
-# TODO: on newer Blender builds io_utils seems to be in bpy_extras, on older ones bpy_extras does not exists. Should be removed with the official Blender release where bpy_extras is present.
-try:
-    from bpy_extras.io_utils import ImportHelper, ExportHelper
-except ImportError:
-    from io_utils import ImportHelper, ExportHelper
-
+from bpy_extras.io_utils import ImportHelper, ExportHelper
 
 class ExportLogDialog(bpy.types.Menu):
     bl_idname = "SCENE_MT_xplane_export_log"

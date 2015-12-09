@@ -239,7 +239,7 @@ class XPlaneBone():
     def getPostAnimationMatrix(self):
         # for non-animated or root bones, post = pre
         if not self.isAnimated() or self.parent == None:
-            # FIXME: Ben syas - this is just calling getBlenderWorldMatrix.  I think getBlenderWorldMatrix
+            # FIXME: Ben says - this is just calling getBlenderWorldMatrix.  I think getBlenderWorldMatrix
             # _is_ the post-animation matrix in pretty much all cases; we should merge these routines.
             return self.getPreAnimationMatrix()
         else:
