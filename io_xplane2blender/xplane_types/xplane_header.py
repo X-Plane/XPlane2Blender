@@ -64,6 +64,18 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("ATTR_LOD_draped", None))
 
     def init(self):
+        isInstance = self.xplaneFile.options.export_type == "instanced_scenery"
+        isCockpit = self.xplaneFile.options.export_type == "cockpit"
+        canHaveDraped = self.xplaneFile.options.export_type not in ["aircraft", "cockpit"]
+
+        # layer groups
+        if self.xplaneFile.options.layer_group != "none":
+            self.attributes['ATTR_layer_group'].setValue((self.xplaneFile.options.layer_group, self.xplaneFile.options.layer_group_offset))
+
+        # draped layer groups
+        if canHaveDraped and self.xplaneFile.options.layer_group_draped != "none":
+            self.attributes['ATTR_layer_group_draped'].setValue((self.xplaneFile.options.layer_group_draped, self.xplaneFile.options.layer_group_draped_offset))
+
         # set slung load
         if self.xplaneFile.options.slungLoadWeight > 0:
             self.attributes['slung_load_weight'].setValue(self.xplaneFile.options.slungLoadWeight)
@@ -80,28 +92,46 @@ class XPlaneHeader():
         if self.xplaneFile.options.autodetectTextures:
             self._autodetectTextures()
 
+        # standard textures
         if self.xplaneFile.options.texture != '':
             self.attributes['TEXTURE'].setValue(self.getTexturePath(self.xplaneFile.options.texture, exportdir, blenddir))
 
-        if self.xplaneFile.options.texture_lit!='':
+        if self.xplaneFile.options.texture_lit != '':
             self.attributes['TEXTURE_LIT'].setValue(self.getTexturePath(self.xplaneFile.options.texture_lit, exportdir, blenddir))
 
-        if self.xplaneFile.options.texture_normal!='':
+        if self.xplaneFile.options.texture_normal != '':
             self.attributes['TEXTURE_NORMAL'].setValue(self.getTexturePath(self.xplaneFile.options.texture_normal, exportdir, blenddir))
 
-        # set cockpit regions
-        num_regions = int(self.xplaneFile.options.cockpit_regions)
+        if canHaveDraped:
+            # draped textures
+            if self.xplaneFile.options.texture_draped != '':
+                self.attributes['TEXTURE_DRAPED'].setValue(self.getTexturePath(self.xplaneFile.options.texture_draped, exportdir, blenddir))
 
-        if num_regions > 0:
-            self.attributes['COCKPIT_REGION'].removeValues()
-            for i in range(0, num_regions):
-                cockpit_region = self.xplaneFile.options.cockpit_region[i]
-                self.attributes['COCKPIT_REGION'].addValue((
-                    cockpit_region.left,
-                    cockpit_region.top,
-                    cockpit_region.left + (2 ** cockpit_region.width),
-                    cockpit_region.top + (2 ** cockpit_region.height)
-                ))
+            if self.xplaneFile.options.texture_draped_normal != '':
+                self.attributes['TEXTURE_DRAPED_NORMAL'].setValue(self.getTexturePath(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
+
+            # bump level
+            if self.xplaneFile.options.bump_level != 1.0:
+                self.attributes['BUMP_LEVEL'].setValue(self.xplaneFile.options.bump_level)
+
+            # draped LOD
+            if self.xplaneFile.options.lod_draped != 0.0:
+                self.attributes['ATTR_LOD_draped'].setValue(self.xplaneFile.options.lod_draped)
+
+        # set cockpit regions
+        if isCockpit:
+            num_regions = int(self.xplaneFile.options.cockpit_regions)
+
+            if num_regions > 0:
+                self.attributes['COCKPIT_REGION'].removeValues()
+                for i in range(0, num_regions):
+                    cockpit_region = self.xplaneFile.options.cockpit_region[i]
+                    self.attributes['COCKPIT_REGION'].addValue((
+                        cockpit_region.left,
+                        cockpit_region.top,
+                        cockpit_region.left + (2 ** cockpit_region.width),
+                        cockpit_region.top + (2 ** cockpit_region.height)
+                    ))
 
         # get point counts
         tris = len(self.xplaneFile.mesh.vertices)
@@ -116,33 +146,36 @@ class XPlaneHeader():
         # v1000
         if xplane_version >= 1000:
             # blend
+            # TODO: this should be autodetected using reference materials
             if self.xplaneFile.options.blend == "off":
                 self.attributes['GLOBAL_no_blend'].setValue(self.xplaneFile.options.blendRatio)
             elif self.xplaneFile.options.blend == 'shadow':
                 self.attributes['GLOBAL_shadow_blend'].setValue(True)
 
             # specular
+            # TODO: this should be autodetected using reference materials
             if self.xplaneFile.options.overrideSpecularity == True:
                 self.attributes['GLOBAL_specular'].setValue(self.xplaneFile.options.specular)
 
-            # tilted
-            if self.xplaneFile.options.tilted == True:
-                self.attributes['TILTED'].setValue(True)
+            if not isCockpit:
+                # tilted
+                if self.xplaneFile.options.tilted == True:
+                    self.attributes['TILTED'].setValue(True)
 
-            # slope_limit
-            if self.xplaneFile.options.slope_limit == True:
-                self.attributes['SLOPE_LIMIT'].setValue((
-                    self.xplaneFile.options.slope_limit_min_pitch,
-                    self.xplaneFile.options.slope_limit_max_pitch,
-                    self.xplaneFile.options.slope_limit_min_roll,
-                    self.xplaneFile.options.slope_limit_max_roll
-                ))
+                # slope_limit
+                if self.xplaneFile.options.slope_limit == True:
+                    self.attributes['SLOPE_LIMIT'].setValue((
+                        self.xplaneFile.options.slope_limit_min_pitch,
+                        self.xplaneFile.options.slope_limit_max_pitch,
+                        self.xplaneFile.options.slope_limit_min_roll,
+                        self.xplaneFile.options.slope_limit_max_roll
+                    ))
 
-            # require surface
-            if self.xplaneFile.options.require_surface == 'wet':
-                self.attributes['REQUIRE_WET'].setValue(True)
-            elif self.xplaneFile.options.require_surface == 'dry':
-                self.attributes['REQUIRE_DRY'].setValue(True)
+                # require surface
+                if self.xplaneFile.options.require_surface == 'wet':
+                    self.attributes['REQUIRE_WET'].setValue(True)
+                elif self.xplaneFile.options.require_surface == 'dry':
+                    self.attributes['REQUIRE_DRY'].setValue(True)
 
         # v1010
         if xplane_version >= 1010:
@@ -151,7 +184,7 @@ class XPlaneHeader():
                 self.attributes['GLOBAL_no_shadow'].setValue(True)
 
             # cockpit_lit
-            if self.xplaneFile.options.export_type == 'cockpit' and self.xplaneFile.options.cockpit_lit == True:
+            if isCockpit and self.xplaneFile.options.cockpit_lit == True:
                 self.attributes['GLOBAL_cockpit_lit'].setValue(True)
 
         # add custom attributes
@@ -162,6 +195,8 @@ class XPlaneHeader():
         texture = None
         textureLit = None
         textureNormal = None
+        textureDraped = None
+        textureDrapedNormal = None
         xplaneObjects = self.xplaneFile.getObjectsList()
 
         for xplaneObject in xplaneObjects:
@@ -171,32 +206,48 @@ class XPlaneHeader():
                 if mat.uv_name == None:
                     logger.warn('Object "%s" has no UV-Map.' % xplaneObject.name)
 
-                if texture == None and mat.texture:
-                    texture = mat.texture
+                if mat.options.draped:
+                    if textureDraped == None and mat.texture:
+                        textureDraped = mat.texture
 
-                if textureLit == None and mat.textureLit:
-                    textureLit = mat.textureLit
+                    if textureDrapedNormal == None and mat.textureNormal:
+                        textureDrapedNormal = mat.textureNormal
+                else:
+                    if texture == None and mat.texture:
+                        texture = mat.texture
 
-                if textureNormal == None and mat.textureNormal:
-                    textureNormal = mat.textureNormal
+                    if textureLit == None and mat.textureLit:
+                        textureLit = mat.textureLit
+
+                    if textureNormal == None and mat.textureNormal:
+                        textureNormal = mat.textureNormal
 
         # now go through all textures again and list any objects with different textures
         for xplaneObject in xplaneObjects:
             if xplaneObject.type == 'PRIMITIVE':
                 mat = xplaneObject.material
 
-                if texture and texture != mat.texture:
-                    logger.warn('Object "%s" has a different or missing color texture.' % xplaneObject.name)
+                if mat.options.draped:
+                    if textureDraped and textureDraped != mat.texture:
+                        logger.warn('Object "%s" has a different or missing draped texture.' % xplaneObject.name)
 
-                if textureLit and textureLit != mat.textureLit:
-                    logger.warn('Object "%s" has a different or missing night/lit texture.' % xplaneObject.name)
+                    if textureDrapedNormal and textureDrapedNormal != mat.textureNormal:
+                        logger.warn('Object "%s" has a different or missing draped normal/specular texture.' % xplaneObject.name)
+                else:
+                    if texture and texture != mat.texture:
+                        logger.warn('Object "%s" has a different or missing color texture.' % xplaneObject.name)
 
-                if textureNormal and textureNormal != mat.textureNormal:
-                    logger.warn('Object "%s" has a different or missing normal/specular texture.' % xplaneObject.name)
+                    if textureLit and textureLit != mat.textureLit:
+                        logger.warn('Object "%s" has a different or missing night/lit texture.' % xplaneObject.name)
+
+                    if textureNormal and textureNormal != mat.textureNormal:
+                        logger.warn('Object "%s" has a different or missing normal/specular texture.' % xplaneObject.name)
 
         self.xplaneFile.options.texture = texture or ''
         self.xplaneFile.options.texture_normal = textureNormal or ''
         self.xplaneFile.options.texture_lit = textureLit or ''
+        self.xplaneFile.options.texture_draped = textureDraped or ''
+        self.xplaneFile.options.texture_draped_normal = textureDrapedNormal or ''
 
 
     # Method: getTexturePath

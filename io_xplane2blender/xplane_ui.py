@@ -485,6 +485,7 @@ def lamp_layout(self, obj):
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
 def material_layout(self, obj):
+    # TODO: hide stuff for draped materials
     version = int(bpy.context.scene.xplane.version)
     layout = self.layout
 
@@ -492,6 +493,9 @@ def material_layout(self, obj):
     row.prop(obj.xplane, "draw", text = "Draw")
 
     if (obj.xplane.draw):
+        row = layout.row()
+        row.prop(obj.xplane, "draped")
+
         row = layout.row()
         row.prop(obj.xplane, "overrideSpecularity", text = "Override specularity")
 

@@ -1091,6 +1091,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = True
     )
 
+    # TODO: deprecate in v3.4
     overrideSpecularity = bpy.props.BoolProperty(
         attr = "overrideSpecularity",
         name = "Override specularity",
@@ -1098,6 +1099,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    # TODO: deprecate in v3.4
     shinyRatio = bpy.props.FloatProperty(
         attr = 'shinyRatio',
         name = 'Shiny ratio',
