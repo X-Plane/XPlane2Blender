@@ -1,4 +1,5 @@
 from ..xplane_helpers import floatToStr
+from ..xplane_constants import *
 
 # Class: XPlaneLights
 # Creates OBJ lights.
@@ -33,7 +34,7 @@ class XPlaneLights():
         light.indices[0] = self.globalindex
 
         # we only write vlights here, all other lights go into the commands table directly
-        if  light.lightType not in ('named','param','custom'):
+        if  light.lightType not in (LIGHT_NAMED, LIGHT_PARAM, LIGHT_CUSTOM):
             # get the location
             co = light.blenderObject.location
 

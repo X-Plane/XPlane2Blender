@@ -1,6 +1,7 @@
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
+from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 from .xplane_material_utils import validate, compare
@@ -46,31 +47,13 @@ class XPlaneMaterial():
         # Material
         self.attributes = XPlaneAttributes()
 
-        # TODO: deprecate in v3.4
-        self.attributes.add(XPlaneAttribute("ATTR_diffuse_rgb"))
-
         # useless according to Ben Supnik
         # self.attributes.add(XPlaneAttribute("ATTR_specular_rgb"))
-
-        # TODO: deprecate in v3.4
-        self.attributes.add(XPlaneAttribute("ATTR_shade_smooth", True))
-        self.attributes.add(XPlaneAttribute("ATTR_shade_flat"))
-
-        # TODO: deprecate in v3.4
-        self.attributes.add(XPlaneAttribute("ATTR_emission_rgb"))
 
         self.attributes.add(XPlaneAttribute("ATTR_shiny_rat"))
         self.attributes.add(XPlaneAttribute("ATTR_hard"))
         self.attributes.add(XPlaneAttribute("ATTR_hard_deck"))
         self.attributes.add(XPlaneAttribute("ATTR_no_hard"))
-
-        # TODO: deprecate in v3.4
-        self.attributes.add(XPlaneAttribute("ATTR_cull"))
-        self.attributes.add(XPlaneAttribute("ATTR_no_cull"))
-
-        # TODO: deprecate in v3.4
-        self.attributes.add(XPlaneAttribute("ATTR_depth"))
-        self.attributes.add(XPlaneAttribute("ATTR_no_depth"))
 
         self.attributes.add(XPlaneAttribute("ATTR_blend"))
         self.attributes.add(XPlaneAttribute("ATTR_shadow_blend"))
@@ -117,33 +100,8 @@ class XPlaneMaterial():
                 if mat.xplane.panel == False:
                     self.attributes['ATTR_draw_enable'].setValue(True)
 
-                    # diffuse
-                    # TODO: deprecate in v3.4
-                    diffuse = [mat.diffuse_intensity*mat.diffuse_color[0],
-                                mat.diffuse_intensity*mat.diffuse_color[1],
-                                mat.diffuse_intensity*mat.diffuse_color[2]]
-                    self.attributes['ATTR_diffuse_rgb'].setValue((
-                        diffuse[0],
-                        diffuse[1],
-                        diffuse[2]
-                    ))
-
                     # specular
-                    if mat.xplane.overrideSpecularity:
-                        self.attributes['ATTR_shiny_rat'].setValue(mat.xplane.shinyRatio)
-                    else:
-                        self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity)
-
-                    # emission
-                    # TODO: deprecate in v3.4
-                    emission = [mat.emit*mat.diffuse_color[0],
-                                mat.emit*mat.diffuse_color[1],
-                                mat.emit*mat.diffuse_color[2]]
-                    self.attributes['ATTR_emission_rgb'].setValue((
-                        emission[0],
-                        emission[1],
-                        emission[2]
-                    ))
+                    self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity)
 
                     # blend
                     if (int(bpy.context.scene.xplane.version) >= 1000):
@@ -158,31 +116,22 @@ class XPlaneMaterial():
                             self.attributes['ATTR_no_blend'].setValue(mat.xplane.blendRatio)
                         else:
                             self.attributes['ATTR_blend'].setValue(True)
+                # draped
+                if mat.xplane.draped:
+                    self.attributes['ATTR_draped'].setValue(True)
+                else:
+                    self.attributes['ATTR_no_draped'].setValue(True)
             else:
                 self.attributes['ATTR_draw_disable'].setValue(True)
 
-            # depth check
-            # TODO: deprecate in v3.4
-            if self.blenderObject.xplane.depth == False:
-                self.attributes['ATTR_no_depth'].setValue(True);
-            else:
-                self.attributes['ATTR_depth'].setValue(True)
-
             # surface type
-            if mat.xplane.surfaceType != 'none':
+            if mat.xplane.surfaceType != SURFACE_TYPE_NONE:
                 if mat.xplane.deck:
                     self.attributes['ATTR_hard_deck'].setValue(mat.xplane.surfaceType)
                 else:
                     self.attributes['ATTR_hard'].setValue(mat.xplane.surfaceType)
             else:
                 self.attributes['ATTR_no_hard'].setValue(True)
-
-            # backface culling
-            # TODO: deprecate in v3.4
-            if self.blenderObject.data.show_double_sided:
-                self.attributes['ATTR_no_cull'].setValue(True)
-            else:
-                self.attributes['ATTR_cull'].setValue(True)
 
             # camera collision
             if mat.xplane.solid_camera:

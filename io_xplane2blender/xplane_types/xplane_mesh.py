@@ -1,6 +1,7 @@
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
+from ..xplane_constants import *
 from .xplane_face import XPlaneFace
 
 # Class: XPlaneMesh
@@ -43,7 +44,7 @@ class XPlaneMesh():
         xplaneObjects = sorted(xplaneObjects, key = getSortKey)
 
         for xplaneObject in xplaneObjects:
-            if xplaneObject.type == 'PRIMITIVE':
+            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE:
                 xplaneObject.indices[0] = len(self.indices)
                 first_vertice_of_this_xplaneObject = len(self.vertices)
 

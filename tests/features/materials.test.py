@@ -22,18 +22,10 @@ class TestMaterials(XPlaneTestCase):
         conditions = xplaneFile.objects['conditions'].material
 
         defaultAttrs = {
-            'ATTR_diffuse_rgb': [0.5, 0.5, 0.5],
-            'ATTR_shade_smooth': True,
-            'ATTR_shade_flat': None,
-            'ATTR_emission_rgb': [0, 0, 0],
             'ATTR_shiny_rat': 1,
             'ATTR_hard': None,
             'ATTR_hard_deck': None,
             'ATTR_no_hard': True,
-            'ATTR_cull': True,
-            'ATTR_no_cull': None,
-            'ATTR_depth': True,
-            'ATTR_no_depth': None,
             'ATTR_blend': True,
             'ATTR_shadow_blend': None,
             'ATTR_no_blend': None,
@@ -53,21 +45,14 @@ class TestMaterials(XPlaneTestCase):
         }
 
         redAttrs = defaultAttrs.copy()
-        redAttrs['ATTR_diffuse_rgb'] = [1.0, 0.0, 0.0]
 
         greenAttrs = defaultAttrs.copy()
-        greenAttrs['ATTR_diffuse_rgb'] = [0, 1, 0]
 
         blueAttrs = defaultAttrs.copy()
-        blueAttrs['ATTR_diffuse_rgb'] = [0, 0, 1]
 
         emissiveAttrs = defaultAttrs.copy()
-        emissiveAttrs['ATTR_diffuse_rgb'] = [0.5, 0.5, 0.5]
-        emissiveAttrs['ATTR_emission_rgb'] = [0.5, 0.5, 0.5]
 
         cockpitAttrs = defaultAttrs.copy()
-        cockpitAttrs['ATTR_diffuse_rgb'] = [0.5, 0.5, 0.5]
-        cockpitAttrs['ATTR_emission_rgb'] = [0.0, 0.0, 0.0]
         cockpitAttrs['ATTR_shiny_rat'] = 1.0
         cockpitAttrs['ATTR_blend'] = True
         cockpitAttrs['ATTR_draw_enable'] = True
@@ -80,8 +65,6 @@ class TestMaterials(XPlaneTestCase):
         cockpitCockpitAttrs['ATTR_cockpit_region'] = None
 
         cockpitPanelAttrs = defaultAttrs.copy()
-        cockpitPanelAttrs['ATTR_diffuse_rgb'] = None
-        cockpitPanelAttrs['ATTR_emission_rgb'] = None
         cockpitPanelAttrs['ATTR_shiny_rat'] = None
         cockpitPanelAttrs['ATTR_blend'] = None
         cockpitPanelAttrs['ATTR_draw_enable'] = None
@@ -93,8 +76,6 @@ class TestMaterials(XPlaneTestCase):
         cockpitPanelCockpitAttrs['ATTR_cockpit_region'] = 0
 
         invisibleAttrs = defaultAttrs.copy()
-        invisibleAttrs['ATTR_diffuse_rgb'] = None
-        invisibleAttrs['ATTR_emission_rgb'] = None
         invisibleAttrs['ATTR_shiny_rat'] = None
         invisibleAttrs['ATTR_blend'] = None
         invisibleAttrs['ATTR_draw_enable'] = None

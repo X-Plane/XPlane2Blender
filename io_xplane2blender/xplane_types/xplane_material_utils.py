@@ -1,9 +1,11 @@
+from ..xplane_constants import *
+
 def compare(refMat, mat, exportType):
-    if exportType == 'scenery':
+    if exportType == EXPORT_TYPE_SCENERY:
         return compareScenery(refMat, mat)
-    elif exportType == 'instanced_scenery':
+    elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
         return compareInstanced(refMat, mat)
-    elif exportType == 'cockpit' or exportType == 'aircraft':
+    elif exportType == EXPORT_TYPE_COCKPIT or exportType == EXPORT_TYPE_AIRCRAFT:
         return compareAircraft(refMat, mat)
 
 def compareScenery(refMat, mat):
@@ -70,17 +72,17 @@ def validate(mat, exportType):
         errors.append('Is invalid.')
         return errors
 
-    if exportType == 'scenery':
+    if exportType == EXPORT_TYPE_SCENERY:
         return validateScenery(mat)
-    elif exportType == 'instanced_scenery':
+    elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
         return validateInstanced(mat)
-    elif exportType == 'cockpit' and mat.options.panel:
+    elif exportType == EXPORT_TYPE_COCKPIT and mat.options.panel:
         return validatePanel(mat)
-    elif exportType == 'cockpit' and not mat.options.panel:
+    elif exportType == EXPORT_TYPE_COCKPIT and not mat.options.panel:
         return validateCockpit(mat)
-    elif exportType == 'aircraft':
+    elif exportType == EXPORT_TYPE_AIRCRAFT:
         return validateAircraft(mat)
-    elif (exportType == 'scenery' or exportType == 'instanced_scenery') and mat.options.draped:
+    elif (exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY) and mat.options.draped:
         return validateDraped(mat)
 
     return errors
@@ -181,14 +183,14 @@ def validateAircraft(mat):
 def validateDraped(mat):
     errors = []
 
+    if not mat.options.draped:
+        errors.append('Must be draped')
+
     if mat.options.lightLevel:
         errors.append('Must not override light level.')
 
     if mat.options.panel:
         errors.append('Must not be part of the cockpit panel.')
-
-    if not mat.options.draped:
-        errors.append('Must be draped.')
 
     if mat.options.surfaceType != 'none':
         errors.append('Must have the surface type "none".')
@@ -219,16 +221,16 @@ def getFirstMatchingMaterial(materials, validation):
 def getReferenceMaterials(materials, exportType):
     refMats = []
 
-    if exportType == 'cockpit':
+    if exportType == EXPORT_TYPE_COCKPIT:
         refMats.append(getFirstMatchingMaterial(materials, validateCockpit))
         refMats.append(getFirstMatchingMaterial(materials, validatePanel))
-    elif exportType == 'aircraft':
+    elif exportType == EXPORT_TYPE_AIRCRAFT:
         refMats.append(getFirstMatchingMaterial(materials, validateAircraft))
         refMats.append(getFirstMatchingMaterial(materials, validatePanel))
-    elif exportType == 'scenerey':
+    elif exportType == EXPORT_TYPE_SCENERY:
         refMats.append(getFirstMatchingMaterial(materials, validateScenery))
         refMats.append(getFirstMatchingMaterial(materials, validateDraped))
-    elif exportType == 'instanced_scenery':
+    elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
         refMats.append(getFirstMatchingMaterial(materials, validateInstanced))
         refMats.append(getFirstMatchingMaterial(materials, validateDraped))
 

@@ -15,9 +15,6 @@ log = False
 # Integer containing the version number of the addon.
 version = bl_info['version']
 
-MAX_LODS = 4
-MAX_COCKPIT_REGIONS = 4
-
 def initConfig():
     global debug
     global log

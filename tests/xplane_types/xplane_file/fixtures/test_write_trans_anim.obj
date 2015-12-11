@@ -261,8 +261,6 @@ ANIM_trans_end
 # rotation keyframes
 # PRIMITIVE: Cube.anim.001	weight: 0
 # MATERIAL: Material
-ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-ATTR_emission_rgb	0	0	0
 ATTR_shiny_rat	0.5
 TRIS	0 36
 	# 2 Object: Cube.child.anim.001
@@ -321,4 +319,4 @@ TRIS	0 36
 		ANIM_end
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'48f7dd6') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

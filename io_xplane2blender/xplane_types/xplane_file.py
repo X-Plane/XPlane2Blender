@@ -130,6 +130,9 @@ class XPlaneFile():
         # the root bone: origin for all animations/objects
         self.rootBone = None
 
+        # materials representing the reference for export
+        self.referenceMaterials = None
+
     # Method: collectFromBlenderLayerIndex
     # collects all objects in a given blender layer
     #
@@ -420,13 +423,16 @@ class XPlaneFile():
         if not self.validateMaterials():
             return ''
 
+        # detect reference materials
+        self.referenceMaterials = getReferenceMaterials(
+            self.getMaterials(),
+            self.options.export_type
+        )
+
         # validation was successful
         # retrieve reference materials
         # and compare all materials against reference materials
-        if not self.compareMaterials(
-            getReferenceMaterials(self.getMaterials(),
-            self.options.export_type)
-        ):
+        if not self.compareMaterials(self.referenceMaterials):
             return ''
 
         o = ''

@@ -4,6 +4,7 @@
 import bpy
 from .xplane_config import *
 from .xplane_helpers import getColorAndLitTextureSlots
+from .xplane_constants import *
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
@@ -78,11 +79,11 @@ class XPlaneDataref(bpy.types.PropertyGroup):
         description = "Type of animation this Dataref will use.",
         default = "transform",
         items = [
-            ("transform", "LocRot", "Location/Rotation"),
-            ('translate', 'Loc', 'Location'),
-            ('rotate', 'Rot', 'Rotation'),
-            ("show", "Show", "Show"),
-            ("hide", "Hide", "Hide")
+            (ANIM_TYPE_TRANSFORM, "LocRot", "Location/Rotation"),
+            (ANIM_TYPE_TRANSLATE, 'Loc', 'Location'),
+            (ANIM_TYPE_ROTATE, 'Rot', 'Rotation'),
+            (ANIM_TYPE_SHOW, "Show", "Show"),
+            (ANIM_TYPE_HIDE, "Hide", "Hide")
         ]
     )
 
@@ -115,9 +116,9 @@ class XPlaneCondition(bpy.types.PropertyGroup):
         description = "Variable",
         default = "GLOBAL_LIGHTING",
         items = [
-            ('GLOBAL_LIGHTING', 'HDR', 'HDR mode On/Off'),
-            ('GLOBAL_SHADOWS', 'Global shadows', 'Global shadows On/Off'),
-            ('VERSION10', 'Version 10.x', 'Always "On", as V9 does not support conditions.')
+            (CONDITION_GLOBAL_LIGHTING, 'HDR', 'HDR mode On/Off'),
+            (CONDITION_GLOBAL_SHADOWS, 'Global shadows', 'Global shadows On/Off'),
+            (CONDITION_VERSION10, 'Version 10.x', 'Always "On", as V9 does not support conditions.')
         ]
     )
 
@@ -177,17 +178,17 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         description = "The type of the manipulator.",
         default = 'drag_xy',
         items = [
-            ("drag_xy", "drag_xy", "drag_xy"),
-            ("drag_axis", "drag_axis", "drag_axis"),
-            ("command", "command", "command"),
-            ("command_axis", "command_axis", "command_axis"),
-            ("push", "push", "push"),
-            ("radio", "radio", "radio"),
-            ("delta", "delta", "delta"),
-            ("wrap", "wrap", "wrap"),
-            ("toggle", "toggle", "toggle"),
-            ("noop", "noop", "noop"),
-            ("drag_axis_pix", "drag_axis_pix (v10.10 or higher only)", "drag_axis_pix (v10.10 or higher only)")
+            (MANIP_DRAG_XY, MANIP_DRAG_XY, MANIP_DRAG_XY),
+            (MANIP_DRAG_AXIS, MANIP_DRAG_AXIS, MANIP_DRAG_AXIS),
+            (MANIP_COMMAND, MANIP_COMMAND, MANIP_COMMAND),
+            (MANIP_COMMAND_AXIS, MANIP_COMMAND_AXIS, MANIP_COMMAND_AXIS),
+            (MANIP_PUSH, MANIP_PUSH, MANIP_PUSH),
+            (MANIP_RADIO, MANIP_RADIO, MANIP_RADIO),
+            (MANIP_DELTA, MANIP_DELTA, MANIP_DELTA),
+            (MANIP_WRAP, MANIP_WRAP, MANIP_WRAP),
+            (MANIP_TOGGLE, MANIP_TOGGLE, MANIP_TOGGLE),
+            (MANIP_NOOP, MANIP_NOOP, MANIP_NOOP),
+            (MANIP_DRAG_AXIS_PIX, MANIP_DRAG_AXIS_PIX + " (v10.10 or higher only)", MANIP_DRAG_AXIS_PIX + " (v10.10 or higher only)")
         ]
     )
 
@@ -204,25 +205,25 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         description = "The mouse cursor type when hovering over the object.",
         default = "hand",
         items = [
-            ("four_arrows", "four_arrows", "four_arrows"),
-            ("hand", "hand", "hand"),
-            ("button", "button", "button"),
-            ("rotate_small", "rotate_small", "rotate_small"),
-            ("rotate_small_left", "rotate_small_left", "rotate_small_left"),
-            ("rotate_small_right", "rotate_small_right", "rotate_small_right"),
-            ("rotate_medium", "rotate_medium", "rotate_medium"),
-            ("rotate_medium_left", "rotate_medium_left", "rotate_medium_left"),
-            ("rotate_medium_right", "rotate_medium_right", "rotate_medium_right"),
-            ("rotate_large", "rotate_large", "rotate_large"),
-            ("rotate_large_left", "rotate_large_left", "rotate_large_left"),
-            ("rotate_large_right", "rotate_large_right", "rotate_large_right"),
-            ("up_down", "up_down", "up_down"),
-            ("down", "down", "down"),
-            ("up", "up", "up"),
-            ("left_right", "left_right", "left_right"),
-            ("left", "left", "left"),
-            ("right", "right", "right"),
-            ("arrow", "arrow", "arrow")
+            (MANIP_CURSOR_FOUR_ARROWS, MANIP_CURSOR_FOUR_ARROWS, MANIP_CURSOR_FOUR_ARROWS),
+            (MANIP_CURSOR_HAND, MANIP_CURSOR_HAND, MANIP_CURSOR_HAND),
+            (MANIP_CURSOR_BUTTON, MANIP_CURSOR_BUTTON, MANIP_CURSOR_BUTTON),
+            (MANIP_CURSOR_ROTATE_SMALL, MANIP_CURSOR_ROTATE_SMALL, MANIP_CURSOR_ROTATE_SMALL),
+            (MANIP_CURSOR_ROTATE_SMALL_LEFT, MANIP_CURSOR_ROTATE_SMALL_LEFT, MANIP_CURSOR_ROTATE_SMALL_LEFT),
+            (MANIP_CURSOR_ROTATE_SMALL_RIGHT, MANIP_CURSOR_ROTATE_SMALL_RIGHT, MANIP_CURSOR_ROTATE_SMALL_RIGHT),
+            (MANIP_CURSOR_ROTATE_MEDIUM, MANIP_CURSOR_ROTATE_MEDIUM, MANIP_CURSOR_ROTATE_MEDIUM),
+            (MANIP_CURSOR_ROTATE_MEDIUM_LEFT, MANIP_CURSOR_ROTATE_MEDIUM_LEFT, MANIP_CURSOR_ROTATE_MEDIUM_LEFT),
+            (MANIP_CURSOR_ROTATE_MEDIUM_RIGHT, MANIP_CURSOR_ROTATE_MEDIUM_RIGHT, MANIP_CURSOR_ROTATE_MEDIUM_RIGHT),
+            (MANIP_CURSOR_ROTATE_LARGE, MANIP_CURSOR_ROTATE_LARGE, MANIP_CURSOR_ROTATE_LARGE),
+            (MANIP_CURSOR_ROTATE_LARGE_LEFT, MANIP_CURSOR_ROTATE_LARGE_LEFT, MANIP_CURSOR_ROTATE_LARGE_LEFT),
+            (MANIP_CURSOR_ROTATE_LARGE_RIGHT, MANIP_CURSOR_ROTATE_LARGE_RIGHT, MANIP_CURSOR_ROTATE_LARGE_RIGHT),
+            (MANIP_CURSOR_UP_DOWN, MANIP_CURSOR_UP_DOWN, MANIP_CURSOR_UP_DOWN),
+            (MANIP_CURSOR_DOWN, MANIP_CURSOR_DOWN, MANIP_CURSOR_DOWN),
+            (MANIP_CURSOR_UP, MANIP_CURSOR_UP, MANIP_CURSOR_UP),
+            (MANIP_CURSOR_LEFT_RIGHT, MANIP_CURSOR_LEFT_RIGHT, MANIP_CURSOR_LEFT_RIGHT),
+            (MANIP_CURSOR_LEFT, MANIP_CURSOR_LEFT, MANIP_CURSOR_LEFT),
+            (MANIP_CURSOR_RIGHT, MANIP_CURSOR_RIGHT, MANIP_CURSOR_RIGHT),
+            (MANIP_CURSOR_ARROW, MANIP_CURSOR_ARROW, MANIP_CURSOR_ARROW)
         ]
     )
 
@@ -505,10 +506,10 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "What kind of thing are you going to export?",
         default = "aircraft",
         items = [
-            ("aircraft", "Aircraft (Part)", "Aircraft (Part)"),
-            ("cockpit", "Cockpit", "Cockpit"),
-            ("scenery", "Scenery Object", "Scenery Object"),
-            ("instanced_scenery", "Instanced Scenery Object", "Instanced Scenery Object")
+            (EXPORT_TYPE_AIRCRAFT, "Aircraft (Part)", "Aircraft (Part)"),
+            (EXPORT_TYPE_COCKPIT, "Cockpit", "Cockpit"),
+            (EXPORT_TYPE_SCENERY, "Scenery Object", "Scenery Object"),
+            (EXPORT_TYPE_INSTANCED_SCENERY, "Instanced Scenery Object", "Instanced Scenery Object")
         ]
     )
 
@@ -673,9 +674,9 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "whether an object should be used over wet or dry terrain when placed from the library",
         default = "none",
         items = [
-            ("none", "Any", "Any surface"),
-            ("dry", "Dry", "Must be placed on dry surface"),
-            ("wet", "Wet", "Must be placed on wet surface")
+            (REQUIRE_SURFACE_NONE, "Any", "Any surface"),
+            (REQUIRE_SURFACE_DRY, "Dry", "Must be placed on dry surface"),
+            (REQUIRE_SURFACE_WET, "Wet", "Must be placed on wet surface")
         ]
     )
 
@@ -714,18 +715,18 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     # v1000
     layerGroups = [
-        ("none", "None", "Does not draws this OBJ in any group."),
-        ("terrain", "Terrain", "Terrain"),
-        ("beaches", "Beaches", "Beaches"),
-        ("shoulders", "Shoulders", "Shoulders"),
-        ("taxiways", "Taxiways", "Taxiways"),
-        ("runways", "Runways", "Runways"),
-        ("markings", "Markings", "Markings"),
-        ("airports", "Airports", "Airports"),
-        ("roads", "Roads", "Roads"),
-        ("objects", "Objects", "Objects"),
-        ("light_objects", "Light Objects", "Light Objects"),
-        ("cars", "Cars", "Cars")
+        (LAYER_GROUP_NONE, "None", "Does not draws this OBJ in any group."),
+        (LAYER_GROUP_TERRAIN, "Terrain", "Terrain"),
+        (LAYER_GROUP_BEACHES, "Beaches", "Beaches"),
+        (LAYER_GROUP_SHOULDERS, "Shoulders", "Shoulders"),
+        (LAYER_GROUP_TAXIWAYS, "Taxiways", "Taxiways"),
+        (LAYER_GROUP_RUNWAYS, "Runways", "Runways"),
+        (LAYER_GROUP_MARKINGS, "Markings", "Markings"),
+        (LAYER_GROUP_AIRPORTS, "Airports", "Airports"),
+        (LAYER_GROUP_ROADS, "Roads", "Roads"),
+        (LAYER_GROUP_OBJECTS, "Objects", "Objects"),
+        (LAYER_GROUP_LIGHT_OBJECTS, "Light Objects", "Light Objects"),
+        (LAYER_GROUP_CARS, "Cars", "Cars")
     ]
 
     layer_group = bpy.props.EnumProperty(
@@ -822,9 +823,9 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "X-Plane Version",
         default = "1010",
         items = [
-            ("900", "9.x", "9.x"),
-            ("1000", "10.0x", "10.0x"),
-            ("1010", "10.1x", "10.1x")
+            (VERSION_900, "9.x", "9.x"),
+            (VERSION_1000, "10.0x", "10.0x"),
+            (VERSION_1010, "10.1x", "10.1x")
         ]
     )
 
@@ -833,8 +834,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "Export Mode",
         default = "layers",
         items = [
-            ("layers", "Layers", "Allows to export an .obj file for each layer."),
-            ("root_objects", "Root Objects", "Allows to export all objects below a root object into a single .obj file.")
+            (EXPORT_MODE_LAYERS, "Layers", "Allows to export an .obj file for each layer."),
+            (EXPORT_MODE_ROOT_OBJECTS, "Root Objects", "Allows to export all objects below a root object into a single .obj file.")
         ]
     )
 
@@ -1005,40 +1006,23 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = True
     )
 
-    # TODO: deprecate in v3.4
-    overrideSpecularity = bpy.props.BoolProperty(
-        attr = "overrideSpecularity",
-        name = "Override specularity (deprecated)",
-        description = "If checked you will override Blenders specularity with the 'Shiny Ratio'.",
-        default = False
-    )
-
-    # TODO: deprecate in v3.4
-    shinyRatio = bpy.props.FloatProperty(
-        attr = 'shinyRatio',
-        name = 'Shiny ratio (deprecated)',
-        description = 'Controls the amount of specularity of the material in X-Plane.',
-        default = 0.0,
-        min = 0.0
-    )
-
     surfaceType = bpy.props.EnumProperty(
         attr = 'surfaceType',
         name = 'Surface type',
         description = 'Controls the bumpiness of material in X-Plane.',
         default = 'none',
         items = [
-            ('none', 'none', 'none'),
-            ('water', 'water', 'water'),
-            ('concrete', 'concrete', 'concrete'),
-            ('asphalt', 'asphalt', 'asphalt'),
-            ('grass', 'grass', 'grass'),
-            ('dirt', 'dirt', 'dirt'),
-            ('gravel', 'gravel', 'gravel'),
-            ('lakebed', 'lakebed', 'lakebed'),
-            ('snow', 'snow', 'snow'),
-            ('shoulder', 'shoulder', 'shoulder'),
-            ('blastpad', 'blastpad', 'blastpad')
+            (SURFACE_TYPE_NONE, SURFACE_TYPE_NONE, SURFACE_TYPE_NONE),
+            (SURFACE_TYPE_WATER, SURFACE_TYPE_WATER, SURFACE_TYPE_WATER),
+            (SURFACE_TYPE_CONCRETE, SURFACE_TYPE_CONCRETE, SURFACE_TYPE_CONCRETE),
+            (SURFACE_TYPE_ASPHALT, SURFACE_TYPE_ASPHALT, SURFACE_TYPE_ASPHALT),
+            (SURFACE_TYPE_GRASS, SURFACE_TYPE_GRASS, SURFACE_TYPE_GRASS),
+            (SURFACE_TYPE_DIRT, SURFACE_TYPE_DIRT, SURFACE_TYPE_DIRT),
+            (SURFACE_TYPE_GRAVEL, SURFACE_TYPE_GRAVEL, SURFACE_TYPE_GRAVEL),
+            (SURFACE_TYPE_LAKEBED, SURFACE_TYPE_LAKEBED, SURFACE_TYPE_LAKEBED),
+            (SURFACE_TYPE_SNOW, SURFACE_TYPE_SNOW, SURFACE_TYPE_SNOW),
+            (SURFACE_TYPE_SHOULDER, SURFACE_TYPE_SHOULDER, SURFACE_TYPE_SHOULDER),
+            (SURFACE_TYPE_BLASTPAD, SURFACE_TYPE_BLASTPAD, SURFACE_TYPE_BLASTPAD)
         ]
     )
 
@@ -1068,9 +1052,9 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Controls texture alpha/blending",
         default = "on",
         items = [
-            ('off', 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
-            ('on', 'Alpha blend', 'Textures alpha channel will blended.'),
-            ('shadow', 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
+            (BLEND_OFF, 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
+            (BLEND_ON, 'Alpha blend', 'Textures alpha channel will blended.'),
+            (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
         ]
     )
 
@@ -1186,7 +1170,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         max = 2.0
     )
 
-
     # v1000 (only for instances)
     tint = bpy.props.BoolProperty(
         attr = "tint",
@@ -1202,6 +1185,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Albedo tint. 0.0 no darkening, 1.0 total darkening.",
         min = 0.0,
         max = 1.0,
+        step = 1 / 255,
         default = 0.0
     )
 
@@ -1212,6 +1196,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Emissive tint. 0.0 no darkening, 1.0 total darkening.",
         min = 0.0,
         max = 1.0,
+        step = 1 / 255,
         default = 0.0
     )
 
@@ -1233,14 +1218,14 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
         description = "Defines the type of the light in X-Plane.",
         default = "default",
         items = [
-            ("default", "default", "default"),
-            ("flashing", "flashing (deprecated)", "flashing (deprecated)"),
-            ("pulsing", "pulsing (deprecated)", "pulsing (deprecated)"),
-            ("strobe", "strobe (deprecated)", "strobe (deprecated)"),
-            ("traffic", "traffic (deprecated)", "traffic (deprecated)"),
-            ("named", "named (deprecated)", "named (deprecated)"),
-            ("custom", "custom", "custom"),
-            ("param", "param", "param")
+            (LIGHT_DEFAULT, LIGHT_DEFAULT, LIGHT_DEFAULT),
+            (LIGHT_FLASHING, LIGHT_FLASHING + " (deprecated)", LIGHT_FLASHING + " (deprecated)"),
+            (LIGHT_PULSING, LIGHT_PULSING + " (deprecated)", LIGHT_PULSING + " (deprecated)"),
+            (LIGHT_STROBE, LIGHT_STROBE + " (deprecated)", LIGHT_STROBE + " (deprecated)"),
+            (LIGHT_TRAFFIC, LIGHT_TRAFFIC + " (deprecated)", LIGHT_TRAFFIC + " (deprecated)"),
+            (LIGHT_NAMED, LIGHT_NAMED + " (deprecated)", LIGHT_NAMED + " (deprecated)"),
+            (LIGHT_CUSTOM, LIGHT_CUSTOM, LIGHT_CUSTOM),
+            (LIGHT_PARAM, LIGHT_PARAM, LIGHT_PARAM)
         ]
     )
 

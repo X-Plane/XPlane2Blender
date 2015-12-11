@@ -2,8 +2,8 @@ I
 800
 OBJ
 
+GLOBAL_cockpit_lit
 POINT_COUNTS	324	0	0	324
-GLOBAL_cockpit_lit	
 
 VT	-1.00000012	-1	-5	0	-1	0	0	0	# 0
 VT	1	-1	-5	0	-1	0	0	0	# 1
@@ -372,14 +372,11 @@ IDX	323
 # 1 Object: blue
 # PRIMITIVE: blue	weight: 0
 # MATERIAL: blue
-ATTR_diffuse_rgb	0	0	1
-ATTR_emission_rgb	0	0	0
 ATTR_shiny_rat	1
 TRIS	0 36
 # 1 Object: cockpit
 # PRIMITIVE: cockpit	weight: 1
 # MATERIAL: cockpit
-ATTR_diffuse_rgb	0.5	0.5	0.5
 ATTR_solid_camera
 ATTR_light_level	1	2	light-level-test
 TRIS	36 36
@@ -387,7 +384,7 @@ TRIS	36 36
 # PRIMITIVE: cockpit_panel	weight: 2
 # MATERIAL: cockpit_panel
 ATTR_cockpit
-ATTR_cockpit_region	
+ATTR_cockpit_region
 TRIS	72 36
 # 1 Object: conditions
 IF GLOBAL_LIGHTING
@@ -401,13 +398,10 @@ ENDIF
 # PRIMITIVE: emissive	weight: 4
 custom_prop_reset
 # MATERIAL: emissive
-ATTR_emission_rgb	0.5	0.5	0.5
 TRIS	144 36
 # 1 Object: green
 # PRIMITIVE: green	weight: 5
 # MATERIAL: green
-ATTR_diffuse_rgb	0	1	0
-ATTR_emission_rgb	0	0	0
 TRIS	180 36
 # 1 Object: invisible
 # PRIMITIVE: invisible	weight: 6
@@ -417,14 +411,12 @@ TRIS	216 36
 # 1 Object: red
 # PRIMITIVE: red	weight: 7
 # MATERIAL: red
-ATTR_diffuse_rgb	1	0	0
 TRIS	252 36
 # 1 Object: surface
 # PRIMITIVE: surface	weight: 8
 # MATERIAL: surface
-ATTR_diffuse_rgb	0.5	0.5	0.5
 ATTR_hard_deck	asphalt
-ATTR_poly_os	
+ATTR_poly_os
 TRIS	288 36
 
 # Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

@@ -1,5 +1,6 @@
-from ..xplane_config import getDebug, MAX_LODS
+from ..xplane_config import getDebug
 from ..xplane_helpers import firstMatchInList, logger
+from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 import re
 import bpy
@@ -25,23 +26,18 @@ class XPlaneCommands():
         self.reseters = {
             'ATTR_light_level':'ATTR_light_level_reset',
             'ATTR_cockpit':'ATTR_no_cockpit',
-#            'ATTR_cockpit_region':'ATTR_no_cockpit',
+            # 'ATTR_cockpit_region':'ATTR_no_cockpit',
             'ATTR_manip_(.*)':'ATTR_manip_none',
             'ATTR_draw_disable':'ATTR_draw_enable',
             'ATTR_poly_os':'ATTR_poly_os 0',
-            'ATTR_no_cull':'ATTR_cull',
             'ATTR_hard':'ATTR_no_hard',
             'ATTR_hard_deck':'ATTR_no_hard',
-            'ATTR_no_depth':'ATTR_depth',
             'ATTR_no_blend':'ATTR_blend',
             'ATTR_draped': 'ATTR_no_draped'
         }
         # add default X-Plane states to presve writing them in the obj
         self.written = {
             'ATTR_no_hard': True,
-            'ATTR_shade_smooth': True,
-            'ATTR_depth': True,
-            'ATTR_cull': True,
             'ATTR_blend': True,
             'ATTR_no_hard': True,
             'ATTR_no_cockpit': True,
@@ -75,9 +71,9 @@ class XPlaneCommands():
         if xplaneObject:
             lods = []
 
-            if exportMode == 'layers':
+            if exportMode == EXPORT_MODE_LAYERS:
                 lods = xplaneObject.lod
-            elif exportMode == 'root_objects':
+            elif exportMode == EXPORT_MODE_ROOT_OBJECTS:
                 lods = xplaneObject.blenderObject.layers
 
             isInLod = False
@@ -89,7 +85,7 @@ class XPlaneCommands():
 
             if lod == -1:
                 # only write objects that are in no lod
-                if not isInLod or (exportMode == 'root_objects' and numLods <= 0):
+                if not isInLod or (exportMode == EXPORT_MODE_ROOT_OBJECTS and numLods <= 0):
                     o += self._writeXPlaneObjectPrefix(xplaneObject)
                     xplaneObjectWritten = True
 

@@ -176,8 +176,6 @@ ATTR_LOD 0 1000
 # 0 Object: root_1
 # PRIMITIVE: root_1	weight: 0
 # MATERIAL: Material
-ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-ATTR_emission_rgb	0	0	0
 ATTR_shiny_rat	0.5
 TRIS	0 36
 # 1 Object: root_1_child_1

@@ -1,5 +1,6 @@
 import bpy
 from ..xplane_config import getDebug
+from ..xplane_constants import *
 from .xplane_object import XPlaneObject
 from .xplane_material import XPlaneMaterial
 from .xplane_attribute import XPlaneAttribute
@@ -32,7 +33,7 @@ class XPlanePrimitive(XPlaneObject):
     #   blenderObject - A Blender object
     def __init__(self, blenderObject):
         super(XPlanePrimitive, self).__init__(blenderObject)
-        self.type = 'PRIMITIVE'
+        self.type = XPLANE_OBJECT_TYPE_PRIMITIVE
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
         self.faces = None
@@ -74,7 +75,7 @@ class XPlanePrimitive(XPlaneObject):
             manipType = self.blenderObject.xplane.manip.type
             attr += manipType
 
-            if manipType == 'drag_xy':
+            if manipType == MANIP_DRAG_XY:
                 value = (
                     manip.cursor,
                     manip.dx,
@@ -87,7 +88,7 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref2,
                     manip.tooltip
                 )
-            elif manipType == 'drag_axis':
+            elif manipType == MANIP_DRAG_AXIS:
                 value = (
                     manip.cursor,
                     manip.dx,
@@ -98,7 +99,7 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
-            elif manipType == 'drag_axis_pix':
+            elif manipType == MANIP_DRAG_AXIS_PIX:
                 value = (
                     manip.cursor,
                     manip.dx,
@@ -109,9 +110,9 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
-            elif manipType == 'command':
+            elif manipType == MANIP_COMMAND:
                 value = (manip.cursor, manip.command, manip.tooltip)
-            elif manipType == 'command_axis':
+            elif manipType == MANIP_COMMAND_AXIS:
                 value = (
                     manip.cursor,
                     manip.dx,
@@ -121,7 +122,7 @@ class XPlanePrimitive(XPlaneObject):
                     manip.negative_command,
                     manip.tooltip
                 )
-            elif manipType == 'push':
+            elif manipType == MANIP_PUSH:
                 value = (
                     manip.cursor,
                     manip.v_down,
@@ -129,14 +130,14 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
-            elif manipType == 'radio':
+            elif manipType == MANIP_RADIO:
                 value = (
                     manip.cursor,
                     manip.v_down,
                     manip.dataref1,
                     manip.tooltip
                 )
-            elif manipType == 'toggle':
+            elif manipType == MANIP_TOGGLE:
                 value = (
                     manip.cursor,
                     manip.v_on,
@@ -144,7 +145,7 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
-            elif manipType in ('delta','wrap'):
+            elif manipType in (MANIP_DELTA, MANIP_WRAP):
                 value = (
                     manip.cursor,
                     manip.v_down,

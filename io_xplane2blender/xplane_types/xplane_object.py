@@ -1,6 +1,7 @@
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import *
+from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 
@@ -137,7 +138,7 @@ class XPlaneObject():
         # add anim attributes from datarefs
         for dataref in self.blenderObject.xplane.datarefs:
             # show/hide animation
-            if dataref.anim_type in ("show", "hide"):
+            if dataref.anim_type in (ANIM_TYPE_SHOW, ANIM_TYPE_HIDE):
                 name = 'ANIM_' + dataref.anim_type
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
@@ -192,7 +193,7 @@ class XPlaneObject():
             o += commands.writeAttribute(self.attributes[attr], self)
 
         # if the file is a cockpit file write all cockpit attributes
-        if xplaneFile.options.export_type == 'cockpit':
+        if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
             for attr in self.cockpitAttributes:
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self)
 

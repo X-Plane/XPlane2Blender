@@ -1,3 +1,4 @@
+from ..xplane_constants import *
 from .xplane_object import XPlaneObject
 
 # Class: XPlaneLine
@@ -10,6 +11,6 @@ class XPlaneLine(XPlaneObject):
     def __init_(self,object):
         super(object)
         self.indices = [0,0]
-        self.type = 'LINE'
+        self.type = XPLANE_OBJECT_TYPE_LINE
 
         self.getWeight(9000)

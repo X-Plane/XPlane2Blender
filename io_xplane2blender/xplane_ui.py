@@ -480,14 +480,6 @@ def material_layout(self, obj):
         row = layout.row()
         row.prop(obj.xplane, "draped")
 
-        # TODO: deprecate in v3.4
-        row = layout.row()
-        row.prop(obj.xplane, "overrideSpecularity", text = "Override specularity (deprecated)")
-
-        if obj.xplane.overrideSpecularity:
-            row = layout.row()
-            row.prop(obj.xplane, "shinyRatio", text = "Shiny ratio (deprecated)")
-
         row = layout.row()
 
         # v1000 blend / v9000 blend

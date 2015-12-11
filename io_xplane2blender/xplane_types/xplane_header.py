@@ -3,6 +3,7 @@ import os
 import platform
 from collections import OrderedDict
 from ..xplane_helpers import floatToStr, logger
+from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 
@@ -64,16 +65,16 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("ATTR_LOD_draped", None))
 
     def init(self):
-        isInstance = self.xplaneFile.options.export_type == "instanced_scenery"
-        isCockpit = self.xplaneFile.options.export_type == "cockpit"
-        canHaveDraped = self.xplaneFile.options.export_type not in ["aircraft", "cockpit"]
+        isInstance = self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY
+        isCockpit = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
+        canHaveDraped = self.xplaneFile.options.export_type not in [EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT]
 
         # layer groups
-        if self.xplaneFile.options.layer_group != "none":
+        if self.xplaneFile.options.layer_group != LAYER_GROUP_NONE:
             self.attributes['ATTR_layer_group'].setValue((self.xplaneFile.options.layer_group, self.xplaneFile.options.layer_group_offset))
 
         # draped layer groups
-        if canHaveDraped and self.xplaneFile.options.layer_group_draped != "none":
+        if canHaveDraped and self.xplaneFile.options.layer_group_draped != LAYER_GROUP_NONE:
             self.attributes['ATTR_layer_group_draped'].setValue((self.xplaneFile.options.layer_group_draped, self.xplaneFile.options.layer_group_draped_offset))
 
         # set slung load
@@ -110,9 +111,22 @@ class XPlaneHeader():
             if self.xplaneFile.options.texture_draped_normal != '':
                 self.attributes['TEXTURE_DRAPED_NORMAL'].setValue(self.getTexturePath(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
 
-            # bump level
-            if self.xplaneFile.options.bump_level != 1.0:
-                self.attributes['BUMP_LEVEL'].setValue(self.xplaneFile.options.bump_level)
+            if self.xplaneFile.referenceMaterials[1]:
+                mat = self.xplaneFile.referenceMaterials[1]
+
+                # draped bump level
+                if mat.bump_level != 1.0:
+                    self.attributes['BUMP_LEVEL'].setValue(mat.bump_level)
+
+                # draped no blend
+                self.attributes['NO_BLEND'] = mat.attributes['ATTR_no_blend']
+                # prevent of writing again in material
+                mat.attributes['ATTR_no_blend'].setValue(None)
+
+                # draped specular
+                self.attributes['SPECULAR'] = mat.attributes['ATTR_shiny_rat']
+                # prevent of writing again in material
+                mat.attributes['ATTR_shiny_rat'].setValue(None)
 
             # draped LOD
             if self.xplaneFile.options.lod_draped != 0.0:
@@ -145,21 +159,28 @@ class XPlaneHeader():
 
         # v1000
         if xplane_version >= 1000:
-            # blend
-            # TODO: this should be autodetected using reference materials
-            # TODO: when detected set ATTR_no_blend/ATTR_blend to written
-            # to prevent rewriting it in commands table
-            if self.xplaneFile.options.blend == "off":
-                self.attributes['GLOBAL_no_blend'].setValue(self.xplaneFile.options.blendRatio)
-            elif self.xplaneFile.options.blend == 'shadow':
-                self.attributes['GLOBAL_shadow_blend'].setValue(True)
+            if self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY and\
+               self.xplaneFile.referenceMaterials[0]:
+                mat = self.xplaneFile.referenceMaterials[0]
 
-            # specular
-            # TODO: this should be autodetected using reference materials
-            # TODO: when detected set ATTR_shiny_rat to written
-            # to prevent rewriting it in commands table
-            if self.xplaneFile.options.overrideSpecularity == True:
-                self.attributes['GLOBAL_specular'].setValue(self.xplaneFile.options.specular)
+                # no blend
+                attr = mat.attributes['ATTR_no_blend']
+                self.attributes['GLOBAL_no_blend'] = attr
+                self.xplaneFile.commands.written['ATTR_no_blend'] = attr.getValue()
+
+                # shadow blend
+                attr = mat.attributes['ATTR_shadow_blend']
+                self.attributes['GLOBAL_shadow_blend'] = attr
+                self.xplaneFile.commands.written['ATTR_shadow_blend'] = attr.getValue()
+
+                # specular
+                attr = mat.attributes['ATTR_shiny_rat']
+                self.attributes['GLOBAL_specular'] = attr
+                self.xplaneFile.commands.written['ATTR_shiny_rat'] = attr.getValue()
+
+                # tint
+                if mat.options.tint:
+                    self.attributes['GLOBAL_tint'].setValue((mat.options.tint_albedo, mat.options.tint_emissive))
 
             if not isCockpit:
                 # tilted
@@ -176,9 +197,9 @@ class XPlaneHeader():
                     ))
 
                 # require surface
-                if self.xplaneFile.options.require_surface == 'wet':
+                if self.xplaneFile.options.require_surface == REQUIRE_SURFACE_WET:
                     self.attributes['REQUIRE_WET'].setValue(True)
-                elif self.xplaneFile.options.require_surface == 'dry':
+                elif self.xplaneFile.options.require_surface == REQUIRE_SURFACE_DRY:
                     self.attributes['REQUIRE_DRY'].setValue(True)
 
         # v1010
@@ -204,7 +225,7 @@ class XPlaneHeader():
         xplaneObjects = self.xplaneFile.getObjectsList()
 
         for xplaneObject in xplaneObjects:
-            if xplaneObject.type == 'PRIMITIVE':
+            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE:
                 mat = xplaneObject.material
 
                 if mat.uv_name == None:
@@ -228,7 +249,7 @@ class XPlaneHeader():
 
         # now go through all textures again and list any objects with different textures
         for xplaneObject in xplaneObjects:
-            if xplaneObject.type == 'PRIMITIVE':
+            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE:
                 mat = xplaneObject.material
 
                 if mat.options.draped:

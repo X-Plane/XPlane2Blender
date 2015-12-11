@@ -1,5 +1,6 @@
 from .xplane_object import XPlaneObject
 from ..xplane_helpers import floatToStr
+from ..xplane_constants import *
 
 # Class: XPlaneLight
 # A Light
@@ -40,7 +41,7 @@ class XPlaneLight(XPlaneObject):
         self.indices = [0,0]
         self.color = [blenderObject.data.color[0], blenderObject.data.color[1], blenderObject.data.color[2]]
         self.energy = blenderObject.data.energy
-        self.type = 'LIGHT'
+        self.type = XPLANE_OBJECT_TYPE_LIGHT
         self.lightType = blenderObject.data.xplane.type
         self.size = blenderObject.data.xplane.size
         self.lightName = blenderObject.data.xplane.name
@@ -49,17 +50,17 @@ class XPlaneLight(XPlaneObject):
         self.dataref = blenderObject.data.xplane.dataref
 
         # change color according to type
-        if self.lightType == 'flashing':
+        if self.lightType == LIGHT_FLASHING:
             self.color[0] = -self.color[0]
-        elif self.lightType == 'pulsing':
+        elif self.lightType == LIGHT_PULSING:
             self.color[0] = 9.9
             self.color[1] = 9.9
             self.color[2] = 9.9
-        elif self.lightType == 'strobe':
+        elif self.lightType == LIGHT_STROBE:
             self.color[0] = 9.8
             self.color[1] = 9.8
             self.color[2] = 9.8
-        elif self.lightType == 'traffic':
+        elif self.lightType == LIGHT_TRAFFIC:
             self.color[0] = 9.7
             self.color[1] = 9.7
             self.color[2] = 9.7
@@ -77,20 +78,20 @@ class XPlaneLight(XPlaneObject):
             translation = bakeMatrix.to_translation()
 			# TODO: the bake matrix may have a rotation component.
 			# in this case we need to emit static rotations to get the light
-			# pointing in the right direction.  
+			# pointing in the right direction.
 			#
 			# Ideally we'd know whether the light has some kind of symetry (E.g.
 			# axial around a given axis for Z or omni) and throw out unnecessary
 			# transforms, since they are toxic to instancing.
-			
-            if self.lightType == "named":
+
+            if self.lightType == LIGHT_NAMED:
                 o += "%sLIGHT_NAMED\t%s\t%s\t%s\t%s\n" % (
                     indent, self.lightName,
                     floatToStr(translation[0]),
                     floatToStr(translation[2]),
                     floatToStr(-translation[1])
                 )
-            elif self.lightType == "param":
+            elif self.lightType == LIGHT_PARAM:
                 o += "%sLIGHT_PARAM\t%s\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (
                     indent, self.lightName,
                     floatToStr(translation[0]),
@@ -98,7 +99,7 @@ class XPlaneLight(XPlaneObject):
                     floatToStr(-translation[1]),
                     self.params
                 )
-            elif self.lightType == "custom":
+            elif self.lightType == LIGHT_CUSTOM:
                 o += "%sLIGHT_CUSTOM\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
                     indent,
                     floatToStr(translation[0]),
