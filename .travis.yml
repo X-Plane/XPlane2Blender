@@ -9,7 +9,7 @@ addons:
 sudo: false
 install:
   - BLENDER_VERSION="2.76b"
-  - BLENDER_ARCHIVE="blender-${BLENDER_VERSION}a-linux-glibc211-x86_64"
+  - BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-linux-glibc211-x86_64"
   - mkdir tmp && cd tmp
   - wget http://mirror.cs.umn.edu/blender.org/release/Blender${BLENDER_VERSION}/${BLENDER_ARCHIVE}.tar.bz2
   - tar jxf ${BLENDER_ARCHIVE}.tar.bz2
