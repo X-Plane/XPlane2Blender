@@ -112,7 +112,7 @@ class XPlanePrimitive(XPlaneObject):
                 )
             elif manipType == MANIP_COMMAND:
                 value = (manip.cursor, manip.command, manip.tooltip)
-            elif manipType == MANIP_COMMAND_AXIS:
+            elif manipType in (MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
                 value = (
                     manip.cursor,
                     manip.dx,
@@ -155,11 +155,26 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
+            elif manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
+                value = (
+                    manip.cursor,
+                    manip.v1,
+                    manip.v2,
+                    manip.click_step,
+                    manip.hold_step,
+                    manip.dataref1,
+                    manip.tooltip
+                )
+
         else:
             attr = None
 
         if attr is not None:
             self.cockpitAttributes.add(XPlaneAttribute(attr, value))
+
+            # add mouse wheel delta
+            if manipType in MOUSE_WHEEL_MANIPULATORS and bpy.context.scene.xplane.version >= VERSION_1050:
+                self.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', manip.wheel_delta))
 
     def write(self):
         indent = self.xplaneBone.getIndent()

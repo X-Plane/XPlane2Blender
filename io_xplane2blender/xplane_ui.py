@@ -4,6 +4,7 @@
 import bpy
 from .xplane_ops import *
 from .xplane_config import *
+from .xplane_constants import *
 from .xplane_helpers import getColorAndLitTextureSlots
 
 # Class: LAMP_PT_xplane
@@ -685,54 +686,63 @@ def manipulator_layout(self, obj):
         box.prop(obj.xplane.manip, 'cursor', text = "Cursor")
         box.prop(obj.xplane.manip, 'tooltip', text = "Tooltip")
 
-        if type != 'drag_xy':
-            box.prop(obj.xplane.manip, 'dataref1', text = "Dataref")
-            box.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
-        else:
-            box.prop(obj.xplane.manip, 'dataref1', text = "Dataref 1")
-            box.prop(obj.xplane.manip, 'dataref2', text = "Dataref 2")
-            box.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
+        if type not in (MANIP_COMMAND, MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
+            if type != MANIP_DRAG_XY:
+                box.prop(obj.xplane.manip, 'dataref1', text = "Dataref")
+                box.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
+            else:
+                box.prop(obj.xplane.manip, 'dataref1', text = "Dataref 1")
+                box.prop(obj.xplane.manip, 'dataref2', text = "Dataref 2")
+                box.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
 
         # drag axis lenghts
-        if type in ('drag_xy', 'drag_axis', 'command_axis'):
+        if type in (MANIP_DRAG_XY, MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
             box.prop(obj.xplane.manip, 'dx', text = "dx")
             box.prop(obj.xplane.manip, 'dy', text = "dy")
 
-            if type in('drag_axis', 'command_axis'):
+            if type in(MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
                 box.prop(obj.xplane.manip, 'dz', text = "dz")
 
-        elif type == 'drag_axis_pix':
+        elif type == MANIP_DRAG_AXIS_PIX:
              box.prop(obj.xplane.manip, 'dx', text = "dx")
              box.prop(obj.xplane.manip, 'step', text = "Step")
              box.prop(obj.xplane.manip, 'exp', text = "Exp")
 
         # values
-        if type == 'drag_xy':
+        if type == MANIP_DRAG_XY:
             box.prop(obj.xplane.manip, 'v1_min', text = "v1 min")
             box.prop(obj.xplane.manip, 'v1_max', text = "v1 max")
             box.prop(obj.xplane.manip, 'v2_min', text = "v2 min")
             box.prop(obj.xplane.manip, 'v2_max', text = "v2 max")
-        elif type == 'drag_axis' or type == 'drag_axis_pix':
+        elif type in (MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
             box.prop(obj.xplane.manip, 'v1', text = "v1")
             box.prop(obj.xplane.manip, 'v2', text = "v2")
-        elif type == 'command':
-            box.prop(obj.xplane.manip, 'command', text = "Command")
-        elif type == 'command_axis':
+        elif type == MANIP_COMMAND:
+            box.prop(obj.xplane.manip, MANIP_COMMAND, text = "Command")
+        elif type in (MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
             box.prop(obj.xplane.manip, 'positive_command', text = "Pos. command")
             box.prop(obj.xplane.manip, 'negative_command', text = "Neg. command")
-        elif type == 'push':
+        elif type == MANIP_PUSH:
             box.prop(obj.xplane.manip, 'v_down', text = "v down")
             box.prop(obj.xplane.manip, 'v_up', text = "v up")
-        elif type == 'radio':
+        elif type == MANIP_RADIO:
             box.prop(obj.xplane.manip, 'v_down', text = "v down")
-        elif type == 'toggle':
+        elif type == MANIP_TOGGLE:
             box.prop(obj.xplane.manip, 'v_on', text = "v On")
             box.prop(obj.xplane.manip, 'v_off', text = "v Off")
-        elif type in ('delta', 'wrap'):
+        elif type in (MANIP_DELTA, MANIP_WRAP):
             box.prop(obj.xplane.manip, 'v_down', text = "v down")
             box.prop(obj.xplane.manip, 'v_hold', text = "v hold")
             box.prop(obj.xplane.manip, 'v1_min', text = "v min")
             box.prop(obj.xplane.manip, 'v1_max', text = "v max")
+
+        if type in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
+            box.prop(obj.xplane.manip, 'click_step')
+            box.prop(obj.xplane.manip, 'hold_step')
+
+        # v1050: mouse wheel support
+        if type in MOUSE_WHEEL_MANIPULATORS:
+            box.prop(obj.xplane.manip, 'wheel_delta')
 
 # Function: conditions_layout
 # Draws the UI layout for conditions.

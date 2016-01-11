@@ -188,7 +188,12 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
             (MANIP_WRAP, MANIP_WRAP, MANIP_WRAP),
             (MANIP_TOGGLE, MANIP_TOGGLE, MANIP_TOGGLE),
             (MANIP_NOOP, MANIP_NOOP, MANIP_NOOP),
-            (MANIP_DRAG_AXIS_PIX, MANIP_DRAG_AXIS_PIX + " (v10.10 or higher only)", MANIP_DRAG_AXIS_PIX + " (v10.10 or higher only)")
+            (MANIP_DRAG_AXIS_PIX, MANIP_DRAG_AXIS_PIX + " (v10.10)", MANIP_DRAG_AXIS_PIX + " (v10.10)"),
+			(MANIP_COMMAND_KNOB, MANIP_COMMAND_KNOB + " (v10.50)", MANIP_COMMAND_KNOB + " (v10.50)"),
+			(MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_UP_DOWN + " (v10.50)", MANIP_COMMAND_SWITCH_UP_DOWN + " (v10.50)"),
+			(MANIP_COMMAND_SWITCH_LEFT_RIGHT, MANIP_COMMAND_SWITCH_LEFT_RIGHT + " (v10.50)", MANIP_COMMAND_SWITCH_LEFT_RIGHT + "(v10.50)"),
+			(MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_UP_DOWN + " (v10.50)", MANIP_AXIS_SWITCH_UP_DOWN + " (v10.50)"),
+			(MANIP_AXIS_SWITCH_LEFT_RIGHT, MANIP_AXIS_SWITCH_LEFT_RIGHT + " (v10.50)", MANIP_AXIS_SWITCH_LEFT_RIGHT + " (v10.50)")
         ]
     )
 
@@ -361,10 +366,31 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
 
     step = bpy.props.FloatProperty(
         attr = "step",
-       name = "Step",
-       description = "Dataref increment",
-       default = 1.0
-   )
+        name = "Step",
+        description = "Dataref increment",
+        default = 1.0
+    )
+
+    click_step = bpy.props.FloatProperty(
+        attr = "click_step",
+        name = "click step",
+        description = "Value change on click",
+        default = 0.0
+    )
+
+    hold_step = bpy.props.FloatProperty(
+        attr = "hold_step",
+        name = "hold step",
+        description = "Value change on hold",
+        default = 0.0
+    )
+
+    wheel_delta = bpy.props.FloatProperty(
+        attr = "wheel_delta",
+        name = "wheel delta",
+        description = "Value change on mouse wheel tick (v10.5x)",
+        default = 0.0
+    )
 
     exp = bpy.props.FloatProperty(
         attr = "exp",
@@ -821,11 +847,13 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
-        default = "1010",
+        default = VERSION_1050,
         items = [
             (VERSION_900, "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
-            (VERSION_1010, "10.1x", "10.1x")
+            (VERSION_1010, "10.1x", "10.1x"),
+            (VERSION_1040, "10.4x", "10.4x"),
+            (VERSION_1050, "10.5x", "10.5x")
         ]
     )
 
