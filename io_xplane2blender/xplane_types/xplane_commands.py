@@ -35,6 +35,12 @@ class XPlaneCommands():
             'ATTR_no_blend':'ATTR_blend',
             'ATTR_draped': 'ATTR_no_draped'
         }
+
+        # these attributes/commands are not persistant and must always be rewritten
+        self.inpersistant = {
+            'ATTR_manip_wheel'
+        }
+
         # add default X-Plane states to presve writing them in the obj
         self.written = {
             'ATTR_no_hard': True,
@@ -208,7 +214,7 @@ class XPlaneCommands():
     # Returns:
     #   bool - True if the attribute must be written, else false.
     def canWriteAttribute(self, attr, value):
-        if attr not in self.written:
+        if attr not in self.written or attr in self.inpersistant:
             return True
         elif self.written[attr] == value:
             return False

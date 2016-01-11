@@ -18,7 +18,8 @@ class TestMaterials(XPlaneTestCase):
                 1, 2, 3, 4, 5, 6,
                 'dataref1', 'dataref2',
                 'this should be the tooltip'
-            )
+            ),
+            'ATTR_manip_wheel': (1)
         })
 
         drag_axis = xplaneFile.objects['drag_axis']
@@ -57,7 +58,8 @@ class TestMaterials(XPlaneTestCase):
                 1, 2,
                 'dataref',
                 'this should be the tooltip'
-            )
+            ),
+            'ATTR_manip_wheel': (1)
         })
 
         radio = xplaneFile.objects['radio']
@@ -67,7 +69,8 @@ class TestMaterials(XPlaneTestCase):
                 1,
                 'dataref',
                 'this should be the tooltip'
-            )
+            ),
+            'ATTR_manip_wheel': (1)
         })
 
         delta = xplaneFile.objects['delta']
@@ -77,7 +80,8 @@ class TestMaterials(XPlaneTestCase):
                 1, 2, 3, 4,
                 'dataref',
                 'this should be the tooltip'
-            )
+            ),
+            'ATTR_manip_wheel': (1)
         })
 
         wrap = xplaneFile.objects['wrap']
@@ -87,7 +91,8 @@ class TestMaterials(XPlaneTestCase):
                 1, 2, 3, 4,
                 'dataref',
                 'this should be the tooltip'
-            )
+            ),
+            'ATTR_manip_wheel': (1)
         })
 
         toggle = xplaneFile.objects['toggle']
@@ -97,7 +102,8 @@ class TestMaterials(XPlaneTestCase):
                 1, 2,
                 'dataref',
                 'this should be the tooltip'
-            )
+            ),
+            'ATTR_manip_wheel': (1)
         })
 
         noop = xplaneFile.objects['noop']
@@ -110,6 +116,54 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_manip_drag_axis_pix': (
                 'rotate_large_left',
                 1, 2, 3, 4, 5,
+                'dataref',
+                'this should be the tooltip'
+            ),
+            'ATTR_manip_wheel': (1)
+        })
+
+        command_knob = xplaneFile.objects['command_knob']
+        self.assertAttributesEqualDict(command_knob.cockpitAttributes, {
+            'ATTR_manip_command_knob': (
+                'rotate_large_left',
+                'pos_command', 'neg_command',
+                'this should be the tooltip'
+            )
+        })
+
+        command_switch_up_down = xplaneFile.objects['command_switch_up_down']
+        self.assertAttributesEqualDict(command_switch_up_down.cockpitAttributes, {
+            'ATTR_manip_command_switch_up_down': (
+                'rotate_large_left',
+                'pos_command', 'neg_command',
+                'this should be the tooltip'
+            )
+        })
+
+        command_switch_left_right = xplaneFile.objects['command_switch_left_right']
+        self.assertAttributesEqualDict(command_switch_left_right.cockpitAttributes, {
+            'ATTR_manip_command_switch_left_right': (
+                'rotate_large_left',
+                'pos_command', 'neg_command',
+                'this should be the tooltip'
+            )
+        })
+
+        axis_switch_up_down = xplaneFile.objects['axis_switch_up_down']
+        self.assertAttributesEqualDict(axis_switch_up_down.cockpitAttributes, {
+            'ATTR_manip_axis_switch_up_down': (
+                'rotate_large_left',
+                4, 5, 1, 0.5,
+                'dataref',
+                'this should be the tooltip'
+            )
+        })
+
+        axis_switch_left_right = xplaneFile.objects['axis_switch_left_right']
+        self.assertAttributesEqualDict(axis_switch_left_right.cockpitAttributes, {
+            'ATTR_manip_axis_switch_left_right': (
+                'rotate_large_left',
+                4, 5, 1, 0.5,
                 'dataref',
                 'this should be the tooltip'
             )
