@@ -6,6 +6,7 @@ from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
+from ..xplane_image_composer import getImageByFilepath, specularToGrayscale, normalWithoutAlpha, combineSpecularAndNormal
 
 # Class: XPlaneHeader
 # Create an OBJ header.
@@ -216,12 +217,48 @@ class XPlaneHeader():
         for attr in self.xplaneFile.options.customAttributes:
             self.attributes.add(XPlaneAttribute(attr.name, attr.value))
 
+    def _getCompositeNormalTexture(self, textureNormal, textureSpecular):
+        normalImage = None
+        specularImage = None
+        texture = None
+
+        if textureNormal:
+            normalImage = getImageByFilepath(textureNormal)
+
+        if textureSpecular:
+            specularImage = getImageByFilepath(textureSpecular)
+
+        # only normals, no specular
+        if normalImage and not specularImage:
+            filename, extension = os.path.splitext(textureNormal)
+            image = normalWithoutAlpha(normalImage, normalImage.name + '_nm')
+            image.filepath = texture = filename + '_nm' + extension
+
+        # normal + specular
+        elif normalImage and specularImage:
+            filename, extension = os.path.splitext(textureNormal)
+            image = combineSpecularAndNormal(specularImage, normalImage, normalImage.name + '_nm_spec')
+            image.filepath = texture = filename + '_nm_spec' + extension
+
+        # specular only
+        elif not normalImage and specularImage:
+            filename, extension = os.path.splitext(specularNormal)
+            image = specularToGrayscale(specularImage, specularImage.name + '_spec')
+            image.filepath = texture = filename + '_spec' + extension
+
+        if image:
+            image.save()
+
+        return texture
+
     def _autodetectTextures(self):
         texture = None
         textureLit = None
         textureNormal = None
+        textureSpecular = None
         textureDraped = None
         textureDrapedNormal = None
+        textureDrapedSpecular = None
         xplaneObjects = self.xplaneFile.getObjectsList()
 
         for xplaneObject in xplaneObjects:
@@ -237,6 +274,9 @@ class XPlaneHeader():
 
                     if textureDrapedNormal == None and mat.textureNormal:
                         textureDrapedNormal = mat.textureNormal
+
+                    if textureDrapedSpecular == None and mat.textureSpecular:
+                        textureDrapedSpecular = mat.textureSpecular
                 else:
                     if texture == None and mat.texture:
                         texture = mat.texture
@@ -246,6 +286,9 @@ class XPlaneHeader():
 
                     if textureNormal == None and mat.textureNormal:
                         textureNormal = mat.textureNormal
+
+                    if textureSpecular == None and mat.textureSpecular:
+                        textureSpecular = mat.textureSpecular
 
         # now go through all textures again and list any objects with different textures
         for xplaneObject in xplaneObjects:
@@ -267,6 +310,12 @@ class XPlaneHeader():
 
                     if textureNormal and textureNormal != mat.textureNormal:
                         logger.warn('Object "%s" has a different or missing normal/specular texture.' % xplaneObject.name)
+
+        # generate composite normal texture if needed
+        if mat.options.draped:
+            textureDrapedNormal = self._getCompositeNormalTexture(textureDrapedNormal, textureDrapedSpecular)
+        else:
+            textureNormal = self._getCompositeNormalTexture(textureNormal, textureSpecular)
 
         self.xplaneFile.options.texture = texture or ''
         self.xplaneFile.options.texture_normal = textureNormal or ''

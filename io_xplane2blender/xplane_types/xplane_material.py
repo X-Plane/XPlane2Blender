@@ -41,6 +41,7 @@ class XPlaneMaterial():
         self.texture = None
         self.textureLit = None
         self.textureNormal = None
+        self.textureSpecular = None
         self.uv_name = None
         self.name = None
 
@@ -165,6 +166,8 @@ class XPlaneMaterial():
                     self.textureLit = slot.texture.image.filepath
                 elif slot.use_map_normal and self.textureNormal == None:
                     self.textureNormal = slot.texture.image.filepath
+                elif slot.use_map_specular and self.textureSpecular == None:
+                    self.textureSpecular = slot.texture.image.filepath
 
     def collectCustomAttributes(self, mat):
         xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
