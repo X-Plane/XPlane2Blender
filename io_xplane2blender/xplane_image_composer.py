@@ -32,15 +32,8 @@ def setPixel(image, x, y, pixel):
 def getGeneratedImage(targetName, width, height, channels):
     image = None
     alpha = channels == 2 or channels == 4
-    # if channels == 1:
-    #     color = (0.0)
-    # if channels == 2:
-    #     color = (0.0, 1.0)
-    # if channels == 3:
-    #     color = (0.0, 0.0, 0.0)
-    # if channels == 4:
     color = (0.0, 0.0, 0.0, 1.0)
-    
+
     print(targetName, alpha)
     if bpy.data.images.find(targetName) != -1:
         image = bpy.data.images[targetName]
