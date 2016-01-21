@@ -18,7 +18,7 @@ def getPixel(image, x, y):
     channels = image.channels
     i = (image.size[1] * y * channels) + (x * channels)
     pixel = []
-    for ii in range(0, channels - 1):
+    for ii in range(0, channels):
         pixel.append(image.pixels[i + ii])
 
     return pixel
@@ -26,7 +26,7 @@ def getPixel(image, x, y):
 def setPixel(image, x, y, pixel):
     channels = image.channels
     i = (image.size[1] * y * channels) + (x * channels)
-    for ii in range(0, channels - 1):
+    for ii in range(0, len(pixel)):
         image.pixels[i + ii] = pixel[ii]
 
 def getGeneratedImage(targetName, width, height, channels):
@@ -40,7 +40,8 @@ def getGeneratedImage(targetName, width, height, channels):
     #     color = (0.0, 0.0, 0.0)
     # if channels == 4:
     color = (0.0, 0.0, 0.0, 1.0)
-
+    
+    print(targetName, alpha)
     if bpy.data.images.find(targetName) != -1:
         image = bpy.data.images[targetName]
         if image.size[0] != width or image.size[1] != height:
@@ -72,7 +73,7 @@ def normalWithoutAlpha(normalImage, targetName):
     height = normalImage.size[1]
 
     image = getGeneratedImage(targetName, width, height, 3)
-    print(normalImage.channels, normalImage.size[0], normalImage.size[1], len(normalImage.pixels))
+
     for y in range(0, height):
         for x in range(0, width):
             normalPixel = getPixel(normalImage, x, y)

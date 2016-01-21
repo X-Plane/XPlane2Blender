@@ -1,0 +1,35 @@
+I
+800
+OBJ
+
+POINT_COUNTS	6	0	1	6
+TEXTURE	tex/color.png
+TEXTURE_NORMAL	tex/normal_with_alpha_nm.png
+
+VT	1	0	-1	0	1	0	0.99990004	0.99990004	# 0
+VT	1	0	1	0	1	0	0.99990004	0.00009998	# 1
+VT	-1	0	1	0	1	0	0.00010004	0.00009998	# 2
+VT	-1	0	1	0	1	0	0.00010004	0.00009998	# 3
+VT	-1	0	-1	0	1	0	0.00009998	0.99990004	# 4
+VT	1	0	-1	0	1	0	0.99990004	0.99990004	# 5
+
+IDX	0
+IDX	1
+IDX	2
+IDX	3
+IDX	4
+IDX	5
+
+VLIGHT	0	1.0765121	0	1	1	1
+
+# 0 ROOT
+# 1 Object: Plane.001
+# PRIMITIVE: Plane.001	weight: 1
+# MATERIAL: Material_2
+ATTR_shiny_rat	1
+TRIS	0 6
+# 1 Object: Point
+# LIGHT: Point	weight: 10000
+LIGHTS	0 1
+
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

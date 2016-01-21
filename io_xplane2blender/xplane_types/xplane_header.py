@@ -222,6 +222,8 @@ class XPlaneHeader():
         specularImage = None
         texture = None
         image = None
+        filepath = None
+        blenddir = os.path.dirname(bpy.context.blend_data.filepath)
 
         if textureNormal:
             normalImage = getImageByFilepath(textureNormal)
@@ -230,25 +232,32 @@ class XPlaneHeader():
             specularImage = getImageByFilepath(textureSpecular)
 
         # only normals, no specular
-        if normalImage and not specularImage:
+        # TODO: blender converts PNGs to RGBA even if PNG contains no alpha channel
+        if normalImage and normalImage.channels == 4 and not specularImage:
             filename, extension = os.path.splitext(textureNormal)
             image = normalWithoutAlpha(normalImage, normalImage.name + '_nm')
-            image.filepath = texture = filename + '_nm' + extension
+            filepath = texture = filename + '_nm' + extension
 
         # normal + specular
         elif normalImage and specularImage:
             filename, extension = os.path.splitext(textureNormal)
             image = combineSpecularAndNormal(specularImage, normalImage, normalImage.name + '_nm_spec')
-            image.filepath = texture = filename + '_nm_spec' + extension
+            filepath = texture = filename + '_nm_spec' + extension
 
         # specular only
         elif not normalImage and specularImage:
             filename, extension = os.path.splitext(specularNormal)
             image = specularToGrayscale(specularImage, specularImage.name + '_spec')
-            image.filepath = texture = filename + '_spec' + extension
+            filepath = texture = filename + '_spec' + extension
 
         if image:
-            image.save()
+            savepath = filepath
+            # remove trailing double slash
+            if savepath[0:2] == '//':
+                savepath = savepath[2:]
+            savepath = os.path.join(blenddir, savepath)
+            image.save_render(savepath)
+            image.filepath = filepath
 
         return texture
 
