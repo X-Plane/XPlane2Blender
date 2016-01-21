@@ -116,7 +116,7 @@ class XPlaneHeader():
                 mat = self.xplaneFile.referenceMaterials[1]
 
                 # draped bump level
-                if mat.bump_level != 1.0:
+                if mat.options.bump_level != 1.0:
                     self.attributes['BUMP_LEVEL'].setValue(mat.bump_level)
 
                 # draped no blend

@@ -72,7 +72,9 @@ def validate(mat, exportType):
         errors.append('Is invalid.')
         return errors
 
-    if exportType == EXPORT_TYPE_SCENERY:
+    if (exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY) and mat.options.draped:
+        return validateDraped(mat)
+    elif exportType == EXPORT_TYPE_SCENERY:
         return validateScenery(mat)
     elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
         return validateInstanced(mat)
@@ -82,8 +84,6 @@ def validate(mat, exportType):
         return validateCockpit(mat)
     elif exportType == EXPORT_TYPE_AIRCRAFT:
         return validateAircraft(mat)
-    elif (exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY) and mat.options.draped:
-        return validateDraped(mat)
 
     return errors
 
