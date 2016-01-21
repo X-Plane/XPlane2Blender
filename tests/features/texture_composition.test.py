@@ -54,4 +54,25 @@ class TestTextureComposition(XPlaneTestCase):
         os.rename(normalSpecTexPath, tmpNormalSpecTextPath)
         self.assertEqual(self.checksum(tmpNormalSpecTextPath), self.checksum(fixtureNormalSpecTextPath), 'Image files are not equal.')
 
+    def test_texture_composition_spec_export(self):
+        def filterLines(line):
+            return isinstance(line[0], str) and \
+                   line[0].find('TEXTURE') == 0
+
+        filename = 'test_texture_composition_spec'
+
+        self.assertLayerExportEqualsFixture(
+            2, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
+
+        # move generated image files into temp dir and compare them with fixtures
+        normalSpecTexPath = os.path.join(__dirname__, 'tex/specular_spec.png')
+        tmpNormalSpecTextPath = os.path.join(__dirname__, '../tmp/specular_spec.png')
+        fixtureNormalSpecTextPath = os.path.join(__dirname__, 'fixtures/tex/specular_spec.png')
+        self.assertTrue(os.path.exists(normalSpecTexPath), 'Normal texture was not generated.')
+        os.rename(normalSpecTexPath, tmpNormalSpecTextPath)
+        self.assertEqual(self.checksum(tmpNormalSpecTextPath), self.checksum(fixtureNormalSpecTextPath), 'Image files are not equal.')
+
 runTestCases([TestTextureComposition])

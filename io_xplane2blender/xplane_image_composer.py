@@ -34,7 +34,6 @@ def getGeneratedImage(targetName, width, height, channels):
     alpha = channels == 2 or channels == 4
     color = (0.0, 0.0, 0.0, 1.0)
 
-    print(targetName, alpha)
     if bpy.data.images.find(targetName) != -1:
         image = bpy.data.images[targetName]
         if image.size[0] != width or image.size[1] != height:
@@ -44,7 +43,6 @@ def getGeneratedImage(targetName, width, height, channels):
         image = bpy.ops.image.new(name = targetName, width = width, height = height, color = color, alpha = alpha)
         image = bpy.data.images[targetName]
         image.file_format = 'PNG'
-        #image.channels = channels
 
     return image
 
@@ -57,7 +55,7 @@ def specularToGrayscale(specularImage, targetName):
     for y in range(0, height - 1):
         for x in range(0, width - 1):
             specularPixel = getPixel(specularImage, x, y)
-            setPixel(image, x, y, (specularPixel[0]))
+            setPixel(image, x, y, (specularPixel[0], specularPixel[1], specularPixel[2]))
 
     return image
 

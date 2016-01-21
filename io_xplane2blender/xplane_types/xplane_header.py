@@ -224,6 +224,7 @@ class XPlaneHeader():
         image = None
         filepath = None
         blenddir = os.path.dirname(bpy.context.blend_data.filepath)
+        channels = 4
 
         if textureNormal:
             normalImage = getImageByFilepath(textureNormal)
@@ -232,23 +233,25 @@ class XPlaneHeader():
             specularImage = getImageByFilepath(textureSpecular)
 
         # only normals, no specular
-        # TODO: blender converts PNGs to RGBA even if PNG contains no alpha channel
-        if normalImage and normalImage.channels == 4 and not specularImage:
+        if normalImage and not specularImage:
             filename, extension = os.path.splitext(textureNormal)
             image = normalWithoutAlpha(normalImage, normalImage.name + '_nm')
             filepath = texture = filename + '_nm' + extension
+            channels = 3
 
         # normal + specular
         elif normalImage and specularImage:
             filename, extension = os.path.splitext(textureNormal)
             image = combineSpecularAndNormal(specularImage, normalImage, normalImage.name + '_nm_spec')
             filepath = texture = filename + '_nm_spec' + extension
+            channels = 4
 
         # specular only
         elif not normalImage and specularImage:
-            filename, extension = os.path.splitext(specularNormal)
+            filename, extension = os.path.splitext(textureSpecular)
             image = specularToGrayscale(specularImage, specularImage.name + '_spec')
             filepath = texture = filename + '_spec' + extension
+            channels = 1
 
         if image:
             savepath = filepath
@@ -256,8 +259,19 @@ class XPlaneHeader():
             if savepath[0:2] == '//':
                 savepath = savepath[2:]
             savepath = os.path.join(blenddir, savepath)
-            image.save_render(savepath)
+
+            color_mode = bpy.context.scene.render.image_settings.color_mode
+            if channels == 4:
+                bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+            elif channels == 3:
+                bpy.context.scene.render.image_settings.color_mode = 'RGB'
+            elif channels == 1:
+                bpy.context.scene.render.image_settings.color_mode = 'BW'
+            image.save_render(savepath, bpy.context.scene)
             image.filepath = filepath
+
+            # restore color_mode
+            bpy.context.scene.render.image_settings.color_mode = color_mode
 
         return texture
 
