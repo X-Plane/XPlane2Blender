@@ -221,6 +221,7 @@ class XPlaneHeader():
         normalImage = None
         specularImage = None
         texture = None
+        image = None
 
         if textureNormal:
             normalImage = getImageByFilepath(textureNormal)
