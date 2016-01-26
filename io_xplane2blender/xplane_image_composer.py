@@ -14,21 +14,6 @@ def getImageByFilepath(filepath):
 def imageSizesEqual(a, b):
     return a.size[0] == b.size[0] and a.size[1] == b.size[1]
 
-def getPixel(image, x, y):
-    channels = image.channels
-    i = (image.size[1] * y * channels) + (x * channels)
-    pixel = []
-    for ii in range(0, channels):
-        pixel.append(image.pixels[i + ii])
-
-    return pixel
-
-def setPixel(image, x, y, pixel):
-    channels = image.channels
-    i = (image.size[1] * y * channels) + (x * channels)
-    for ii in range(0, len(pixel)):
-        image.pixels[i + ii] = pixel[ii]
-
 def getGeneratedImage(targetName, width, height, channels):
     image = None
     alpha = channels == 2 or channels == 4
@@ -49,26 +34,22 @@ def getGeneratedImage(targetName, width, height, channels):
 def specularToGrayscale(specularImage, targetName):
     width = specularImage.size[0]
     height = specularImage.size[1]
-
     image = getGeneratedImage(targetName, width, height, 1)
 
-    for y in range(0, height - 1):
-        for x in range(0, width - 1):
-            specularPixel = getPixel(specularImage, x, y)
-            setPixel(image, x, y, (specularPixel[0], specularPixel[1], specularPixel[2]))
+    for pi in range(0, len(specularImage.pixels), 4):
+        for i in range(3):
+            image.pixels[pi + i] = specularImage.pixels[pi + i]
 
     return image
 
 def normalWithoutAlpha(normalImage, targetName):
     width = normalImage.size[0]
     height = normalImage.size[1]
-
     image = getGeneratedImage(targetName, width, height, 3)
 
-    for y in range(0, height):
-        for x in range(0, width):
-            normalPixel = getPixel(normalImage, x, y)
-            setPixel(image, x, y, (normalPixel[0], normalPixel[1], normalPixel[2]))
+    for pi in range(0, len(normalImage.pixels), 4):
+        for i in range(3):
+            image.pixels[pi + i] = normalImage.pixels[pi + i]
 
     return image
 
@@ -80,13 +61,12 @@ def combineSpecularAndNormal(specularImage, normalImage, targetName):
 
     width = specularImage.size[0]
     height = specularImage.size[1]
-
     image = getGeneratedImage(targetName, width, height, 4)
 
-    for y in range(0, height):
-        for x in range(0, width):
-            specularPixel = getPixel(specularImage, x, y)
-            normalPixel = getPixel(normalImage, x, y)
-            setPixel(image, x, y, (normalPixel[0], normalPixel[1], normalPixel[2], specularPixel[0]))
+    for pi in range(0, len(normalImage.pixels), 4):
+        for i in range(3):
+            image.pixels[pi + i] = normalImage.pixels[pi + i]
+
+        image.pixels[pi + 3] = specularImage.pixels[pi]
 
     return image
