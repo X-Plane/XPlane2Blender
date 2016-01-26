@@ -2,6 +2,7 @@
 # Defines Helpers
 
 import bpy
+import os
 
 FLOAT_PRECISION = 8
 
@@ -38,6 +39,14 @@ def getColorAndLitTextureSlots(mat):
                 textureLit = slot
 
     return texture, textureLit
+
+def resolveBlenderPath(path):
+    blenddir = os.path.dirname(bpy.context.blend_data.filepath)
+
+    if path[0:2] == '//':
+        return os.path.join(blenddir, path[2:])
+    else:
+        return path
 
 class XPlaneLogger():
     def __init__(self):

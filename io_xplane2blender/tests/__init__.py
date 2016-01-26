@@ -139,18 +139,22 @@ class XPlaneTestCase(unittest.TestCase):
 
         return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
 
-    def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
+    def exportLayer(self, layer, dest = None):
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
 
         out = xplaneFile.write()
 
-        if tmpFilename:
+        if dest:
             tmpDir = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
-            tmpFile = os.path.join(tmpDir, tmpFilename + '.obj')
+            tmpFile = os.path.join(tmpDir, dest + '.obj')
             fh = open(tmpFile, 'w')
             fh.write(out)
             fh.close()
 
+        return out
+
+    def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
+        out = self.exportLayer(layer, tmpFilename)
         self.assertFileEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     # asserts that an attributes object equals a dict
