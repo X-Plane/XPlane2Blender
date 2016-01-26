@@ -167,6 +167,11 @@ def scene_layout(self, scene):
     row.prop(scene.xplane, "exportMode", text = "Export Mode")
 
     row = layout.row()
+    row.prop(scene.xplane, "compositeTextures")
+    row = layout.row()
+    row.label("Will automaticly create and use corrected normal textures. (Recommended)", icon = "INFO")
+
+    row = layout.row()
 
     if scene.xplane.exportMode == 'layers':
         if len(scene.xplane.layers) != 0:

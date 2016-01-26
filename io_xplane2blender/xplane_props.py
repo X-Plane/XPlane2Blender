@@ -867,6 +867,12 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         ]
     )
 
+    compositeTextures = bpy.props.BoolProperty(
+        attr = "compositeTextures",
+        name = "Compile Normal-Textures",
+        default = True
+    )
+
 # Class: XPlaneObjectSettings
 # Settings for Blender objects.
 #

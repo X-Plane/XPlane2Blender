@@ -230,7 +230,7 @@ class XPlaneHeader():
 
                 if os.path.exists(sourcePath):
                     sourceTime = os.path.getmtime(sourcePath)
-                    
+
                     if sourceTime > compositeTime:
                         return True
 
@@ -356,10 +356,11 @@ class XPlaneHeader():
                         logger.warn('Object "%s" has a different or missing normal/specular texture.' % xplaneObject.name)
 
         # generate composite normal texture if needed
-        if mat.options.draped:
-            textureDrapedNormal = self._getCompositeNormalTexture(textureDrapedNormal, textureDrapedSpecular)
-        else:
-            textureNormal = self._getCompositeNormalTexture(textureNormal, textureSpecular)
+        if bpy.context.scene.xplane.compositeTextures:
+            if mat.options.draped:
+                textureDrapedNormal = self._getCompositeNormalTexture(textureDrapedNormal, textureDrapedSpecular)
+            else:
+                textureNormal = self._getCompositeNormalTexture(textureNormal, textureSpecular)
 
         self.xplaneFile.options.texture = texture or ''
         self.xplaneFile.options.texture_normal = textureNormal or ''

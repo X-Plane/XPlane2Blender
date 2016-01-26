@@ -8,6 +8,9 @@ from bpy.app.handlers import persistent
 def update(fromVersion):
     if fromVersion == '<3.3.0':
         for scene in bpy.data.scenes:
+            # set compositeTextures to False
+            scene.xplane.compositeTextures = False
+
             if scene.xplane and scene.xplane.layers and len(scene.xplane.layers) > 0:
                 for layer in scene.xplane.layers:
                     # set autodetectTextures to False
@@ -24,6 +27,12 @@ def update(fromVersion):
 @persistent
 def load_handler(dummy):
     currentVersion = '.'.join(map(str,version))
+    filepath = bpy.context.blend_data.filepath
+
+    # do not update newly created files
+    if not filepath:
+        return
+
     fileVersion = bpy.data.worlds[0].xplane2blender_version
 
     if fileVersion < currentVersion:
