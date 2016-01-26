@@ -8,7 +8,7 @@ from . import bl_info
 debug = False
 
 # Variable: log
-# Set to True, to log debug output in a file. This is still experimental.
+# Set to True, to log debug output in a file.
 log = False
 
 # Variable: version

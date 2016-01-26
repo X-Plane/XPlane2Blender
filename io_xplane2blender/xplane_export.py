@@ -112,6 +112,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         self.logFile = None
 
         logger.clearTransports()
+        logger.clearMessages()
 
         # in debug mode, we log everything
         if debug:

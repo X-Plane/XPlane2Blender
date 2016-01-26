@@ -169,6 +169,13 @@ class XPlaneMaterial():
                 elif slot.use_map_specular and self.textureSpecular == None:
                     self.textureSpecular = slot.texture.image.filepath
 
+        # panel materials have only a color texture
+        if self.options.panel:
+            self.textureLit = None
+            self.textureNormal = None
+            self.textureSpecular = None
+
+
     def collectCustomAttributes(self, mat):
         xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
         commands =  xplaneFile.commands

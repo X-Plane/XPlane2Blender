@@ -62,6 +62,9 @@ class XPlaneLogger():
     def clearTransports(self):
         del self.transports[:]
 
+    def clearMessages(self):
+        del self.messages[:]
+
     def log(self, messageType, message, context = None):
         self.messages.append({
             'type': messageType,
