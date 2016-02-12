@@ -9,6 +9,9 @@ from .animation_file_mappings import mappings
 
 EPSILON = sys.float_info.epsilon
 
+if EPSILON == 0.0:
+    EPSILON = 0.00001
+
 __dirname__ = os.path.dirname(__file__)
 
 class XPlaneTestCase(unittest.TestCase):
