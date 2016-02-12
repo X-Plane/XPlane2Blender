@@ -304,6 +304,7 @@ class XPlaneHeader():
         textureDrapedNormal = None
         textureDrapedSpecular = None
         xplaneObjects = self.xplaneFile.getObjectsList()
+        hasDraped = False
 
         for xplaneObject in xplaneObjects:
             if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE:
@@ -313,6 +314,8 @@ class XPlaneHeader():
                     logger.warn('Object "%s" has no UV-Map.' % xplaneObject.name)
 
                 if mat.options.draped:
+                    hasDraped = True
+
                     if textureDraped == None and mat.texture:
                         textureDraped = mat.texture
 
@@ -357,10 +360,10 @@ class XPlaneHeader():
 
         # generate composite normal texture if needed
         if bpy.context.scene.xplane.compositeTextures:
-            if mat.options.draped:
+            textureNormal = self._getCompositeNormalTexture(textureNormal, textureSpecular)
+
+            if hasDraped:
                 textureDrapedNormal = self._getCompositeNormalTexture(textureDrapedNormal, textureDrapedSpecular)
-            else:
-                textureNormal = self._getCompositeNormalTexture(textureNormal, textureSpecular)
 
         self.xplaneFile.options.texture = texture or ''
         self.xplaneFile.options.texture_normal = textureNormal or ''
