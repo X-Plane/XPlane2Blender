@@ -7,7 +7,7 @@ from ..xplane_config import setDebug, getDebug
 from ..xplane_helpers import logger, XPlaneLogger
 from .animation_file_mappings import mappings
 
-FLOAT_TOLERANCE = 0.00001
+FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
 
