@@ -7,10 +7,7 @@ from ..xplane_config import setDebug, getDebug
 from ..xplane_helpers import logger, XPlaneLogger
 from .animation_file_mappings import mappings
 
-EPSILON = sys.float_info.epsilon
-
-if EPSILON == 0.0:
-    EPSILON = 0.00001
+FLOAT_TOLERANCE = 0.00001
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -62,8 +59,8 @@ class XPlaneTestCase(unittest.TestCase):
 
     def assertFloatsEqual(self, a, b, tolerance = None):
         if tolerance == None:
-            tolerance = EPSILON
-        print(tolerance)
+            tolerance = FLOAT_TOLERANCE
+
         if abs(a - b) < tolerance:
             return True
         else:
@@ -71,7 +68,7 @@ class XPlaneTestCase(unittest.TestCase):
 
     def assertFloatVectorsEqual(self, a, b, tolerance = None):
         if tolerance == None:
-            tolerance = EPSILON
+            tolerance = FLOAT_TOLERANCE
 
         self.assertEquals(len(a), len(b))
 
@@ -100,7 +97,7 @@ class XPlaneTestCase(unittest.TestCase):
 
         return list(map(parseLine, filter(filterLine, map(str.strip, data.strip().split('\n')))))
 
-    def assertFilesEqual(self, a, b, filterCallback = None, floatTolerance = 0.00001):
+    def assertFilesEqual(self, a, b, filterCallback = None, floatTolerance = None):
         def isnumber(d):
             return isinstance(d, float) or isinstance(d, int)
 
@@ -112,7 +109,7 @@ class XPlaneTestCase(unittest.TestCase):
 
 
         if floatTolerance == None:
-            floatTolerance = EPSILON
+            floatTolerance = FLOAT_TOLERANCE
 
         linesA = self.parseFileToLines(a)
         linesB = self.parseFileToLines(b)
@@ -145,7 +142,6 @@ class XPlaneTestCase(unittest.TestCase):
 
                 # assure same values (floats must be compared with tolerance)
                 if isnumber(segmentA) and isnumber(segmentB):
-                    print(floatTolerance)
                     self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
                 else:
                     self.assertEquals(segmentA, segmentB)
