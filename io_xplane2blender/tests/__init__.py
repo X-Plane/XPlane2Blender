@@ -63,7 +63,7 @@ class XPlaneTestCase(unittest.TestCase):
     def assertFloatsEqual(self, a, b, tolerance = None):
         if tolerance == None:
             tolerance = EPSILON
-
+        print(tolerance)
         if abs(a - b) < tolerance:
             return True
         else:
@@ -145,6 +145,7 @@ class XPlaneTestCase(unittest.TestCase):
 
                 # assure same values (floats must be compared with tolerance)
                 if isnumber(segmentA) and isnumber(segmentB):
+                    print(floatTolerance)
                     self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
                 else:
                     self.assertEquals(segmentA, segmentB)
