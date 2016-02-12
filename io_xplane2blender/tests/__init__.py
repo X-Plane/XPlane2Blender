@@ -126,6 +126,13 @@ class XPlaneTestCase(unittest.TestCase):
                 segmentA = lineA[linePos]
                 segmentB = lineB[linePos]
 
+                # convert numeric strings
+                if isinstance(segmentA, str) and segmentA.isnumeric():
+                    segmentA = float(segmentA)
+
+                if isinstance(segmentB, str) and segmentB.isnumeric():
+                    segmentB = float(segmentB)
+
                 # assure same values (floats must be compared with tolerance)
                 if isnumber(segmentA) and isnumber(segmentB):
                     self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
