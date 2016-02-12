@@ -74,6 +74,9 @@ class XPlaneAttribute():
         # convert floats to strings
         if isinstance(value, float):
             value = floatToStr(value)
+        # convert ints to strings
+        elif isinstance(value, int):
+            value = str(value)
         # convert lists to strings
         elif isinstance(value, list) or isinstance(value, tuple) and len(value) > 0:
             _value = []
