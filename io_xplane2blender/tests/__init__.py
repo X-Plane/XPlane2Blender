@@ -100,7 +100,7 @@ class XPlaneTestCase(unittest.TestCase):
 
         return list(map(parseLine, filter(filterLine, map(str.strip, data.strip().split('\n')))))
 
-    def assertFilesEqual(self, a, b, filterCallback = None, floatTolerance = 0.000001):
+    def assertFilesEqual(self, a, b, filterCallback = None, floatTolerance = 0.00001):
         def isnumber(d):
             return isinstance(d, float) or isinstance(d, int)
 
