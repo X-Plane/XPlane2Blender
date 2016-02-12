@@ -101,6 +101,13 @@ class XPlaneTestCase(unittest.TestCase):
         def isnumber(d):
             return isinstance(d, float) or isinstance(d, int)
 
+        def toFloat(d, fail = None):
+            try:
+                return float(d)
+            except Exception:
+                return fail
+
+
         if floatTolerance == None:
             floatTolerance = EPSILON
 
@@ -127,11 +134,11 @@ class XPlaneTestCase(unittest.TestCase):
                 segmentB = lineB[linePos]
 
                 # convert numeric strings
-                if isinstance(segmentA, str) and segmentA.isnumeric():
-                    segmentA = float(segmentA)
+                if isinstance(segmentA, str):
+                    segmentA = toFloat(segmentA, segmentA)
 
-                if isinstance(segmentB, str) and segmentB.isnumeric():
-                    segmentB = float(segmentB)
+                if isinstance(segmentB, str):
+                    segmentB = toFloat(segmentB, segmentB)
 
                 # assure same values (floats must be compared with tolerance)
                 if isnumber(segmentA) and isnumber(segmentB):
