@@ -86,6 +86,9 @@ for root, dirs, files in os.walk('./tests'):
 
                 out = subprocess.check_output(args, stderr = subprocess.STDOUT)
 
+                if sys.version_info >= (3, 0):
+                    out = out.decode('utf-8')
+
                 print(out)
 
                 # tests raised an error
