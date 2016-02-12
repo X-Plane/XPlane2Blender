@@ -11,6 +11,13 @@ def getImageByFilepath(filepath):
 
     return image
 
+def getImagePixels(image):
+    pixels = [0.0,0.0,0.0,1.0] * int((len(image.pixels) / 4))
+    #for i in range(0, len(image.pixels)):
+    #    pixels.append(image.pixels[i])
+
+    return pixels
+
 def imageSizesEqual(a, b):
     return a.size[0] == b.size[0] and a.size[1] == b.size[1]
 
@@ -36,9 +43,15 @@ def specularToGrayscale(specularImage, targetName):
     height = specularImage.size[1]
     image = getGeneratedImage(targetName, width, height, 1)
 
+    pixels = getImagePixels(image)
+    specPixels = specularImage.pixels[:]
+
     for pi in range(0, len(specularImage.pixels), 4):
         for i in range(3):
-            image.pixels[pi + i] = specularImage.pixels[pi + i]
+            pixels[pi + i] = specPixels[pi + i]
+        pixels[pi + 3] = 1.0
+
+    image.pixels = pixels
 
     return image
 
@@ -47,9 +60,15 @@ def normalWithoutAlpha(normalImage, targetName):
     height = normalImage.size[1]
     image = getGeneratedImage(targetName, width, height, 3)
 
+    pixels = getImagePixels(image)
+    normalPixels = normalImage.pixels[:]
+
     for pi in range(0, len(normalImage.pixels), 4):
         for i in range(3):
-            image.pixels[pi + i] = normalImage.pixels[pi + i]
+            pixels[pi + i] = normalPixels[pi + i]
+        pixels[pi + 3] = 1.0
+
+    image.pixels = pixels
 
     return image
 
@@ -63,10 +82,16 @@ def combineSpecularAndNormal(specularImage, normalImage, targetName):
     height = specularImage.size[1]
     image = getGeneratedImage(targetName, width, height, 4)
 
+    pixels = getImagePixels(image)
+    normalPixels = normalImage.pixels[:]
+    specPixels = specularImage.pixels[:]
+
     for pi in range(0, len(normalImage.pixels), 4):
         for i in range(3):
-            image.pixels[pi + i] = normalImage.pixels[pi + i]
+            pixels[pi + i] = normalPixels[pi + i]
 
-        image.pixels[pi + 3] = specularImage.pixels[pi]
+        pixels[pi + 3] = specPixels[pi]
+
+    image.pixels = pixels
 
     return image
