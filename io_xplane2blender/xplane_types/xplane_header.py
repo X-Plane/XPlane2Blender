@@ -120,12 +120,12 @@ class XPlaneHeader():
                     self.attributes['BUMP_LEVEL'].setValue(mat.bump_level)
 
                 # draped no blend
-                self.attributes['NO_BLEND'] = mat.attributes['ATTR_no_blend']
+                self.attributes['NO_BLEND'].setValue(mat.attributes['ATTR_no_blend'].getValue())
                 # prevent of writing again in material
                 mat.attributes['ATTR_no_blend'].setValue(None)
 
                 # draped specular
-                self.attributes['SPECULAR'] = mat.attributes['ATTR_shiny_rat']
+                self.attributes['SPECULAR'].setValue(mat.attributes['ATTR_shiny_rat'].getValue())
                 # prevent of writing again in material
                 mat.attributes['ATTR_shiny_rat'].setValue(None)
 
@@ -166,17 +166,17 @@ class XPlaneHeader():
 
                 # no blend
                 attr = mat.attributes['ATTR_no_blend']
-                self.attributes['GLOBAL_no_blend'] = attr
+                self.attributes['GLOBAL_no_blend'].setValue(attr.getValue())
                 self.xplaneFile.commands.written['ATTR_no_blend'] = attr.getValue()
 
                 # shadow blend
                 attr = mat.attributes['ATTR_shadow_blend']
-                self.attributes['GLOBAL_shadow_blend'] = attr
+                self.attributes['GLOBAL_shadow_blend'].setValue(attr.getValue())
                 self.xplaneFile.commands.written['ATTR_shadow_blend'] = attr.getValue()
 
                 # specular
                 attr = mat.attributes['ATTR_shiny_rat']
-                self.attributes['GLOBAL_specular'] = attr
+                self.attributes['GLOBAL_specular'].setValue(attr.getValue())
                 self.xplaneFile.commands.written['ATTR_shiny_rat'] = attr.getValue()
 
                 # tint
