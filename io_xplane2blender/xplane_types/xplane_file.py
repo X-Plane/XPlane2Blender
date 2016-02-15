@@ -400,7 +400,7 @@ class XPlaneFile():
 
                         if errors and len(errors):
                             for error in errors:
-                                logger.error('Material in object "%s" %s.' % (material.xplaneObject.blenderObject.name, error))
+                                logger.error('Material in object "%s" %s' % (material.xplaneObject.blenderObject.name, error))
 
         if logger.hasErrors():
             return False

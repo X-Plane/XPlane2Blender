@@ -12,13 +12,17 @@ def compareScenery(refMat, mat):
     errors = []
 
     if mat.texture != refMat.texture:
-        errors.append('Texture must be %s.' % refMat.texture)
+        errors.append('Texture must be "%s".' % refMat.texture)
 
     if mat.textureLit != refMat.textureLit:
-        errors.append('Lit/Emissive texture must be %s.' % refMat.textureLit)
+        errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
     if mat.textureNormal != refMat.textureNormal:
-        errors.append('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
+        errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+
+    if mat.options.draped and refMat.options.draped:
+        if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
+            errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
 
     return errors
 
@@ -26,13 +30,13 @@ def compareInstanced(refMat, mat):
     errors = []
 
     if mat.texture != refMat.texture:
-        errors.append('Texture must be %s.' % refMat.texture)
+        errors.append('Texture must be "%s".' % refMat.texture)
 
     if mat.textureLit != refMat.textureLit:
-        errors.append('Lit/Emissive texture must be %s.' % refMat.textureLit)
+        errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
     if mat.textureNormal != refMat.textureNormal:
-        errors.append('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
+        errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
     if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
         errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
@@ -52,13 +56,13 @@ def compareAircraft(refMat, mat):
 
     if refMat.options.panel == mat.options.panel:
         if mat.texture != refMat.texture:
-            errors.append('Texture must be %s.' % refMat.texture)
+            errors.append('Texture must be "%s".' % refMat.texture)
 
     if mat.textureLit != refMat.textureLit:
-        errors.append('Lit/Emissive texture must be %s.' % refMat.textureLit)
+        errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
     if mat.textureNormal != refMat.textureNormal:
-        errors.append('Normal/Alpha/Specular texture must be %s.' % refMat.textureNormal)
+        errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
     return errors
 

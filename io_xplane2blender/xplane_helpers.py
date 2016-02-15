@@ -65,6 +65,17 @@ class XPlaneLogger():
     def clearMessages(self):
         del self.messages[:]
 
+    def messagesToString(self, messages = None):
+        if messages == None:
+            messages = self.messages
+
+        out = ''
+
+        for message in messages:
+            out += XPlaneLogger.messageToString(message['type'], message['message'], message['context']) + '\n'
+
+        return out
+
     def log(self, messageType, message, context = None):
         self.messages.append({
             'type': messageType,
