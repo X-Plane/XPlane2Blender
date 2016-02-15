@@ -120,6 +120,7 @@ class XPlaneMaterial():
                 # draped
                 if mat.xplane.draped:
                     self.attributes['ATTR_draped'].setValue(True)
+                    self.attributes['ATTR_no_draped'].setValue(False)
                 else:
                     self.attributes['ATTR_no_draped'].setValue(True)
             else:
@@ -137,6 +138,7 @@ class XPlaneMaterial():
             # camera collision
             if mat.xplane.solid_camera:
                 self.attributes['ATTR_solid_camera'].setValue(True)
+                self.attributes['ATTR_no_solid_camera'].setValue(False)
             else:
                 self.attributes['ATTR_no_solid_camera'].setValue(True)
 

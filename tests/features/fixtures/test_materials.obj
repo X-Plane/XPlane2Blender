@@ -2,7 +2,7 @@ I
 800
 OBJ
 
-GLOBAL_cockpit_lit
+GLOBAL_cockpit_lit	True
 POINT_COUNTS	324	0	0	324
 
 VT	-1.00000012	-1	-5	0	-1	0	0	0	# 0
@@ -384,13 +384,14 @@ TRIS	36 36
 # PRIMITIVE: cockpit_panel	weight: 2
 # MATERIAL: cockpit_panel
 ATTR_cockpit
-ATTR_cockpit_region
+ATTR_cockpit_region	0
 TRIS	72 36
 # 1 Object: conditions
 IF GLOBAL_LIGHTING
 # PRIMITIVE: conditions	weight: 3
 ATTR_no_cockpit
 # MATERIAL: conditions
+ATTR_no_solid_camera
 custom_prop	10
 TRIS	108 36
 ENDIF
@@ -411,12 +412,13 @@ TRIS	216 36
 # 1 Object: red
 # PRIMITIVE: red	weight: 7
 # MATERIAL: red
+ATTR_draw_enable
 TRIS	252 36
 # 1 Object: surface
 # PRIMITIVE: surface	weight: 8
 # MATERIAL: surface
 ATTR_hard_deck	asphalt
-ATTR_poly_os
+ATTR_poly_os	2
 TRIS	288 36
 
 # Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0

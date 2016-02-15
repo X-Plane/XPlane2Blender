@@ -21,7 +21,4 @@ class TestSSO_2compatibleMats_Draped(XPlaneTestCase):
             filterLines
         )
 
-        # remove generated texture
-        os.unlink(os.path.join(__dirname__, 'texture_NML_nm.png'))
-
 runTestCases([TestSSO_2compatibleMats_Draped])

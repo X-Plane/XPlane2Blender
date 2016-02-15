@@ -57,7 +57,7 @@ class TestMaterials(XPlaneTestCase):
         cockpitAttrs['ATTR_blend'] = True
         cockpitAttrs['ATTR_draw_enable'] = True
         cockpitAttrs['ATTR_solid_camera'] = True
-        cockpitAttrs['ATTR_no_solid_camera'] = None
+        cockpitAttrs['ATTR_no_solid_camera'] = False
         cockpitAttrs['ATTR_light_level'] = [1.0, 2.0, 'light-level-test']
         cockpitCockpitAttrs = defaultCockpitAttrs.copy()
         cockpitCockpitAttrs['ATTR_cockpit'] = None
@@ -69,7 +69,7 @@ class TestMaterials(XPlaneTestCase):
         cockpitPanelAttrs['ATTR_blend'] = None
         cockpitPanelAttrs['ATTR_draw_enable'] = None
         cockpitPanelAttrs['ATTR_solid_camera'] = True
-        cockpitPanelAttrs['ATTR_no_solid_camera'] = None
+        cockpitPanelAttrs['ATTR_no_solid_camera'] = False
         cockpitPanelCockpitAttrs = defaultCockpitAttrs.copy()
         cockpitPanelCockpitAttrs['ATTR_cockpit'] = True
         cockpitPanelCockpitAttrs['ATTR_no_cockpit'] = None

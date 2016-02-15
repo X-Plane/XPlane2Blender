@@ -429,6 +429,9 @@ class XPlaneHeader():
                         o += '%s\t%s\n' % (attr.name, attr.getValueAsString(vi))
 
                 else:
-                    o += '%s\t%s\n' % (attr.name, attr.getValueAsString())
+                    if isinstance(values[0], bool) and values[0]:
+                        o += '%s\n' % (attr.name)
+                    else:
+                        o += '%s\t%s\n' % (attr.name, attr.getValueAsString())
 
         return o

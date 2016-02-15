@@ -393,11 +393,14 @@ class XPlaneFile():
         for refMaterial in refMaterials:
             if refMaterial is not None:
                 for material in materials:
-                    errors = material.isCompatibleTo(refMaterial, self.options.export_type)
+                    # only compare draped materials agains draped
+                    # and non-draped agains non-draped
+                    if refMaterial.options.draped == material.options.draped:
+                        errors = material.isCompatibleTo(refMaterial, self.options.export_type)
 
-                    if errors and len(errors):
-                        for error in errors:
-                            logger.error('Material in object "%s" %s.' % (material.xplaneObject.blenderObject.name, error))
+                        if errors and len(errors):
+                            for error in errors:
+                                logger.error('Material in object "%s" %s.' % (material.xplaneObject.blenderObject.name, error))
 
         if logger.hasErrors():
             return False

@@ -33,7 +33,8 @@ class XPlaneCommands():
             'ATTR_hard':'ATTR_no_hard',
             'ATTR_hard_deck':'ATTR_no_hard',
             'ATTR_no_blend':'ATTR_blend',
-            'ATTR_draped': 'ATTR_no_draped'
+            'ATTR_draped': 'ATTR_no_draped',
+            'ATTR_solid_camera': 'ATTR_no_solid_camera'
         }
 
         # these attributes/commands are not persistant and must always be rewritten
@@ -161,6 +162,12 @@ class XPlaneCommands():
 
                     # store this in the written attributes
                     self.written[name] = value
+
+                    # check if this thing has a reseter and remove counterpart if any
+                    reseter = self.getAttributeReseter(name)
+
+                    if reseter and reseter in self.written:
+                        del self.written[reseter]
             else:
                 # store this in the written attributes
                 self.written[name] = value
