@@ -8,7 +8,7 @@ from io_xplane2blender.xplane_types import xplane_file
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestAOTC_2Mats_PNL(XPlaneTestCase):
+class TestIST_2Mats_wDraping(XPlaneTestCase):
     def test_export(self):
         def filterLines(line):
             return isinstance(line[0], str) and \
@@ -17,7 +17,7 @@ class TestAOTC_2Mats_PNL(XPlaneTestCase):
                    line[0].find('GLOBAL') == 0 or \
                    line[0].find('SPECULAR'))
 
-        filename = 'test_AOTC_2Mats_PNL'
+        filename = 'test_IST_2Mats_wDraping'
 
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
@@ -25,4 +25,4 @@ class TestAOTC_2Mats_PNL(XPlaneTestCase):
             filterLines
         )
 
-runTestCases([TestAOTC_2Mats_PNL])
+runTestCases([TestIST_2Mats_wDraping])
