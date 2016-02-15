@@ -27,7 +27,7 @@ class XPlaneCommands():
             'ATTR_light_level':'ATTR_light_level_reset',
             'ATTR_cockpit':'ATTR_no_cockpit',
             # 'ATTR_cockpit_region':'ATTR_no_cockpit',
-            'ATTR_manip_(.*)':'ATTR_manip_none',
+            'ATTR_manip_(?!none)(.*)':'ATTR_manip_none',
             'ATTR_draw_disable':'ATTR_draw_enable',
             'ATTR_poly_os':'ATTR_poly_os 0',
             'ATTR_hard':'ATTR_no_hard',
@@ -186,7 +186,6 @@ class XPlaneCommands():
                 # check if a reseter counterpart has been written and if so delete its reseter
                 for reseter in self.reseters:
                     matchingWritten = firstMatchInList(re.compile(reseter), writtenNames)
-
                     if self.reseters[reseter] == name and matchingWritten:
                         del self.written[matchingWritten]
 

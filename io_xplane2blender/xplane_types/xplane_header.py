@@ -310,7 +310,7 @@ class XPlaneHeader():
             if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE:
                 mat = xplaneObject.material
 
-                if mat.uv_name == None:
+                if mat.uv_name == None and mat.options.draw:
                     logger.warn('Object "%s" has no UV-Map.' % xplaneObject.name)
 
                 if mat.options.draped:
@@ -324,7 +324,7 @@ class XPlaneHeader():
 
                     if textureDrapedSpecular == None and mat.textureSpecular:
                         textureDrapedSpecular = mat.textureSpecular
-                elif not mat.options.panel:
+                elif not mat.options.panel and not mat.options.solid_camera:
                     if texture == None and mat.texture:
                         texture = mat.texture
 
@@ -348,7 +348,7 @@ class XPlaneHeader():
 
                     if textureDrapedNormal and textureDrapedNormal != mat.textureNormal:
                         logger.warn('Object "%s" has a different or missing draped normal/specular texture.' % xplaneObject.name)
-                elif not mat.options.panel:
+                elif not mat.options.panel and not mat.options.solid_camera:
                     if texture and texture != mat.texture:
                         logger.warn('Object "%s" has a different or missing color texture.' % xplaneObject.name)
 

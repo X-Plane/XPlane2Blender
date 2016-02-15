@@ -12,60 +12,62 @@ def compare(refMat, mat, exportType):
 def compareScenery(refMat, mat):
     errors = []
 
-    if mat.texture != refMat.texture:
-        errors.append('Texture must be "%s".' % refMat.texture)
-
-    if mat.textureLit != refMat.textureLit:
-        errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
-
-    if mat.textureNormal != refMat.textureNormal:
-        errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
-
-    if mat.options.draped and refMat.options.draped:
-        if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
-            errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
-
-    return errors
-
-def compareInstanced(refMat, mat):
-    errors = []
-
-    if mat.texture != refMat.texture:
-        errors.append('Texture must be "%s".' % refMat.texture)
-
-    if mat.textureLit != refMat.textureLit:
-        errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
-
-    if mat.textureNormal != refMat.textureNormal:
-        errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
-
-    if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
-        errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
-
-    if mat.options.blend != refMat.options.blend:
-        if refMat.options.blend:
-            errors.append('Alpha cutoff must be enabled.')
-        else:
-            errors.append('Alpha cutoff must be disabled.')
-    elif mat.options.blendRatio != refMat.options.blendRatio:
-        errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
-
-    return errors
-
-def compareAircraft(refMat, mat):
-    errors = []
-
-    # panel parts can have anything
-    if not mat.options.panel and not refMat.options.panel:
-        if refMat.options.panel == mat.options.panel:
-            if mat.texture != refMat.texture:
-                errors.append('Texture must be "%s".' % refMat.texture)
+    if mat.options.draw:
+        if mat.texture != refMat.texture:
+            errors.append('Texture must be "%s".' % refMat.texture)
 
         if mat.textureLit != refMat.textureLit:
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
         if mat.textureNormal != refMat.textureNormal:
             errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+
+        if mat.options.draped and refMat.options.draped:
+            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
+                errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
+
+    return errors
+
+def compareInstanced(refMat, mat):
+    errors = []
+
+    if mat.options.draw:
+        if mat.texture != refMat.texture:
+            errors.append('Texture must be "%s".' % refMat.texture)
+
+        if mat.textureLit != refMat.textureLit:
+            errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
+
+        if mat.textureNormal != refMat.textureNormal:
+            errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+
+        if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
+            errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
+
+        if mat.options.blend != refMat.options.blend:
+            if refMat.options.blend:
+                errors.append('Alpha cutoff must be enabled.')
+            else:
+                errors.append('Alpha cutoff must be disabled.')
+        elif mat.options.blendRatio != refMat.options.blendRatio:
+            errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
+
+    return errors
+
+def compareAircraft(refMat, mat):
+    errors = []
+
+    if mat.options.draw:
+        # panel parts can have anything
+        if not mat.options.panel and not refMat.options.panel:
+            if mat.texture != refMat.texture:
+                errors.append('Texture must be "%s".' % refMat.texture)
+
+            if mat.textureLit != refMat.textureLit:
+                errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
+
+            if mat.textureNormal != refMat.textureNormal:
+                errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
     return errors
 
@@ -143,11 +145,12 @@ def validatePanel(mat):
     if mat.options.lightLevel:
         errors.append('Must not override light level.')
 
-    if mat.textureLit:
-        errors.append('Must not have a lit/emissive texture.')
+    if mat.options.draw:
+        if mat.textureLit:
+            errors.append('Must not have a lit/emissive texture.')
 
-    if mat.textureNormal:
-        errors.append('Must not have a normal/alpha/specularity texture.')
+        if mat.textureNormal:
+            errors.append('Must not have a normal/alpha/specularity texture.')
 
     if not mat.options.panel:
         errors.append('Must be part of the cockpit panel.')
@@ -221,7 +224,7 @@ def getFirstMatchingMaterial(materials, validation):
     for mat in materials:
         errors = validation(mat)
 
-        if len(errors) == 0:
+        if len(errors) == 0 and mat.options.draw:
             return mat
 
     return None
