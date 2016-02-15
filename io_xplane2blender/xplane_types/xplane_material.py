@@ -71,7 +71,7 @@ class XPlaneMaterial():
 
         self.cockpitAttributes = XPlaneAttributes()
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit', None, 2000))
-        self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit', True))
+        self.cockpitAttributes.add(XPlaneAttribute('ATTR_no_cockpit', True, 2000))
         self.cockpitAttributes.add(XPlaneAttribute('ATTR_cockpit_region', None, 2000))
 
         self.conditions = []
@@ -229,7 +229,9 @@ class XPlaneMaterial():
             o += commands.writeAttribute(self.attributes[attr], self.xplaneObject)
 
         # if the file is a cockpit file write all cockpit attributes
-        if xplaneFile.options.export_type == 'cockpit':
+        if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT or \
+            (bpy.context.scene.xplane.version >= VERSION_1040 and \
+            xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT):
             for attr in self.cockpitAttributes:
                 # do not write own reseters just now
                 # FIXME: why have we been doing this at all?

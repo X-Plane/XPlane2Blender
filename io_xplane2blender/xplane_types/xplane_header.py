@@ -324,7 +324,7 @@ class XPlaneHeader():
 
                     if textureDrapedSpecular == None and mat.textureSpecular:
                         textureDrapedSpecular = mat.textureSpecular
-                else:
+                elif not mat.options.panel:
                     if texture == None and mat.texture:
                         texture = mat.texture
 
@@ -348,7 +348,7 @@ class XPlaneHeader():
 
                     if textureDrapedNormal and textureDrapedNormal != mat.textureNormal:
                         logger.warn('Object "%s" has a different or missing draped normal/specular texture.' % xplaneObject.name)
-                else:
+                elif not mat.options.panel:
                     if texture and texture != mat.texture:
                         logger.warn('Object "%s" has a different or missing color texture.' % xplaneObject.name)
 

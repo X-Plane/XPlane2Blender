@@ -1,3 +1,4 @@
+import bpy
 from ..xplane_constants import *
 
 def compare(refMat, mat, exportType):
@@ -54,15 +55,17 @@ def compareInstanced(refMat, mat):
 def compareAircraft(refMat, mat):
     errors = []
 
-    if refMat.options.panel == mat.options.panel:
-        if mat.texture != refMat.texture:
-            errors.append('Texture must be "%s".' % refMat.texture)
+    # panel parts can have anything
+    if not mat.options.panel and not refMat.options.panel:
+        if refMat.options.panel == mat.options.panel:
+            if mat.texture != refMat.texture:
+                errors.append('Texture must be "%s".' % refMat.texture)
 
-    if mat.textureLit != refMat.textureLit:
-        errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
+        if mat.textureLit != refMat.textureLit:
+            errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
-    if mat.textureNormal != refMat.textureNormal:
-        errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+        if mat.textureNormal != refMat.textureNormal:
+            errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
     return errors
 
@@ -85,7 +88,10 @@ def validate(mat, exportType):
     elif exportType == EXPORT_TYPE_COCKPIT and not mat.options.panel:
         return validateCockpit(mat)
     elif exportType == EXPORT_TYPE_AIRCRAFT:
-        return validateAircraft(mat)
+        if bpy.context.scene.xplane.version >= VERSION_1040 and mat.options.panel:
+            return validatePanel(mat)
+        else:
+            return validateAircraft(mat)
 
     return errors
 
