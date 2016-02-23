@@ -267,20 +267,22 @@ class XPlaneFile():
             bone.collectAnimations()
 
             # collect child blender objects of this bone
-            childBlenderObjects = self.getChildBlenderObjectsForBlenderBone(blenderBone)
+            childBlenderObjects = self.getChildBlenderObjectsForBlenderBone(blenderBone, blenderArmature)
 
             self.collectBonesFromBlenderObjects(bone, childBlenderObjects, False)
             self.collectBonesFromBlenderBones(bone, blenderArmature, blenderBone.children, False)
 
         parentBone.sortChildren()
 
-    def getChildBlenderObjectsForBlenderBone(self, blenderBone):
+    def getChildBlenderObjectsForBlenderBone(self, blenderBone, blenderArmature):
         blenderObjects = []
 
         for name in self.objects:
             xplaneObject = self.objects[name]
 
-            if xplaneObject.blenderObject.parent_type == 'BONE' and xplaneObject.blenderObject.parent_bone == blenderBone.name:
+            if xplaneObject.blenderObject.parent_type == 'BONE' and \
+               xplaneObject.blenderObject.parent == blenderArmature and \
+               xplaneObject.blenderObject.parent_bone == blenderBone.name:
                 blenderObjects.append(xplaneObject.blenderObject)
 
         return blenderObjects
