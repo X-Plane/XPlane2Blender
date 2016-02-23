@@ -434,7 +434,8 @@ class XPlaneFile():
 
         refMatNames = []
         for refMat in self.referenceMaterials:
-            refMatNames.append(refMat.name)
+            if refMat:
+                refMatNames.append(refMat.name)
 
         logger.info('Using the following reference materials: %s' % ', '.join(refMatNames))
 

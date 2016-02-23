@@ -85,6 +85,8 @@ class XPlaneMaterial():
             self.options = mat.xplane
 
             if mat.xplane.draw:
+                self.attributes['ATTR_draw_enable'].setValue(True)
+
                 # add cockpit attributes
                 self.collectCockpitAttributes(mat)
 
