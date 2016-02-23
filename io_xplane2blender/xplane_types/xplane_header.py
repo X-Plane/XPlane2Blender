@@ -344,19 +344,19 @@ class XPlaneHeader():
 
                 if mat.options.draped:
                     if textureDraped and textureDraped != mat.texture:
-                        logger.warn('Object "%s" has a different or missing draped texture.' % xplaneObject.name)
+                        logger.warn('Material "%s" in Object "%s" must use the draped texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureDraped, mat.texture))
 
                     if textureDrapedNormal and textureDrapedNormal != mat.textureNormal:
-                        logger.warn('Object "%s" has a different or missing draped normal/specular texture.' % xplaneObject.name)
+                        logger.warn('Material "%s" in Object "%s" must use the draped normal/specular texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureDrapedNormal, mat.textureNormal))
                 elif not mat.options.panel and not mat.options.solid_camera:
                     if texture and texture != mat.texture:
-                        logger.warn('Object "%s" has a different or missing color texture.' % xplaneObject.name)
+                        logger.warn('Material "%s" in Object "%s" must use the color texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, texture, mat.texture))
 
                     if textureLit and textureLit != mat.textureLit:
-                        logger.warn('Object "%s" has a different or missing night/lit texture.' % xplaneObject.name)
+                        logger.warn('Material "%s" in Object "%s" must use the night/lit texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureLit, mat.textureLit))
 
                     if textureNormal and textureNormal != mat.textureNormal:
-                        logger.warn('Object "%s" has a different or missing normal/specular texture.' % xplaneObject.name)
+                        logger.warn('Material "%s" in Object "%s" must use the normal/specular texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureNormal, mat.textureNormal))
 
         # generate composite normal texture if needed
         if bpy.context.scene.xplane.compositeTextures:

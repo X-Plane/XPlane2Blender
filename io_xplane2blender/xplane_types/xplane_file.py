@@ -370,7 +370,7 @@ class XPlaneFile():
 
                 if errors and len(errors):
                     for error in errors:
-                        logger.error('Material in object "%s" %s' % (xplaneObject.blenderObject.name, error))
+                        logger.error('Material "%s" in object "%s" %s' % (xplaneObject.material.name, xplaneObject.blenderObject.name, error))
 
         if logger.hasErrors():
             return False
@@ -400,7 +400,7 @@ class XPlaneFile():
 
                         if errors and len(errors):
                             for error in errors:
-                                logger.error('Material in object "%s" %s' % (material.xplaneObject.blenderObject.name, error))
+                                logger.error('Material "%s" in object "%s" %s' % (material.name, material.xplaneObject.blenderObject.name, error))
 
         if logger.hasErrors():
             return False
@@ -431,6 +431,12 @@ class XPlaneFile():
             self.getMaterials(),
             self.options.export_type
         )
+
+        refMatNames = []
+        for refMat in self.referenceMaterials:
+            refMatNames.append(refMat.name)
+
+        logger.info('Using the following reference materials: %s' % ', '.join(refMatNames))
 
         # validation was successful
         # retrieve reference materials
