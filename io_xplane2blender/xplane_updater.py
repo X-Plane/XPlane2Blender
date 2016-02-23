@@ -33,7 +33,7 @@ def load_handler(dummy):
     if not filepath:
         return
 
-    fileVersion = bpy.data.worlds[0].xplane2blender_version
+    fileVersion = bpy.data.scenes[0].get('xplane2blender_version', '3.2')
 
     if fileVersion < currentVersion:
         if len(fileVersion) == 0:
@@ -45,7 +45,7 @@ def load_handler(dummy):
         update(fileVersion)
 
         # store currentVersion
-        bpy.data.worlds[0].xplane2blender_version = currentVersion
+        bpy.data.scenes[0]['xplane2blender_version'] = currentVersion
         print('Your file was successfully updated to XPlane2Blender %s' % currentVersion)
 
 bpy.app.handlers.load_post.append(load_handler)
