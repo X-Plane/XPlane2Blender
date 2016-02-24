@@ -279,7 +279,7 @@ class XPlaneFile():
 
         for name in self.objects:
             xplaneObject = self.objects[name]
-            print(name, xplaneObject.blenderObject.parent_type, xplaneObject.blenderObject.parent)
+            
             if xplaneObject.blenderObject.parent_type == 'BONE' and \
                xplaneObject.blenderObject.parent == blenderArmature and \
                xplaneObject.blenderObject.parent_bone == blenderBone.name:

@@ -64,7 +64,7 @@ class TestCreateFromLayers(XPlaneTestCase):
         xplaneFile3 = xplane_file.createFileFromBlenderLayerIndex(2)
 
         # should contain 4 cubes
-        self.assertEqual(len(xplaneFile3.objects), 4)
+        self.assertEqual(len(xplaneFile3.objects), 5)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile3, [

@@ -67,7 +67,7 @@ class TestMaterials(XPlaneTestCase):
         cockpitPanelAttrs = defaultAttrs.copy()
         cockpitPanelAttrs['ATTR_shiny_rat'] = None
         cockpitPanelAttrs['ATTR_blend'] = None
-        cockpitPanelAttrs['ATTR_draw_enable'] = None
+        cockpitPanelAttrs['ATTR_draw_enable'] = True
         cockpitPanelAttrs['ATTR_solid_camera'] = True
         cockpitPanelAttrs['ATTR_no_solid_camera'] = False
         cockpitPanelCockpitAttrs = defaultCockpitAttrs.copy()
