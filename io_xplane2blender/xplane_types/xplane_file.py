@@ -6,7 +6,7 @@ import mathutils
 from .xplane_bone import XPlaneBone
 from .xplane_light import XPlaneLight
 # from .xplane_line import XPlaneLine
-# from .xplane_object import XPlaneObject
+from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 from .xplane_lights import XPlaneLights
 from .xplane_mesh import XPlaneMesh
@@ -279,7 +279,7 @@ class XPlaneFile():
 
         for name in self.objects:
             xplaneObject = self.objects[name]
-
+            print(name, xplaneObject.blenderObject.parent_type, xplaneObject.blenderObject.parent)
             if xplaneObject.blenderObject.parent_type == 'BONE' and \
                xplaneObject.blenderObject.parent == blenderArmature and \
                xplaneObject.blenderObject.parent_bone == blenderBone.name:
@@ -337,6 +337,9 @@ class XPlaneFile():
         elif blenderObject.type == "LAMP":
             logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject  = XPlaneLight(blenderObject)
+        elif blenderObject.type == "ARMATURE":
+            logger.info("\t %s: adding to list" % blenderObject.name)
+            xplaneObject = XPlaneObject(blenderObject)
 
         return xplaneObject
 
