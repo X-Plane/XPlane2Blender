@@ -343,19 +343,24 @@ class XPlaneHeader():
                 mat = xplaneObject.material
 
                 if mat.options.draped:
-                    if textureDraped and textureDraped != mat.texture:
+                    if textureDraped and \
+                       self._getCanonicalTexturePath(textureDraped) != self._getCanonicalTexturePath(mat.texture):
                         logger.warn('Material "%s" in Object "%s" must use the draped texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureDraped, mat.texture))
 
-                    if textureDrapedNormal and textureDrapedNormal != mat.textureNormal:
+                    if textureDrapedNormal and \
+                       self._getCanonicalTexturePath(textureDrapedNormal) != self._getCanonicalTexturePath(mat.textureNormal):
                         logger.warn('Material "%s" in Object "%s" must use the draped normal/specular texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureDrapedNormal, mat.textureNormal))
                 elif not mat.options.panel and not mat.options.solid_camera:
-                    if texture and texture != mat.texture:
+                    if texture and \
+                       self._getCanonicalTexturePath(texture) != self._getCanonicalTexturePath(mat.texture):
                         logger.warn('Material "%s" in Object "%s" must use the color texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, texture, mat.texture))
 
-                    if textureLit and textureLit != mat.textureLit:
+                    if textureLit and \
+                       self._getCanonicalTexturePath(textureLit) != self._getCanonicalTexturePath(mat.textureLit):
                         logger.warn('Material "%s" in Object "%s" must use the night/lit texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureLit, mat.textureLit))
 
-                    if textureNormal and textureNormal != mat.textureNormal:
+                    if textureNormal and \
+                       self._getCanonicalTexturePath(textureNormal) != self._getCanonicalTexturePath(mat.textureNormal):
                         logger.warn('Material "%s" in Object "%s" must use the normal/specular texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureNormal, mat.textureNormal))
 
         # generate composite normal texture if needed
@@ -395,6 +400,28 @@ class XPlaneHeader():
         texpath = os.path.relpath(texpath, exportdir)
 
         return texpath
+
+    # Method: _getCanonicalTexturePath
+    # Returns normalized (canonical) path to texture
+    #
+    # Parameters:
+    #   string texpath - the relative or absolute texture path as chosen by the user
+    #
+    # Returns:
+    #   string - the absolute/normalized path to the texture
+    def _getCanonicalTexturePath(self, texpath):
+        blenddir = os.path.dirname(bpy.context.blend_data.filepath)
+
+        if texpath[0:2] == '//':
+            texpath = texpath[2:]
+
+        if os.path.isabs(texpath):
+            texpath = os.path.abspath(os.path.normpath(texpath))
+        else:
+            texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir, texpath)))
+
+        return texpath
+
 
     # Method: write
     # Returns the OBJ header.
