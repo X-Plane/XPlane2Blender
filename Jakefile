@@ -76,7 +76,9 @@ task('build', {async: true}, function(){
 
 task('push', {async: true}, function(){
     console.log('pushing changes');
-    cp.exec('git add . && git commit -m\'deployment\' && git push origin gh-pages', function(error, stdout, stderr) {
+    cp.exec('git add . && git commit -m\'deployment\' && git push origin gh-pages', {
+      maxBuffer: 1024 * 1024
+    }, function(error, stdout, stderr) {
         if (error) {
             console.error(error);
             fail(error.message);
