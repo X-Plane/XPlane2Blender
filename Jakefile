@@ -80,7 +80,7 @@ task('push', {async: true}, function(){
       maxBuffer: 1024 * 1024
     }, function(error, stdout, stderr) {
         console.log(stdout || stderr);
-        
+
         console.log('deployment done');
         complete();
     });
