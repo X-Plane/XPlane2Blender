@@ -159,6 +159,13 @@ class XPlaneFile():
         # restore frame before export
         bpy.context.scene.frame_set(frame = currentFrame)
 
+        # go through blender objects and warn user if there is no xplaneBone for it
+        for name in self.objects:
+            xplaneObject = self.objects[name]
+
+            if not xplaneObject.xplaneBone:
+                logger.warn('Object "%s" will not be exported as it has parent(s) in another layer. Move it\'s parent(s) into layer %d.' % (name, layerIndex + 1))
+
     def collectBlenderObjects(self, blenderObjects):
         for blenderObject in blenderObjects:
             xplaneObject = self.convertBlenderObject(blenderObject)
