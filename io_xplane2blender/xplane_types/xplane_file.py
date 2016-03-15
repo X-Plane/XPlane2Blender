@@ -204,7 +204,7 @@ class XPlaneFile():
             if parentBlenderObject:
                 return blenderObject.parent == parentBlenderObject
             elif parentBlenderBone:
-                return blenderObject.parent_type == 'Bone' and blenderObject.parent_bone == parentBlenderBone
+                return blenderObject.parent_type == 'BONE' and blenderObject.parent_bone == parentBlenderBone
             elif blenderObject.parent_type == 'OBJECT':
                 return blenderObject.parent == None
             elif blenderObject.parent_type == 'BONE':
@@ -279,7 +279,7 @@ class XPlaneFile():
 
         for name in self.objects:
             xplaneObject = self.objects[name]
-            
+
             if xplaneObject.blenderObject.parent_type == 'BONE' and \
                xplaneObject.blenderObject.parent == blenderArmature and \
                xplaneObject.blenderObject.parent_bone == blenderBone.name:

@@ -307,7 +307,8 @@ class XPlaneHeader():
         hasDraped = False
 
         for xplaneObject in xplaneObjects:
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE:
+            # skip non-mesh objects and objects without a xplane bone
+            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and xplaneObject.xplaneBone:
                 mat = xplaneObject.material
 
                 if mat.uv_name == None and mat.options.draw:
@@ -339,7 +340,8 @@ class XPlaneHeader():
 
         # now go through all textures again and list any objects with different textures
         for xplaneObject in xplaneObjects:
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE:
+            # skip non-mesh objects and objects without a xplane bone
+            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and xplaneObject.xplaneBone:
                 mat = xplaneObject.material
 
                 if mat.options.draped:

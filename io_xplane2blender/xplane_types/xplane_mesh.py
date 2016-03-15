@@ -44,7 +44,8 @@ class XPlaneMesh():
         xplaneObjects = sorted(xplaneObjects, key = getSortKey)
 
         for xplaneObject in xplaneObjects:
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE:
+            # skip non-mesh objects and objects that do not have a xplane bone
+            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and xplaneObject.xplaneBone:
                 xplaneObject.indices[0] = len(self.indices)
                 first_vertice_of_this_xplaneObject = len(self.vertices)
 

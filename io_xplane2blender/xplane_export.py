@@ -147,7 +147,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
             return False
 
         # write the file
-        logger.info("Writing %s.obj" % fullpath)
+        logger.info("Writing %s" % fullpath)
 
         objFile = open(fullpath, "w")
         objFile.write(out)
