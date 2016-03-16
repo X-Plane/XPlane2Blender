@@ -18,13 +18,15 @@ version = sys.argv[1]
 
 __dirname__ = os.path.dirname(__file__)
 
-f = open(os.path.join(__dirname__, 'io_xplane2blender', '__init__.py'), 'rw+')
+filepath = os.path.join(__dirname__, 'io_xplane2blender', '__init__.py')
+f = open(filepath, 'r')
 
 initFile = f.read()
+f.close()
 
 initFile = re.sub(r"\"version\"\: \(\d+,\d+,\d+\)", '"version": (%s)' % version.replace('.', ','), initFile)
 
-f.truncate(0)
+f = open(filepath, 'w')
 f.write(initFile)
 f.close()
 
