@@ -24,7 +24,7 @@
 bl_info = {
     "name": "Import/Export: XPlane",
     "author": "Ondrej Brinkel",
-    "version": (3,3,4),
+    "version": (3,3,5),
     "blender": (2, 7, 6),
     "api": 36273,
     "location": "File > Import/Export > XPlane",
