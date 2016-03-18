@@ -71,54 +71,54 @@ class XPlaneLight(XPlaneObject):
         indent = self.xplaneBone.getIndent()
         o = super(XPlaneLight, self).write()
 
-        # rendering (do not render lights with no indices)
-        if self.indices[1] > self.indices[0]:
-            bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
+        bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
 
-            translation = bakeMatrix.to_translation()
-			# TODO: the bake matrix may have a rotation component.
-			# in this case we need to emit static rotations to get the light
-			# pointing in the right direction.
-			#
-			# Ideally we'd know whether the light has some kind of symetry (E.g.
-			# axial around a given axis for Z or omni) and throw out unnecessary
-			# transforms, since they are toxic to instancing.
+        translation = bakeMatrix.to_translation()
+		# TODO: the bake matrix may have a rotation component.
+		# in this case we need to emit static rotations to get the light
+		# pointing in the right direction.
+		#
+		# Ideally we'd know whether the light has some kind of symetry (E.g.
+		# axial around a given axis for Z or omni) and throw out unnecessary
+		# transforms, since they are toxic to instancing.
 
-            if self.lightType == LIGHT_NAMED:
-                o += "%sLIGHT_NAMED\t%s\t%s\t%s\t%s\n" % (
-                    indent, self.lightName,
-                    floatToStr(translation[0]),
-                    floatToStr(translation[2]),
-                    floatToStr(-translation[1])
-                )
-            elif self.lightType == LIGHT_PARAM:
-                o += "%sLIGHT_PARAM\t%s\t%6.8f\t%6.8f\t%6.8f\t%s\n" % (
-                    indent, self.lightName,
-                    floatToStr(translation[0]),
-                    floatToStr(translation[2]),
-                    floatToStr(-translation[1]),
-                    self.params
-                )
-            elif self.lightType == LIGHT_CUSTOM:
-                o += "%sLIGHT_CUSTOM\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
-                    indent,
-                    floatToStr(translation[0]),
-                    floatToStr(translation[2]),
-                    floatToStr(-translation[1]),
-                    floatToStr(self.color[0]),
-                    floatToStr(self.color[1]),
-                    floatToStr(self.color[2]),
-                    floatToStr(self.energy),
-                    floatToStr(self.size),
-                    floatToStr(self.uv[0]),
-                    floatToStr(self.uv[1]),
-                    floatToStr(self.uv[2]),
-                    floatToStr(self.uv[3]),
-                    self.dataref
-                )
-            else:
-                offset = self.indices[0]
-                count = self.indices[1] - self.indices[0]
-                o += "%sLIGHTS\t%d %d\n" % (indent, offset, count)
+        if self.lightType == LIGHT_NAMED:
+            o += "%sLIGHT_NAMED\t%s %s %s %s\n" % (
+                indent, self.lightName,
+                floatToStr(translation[0]),
+                floatToStr(translation[2]),
+                floatToStr(-translation[1])
+            )
+        elif self.lightType == LIGHT_PARAM:
+            o += "%sLIGHT_PARAM\t%s %s %s %s %s\n" % (
+                indent, self.lightName,
+                floatToStr(translation[0]),
+                floatToStr(translation[2]),
+                floatToStr(-translation[1]),
+                self.params
+            )
+        elif self.lightType == LIGHT_CUSTOM:
+            o += "%sLIGHT_CUSTOM\t%s %s %s %s %s %s %s %s %s %s %s %s %s\n" % (
+                indent,
+                floatToStr(translation[0]),
+                floatToStr(translation[2]),
+                floatToStr(-translation[1]),
+                floatToStr(self.color[0]),
+                floatToStr(self.color[1]),
+                floatToStr(self.color[2]),
+                floatToStr(self.energy),
+                floatToStr(self.size),
+                floatToStr(self.uv[0]),
+                floatToStr(self.uv[1]),
+                floatToStr(self.uv[2]),
+                floatToStr(self.uv[3]),
+                self.dataref
+            )
+
+        # do not render lights with no indices
+        elif self.indices[1] > self.indices[0]:
+            offset = self.indices[0]
+            count = self.indices[1] - self.indices[0]
+            o += "%sLIGHTS\t%d %d\n" % (indent, offset, count)
 
         return o

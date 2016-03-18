@@ -372,8 +372,13 @@ class XPlaneMesh():
 
     def write(self):
         o = ''
-        o += self.writeVertices()
-        o += '\n'
+
+        verticesOut = self.writeVertices()
+        o += verticesOut
+
+        if len(verticesOut):
+            o += '\n'
+
         o += self.writeIndices()
 
         return o

@@ -460,16 +460,27 @@ class XPlaneFile():
         o = ''
         o += self.header.write()
         o += '\n'
-        o += self.mesh.write()
+
+        meshOut = self.mesh.write()
+        o += meshOut
+
+
+        if len(meshOut):
+            o += '\n'
 
         # TODO: deprecate in v3.4
-        o += '\n'
-        o += self.lights.write()
+        lightsOut = self.lights.write()
+        o += lightsOut
 
-        o += '\n'
-        o += self._writeLods()
+        if len(lightsOut):
+            o += '\n'
 
-        o += '\n'
+        lodsOut = self._writeLods()
+        o += lodsOut
+
+        if len(lodsOut):
+            o += '\n'
+
         o += self.writeFooter()
 
         self.cleanup()
