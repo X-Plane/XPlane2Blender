@@ -30,11 +30,11 @@ class XPlaneLights():
         self.globalindex = 0
 
     def append(self, light):
-        self.items.append(light)
-        light.indices[0] = self.globalindex
-
         # we only write vlights here, all other lights go into the commands table directly
         if  light.lightType not in (LIGHT_NAMED, LIGHT_PARAM, LIGHT_CUSTOM):
+            self.items.append(light)
+            light.indices[0] = self.globalindex
+
             # get the location
             co = light.blenderObject.location
 

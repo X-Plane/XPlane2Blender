@@ -12,7 +12,8 @@ class TestLights(XPlaneTestCase):
         def filterLines(line):
             return isinstance(line[0], str) and \
                    (line[0].find('LIGHT') == 0 or \
-                   line[0].find('VLIGHT') == 0)
+                   line[0].find('VLIGHT') == 0 or \
+                   line[0].find('POINT_COUNTS') == 0)
 
         filename = 'test_lights'
 
