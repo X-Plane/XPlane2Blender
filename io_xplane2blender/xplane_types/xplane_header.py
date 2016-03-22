@@ -308,7 +308,10 @@ class XPlaneHeader():
 
         for xplaneObject in xplaneObjects:
             # skip non-mesh objects and objects without a xplane bone
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and xplaneObject.xplaneBone:
+            # also skip invalid materials
+            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and \
+               xplaneObject.xplaneBone and \
+               xplaneObject.material.options:
                 mat = xplaneObject.material
 
                 if mat.uv_name == None and mat.options.draw:

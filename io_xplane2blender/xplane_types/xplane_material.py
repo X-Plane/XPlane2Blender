@@ -155,7 +155,7 @@ class XPlaneMaterial():
             self.collectCustomAttributes(mat)
 
         else:
-            logger.warn('%s: No Material found.' % self.blenderObject.name)
+            logger.error('%s: No Material found.' % self.blenderObject.name)
 
         self.attributes.order()
 
