@@ -20,6 +20,7 @@ class TestMaterials(XPlaneTestCase):
         invisible = xplaneFile.objects['invisible'].material
         surface = xplaneFile.objects['surface'].material
         conditions = xplaneFile.objects['conditions'].material
+        specular = xplaneFile.objects['specular'].material
 
         defaultAttrs = {
             'ATTR_shiny_rat': 1,
@@ -89,6 +90,9 @@ class TestMaterials(XPlaneTestCase):
         conditionsAttrs = defaultAttrs.copy()
         conditionsAttrs['custom_prop'] = '10'
 
+        specularAttrs = defaultAttrs.copy()
+        specularAttrs['ATTR_shiny_rat'] = 0.75
+
         self.assertAttributesEqualDict(red.attributes, redAttrs)
         self.assertAttributesEqualDict(red.cockpitAttributes, defaultCockpitAttrs)
 
@@ -115,6 +119,9 @@ class TestMaterials(XPlaneTestCase):
 
         self.assertAttributesEqualDict(conditions.attributes, conditionsAttrs)
         self.assertAttributesEqualDict(conditions.cockpitAttributes, defaultCockpitAttrs)
+
+        self.assertAttributesEqualDict(specular.attributes, specularAttrs)
+        self.assertAttributesEqualDict(specular.cockpitAttributes, defaultCockpitAttrs)
 
     def test_export_materials(self):
         def filterLines(line):

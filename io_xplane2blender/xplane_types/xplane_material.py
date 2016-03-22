@@ -104,7 +104,14 @@ class XPlaneMaterial():
                     self.attributes['ATTR_draw_enable'].setValue(True)
 
                     # specular
-                    self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity)
+                    # include texture intensity of specular texture if any
+                    textureSpec = 0
+
+                    for texture in mat.texture_slots:
+                        if texture and texture.use_map_specular:
+                            textureSpec += texture.specular_factor
+
+                    self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity + textureSpec)
 
                     # blend
                     if (int(bpy.context.scene.xplane.version) >= 1000):
