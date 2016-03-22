@@ -8,8 +8,8 @@ addons:
       - blender
 sudo: false
 install:
-  - BLENDER_VERSION="2.76"
-  - BLENDER_VERSION_SUFFIX="b"
+  - BLENDER_VERSION="2.77"
+  - BLENDER_VERSION_SUFFIX=""
   - BLENDER_ARCHIVE="blender-${BLENDER_VERSION}${BLENDER_VERSION_SUFFIX}-linux-glibc211-x86_64"
   - mkdir tmp && cd tmp
   - wget http://ftp.nluug.nl/pub/graphics/blender/release/Blender${BLENDER_VERSION}/${BLENDER_ARCHIVE}.tar.bz2

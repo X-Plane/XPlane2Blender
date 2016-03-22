@@ -428,8 +428,6 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
 #   obj - Blender object.
 def mesh_layout(self, obj):
     layout = self.layout
-    row = layout.row()
-    row.prop(obj.xplane, "depth", text = "Use depth culling")
 
     if bpy.context.scene.xplane.exportMode == 'layers':
         row = layout.row()

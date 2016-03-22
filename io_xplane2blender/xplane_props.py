@@ -894,13 +894,6 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         type = XPlaneDataref
     )
 
-    depth = bpy.props.BoolProperty(
-        attr = "depth",
-        name = "Use depth culling",
-        description = "If unchecked the renderer will perform no depth check on this object.",
-        default = True
-    )
-
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
         name = "Custom X-Plane attributes",
