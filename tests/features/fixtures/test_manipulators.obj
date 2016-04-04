@@ -682,7 +682,6 @@ IDX10	600	601	602	603	604	605	606	607	608	609
 IDX	610
 IDX	611
 
-
 # 0 ROOT
 # 1 Object: drag_xy
 # PRIMITIVE: drag_xy	weight: 0
@@ -738,7 +737,7 @@ ATTR_manip_wheel	1
 TRIS	540 36
 # 1 Object: noop
 # PRIMITIVE: noop	weight: 9
-ATTR_manip_noop
+ATTR_manip_noop	dataref	this should be the tooltip
 # MATERIAL: Material
 TRIS	432 36
 # 1 Object: drag_axis_pix
@@ -762,8 +761,8 @@ TRIS	216 36
 ATTR_manip_command_switch_left_right	rotate_large_left	pos_command	neg_command	this should be the tooltip
 # MATERIAL: Material
 TRIS	180 36
-# 1 Object: axis_swith_up_down
-# PRIMITIVE: axis_swith_up_down	weight: 14
+# 1 Object: axis_switch_up_down
+# PRIMITIVE: axis_switch_up_down	weight: 14
 ATTR_manip_axis_switch_up_down	rotate_large_left	4	5	1	0.5	dataref	this should be the tooltip
 # MATERIAL: Material
 TRIS	36 36
@@ -778,4 +777,4 @@ ATTR_manip_none
 # MATERIAL: Material
 TRIS	396 36
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.7

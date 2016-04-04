@@ -172,6 +172,11 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
+            elif manipType == MANIP_NOOP:
+                value = (
+                    manip.dataref1,
+                    manip.tooltip
+                )
 
         else:
             attr = None

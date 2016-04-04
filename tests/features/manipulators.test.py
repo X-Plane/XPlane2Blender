@@ -108,7 +108,10 @@ class TestMaterials(XPlaneTestCase):
 
         noop = xplaneFile.objects['noop']
         self.assertAttributesEqualDict(noop.cockpitAttributes, {
-            'ATTR_manip_noop': True
+            'ATTR_manip_noop': (
+                'dataref',
+                'this should be the tooltip'
+            )
         })
 
         drag_axis_pix = xplaneFile.objects['drag_axis_pix']
