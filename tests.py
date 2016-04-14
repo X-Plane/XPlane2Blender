@@ -32,6 +32,8 @@ fileFilter = getOption('--filter', None)
 exclude = getOption('--exclude', None)
 blenderExecutable = getOption('--blender', 'blender')
 debug = getFlag('--debug')
+keep_going = getFlag('--continue')
+be_quiet = getFlag('--quiet')
 showHelp = getFlag('--help')
 
 if showHelp:
@@ -41,6 +43,8 @@ if showHelp:
         '  --filter [regex]\tfilter test files with a regular expression\n' +
         '  --exclude [regex]\texclude test files with a regular expression\n' +
         '  --debug\t\tenable debugging\n' +
+        '  --continue\tKeep running after test failure\n' +
+        '  --quiet\tReduce output from tests\n' +
         '  --blender [path]\tProvide alternative path to blender executable\n' +
         '  --help\t\tdisplay this help\n\n'
     )
@@ -67,7 +71,8 @@ for root, dirs, files in os.walk('./tests'):
             if inFilter(pyFile):
                 blendFile = pyFile.replace('.py', '.blend')
 
-                print('Running file %s' % pyFile)
+                if not be_quiet:
+                    print('Running file %s' % pyFile)
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
@@ -89,8 +94,14 @@ for root, dirs, files in os.walk('./tests'):
                 if sys.version_info >= (3, 0):
                     out = out.decode('utf-8')
 
-                print(out)
+                if not be_quiet: 
+                    print(out)
 
                 # tests raised an error
                 if out.find('FAILED') != -1 or out.find('Error') != -1:
-                    exit(1)
+                    if be_quiet:
+                        print('%s FAILED' % pyFile)
+                    if not keep_going:
+                        exit(1)
+                elif be_quiet:
+                    print('%s passed' % pyFile)
