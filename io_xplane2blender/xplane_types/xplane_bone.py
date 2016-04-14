@@ -284,6 +284,9 @@ class XPlaneBone():
         for keyframe in keyframes:
             rotation = keyframe.rotation
             axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
+			# Why the heck XZY?  Jonathan's 2.49 exporter decomposes Eulers using XYZ (because that is the ONLY
+			# decomposition available in 2.49), but it does so in X-Plane space.  So this is an axis renaming
+			# (since we alway work in Blender space) so that it comes out the same in X-Plane.
             keyframe.rotationMode = 'XZY'
             keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XZY')
 
@@ -399,8 +402,21 @@ class XPlaneBone():
         if debug:
             o += indent + '# static rotation\n'
 
-        axes = (0, 2, 1)
-        eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
+		# Ben says: this is SLIGHTLY counter-intuitive...Blender axes are
+		# globally applied in a Euler, so in our XYZ, X is affected -by- Y
+		# and both are affected by Z.
+		#
+		# Since X-Plane works opposite this, we are going to apply the
+		# animations exactly BACKWARD! ZYX.  The order here must
+		# be opposite the decomposition order above.
+		#
+		# Note that since our axis naming is ALSO different this will
+		# appear in the OBJ file as Y -Z X.
+		#
+		# see also: http://hacksoflife.blogspot.com/2015/11/blender-notepad-eulers.html
+
+        axes = (2, 1, 0)
+        eulerAxes = [(0.0,0.0,1.0),(0.0,1.0,0.0),(1.0,0.0,0.0)]
         i = 0
 
         for axis in eulerAxes:
