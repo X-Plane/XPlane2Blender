@@ -249,7 +249,6 @@ IDX	213
 IDX	214
 IDX	215
 
-
 # 0 ROOT
 # 1 Object: Cube.anim.001
 ANIM_begin
@@ -306,7 +305,7 @@ TRIS	0 36
 		# static translation
 		ANIM_trans	-0.00000003	-0.00000024	-0.00000006	-0.00000003	-0.00000024	-0.00000006
 		# static rotation
-		ANIM_rotate	0	1	0	0.0000025	0.0000025
+		ANIM_rotate	0	0	-1	0.0000025	0.0000025
 		# translation keyframes
 		ANIM_trans_begin	test
 		ANIM_trans_key	0	0	4	-2
@@ -319,4 +318,4 @@ TRIS	0 36
 		ANIM_end
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.7

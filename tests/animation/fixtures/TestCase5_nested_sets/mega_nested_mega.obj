@@ -51,7 +51,6 @@ IDX	33
 IDX	34
 IDX	35
 
-
 # 0 ROOT
 # 1 Object: Armature.008
 ANIM_begin
@@ -116,8 +115,8 @@ ANIM_rotate_end
 			# 4 Bone: Bone
 			ANIM_begin
 			# static rotation
+			ANIM_rotate	0	0	-1	89.99998884	89.99998884
 			ANIM_rotate	1	0	0	89.99999567	89.99999567
-			ANIM_rotate	0	1	0	89.99998884	89.99998884
 			# translation keyframes
 			ANIM_trans_begin	sim/cockpit2/engine/actuators/throttle_ratio[3]
 			ANIM_trans_key	0	0	0	0
@@ -138,4 +137,4 @@ ANIM_rotate_end
 	ANIM_end
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.7

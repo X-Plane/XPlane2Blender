@@ -767,9 +767,9 @@ IDX	677
 	# static translation
 	ANIM_trans	-1.79138386	0.17030573	0.33388519	-1.79138386	0.17030573	0.33388519
 	# static rotation
+	ANIM_rotate	0	1	0	16.75384273	16.75384273
+	ANIM_rotate	0	0	-1	-11.80388084	-11.80388084
 	ANIM_rotate	1	0	0	86.47610984	86.47610984
-	ANIM_rotate	0	0	-1	16.75384273	16.75384273
-	ANIM_rotate	0	1	0	11.80388084	11.80388084
 	# rotation keyframes
 	ANIM_rotate_begin	1	0	0	sim/flightmodel2/wing/elevator1_deg[1]
 	ANIM_rotate_key	0	0

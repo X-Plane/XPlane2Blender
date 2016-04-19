@@ -87,17 +87,17 @@ IDX10	60	61	62	63	64	65	66	67	68	69
 IDX	70
 IDX	71
 
-
 # 0 ROOT
 # 1 Object: Armature.001
+# ARMATURE: Armature.001	weight: 0
 	# 2 Bone: Bone
 	ANIM_begin
 	# static translation
 	ANIM_trans	0	0	-5	0	0	-5
 	# static rotation
-	ANIM_rotate	1	0	0	179.99999135	179.99999135
-	ANIM_rotate	0	0	-1	0	0
 	ANIM_rotate	0	1	0	0	0
+	ANIM_rotate	0	0	-1	0	0
+	ANIM_rotate	1	0	0	179.99999135	179.99999135
 	# rotation keyframes
 	ANIM_rotate_begin	1	0	0	test
 	ANIM_rotate_key	0	0
@@ -106,8 +106,6 @@ IDX	71
 		# 3 Object: Cube.001
 		# PRIMITIVE: Cube.001	weight: 0
 		# MATERIAL: Material
-		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_emission_rgb	0	0	0
 		ATTR_shiny_rat	0.5
 		TRIS	0 36
 		# 3 Bone: Bone.001
@@ -115,8 +113,8 @@ IDX	71
 		# static translation
 		ANIM_trans	0	0	-1	0	0	-1
 		# static rotation
+		ANIM_rotate	0	0	-1	-89.99999567	-89.99999567
 		ANIM_rotate	1	0	0	-90.0000025	-90.0000025
-		ANIM_rotate	0	1	0	-89.99999567	-89.99999567
 		# rotation keyframes
 		ANIM_rotate_begin	0	1	0	test
 		ANIM_rotate_key	0	0
@@ -137,4 +135,4 @@ IDX	71
 		ANIM_end
 	ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.7
