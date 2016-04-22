@@ -234,7 +234,13 @@ class XPlaneBone():
             # animated objects have parents world matrix * inverse of parents matrix
             # matrix_parent_inverse is a static arbitrary transform applied at parenting time to keep
             # objects from "jumping".  Without this, Blender would have to edit key frame tables on parenting.
-            return self.parent.getBlenderWorldMatrix() * self.blenderObject.matrix_parent_inverse
+
+            # Workaround blender bug where old parent_inverse_matrices are kept after unparenting
+            matrix_parent_inverse = self.blenderObject.matrix_parent_inverse
+            if self.blenderObject.parent == None:
+                matrix_parent_inverse = mathutils.Matrix.Identity(4)
+
+            return self.parent.getBlenderWorldMatrix() * matrix_parent_inverse
 
     def getPostAnimationMatrix(self):
         # for non-animated or root bones, post = pre
