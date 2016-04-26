@@ -387,7 +387,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
 
     wheel_delta = bpy.props.FloatProperty(
         attr = "wheel_delta",
-        name = "wheel delta",
+        name = "wheel delta (v10.5x)",
         description = "Value change on mouse wheel tick (v10.5x)",
         default = 0.0
     )

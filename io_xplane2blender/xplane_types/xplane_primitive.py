@@ -189,13 +189,31 @@ class XPlanePrimitive(XPlaneObject):
                 self.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', manip.wheel_delta))
 
     def write(self):
+        debug = getDebug()
         indent = self.xplaneBone.getIndent()
-        o = super(XPlanePrimitive, self).write()
+        o = ''
+
+        xplaneFile = self.xplaneBone.xplaneFile
+        commands =  xplaneFile.commands
+
+        if debug:
+            o += "%s# %s: %s\tweight: %d\n" % (indent, self.type, self.name, self.weight)
+
+        o += commands.writeReseters(self)
+
+        for attr in self.attributes:
+            o += commands.writeAttribute(self.attributes[attr], self)
 
         # rendering (do not render meshes/objects with no indices)
         if self.indices[1] > self.indices[0]:
             o += self.material.write()
 
+        # if the file is a cockpit file write all cockpit attributes
+        if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
+            for attr in self.cockpitAttributes:
+                o += commands.writeAttribute(self.cockpitAttributes[attr], self)
+
+        if self.indices[1] > self.indices[0]:
             offset = self.indices[0]
             count = self.indices[1] - self.indices[0]
             o += "%sTRIS\t%d %d\n" % (indent, offset, count)

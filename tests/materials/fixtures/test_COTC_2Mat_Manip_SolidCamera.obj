@@ -136,13 +136,12 @@ IDX	105
 IDX	106
 IDX	107
 
-
 # 0 ROOT
 # 1 Object: Cube.001
 # PRIMITIVE: Cube.001	weight: 0
-ATTR_manip_toggle	hand	0	0	sim/cockpit2/switches/landing_lights_switch	sim/cockpit2/switches/landing_lights_switch
 # MATERIAL: Panel Tex
 ATTR_cockpit
+ATTR_manip_toggle	hand	0	0	sim/cockpit2/switches/landing_lights_switch	sim/cockpit2/switches/landing_lights_switch
 TRIS	36 36
 # 1 Object: Cube.002
 # PRIMITIVE: Cube.002	weight: 1
@@ -160,4 +159,4 @@ ATTR_draw_enable
 ATTR_no_solid_camera
 TRIS	0 36
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.77 (sub 0) (build b'abf6f08') Exported with XPlane2Blender 3.3.8
