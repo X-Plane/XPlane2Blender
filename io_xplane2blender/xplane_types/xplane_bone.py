@@ -54,8 +54,7 @@ class XPlaneBone():
     # Returns:
     #   bool - True if bone is animated, False if not.
     def isAnimated(self):
-        return (hasattr(self, 'animations') and len(self.animations) > 0) or \
-               (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
+        return (hasattr(self, 'animations') and len(self.animations) > 0)
 
     # Method: collectAnimations
     # Stores all animations in <animations>.
@@ -333,23 +332,27 @@ class XPlaneBone():
                o += str(p.getBakeMatrixForMyAnimations()) + '\n'
                p = None
             '''
+        isAnimated = self.isAnimated()
+        hasAnimationAttributes = (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
 
-        if not self.isAnimated():
+        if not isAnimated and not hasAnimationAttributes:
             return o
 
         preMatrix = self.getPreAnimationMatrix()
         postMatrix = self.getPostAnimationMatrix()
         bakeMatrix = self.getBakeMatrixForMyAnimations()
 
-        if postMatrix is not preMatrix:
-            # write out static translations of bake
+        if (isAnimated and postMatrix is not preMatrix) or \
+            hasAnimationAttributes:
             o += indent + 'ANIM_begin\n'
 
+        if isAnimated and postMatrix is not preMatrix:
+            # write out static translations of bake
             o += self._writeStaticTranslation(bakeMatrix)
             o += self._writeStaticRotation(bakeMatrix)
 
-        for dataref in self.animations:
-            o += self.writeKeyframes(dataref)
+            for dataref in self.animations:
+                o += self.writeKeyframes(dataref)
 
         # IMPORTANT: we _do not_ invert out the static translation!  All children of this
         # bone will be taken relative to our final transform, wihch is around the rotation
@@ -664,16 +667,20 @@ class XPlaneBone():
 
     def writeAnimationSuffix(self):
         o = ''
+        indent = self.getIndent()
 
-        if not self.isAnimated():
+        isAnimated = self.isAnimated()
+        hasAnimationAttributes = (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
+
+        if not isAnimated and not hasAnimationAttributes:
             return o
 
         # unanimated bones do not export any suffix
         preMatrix = self.getPreAnimationMatrix()
         postMatrix = self.getPostAnimationMatrix()
 
-        if postMatrix is not preMatrix:
-            indent = self.getIndent()
+        if (isAnimated and postMatrix is not preMatrix) or \
+            hasAnimationAttributes:
             o += indent + 'ANIM_end\n'
 
         return o
