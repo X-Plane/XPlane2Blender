@@ -56,6 +56,7 @@ class XPlaneMesh():
                 # and bake it to the mesh
                 xplaneObject.bakeMatrix = xplaneObject.xplaneBone.getBakeMatrixForAttached()
                 mesh.transform(xplaneObject.bakeMatrix)
+                mesh.calc_normals_split()
 
                 if hasattr(mesh, 'polygons'): # BMesh
                     mesh.update(calc_tessface = True)
@@ -105,11 +106,12 @@ class XPlaneMesh():
                             # get the vertice from original mesh
                             v = mesh.vertices[vindex]
                             co = v.co
+                            ns=f['norms'][2-i]
 
                             if f['original_face'].use_smooth: # use smoothed vertex normal
                                 vert = [
                                     co[0], co[2], -co[1],
-                                    v.normal[0], v.normal[2], -v.normal[1],
+                                    ns[0], ns[2], -ns[1],
                                     f['uv'][i][0], f['uv'][i][1]
                                 ]
                             else: # use flat face normal
@@ -281,19 +283,29 @@ class XPlaneMesh():
     def faceToTrianglesWithUV(self,face,uv):
         triangles = []
         #inverse uv's as we are inversing face indices later
+        i0 = face.vertices[0]
+        i1 = face.vertices[1]
+        i2 = face.vertices[2]
         if len(face.vertices) == 4: #quad
+            i3 = face.vertices[3]
             if uv != None:
-                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv1[0], uv.uv1[1]]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]],'original_face':face})
-                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv4[0], uv.uv4[1]], [uv.uv3[0], uv.uv3[1]]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]],'original_face':face})
+                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv1[0], uv.uv1[1]]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]],'original_face':face,
+                    "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
+                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv4[0], uv.uv4[1]], [uv.uv3[0], uv.uv3[1]]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]],'original_face':face,
+                    "norms":[face.split_normals[2], face.split_normals[3], face.split_normals[0]]})
             else:
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]],'original_face':face})
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]],'original_face':face})
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]],'original_face':face,
+                    "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]],'original_face':face,
+                    "norms":[face.split_normals[2], face.split_normals[3], face.split_normals[0]]})
 
         else:
             if uv != None:
-                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv1[0], uv.uv1[1]]], "indices":face.vertices,'original_face':face})
+                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv1[0], uv.uv1[1]]], "indices":face.vertices,'original_face':face,
+                    "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
             else:
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices,'original_face':face})
+                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices,'original_face':face,
+                    "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
 
         return triangles
 
