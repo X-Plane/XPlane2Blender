@@ -1,0 +1,22 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+addons:
+  apt:
+    packages:
+      - blender
+sudo: false
+install:
+  - BLENDER_VERSION="2.77"
+  - BLENDER_VERSION_SUFFIX=""
+  - BLENDER_ARCHIVE="blender-${BLENDER_VERSION}${BLENDER_VERSION_SUFFIX}-linux-glibc211-x86_64"
+  - mkdir tmp && cd tmp
+  - wget http://ftp.nluug.nl/pub/graphics/blender/release/Blender${BLENDER_VERSION}/${BLENDER_ARCHIVE}.tar.bz2
+  - tar jxf ${BLENDER_ARCHIVE}.tar.bz2
+  - mv ${BLENDER_ARCHIVE} blender
+  - rm ${BLENDER_ARCHIVE}.tar.bz2
+  - cd ..
+  - ln -s ${PWD}/io_xplane2blender ${PWD}/tmp/blender/${BLENDER_VERSION}/scripts/addons/io_xplane2blender
+script: python tests.py --blender ./tmp/blender/blender

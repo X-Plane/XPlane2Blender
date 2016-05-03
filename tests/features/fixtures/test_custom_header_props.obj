@@ -1,0 +1,18 @@
+I
+800
+OBJ
+
+COCKPIT_REGION	0	0	32	32
+COCKPIT_REGION	32	0	64	32
+COCKPIT_REGION	64	0	96	32
+GLOBAL_cockpit_lit
+POINT_COUNTS	0	0	0	0
+custom_prop	10
+custom_prop_2	20
+
+
+
+
+# 0 ROOT
+
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
