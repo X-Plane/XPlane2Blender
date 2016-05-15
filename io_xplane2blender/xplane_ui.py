@@ -171,6 +171,11 @@ def scene_layout(self, scene):
     row = layout.row()
     row.label("Will automaticly create and use corrected normal textures. (Recommended)", icon = "INFO")
 
+    row = layout.row();
+    row.prop(scene.xplane, "exportCustomNormals")
+    row = layout.row();
+    row.label("Will use custom split normals when exporting (Blender 2.77 and above)", icon = "INFO")
+
     row = layout.row()
 
     if scene.xplane.exportMode == 'layers':

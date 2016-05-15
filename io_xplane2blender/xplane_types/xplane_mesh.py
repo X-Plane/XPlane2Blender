@@ -36,6 +36,8 @@ class XPlaneMesh():
     def collectXPlaneObjects(self, xplaneObjects):
         debug = getDebug()
 
+        exportCustomNormals = bpy.context.scene.xplane.exportCustomNormals
+
         def getSortKey(xplaneObject):
             return xplaneObject.name
 
@@ -106,7 +108,7 @@ class XPlaneMesh():
                             # get the vertice from original mesh
                             v = mesh.vertices[vindex]
                             co = v.co
-                            ns=f['norms'][2-i]
+                            ns = f['norms'][2-i] if exportCustomNormals else v.normal
 
                             if f['original_face'].use_smooth: # use smoothed vertex normal
                                 vert = [

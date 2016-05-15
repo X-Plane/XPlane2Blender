@@ -844,6 +844,13 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    exportCustomNormals = bpy.props.BoolProperty (
+        attr = "exportCustomNormals",
+        name = "Export Custom Normals (2.77+)",
+        description = "If checked, custom split normals will be exported. Only works in Blender 2.77 and above",
+        default = False
+    )
+
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
