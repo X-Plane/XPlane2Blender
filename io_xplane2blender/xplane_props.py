@@ -873,6 +873,29 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = True
     )
 
+    startframe = bpy.props.IntProperty(
+        attr = "startframe",
+        name = "Startframe",
+        description = "Start Frame",
+        default = 1,
+        min = 1
+    )
+
+    lastframe = bpy.props.IntProperty(
+        attr = "lastframe",
+        name = "Lastframe",
+        description = "Last Frame",
+        default = 250,
+        min = 1
+    )
+
+    stepframe = bpy.props.IntProperty(
+        attr = "stepframe",
+        name = "Stepframe",
+        description = "Step Frame",
+        default = 1,
+        min = 1
+    )
 # Class: XPlaneObjectSettings
 # Settings for Blender objects.
 #

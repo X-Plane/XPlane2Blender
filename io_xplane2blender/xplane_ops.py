@@ -546,6 +546,42 @@ class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
         obj.xplane.conditions.remove(self.index)
         return {'FINISHED'}
 
+
+# Class: OBJECT_OT_create_xplane_dataref_keyframes
+# Auto create Keyframes to the value of a <XPlaneDataref> of an object.
+class OBJECT_OT_create_xplane_dataref_keyframes(bpy.types.Operator):
+    bl_label = 'Auto Create All Dataref keyframes'
+    bl_idname = 'object.create_xplane_dataref_keyframes'
+    bl_description = 'auto create all X-Plane Dataref keyframes'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self, context):
+        scene = context.scene
+        obj = context.object
+        # 
+        path = 'sim/time/total_running_time_sec'
+        obj.xplane.datarefs[self.index].path = path
+
+        step = scene.xplane.stepframe / scene.render.fps
+        value = 0.0
+        for frame in range(scene.xplane.startframe, scene.xplane.lastframe + 1, scene.xplane.stepframe):
+            scene.frame_set(frame)
+            value += step
+            obj.xplane.datarefs[self.index].value = value
+            print('frame %i=%f' % (frame, value))
+
+            if "XPlane Datarefs" not in obj.animation_data.action.groups:
+                obj.animation_data.action.groups.new('XPlane Datarefs')
+
+            obj.xplane.datarefs[self.index].keyframe_insert(data_path="value", group="XPlane Datarefs")
+            makeKeyframesLinear(obj, path)
+        obj.xplane.datarefs[self.index].loop = value
+
+        return {'FINISHED'}
+
+
+ 
 # Function: addXPlaneOps
 # Registers all Operators.
 def addXPlaneOps():
@@ -576,6 +612,8 @@ def addXPlaneOps():
     bpy.utils.register_class(OBJECT_OT_remove_xplane_object_condition)
     bpy.utils.register_class(OBJECT_OT_add_xplane_material_condition)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_material_condition)
+
+    bpy.utils.register_class(OBJECT_OT_create_xplane_dataref_keyframes)
 
 
 # Function: removeXPlaneOps
@@ -608,3 +646,5 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_condition)
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_condition)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_condition)
+
+    bpy.utils.unregister_class(OBJECT_OT_create_xplane_dataref_keyframes)

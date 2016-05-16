@@ -608,6 +608,8 @@ def custom_layout(self, obj, type):
 #   obj - Blender object.
 #   bool bone - True if the object is a bone.
 def animation_layout(self, obj, bone = False):
+    scene = bpy.context.scene
+    
     layout = self.layout
     layout.separator()
     row = layout.row()
@@ -647,6 +649,21 @@ def animation_layout(self, obj, bone = False):
                 subrow.prop(attr, "value")
                 subrow = subbox.row()
                 subrow.prop(attr, "loop", text = "Loops")
+                #
+                subbox = box.box()
+                subrow = subbox.row()
+                subrow.label('loop animation auto create keyframes')
+                subrow.separator()
+                subrow = subbox.row()
+                subrow.prop(scene.xplane, "startframe")
+                subrow = subbox.row()
+                subrow.prop(scene.xplane, "lastframe")
+                subrow = subbox.row()
+                subrow.prop(scene.xplane, "stepframe")
+                subrow = subbox.row()
+                subrow.label('Actions:')
+                subrow = subbox.row()
+                subrow.operator("object.create_xplane_dataref_keyframes", text = "Create Keyframes").index = i
             else:
                 subrow.label('Object not animated.')
         elif attr.anim_type in ("show", "hide"):
