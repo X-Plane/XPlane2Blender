@@ -35,6 +35,7 @@ class XPlaneMesh():
     #   list xplaneObjects - list of <XPlaneObjects>.
     def collectXPlaneObjects(self, xplaneObjects):
         debug = getDebug()
+        supports_split_normals = False
 
         def getSortKey(xplaneObject):
             return xplaneObject.name
@@ -56,7 +57,10 @@ class XPlaneMesh():
                 # and bake it to the mesh
                 xplaneObject.bakeMatrix = xplaneObject.xplaneBone.getBakeMatrixForAttached()
                 mesh.transform(xplaneObject.bakeMatrix)
-                mesh.calc_normals_split()
+
+                if hasattr(mesh, 'calc_normals_split'): # split normals
+                    mesh.calc_normals_split()
+                    supports_split_normals = True
 
                 if hasattr(mesh, 'polygons'): # BMesh
                     mesh.update(calc_tessface = True)
@@ -106,7 +110,7 @@ class XPlaneMesh():
                             # get the vertice from original mesh
                             v = mesh.vertices[vindex]
                             co = v.co
-                            ns=f['norms'][2-i]
+                            ns = f['norms'][2 - i] if supports_split_normals else v.normal
 
                             if f['original_face'].use_smooth: # use smoothed vertex normal
                                 vert = [
