@@ -6,7 +6,7 @@ from .xplane_config import *
 from bpy.app.handlers import persistent
 
 def update(fromVersion):
-    if fromVersion == '<3.3.0':
+    if fromVersion == '<3.3.0' or fromVersion == '3.2':
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
@@ -17,7 +17,7 @@ def update(fromVersion):
                     layer.autodetectTextures = False
 
                     # set export mode to cockpit, if cockpit was previously enabled
-                    # TODO: Have users actually exwported scenery objects before?
+                    # TODO: Have users actually exported scenery objects before?
                     # Do we need to care about non-aircraft export types?
                     if layer.cockpit:
                         layer.export_type = 'cockpit'
@@ -41,7 +41,6 @@ def load_handler(dummy):
 
         print('This file was created with an older XPlane2Blender version (%s) and will now automaticly be updated' % fileVersion)
 
-        # TODO: update blend data
         update(fileVersion)
 
         # store currentVersion
