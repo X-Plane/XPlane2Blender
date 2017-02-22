@@ -1250,7 +1250,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
             (LIGHT_PULSING, LIGHT_PULSING + " (deprecated)", LIGHT_PULSING + " (deprecated)"),
             (LIGHT_STROBE, LIGHT_STROBE + " (deprecated)", LIGHT_STROBE + " (deprecated)"),
             (LIGHT_TRAFFIC, LIGHT_TRAFFIC + " (deprecated)", LIGHT_TRAFFIC + " (deprecated)"),
-            (LIGHT_NAMED, LIGHT_NAMED + " (deprecated)", LIGHT_NAMED + " (deprecated)"),
+            (LIGHT_NAMED, LIGHT_NAMED, LIGHT_NAMED),
             (LIGHT_CUSTOM, LIGHT_CUSTOM, LIGHT_CUSTOM),
             (LIGHT_PARAM, LIGHT_PARAM, LIGHT_PARAM)
         ]
