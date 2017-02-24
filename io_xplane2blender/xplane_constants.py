@@ -1,6 +1,7 @@
 # holds all kinds of constants
 
-MAX_LODS = 4
+#none, 1, 2, 3, 4
+MAX_LODS = 5
 MAX_COCKPIT_REGIONS = 4
 
 EXPORT_MODE_LAYERS = "layers"

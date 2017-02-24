@@ -477,6 +477,12 @@ class XPlaneLOD(bpy.types.PropertyGroup):
         min = 0
     )
 
+def make_lods_array():
+    lods_arr = [("0","none","none")]
+    for i in range(1,MAX_LODS):
+        lods_arr.append((str(i),str(i),str(i)))
+    return lods_arr
+
 # Class: XPlaneLayer
 # Defines settings for a OBJ file. Is "parented" to a Blender layer.
 #
@@ -622,12 +628,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Levels of detail",
         description = "Levels of detail",
         default = "0",
-        items = [
-            ("0", "none", "none"),
-            ("2", "2", "2"),
-            ("3", "3", "3"),
-            ("4", "4", "4")
-        ]
+        items = make_lods_array()
     )
 
     lod = bpy.props.CollectionProperty(
@@ -918,8 +919,8 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     lod = bpy.props.BoolVectorProperty(
         name = "Levels of detail",
         description = "Define in wich LODs this object will be used. If none is checked it will be used in all.",
-        default = (False, False, False),
-        size = 3
+        default = (False, False, False, False, False),
+        size = MAX_LODS
     )
 
     override_weight = bpy.props.BoolProperty(

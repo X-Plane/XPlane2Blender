@@ -3,6 +3,7 @@
 
 import bpy
 from .xplane_config import *
+from .xplane_constants import MAX_LODS
 
 # Function: findFCurveByPath
 # Helper function to find an FCurve by an data-path.
@@ -105,7 +106,7 @@ class SCENE_OT_add_xplane_layers(bpy.types.Operator):
             scene.xplane.layers.add()
 
             # add all lods
-            for ii in range(0, 3):
+            for ii in range(0, MAX_LODS-1):
                 scene.xplane.layers[i].lod.add()
 
             # add cockpit regions
@@ -131,7 +132,7 @@ class SCENE_OT_add_xplane_layer_lods(bpy.types.Operator):
 
         num_lods = int(scene.xplane.layers[self.index].lods)
 
-        while len(scene.xplane.layers[self.index].lod) < 4:
+        while len(scene.xplane.layers[self.index].lod) < MAX_LODS:
             scene.xplane.layers[self.index].lod.add()
 
         return {'FINISHED'}

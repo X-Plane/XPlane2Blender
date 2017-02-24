@@ -312,17 +312,18 @@ class XPlaneFile():
                 collectChildren(blenderObject)
 
         collectChildren(blenderRootObject)
-        self.collectBlenderObjects(blenderObjects)
+        if len(blenderObjects) > 1:
+            self.collectBlenderObjects(blenderObjects)
 
-        # setup root bone and root xplane object
-        rootXPlaneObject = self.objects[blenderRootObject.name]
-        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject)
-        self.rootBone.xplaneFile = self
+            # setup root bone and root xplane object
+            rootXPlaneObject = self.objects[blenderRootObject.name]
+            self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject)
+            self.rootBone.xplaneFile = self
 
-        # need to collect data
-        rootXPlaneObject.collect()
+            # need to collect data
+            rootXPlaneObject.collect()
 
-        self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
+            self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
         # restore frame before export
         bpy.context.scene.frame_set(frame = currentFrame)
@@ -522,6 +523,7 @@ class XPlaneFile():
                 )
                 o += self.commands.write(lodIndex)
 
+        #TODO: Who's idea was this? Is this in the OBJ Spec?
         # if lods are present we need to attach a closing lod
         # containing all objects not in a lod that should always be visible
         if numLods > 0 and tallestFar < 100000:
