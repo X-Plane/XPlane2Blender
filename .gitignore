@@ -1,3 +1,10 @@
 *.pyc
 io_xplane_debug.py
 setup.py
+tmp
+*.blend1
+*.blend2
+*.blend3
+*.blend4
+*.blend5
+__pycache__

@@ -1,0 +1,83 @@
+I
+800
+OBJ
+
+TEXTURE	../../../../../../../../../Users/alxunru/Desktop/X-Plane 10/Aircraft/Test Cases/objects/test.png
+POINT_COUNTS	36	0	0	36
+
+VT	-0.5	0.5	0.5	-1	0	0	0	0	# 0
+VT	-0.5	-0.5	0.5	-1	0	0	0	0	# 1
+VT	-0.5	-0.5	-0.5	-1	0	0	0	0	# 2
+VT	-0.5	-0.5	-0.5	-1	0	0	0	0	# 3
+VT	-0.5	0.5	-0.5	-1	0	0	0	0	# 4
+VT	-0.5	0.5	0.5	-1	0	0	0	0	# 5
+VT	0.5	-0.5	-0.5	0	0	-1	0	0	# 6
+VT	0.5	0.5	-0.5	0	0	-1	0	0	# 7
+VT	-0.5	0.5	-0.5	0	0	-1	0	0	# 8
+VT	-0.5	0.5	-0.5	0	0	-1	0	0	# 9
+VT	-0.5	-0.5	-0.5	0	0	-1	0	0	# 10
+VT	0.5	-0.5	-0.5	0	0	-1	0	0	# 11
+VT	0.5	-0.5	0.5	1	0	0	0	0	# 12
+VT	0.5	0.5	0.5	1	0	0	0	0	# 13
+VT	0.5	0.5	-0.5	1	0	0	0	0	# 14
+VT	0.5	0.5	-0.5	1	0	0	0	0	# 15
+VT	0.5	-0.5	-0.5	1	0	0	0	0	# 16
+VT	0.5	-0.5	0.5	1	0	0	0	0	# 17
+VT	0.5	0.5	0.5	0	0	1	0	0	# 18
+VT	0.5	-0.5	0.5	0	0	1	0	0	# 19
+VT	-0.5	-0.5	0.5	0	0	1	0	0	# 20
+VT	-0.5	-0.5	0.5	0	0	1	0	0	# 21
+VT	-0.5	0.5	0.5	0	0	1	0	0	# 22
+VT	0.5	0.5	0.5	0	0	1	0	0	# 23
+VT	0.5	-0.5	-0.5	0	-1	0	0	0	# 24
+VT	-0.5	-0.5	-0.5	0	-1	0	0	0	# 25
+VT	-0.5	-0.5	0.5	0	-1	0	0	0	# 26
+VT	-0.5	-0.5	0.5	0	-1	0	0	0	# 27
+VT	0.5	-0.5	0.5	0	-1	0	0	0	# 28
+VT	0.5	-0.5	-0.5	0	-1	0	0	0	# 29
+VT	-0.5	0.5	-0.5	0	1	0	0	0	# 30
+VT	0.5	0.5	-0.5	0	1	0	0	0	# 31
+VT	0.5	0.5	0.5	0	1	0	0	0	# 32
+VT	0.5	0.5	0.5	0	1	0	0	0	# 33
+VT	-0.5	0.5	0.5	0	1	0	0	0	# 34
+VT	-0.5	0.5	-0.5	0	1	0	0	0	# 35
+
+IDX10	0	1	2	3	4	5	6	7	8	9
+IDX10	10	11	12	13	14	15	16	17	18	19
+IDX10	20	21	22	23	24	25	26	27	28	29
+IDX	30
+IDX	31
+IDX	32
+IDX	33
+IDX	34
+IDX	35
+
+
+# 0 ROOT
+# 1 Object: Cube.014
+ANIM_begin
+# rotation keyframes
+ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.33000004	-30.75937785
+ANIM_rotate_key	1	-61.5187557
+ANIM_rotate_end
+ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.33000004	4.92327591
+ANIM_rotate_key	1	9.84655183
+ANIM_rotate_end
+ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_key	0	0
+ANIM_rotate_key	0.33000004	31.24762368
+ANIM_rotate_key	1	62.49524736
+ANIM_rotate_end
+# PRIMITIVE: Cube.014	weight: 0
+# MATERIAL: Material
+ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
+ATTR_emission_rgb	0	0	0
+ATTR_shiny_rat	0.5
+TRIS	0 36
+ANIM_end
+
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
