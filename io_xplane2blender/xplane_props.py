@@ -919,8 +919,8 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     lod = bpy.props.BoolVectorProperty(
         name = "Levels of detail",
         description = "Define in wich LODs this object will be used. If none is checked it will be used in all.",
-        default = (False, False, False, False, False),
-        size = MAX_LODS
+        default = (False, False, False, False),
+        size = MAX_LODS-1
     )
 
     override_weight = bpy.props.BoolProperty(
