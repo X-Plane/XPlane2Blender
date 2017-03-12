@@ -51,19 +51,36 @@ class XPlaneKeyframe():
         # goto keyframe and read out object values
         # TODO: support subframes?
         self.frame = int(round(keyframe.co[0]))
-        bpy.context.scene.frame_set(frame = self.frame)
+        bpy.context.scene.frame_set(frame=self.frame)
 
         self.location = copy.copy(blenderObject.location)
         self.rotation = None
         self.rotationMode = blenderObject.rotation_mode
 
-        # TODO: rotationMode should reside in keyframes collection as it is the same for each keyframe
-        if self.rotationMode == 'QUATERNION':
-            self.rotation = blenderObject.rotation_quaternion.copy()
-        elif self.rotationMode == 'AXIS_ANGLE':
-            rot = blenderObject.rotation_axis_angle
-            self.rotation = (rot[0], rot[1], rot[2], rot[3])
-        else:
-            self.rotation = blenderObject.rotation_euler.copy()
+        # TODO: Support parented bones
+        if self.xplaneBone.blenderBone:
+            # For 'BlenderBones', we get a matrix as the euler/quaternion values are
+            # incorrectly reported when being driven by ik and other constraints.
 
-        self.scale = copy.copy(blenderObject.scale)
+            # Note: We need the values in 'pose' space - this is the rest position here.
+            rest = blenderObject.bone.matrix_local.inverted()
+            matrix_final = rest * blenderObject.matrix
+
+            self.location = matrix_final.to_translation().copy()
+            self.scale = copy.copy(matrix_final.to_scale())
+
+            if self.rotationMode == 'QUATERNION':
+                self.rotation = matrix_final.to_quaternion().copy()
+            else:
+                self.rotation = matrix_final.to_euler().copy()
+        else:
+            # TODO: rotationMode should reside in keyframes collection as it is the same for each keyframe
+            if self.rotationMode == 'QUATERNION':
+                self.rotation = blenderObject.rotation_quaternion.copy()
+            elif self.rotationMode == 'AXIS_ANGLE':
+                rot = blenderObject.rotation_axis_angle
+                self.rotation = (rot[0], rot[1], rot[2], rot[3])
+            else:
+                self.rotation = blenderObject.rotation_euler.copy()
+
+            self.scale = copy.copy(blenderObject.scale)
