@@ -312,18 +312,17 @@ class XPlaneFile():
                 collectChildren(blenderObject)
 
         collectChildren(blenderRootObject)
-        if len(blenderObjects) > 1:
-            self.collectBlenderObjects(blenderObjects)
+        self.collectBlenderObjects(blenderObjects)
 
-            # setup root bone and root xplane object
-            rootXPlaneObject = self.objects[blenderRootObject.name]
-            self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject)
-            self.rootBone.xplaneFile = self
+        # setup root bone and root xplane object
+        rootXPlaneObject = self.objects[blenderRootObject.name]
+        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject)
+        self.rootBone.xplaneFile = self
 
-            # need to collect data
-            rootXPlaneObject.collect()
+        # need to collect data
+        rootXPlaneObject.collect()
 
-            self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
+        self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
         # restore frame before export
         bpy.context.scene.frame_set(frame = currentFrame)
