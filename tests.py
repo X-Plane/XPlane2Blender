@@ -96,9 +96,9 @@ for root, dirs, files in os.walk('./tests'):
 
                 if not be_quiet: 
                     print(out)
-
-                # tests raised an error
-                if out.find('FAILED') != -1 or out.find('Error') != -1:
+                    
+                # tests raised an error - IMPORTANT! If the output changes from FAIL to something else you will start getting false positives!
+                if out.find('FAIL') != -1 or out.find('Error') != -1:
                     if be_quiet:
                         print('%s FAILED' % pyFile)
                     if not keep_going:
