@@ -135,8 +135,6 @@ def create_test_cubes():
 
 class TestLODs(XPlaneTestCase):
     def test_lods_export(self):
-        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.5.0.201701191708\pysrc')
-        import pydevd;pydevd.settrace()
         def filterLines(line):
             return isinstance(line[0], str) and \
                    (line[0].find('POINT_COUNTS') == 0 or \
