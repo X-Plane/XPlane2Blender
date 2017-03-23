@@ -171,12 +171,16 @@ class XPlaneMaterial():
             slot = mat.texture_slots[i]
 
             if slot and slot.use and slot.texture.type == 'IMAGE':
+                #Props->Texture->Influence->Diffuse->[X] Color
                 if slot.use_map_color_diffuse and self.texture == None:
                     self.texture = slot.texture.image.filepath
+                #Props->Texture->Influence->Shading->[X] Emit
                 elif slot.use_map_emit and self.textureLit == None:
                     self.textureLit = slot.texture.image.filepath
+                #Props->Texture->Influence->Geometry->[X] Normal
                 elif slot.use_map_normal and self.textureNormal == None:
                     self.textureNormal = slot.texture.image.filepath
+                #Props->Texture->Influence->Specular->[X] Intensity
                 elif slot.use_map_specular and self.textureSpecular == None:
                     self.textureSpecular = slot.texture.image.filepath
 

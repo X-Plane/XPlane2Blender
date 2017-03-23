@@ -181,10 +181,9 @@ class XPlaneCommands():
                 if reseter and reseter in self.written:
                     del self.written[reseter]
 
-                writtenNames = list(self.written.keys())
-
+                writtenNames = sorted(list(self.written.keys()))
                 # check if a reseter counterpart has been written and if so delete its reseter
-                for reseter in self.reseters:
+                for reseter in sorted(self.reseters.keys()):
                     matchingWritten = firstMatchInList(re.compile(reseter), writtenNames)
                     if self.reseters[reseter] == name and matchingWritten:
                         del self.written[matchingWritten]
@@ -242,14 +241,15 @@ class XPlaneCommands():
     def attributeIsReseter(self, attr, reseters = None):
         if reseters == None: reseters = self.reseters
 
-        for reseter in reseters:
+        for reseter in sorted(self.reseters.keys()):
             if reseters[reseter] == attr:
                 return True
 
         return False
 
     def getAttributeReseter(self, attr):
-        reseterNames = list(self.reseters.keys())
+        #TODO Unsure if this call to sorted makes a difference
+        reseterNames = sorted(list(self.reseters.keys()))
 
         for reseter in reseterNames:
             pattern = re.compile(reseter)
@@ -289,10 +289,10 @@ class XPlaneCommands():
             if xplaneObject.cockpitAttributes[attr]:
                 attributes.add(xplaneObject.cockpitAttributes[attr])
 
-        attributeNames = list(attributes.keys())
-        writtenNames = list(self.written.keys())
+        attributeNames = sorted(list(attributes.keys()))
+        writtenNames = sorted(list(self.written.keys()))
 
-        for reseter in self.reseters:
+        for reseter in sorted(self.reseters.keys()):
             resetingAttr = self.reseters[reseter]
             pattern = re.compile(reseter)
 
@@ -301,7 +301,7 @@ class XPlaneCommands():
 
             # only reset attributes that wont be written with this object again
             if not matchingAttribute and matchingWritten:
-#                logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
+                #logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
 
                 # write reseter and add it to written
                 o += indent + resetingAttr + "\n"
