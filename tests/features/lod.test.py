@@ -19,9 +19,9 @@ layer 1, defines no buckets [] [] [] [] []
 import bpy
 import os
 import sys
-#from io_xplane2blender.tests import *
-#from io_xplane2blender.xplane_config import *
-#from io_xplane2blender.xplane_types import xplane_file
+from io_xplane2blender.tests import *
+from io_xplane2blender.xplane_config import *
+from io_xplane2blender.xplane_types import xplane_file
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -31,7 +31,7 @@ MAX_XPLANE_LAYERS = 5
 LOD_VAL_INCREMENT = 200
 LOD_N_F_PAIRS = []
 
-def make_lod_near_far_pairs():
+def make_lod_near_far_pairs():#{{{1
     ''' Makes the LOD near and fair pairs, initializing this test's LOD_N_F_PAIRS'''
     for i in range(0,REAL_LOD_BUCKETS):
         n = LOD_VAL_INCREMENT * i
@@ -68,10 +68,11 @@ def make_cubes(current_layer, layer_index, current_scene):
 def create_test_cubes():
     """Creates the test blender file programmatically, an trophy shape cut in half with cubes placed in different layers in different buckets"""
 
+    #For now, delete everything by hand if needed
     # delete all existing objects
-    bpy.ops.object.select_all(action="SELECT")
-    for blender_obj in bpy.data.objects:
-        bpy.data.objects.remove(blender_obj,do_unlink=True)
+    #bpy.ops.object.select_all(action="SELECT")
+    #for blender_obj in bpy.data.objects:
+        #bpy.data.objects.remove(blender_obj, do_unlink=True) For when we have Blender 2.78
 
     scene = bpy.data.scenes[0]
 
@@ -82,9 +83,14 @@ def create_test_cubes():
     # Set Scene Options #
     #####################
     scene.xplane.version = '1050'
-    #scene.xplane.optimize = True    
+    scene.xplane.optimize = True    
     scene.xplane.debug = True    
 
+    ################################
+    # Material and Texture Options #
+    ################################
+    bpy.data.materials["Material"].texture_slots['Tex'].texture_coords = 'UV'
+    
     ########################
     # Setup X-Plane layers #
     ########################
@@ -124,9 +130,26 @@ def create_test_cubes():
         scene.layers[layer_index] = True
         layer_index += 1
 
-create_test_cubes()
+#Use this to perfectly recreate the initial test
+#create_test_cubes()
 
 class TestLODs(XPlaneTestCase):
     def test_lods_export(self):
-        pass
+        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.5.0.201701191708\pysrc')
+        import pydevd;pydevd.settrace()
+        def filterLines(line):
+            return isinstance(line[0], str) and \
+                   (line[0].find('POINT_COUNTS') == 0 or \
+                    line[0].find('ATTR_LOD')     == 0 or \
+                    line[0].find('TRIS')         == 0)
+                   
+        
+        for layer_idx in range(0,MAX_XPLANE_LAYERS):
+            filename = "test_lod_layer_" + str(layer_idx + 1)
+            self.assertLayerExportEqualsFixture(
+                layer_idx,
+                os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+                filename,
+                filterLines)
 
+runTestCases([TestLODs])
