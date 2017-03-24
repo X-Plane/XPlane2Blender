@@ -98,7 +98,17 @@ for root, dirs, files in os.walk('./tests'):
                     print(out)
                     
                 # tests raised an error - IMPORTANT! If the output changes from FAIL to something else you will start getting false positives!
-                if out.find('FAIL') != -1 or out.find('Error') != -1:
+                #Under advisement from a Blender developer, you can ignore Error, region type 4"
+                split_lines = list(filter(lambda line: line.find("Error") != -1, re.split(r'([\r\n]|\r\n)',out)))
+                
+                found_non_region_type_error = False
+                
+                for line in split_lines:
+                    if line.find("Error, region type") == -1:
+                        found_non_region_type_error = True
+                        break
+                
+                if (out.find('FAIL') != -1) or (out.find('Error') != -1 and found_non_region_type_error == True):
                     if be_quiet:
                         print('%s FAILED' % pyFile)
                     if not keep_going:
