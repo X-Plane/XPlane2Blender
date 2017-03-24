@@ -347,7 +347,10 @@ class XPlaneFile():
         elif blenderObject.type == "ARMATURE":
             logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject = XPlaneObject(blenderObject)
-
+        elif blenderObject.type == "EMPTY":
+            logger.info("\t %s: adding to list" % blenderObject.name)
+            xplaneObject = XPlaneObject(blenderObject)
+            
         return xplaneObject
 
     def getBoneByBlenderName(self, name, parent = None):
