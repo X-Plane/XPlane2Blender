@@ -9,11 +9,10 @@ from io_xplane2blender.xplane_types import xplane_file
 __dirname__ = os.path.dirname(__file__)
 
 class TestSSO_2incompatibleMats(XPlaneTestCase):
+    expected_logger_errors = 3
+        
     def test_export(self):
         filename = 'test_SSO_2incompatibleMats'
-
-        # we must the console transport to prevent the CI from thinking that we got errors
-        logger.clearTransports()
 
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
         out = xplaneFile.write()
