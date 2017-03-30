@@ -17,6 +17,6 @@ class TestSSO_2incompatibleMats(XPlaneTestCase):
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
         out = xplaneFile.write()
 
-        self.assertEquals(len(logger.findErrors()), 3)
+        self.assertEquals(len(logger.findErrors()), self.expected_logger_errors)
 
 runTestCases([TestSSO_2incompatibleMats])

@@ -16,6 +16,6 @@ class TestSSO_IllegalUsePanelTex(XPlaneTestCase):
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
         out = xplaneFile.write()
 
-        self.assertEquals(len(logger.findErrors()), 1)
+        self.assertEquals(len(logger.findErrors()), self.expected_logger_errors)
 
 runTestCases([TestSSO_IllegalUsePanelTex])
