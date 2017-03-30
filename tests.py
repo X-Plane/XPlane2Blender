@@ -84,7 +84,7 @@ for root, dirs, files in os.walk('./tests'):
                 blendFile = pyFile.replace('.py', '.blend')
 
                 if not be_quiet:
-                    print('Running file %s' % pyFile)
+                    print(("/*=== Running file " + pyFile).ljust(75,'=')+'{{{')
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
@@ -105,19 +105,26 @@ for root, dirs, files in os.walk('./tests'):
 
                 if sys.version_info >= (3, 0):
                     out = out.decode('utf-8')
-
-                if not be_quiet: 
-                    print(out)
                     
                 logger_matches = re.search(ERRORED_LOGGER_REGEX, out)
                 if logger_matches == None:
                     num_errors = 0
                 else:
                     num_errors = (int(logger_matches.group(1)))
-                
+ 
+                if not be_quiet: 
+                    print(out)
+                                   
                 if out.find('FAIL') != -1 or num_errors != 0:
                     print('%s FAILED' % pyFile)
                     if not keep_going:
                         exit(1)
                 elif be_quiet:
                     print('%s passed' % pyFile)
+                
+                #THIS IS THE LAST THING TO PRINT BEFORE A TEST ENDS
+                #Its a little easier to see the boundaries between test suites,
+                #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
+                #Blender, and more in there sometimes
+                if not be_quiet:
+                    print(('=' *75)+"}}}*/")
