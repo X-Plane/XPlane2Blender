@@ -5,6 +5,18 @@ import sys
 import shutil
 import re
 
+    
+"""
+SPECIAL HARDCODED STRING error checking string
+
+Rather than try complicated string matching, the exporter prints
+
+LOGGER HAD X UNEXPECTED ERRORS 
+
+The string is never indented. The formating of X is not specified, as long as it parses to an int
+"""
+ERRORED_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
+
 if os.path.exists('./tests/tmp'):
     # empty temp directory
     shutil.rmtree('./tests/tmp')
@@ -72,7 +84,7 @@ for root, dirs, files in os.walk('./tests'):
                 blendFile = pyFile.replace('.py', '.blend')
 
                 if not be_quiet:
-                    print('Running file %s' % pyFile)
+                    print(("/*=== Running file " + pyFile).ljust(75,'=')+'{{{')
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
@@ -93,15 +105,26 @@ for root, dirs, files in os.walk('./tests'):
 
                 if sys.version_info >= (3, 0):
                     out = out.decode('utf-8')
-
+                    
+                logger_matches = re.search(ERRORED_LOGGER_REGEX, out)
+                if logger_matches == None:
+                    num_errors = 0
+                else:
+                    num_errors = (int(logger_matches.group(1)))
+ 
                 if not be_quiet: 
                     print(out)
-
-                # tests raised an error
-                if out.find('FAILED') != -1 or out.find('Error') != -1:
-                    if be_quiet:
-                        print('%s FAILED' % pyFile)
+                                   
+                if out.find('FAIL') != -1 or num_errors != 0:
+                    print('%s FAILED' % pyFile)
                     if not keep_going:
                         exit(1)
                 elif be_quiet:
                     print('%s passed' % pyFile)
+                
+                #THIS IS THE LAST THING TO PRINT BEFORE A TEST ENDS
+                #Its a little easier to see the boundaries between test suites,
+                #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
+                #Blender, and more in there sometimes
+                if not be_quiet:
+                    print(('=' *75)+"}}}*/")

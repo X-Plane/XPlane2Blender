@@ -7,11 +7,19 @@ from ..xplane_config import setDebug, getDebug
 from ..xplane_helpers import logger, XPlaneLogger
 from .animation_file_mappings import mappings
 
+#TODO: Make this import from XPlane2Blender/tests.py instead of just keeping it in sync manually
+ERRORED_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
+
 FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
 
 class XPlaneTestCase(unittest.TestCase):
+    
+    #If you are expecting errors as as part of your test, every part of your test must expect errors.
+    #Split facets that must pass and facets that must fail into separate tests
+    expected_logger_errors = 0
+        
     def setUp(self, useLogger = True):
         if '--debug' in sys.argv:
             setDebug(True)
@@ -237,7 +245,21 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             self.assertFileEqualsFixture(out, fixtureFile, filterLine)
 
 def runTestCases(testCases):
-    for testCase in testCases:
+    #Until a better solution for knowing if the logger's error count should be used to quit the testing,
+    #we are currently saying only 1 is allow per suite at a time (which is likely how it should be anyways)
+    assert len(testCases) == 1, "Currently, only one test case per suite is supported at a time"
+    expected_logger_errors = 0
+    for testCase in testCases:    
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(testCase)
-
+        expected_logger_errors += testCase.expected_logger_errors
+    
     unittest.TextTestRunner().run(suite)
+    
+    #WARNING! There is a chance for false positives with this - if the total number of errors is correct,
+    #but their distribution throughout the asserts are not. Therefore it is recommended to only create one
+    #self.assertEquals(len(logger.findErrors()), num_errors) at the end of the test
+    unexpected_errors = len(logger.findErrors()) - expected_logger_errors
+    
+    #See XPlane2Blender/tests.py for documentation. The strings must be kept in sync!
+    return_string = ERRORED_LOGGER_REGEX.replace("([+-]?\d+)", str(unexpected_errors))
+    print(return_string)

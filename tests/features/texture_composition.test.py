@@ -12,6 +12,37 @@ class TestTextureComposition(XPlaneTestCase):
     def checksum(self, file):
         return md5(open(file, 'rb').read()).hexdigest()
 
+    #returns a tuple of texture, generated texture, and fixture texture
+    def make_test_paths(self,file_name):
+        #The file referenced in the blender file
+        blenderTexPath = os.path.join(__dirname__, 'tex/' + file_name)
+        
+        #The file generated during the test
+        tmpTexPath     = os.path.join(__dirname__, '../tmp/' + file_name)
+        
+        #The test fixture file to test sameness with
+        fixtureTexPath = os.path.join(__dirname__, 'fixtures/tex/'  + file_name)
+        return (blenderTexPath,tmpTexPath,fixtureTexPath)
+    
+    # move generated image files into temp dir and compare them with fixtures
+    def move_image_for_manual_comparison(self, blenderTexPath, tmpTexPath):
+         # move to tmp dir for manual investigation
+        os.rename(blenderTexPath, tmpTexPath)
+        
+        print("Manually inspect blender image %s with generated image %s" % (blenderTexPath,tmpTexPath))
+    
+    #TODO: Is this needed?
+    #Assert that the modification is the same
+    def do_modified_time_test(self,blenderTexPath,layer_index, filename):
+        # store modification time of composed texture
+        blenderTexTime = os.path.getmtime(blenderTexPath)
+
+        # export again
+        self.exportLayer(layer_index, filename)
+
+        self.assertTrue(os.path.exists(blenderTexPath))
+        self.assertEqual(blenderTexTime, os.path.getmtime(blenderTexPath))
+        
     def test_texture_composition_nm_spec_export(self):
         def filterLines(line):
             return isinstance(line[0], str) and \
@@ -26,23 +57,13 @@ class TestTextureComposition(XPlaneTestCase):
         )
 
         # move generated image files into temp dir and compare them with fixtures
-        normalSpecTexPath = os.path.join(__dirname__, 'tex/normal_nm_spec.png')
-        tmpNormalSpecTexPath = os.path.join(__dirname__, '../tmp/normal_nm_spec.png')
-        fixtureNormalSpecTexPath = os.path.join(__dirname__, 'fixtures/tex/normal_nm_spec.png')
-        self.assertTrue(os.path.exists(normalSpecTexPath), 'Normal+Specular texture was not generated.')
-        self.assertEqual(self.checksum(normalSpecTexPath), self.checksum(fixtureNormalSpecTexPath), 'Image files are not equal.')
+        (blenderNormSpecTexPath, tmpNormSpecTexPath, fixtureNormSpecTexPath) = self.make_test_paths('normal_nm_spec.png')
+        
+        self.assertTrue(os.path.exists(blenderNormSpecTexPath), 'Normal+Specular texture was not generated.')
+        self.assertEqual(self.checksum(blenderNormSpecTexPath), self.checksum(fixtureNormSpecTexPath), 'Image files are not equal.')
 
-        # store modification time of composed texture
-        normalSpecTexTime = os.path.getmtime(normalSpecTexPath)
-
-        # export again
-        self.exportLayer(0, filename)
-
-        self.assertTrue(os.path.exists(normalSpecTexPath))
-        self.assertEqual(normalSpecTexTime, os.path.getmtime(normalSpecTexPath))
-
-        # move to tmp dir for manual investigation
-        os.rename(normalSpecTexPath, tmpNormalSpecTexPath)
+        self.do_modified_time_test(blenderNormSpecTexPath,0,filename)
+        self.move_image_for_manual_comparison(blenderNormSpecTexPath,tmpNormSpecTexPath)
 
     def test_texture_composition_nm_export(self):
         def filterLines(line):
@@ -58,23 +79,15 @@ class TestTextureComposition(XPlaneTestCase):
         )
 
         # move generated image files into temp dir and compare them with fixtures
-        normalSpecTexPath = os.path.join(__dirname__, 'tex/normal_with_alpha_nm.png')
-        tmpNormalSpecTexPath = os.path.join(__dirname__, '../tmp/normal_with_alpha_nm.png')
-        fixtureNormalSpecTexPath = os.path.join(__dirname__, 'fixtures/tex/normal_with_alpha_nm.png')
-        self.assertTrue(os.path.exists(normalSpecTexPath), 'Normal texture was not generated.')
-        self.assertEqual(self.checksum(normalSpecTexPath), self.checksum(fixtureNormalSpecTexPath), 'Image files are not equal.')
+        (blenderNormWithAlphaTexPath,tmpNormWithAlphaTexPath,fixtureAlphaTexPath) = self.make_test_paths('normal_with_alpha_nm.png')
+        
+        self.assertTrue(os.path.exists(blenderNormWithAlphaTexPath), 'Normal w/ alpha texture was not generated.')
+        self.assertEqual(self.checksum(blenderNormWithAlphaTexPath), self.checksum(fixtureAlphaTexPath), 'Image files are not equal.')
 
-        # store modification time of composed texture
-        normalSpecTexTime = os.path.getmtime(normalSpecTexPath)
-
-        # export again
-        self.exportLayer(1, filename)
-
-        self.assertTrue(os.path.exists(normalSpecTexPath))
-        self.assertEqual(normalSpecTexTime, os.path.getmtime(normalSpecTexPath))
+        self.do_modified_time_test(blenderNormWithAlphaTexPath,1,filename)
 
         # move to tmp dir for manual investigation
-        os.rename(normalSpecTexPath, tmpNormalSpecTexPath)
+        self.move_image_for_manual_comparison(blenderNormWithAlphaTexPath, tmpNormWithAlphaTexPath)
 
     def test_texture_composition_spec_export(self):
         def filterLines(line):
@@ -88,24 +101,14 @@ class TestTextureComposition(XPlaneTestCase):
             filename,
             filterLines
         )
+        
+        (blenderSpecTexPath,tmpSpecTexPath,fixtureSpecTextPath) = self.make_test_paths('specular_spec.png')
+        
+        self.assertTrue(os.path.exists(blenderSpecTexPath), 'Specular spec texture was not generated.')
+        self.assertEqual(self.checksum(blenderSpecTexPath), self.checksum(fixtureSpecTextPath), 'Image files are not equal.')
 
-        # move generated image files into temp dir and compare them with fixtures
-        normalSpecTexPath = os.path.join(__dirname__, 'tex/specular_spec.png')
-        tmpNormalSpecTexPath = os.path.join(__dirname__, '../tmp/specular_spec.png')
-        fixtureNormalSpecTexPath = os.path.join(__dirname__, 'fixtures/tex/specular_spec.png')
-        self.assertTrue(os.path.exists(normalSpecTexPath), 'Normal texture was not generated.')
-        self.assertEqual(self.checksum(normalSpecTexPath), self.checksum(fixtureNormalSpecTexPath), 'Image files are not equal.')
-
-        # store modification time of composed texture
-        normalSpecTexTime = os.path.getmtime(normalSpecTexPath)
-
-        # export again
-        self.exportLayer(2, filename)
-
-        self.assertTrue(os.path.exists(normalSpecTexPath))
-        self.assertEqual(normalSpecTexTime, os.path.getmtime(normalSpecTexPath))
-
-        # move to tmp dir for manual investigation
-        os.rename(normalSpecTexPath, tmpNormalSpecTexPath)
+        self.do_modified_time_test(blenderSpecTexPath,2,filename)
+        
+        self.move_image_for_manual_comparison(blenderSpecTexPath, tmpSpecTexPath)
 
 runTestCases([TestTextureComposition])

@@ -9,15 +9,14 @@ from io_xplane2blender.xplane_types import xplane_file
 __dirname__ = os.path.dirname(__file__)
 
 class TestIST_2Mats_VarSPEC(XPlaneTestCase):
+    expected_logger_errors = 1
+        
     def test_export(self):
         filename = 'test_IST_2Mats_VarSPEC'
-
-        # we must the console transport to prevent the CI from thinking that we got errors
-        logger.clearTransports()
 
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
         out = xplaneFile.write()
 
-        self.assertEquals(len(logger.findErrors()), 1)
+        self.assertEquals(len(logger.findErrors()), self.expected_logger_errors)
 
 runTestCases([TestIST_2Mats_VarSPEC])
