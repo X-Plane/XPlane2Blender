@@ -8,18 +8,6 @@ from io_xplane2blender.xplane_types import xplane_file
 __dirname__ = os.path.dirname(__file__)
 
 class TestMaterials(XPlaneTestCase):
-    def test_lod_export(self):
-        def filterLines(line):
-            return isinstance(line[0], str) and \
-                   (line[0].find('ATTR_LOD_') == 0 or \
-                   line[0] == 'TRIS')
-
-        filename = 'test_lod'
-        self.assertLayerExportEqualsFixture(
-            0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
-            filename,
-            filterLines
-        )
 
     def test_custom_prop_export(self):
         def filterLines(line):

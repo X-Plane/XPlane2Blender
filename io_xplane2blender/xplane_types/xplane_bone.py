@@ -463,7 +463,6 @@ class XPlaneBone():
         debug = getDebug()
         keyframes = self.animations[dataref]
         o = ''
-        lastValue = [None, None, None]
         totalTrans = 0
         indent = self.getIndent()
 
@@ -475,14 +474,12 @@ class XPlaneBone():
         for keyframe in keyframes:
             totalTrans += abs(keyframe.location[0]) + abs(keyframe.location[1]) + abs(keyframe.location[2])
 
-            if lastValue[0] != keyframe.location[0] or lastValue[1] != keyframe.location[1] or lastValue[2] != keyframe.location[2]:
-                o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
-                    indent, floatToStr(keyframe.value),
-                    floatToStr(keyframe.location[0]),
-                    floatToStr(keyframe.location[2]),
-                    floatToStr(-keyframe.location[1])
-                )
-                lastValue = keyframe.location
+            o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
+                indent, floatToStr(keyframe.value),
+                floatToStr(keyframe.location[0]),
+                floatToStr(keyframe.location[2]),
+                floatToStr(-keyframe.location[1])
+            )
 
         o += self._writeKeyframesLoop(dataref)
         o += "%sANIM_trans_end\n" % indent
@@ -497,7 +494,6 @@ class XPlaneBone():
         o = ''
         indent = self.getIndent()
         keyframes = self.animations[dataref]
-        lastValue = None
         totalRot = 0
 
         # our reference axis
@@ -543,13 +539,11 @@ class XPlaneBone():
             deg = math.degrees(keyframe.rotation[0])
             totalRot += abs(deg)
 
-            if lastValue != keyframe.value:
-                o += "%sANIM_rotate_key\t%s\t%s\n" % (
-                    indent,
-                    floatToStr(keyframe.value),
-                    floatToStr(deg)
-                )
-                lastValue = keyframe.value
+            o += "%sANIM_rotate_key\t%s\t%s\n" % (
+                indent,
+                floatToStr(keyframe.value),
+                floatToStr(deg)
+            )
 
         o += self._writeKeyframesLoop(dataref)
         o += "%sANIM_rotate_end\n" % indent
@@ -591,7 +585,6 @@ class XPlaneBone():
 
         for axis in axes:
             ao = ''
-            lastValue = None
             totalAxisRot = 0
 
             ao += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
@@ -607,13 +600,11 @@ class XPlaneBone():
                 totalRot += abs(deg)
                 totalAxisRot += abs(deg)
 
-                if lastValue != keyframe.value:
-                    ao += "%sANIM_rotate_key\t%s\t%s\n" % (
-                        indent,
-                        floatToStr(keyframe.value),
-                        floatToStr(deg)
-                    )
-                    lastValue = keyframe.value
+                ao += "%sANIM_rotate_key\t%s\t%s\n" % (
+                    indent,
+                    floatToStr(keyframe.value),
+                    floatToStr(deg)
+                )
 
             ao += self._writeKeyframesLoop(dataref)
             ao += "%sANIM_rotate_end\n" % indent

@@ -404,7 +404,8 @@ class XPlaneHeader():
 
         texpath = os.path.relpath(texpath, exportdir)
 
-        return texpath
+        #Replace any \ separators if you're on Windows. For other platforms this does nothing
+        return texpath.replace("\\","/")
 
     # Method: _getCanonicalTexturePath
     # Returns normalized (canonical) path to texture
