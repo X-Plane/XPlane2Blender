@@ -645,7 +645,8 @@ class XPlaneBone():
 
         for name in self.xplaneObject.animAttributes:
             attr = self.xplaneObject.animAttributes[name]
-            o += indent + '%s\t%s\n' % (attr.name, attr.getValueAsString())
+            for i in range(len(attr.value)):
+                o += indent + '%s\t%s\n' % (attr.name, attr.getValueAsString(i=i))
 
         return o
 
