@@ -459,7 +459,24 @@ class XPlaneBone():
     def _writeTranslationKeyframes(self, dataref):
         debug = getDebug()
         keyframes = self.animations[dataref]
+        
         o = ''
+        
+        #Check to see if there is at least some difference in the keyframe locations 
+        if len(keyframes) > 0:
+            should_write_keyframes = False
+            last_keyframe = keyframes[0]
+            for keyframe in keyframes:
+                #if there is a difference
+                if keyframe.location != last_keyframe.location:
+                    should_write_keyframes = True
+                    break
+                else:
+                    last_keyframe = keyframe
+            
+            if should_write_keyframes == False:
+                return o
+               
         totalTrans = 0
         indent = self.getIndent()
 
@@ -620,6 +637,22 @@ class XPlaneBone():
         debug = getDebug()
         keyframes = self.animations[dataref]
         o = ''
+        
+         #Check to see if there is at least some difference in the keyframe locations 
+        if len(keyframes) > 0:
+            should_write_keyframes = False
+            last_keyframe = keyframes[0]
+            for keyframe in keyframes:
+                #if there is a difference
+                if keyframe.rotation != last_keyframe.rotation:
+                    should_write_keyframes = True
+                    break
+                else:
+                    last_keyframe = keyframe
+            
+            if should_write_keyframes == False:
+                return o
+            
         indent = self.getIndent()
 
         if debug:
