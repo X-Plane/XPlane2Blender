@@ -48,6 +48,42 @@ class XPlaneBone():
 
         self.children.sort(key = getWeight)
 
+    # Method: isAnimatedForTranslation
+    # Checks if a dataref's keyframes actually contain meaningful translations, and we should therefore write keyframes out
+    def isDataRefAnimatedForTranslation(self):
+        if hasattr(self, 'animations') and len(self.animations) > 0:
+           #Check to see if there is at least some difference in the keyframe locations 
+            for dataref in self.animations:
+                keyframes = self.animations[dataref]
+                if len(keyframes) > 0:
+                    last_keyframe = keyframes[0]
+                    for keyframe in keyframes:
+                        #if there is a difference
+                        if keyframe.location != last_keyframe.location:
+                            return True
+                        else:
+                            last_keyframe = keyframe
+             
+                    return False
+
+    # Method: isAnimatedForRotation
+    # Checks if a dataref's keyframes actually contain meaningful translations, and we should therefore write keyframes out
+    def isDataRefAnimatedForRotation(self):
+        if hasattr(self, 'animations') and len(self.animations) > 0:
+           #Check to see if there is at least some difference in the keyframe locations 
+            for dataref in self.animations:
+                keyframes = self.animations[dataref]
+                if len(keyframes) > 0:
+                    last_keyframe = keyframes[0]
+                    for keyframe in keyframes:
+                        #if there is a difference
+                        if keyframe.rotation != last_keyframe.rotation:
+                            return True
+                        else:
+                            last_keyframe = keyframe
+             
+                    return False
+
     # Method: isAnimated
     # Checks if the object is animated.
     #
@@ -239,7 +275,11 @@ class XPlaneBone():
             if self.blenderObject.parent == None:
                 matrix_parent_inverse = mathutils.Matrix.Identity(4)
 
-            return self.parent.getBlenderWorldMatrix() * matrix_parent_inverse
+            if not self.isDataRefAnimatedForTranslation():
+                res = mathutils.Matrix.Translation(self.blenderObject.matrix_world.to_translation())
+                return self.parent.getBlenderWorldMatrix() * matrix_parent_inverse * res
+            else:
+                return self.parent.getBlenderWorldMatrix() * matrix_parent_inverse
 
     def getPostAnimationMatrix(self):
         # for non-animated or root bones, post = pre
@@ -462,20 +502,8 @@ class XPlaneBone():
         
         o = ''
         
-        #Check to see if there is at least some difference in the keyframe locations 
-        if len(keyframes) > 0:
-            should_write_keyframes = False
-            last_keyframe = keyframes[0]
-            for keyframe in keyframes:
-                #if there is a difference
-                if keyframe.location != last_keyframe.location:
-                    should_write_keyframes = True
-                    break
-                else:
-                    last_keyframe = keyframe
-            
-            if should_write_keyframes == False:
-                return o
+        if not self.isDataRefAnimatedForTranslation():
+            return o
                
         totalTrans = 0
         indent = self.getIndent()
@@ -637,21 +665,9 @@ class XPlaneBone():
         debug = getDebug()
         keyframes = self.animations[dataref]
         o = ''
-        
-         #Check to see if there is at least some difference in the keyframe locations 
-        if len(keyframes) > 0:
-            should_write_keyframes = False
-            last_keyframe = keyframes[0]
-            for keyframe in keyframes:
-                #if there is a difference
-                if keyframe.rotation != last_keyframe.rotation:
-                    should_write_keyframes = True
-                    break
-                else:
-                    last_keyframe = keyframe
-            
-            if should_write_keyframes == False:
-                return o
+       
+        if not self.isDataRefAnimatedForRotation():
+            return o
             
         indent = self.getIndent()
 
