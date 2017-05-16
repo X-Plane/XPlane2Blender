@@ -276,7 +276,7 @@ class XPlaneBone():
                 matrix_parent_inverse = mathutils.Matrix.Identity(4)
 
             if not self.isDataRefAnimatedForTranslation():
-                res = mathutils.Matrix.Translation(self.blenderObject.matrix_world.to_translation())
+                res = mathutils.Matrix.Translation(self.blenderObject.matrix_basis.to_translation())
                 return self.parent.getBlenderWorldMatrix() * matrix_parent_inverse * res
             else:
                 return self.parent.getBlenderWorldMatrix() * matrix_parent_inverse
