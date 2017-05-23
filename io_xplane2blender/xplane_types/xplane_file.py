@@ -457,7 +457,7 @@ class XPlaneFile():
         # validation was successful
         # retrieve reference materials
         # and compare all materials against reference materials
-        if not self.compareMaterials(self.referenceMaterials):
+        if self.options.autodetectTextures == True and not self.compareMaterials(self.referenceMaterials):
             return ''
 
         o = ''
