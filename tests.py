@@ -15,8 +15,10 @@ LOGGER HAD X UNEXPECTED ERRORS
 
 The string is never indented. The formating of X is not specified, as long as it parses to an int
 """
-ERRORED_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
+ERROR_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
 
+#One day if we need to have a strictness rating we can have it stop on warnings as well as errors
+#WARNING_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED WARNING"
 if os.path.exists('./tests/tmp'):
     # empty temp directory
     shutil.rmtree('./tests/tmp')
@@ -84,6 +86,7 @@ for root, dirs, files in os.walk('./tests'):
                 blendFile = pyFile.replace('.py', '.blend')
 
                 if not be_quiet:
+                    #The /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests
                     print(("/*=== Running file " + pyFile).ljust(75,'=')+'{{{')
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
@@ -106,7 +109,7 @@ for root, dirs, files in os.walk('./tests'):
                 if sys.version_info >= (3, 0):
                     out = out.decode('utf-8')
                     
-                logger_matches = re.search(ERRORED_LOGGER_REGEX, out)
+                logger_matches = re.search(ERROR_LOGGER_REGEX, out)
                 if logger_matches == None:
                     num_errors = 0
                 else:

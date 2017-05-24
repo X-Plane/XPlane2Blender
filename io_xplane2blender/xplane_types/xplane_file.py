@@ -457,9 +457,12 @@ class XPlaneFile():
         # validation was successful
         # retrieve reference materials
         # and compare all materials against reference materials
-        if self.options.autodetectTextures == True and not self.compareMaterials(self.referenceMaterials):
-            return ''
-
+        if self.options.autodetectTextures == True:
+            if not self.compareMaterials(self.referenceMaterials):
+                return ''
+        else:
+            logger.warn('Autodetect textures overriden for file %s: not checking manually entered materials against Blender-based reference materials' % (self.filename))
+        
         o = ''
         o += self.header.write()
         o += '\n'
