@@ -3,7 +3,7 @@ I
 OBJ
 
 POINT_COUNTS	48	0	0	72
-TEXTURE	../1x1.png
+TEXTURE	../tex/color.png
 
 VT	-1	1	1	-1	0	0	0	0	# 0
 VT	-1	-1	1	-1	0	0	0	0	# 1

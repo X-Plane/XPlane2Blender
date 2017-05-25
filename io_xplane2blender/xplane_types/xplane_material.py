@@ -262,8 +262,8 @@ class XPlaneMaterial():
     #
     # Returns:
     #   bool, list - True if Material is compatible to reference Material, else False + a list of errors/conflicts
-    def isCompatibleTo(self, refMat, exportType):
-        return compare(refMat, self, exportType)
+    def isCompatibleTo(self, refMat, exportType,autodetectTextures):
+        return compare(refMat, self, exportType,autodetectTextures)
 
     # Method: isValid
     # Checks if material is valid based on an export type.

@@ -411,7 +411,7 @@ class XPlaneFile():
                     # only compare draped materials agains draped
                     # and non-draped agains non-draped
                     if refMaterial.options.draped == material.options.draped:
-                        errors = material.isCompatibleTo(refMaterial, self.options.export_type)
+                        errors = material.isCompatibleTo(refMaterial, self.options.export_type,self.options.autodetectTextures)
 
                         if errors and len(errors):
                             for error in errors:
@@ -457,11 +457,11 @@ class XPlaneFile():
         # validation was successful
         # retrieve reference materials
         # and compare all materials against reference materials
-        if self.options.autodetectTextures == True:
-            if not self.compareMaterials(self.referenceMaterials):
-                return ''
-        else:
-            logger.warn('Autodetect textures overriden for file %s: not checking manually entered materials against Blender-based reference materials' % (self.filename))
+        if self.options.autodetectTextures == False:
+            logger.info('Autodetect textures overriden for file %s: not fully checking manually entered textures against Blender-based reference materials\' textures' % (self.filename))
+        
+        if not self.compareMaterials(self.referenceMaterials):
+            return ''
         
         o = ''
         o += self.header.write()
