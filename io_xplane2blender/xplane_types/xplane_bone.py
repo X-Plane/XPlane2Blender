@@ -218,8 +218,14 @@ class XPlaneBone():
         else:
             return self.parent.getFirstAnimatedParent()
 
-
+	# Blender World Matrix (Pose)
+	#
+	# This is the absolute final pose of a blender object after _everything_ is taken into account.
+	# If we want to emit a mesh, this is where the mesh lives.  The world matrix might be "more"
+	# transforms than post-animation if there is a static rotation after a dynamic translation.
+	#
     def getBlenderWorldMatrix(self):
+		# Root bone - always lives at the origin, special cased.
         if self.parent == None:
             return mathutils.Matrix.Identity(4)
 
@@ -237,10 +243,26 @@ class XPlaneBone():
             # Data blocks simply know their world-space location post-transform.
             return self.blenderObject.matrix_world.copy()
 
+	#
+	# THE PRE-ANIMATION MATRIX (POSE)
+	#
+	# This matrix represents the world space pose in the rest position of this bone _before_
+	# its animations are applied.  This is the frame of reference in which the animations are
+	# happening.
+	#
+	# It is only legal to ask for this if (1) a bone is animated and (2) it is not the root
+	# bone.
     def getPreAnimationMatrix(self):
-        if not self.isAnimated() or self.parent == None:
-            # not animated objects have own world matrix
-            return self.getBlenderWorldMatrix()
+        if self.parent == None:
+			# No one should ever need the pre-animation matrix of the root bone -
+			# we only need this to get a bake matrix between two animations.
+            print("Pre-animation requested on root bone - who requested this?")
+            raise Exception()
+        elif not self.isAnimated():
+			# We should not ask for pre and post animation matrices when there is no
+			# animation - if we did, the code has failed to optimize something out.
+            print(self)
+            raise Exception()
         elif self.blenderBone:
 
             poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
@@ -270,46 +292,89 @@ class XPlaneBone():
             # matrix_parent_inverse is a static arbitrary transform applied at parenting time to keep
             # objects from "jumping".  Without this, Blender would have to edit key frame tables on parenting.
 
-            # Workaround blender bug where old parent_inverse_matrices are kept after unparenting
-            matrix_parent_inverse = self.blenderObject.matrix_parent_inverse
-            if self.blenderObject.parent == None:
-                matrix_parent_inverse = mathutils.Matrix.Identity(4)
+            # Workaround blender bug where old parent_inverse_matrices are kept after unparenting - only look
+			# at parent inverse if Blender wold have.
+            parent_final = mathutils.Matrix.Identity(4)
+            matrix_parent_inverse = mathutils.Matrix.Identity(4)
+            static_translation = mathutils.Matrix.Identity(4)
+			
+			# If we have a parent, get the parnet pose and parent inverse.
+            if self.blenderObject.parent != None:
+                parent_final = self.parent.getBlenderWorldMatrix()
+                matrix_parent_inverse = self.blenderObject.matrix_parent_inverse
 
+			# If we have a data block translation that is NOT key framed in a useful way, use it here!  This
+			# "bakes" static translations into our pre-animation pose, so we don't have to emit code for them.
             if not self.isDataRefAnimatedForTranslation():
-                res = mathutils.Matrix.Translation(self.blenderObject.matrix_basis.to_translation())
-                return self.parent.getBlenderWorldMatrix() * matrix_parent_inverse * res
-            else:
-                return self.parent.getBlenderWorldMatrix() * matrix_parent_inverse
+                static_translation = mathutils.Matrix.Translation(self.blenderObject.matrix_basis.to_translation())
 
+            return parent_final * matrix_parent_inverse *static_translation
+
+	#
+	# THE POST-ANIMATION MATRIX (POSE)
+	#
+	# This matrix represents the world space pose of the bone just after all dynamic animation.  EVERY
+	# bone has this, because everything "on" the bone (sub-bones, meshes) is attached to this pose.
+	#
     def getPostAnimationMatrix(self):
-        # for non-animated or root bones, post = pre
-        if not self.isAnimated() or self.parent == None:
-            # FIXME: Ben says - this is just calling getBlenderWorldMatrix.  I think getBlenderWorldMatrix
-            # _is_ the post-animation matrix in pretty much all cases; we should merge these routines.
+        if self.parent == None:
+            return self.getBlenderWorldMatrix() # correctly returns Identity for root bone
+        elif not self.isAnimated():
+			#No one should be asking or post-animation matrices on _non_-animated bones!
+            print(self)
+            raise Exception()
+        else:
+			# Our blender "world" matrix basically "is" our post-animation pose with ONE
+			# exception: if our rotation is static, get the pose BEFORE static rotation.  This
+			# lets us 'bake' the static rotation into the NEXT thing (mesh, sub-animation) instead
+			# of emitting static rotates.
+            if not self.isDataRefAnimatedForRotation():
+				# Basically we hack zero-out the translation to get our rotation.
+                res = self.blenderObject.matrix_basis.copy()
+                res[0][3] = 0
+                res[1][3] = 0
+                res[2][3] = 0
+                return self.getBlenderWorldMatrix() * res.inverted_safe()
+            else:
+                return self.getBlenderWorldMatrix()
+
+	#
+	# ANIMATION BAKE MATRIX (DELTA)
+	#
+    # A bake matrix is a _delta_ - a transformation from one pose to another that is static in the model, and therefore can
+	# be implemented by "applying" the transform to the child things, instead of writing it as ANIM_ directives.
+	# In other wods, it is a static relative transform that is elligible for 'baking'.
+	#
+	# Baking is important because without it, the exporter would have to output a ton of transform code for 'highly structured'
+	# (but not dynamic) models; with baking, an author can use lots of sub-blocks and relative positioning and still just get
+	# triangles.
+	#
+	# The bake matrix for animations for bone X is the static transform _from X's parent bone to X before its animations.
+	# In other words, once we are in X's parent's coordinate system, we need to do this bake to then apply our animations.
+    def getBakeMatrixForMyAnimations(self):
+        parent_bone = self.getFirstAnimatedParent()
+        if parent_bone == None:
+            # If we have no parent bone, our bake matrix goes from gobal coordinates TO our pre-animation pose.
+			# This would be more formal if it was inverse(identity) * getPreAnimationMatrix() - this has been
+			# simplifiied.
             return self.getPreAnimationMatrix()
         else:
-            return self.getBlenderWorldMatrix()
+			# This is the parent transform we are going from
+            parent_post = self.getFirstAnimatedParent().getPostAnimationMatrix()
+			# This is the child we are going to
+            pre = self.getPreAnimationMatrix()
+            return parent_post.inverted_safe() * pre
 
-    # This API returns the bake matrix that is applied _to_ the animations of this bone itself.  In other words,
-    # this is what we bake our own animation prefix with.  This should NOT be called by other code!
-    def getBakeMatrixForMyAnimations(self):
-        if self.parent == None:
-            # If our pre-animation matrix contains a static transform we still need it?
-            return self.getBlenderWorldMatrix()
-        else:
-            return self.getFirstAnimatedParent().getPostAnimationMatrix().inverted_safe() * self.getPreAnimationMatrix()
 
+	# ATTACHENT BAKE MATRIX (DELTA)
+	#
+	# This bake matrix is the delta from the final bone (post animation) to an actual THING like a mesh or a light.
     #
     # This API gets the bake matrix to be applied to output-able primitives that are attached to -this- bone.
     # In other words, this is a helper for how to bake our lights, meshes, etc.
     #
     def getBakeMatrixForAttached(self):
-        # In the case where we have to bake for an attached object, we are looking for a relative matrix...
-        #  From: the end of the last animation we output
-        #  To: the transform of the actual 'thing' we are going to output.
-        #
-        # This code assumes that the data block that the primitive sits in _is_ its parent bone.
-        # In the future, maybe we pass in the data block of the exportable primitive.
+		# Our anchor bone is the thing we are attached to - it might be us, or it might be our parent.
         if self.isAnimated():
             my_anchor_bone = self                           # The anchor bone is the last bone to be animated -
         else:                                               # We are 'in' its post-animation coordinate system
@@ -317,10 +382,12 @@ class XPlaneBone():
 
         if my_anchor_bone == None:
             # If there's no animation, just get to our post-animation xform.
-            return self.getPostAnimationMatrix()
+            return self.getBlenderWorldMatrix()
         else:
+            anchor_post_anim = my_anchor_bone.getPostAnimationMatrix()
+            my_final_world = self.getBlenderWorldMatrix()
             # Find the relative matrix from the post-animation of our last animated bone to our final post animation transform.
-            return my_anchor_bone.getPostAnimationMatrix().inverted_safe() * self.getPostAnimationMatrix()
+            return anchor_post_anim.inverted_safe() * my_final_world
 
     def __str__(self):
         return self.toString()
@@ -378,29 +445,20 @@ class XPlaneBone():
         if not isAnimated and not hasAnimationAttributes:
             return o
 
-        preMatrix = self.getPreAnimationMatrix()
-        postMatrix = self.getPostAnimationMatrix()
         bakeMatrix = self.getBakeMatrixForMyAnimations()
-
-        if (isAnimated and postMatrix is not preMatrix) or \
+    
+        # and postMatrix is not preMatrix
+        if (isAnimated) or \
             hasAnimationAttributes:
             o += indent + 'ANIM_begin\n'
 
-        if isAnimated and postMatrix is not preMatrix:
+        if isAnimated:# and postMatrix is not preMatrix:
             # write out static translations of bake
             o += self._writeStaticTranslation(bakeMatrix)
             o += self._writeStaticRotation(bakeMatrix)
 
             for dataref in self.animations:
                 o += self.writeKeyframes(dataref)
-
-        # IMPORTANT: we _do not_ invert out the static translation!  All children of this
-        # bone will be taken relative to our final transform, wihch is around the rotation
-        # origin!
-
-        #if postMatrix is not preMatrix:
-        #    # revert static translations needed for correct rotation origin
-        #    o += self._writeStaticTranslation(bakeMatrix, True)
 
         o += self._writeAnimAttributes()
 
@@ -716,11 +774,7 @@ class XPlaneBone():
         if not isAnimated and not hasAnimationAttributes:
             return o
 
-        # unanimated bones do not export any suffix
-        preMatrix = self.getPreAnimationMatrix()
-        postMatrix = self.getPostAnimationMatrix()
-
-        if (isAnimated and postMatrix is not preMatrix) or \
+        if (isAnimated) or \
             hasAnimationAttributes:
             o += indent + 'ANIM_end\n'
 
