@@ -333,12 +333,7 @@ TRIS	0 36
 		# 3 Object: Cube.child.anim.anim.002
 		ANIM_begin
 		# static translation
-		ANIM_trans	0	-2	-2	0	-2	-2
-		# translation keyframes
-		ANIM_trans_begin	test
-		ANIM_trans_key	0	0	5	8
-		ANIM_trans_key	1	0	5	8
-		ANIM_trans_end
+		ANIM_trans	0	3	6	0	3	6
 		# rotation keyframes
 		ANIM_rotate_begin	1	0	0	test
 		ANIM_rotate_key	0	0

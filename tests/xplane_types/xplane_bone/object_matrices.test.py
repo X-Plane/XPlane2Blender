@@ -19,19 +19,21 @@ class TestMatrices(XPlaneTestCase):
         # FIXME: we are actually testing getBoneByBlenderName() here, should be in it's own test file
         self.assertIsNotNone(cubeStatic)
 
-        preMatrix = cubeStatic.getPreAnimationMatrix()
-        postMatrix = cubeStatic.getPostAnimationMatrix()
-        bakeMatrix = cubeStatic.getBakeMatrixForMyAnimations()
+        # Ben says: fix for issue 219 makes it ILLEGAL to ask for pre-and post animation or animation-bake matrices for a NON-animated bone!
 
-        self.assertFloatVectorsEqual(preMatrix.to_translation(), cubeStatic.blenderObject.location, FLOAT_TOLERANCE)
-        self.assertFloatVectorsEqual(preMatrix.to_scale(), cubeStatic.blenderObject.scale, FLOAT_TOLERANCE)
-        self.assertFloatVectorsEqual(preMatrix.to_euler('XYZ'), cubeStatic.blenderObject.rotation_euler, FLOAT_TOLERANCE)
+#       preMatrix = cubeStatic.getPreAnimationMatrix()
+#       postMatrix = cubeStatic.getPostAnimationMatrix()
+#       bakeMatrix = cubeStatic.getBakeMatrixForMyAnimations()
+
+#       self.assertFloatVectorsEqual(preMatrix.to_translation(), cubeStatic.blenderObject.location, FLOAT_TOLERANCE)
+#       self.assertFloatVectorsEqual(preMatrix.to_scale(), cubeStatic.blenderObject.scale, FLOAT_TOLERANCE)
+#       self.assertFloatVectorsEqual(preMatrix.to_euler('XYZ'), cubeStatic.blenderObject.rotation_euler, FLOAT_TOLERANCE)
 
         # post and pre are the same if not animated
-        self.assertEquals(preMatrix, postMatrix)
+#       self.assertEquals(preMatrix, postMatrix)
 
         # bake matrix should be objects world matrix as its not animated
-        self.assertEquals(bakeMatrix, cubeStatic.blenderObject.matrix_world)
+#       self.assertEquals(bakeMatrix, cubeStatic.blenderObject.matrix_world)
 
         cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated')
         self.assertIsNotNone(cubeAnimated)
@@ -59,15 +61,15 @@ class TestMatrices(XPlaneTestCase):
         # FIXME: we are actually testing getBoneByBlenderName() here, should be in it's own test file
         self.assertIsNotNone(cubeStaticChildStatic)
 
-        preMatrix = cubeStaticChildStatic.getPreAnimationMatrix()
-        postMatrix = cubeStaticChildStatic.getPostAnimationMatrix()
-        bakeMatrix = cubeStaticChildStatic.getBakeMatrixForMyAnimations()
+#       preMatrix = cubeStaticChildStatic.getPreAnimationMatrix()
+#       postMatrix = cubeStaticChildStatic.getPostAnimationMatrix()
+#       bakeMatrix = cubeStaticChildStatic.getBakeMatrixForMyAnimations()
 
-        self.assertEquals(preMatrix, cubeStaticChildStatic.blenderObject.matrix_world)
-        self.assertEquals(postMatrix, preMatrix)
+#       self.assertEquals(preMatrix, cubeStaticChildStatic.blenderObject.matrix_world)
+#       self.assertEquals(postMatrix, preMatrix)
 
         # bakematrix should be objects world matrix, as object and its parent are not animated
-        self.assertEquals(bakeMatrix, cubeStaticChildStatic.blenderObject.matrix_world)
+#       self.assertEquals(bakeMatrix, cubeStaticChildStatic.blenderObject.matrix_world)
 
         # no to the animated child
         cubeStaticChildAnimated = xplaneFile.getBoneByBlenderName('Cube_static.child_animated')
@@ -88,12 +90,12 @@ class TestMatrices(XPlaneTestCase):
         cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated')
         cubeAnimatedChildStatic = xplaneFile.getBoneByBlenderName('Cube_animated.child_static')
 
-        preMatrix = cubeAnimatedChildStatic.getPreAnimationMatrix()
-        postMatrix = cubeAnimatedChildStatic.getPostAnimationMatrix()
-        bakeMatrix = cubeAnimatedChildStatic.getBakeMatrixForMyAnimations()
+#       preMatrix = cubeAnimatedChildStatic.getPreAnimationMatrix()
+#       postMatrix = cubeAnimatedChildStatic.getPostAnimationMatrix()
+#       bakeMatrix = cubeAnimatedChildStatic.getBakeMatrixForMyAnimations()
 
-        self.assertEquals(preMatrix, cubeAnimatedChildStatic.blenderObject.matrix_world)
-        self.assertEquals(postMatrix, preMatrix)
+#       self.assertEquals(preMatrix, cubeAnimatedChildStatic.blenderObject.matrix_world)
+#       self.assertEquals(postMatrix, preMatrix)
 
         # TODO: what should the bake matrix be like?
         # self.assertFloatVectorsEqual(bakeMatrix.to_translation(), cubeAnimated.blenderObject.location + cubeAnimatedChildStatic.blenderObject.location, FLOAT_TOLERANCE)
