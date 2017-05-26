@@ -3,7 +3,7 @@ I
 OBJ
 
 POINT_COUNTS	36	0	0	36
-TEXTURE	../../../../../../../../../../../alxunru/Desktop/X-Plane 10/Aircraft/Test Cases/objects/test.png
+TEXTURE	../../../../alxunru/Desktop/X-Plane 10/Aircraft/Test Cases/objects/test.png
 
 VT	-0.5	0.5	0.5	-1	0	0	0	0	# 0
 VT	-0.5	-0.5	0.5	-1	0	0	0	0	# 1
@@ -55,12 +55,8 @@ IDX	35
 # 0 ROOT
 # 1 Object: Cube.010
 ANIM_begin
-# translation keyframes
-ANIM_trans_begin	sim/cockpit2/engine/actuators/throttle_ratio[0]
-ANIM_trans_key	0	0	0	-0.00000009
-ANIM_trans_key	0.33000001	0	0	-0.00000009
-ANIM_trans_key	1	0	0	-0.00000009
-ANIM_trans_end
+# static translation
+ANIM_trans	0	0	-0.00000009	0	0	-0.00000009
 # rotation keyframes
 ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
