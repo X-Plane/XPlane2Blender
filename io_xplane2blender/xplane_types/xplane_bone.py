@@ -445,8 +445,6 @@ class XPlaneBone():
         if not isAnimated and not hasAnimationAttributes:
             return o
 
-        bakeMatrix = self.getBakeMatrixForMyAnimations()
-    
         # and postMatrix is not preMatrix
         if (isAnimated) or \
             hasAnimationAttributes:
@@ -454,6 +452,8 @@ class XPlaneBone():
 
         if isAnimated:# and postMatrix is not preMatrix:
             # write out static translations of bake
+            bakeMatrix = self.getBakeMatrixForMyAnimations()
+    
             o += self._writeStaticTranslation(bakeMatrix)
             o += self._writeStaticRotation(bakeMatrix)
 
