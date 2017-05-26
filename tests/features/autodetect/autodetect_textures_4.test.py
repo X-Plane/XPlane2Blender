@@ -7,7 +7,7 @@ from io_xplane2blender.xplane_types import xplane_file
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestAutodetectTextures(XPlaneTestCase):
+class TestAutodetectTextures4(XPlaneTestCase):
     expected_logger_errors = 1
     def test_autodetect_textures_export(self):
         def filterLines(line):
@@ -19,4 +19,4 @@ class TestAutodetectTextures(XPlaneTestCase):
         
         self.assertEquals(len(logger.findErrors()),self.expected_logger_errors)
         
-runTestCases([TestAutodetectTextures])
+runTestCases([TestAutodetectTextures4])

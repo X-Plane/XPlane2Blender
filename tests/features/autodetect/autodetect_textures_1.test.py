@@ -7,7 +7,7 @@ from io_xplane2blender.xplane_types import xplane_file
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestAutodetectTextures(XPlaneTestCase):
+class TestAutodetectTextures1(XPlaneTestCase):
     def test_autodetect_textures_export(self):
         def filterLines(line):
             return isinstance(line[0], str) and \
@@ -21,4 +21,4 @@ class TestAutodetectTextures(XPlaneTestCase):
             filterLines
         )
 
-runTestCases([TestAutodetectTextures])
+runTestCases([TestAutodetectTextures1])
