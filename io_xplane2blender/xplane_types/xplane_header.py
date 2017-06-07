@@ -166,13 +166,15 @@ class XPlaneHeader():
 
                 # no blend
                 attr = mat.attributes['ATTR_no_blend']
-                self.attributes['GLOBAL_no_blend'].setValue(attr.getValue())
-                self.xplaneFile.commands.written['ATTR_no_blend'] = attr.getValue()
+                if attr.getValue():
+                    self.attributes['GLOBAL_no_blend'].setValue(attr.getValue())
+                    self.xplaneFile.commands.written['ATTR_no_blend'] = attr.getValue()
 
                 # shadow blend
                 attr = mat.attributes['ATTR_shadow_blend']
-                self.attributes['GLOBAL_shadow_blend'].setValue(attr.getValue())
-                self.xplaneFile.commands.written['ATTR_shadow_blend'] = attr.getValue()
+                if attr.getValue():
+                    self.attributes['GLOBAL_shadow_blend'].setValue(attr.getValue())
+                    self.xplaneFile.commands.written['ATTR_shadow_blend'] = attr.getValue()
 
                 # specular
                 attr = mat.attributes['ATTR_shiny_rat']

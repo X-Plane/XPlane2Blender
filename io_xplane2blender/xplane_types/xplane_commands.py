@@ -5,6 +5,64 @@ from .xplane_attributes import XPlaneAttributes
 import re
 import bpy
 
+# Setters, resetters, and counterparts:
+#
+# Conceptually X-Plane OBJ files are a state vector with orthogonal state, e.g. our "hardness" state, "blend" state,
+# polygon offset state, etc.  Each triagnle mesh emitted via TRIS has the state of the vector, and attribute commands
+# change the state vector for future commands.
+#
+# What makes file generation slightly tricky is that the name of the attributes is unrelated to the state vector, and
+# the state vector can be affected by an arbitrary number of commands, e.g.
+#
+# ATTR_blend: set blend mode to "blend"
+# ATTR_no_blend x: set blend mode to "no_blend", set blend cutoff to x.
+# ATTR_shadow_blend x: set blend mode to "shadow_blend", set blend cutoff to x.
+#
+# There is, of coarse, an interaction between all three - we don't need to repeat ATTR_blend, until
+# _one of_ ATTR_no_blend or ATTR_shadow_blend interposes, and we don't need to repeat ATTR_shadow_blend
+# after another ATTR_shadow_blend unless the cutoff changes.
+#
+# Here's what makes the Blender 2.7 exporter REALLY tricky: the attribute system is written _generically_, to support
+# the user interface where authors can make up their own attributes on the fly.  While every other OBJ8 exporter knows
+# the schema, this one assumes very little.  This feature was requested of Ondrej so that authors could adopt new
+# X-Plane features without waiting for an exporter iteration.
+#
+#
+# Here's how the system works.  Conceptually any given attribute has one or more "counterparts" - other attributes that
+# affect the same state vector.  For example, every ATTR_manip_xx command is a counter-part to every other one, and
+# ATTR_hard, ATTR_no_hard, and ATTR_hard_deck are all counterparts.
+#
+# Amongst the set of counterparts, one is deemed the "resetter" - this is usually the one that sets X-Plane to the
+# default state, and/or takes no arguments.  The other ones are "setters".
+#
+# The "reseters" map is a map of:
+#
+# Key: a regular expression that matches every setter.
+# Value: a resetter.
+#
+# From this table, we can determine two things:
+# 1. For any given attribute, what previously written attribute is no longer valid.  For example, if
+#	 We write ATTR_no_hard, any past ATTR_hard or ATTR_hard_deck is no longer in effect.
+# 2. If we need to write a new object that is missing a previously written setter, what is the resetter
+#	 to issue to get to default state.
+#
+# For customization, the "addReseter" can be called to register the resetter for a custom attribute that
+# will need to be undone later by another part of the code.
+#
+#
+# The command processor tracks state by keeping a map of every written and currently effective attrbute, keyed by
+# the attribute name.  When a new attribute is to be written, it is first compared to the existing written attributes
+# and dropped if needed.  Then once it is written (if needed), every counter part to the new attribute that is in
+# the written vector is removed.
+#
+#
+# One known bug that I am aware of: X-Plane has interaction between manipulator and panel-texture state; the current
+# exporter does not model this and the current authoring level blender data does not support it.  For the 3.4 release,
+# we expect to leave things in their currently broken state; for 3.5, we can then add specific panel attribute labeling
+# to the UI and have authors migrate their projects forward.
+#
+
+
 # Class: XPlaneCommands
 # Creates the OBJ commands table.
 class XPlaneCommands():
@@ -25,14 +83,12 @@ class XPlaneCommands():
 
         self.reseters = {
             'ATTR_light_level':'ATTR_light_level_reset',
-            'ATTR_cockpit':'ATTR_no_cockpit',
-            # 'ATTR_cockpit_region':'ATTR_no_cockpit',
-            'ATTR_manip_(?!none)(.*)':'ATTR_manip_none',
+            'ATTR_cockpit|ATTR_cockpit_region':'ATTR_no_cockpit',
+            'ATTR_manip_(?!none)(?!wheel)(.*)':'ATTR_manip_none',
             'ATTR_draw_disable':'ATTR_draw_enable',
             'ATTR_poly_os':'ATTR_poly_os 0',
-            'ATTR_hard':'ATTR_no_hard',
-            'ATTR_hard_deck':'ATTR_no_hard',
-            'ATTR_no_blend':'ATTR_blend',
+            'ATTR_hard|ATTR_hard_deck':'ATTR_no_hard',
+            'ATTR_no_blend|ATTR_shadow_blend':'ATTR_blend',
             'ATTR_draped': 'ATTR_no_draped',
             'ATTR_solid_camera': 'ATTR_no_solid_camera'
         }
@@ -163,11 +219,14 @@ class XPlaneCommands():
                     # store this in the written attributes
                     self.written[name] = value
 
-                    # check if this thing has a reseter and remove counterpart if any
-                    reseter = self.getAttributeReseter(name)
+                    # If there is a resetter for this attribute, we need to
+                    # nuke it from the written list - we are replacing it.
+                    counterparts = self.getAttributeCounterparts(name)
+					
+                    for counterpart in counterparts:
+                        if counterpart in self.written:
+                            del self.written[counterpart]
 
-                    if reseter and reseter in self.written:
-                        del self.written[reseter]
             else:
                 # store this in the written attributes
                 self.written[name] = value
@@ -176,18 +235,11 @@ class XPlaneCommands():
                 o += indent + '%s\t%s\n' % (name, value)
 
                 # check if this thing has a reseter and remove counterpart if any
-                reseter = self.getAttributeReseter(name)
+                counterparts = self.getAttributeCounterparts(name)
 
-                if reseter and reseter in self.written:
-                    del self.written[reseter]
-
-                writtenNames = sorted(list(self.written.keys()))
-                # check if a reseter counterpart has been written and if so delete its reseter
-                for reseter in sorted(self.reseters.keys()):
-                    matchingWritten = firstMatchInList(re.compile(reseter), writtenNames)
-                    if self.reseters[reseter] == name and matchingWritten:
-                        del self.written[matchingWritten]
-
+                for counterpart in counterparts:
+                    if counterpart in self.written:
+                        del self.written[counterpart]
         return o
 
     # Method: parseAttributeValue
@@ -238,26 +290,41 @@ class XPlaneCommands():
     #
     # Returns:
     #  bool - True if attribute is a reseter, else False
-    def attributeIsReseter(self, attr, reseters = None):
-        if reseters == None: reseters = self.reseters
-
+    def getAllAttributesForReseter(self, attr):
         for reseter in sorted(self.reseters.keys()):
-            if reseters[reseter] == attr:
-                return True
-
-        return False
-
-    def getAttributeReseter(self, attr):
-        #TODO Unsure if this call to sorted makes a difference
-        reseterNames = sorted(list(self.reseters.keys()))
-
-        for reseter in reseterNames:
-            pattern = re.compile(reseter)
-
-            if pattern.fullmatch(attr):
-                return self.reseters[reseter]
+            if self.reseters[reseter] == attr:
+                return reseter
 
         return None
+
+    # Given any non-resetter attribute, this returns the
+    # resetter that "undoes" it.  Given any resetter, this
+    # returns all setters.
+    def getAttributeCounterparts(self, attr):
+
+        found=[]
+        setterPatterns = sorted(list(self.reseters.keys()))
+
+        for setterPattern in setterPatterns:
+            resetter = self.reseters[setterPattern]
+            compiledPattern = re.compile(setterPattern)
+
+            # The attribute is a setter - the resetter is a counter part
+            if compiledPattern.fullmatch(attr):
+                found.append(resetter)
+    
+            # The pattern is a resetter or ONE of the setters.
+            # Every other setter but us is a counterpart.
+            if attr == resetter or compiledPattern.fullmatch(attr):
+                allWritten = sorted(list(self.written.keys()))
+                for oneWritten in allWritten:
+                    if compiledPattern.fullmatch(oneWritten):
+                        # We have to check for ourselves - we might be taking every written attribute
+                        # that is a SETTER that matches the reg-ex, e.g. we are ATTR_cockpit and we found
+                        # ATTR_cockpit|ATTR_cockpit_region.  So take ATTR_cockpit_region but NOT us.
+                        if oneWritten != attr:
+                            found.append(oneWritten)
+        return found
 
     # Method: writeReseters
     # Returns the commands for a <XPlaneObject> needed to reset previous commands.
@@ -277,38 +344,49 @@ class XPlaneCommands():
         attributes = XPlaneAttributes()
         # add custom attributes
         for attr in xplaneObject.attributes:
-            if xplaneObject.attributes[attr]:
+            if xplaneObject.attributes[attr].getValue():
                 attributes.add(xplaneObject.attributes[attr])
         # add material attributes if any
         if hasattr(xplaneObject, 'material'):
             for attr in xplaneObject.material.attributes:
-                if xplaneObject.material.attributes[attr]:
+                if xplaneObject.material.attributes[attr].getValue():
                     attributes.add(xplaneObject.material.attributes[attr])
         # add cockpit attributes
         for attr in xplaneObject.cockpitAttributes:
-            if xplaneObject.cockpitAttributes[attr]:
+            if xplaneObject.cockpitAttributes[attr].getValue():
                 attributes.add(xplaneObject.cockpitAttributes[attr])
 
+        # This is the attributes that the next object will have.
         attributeNames = sorted(list(attributes.keys()))
+        # This is the attributes we have already stated that MIGHT need to be reset.
         writtenNames = sorted(list(self.written.keys()))
 
-        for reseter in sorted(self.reseters.keys()):
-            resetingAttr = self.reseters[reseter]
-            pattern = re.compile(reseter)
+        for setterPattern in sorted(self.reseters.keys()):
+            resetingAttr = self.reseters[setterPattern]
+            pattern = re.compile(setterPattern)
 
-            matchingWritten = firstMatchInList(pattern, writtenNames)
-            matchingAttribute = firstMatchInList(pattern, attributeNames)
+            matchingWritten = [x for x in writtenNames if pattern.fullmatch(x)]
+            matchingAttribute = [x for x in attributeNames if pattern.fullmatch(x)]
 
-            # only reset attributes that wont be written with this object again
-            if not matchingAttribute and matchingWritten:
+            if len(matchingAttribute) > 1:
+                print("WARNING: multiple incoming attributes matched %s" % setterPattern)
+                print(matchingAttribute)
+
+            if len(matchingWritten) > 1:
+                print("WARNING: multiple written attributes matched %s" % setterPattern)
+                print(matchingWritten)
+
+            if matchingWritten and not matchingAttribute:
+
+                # only reset attributes that wont be written with this object again
                 #logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
-
                 # write reseter and add it to written
                 o += indent + resetingAttr + "\n"
                 self.written[resetingAttr] = True
 
-                # we've reset an attribute so remove it from written as it will need rewrite with next object
-                del self.written[matchingWritten]
+                for orphan in matchingWritten:
+                    # we've reset an attribute so remove it from written as it will need rewrite with next object
+                    del self.written[orphan]
         return o
 
     def _writeConditions(self, conditions, xplaneObject, close = False):

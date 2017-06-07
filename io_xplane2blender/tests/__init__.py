@@ -178,6 +178,8 @@ class XPlaneTestCase(unittest.TestCase):
         return out
 
     def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
+        if not '--quiet' in sys.argv:
+            print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
         out = self.exportLayer(layer, tmpFilename)
         self.assertFileEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 

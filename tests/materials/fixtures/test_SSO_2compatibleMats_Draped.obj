@@ -8,6 +8,7 @@ TEXTURE_LIT	texture_LIT.png
 TEXTURE_NORMAL	texture_NML.png
 TEXTURE_DRAPED	draped.png
 TEXTURE_DRAPED_NORMAL	draped_NML.png
+SPECULAR	0.69999999
 
 VT	-1.00000012	0	0.99999982	0	-1	0	0.49999997	1.5	# 0
 VT	1	0	1	0	-1	0	0.49999994	1.00000012	# 1
@@ -104,7 +105,6 @@ IDX	75
 IDX	76
 IDX	77
 
-
 # 0 ROOT
 # 1 Object: Plane
 # PRIMITIVE: Plane	weight: 0
@@ -113,9 +113,9 @@ ATTR_draped
 TRIS	72 6
 # 1 Object: Cube
 # PRIMITIVE: Cube	weight: 1
+ATTR_no_draped
 # MATERIAL: Non Draped Tex A Shine05
 ATTR_shiny_rat	0.5
-ATTR_no_draped
 TRIS	0 36
 # 1 Object: Cube.001
 # PRIMITIVE: Cube.001	weight: 2
@@ -123,4 +123,4 @@ TRIS	0 36
 ATTR_shiny_rat	1
 TRIS	36 36
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13
