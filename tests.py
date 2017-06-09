@@ -77,6 +77,13 @@ def inFilter(filepath):
 
     return passes
 
+def printTestBeginning():
+    '''Print the /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests'''
+    print(("/*=== Running file " + pyFile).ljust(75,'=')+'{{{')
+
+def printTestEnd():
+    print(('=' *75)+"}}}*/")     
+    
 for root, dirs, files in os.walk('./tests'):
     for pyFile in files:
         pyFile = os.path.join(root, pyFile)
@@ -86,14 +93,17 @@ for root, dirs, files in os.walk('./tests'):
                 blendFile = pyFile.replace('.py', '.blend')
 
                 if not be_quiet:
-                    #The /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests
-                    print(("/*=== Running file " + pyFile).ljust(75,'=')+'{{{')
+                   printTestBeginning()
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
                 if os.path.exists(blendFile):
                     args.append(blendFile)
-
+                else:
+                    print("WARNING: Blender file " + blendFile + " does not exist")
+                    printTestEnd()
+                    continue
+                
                 args.append('--python')
                 args.append(pyFile)
 
@@ -130,4 +140,4 @@ for root, dirs, files in os.walk('./tests'):
                 #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
                 #Blender, and more in there sometimes
                 if not be_quiet:
-                    print(('=' *75)+"}}}*/")
+                    printTestEnd()
