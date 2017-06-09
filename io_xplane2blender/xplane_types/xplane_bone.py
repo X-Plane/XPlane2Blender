@@ -456,8 +456,8 @@ class XPlaneBone():
     
             o += self._writeStaticTranslation(bakeMatrix)
             o += self._writeStaticRotation(bakeMatrix)
-
-            for dataref in self.animations:
+            
+            for dataref in sorted(list(self.animations.keys())):
                 o += self.writeKeyframes(dataref)
 
         o += self._writeAnimAttributes()

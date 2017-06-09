@@ -13,15 +13,16 @@ class TestTransformStackWOParent(XPlaneTestCase):
     def test_transform_stack_wo(self):
         def filterLines(line):
             return isinstance(line[0], str) and (line[0] == 'VT' or line[0].find('ANIM') == 0)
-
-        filenames = ['cube_loc_wo_parent','cube_locrot_wo_parent','cube_none_wo_parent','cube_rot_wo_parent']
-        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-        import pydevd;pydevd.settrace()
+        
+        filenames = ['cube_loc_wo_parent','cube_locrot_wo_parent','cube_rot_wo_parent','cube_none_wo_parent']
+        
+        layer_num = 0
         for filename in filenames:
             self.assertLayerExportEqualsFixture(
-                0, os.path.join(__dirname__, 'fixtures', 'transform_stack', 'test_transform_stack_' + filename + '.obj'),
+                layer_num, os.path.join(__dirname__, 'fixtures', 'transform_stack', 'test_transform_stack_' + filename + '.obj'),
                 'test_transform_stack_' + filename + '.obj',
                 filterLines
             )
+            layer_num += 1
 
 runTestCases([TestTransformStackWOParent])

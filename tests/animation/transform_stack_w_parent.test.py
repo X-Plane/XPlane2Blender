@@ -14,25 +14,15 @@ class TestTransformStackWParent(XPlaneTestCase):
         def filterLines(line):
             return isinstance(line[0], str) and (line[0] == 'VT' or line[0].find('ANIM') == 0)
 
-        filenames = [\
-                     #'cube_loc_w_parent',\
-                     'cube_locrot_w_parent',\
-                     'cube_none_w_parent',\
-                     'cube_rot_w_parent']
+        filenames = ['cube_loc_w_parent','cube_locrot_w_parent','cube_rot_w_parent','cube_none_w_parent']
         
-        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-        import pydevd;pydevd.settrace()
-        out0 = self.exportLayer(0)
-        out1 = self.exportLayer(1)
-        out2 = self.exportLayer(2)
-        out3 = self.exportLayer(3)
-        
+        layer_num = 0
         for filename in filenames:
-            
             self.assertLayerExportEqualsFixture(
-                0, os.path.join(__dirname__, 'fixtures', 'transform_stack', 'test_transform_stack_' + filename + '.obj'),
-                filename,
+                layer_num, os.path.join(__dirname__, 'fixtures', 'transform_stack', 'test_transform_stack_' + filename + '.obj'),
+                'test_transform_stack_' + filename + '.obj',
                 filterLines
             )
+            layer_num += 1
 
 runTestCases([TestTransformStackWParent])

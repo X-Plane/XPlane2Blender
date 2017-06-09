@@ -75,25 +75,25 @@ TRIS	36 36
 	# 2 Object: Cube_locrot
 	ANIM_begin
 	# translation keyframes
-	ANIM_trans_begin	sim/joystick/yoke_pitch_ratio
-	ANIM_trans_key	0	0	0	0
-	ANIM_trans_key	0	0	0	0
-	ANIM_trans_key	1	12	0	0
-	ANIM_trans_end
-	# translation keyframes
 	ANIM_trans_begin	sim/graphics/animation/sin_wave_2
 	ANIM_trans_key	0	0	0	0
 	ANIM_trans_key	0	0	0	0
 	ANIM_trans_key	1	12	0	0
 	ANIM_trans_end
 	# rotation keyframes
-	ANIM_rotate_begin	1	0	0	sim/joystick/yoke_pitch_ratio
+	ANIM_rotate_begin	1	0	0	sim/graphics/animation/sin_wave_2
 	ANIM_rotate_key	0	0
 	ANIM_rotate_key	0	0
 	ANIM_rotate_key	1	45.00000125
 	ANIM_rotate_end
+	# translation keyframes
+	ANIM_trans_begin	sim/joystick/yoke_pitch_ratio
+	ANIM_trans_key	0	0	0	0
+	ANIM_trans_key	0	0	0	0
+	ANIM_trans_key	1	12	0	0
+	ANIM_trans_end
 	# rotation keyframes
-	ANIM_rotate_begin	1	0	0	sim/graphics/animation/sin_wave_2
+	ANIM_rotate_begin	1	0	0	sim/joystick/yoke_pitch_ratio
 	ANIM_rotate_key	0	0
 	ANIM_rotate_key	0	0
 	ANIM_rotate_key	1	45.00000125
