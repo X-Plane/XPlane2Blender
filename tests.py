@@ -15,8 +15,10 @@ LOGGER HAD X UNEXPECTED ERRORS
 
 The string is never indented. The formating of X is not specified, as long as it parses to an int
 """
-ERRORED_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
+ERROR_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
 
+#One day if we need to have a strictness rating we can have it stop on warnings as well as errors
+#WARNING_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED WARNING"
 if os.path.exists('./tests/tmp'):
     # empty temp directory
     shutil.rmtree('./tests/tmp')
@@ -75,6 +77,13 @@ def inFilter(filepath):
 
     return passes
 
+def printTestBeginning():
+    '''Print the /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests'''
+    print(("/*=== Running file " + pyFile).ljust(75,'=')+'{{{')
+
+def printTestEnd():
+    print(('=' *75)+"}}}*/")     
+    
 for root, dirs, files in os.walk('./tests'):
     for pyFile in files:
         pyFile = os.path.join(root, pyFile)
@@ -84,13 +93,17 @@ for root, dirs, files in os.walk('./tests'):
                 blendFile = pyFile.replace('.py', '.blend')
 
                 if not be_quiet:
-                    print(("/*=== Running file " + pyFile).ljust(75,'=')+'{{{')
+                   printTestBeginning()
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
                 if os.path.exists(blendFile):
                     args.append(blendFile)
-
+                else:
+                    print("WARNING: Blender file " + blendFile + " does not exist")
+                    printTestEnd()
+                    continue
+                
                 args.append('--python')
                 args.append(pyFile)
 
@@ -106,7 +119,7 @@ for root, dirs, files in os.walk('./tests'):
                 if sys.version_info >= (3, 0):
                     out = out.decode('utf-8')
                     
-                logger_matches = re.search(ERRORED_LOGGER_REGEX, out)
+                logger_matches = re.search(ERROR_LOGGER_REGEX, out)
                 if logger_matches == None:
                     num_errors = 0
                 else:
@@ -127,4 +140,4 @@ for root, dirs, files in os.walk('./tests'):
                 #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
                 #Blender, and more in there sometimes
                 if not be_quiet:
-                    print(('=' *75)+"}}}*/")
+                    printTestEnd()

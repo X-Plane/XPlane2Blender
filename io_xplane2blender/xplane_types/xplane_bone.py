@@ -64,7 +64,7 @@ class XPlaneBone():
                         else:
                             last_keyframe = keyframe
              
-                    return False
+        return False
 
     # Method: isAnimatedForRotation
     # Checks if a dataref's keyframes actually contain meaningful translations, and we should therefore write keyframes out
@@ -82,7 +82,7 @@ class XPlaneBone():
                         else:
                             last_keyframe = keyframe
              
-                    return False
+        return False
 
     # Method: isAnimated
     # Checks if the object is animated.
@@ -456,9 +456,11 @@ class XPlaneBone():
     
             o += self._writeStaticTranslation(bakeMatrix)
             o += self._writeStaticRotation(bakeMatrix)
-            
+
             for dataref in sorted(list(self.animations.keys())):
-                o += self.writeKeyframes(dataref)
+                o += self._writeTranslationKeyframes(dataref)
+            for dataref in sorted(list(self.animations.keys())):
+                o += self._writeRotationKeyframes(dataref)
 
         o += self._writeAnimAttributes()
 
@@ -754,13 +756,6 @@ class XPlaneBone():
             attr = self.xplaneObject.animAttributes[name]
             for i in range(len(attr.value)):
                 o += indent + '%s\t%s\n' % (attr.name, attr.getValueAsString(i=i))
-
-        return o
-
-    def writeKeyframes(self, dataref):
-        o = ''
-        o += self._writeTranslationKeyframes(dataref)
-        o += self._writeRotationKeyframes(dataref)
 
         return o
 

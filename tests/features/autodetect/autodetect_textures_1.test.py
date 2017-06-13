@@ -7,18 +7,18 @@ from io_xplane2blender.xplane_types import xplane_file
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestAutodetectTextures(XPlaneTestCase):
+class TestAutodetectTextures1(XPlaneTestCase):
     def test_autodetect_textures_export(self):
         def filterLines(line):
             return isinstance(line[0], str) and \
                    line[0].find('TEXTURE') == 0
 
-        filename = 'test_autodetect_textures_2'
+        filename = 'test_autodetect_textures_1'
 
         self.assertLayerExportEqualsFixture(
-            0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            0, os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )
 
-runTestCases([TestAutodetectTextures])
+runTestCases([TestAutodetectTextures1])

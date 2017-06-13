@@ -1,37 +1,23 @@
 import bpy
 from ..xplane_constants import *
 
-def compare(refMat, mat, exportType):
+def compare(refMat, mat, exportType, autodetectTextures):
     if exportType == EXPORT_TYPE_SCENERY:
-        return compareScenery(refMat, mat)
+        return compareScenery(refMat, mat, autodetectTextures)
     elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
-        return compareInstanced(refMat, mat)
+        return compareInstanced(refMat, mat, autodetectTextures)
     elif exportType == EXPORT_TYPE_COCKPIT or exportType == EXPORT_TYPE_AIRCRAFT:
         return compareAircraft(refMat, mat)
 
-def compareScenery(refMat, mat):
+def compareScenery(refMat, mat, autodetectTextures):
     errors = []
 
     if mat.options.draw:
-        if mat.texture != refMat.texture:
-            errors.append('Texture must be "%s".' % refMat.texture)
-
-        if mat.textureLit != refMat.textureLit:
-            errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
-
-        if mat.textureNormal != refMat.textureNormal:
-            errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
-
         if mat.options.draped and refMat.options.draped:
             if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
                 errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
 
-    return errors
-
-def compareInstanced(refMat, mat):
-    errors = []
-
-    if mat.options.draw:
+    if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
             errors.append('Texture must be "%s".' % refMat.texture)
 
@@ -40,7 +26,13 @@ def compareInstanced(refMat, mat):
 
         if mat.textureNormal != refMat.textureNormal:
             errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+            
+    return errors
 
+def compareInstanced(refMat, mat, autodetectTextures):
+    errors = []
+
+    if mat.options.draw:
         if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
             errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
 
@@ -51,6 +43,16 @@ def compareInstanced(refMat, mat):
                 errors.append('Alpha cutoff must be disabled.')
         elif mat.options.blendRatio != refMat.options.blendRatio:
             errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
+            
+    if mat.options.draw and autodetectTextures:
+        if mat.texture != refMat.texture:
+            errors.append('Texture must be "%s".' % refMat.texture)
+
+        if mat.textureLit != refMat.textureLit:
+            errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
+
+        if mat.textureNormal != refMat.textureNormal:
+            errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
     return errors
 
