@@ -90,7 +90,8 @@ class XPlaneBone():
     # Returns:
     #   bool - True if bone is animated, False if not.
     def isAnimated(self):
-        return (hasattr(self, 'animations') and len(self.animations) > 0)
+        return self.isDataRefAnimatedForTranslation() or self.isDataRefAnimatedForRotation()
+#       return (hasattr(self, 'animations') and len(self.animations) > 0)
 
     # Method: collectAnimations
     # Stores all animations in <animations>.
