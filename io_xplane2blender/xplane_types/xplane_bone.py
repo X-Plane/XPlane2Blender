@@ -90,7 +90,8 @@ class XPlaneBone():
     # Returns:
     #   bool - True if bone is animated, False if not.
     def isAnimated(self):
-        return (hasattr(self, 'animations') and len(self.animations) > 0)
+        return self.isDataRefAnimatedForTranslation() or self.isDataRefAnimatedForRotation()
+#       return (hasattr(self, 'animations') and len(self.animations) > 0)
 
     # Method: collectAnimations
     # Stores all animations in <animations>.
@@ -457,9 +458,9 @@ class XPlaneBone():
             o += self._writeStaticTranslation(bakeMatrix)
             o += self._writeStaticRotation(bakeMatrix)
 
-            for dataref in self.animations:
+            for dataref in sorted(list(self.animations.keys())):
                 o += self._writeTranslationKeyframes(dataref)
-            for dataref in self.animations:
+            for dataref in sorted(list(self.animations.keys())):
                 o += self._writeRotationKeyframes(dataref)
 
         o += self._writeAnimAttributes()
