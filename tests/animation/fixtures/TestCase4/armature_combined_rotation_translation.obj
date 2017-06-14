@@ -58,7 +58,7 @@ IDX	35
 	# 2 Bone: Bone
 	ANIM_begin
 	# static rotation
-	ANIM_rotate	1	0	0	90.0000025	90.0000025
+	ANIM_rotate	1	0	0	90.00020741	90.00020741
 	# translation keyframes
 	ANIM_trans_begin	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_trans_key	0	0	0	0
@@ -67,15 +67,15 @@ IDX	35
 	# rotation keyframes
 	ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
-	ANIM_rotate_key	1	-55.25473457
+	ANIM_rotate_key	1	-55.25490533
 	ANIM_rotate_end
 	ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
-	ANIM_rotate_key	1	24.88947913
+	ANIM_rotate_key	1	24.88928618
 	ANIM_rotate_end
 	ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
-	ANIM_rotate_key	1	29.78528359
+	ANIM_rotate_key	1	29.78521188
 	ANIM_rotate_end
 		# 3 Object: Cube.001
 		# PRIMITIVE: Cube.001	weight: 0

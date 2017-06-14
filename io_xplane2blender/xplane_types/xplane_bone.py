@@ -475,6 +475,9 @@ class XPlaneBone():
         bakeMatrix = bakeMatrix or self.getBakeMatrixForMyAnimations()
 
         translation = bakeMatrix.to_translation()
+        translation[0] = round(translation[0],5)
+        translation[1] = round(translation[1],5)
+        translation[2] = round(translation[2],5)
 
         # ignore noop translations
         if translation[0] == 0 and translation[1] == 0 and translation[2] == 0:
@@ -504,7 +507,10 @@ class XPlaneBone():
         o = ''
         bakeMatrix = bakeMatrix or self.getBakeMatrixForMyAnimations()
         rotation = bakeMatrix.to_euler('XYZ')
-
+        rotation[0] = round(rotation[0],5)
+        rotation[1] = round(rotation[1],5)
+        rotation[2] = round(rotation[2],5)
+        
         # ignore noop rotations
         if rotation[0] == 0 and rotation[1] == 0 and rotation[2] == 0:
             return o

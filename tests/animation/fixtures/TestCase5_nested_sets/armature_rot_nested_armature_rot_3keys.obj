@@ -57,11 +57,11 @@ IDX	35
 	# 2 Bone: Bone
 	ANIM_begin
 	# static rotation
-	ANIM_rotate	1	0	0	90.0000025	90.0000025
+	ANIM_rotate	1	0	0	90.00020741	90.00020741
 	# rotation keyframes
 	ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
-	ANIM_rotate_key	0.5	45.00000467
+	ANIM_rotate_key	0.5	45.00000125
 	ANIM_rotate_key	1	44.99999784
 	ANIM_rotate_end
 	ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
@@ -72,15 +72,14 @@ IDX	35
 	ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
 	ANIM_rotate_key	0.5	0
-	ANIM_rotate_key	1	-19.99999088
+	ANIM_rotate_key	1	-19.99999259
 	ANIM_rotate_end
 		# 3 Object: Armature.003
 		# ARMATURE: Armature.003	weight: 0
 			# 4 Bone: Bone
 			ANIM_begin
 			# static rotation
-			ANIM_rotate	0	1	0	-89.99998884	-89.99998884
-			ANIM_rotate	1	0	0	-0.0000077	-0.0000077
+			ANIM_rotate	0	1	0	-90.00020741	-90.00020741
 			# rotation keyframes
 			ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[1]
 			ANIM_rotate_key	0	0
@@ -105,4 +104,4 @@ IDX	35
 			ANIM_end
 	ANIM_end
 
-# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.7
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13
