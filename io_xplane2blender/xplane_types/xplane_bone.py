@@ -226,10 +226,6 @@ class XPlaneBone():
 	# transforms than post-animation if there is a static rotation after a dynamic translation.
 	#
     def getBlenderWorldMatrix(self):
-		# Root bone - always lives at the origin, special cased.
-        if self.parent == None:
-            return mathutils.Matrix.Identity(4)
-
         if self.blenderBone:
             # Blender bones in their current pose (which matches the shape of all data
             # blocks 'right now') are stored as a transform in the pose bone relative
@@ -243,6 +239,14 @@ class XPlaneBone():
         elif self.blenderObject:
             # Data blocks simply know their world-space location post-transform.
             return self.blenderObject.matrix_world.copy()
+		# Root bone gets a special exception: if it has a None blender object, then we are parented to
+        # the glboal coordinate system
+        elif self.parent == None:
+            return mathutils.Matrix.Identity(4)
+        else:
+        # Wat!?!  We have a non-root bone with NO blender stuff attached.
+            raise Exception()
+
 
 	#
 	# THE PRE-ANIMATION MATRIX (POSE)
@@ -373,7 +377,7 @@ class XPlaneBone():
     def getBakeMatrixForMyAnimations(self):
         parent_bone = self.getFirstAnimatedParent()
         if parent_bone == None:
-            # If we have no parent bone, our bake matrix goes from gobal coordinates TO our pre-animation pose.
+            # If we have no parent bone, our bake matrix goes from global coordinates TO our pre-animation pose.
 			# This would be more formal if it was inverse(identity) * getPreAnimationMatrix() - this has been
 			# simplifiied.
             return self.getPreAnimationMatrix()
@@ -400,8 +404,11 @@ class XPlaneBone():
             my_anchor_bone = self.getFirstAnimatedParent()
 
         if my_anchor_bone == None:
-            # If there's no animation, just get to our post-animation xform.
-            return self.getBlenderWorldMatrix()
+            # If my anchor bone is _none_, it means that there is both no animation AND no parent
+            # bone of ANY kind.  This happens when we do a by-object export and the user sets the
+            # mesh data block ITSELF to be a root.  In this case, we are our own coordinate system,
+            # so our bake is the identity.
+            return mathutils.Matrix.Identity(4)
         else:
             anchor_post_anim = my_anchor_bone.getPostAnimationMatrix()
             my_final_world = self.getBlenderWorldMatrix()
