@@ -319,25 +319,43 @@ class XPlaneBone():
 	#
     def getPostAnimationMatrix(self):
         if self.parent == None:
+            # WARNING: If the root bone has been scaled then the scale does NOT apply to the OBJ.
+            # This is probably technically correct based on some insane fine-print reading of export-by-object
+            # but may astonish users.
             return self.getBlenderWorldMatrix() # correctly returns Identity for root bone
         elif not self.isAnimated():
 			#No one should be asking or post-animation matrices on _non_-animated bones!
             print(self)
             raise Exception()
         else:
-			# Our blender "world" matrix basically "is" our post-animation pose with ONE
-			# exception: if our rotation is static, get the pose BEFORE static rotation.  This
-			# lets us 'bake' the static rotation into the NEXT thing (mesh, sub-animation) instead
-			# of emitting static rotates.
+        
+            # Scaling trickery: we have to BACK OUT the scaling of our post-animation matrix...this
+            # pushes it into the next bake, which means eventually the mesh vertices themselves get scaled.
+            # If we DONT'T do this then scaling "above" an animation won't scale what's below because the code
+            # assumes that the entire transform stack is "applied" in the OBJ file before we continue from an
+            # animation - and since OBJs don't scale, we can't do that.  Obviously if something that is
+            # impossible-in-OBJ happens, the pushed-through scaling will be wrong.
+            #
+            # Rotation trickery: if our rotation was static, we are goint to back that out of our post-animation too,
+            # forcing it into the bake matrix.  This is correct and removes the need for static rotations.
+
+            # First: get our world matrix without ANY scaling.
+            world_matrix = self.getBlenderWorldMatrix()
+            loc, rot, scale = world_matrix.decompose()
+            world_matrix_no_scale = mathutils.Matrix.Translation(loc) * rot.to_matrix().to_4x4()
+            # If there is no scaling, just take our real matrix, don't decompose and recompose.  This aims to
+            # avoid floating point crap accumulation
+            if scale == mathutils.Vector((1.0,1.0,1.0)):
+                world_matrix_no_scale = world_matrix
+            
             if not self.isDataRefAnimatedForRotation():
-				# Basically we hack zero-out the translation to get our rotation.
-                res = self.blenderObject.matrix_basis.copy()
-                res[0][3] = 0
-                res[1][3] = 0
-                res[2][3] = 0
-                return self.getBlenderWorldMatrix() * res.inverted_safe()
+				# No-rotation case: back out ONLY OUR rotation.  Note that our parents rotations and other random
+                # rotations are kept in!
+                our_loc, our_rot, our_scale = self.blenderObject.matrix_basis.decompose()
+                our_rot_inv = our_rot.to_matrix().to_4x4().inverted_safe()
+                return world_matrix_no_scale * our_rot_inv
             else:
-                return self.getBlenderWorldMatrix()
+                return world_matrix_no_scale
 
 	#
 	# ANIMATION BAKE MATRIX (DELTA)
@@ -467,12 +485,12 @@ class XPlaneBone():
 
         return o
 
-    def _writeStaticTranslation(self, bakeMatrix, reverse = False):
+    def _writeStaticTranslation(self, bakeMatrix):
         debug = getDebug()
         indent = self.getIndent()
         o = ''
 
-        bakeMatrix = bakeMatrix or self.getBakeMatrixForMyAnimations()
+        bakeMatrix = bakeMatrix
 
         translation = bakeMatrix.to_translation()
         translation[0] = round(translation[0],5)
@@ -482,10 +500,6 @@ class XPlaneBone():
         # ignore noop translations
         if translation[0] == 0 and translation[1] == 0 and translation[2] == 0:
             return o
-
-        if reverse:
-            for i in range(0, 3):
-               translation[i] = -translation[i]
 
         if debug:
             o += indent + '# static translation\n'
@@ -505,7 +519,7 @@ class XPlaneBone():
         debug = getDebug()
         indent = self.getIndent()
         o = ''
-        bakeMatrix = bakeMatrix or self.getBakeMatrixForMyAnimations()
+        bakeMatrix = bakeMatrix
         rotation = bakeMatrix.to_euler('XYZ')
         rotation[0] = round(rotation[0],5)
         rotation[1] = round(rotation[1],5)
@@ -571,7 +585,10 @@ class XPlaneBone():
         
         if not self.isDataRefAnimatedForTranslation():
             return o
-               
+        
+        # Apply scaling to translations
+        pre_loc, pre_rot, pre_scale = self.getPreAnimationMatrix().decompose()
+        
         totalTrans = 0
         indent = self.getIndent()
 
@@ -585,9 +602,9 @@ class XPlaneBone():
 
             o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
                 indent, floatToStr(keyframe.value),
-                floatToStr(keyframe.location[0]),
-                floatToStr(keyframe.location[2]),
-                floatToStr(-keyframe.location[1])
+                floatToStr(keyframe.location[0] * pre_scale[0]),
+                floatToStr(keyframe.location[2] * pre_scale[2]),
+                floatToStr(-keyframe.location[1] * pre_scale[1])
             )
 
         o += self._writeKeyframesLoop(dataref)

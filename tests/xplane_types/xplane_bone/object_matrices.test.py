@@ -9,7 +9,24 @@ from io_xplane2blender import xplane_config
 
 FLOAT_TOLERANCE = 0.000001
 
+# This was useful for exploring noise in the low bits of matrices
+#def print_acc(m):
+#    print("(%.9f %.9f %.9f %.9f)\n(%.9f %.9f %.9f %.9f)\n(%.9f %.9f %.9f %.9f)\n(%.9f %.9f %.9f %.9f)\n" %
+#        (m[0][0], m[1][0], m[2][0], m[3][0],
+#         m[0][1], m[1][1], m[2][1], m[3][1],
+#         m[0][2], m[1][2], m[2][2], m[3][2],
+#         m[0][3], m[1][3], m[2][3], m[3][3]))
+
 class TestMatrices(XPlaneTestCase):
+
+    # Ben says: when we decompose and re-compose
+    def assertMatricesEqual(self,m1,m2,T):
+        self.assertEquals(m1,m2)
+        self.assertFloatVectorsEqual(m1[0],m2[0], T)
+        self.assertFloatVectorsEqual(m1[1],m2[1], T)
+        self.assertFloatVectorsEqual(m1[2],m2[2], T)
+        self.assertFloatVectorsEqual(m1[3],m2[3], T)
+
     def test_bone_root_matrices(self):
         identityMatrix = mathutils.Matrix.Identity(4)
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
@@ -46,7 +63,7 @@ class TestMatrices(XPlaneTestCase):
         self.assertEquals(preMatrix, identityMatrix)
 
         # post matrix must be blender objects world matrix
-        self.assertEquals(postMatrix, cubeAnimated.blenderObject.matrix_world)
+        self.assertMatricesEqual(postMatrix, cubeAnimated.blenderObject.matrix_world, 0.0001)
 
         # bake matrix should be identity matrix (world origin)
         self.assertEquals(bakeMatrix, identityMatrix)
@@ -82,7 +99,7 @@ class TestMatrices(XPlaneTestCase):
         self.assertEquals(preMatrix, cubeStaticChildAnimated.blenderObject.parent.matrix_world * cubeStaticChildAnimated.blenderObject.matrix_parent_inverse)
 
         # post matrix should be world matrix
-        self.assertEquals(postMatrix, cubeStaticChildAnimated.blenderObject.matrix_world)
+        self.assertMatricesEqual(postMatrix, cubeStaticChildAnimated.blenderObject.matrix_world,0.0001)
 
         # bake matrix should be inverted identity matrix *  own preanimation matrix
         self.assertEquals(bakeMatrix, identityMatrix.inverted_safe() * preMatrix)
