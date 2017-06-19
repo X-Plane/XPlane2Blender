@@ -484,27 +484,15 @@ def material_layout(self, obj):
         row = layout.row()
         row.prop(obj.xplane, "draped")
 
-        if version >= 1100:
-            row = layout.row()
-            row.prop(obj.xplane, "normal_metalness")
-
         row = layout.row()
 
-        # v1100 blend / v1000 blend / v9000 blend
-        if version >= 1100:
-            row.prop(obj.xplane, "blend_v1100", text = "Blend")
-        elif version >= 1000:
+        # v1000 blend / v9000 blend
+        if version >= 1000:
             row.prop(obj.xplane, "blend_v1000", text = "Blend")
         else:
             row.prop(obj.xplane, "blend", text = "Use alpha cutoff")
 
-        if (obj.xplane.blend == True and version < 1000):
-            row = layout.row()
-            row.prop(obj.xplane, "blendRatio", text = "Alpha cutoff ratio")
-        elif(obj.xplane.blend_v1000 == 'off' and version >= 1000 and version < 1100):
-            row = layout.row()
-            row.prop(obj.xplane, "blendRatio", text = "Alpha cutoff ratio")
-        elif(obj.xplane.blend_v1100 == 'off' and version >= 1100 and version < 1200): #I hope there is an X-Plane 12! - Ted
+        if obj.xplane.blend == True or obj.xplane.blend_v1000 == 'off':
             row = layout.row()
             row.prop(obj.xplane, "blendRatio", text = "Alpha cutoff ratio")
 

@@ -848,14 +848,13 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
-        default = VERSION_1100,
+        default = VERSION_1050,
         items = [
-            (VERSION_900,    "9.x",   "9.x"),
+            (VERSION_900, "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
             (VERSION_1010, "10.1x", "10.1x"),
             (VERSION_1040, "10.4x", "10.4x"),
-            (VERSION_1050, "10.5x", "10.5x"),
-            (VERSION_1100, "11.0x", "11.0x")
+            (VERSION_1050, "10.5x", "10.5x")
         ]
     )
 
@@ -1074,28 +1073,17 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = False
     )
 
-    blend_items_v1000 = [(BLEND_OFF, 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
-                         (BLEND_ON,   'Alpha blend', 'Textures alpha channel will blended.'),
-                         (BLEND_SHADOW,    'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.') ]
-    
     # v1000
     blend_v1000 = bpy.props.EnumProperty(
         attr = "blend_v1000",
         name = "Blend",
         description = "Controls texture alpha/blending",
         default = "on",
-        items = blend_items_v1000
-    )
-    
-    blend_items_v1100 = blend_items_v1000 + [(BLEND_GLASS, 'Glass', 'The alpha channel of the albedo (day texture) will be used to create translucent rendering.') ]
-    
-    # v1100
-    blend_v1100 = bpy.props.EnumProperty(
-        attr = "blend_v1100",
-        name = "Blend",
-        description = "Controls texture alpha/blending",
-        default = "on",
-        items = blend_items_v1100
+        items = [
+            (BLEND_OFF, 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
+            (BLEND_ON, 'Alpha blend', 'Textures alpha channel will blended.'),
+            (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
+        ]
     )
 
     blendRatio = bpy.props.FloatProperty(
@@ -1199,14 +1187,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Will perfectly match with the ground.",
         default = False
     )
-
-    # v1100
-    normal_metalness = bpy.props.BoolProperty(
-        attr = "normal_metalness",
-        name = "Normal Metalness",
-        description = "Blue channel is suitable for base reflectance.",
-        default = False
-        )
 
     # v1000 (draped only)
     bump_level = bpy.props.FloatProperty(
