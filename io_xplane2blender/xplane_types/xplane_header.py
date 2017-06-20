@@ -53,7 +53,8 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("GLOBAL_no_shadow", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_specular", None))
-
+        self.attributes.add(XPlaneAttribute("BLEND_GLASS", None)) #is this in the right "section"?
+        
         # draped shader attributes
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED_NORMAL", None))
@@ -104,6 +105,13 @@ class XPlaneHeader():
         if self.xplaneFile.options.texture_normal != '':
             self.attributes['TEXTURE_NORMAL'].setValue(self.getTexturePath(self.xplaneFile.options.texture_normal, exportdir, blenddir))
 
+
+        if self.xplaneFile.referenceMaterials[0]:
+            mat = self.xplaneFile.referenceMaterials[0]
+            xplane_version = int(bpy.context.scene.xplane.version)
+            if xplane_version >= 1100:            
+                self.attributes['BLEND_GLASS'].setValue(mat.options.blend_glass)
+
         if canHaveDraped:
             # draped textures
             if self.xplaneFile.options.texture_draped != '':
@@ -128,7 +136,6 @@ class XPlaneHeader():
                 self.attributes['SPECULAR'].setValue(mat.attributes['ATTR_shiny_rat'].getValue())
                 # prevent of writing again in material
                 mat.attributes['ATTR_shiny_rat'].setValue(None)
-
             # draped LOD
             if self.xplaneFile.options.lod_draped != 0.0:
                 self.attributes['ATTR_LOD_draped'].setValue(self.xplaneFile.options.lod_draped)

@@ -5,6 +5,7 @@ import bpy
 from .xplane_config import *
 from .xplane_helpers import getColorAndLitTextureSlots
 from .xplane_constants import *
+from io_xplane2blender import xplane_constants
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
@@ -848,13 +849,14 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
-        default = VERSION_1050,
+        default = VERSION_1100,
         items = [
             (VERSION_900, "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
             (VERSION_1010, "10.1x", "10.1x"),
             (VERSION_1040, "10.4x", "10.4x"),
-            (VERSION_1050, "10.5x", "10.5x")
+            (VERSION_1050, "10.5x", "10.5x"),
+            (VERSION_1100, "11.0x", "11.0x")
         ]
     )
 
@@ -1187,6 +1189,22 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Will perfectly match with the ground.",
         default = False
     )
+
+    # v1100
+    normal_metalness = bpy.props.BoolProperty(
+        attr = "normal_metalness",
+        name = "Normal Metalness",
+        description = "Blue channel is suitable for base reflectance.",
+        default = False
+        )
+    
+    # v1100
+    blend_glass = bpy.props.BoolProperty(
+        attr = "blend_glass",
+        name = "Blend Glass",
+        description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering.",
+        default = False
+        )
 
     # v1000 (draped only)
     bump_level = bpy.props.FloatProperty(

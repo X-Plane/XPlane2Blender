@@ -114,14 +114,18 @@ class XPlaneMaterial():
                     self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity + textureSpec)
 
                     # blend
-                    if (int(bpy.context.scene.xplane.version) >= 1000):
-                        if mat.xplane.blend_v1000 == 'off':
+                    xplane_version = int(bpy.context.scene.xplane.version)
+                    if xplane_version >= 1000:
+                        xplane_blend_enum = mat.xplane.blend_v1000
+                    
+                    if xplane_version >= 1000:
+                        if xplane_blend_enum == BLEND_OFF:
                             self.attributes['ATTR_no_blend'].setValue(mat.xplane.blendRatio)
-                        elif mat.xplane.blend_v1000 == 'on':
+                        elif xplane_blend_enum == BLEND_ON:
                             self.attributes['ATTR_blend'].setValue(True)
-                        elif mat.xplane.blend_v1000 == 'shadow':
+                        elif xplane_blend_enum == BLEND_SHADOW:
                             self.attributes['ATTR_shadow_blend'].setValue(True)
-                    else:
+                    elif xplane_version < 1000:
                         if mat.xplane.blend:
                             self.attributes['ATTR_no_blend'].setValue(mat.xplane.blendRatio)
                         else:
