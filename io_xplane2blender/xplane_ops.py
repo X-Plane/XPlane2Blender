@@ -547,6 +547,15 @@ class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
         obj.xplane.conditions.remove(self.index)
         return {'FINISHED'}
 
+class SCENE_OT_developer_export_to_current_dir(bpy.types.Operator):
+    bl_label = 'Export .blend File To Current Dir'
+    bl_idname = 'scene.developer_export_to_current_dir'
+    bl_description = 'Exports blender file to current working directory. Useful for quick plugin testing'
+
+    def execute(self, context):
+        bpy.ops.export.xplane_obj(filepath="")
+        return {'FINISHED'}
+
 # Function: addXPlaneOps
 # Registers all Operators.
 def addXPlaneOps():
@@ -573,6 +582,8 @@ def addXPlaneOps():
     bpy.utils.register_class(SCENE_OT_add_xplane_layers)
     bpy.utils.register_class(SCENE_OT_remove_xplane_layer_attribute)
 
+    bpy.utils.register_class(SCENE_OT_developer_export_to_current_dir)
+    
     bpy.utils.register_class(OBJECT_OT_add_xplane_object_condition)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_object_condition)
     bpy.utils.register_class(OBJECT_OT_add_xplane_material_condition)
@@ -604,6 +615,7 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(SCENE_OT_add_xplane_layer_attribute)
     bpy.utils.unregister_class(SCENE_OT_add_xplane_layers)
     bpy.utils.unregister_class(SCENE_OT_remove_xplane_layer_attribute)
+    bpy.utils.unregister_class(SCENE_OT_developer_export_to_current_dir)
 
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_object_condition)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_condition)

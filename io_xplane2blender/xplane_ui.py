@@ -162,6 +162,16 @@ def scene_layout(self, scene):
         box = layout.box()
         box.prop(scene.xplane, "profile", text = "Profiling")
         box.prop(scene.xplane, "log", text = "Log")
+    
+    row = layout.row()
+    row.prop(scene.xplane, "plugin_development", text = "Plugin Development Tools")
+    
+    if scene.xplane.plugin_development:
+       box = layout.box()
+       row = box.row()
+       row.prop(scene.xplane, "dev_enable_breakpoints")
+       row = box.row()
+       row.operator("scene.developer_export_to_current_dir")
 
     row = layout.row()
     row.prop(scene.xplane, "exportMode", text = "Export Mode")

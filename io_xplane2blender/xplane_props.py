@@ -832,6 +832,19 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    # Plugin development tools
+    plugin_development = bpy.props.BoolProperty(
+        attr = "plugin_development",
+        name = "Plugin Development Tools",
+        description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
+        default = False) # Set this to true during development to avoid re-checking it
+    
+    dev_enable_breakpoints = bpy.props.BoolProperty(
+        attr = "dev_enable_breakpoints",
+        name = "Enable Breakpoints",
+        description = "Allows use of Eclipse breakpoints (must have PyDev, Eclipse installed and configured to use and Pydev Debug Server running!)",
+        default = False)
+
     layers = bpy.props.CollectionProperty(
         attr = "layers",
         name = "Layers",
