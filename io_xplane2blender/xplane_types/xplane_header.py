@@ -53,8 +53,10 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("GLOBAL_no_shadow", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_specular", None))
-        self.attributes.add(XPlaneAttribute("BLEND_GLASS", None)) #is this in the right "section"?
+        
+        #TODO: These are both shader attributes, right?
         self.attributes.add(XPlaneAttribute("NORMAL_METALNESS", None))
+        self.attributes.add(XPlaneAttribute("BLEND_GLASS", None))
         
         # draped shader attributes
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED", None))
@@ -110,8 +112,8 @@ class XPlaneHeader():
             mat = self.xplaneFile.referenceMaterials[0]
             xplane_version = int(bpy.context.scene.xplane.version)
             if xplane_version >= 1100:
-                self.attributes['BLEND_GLASS'].setValue(mat.options.blend_glass)
                 self.attributes['NORMAL_METALNESS'].setValue(mat.options.normal_metalness)
+                self.attributes['BLEND_GLASS'].setValue(mat.options.blend_glass)
 
         if canHaveDraped:
             # draped textures

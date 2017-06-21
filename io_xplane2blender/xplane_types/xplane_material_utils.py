@@ -78,7 +78,7 @@ def validate(mat, exportType):
     if mat.options == None:
         errors.append('Is invalid.')
         return errors
-
+    
     if (exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY) and mat.options.draped:
         return validateDraped(mat)
     elif exportType == EXPORT_TYPE_SCENERY:
@@ -111,6 +111,9 @@ def validateScenery(mat):
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
+    
+    if mat.options.blend_glass:
+        errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors
 
@@ -135,6 +138,9 @@ def validateInstanced(mat):
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
+
+    if mat.options.blend_glass:
+        errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors
 
@@ -161,6 +167,8 @@ def validatePanel(mat):
     if mat.options.surfaceType != 'none':
         errors.append('Must have the surface type "none".')
 
+    if mat.options.blend_glass:
+        errors.append('Blend glass only legal on aircraft and cockpit objects')
     return errors
 
 
@@ -218,6 +226,9 @@ def validateDraped(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
+    if mat.options.blend_glass:
+       errors.append('Blend glass only legal on aircraft and cockpit objects')
+        
     return errors
 
 def getFirstMatchingMaterial(materials, validation):
