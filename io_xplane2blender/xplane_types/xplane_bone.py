@@ -271,6 +271,12 @@ class XPlaneBone():
         elif self.blenderBone:
 
             poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
+
+            static_translation = mathutils.Matrix.Identity(4)
+            if not self.isDataRefAnimatedForTranslation():
+                static_translation = mathutils.Matrix.Translation(poseBone.matrix_basis.to_translation())
+
+
             if self.blenderBone.parent and poseBone and poseBone.parent:
                 # This special cases a bone that is parented to another bone.  In this case, we have a
                 # problem: Blender stores all bones relative to the armature, both in rest and in pose.
@@ -285,12 +291,12 @@ class XPlaneBone():
                 # 2. Our parent's pose
                 # 3. The bake matrix from our parent's pose to us.
                 # This gets us up to right before our transform.
-                return (self.blenderObject.matrix_world.copy() * poseBone.parent.matrix.copy() * r2r)
+                return (self.blenderObject.matrix_world.copy() * poseBone.parent.matrix.copy() * r2r) * static_translation
 
             # This is the unparented bone case (and any fall-throughs from crazy objects):
             # Simply apply our rest position (relative to the armature) to the armature's current world-space
             # position.
-            return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
+            return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy() * static_translation
 
         elif self.blenderObject:
             # animated objects have parents world matrix * inverse of parents matrix
@@ -355,7 +361,13 @@ class XPlaneBone():
             if not self.isDataRefAnimatedForRotation():
 				# No-rotation case: back out ONLY OUR rotation.  Note that our parents rotations and other random
                 # rotations are kept in!
-                our_loc, our_rot, our_scale = self.blenderObject.matrix_basis.decompose()
+            
+                if self.blenderBone:
+                    poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
+                    our_loc, our_rot, our_scale = poseBone.matrix_basis.decompose()
+                else:
+                    our_loc, our_rot, our_scale = self.blenderObject.matrix_basis.decompose()
+
                 our_rot_inv = our_rot.to_matrix().to_4x4().inverted_safe()
                 return world_matrix_no_scale * our_rot_inv
             else:

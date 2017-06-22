@@ -81,5 +81,11 @@ mappings = {
     },
     'TestCase7_scaling_rotloc': {
         0: './fixtures/TestCase7_scaling_rotloc/TestCase7_scaling_rotloc.obj'
+    },
+    'TestCase8_bone_optimization': {
+        0: './fixtures/Testcase8_bone_optimization/TestCase8_rot.obj',
+        1: './fixtures/Testcase8_bone_optimization/TestCase8_loc.obj',
+        2: './fixtures/Testcase8_bone_optimization/TestCase8_rot_loc.obj',
+        3: './fixtures/Testcase8_bone_optimization/TestCase8_static.obj'
     }
 }
