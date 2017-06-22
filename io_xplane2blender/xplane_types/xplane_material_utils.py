@@ -1,6 +1,20 @@
 import bpy
 from ..xplane_constants import *
 
+def _validateNormalMetalness(refMat, mat):
+    errors = []
+    if mat.getEffectiveNormalMetalness() != refMat.getEffectiveNormalMetalness():
+        errors.append('NORMAL_METALNESS must be set for all materials with the same albedo texture')
+
+    return errors
+
+def _validateBlendGlass(refMat, mat):
+    errors = []
+    if mat.getEffectiveBlendGlass() != refMat.getEffectiveBlendGlass():
+        errors.append('BLEND_GLASS must be set for all materials with the same albedo texture')
+
+    return errors
+
 def compare(refMat, mat, exportType):
     if exportType == EXPORT_TYPE_SCENERY:
         return compareScenery(refMat, mat)
@@ -15,6 +29,7 @@ def compareScenery(refMat, mat):
     if mat.options.draw:
         if mat.texture != refMat.texture:
             errors.append('Texture must be "%s".' % refMat.texture)
+            errors.extend(_validateNormalMetalness(refMat, mat))
 
         if mat.textureLit != refMat.textureLit:
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
@@ -23,7 +38,8 @@ def compareScenery(refMat, mat):
             errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
         if mat.options.draped and refMat.options.draped:
-            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
+            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
+               mat.getEffectiveNormalMetalness() == False:
                 errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
 
     return errors
@@ -34,6 +50,7 @@ def compareInstanced(refMat, mat):
     if mat.options.draw:
         if mat.texture != refMat.texture:
             errors.append('Texture must be "%s".' % refMat.texture)
+            errors.extend(_validateNormalMetalness(refMat, mat))
 
         if mat.textureLit != refMat.textureLit:
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
@@ -41,7 +58,8 @@ def compareInstanced(refMat, mat):
         if mat.textureNormal != refMat.textureNormal:
             errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
-        if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
+        if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
+           mat.getEffectiveNormalMetalness() == False:
             errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
 
         if mat.options.blend != refMat.options.blend:
@@ -62,6 +80,8 @@ def compareAircraft(refMat, mat):
         if not mat.options.panel and not refMat.options.panel:
             if mat.texture != refMat.texture:
                 errors.append('Texture must be "%s".' % refMat.texture)
+                errors.extend(_validateNormalMetalness(refMat, mat))
+                errors.extend(_validateBlendGlass(refMat, mat))
 
             if mat.textureLit != refMat.textureLit:
                 errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)

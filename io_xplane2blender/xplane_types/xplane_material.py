@@ -82,7 +82,7 @@ class XPlaneMaterial():
             mat = self.blenderObject.data.materials[0]
             self.name = mat.name
             self.blenderMaterial = mat
-            self.options = mat.xplane
+            self.options = mat.xplane #xplane_prop.XPlaneMaterialSettings
 
             if mat.xplane.draw:
                 self.attributes['ATTR_draw_enable'].setValue(True)
@@ -279,3 +279,27 @@ class XPlaneMaterial():
     #   bool, list - True if Material is valid, else False + a list of errors
     def isValid(self, exportType):
         return validate(self, exportType)
+    
+    # Method: getEffectiveNormalMetalness
+    # Predicate that returns the effective value of NORMAL_METALNESS, taking into account the current xplane version
+    #
+    # Returns:
+    # bool - True or false if the version of XPlane chosen supports NORMAL_METALNESS and what its value is,
+    # False if the current XPLane version doesn't support it
+    def getEffectiveNormalMetalness(self):
+        if int(bpy.ops.scene.xplane.version) >= 1100:
+            return self.option.normal_metalness
+        else
+            return False
+        
+    # Method: getEffectiveBlendGlass
+    # Predicate that returns the effective value of BLEND_GLASS, taking into account the current xplane version
+    #
+    # Returns:
+    # bool - True or false if the version of XPlane chosen supports BLEND_GLASS and what its value is,
+    # False if the current XPLane version doesn't support it
+    def getEffectiveBlendGlass(self):
+        if int(bpy.ops.scene.xplane.version) >= 1100:
+            return self.option.blend_glass
+        else
+            return False
