@@ -544,7 +544,7 @@ class XPlaneFile():
             tempBlenderObject = self._tempBlenderObjects.pop()
             bpy.data.objects.remove(tempBlenderObject)
     
-    # Method: getEffectiveXPlaneVersion
-    # Returns the current chosen X-Plane version as an int
-    def getXPlaneVersion(self):
-        return int(bpy.context.scene.xplane.version)
+# Method: getEffectiveXPlaneVersion
+# Returns the current chosen X-Plane version as an int
+def getXPlaneVersion():
+    return int(bpy.context.scene.xplane.version)
