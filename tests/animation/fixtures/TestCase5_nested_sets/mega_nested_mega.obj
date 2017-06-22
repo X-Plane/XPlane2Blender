@@ -62,21 +62,21 @@ ANIM_trans_end
 # rotation keyframes
 ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
-ANIM_rotate_key	1	-49.10660126
+ANIM_rotate_key	1	-49.1064954
 ANIM_rotate_end
 ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
-ANIM_rotate_key	1	48.59037898
+ANIM_rotate_key	1	48.59025945
 ANIM_rotate_end
 ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
-ANIM_rotate_key	1	4.10659959
+ANIM_rotate_key	1	4.1063887
 ANIM_rotate_end
 # ARMATURE: Armature.008	weight: 0
 	# 2 Bone: Bone
 	ANIM_begin
 	# static rotation
-	ANIM_rotate	1	0	0	90.0000025	90.0000025
+	ANIM_rotate	1	0	0	90.00020741	90.00020741
 	# translation keyframes
 	ANIM_trans_begin	sim/cockpit2/engine/actuators/throttle_ratio[1]
 	ANIM_trans_key	0	0	0	0
@@ -92,7 +92,7 @@ ANIM_rotate_end
 		# static translation
 		ANIM_trans	0	0	1	0	0	1
 		# static rotation
-		ANIM_rotate	1	0	0	-90.0000025	-90.0000025
+		ANIM_rotate	1	0	0	-90.00020741	-90.00020741
 		# translation keyframes
 		ANIM_trans_begin	sim/cockpit2/engine/actuators/throttle_ratio[2]
 		ANIM_trans_key	0	0	0	0
@@ -101,26 +101,26 @@ ANIM_rotate_end
 		# rotation keyframes
 		ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[2]
 		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	67.7923391
+		ANIM_rotate_key	1	67.79236642
 		ANIM_rotate_end
 		ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[2]
 		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	-20.70481176
+		ANIM_rotate_key	1	-20.70497569
 		ANIM_rotate_end
 		ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[2]
 		ANIM_rotate_key	0	0
-		ANIM_rotate_key	1	-20.89340353
+		ANIM_rotate_key	1	-20.89347866
 		ANIM_rotate_end
 		# ARMATURE: Armature.009	weight: 0
 			# 4 Bone: Bone
 			ANIM_begin
 			# static rotation
-			ANIM_rotate	0	0	-1	89.99998884	89.99998884
-			ANIM_rotate	1	0	0	89.99999567	89.99999567
+			ANIM_rotate	0	0	-1	90.00020741	90.00020741
+			ANIM_rotate	1	0	0	90.00020741	90.00020741
 			# translation keyframes
 			ANIM_trans_begin	sim/cockpit2/engine/actuators/throttle_ratio[3]
 			ANIM_trans_key	0	0	0	0
-			ANIM_trans_key	1	0.00000039	0.00000027	-2
+			ANIM_trans_key	1	0	0	-2
 			ANIM_trans_end
 			# rotation keyframes
 			ANIM_rotate_begin	-0.00000001	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[3]
@@ -137,4 +137,4 @@ ANIM_rotate_end
 	ANIM_end
 ANIM_end
 
-# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.7
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13

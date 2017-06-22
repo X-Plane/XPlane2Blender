@@ -61,3 +61,7 @@ class XPlaneAttributes(OrderedDict):
             o += name + ': ' + self[name].getValuesAsString() + '\n'
 
         return o
+
+    def __str__(self):
+        return self.asString()
+

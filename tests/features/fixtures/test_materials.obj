@@ -426,6 +426,7 @@ ATTR_light_level	1	2	light-level-test
 TRIS	36 36
 # 1 Object: cockpit_panel
 # PRIMITIVE: cockpit_panel	weight: 2
+ATTR_light_level_reset
 # MATERIAL: cockpit_panel
 ATTR_cockpit
 ATTR_cockpit_region	0
@@ -434,8 +435,8 @@ TRIS	72 36
 IF GLOBAL_LIGHTING
 # PRIMITIVE: conditions	weight: 3
 ATTR_no_cockpit
-# MATERIAL: conditions
 ATTR_no_solid_camera
+# MATERIAL: conditions
 custom_prop	10
 TRIS	108 36
 ENDIF
@@ -455,8 +456,8 @@ ATTR_draw_disable
 TRIS	216 36
 # 1 Object: red
 # PRIMITIVE: red	weight: 7
-# MATERIAL: red
 ATTR_draw_enable
+# MATERIAL: red
 TRIS	252 36
 # 1 Object: specular
 # PRIMITIVE: specular	weight: 8
@@ -471,4 +472,4 @@ ATTR_hard_deck	asphalt
 ATTR_poly_os	2
 TRIS	324 36
 
-# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.6
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13

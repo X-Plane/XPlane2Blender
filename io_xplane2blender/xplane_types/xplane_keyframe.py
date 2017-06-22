@@ -1,6 +1,8 @@
 import bpy
 import copy
 
+KEYFRAME_PRECISION = 5
+
 # Class: XPlaneKeyframe
 # A Keyframe.
 class XPlaneKeyframe():
@@ -54,6 +56,9 @@ class XPlaneKeyframe():
         bpy.context.scene.frame_set(frame = self.frame)
 
         self.location = copy.copy(blenderObject.location)
+        self.location[0] = round(self.location[0],KEYFRAME_PRECISION)
+        self.location[1] = round(self.location[1],KEYFRAME_PRECISION)
+        self.location[2] = round(self.location[2],KEYFRAME_PRECISION)
         self.rotation = None
         self.rotationMode = blenderObject.rotation_mode
 
@@ -62,8 +67,11 @@ class XPlaneKeyframe():
             self.rotation = blenderObject.rotation_quaternion.copy()
         elif self.rotationMode == 'AXIS_ANGLE':
             rot = blenderObject.rotation_axis_angle
-            self.rotation = (rot[0], rot[1], rot[2], rot[3])
+            self.rotation = (round(rot[0],KEYFRAME_PRECISION), rot[1], rot[2], rot[3])
         else:
             self.rotation = blenderObject.rotation_euler.copy()
+            self.rotation[0] = round(self.rotation[0],KEYFRAME_PRECISION)
+            self.rotation[1] = round(self.rotation[1],KEYFRAME_PRECISION)
+            self.rotation[2] = round(self.rotation[2],KEYFRAME_PRECISION)
 
         self.scale = copy.copy(blenderObject.scale)

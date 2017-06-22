@@ -153,10 +153,10 @@ ATTR_solid_camera
 TRIS	72 36
 # 1 Object: Cube
 # PRIMITIVE: Cube	weight: 2
-# MATERIAL: TexA
-ATTR_shiny_rat	0.5
 ATTR_draw_enable
 ATTR_no_solid_camera
+# MATERIAL: TexA
+ATTR_shiny_rat	0.5
 TRIS	0 36
 
-# Build with Blender 2.77 (sub 0) (build b'abf6f08') Exported with XPlane2Blender 3.3.8
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13

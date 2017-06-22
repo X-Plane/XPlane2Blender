@@ -685,91 +685,91 @@ IDX	611
 # 0 ROOT
 # 1 Object: drag_xy
 # PRIMITIVE: drag_xy	weight: 0
-ATTR_manip_drag_xy	hand	1	2	3	4	5	6	dataref1	dataref2	this should be the tooltip
-ATTR_manip_wheel	1
 # MATERIAL: Material
 ATTR_draw_disable
+ATTR_manip_drag_xy	hand	1	2	3	4	5	6	dataref1	dataref2	this should be the tooltip
+ATTR_manip_wheel	1
 TRIS	360 36
 # 1 Object: drag_axis
 # PRIMITIVE: drag_axis	weight: 1
-ATTR_manip_drag_axis	four_arrows	1	2	3	4	5	dataref	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_drag_axis	four_arrows	1	2	3	4	5	dataref	this should be the tooltip
 TRIS	288 36
 # 1 Object: command
 # PRIMITIVE: command	weight: 2
-ATTR_manip_command	button	the_command	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_command	button	the_command	this should be the tooltip
 TRIS	72 36
 # 1 Object: command_axis
 # PRIMITIVE: command_axis	weight: 3
-ATTR_manip_command_axis	rotate_small	1	2	3	pos_command	neg_command	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_command_axis	rotate_small	1	2	3	pos_command	neg_command	this should be the tooltip
 TRIS	108 36
 # 1 Object: push
 # PRIMITIVE: push	weight: 4
+# MATERIAL: Material
 ATTR_manip_push	rotate_small_left	1	2	dataref	this should be the tooltip
 ATTR_manip_wheel	1
-# MATERIAL: Material
 TRIS	468 36
 # 1 Object: radio
 # PRIMITIVE: radio	weight: 5
+# MATERIAL: Material
 ATTR_manip_radio	rotate_small_right	1	dataref	this should be the tooltip
 ATTR_manip_wheel	1
-# MATERIAL: Material
 TRIS	504 36
 # 1 Object: delta
 # PRIMITIVE: delta	weight: 6
+# MATERIAL: Material
 ATTR_manip_delta	rotate_medium	1	2	3	4	dataref	this should be the tooltip
 ATTR_manip_wheel	1
-# MATERIAL: Material
 TRIS	252 36
 # 1 Object: wrap
 # PRIMITIVE: wrap	weight: 7
+# MATERIAL: Material
 ATTR_manip_wrap	rotate_medium_left	1	2	3	4	dataref	this should be the tooltip
 ATTR_manip_wheel	1
-# MATERIAL: Material
 TRIS	576 36
 # 1 Object: toggle
 # PRIMITIVE: toggle	weight: 8
+# MATERIAL: Material
 ATTR_manip_toggle	rotate_medium_right	1	2	dataref	this should be the tooltip
 ATTR_manip_wheel	1
-# MATERIAL: Material
 TRIS	540 36
 # 1 Object: noop
 # PRIMITIVE: noop	weight: 9
-ATTR_manip_noop	dataref	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_noop	dataref	this should be the tooltip
 TRIS	432 36
 # 1 Object: drag_axis_pix
 # PRIMITIVE: drag_axis_pix	weight: 10
+# MATERIAL: Material
 ATTR_manip_drag_axis_pix	rotate_large_left	1	2	3	4	5	dataref	this should be the tooltip
 ATTR_manip_wheel	1
-# MATERIAL: Material
 TRIS	324 36
 # 1 Object: command_knob
 # PRIMITIVE: command_knob	weight: 11
-ATTR_manip_command_knob	rotate_large_left	pos_command	neg_command	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_command_knob	rotate_large_left	pos_command	neg_command	this should be the tooltip
 TRIS	144 36
 # 1 Object: command_switch_up_down
 # PRIMITIVE: command_switch_up_down	weight: 12
-ATTR_manip_command_switch_up_down	rotate_large_left	pos_command	neg_command	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_command_switch_up_down	rotate_large_left	pos_command	neg_command	this should be the tooltip
 TRIS	216 36
 # 1 Object: command_switch_left_right
 # PRIMITIVE: command_switch_left_right	weight: 13
-ATTR_manip_command_switch_left_right	rotate_large_left	pos_command	neg_command	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_command_switch_left_right	rotate_large_left	pos_command	neg_command	this should be the tooltip
 TRIS	180 36
 # 1 Object: axis_switch_up_down
 # PRIMITIVE: axis_switch_up_down	weight: 14
-ATTR_manip_axis_switch_up_down	rotate_large_left	4	5	1	0.5	dataref	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_axis_switch_up_down	rotate_large_left	4	5	1	0.5	dataref	this should be the tooltip
 TRIS	36 36
 # 1 Object: axis_switch_left_right
 # PRIMITIVE: axis_switch_left_right	weight: 15
-ATTR_manip_axis_switch_left_right	rotate_large_left	4	5	1	0.5	dataref	this should be the tooltip
 # MATERIAL: Material
+ATTR_manip_axis_switch_left_right	rotate_large_left	4	5	1	0.5	dataref	this should be the tooltip
 TRIS	0 36
 # 1 Object: none
 # PRIMITIVE: none	weight: 100
@@ -777,4 +777,4 @@ ATTR_manip_none
 # MATERIAL: Material
 TRIS	396 36
 
-# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.7
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13

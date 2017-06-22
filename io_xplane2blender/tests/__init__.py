@@ -8,7 +8,8 @@ from ..xplane_helpers import logger, XPlaneLogger
 from .animation_file_mappings import mappings
 
 #TODO: Make this import from XPlane2Blender/tests.py instead of just keeping it in sync manually
-ERRORED_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
+ERROR_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
+WARNING_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED WARNINGS"
 
 FLOAT_TOLERANCE = 0.0001
 
@@ -19,7 +20,8 @@ class XPlaneTestCase(unittest.TestCase):
     #If you are expecting errors as as part of your test, every part of your test must expect errors.
     #Split facets that must pass and facets that must fail into separate tests
     expected_logger_errors = 0
-        
+    expected_logger_warnings = 0
+    
     def setUp(self, useLogger = True):
         if '--debug' in sys.argv:
             setDebug(True)
@@ -176,6 +178,8 @@ class XPlaneTestCase(unittest.TestCase):
         return out
 
     def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
+        if not '--quiet' in sys.argv:
+            print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
         out = self.exportLayer(layer, tmpFilename)
         self.assertFileEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
@@ -249,17 +253,22 @@ def runTestCases(testCases):
     #we are currently saying only 1 is allow per suite at a time (which is likely how it should be anyways)
     assert len(testCases) == 1, "Currently, only one test case per suite is supported at a time"
     expected_logger_errors = 0
+    expected_logger_warnings = 0
     for testCase in testCases:    
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(testCase)
         expected_logger_errors += testCase.expected_logger_errors
+        expected_logger_warnings += testCase.expected_logger_warnings
     
     unittest.TextTestRunner().run(suite)
     
     #WARNING! There is a chance for false positives with this - if the total number of errors is correct,
     #but their distribution throughout the asserts are not. Therefore it is recommended to only create one
     #self.assertEquals(len(logger.findErrors()), num_errors) at the end of the test
-    unexpected_errors = len(logger.findErrors()) - expected_logger_errors
+    unexpected_errors   = len(logger.findErrors())   - expected_logger_errors
+    unexpected_warnings = len(logger.findWarnings()) - expected_logger_warnings
     
     #See XPlane2Blender/tests.py for documentation. The strings must be kept in sync!
-    return_string = ERRORED_LOGGER_REGEX.replace("([+-]?\d+)", str(unexpected_errors))
+    return_string = ERROR_LOGGER_REGEX.replace("([+-]?\d+)", str(unexpected_errors))
     print(return_string)
+    #For if we ever create a --verbose flag
+    #print(WARNING_LOGGER_REGEX.replace("([+-]?\d+)", str(unexpected_warnings)))
