@@ -586,14 +586,15 @@ class XPlaneBone():
 
     def _writeKeyframesLoop(self, dataref):
         o = ''
-
-        if self.xplaneObject and self.xplaneObject.datarefs[dataref].loop > 0:
-            indent = self.getIndent()
-            o += "%s\tANIM_keyframe_loop\t%s\n" % (
-                indent,
-                self.xplaneObject.datarefs[dataref].loop
-            )
-
+        
+        if dataref in self.datarefs:
+            if self.datarefs[dataref].loop > 0:
+                indent = self.getIndent()
+                o += "%s\tANIM_keyframe_loop\t%s\n" % (
+                    indent,
+                    self.datarefs[dataref].loop
+                )
+								
         return o
 
     def _writeTranslationKeyframes(self, dataref):

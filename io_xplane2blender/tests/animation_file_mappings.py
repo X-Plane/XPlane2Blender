@@ -87,5 +87,11 @@ mappings = {
         1: './fixtures/Testcase8_bone_optimization/TestCase8_loc.obj',
         2: './fixtures/Testcase8_bone_optimization/TestCase8_rot_loc.obj',
         3: './fixtures/Testcase8_bone_optimization/TestCase8_static.obj'
+    },
+    'TestCase9_keyframe_loops': {
+        0:  './fixtures/TestCase9_keyframe_loops/TestCase9_loop_bone.obj',
+        1:  './fixtures/TestCase9_keyframe_loops/TestCase9_loop_arm.obj',
+        2:  './fixtures/TestCase9_keyframe_loops/TestCase9_loop_arm_bone.obj',
+        3:  './fixtures/TestCase9_keyframe_loops/TestCase9_loop_none.obj'
     }
 }
