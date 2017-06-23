@@ -166,7 +166,7 @@ class XPlaneHeader():
 
         self.attributes['POINT_COUNTS'].setValue((tris, lines, lights, indices))
 
-        xplane_version = self.xplaneFile.getXPlaneVersion()
+        xplane_version = int(bpy.context.scene.xplane.version)
 
         if self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY and\
            self.xplaneFile.referenceMaterials[0]:
@@ -480,9 +480,12 @@ class XPlaneHeader():
                         o += '%s\t%s\n' % (attr.name, attr.getValueAsString(vi))
 
                 else:
-                    if isinstance(values[0], bool) and values[0]:
+                    #This is a double fix. Boolean values with True get written (sans the word true), False does not,
+                    #and strings that start with True or False don't get treated as as booleans 
+                    is_bool = len(values) == 1 and isinstance(values[0],bool)
+                    if is_bool and values[0] == True:
                         o += '%s\n' % (attr.name)
-                    else:
+                    elif not is_bool: #True case already taken care of, don't care about False case - implicitly skipped
                         o += '%s\t%s\n' % (attr.name, attr.getValueAsString())
 
         return o
