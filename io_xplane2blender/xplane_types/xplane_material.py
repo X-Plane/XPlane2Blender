@@ -4,7 +4,7 @@ from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
-from .xplane_file import getXPlaneVersion
+#from .xplane_file import getXPlaneVersion
 from .xplane_material_utils import validate, compare
 
 # Class: XPlaneMaterial
@@ -280,7 +280,7 @@ class XPlaneMaterial():
     #   bool, list - True if Material is valid, else False + a list of errors
     def isValid(self, exportType):
         return validate(self, exportType)
-    
+
     # Method: getEffectiveNormalMetalness
     # Predicate that returns the effective value of NORMAL_METALNESS, taking into account the current xplane version
     #
@@ -288,8 +288,8 @@ class XPlaneMaterial():
     # bool - True or false if the version of XPlane chosen supports NORMAL_METALNESS and what its value is,
     # False if the current XPLane version doesn't support it
     def getEffectiveNormalMetalness(self):
-        if getXPlaneVersion() >= 1100:
-            return self.option.normal_metalness
+        if int(bpy.context.scene.xplane.version) >= 1100:
+            return self.options.normal_metalness
         else:
             return False
         
@@ -300,7 +300,7 @@ class XPlaneMaterial():
     # bool - True or false if the version of XPlane chosen supports BLEND_GLASS and what its value is,
     # False if the current XPLane version doesn't support it
     def getEffectiveBlendGlass(self):
-        if getXPlaneVersion() >= 1100:
-            return self.option.blend_glass
+        if int(bpy.context.scene.xplane.version) >= 1100:
+            return self.options.blend_glass
         else:
             return False
