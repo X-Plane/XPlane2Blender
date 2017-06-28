@@ -110,7 +110,6 @@ SURFACE_TYPE_BLASTPAD = "blastpad"
 BLEND_OFF    = "off"
 BLEND_ON     = "on"
 BLEND_SHADOW = "shadow"
-
 BLEND_GLASS  = "glass"
 
 LIGHT_DEFAULT = "default"

@@ -3,8 +3,6 @@
 
 import bpy
 import re
-from .xplane_config import *
-
 
 class SCENE_OT_dev_export_to_current_dir(bpy.types.Operator):
     bl_label = 'Export .blend File To Current Dir'

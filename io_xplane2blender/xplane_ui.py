@@ -500,22 +500,28 @@ def material_layout(self, obj):
             row = layout.row()
             row.prop(obj.xplane, "normal_metalness")
 
-            row = layout.row()
-            row.prop(obj.xplane, "blend_glass")
-
         row = layout.row()
         # v1000 blend / v9000 blend
-        if version >= 1000:
-            row.prop(obj.xplane, "blend_v1000", text = "Blend")
+        if version >= 1100:
+            row.prop(obj.xplane, "blend_v1100")
+        elif version >= 1000:
+            row.prop(obj.xplane, "blend_v1000")
         else:
-            row.prop(obj.xplane, "blend", text = "Use alpha cutoff")
-
-        if (obj.xplane.blend == True and version < 1000):
+            row.prop(obj.xplane, "blend")
+        
+        if version >= 1100:
+            blend_prop_enum = obj.xplane.blend_v1100
+        elif version >= 1000:
+            blend_prop_enum = obj.xplane.blend_v1000
+        else:
+            blend_prop_enum = None
+            
+        if obj.xplane.blend == True and version < 1000:
             row = layout.row()
-            row.prop(obj.xplane, "blendRatio", text = "Alpha cutoff ratio")
-        elif(obj.xplane.blend_v1000 == 'off' and version >= 1000):
+            row.prop(obj.xplane, "blendRatio")
+        elif blend_prop_enum == BLEND_OFF and version >= 1000:
             row = layout.row()
-            row.prop(obj.xplane, "blendRatio", text = "Alpha cutoff ratio")
+            row.prop(obj.xplane, "blendRatio")
 
     row = layout.row()
     row.prop(obj.xplane, "surfaceType", text = "Surface type")

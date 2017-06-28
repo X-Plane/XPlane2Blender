@@ -523,7 +523,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         attr = "debug",
         name = "Debug",
         description = "If checked, this OBJ file will put diagnostics in Plane's log.txt.",
-        default = False
+        default = True
     )
 
     name = bpy.props.StringProperty(
@@ -1088,19 +1088,32 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    __blend_v1000_items = [
+            (BLEND_OFF, 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
+            (BLEND_ON, 'Alpha blend', 'Textures alpha channel will blended.'),
+            (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
+        ]
+
     # v1000
     blend_v1000 = bpy.props.EnumProperty(
         attr = "blend_v1000",
         name = "Blend",
         description = "Controls texture alpha/blending",
-        default = "on",
-        items = [
-            (BLEND_OFF, 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
-            (BLEND_ON, 'Alpha blend', 'Textures alpha channel will blended.'),
-            (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
-        ]
+        default = BLEND_ON,
+        items = __blend_v1000_items
     )
 
+    __blend_v1100_items = [(BLEND_GLASS, 'Blend Glass', 'The alpha channel of the albedo (day texture) will be used to create translucent rendering.')]
+    
+    # v1100
+    blend_v1100 = bpy.props.EnumProperty(
+        attr = "blend_v1100",
+        name = "Blend",
+        description = "Controls texture alpha/blending",
+        default = BLEND_ON,
+        items = __blend_v1000_items + __blend_v1100_items
+    )
+    
     blendRatio = bpy.props.FloatProperty(
         attr = "blendRatio",
         name = "Alpha cutoff ratio",
@@ -1211,13 +1224,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = False
         )
     
-    # v1100
-    blend_glass = bpy.props.BoolProperty(
-        attr = "blend_glass",
-        name = "Blend Glass",
-        description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering.",
-        default = False
-        )
 
     # v1000 (draped only)
     bump_level = bpy.props.FloatProperty(

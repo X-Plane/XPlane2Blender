@@ -112,8 +112,8 @@ class XPlaneHeader():
             mat = self.xplaneFile.referenceMaterials[0]
             xplane_version = int(bpy.context.scene.xplane.version)
             if xplane_version >= 1100:
-                self.attributes['NORMAL_METALNESS'].setValue(mat.options.normal_metalness)
-                self.attributes['BLEND_GLASS'].setValue(mat.options.blend_glass)
+                self.attributes['NORMAL_METALNESS'].setValue(mat.getEffectiveNormalMetalness())
+                self.attributes['BLEND_GLASS'].setValue(mat.getEffectiveBlendGlass())
 
         if canHaveDraped:
             # draped textures

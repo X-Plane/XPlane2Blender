@@ -138,7 +138,7 @@ def validateScenery(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
     
-    if mat.options.blend_glass:
+    if mat.getEffectiveBlendGlass():
         errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors
@@ -165,7 +165,7 @@ def validateInstanced(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
-    if mat.options.blend_glass:
+    if mat.getEffectiveBlendGlass():
         errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors
@@ -193,7 +193,7 @@ def validatePanel(mat):
     if mat.options.surfaceType != 'none':
         errors.append('Must have the surface type "none".')
 
-    if mat.options.blend_glass:
+    if mat.getEffectiveBlendGlass():
         errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors
@@ -253,7 +253,7 @@ def validateDraped(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
-    if mat.options.blend_glass:
+    if mat.getEffectiveBlendGlass():
        errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors

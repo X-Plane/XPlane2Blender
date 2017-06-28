@@ -300,7 +300,10 @@ class XPlaneMaterial():
     # bool - True or false if the version of XPlane chosen supports BLEND_GLASS and what its value is,
     # False if the current XPLane version doesn't support it
     def getEffectiveBlendGlass(self):
-        if int(bpy.context.scene.xplane.version) >= 1100:
-            return self.options.blend_glass
+        xplane_version  = int(bpy.context.scene.xplane.version)
+        blend_prop_enum = self.options.blend_v1100
+        
+        if xplane_version >= 1100:
+            return blend_prop_enum == BLEND_GLASS
         else:
             return False
