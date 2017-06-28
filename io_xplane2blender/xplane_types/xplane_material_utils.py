@@ -8,13 +8,6 @@ def _validateNormalMetalness(refMat, mat):
 
     return errors
 
-def _validateBlendGlass(refMat, mat):
-    errors = []
-    if mat.getEffectiveBlendGlass() != refMat.getEffectiveBlendGlass():
-        errors.append('BLEND_GLASS must be set for all materials with the same albedo texture')
-
-    return errors
-
 def compare(refMat, mat, exportType, autodetectTextures):
     if exportType == EXPORT_TYPE_SCENERY:
         return compareScenery(refMat, mat, autodetectTextures)
@@ -64,11 +57,11 @@ def compareInstanced(refMat, mat, autodetectTextures):
                 errors.append('Alpha cutoff must be disabled.')
         elif mat.options.blendRatio != refMat.options.blendRatio:
             errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
+        errors.extend(_validateNormalMetalness(refMat, mat))
             
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
             errors.append('Texture must be "%s".' % refMat.texture)
-            errors.extend(_validateNormalMetalness(refMat, mat))
             
         if mat.textureLit != refMat.textureLit:
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
@@ -80,20 +73,20 @@ def compareInstanced(refMat, mat, autodetectTextures):
 
 def compareAircraft(refMat, mat):
     errors = []
-
     if mat.options.draw:
         # panel parts can have anything
         if not mat.options.panel and not refMat.options.panel:
             if mat.texture != refMat.texture:
                 errors.append('Texture must be "%s".' % refMat.texture)
-                errors.extend(_validateNormalMetalness(refMat, mat))
-                errors.extend(_validateBlendGlass(refMat, mat))
 
             if mat.textureLit != refMat.textureLit:
                 errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
             if mat.textureNormal != refMat.textureNormal:
                 errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+
+        if mat.getEffectiveBlendGlass() != refMat.getEffectiveBlendGlass():
+            errors.append('BLEND_GLASS must be set for all materials with the same albedo texture')
 
     return errors
 
@@ -193,9 +186,6 @@ def validatePanel(mat):
     if mat.options.surfaceType != 'none':
         errors.append('Must have the surface type "none".')
 
-    if mat.getEffectiveBlendGlass():
-        errors.append('Blend glass only legal on aircraft and cockpit objects')
-
     return errors
 
 
@@ -267,6 +257,16 @@ def getFirstMatchingMaterial(materials, validation):
 
     return None
 
+
+#find list of reference materials slots vary in their purpose based on purpose.
+#cockpit - main material is [0], panel is slot [1]?
+#scenery - draped is slot [1], scenery slot [0]
+
+#Why this is necissary
+#Draped Scenery - like two objects in one. Need two materials to represent it. Like an exemplar of a set of materaisl where a certain
+# aspect, 
+# Its al about textures.
+#
 def getReferenceMaterials(materials, exportType):
     refMats = []
 
