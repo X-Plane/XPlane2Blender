@@ -21,8 +21,9 @@ def compareScenery(refMat, mat, autodetectTextures):
 
     if mat.options.draw:
         if mat.options.draped and refMat.options.draped:
-            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
-                errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
+            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
+               mat.getEffectiveNormalMetalness() == False:
+                errors.append('Specularity must be %f, is %f' % (refMat.blenderMaterial.specular_intensity,mat.blenderMaterial.specular_intensity))
 
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
@@ -35,11 +36,6 @@ def compareScenery(refMat, mat, autodetectTextures):
         if mat.textureNormal != refMat.textureNormal:
             errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
-        if mat.options.draped and refMat.options.draped:
-            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
-               mat.getEffectiveNormalMetalness() == False:
-                errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
-
     return errors
 
 def compareInstanced(refMat, mat, autodetectTextures):
@@ -48,7 +44,7 @@ def compareInstanced(refMat, mat, autodetectTextures):
     if mat.options.draw:
         if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
            mat.getEffectiveNormalMetalness() == False:
-            errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
+                errors.append('Specularity must be %f, is %f' % (refMat.blenderMaterial.specular_intensity,mat.blenderMaterial.specular_intensity))
 
         if mat.options.blend != refMat.options.blend:
             if refMat.options.blend:

@@ -108,10 +108,11 @@ class XPlaneHeader():
         if self.xplaneFile.options.texture_normal != '':
             self.attributes['TEXTURE_NORMAL'].setValue(self.getTexturePath(self.xplaneFile.options.texture_normal, exportdir, blenddir))
 
-        if self.xplaneFile.referenceMaterials[0]:
-            mat = self.xplaneFile.referenceMaterials[0]
-            xplane_version = int(bpy.context.scene.xplane.version)
-            if xplane_version >= 1100:
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= 1100:
+            if self.xplaneFile.referenceMaterials[0]:
+                mat = self.xplaneFile.referenceMaterials[0]
+
                 self.attributes['NORMAL_METALNESS'].setValue(mat.getEffectiveNormalMetalness())
                 self.attributes['BLEND_GLASS'].setValue(mat.getEffectiveBlendGlass())
 
@@ -166,20 +167,16 @@ class XPlaneHeader():
 
         self.attributes['POINT_COUNTS'].setValue((tris, lines, lights, indices))
 
-        xplane_version = int(bpy.context.scene.xplane.version)
+        write_user_specular_values = True
 
-        if self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY and\
-           self.xplaneFile.referenceMaterials[0]:
-            if xplane_version >= 1100:
-                # specular
+        if xplane_version >= 1100 and self.xplaneFile.referenceMaterials[0]:
+            mat = self.xplaneFile.referenceMaterials[0]
+            if mat.getEffectiveNormalMetalness():
                 self.attributes['GLOBAL_specular'].setValue(1.0)
                 self.xplaneFile.commands.written['ATTR_shiny_rat'] = 1.0 # Here we are fooling ourselves
-            elif xplane_version >= 1000:
-                # specular
-                attr = mat.attributes['ATTR_shiny_rat']
-                self.attributes['GLOBAL_specular'].setValue(attr.getValue())
-                self.xplaneFile.commands.written['ATTR_shiny_rat'] = attr.getValue()
-
+                write_user_specular_values = False #It will be skipped from now on
+        
+        # v1000
         if xplane_version >= 1000:
             if self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY and\
                self.xplaneFile.referenceMaterials[0]:
@@ -196,6 +193,12 @@ class XPlaneHeader():
                 if attr.getValue():
                     self.attributes['GLOBAL_shadow_blend'].setValue(attr.getValue())
                     self.xplaneFile.commands.written['ATTR_shadow_blend'] = attr.getValue()
+
+                # specular
+                attr = mat.attributes['ATTR_shiny_rat']
+                if write_user_specular_values and attr.getValue():
+                    self.attributes['GLOBAL_specular'].setValue(attr.getValue())
+                    self.xplaneFile.commands.written['ATTR_shiny_rat'] = attr.getValue()
 
                 # tint
                 if mat.options.tint:
