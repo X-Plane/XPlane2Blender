@@ -110,8 +110,8 @@ class XPlaneHeader():
 
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= 1100:
-            if self.xplaneFile.referenceMaterials[0]:
-                mat = self.xplaneFile.referenceMaterials[0]
+            if self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]:
+                mat = self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]
 
                 self.attributes['NORMAL_METALNESS'].setValue(mat.getEffectiveNormalMetalness())
                 self.attributes['BLEND_GLASS'].setValue(mat.getEffectiveBlendGlass())
