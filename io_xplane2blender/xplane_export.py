@@ -106,7 +106,13 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
                     self._endLogging()
                     showLogDialog()
 
-                return {'CANCELLED'}
+                if bpy.context.scene.xplane.plugin_development and \
+                    bpy.context.scene.xplane.dev_continue_export_on_error:
+                    logger.info("Continuing export despite error in %s" % xplaneFile.filename)
+                    logger.clearMessages()
+                    continue
+                else:
+                    return {'CANCELLED'}
 
         # return to stored frame
         bpy.context.scene.frame_set(frame = currentFrame)

@@ -836,7 +836,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     plugin_development = bpy.props.BoolProperty(
         attr = "plugin_development",
         name = "Plugin Development Tools",
-        description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
+        description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful.",
         default = False) # Set this to true during development to avoid re-checking it
     
     dev_enable_breakpoints = bpy.props.BoolProperty(
@@ -844,6 +844,13 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "Enable Breakpoints",
         description = "Allows use of Eclipse breakpoints (must have PyDev, Eclipse installed and configured to use and Pydev Debug Server running!)",
         default = False)
+    
+    dev_continue_export_on_error = bpy.props.BoolProperty(
+        attr = "dev_continue_export_on_error",
+        name = "Continue Export On Error",
+        description = "Exporter continues even when an OBJ cannot be exported. It does not affect unit tests.",
+        default = False)
+    #######################################
 
     layers = bpy.props.CollectionProperty(
         attr = "layers",

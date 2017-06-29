@@ -171,6 +171,8 @@ def scene_layout(self, scene):
        row = box.row()
        row.prop(scene.xplane, "dev_enable_breakpoints")
        row = box.row()
+       row.prop(scene.xplane, "dev_continue_export_on_error")
+       row = box.row()
        row.operator("scene.dev_export_to_current_dir")
        row = box.row()
        row.operator("scene.dev_layer_names_to_current_dir")
