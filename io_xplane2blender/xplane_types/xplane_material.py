@@ -112,7 +112,9 @@ class XPlaneMaterial():
                         if texture and texture.use_map_specular:
                             textureSpec += texture.specular_factor
 
-                    self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity + textureSpec)
+                    #SPECIAL CASE!
+                    if self.getEffectiveNormalMetalness() == False:
+                        self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity + textureSpec)
 
                     # blend
                     xplane_version = int(bpy.context.scene.xplane.version)

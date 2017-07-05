@@ -25,16 +25,17 @@ class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
         objects = bpy.context.scene.objects
         xplane_layers = bpy.context.scene.xplane.layers
         
-        for object in objects:
-            cleaned_name = object.name
+        for object in sorted(objects.keys()):
+            cleaned_name = objects[object].name
             if self.clean_data_block_string:
-                m = re.match("(Cube_|Empty_)(.*)", object.name)
+                m = re.match("(Cube_|Empty_)(.*)", objects[object].name)
                 if m != None:
                     cleaned_name = m.group(2)
                 
             #Find first true
             idx = 0
-            for obj_layer_idx in object.layers:
+            for obj_layer_idx in objects[object].layers:
+                print(idx)
                 if obj_layer_idx == True:
                     break
                 idx += 1

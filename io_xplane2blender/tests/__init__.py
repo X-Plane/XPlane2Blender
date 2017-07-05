@@ -248,8 +248,8 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             self.assertTrue(os.path.exists(fixtureFile), 'File "%s" does not exits' % fixtureFile)
             self.assertFileEqualsFixture(out, fixtureFile, filterLine)
 
-def make_fixture_path(dirname,filename):
-    return os.path.join(dirname, 'fixtures', filename + '.obj')
+def make_fixture_path(dirname,filename,sub_dir=""):
+    return os.path.join(dirname, 'fixtures', sub_dir, filename + '.obj')
 
 def runTestCases(testCases):
     #Until a better solution for knowing if the logger's error count should be used to quit the testing,
