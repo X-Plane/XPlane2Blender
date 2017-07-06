@@ -26,6 +26,9 @@ class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
         xplane_layers = bpy.context.scene.xplane.layers
         
         for object in sorted(objects.keys()):
+            if objects[object].parent != None:
+                continue
+            
             cleaned_name = objects[object].name
             if self.clean_data_block_string:
                 m = re.match("(Cube_|Empty_)(.*)", objects[object].name)
