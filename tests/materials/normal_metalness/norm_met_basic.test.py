@@ -1,5 +1,6 @@
 import bpy
 import os
+
 C = bpy.context
 D = bpy.data
 
@@ -58,6 +59,7 @@ def get_texture(is_draped,is_normal):
         tex = D.textures.new(tex_name, type='IMAGE')
         tex.image = D.images[tex_name+".png"]
         
+        
 def create_textures():
     #Create them all
     get_texture(True,True)
@@ -76,15 +78,20 @@ def get_material(is_metal,is_draped):
     else:
         mat = bpy.data.materials.new(get_material_name(is_metal,is_draped))
         
+        #Albedo texture
         mat_tex_slot = mat.texture_slots.add()
         mat_tex_slot.texture = get_texture(is_draped, False)
         mat_tex_slot.texture_coords = "UV"
         
+        #NML texture
         mat_tex_slot = mat.texture_slots.add()
         mat_tex_slot.texture = get_texture(is_draped, True)
         mat_tex_slot.texture_coords = "UV"
+        mat_tex_slot.use_map_color_diffuse = False
+        mat_tex_slot.use_map_normal = True
         
         mat.specular_intensity = 0.25
+        
         if is_metal:
             mat.xplane.normal_metalness = True
 
@@ -113,7 +120,8 @@ def create_object_names():
 
 def delete_scene_data():
     for object in D.objects:
-        object.select = True
+        if not "D_none_NON_D_none" in object.name:
+            object.select = True
     bpy.ops.object.delete()
 
     for material in D.materials:
@@ -168,20 +176,25 @@ def create_partial_test_setup():
             C.object.parent = empty_parent
             C.object.scale = (2,2,2)
             
-            is_metal = name.find("D_non_metal") == 0
-            is_draped = True
-
+            is_metal = name.find("D_metal") == 0
             C.object.data.materials.append(get_material(is_metal,is_draped=True))
-            
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.uv.smart_project()
+            bpy.ops.object.mode_set(mode='OBJECT')
+                                    
         if needs_non_draped:
             bpy.ops.mesh.primitive_cube_add(layers=layers_array,location=(0,0,1))
             C.object.name = name + "_ND"
             C.object.parent = empty_parent
             
 
-            is_metal = "NON_D_non_metal" in name
+            is_metal = "NON_D_metal" in name
             C.object.data.materials.append(get_material(is_metal,is_draped=False))
             
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.uv.smart_project()
+            bpy.ops.object.mode_set(mode='OBJECT')
+                    
         layer_idx += 1            
 
 create_partial_test_setup()
