@@ -8,7 +8,7 @@ from io_xplane2blender.xplane_types import xplane_file
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestSSO_2incompatibleDrapedMats(XPlaneTestCase):
+class TestSSO_2incompatibleATTRsDrapedMats(XPlaneTestCase):
     expected_logger_errors = 1
         
     def test_export(self):
@@ -19,4 +19,4 @@ class TestSSO_2incompatibleDrapedMats(XPlaneTestCase):
 
         self.assertEquals(len(logger.findErrors()), self.expected_logger_errors)
 
-runTestCases([TestSSO_2incompatibleDrapedMats])
+runTestCases([TestSSO_2incompatibleATTRsDrapedMats])
