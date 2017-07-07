@@ -33,7 +33,8 @@ class XPlaneHeader():
         self.general_attributes    = XPlaneAttributes()
         self.non_draped_attributes = XPlaneAttributes()
         self.draped_attributes     = XPlaneAttributes()
-
+        self.custom_attributes     = XPlaneAttributes()
+        
         # object attributes
         self.general_attributes.add(XPlaneAttribute("ATTR_layer_group", None))
         self.general_attributes.add(XPlaneAttribute("COCKPIT_REGION", None))
@@ -111,10 +112,12 @@ class XPlaneHeader():
 
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= 1100:
-            if self.xplaneFile.referenceMaterials[0]:
-                mat = self.xplaneFile.referenceMaterials[0]
-
+            if self.xplaneFile.referenceMaterials[1] and self.non_draped_attributes['TEXTURE_NORMAL'].getValue(0) is not None:
+                mat = self.xplaneFile.referenceMaterials[1]
                 self.non_draped_attributes['NORMAL_METALNESS'].setValue(mat.getEffectiveNormalMetalness())
+                
+            if self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]:
+                mat = self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]
                 self.non_draped_attributes['BLEND_GLASS'].setValue(mat.getEffectiveBlendGlass())
 
         if canHaveDraped:
@@ -127,8 +130,8 @@ class XPlaneHeader():
                 #"That's the scaling factor for the normal map available ONLY for the draped info. Without that , it can't find the texture.
                 #That makes a non-fatal error in x-plane. Without the normal map, the metalness directive is ignored" -Ben Supnik, 07/06/17 8:35pm
                 self.draped_attributes['TEXTURE_DRAPED_NORMAL'].setValue("1.0 " + self.getTexturePath(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
-                
-            if self.xplaneFile.referenceMaterials[1]:
+            
+            if self.xplaneFile.referenceMaterials[1] and self.draped_attributes['TEXTURE_DRAPED_NORMAL'].getValue(0) is not None:
                 mat = self.xplaneFile.referenceMaterials[1]
                 if xplane_version >= 1100:
                     self.draped_attributes['NORMAL_METALNESS'].setValue(mat.getEffectiveNormalMetalness())
@@ -248,7 +251,7 @@ class XPlaneHeader():
 
         # add custom attributes
         for attr in self.xplaneFile.options.customAttributes:
-            self.attributes.add(XPlaneAttribute(attr.name, attr.value))
+            self.custom_attributes.add(XPlaneAttribute(attr.name, attr.value))
 
     def _compositeNormalTextureNeedsRecompile(self, compositePath, sourcePaths):
         compositePath = resolveBlenderPath(compositePath)
@@ -484,7 +487,7 @@ class XPlaneHeader():
 
         o += 'OBJ\n\n'
 
-        for attribute_dict in [self.general_attributes,self.non_draped_attributes,self.draped_attributes]:
+        for attribute_dict in [self.general_attributes,self.non_draped_attributes,self.draped_attributes,self.custom_attributes]:
             # attributes
             for name in attribute_dict:
                 attr   = attribute_dict[name]

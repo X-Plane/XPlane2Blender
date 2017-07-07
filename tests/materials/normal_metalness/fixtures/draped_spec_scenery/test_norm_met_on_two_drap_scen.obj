@@ -68,15 +68,15 @@ IDX	47
 IDX	44
 
 # 0 ROOT
-# 1 Object: Cube_norm_2_mat_scen
-# EMPTY: Cube_norm_2_mat_scen	weight: 0
-	# 2 Object: Cube_norm_2_mat_scen_A
-	# PRIMITIVE: Cube_norm_2_mat_scen_A	weight: 2
+# 1 Object: Cube_norm_met_on_two_drap_scen
+# EMPTY: Cube_norm_met_on_two_drap_scen	weight: 0
+	# 2 Object: Cube_norm_met_on_two_drapA_scen
+	# PRIMITIVE: Cube_norm_met_on_two_drapA_scen	weight: 2
 	# MATERIAL: Material_norm_met_on_drapA
 	ATTR_draped
 	TRIS	0 36
-	# 2 Object: Cube_norm_2_mat_scen_B
-	# PRIMITIVE: Cube_norm_2_mat_scen_B	weight: 3
+	# 2 Object: Cube_norm_met_on_two_drapB_scen
+	# PRIMITIVE: Cube_norm_met_on_two_drapB_scen	weight: 3
 	# MATERIAL: Material_norm_met_on_drapB
 	TRIS	36 36
 

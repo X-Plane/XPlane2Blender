@@ -3,7 +3,8 @@ I
 OBJ
 
 POINT_COUNTS	24	0	0	36
-NORMAL_METALNESS
+TEXTURE_DRAPED	tex/v10_cessna_wing_draped.png
+TEXTURE_DRAPED_NORMAL	1.0 tex/v10_cessna_wing_draped_NML_nm.png
 SPECULAR	0.25
 
 VT	-1	1	1	-1	0	0	0	0	# 0
@@ -42,9 +43,9 @@ IDX	23
 IDX	20
 
 # 0 ROOT
-# 1 Object: Cube_norm_met_on_one_drap
-# PRIMITIVE: Cube_norm_met_on_one_drap	weight: 2
-# MATERIAL: Material_norm_met_on_drapA
+# 1 Object: Cube_norm_met_off_one_drap_scen
+# PRIMITIVE: Cube_norm_met_off_one_drap_scen	weight: 0
+# MATERIAL: Material_norm_met_off_drapA
 ATTR_draped
 TRIS	0 36
 
