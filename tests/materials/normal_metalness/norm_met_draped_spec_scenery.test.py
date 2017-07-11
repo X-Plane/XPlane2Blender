@@ -20,14 +20,17 @@ class TestNormMetDrapedSpecScenery(XPlaneTestCase):
 
     def test_norm_met_off_two_drap_inst(self):
         expected_logger_errors = 1
+                                                                       #"test_norm_met_off_two_drap_inst"
         out = xplane_file.createFileFromBlenderLayerIndex(2).write()
         self.assertEqual(len(logger.findErrors()), expected_logger_errors)
         logger.clearMessages()
 
     def test_norm_met_off_two_drap_scen(self):
+        expected_logger_errors = 1
+                                                                       #"test_norm_met_off_two_drap_scen"
         out = xplane_file.createFileFromBlenderLayerIndex(3).write()
-        print(out)
-        self.assertFileEqualsFixture(out,make_fixture_path(__dirname__, "test_norm_met_off_two_drap_scen",sub_dir="draped_spec_scenery"))
+        self.assertEqual(len(logger.findErrors()), expected_logger_errors)
+        logger.clearMessages()
 
     def test_norm_met_on_one_drap_inst(self):
         out = xplane_file.createFileFromBlenderLayerIndex(4).write()

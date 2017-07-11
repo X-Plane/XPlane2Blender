@@ -3,10 +3,10 @@ I
 OBJ
 
 POINT_COUNTS	48	0	0	72
-TEXTURE_DRAPED	tex/v10_cessna_wing_draped.png
-TEXTURE_DRAPED_NORMAL	1.0 tex/v10_cessna_wing_draped_NML_nm.png
+TEXTURE	tex/v10_cessna_wing_draped.png
+TEXTURE_NORMAL	tex/v10_cessna_wing_draped_NML_nm.png
 NORMAL_METALNESS
-SPECULAR	1
+GLOBAL_specular	1
 
 VT	-1	1	1	-1	0	0	0	0	# 0
 VT	-1	-1	1	-1	0	0	0	0	# 1
@@ -72,12 +72,11 @@ IDX	44
 # EMPTY: Cube_norm_2_mat_inst	weight: 0
 	# 2 Object: Cube_norm_2_mat_inst_A
 	# PRIMITIVE: Cube_norm_2_mat_inst_A	weight: 2
-	# MATERIAL: Material_norm_met_on_drapA
-	ATTR_draped
+	# MATERIAL: Material_norm_met_on_A
 	TRIS	0 36
 	# 2 Object: Cube_norm_2_mat_inst_B
 	# PRIMITIVE: Cube_norm_2_mat_inst_B	weight: 3
-	# MATERIAL: Material_norm_met_on_drapB
+	# MATERIAL: Material_norm_met_on_B
 	TRIS	36 36
 
 # Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.13

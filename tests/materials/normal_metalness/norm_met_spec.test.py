@@ -46,9 +46,14 @@ def create_partial_test_env(self):
 __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
-    return isinstance(line[0],str) and (line[0].find('GLOBAL_specular')  == 0 or \
+    return isinstance(line[0],str) and (line[0].find('ATTR_draped')      == 0 or \
+                                        line[0].find('ATTR_no_draped')   == 0 or \
+                                        line[0].find('ATTR_shiney_rat')  == 0 or \
+                                        line[0].find('GLOBAL_specular')  == 0 or \
                                         line[0].find('NORMAL_METALNESS') == 0 or \
-                                        line[0].find('ATTR_shiney_rat')  == 0)
+                                        line[0].find('TEXTURE')          == 0 or \
+                                        line[0].find('TEXTURE_DRAPED')   == 0 or \
+                                        line[0].find('TEXTURE_NORMAL')   == 0)
 
 class TestNormMetSpec(XPlaneTestCase):
     def test_none_1_mat_inst(self):

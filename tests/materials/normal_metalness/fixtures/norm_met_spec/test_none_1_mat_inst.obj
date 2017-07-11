@@ -3,7 +3,9 @@ I
 OBJ
 
 POINT_COUNTS	24	0	0	36
-TEXTURE_DRAPED	tex/v10_cessna_wing_draped.png
+TEXTURE	tex/v10_cessna_wing_draped.png
+TEXTURE_NORMAL	tex/v10_cessna_wing_draped_NML_nm.png
+GLOBAL_specular	0.25
 
 VT	-1	1	1	-1	0	0	0	0	# 0
 VT	-1	-1	1	-1	0	0	0	0	# 1
@@ -43,9 +45,7 @@ IDX	20
 # 0 ROOT
 # 1 Object: Cube_none_1_mat_inst
 # PRIMITIVE: Cube_none_1_mat_inst	weight: 0
-# MATERIAL: Material_norm_met_off_drapA
-ATTR_shiny_rat	0.25
-ATTR_draped
+# MATERIAL: Material_norm_met_off_A
 TRIS	0 36
 
 # Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.13
