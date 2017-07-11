@@ -57,7 +57,9 @@ class TestAnimations(XPlaneTestCase):
         self.assertEquals(cubeKeyframes[0].rotation, mathutils.Euler((0, 0, 0), 'XYZ'))
         self.assertEquals(cubeKeyframes[0].rotationMode, 'XYZ')
         self.assertEquals(cubeKeyframes[1].location, mathutils.Vector((0, 2, 0)))
-        self.assertEquals(cubeKeyframes[1].rotation, mathutils.Euler((0, math.radians(90), 0), 'XYZ'))
+        self.assertFloatsEqual(cubeKeyframes[1].rotation[0], math.radians( 0),0.00001)
+        self.assertFloatsEqual(cubeKeyframes[1].rotation[1], math.radians(90),0.00001)
+        self.assertFloatsEqual(cubeKeyframes[1].rotation[2], math.radians( 0),0.00001)
         self.assertEquals(cubeKeyframes[1].rotationMode, 'XYZ')
 
         # should have only one dataref and animation

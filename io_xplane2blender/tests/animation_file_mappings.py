@@ -75,5 +75,23 @@ mappings = {
         5: './fixtures/TestCase5_nested_sets/armature_locrot_whereOBJ_trans_rotation_single_axis.obj',
         6: './fixtures/TestCase5_nested_sets/armature_locrot_whereOBJ_trans_rotation_arbitrary.obj',
         7: './fixtures/TestCase5_nested_sets/mega_nested_mega.obj'
+    },
+    'TestCase6_scaling_rot': {
+        0: './fixtures/TestCase6_scaling_rot/TestCase6_scaling_rot.obj'
+    },
+    'TestCase7_scaling_rotloc': {
+        0: './fixtures/TestCase7_scaling_rotloc/TestCase7_scaling_rotloc.obj'
+    },
+    'TestCase8_bone_optimization': {
+        0: './fixtures/TestCase8_bone_optimization/TestCase8_rot.obj',
+        1: './fixtures/TestCase8_bone_optimization/TestCase8_loc.obj',
+        2: './fixtures/TestCase8_bone_optimization/TestCase8_rot_loc.obj',
+        3: './fixtures/TestCase8_bone_optimization/TestCase8_static.obj'
+    },
+    'TestCase9_keyframe_loops': {
+        0:  './fixtures/TestCase9_keyframe_loops/TestCase9_loop_bone.obj',
+        1:  './fixtures/TestCase9_keyframe_loops/TestCase9_loop_arm.obj',
+        2:  './fixtures/TestCase9_keyframe_loops/TestCase9_loop_arm_bone.obj',
+        3:  './fixtures/TestCase9_keyframe_loops/TestCase9_loop_none.obj'
     }
 }

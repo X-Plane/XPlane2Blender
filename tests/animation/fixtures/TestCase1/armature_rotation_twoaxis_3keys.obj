@@ -2,8 +2,8 @@ I
 800
 OBJ
 
-TEXTURE	../../../../../../../../../Users/alxunru/Desktop/X-Plane 10/Aircraft/Test Cases/objects/test.png
 POINT_COUNTS	36	0	0	36
+TEXTURE	../../../../Users/alxunru/Desktop/X-Plane 10/Aircraft/Test Cases/objects/test.png
 
 VT	-0.5	0.5	-0.5	-1	0	0	0	0	# 0
 VT	-0.5	0.5	0.5	-1	0	0	0	1	# 1
@@ -52,36 +52,34 @@ IDX	33
 IDX	34
 IDX	35
 
-
 # 0 ROOT
 # 1 Object: Armature.001
+# ARMATURE: Armature.001	weight: 0
 	# 2 Bone: Bone
 	ANIM_begin
 	# static rotation
-	ANIM_rotate	1	0	0	90.0000025	90.0000025
+	ANIM_rotate	1	0	0	90.00020741	90.00020741
 	# rotation keyframes
 	ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
-	ANIM_rotate_key	0.5	-50.00000025
-	ANIM_rotate_key	1	-30.00000083
+	ANIM_rotate_key	0.5	-49.99973388
+	ANIM_rotate_key	1	-30.00006914
 	ANIM_rotate_end
 	ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
-	ANIM_rotate_key	0.5	19.99999942
-	ANIM_rotate_key	1	69.99999967
+	ANIM_rotate_key	0.5	20.00023847
+	ANIM_rotate_key	1	69.99997235
 	ANIM_rotate_end
 	ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
-	ANIM_rotate_key	0.5	-19.99999942
-	ANIM_rotate_key	1	50.00000025
+	ANIM_rotate_key	0.5	-20.00023847
+	ANIM_rotate_key	1	49.99973388
 	ANIM_rotate_end
 		# 3 Object: Cube.001
 		# PRIMITIVE: Cube.001	weight: 0
 		# MATERIAL: Material
-		ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-		ATTR_emission_rgb	0	0	0
 		ATTR_shiny_rat	0.5
 		TRIS	0 36
 	ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13

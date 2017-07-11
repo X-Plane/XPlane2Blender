@@ -1,0 +1,16 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	1	0
+
+VLIGHT	0	3	0	1	1	1
+
+# 0 ROOT
+# 1 Object: D_none_NON_D_none
+# EMPTY: D_none_NON_D_none	weight: 0
+	# 2 Object: D_none_NON_D_none_Hemi
+	# LIGHT: D_none_NON_D_none_Hemi	weight: 10000
+	LIGHTS	0 1
+
+# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.13

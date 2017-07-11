@@ -1,6 +1,13 @@
 import bpy
 from ..xplane_constants import *
 
+def _validateNormalMetalness(refMat, mat):
+    errors = []
+    if mat.getEffectiveNormalMetalness() != refMat.getEffectiveNormalMetalness():
+        errors.append('NORMAL_METALNESS must be set for all materials with the same albedo texture')
+
+    return errors
+
 def compare(refMat, mat, exportType, autodetectTextures):
     if exportType == EXPORT_TYPE_SCENERY:
         return compareScenery(refMat, mat, autodetectTextures)
@@ -14,27 +21,30 @@ def compareScenery(refMat, mat, autodetectTextures):
 
     if mat.options.draw:
         if mat.options.draped and refMat.options.draped:
-            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
-                errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
+            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
+               mat.getEffectiveNormalMetalness() == False:
+                errors.append('Specularity must be %f, is %f' % (refMat.blenderMaterial.specular_intensity,mat.blenderMaterial.specular_intensity))
 
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
             errors.append('Texture must be "%s".' % refMat.texture)
+            errors.extend(_validateNormalMetalness(refMat, mat))
 
         if mat.textureLit != refMat.textureLit:
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
         if mat.textureNormal != refMat.textureNormal:
             errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
-            
+
     return errors
 
 def compareInstanced(refMat, mat, autodetectTextures):
     errors = []
 
     if mat.options.draw:
-        if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity:
-            errors.append('Specularity must be %f.' % refMat.blenderMaterial.specular_intensity)
+        if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
+           mat.getEffectiveNormalMetalness() == False:
+            errors.append('Specularity must be %f, is %f' % (refMat.blenderMaterial.specular_intensity,mat.blenderMaterial.specular_intensity))
 
         if mat.options.blend != refMat.options.blend:
             if refMat.options.blend:
@@ -43,11 +53,12 @@ def compareInstanced(refMat, mat, autodetectTextures):
                 errors.append('Alpha cutoff must be disabled.')
         elif mat.options.blendRatio != refMat.options.blendRatio:
             errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
+        errors.extend(_validateNormalMetalness(refMat, mat))
             
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
             errors.append('Texture must be "%s".' % refMat.texture)
-
+            
         if mat.textureLit != refMat.textureLit:
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
@@ -58,7 +69,6 @@ def compareInstanced(refMat, mat, autodetectTextures):
 
 def compareAircraft(refMat, mat):
     errors = []
-
     if mat.options.draw:
         # panel parts can have anything
         if not mat.options.panel and not refMat.options.panel:
@@ -71,6 +81,9 @@ def compareAircraft(refMat, mat):
             if mat.textureNormal != refMat.textureNormal:
                 errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
 
+        if mat.getEffectiveBlendGlass() != refMat.getEffectiveBlendGlass():
+            errors.append('BLEND_GLASS must be set for all materials with the same albedo texture')
+
     return errors
 
 
@@ -80,7 +93,7 @@ def validate(mat, exportType):
     if mat.options == None:
         errors.append('Is invalid.')
         return errors
-
+    
     if (exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY) and mat.options.draped:
         return validateDraped(mat)
     elif exportType == EXPORT_TYPE_SCENERY:
@@ -113,6 +126,9 @@ def validateScenery(mat):
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
+    
+    if mat.getEffectiveBlendGlass():
+        errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors
 
@@ -137,6 +153,9 @@ def validateInstanced(mat):
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
+
+    if mat.getEffectiveBlendGlass():
+        errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors
 
@@ -220,6 +239,9 @@ def validateDraped(mat):
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
 
+    if mat.getEffectiveBlendGlass():
+       errors.append('Blend glass only legal on aircraft and cockpit objects')
+
     return errors
 
 def getFirstMatchingMaterial(materials, validation):
@@ -231,6 +253,20 @@ def getFirstMatchingMaterial(materials, validation):
 
     return None
 
+# Method: getReferenceMaterials
+# Returns a list of one or materials, the first valid ones it finds. The content of the slots has meaning based on
+# What the current export type is
+#
+# Aircraft:  [0] is the aircraft material, [1] is the (optional) panel material
+# Cockpit:   [0] is the cockpit material,  [1] is the (optional) panel material
+# Instanced: [0] is the instanced scenery, [1] is the (optional) draped material
+# Scenery:   [0] is the scenery material,  [1] is the (optional) draped material
+#
+# Parameters:
+#    List<XPlaneMaterial> - A list of materials found in an object
+#    string exportType - The export type given by xplane_file.options.export_type
+#
+#    Returns list of 1 or more reference materials
 def getReferenceMaterials(materials, exportType):
     refMats = []
 

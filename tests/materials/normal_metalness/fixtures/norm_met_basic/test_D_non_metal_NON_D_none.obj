@@ -1,0 +1,31 @@
+I
+800
+OBJ
+
+POINT_COUNTS	4	0	0	6
+TEXTURE_DRAPED	tex/v10_cessna_wing_draped.png
+TEXTURE_DRAPED_NORMAL	1.0 tex/v10_cessna_wing_draped_NML_nm.png
+SPECULAR	0.25
+
+VT	2	0	-2	0	1	0	0.99999988	0	# 0
+VT	2	0	2	0	1	0	0	0.00000015	# 1
+VT	-2	0	2	0	1	0	0.00000015	1	# 2
+VT	-2	0	-2	0	1	0	1	0.99999988	# 3
+
+IDX	0
+IDX	1
+IDX	2
+IDX	2
+IDX	3
+IDX	0
+
+# 0 ROOT
+# 1 Object: D_non_metal_NON_D_none
+# EMPTY: D_non_metal_NON_D_none	weight: 0
+	# 2 Object: D_non_metal_NON_D_none_D
+	# PRIMITIVE: D_non_metal_NON_D_none_D	weight: 1
+	# MATERIAL: Material_norm_met_off_drap
+	ATTR_draped
+	TRIS	0 6
+
+# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.13

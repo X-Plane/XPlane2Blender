@@ -2,7 +2,6 @@ I
 800
 OBJ
 
-TEXTURE	../../../../../../../../../Users/alxunru/Desktop/X-Plane 10/Aircraft/Test Cases/objects/test.png
 POINT_COUNTS	36	0	0	36
 
 VT	-0.5	0.5	0.5	-1	0	0	0	0	# 0
@@ -52,7 +51,6 @@ IDX	33
 IDX	34
 IDX	35
 
-
 # 0 ROOT
 # 1 Object: Cube.019
 ANIM_begin
@@ -64,14 +62,12 @@ ANIM_trans_end
 # rotation keyframes
 ANIM_rotate_begin	-0.03912386	-0.93499184	-0.35250479	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
-ANIM_rotate_key	1	69.35588551
+ANIM_rotate_key	1	69.35596814
 ANIM_rotate_end
 # PRIMITIVE: Cube.019	weight: 0
 # MATERIAL: Material
-ATTR_diffuse_rgb	0.64000002	0.64000002	0.64000002
-ATTR_emission_rgb	0	0	0
 ATTR_shiny_rat	0.5
 TRIS	0 36
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13

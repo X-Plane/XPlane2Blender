@@ -57,7 +57,23 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         # prepare logging
         self._startLogging()
-
+        if bpy.context.scene.xplane.plugin_development and \
+            bpy.context.scene.xplane.dev_enable_breakpoints:
+            try:
+                #If you do not have your interpreter set up to include pydev by default, do so, or manually fill
+                #in the path. Likely something like ~\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc
+                #import sys;sys.path.append(r'YOUR_PYDEVPATH')
+                import pydevd;
+                #Port must be set to 5678 for Blender to connect!
+                pydevd.settrace(stdoutToServer=False,#Enable to have logger and print statements sent to 
+                                                     #the Eclipse console, as well as Blender's console.
+                                                     #Only logger statements will show in xplane2blender.log
+                                stderrToServer=False,#Same as stdoutToServer
+                                suspend=True) #Seems to only work having suspend be set to true.
+                                              #Get used to immediately pressing continue unfortunately.
+            except:
+                logger.info("Pydevd could not be imported, breakpoints not enabled. Ensure PyDev is installed and configured properly")
+        
         exportMode = bpy.context.scene.xplane.exportMode
 
         if exportMode == 'layers':
@@ -90,7 +106,13 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
                     self._endLogging()
                     showLogDialog()
 
-                return {'CANCELLED'}
+                if bpy.context.scene.xplane.plugin_development and \
+                    bpy.context.scene.xplane.dev_continue_export_on_error:
+                    logger.info("Continuing export despite error in %s" % xplaneFile.filename)
+                    logger.clearMessages()
+                    continue
+                else:
+                    return {'CANCELLED'}
 
         # return to stored frame
         bpy.context.scene.frame_set(frame = currentFrame)

@@ -3209,10 +3209,6 @@ IDX	2903
 # ARMATURE: Armature	weight: 0
 	# 2 Bone: Bone
 	ANIM_begin
-	# static rotation
-	ANIM_rotate	0	1	0	0	0
-	ANIM_rotate	0	0	-1	-0.00001002	-0.00001002
-	ANIM_rotate	1	0	0	0.00000774	0.00000774
 	# translation keyframes
 	ANIM_trans_begin	sim/flightmodel2/controls/flap1_deploy_ratio
 	ANIM_trans_key	0	0	0	0
@@ -3232,14 +3228,14 @@ IDX	2903
 	ANIM_rotate_begin	0	1	0	sim/flightmodel2/controls/flap1_deploy_ratio
 	ANIM_rotate_key	0	0
 	ANIM_rotate_key	0.25	-30.00000767
-	ANIM_rotate_key	0.5	-25.65891701
-	ANIM_rotate_key	0.75	-53.90223759
+	ANIM_rotate_key	0.5	-25.65891872
+	ANIM_rotate_key	0.75	-53.90223417
 	ANIM_rotate_key	1	-35.08279539
 	ANIM_rotate_end
 	ANIM_rotate_begin	1	0	0	sim/flightmodel2/controls/flap1_deploy_ratio
 	ANIM_rotate_key	0	0
 	ANIM_rotate_key	0.25	0.00000119
-	ANIM_rotate_key	0.5	-33.69008567
+	ANIM_rotate_key	0.5	-33.69008908
 	ANIM_rotate_key	0.75	-47.3038548
 	ANIM_rotate_key	1	-80.89554476
 	ANIM_rotate_end
@@ -3250,4 +3246,4 @@ IDX	2903
 		TRIS	0 2904
 	ANIM_end
 
-# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.7
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13

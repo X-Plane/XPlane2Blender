@@ -162,7 +162,20 @@ def scene_layout(self, scene):
         box = layout.box()
         box.prop(scene.xplane, "profile", text = "Profiling")
         box.prop(scene.xplane, "log", text = "Log")
-
+    
+    row = layout.row()
+    row.prop(scene.xplane, "plugin_development", text = "Plugin Development Tools")
+    
+    if scene.xplane.plugin_development:
+       box = layout.box()
+       row = box.row()
+       row.prop(scene.xplane, "dev_enable_breakpoints")
+       row = box.row()
+       row.prop(scene.xplane, "dev_continue_export_on_error")
+       row = box.row()
+       row.operator("scene.dev_export_to_current_dir")
+       row = box.row()
+       row.operator("scene.dev_layer_names_to_current_dir")
     row = layout.row()
     row.prop(scene.xplane, "exportMode", text = "Export Mode")
 
@@ -485,16 +498,32 @@ def material_layout(self, obj):
         row.prop(obj.xplane, "draped")
 
         row = layout.row()
-
-        # v1000 blend / v9000 blend
-        if version >= 1000:
-            row.prop(obj.xplane, "blend_v1000", text = "Blend")
-        else:
-            row.prop(obj.xplane, "blend", text = "Use alpha cutoff")
-
-        if obj.xplane.blend == True or obj.xplane.blend_v1000 == 'off':
+        if version >= 1100:
             row = layout.row()
-            row.prop(obj.xplane, "blendRatio", text = "Alpha cutoff ratio")
+            row.prop(obj.xplane, "normal_metalness")
+
+        row = layout.row()
+        # v1000 blend / v9000 blend
+        if version >= 1100:
+            row.prop(obj.xplane, "blend_v1100")
+        elif version >= 1000:
+            row.prop(obj.xplane, "blend_v1000")
+        else:
+            row.prop(obj.xplane, "blend")
+        
+        if version >= 1100:
+            blend_prop_enum = obj.xplane.blend_v1100
+        elif version >= 1000:
+            blend_prop_enum = obj.xplane.blend_v1000
+        else:
+            blend_prop_enum = None
+            
+        if obj.xplane.blend == True and version < 1000:
+            row = layout.row()
+            row.prop(obj.xplane, "blendRatio")
+        elif blend_prop_enum == BLEND_OFF and version >= 1000:
+            row = layout.row()
+            row.prop(obj.xplane, "blendRatio")
 
     row = layout.row()
     row.prop(obj.xplane, "surfaceType", text = "Surface type")

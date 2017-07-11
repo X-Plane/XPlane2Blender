@@ -47,7 +47,8 @@ exclude = getOption('--exclude', None)
 blenderExecutable = getOption('--blender', 'blender')
 debug = getFlag('--debug')
 keep_going = getFlag('--continue')
-be_quiet = getFlag('--quiet')
+be_quiet = getFlag('--quiet') or getFlag('--print-fails')
+print_fails = getFlag('--print-fails')
 showHelp = getFlag('--help')
 
 if showHelp:
@@ -59,6 +60,7 @@ if showHelp:
         '  --debug\t\tenable debugging\n' +
         '  --continue\tKeep running after test failure\n' +
         '  --quiet\tReduce output from tests\n' +
+        '  --print-fails\tSets --quiet, but also prints the output of failed tests\n'
         '  --blender [path]\tProvide alternative path to blender executable\n' +
         '  --help\t\tdisplay this help\n\n'
     )
@@ -77,6 +79,13 @@ def inFilter(filepath):
 
     return passes
 
+def printTestBeginning(text):
+    '''Print the /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests'''
+    print(("/*=== " + text + " ").ljust(75,'=')+'{{{')
+
+def printTestEnd():
+    print(('=' *75)+"}}}*/")     
+
 for root, dirs, files in os.walk('./tests'):
     for pyFile in files:
         pyFile = os.path.join(root, pyFile)
@@ -86,14 +95,18 @@ for root, dirs, files in os.walk('./tests'):
                 blendFile = pyFile.replace('.py', '.blend')
 
                 if not be_quiet:
-                    #The /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests
-                    print(("/*=== Running file " + pyFile).ljust(75,'=')+'{{{')
+                   printTestBeginning("Running file " + pyFile)
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
                 if os.path.exists(blendFile):
                     args.append(blendFile)
-
+                else:
+                    print("WARNING: Blender file " + blendFile + " does not exist")
+                    if not be_quiet:
+                        printTestEnd()
+                    continue
+                
                 args.append('--python')
                 args.append(pyFile)
 
@@ -119,7 +132,15 @@ for root, dirs, files in os.walk('./tests'):
                     print(out)
                                    
                 if out.find('FAIL') != -1 or num_errors != 0:
-                    print('%s FAILED' % pyFile)
+                    if print_fails:
+                        printTestBeginning("Running file %s - FAILED" % (pyFile))
+                        print(out)
+                    else:
+                        print('%s FAILED' % pyFile)
+                    
+                    if print_fails:
+                        printTestEnd()
+
                     if not keep_going:
                         exit(1)
                 elif be_quiet:
@@ -130,4 +151,4 @@ for root, dirs, files in os.walk('./tests'):
                 #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
                 #Blender, and more in there sometimes
                 if not be_quiet:
-                    print(('=' *75)+"}}}*/")
+                    printTestEnd()

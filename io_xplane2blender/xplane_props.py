@@ -5,6 +5,7 @@ import bpy
 from .xplane_config import *
 from .xplane_helpers import getColorAndLitTextureSlots
 from .xplane_constants import *
+from io_xplane2blender import xplane_constants
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
@@ -522,7 +523,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         attr = "debug",
         name = "Debug",
         description = "If checked, this OBJ file will put diagnostics in Plane's log.txt.",
-        default = False
+        default = True
     )
 
     name = bpy.props.StringProperty(
@@ -831,6 +832,26 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    # Plugin development tools
+    plugin_development = bpy.props.BoolProperty(
+        attr = "plugin_development",
+        name = "Plugin Development Tools",
+        description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful.",
+        default = False) # Set this to true during development to avoid re-checking it
+    
+    dev_enable_breakpoints = bpy.props.BoolProperty(
+        attr = "dev_enable_breakpoints",
+        name = "Enable Breakpoints",
+        description = "Allows use of Eclipse breakpoints (must have PyDev, Eclipse installed and configured to use and Pydev Debug Server running!)",
+        default = False)
+    
+    dev_continue_export_on_error = bpy.props.BoolProperty(
+        attr = "dev_continue_export_on_error",
+        name = "Continue Export On Error",
+        description = "Exporter continues even when an OBJ cannot be exported. It does not affect unit tests.",
+        default = False)
+    #######################################
+
     layers = bpy.props.CollectionProperty(
         attr = "layers",
         name = "Layers",
@@ -848,13 +869,14 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
-        default = VERSION_1050,
+        default = VERSION_1100,
         items = [
             (VERSION_900, "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
             (VERSION_1010, "10.1x", "10.1x"),
             (VERSION_1040, "10.4x", "10.4x"),
-            (VERSION_1050, "10.5x", "10.5x")
+            (VERSION_1050, "10.5x", "10.5x"),
+            (VERSION_1100, "11.0x", "11.0x")
         ]
     )
 
@@ -1073,19 +1095,32 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    __blend_v1000_items = [
+            (BLEND_OFF, 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
+            (BLEND_ON, 'Alpha blend', 'Textures alpha channel will blended.'),
+            (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
+        ]
+
     # v1000
     blend_v1000 = bpy.props.EnumProperty(
         attr = "blend_v1000",
         name = "Blend",
         description = "Controls texture alpha/blending",
-        default = "on",
-        items = [
-            (BLEND_OFF, 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
-            (BLEND_ON, 'Alpha blend', 'Textures alpha channel will blended.'),
-            (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
-        ]
+        default = BLEND_ON,
+        items = __blend_v1000_items
     )
 
+    __blend_v1100_items = [(BLEND_GLASS, 'Blend Glass', 'The alpha channel of the albedo (day texture) will be used to create translucent rendering.')]
+    
+    # v1100
+    blend_v1100 = bpy.props.EnumProperty(
+        attr = "blend_v1100",
+        name = "Blend",
+        description = "Controls texture alpha/blending",
+        default = BLEND_ON,
+        items = __blend_v1000_items + __blend_v1100_items
+    )
+    
     blendRatio = bpy.props.FloatProperty(
         attr = "blendRatio",
         name = "Alpha cutoff ratio",
@@ -1187,6 +1222,15 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Will perfectly match with the ground.",
         default = False
     )
+
+    # v1100
+    normal_metalness = bpy.props.BoolProperty(
+        attr = "normal_metalness",
+        name = "Normal Metalness",
+        description = "Blue channel is suitable for base reflectance.",
+        default = False
+        )
+    
 
     # v1000 (draped only)
     bump_level = bpy.props.FloatProperty(

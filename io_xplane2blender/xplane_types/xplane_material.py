@@ -4,6 +4,7 @@ from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
+#from .xplane_file import getXPlaneVersion
 from .xplane_material_utils import validate, compare
 
 # Class: XPlaneMaterial
@@ -82,7 +83,7 @@ class XPlaneMaterial():
             mat = self.blenderObject.data.materials[0]
             self.name = mat.name
             self.blenderMaterial = mat
-            self.options = mat.xplane
+            self.options = mat.xplane #xplane_prop.XPlaneMaterialSettings
 
             if mat.xplane.draw:
                 self.attributes['ATTR_draw_enable'].setValue(True)
@@ -111,17 +112,23 @@ class XPlaneMaterial():
                         if texture and texture.use_map_specular:
                             textureSpec += texture.specular_factor
 
-                    self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity + textureSpec)
+                    #SPECIAL CASE!
+                    if self.getEffectiveNormalMetalness() == False:
+                        self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity + textureSpec)
 
                     # blend
-                    if (int(bpy.context.scene.xplane.version) >= 1000):
-                        if mat.xplane.blend_v1000 == 'off':
+                    xplane_version = int(bpy.context.scene.xplane.version)
+                    if xplane_version >= 1000:
+                        xplane_blend_enum = mat.xplane.blend_v1000
+                    
+                    if xplane_version >= 1000:
+                        if xplane_blend_enum == BLEND_OFF:
                             self.attributes['ATTR_no_blend'].setValue(mat.xplane.blendRatio)
-                        elif mat.xplane.blend_v1000 == 'on':
+                        elif xplane_blend_enum == BLEND_ON:
                             self.attributes['ATTR_blend'].setValue(True)
-                        elif mat.xplane.blend_v1000 == 'shadow':
+                        elif xplane_blend_enum == BLEND_SHADOW:
                             self.attributes['ATTR_shadow_blend'].setValue(True)
-                    else:
+                    elif xplane_version < 1000:
                         if mat.xplane.blend:
                             self.attributes['ATTR_no_blend'].setValue(mat.xplane.blendRatio)
                         else:
@@ -275,3 +282,30 @@ class XPlaneMaterial():
     #   bool, list - True if Material is valid, else False + a list of errors
     def isValid(self, exportType):
         return validate(self, exportType)
+
+    # Method: getEffectiveNormalMetalness
+    # Predicate that returns the effective value of NORMAL_METALNESS, taking into account the current xplane version
+    #
+    # Returns:
+    # bool - True or false if the version of XPlane chosen supports NORMAL_METALNESS and what its value is,
+    # False if the current XPLane version doesn't support it
+    def getEffectiveNormalMetalness(self):
+        if int(bpy.context.scene.xplane.version) >= 1100:
+            return self.options.normal_metalness
+        else:
+            return False
+        
+    # Method: getEffectiveBlendGlass
+    # Predicate that returns the effective value of BLEND_GLASS, taking into account the current xplane version
+    #
+    # Returns:
+    # bool - True or false if the version of XPlane chosen supports BLEND_GLASS and what its value is,
+    # False if the current XPLane version doesn't support it
+    def getEffectiveBlendGlass(self):
+        xplane_version  = int(bpy.context.scene.xplane.version)
+        blend_prop_enum = self.options.blend_v1100
+        
+        if xplane_version >= 1100:
+            return blend_prop_enum == BLEND_GLASS
+        else:
+            return False

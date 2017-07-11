@@ -136,8 +136,10 @@ class XPlaneTestCase(unittest.TestCase):
             lineA = linesA[lineIndex]
             lineB = linesB[lineIndex]
 
+            #print("lineA:%s lineB:%s" %(lineA,lineB))
             # ensure same number of line segments
             self.assertEquals(len(lineA), len(lineB))
+            
 
             for linePos in range(0, len(lineA)):
                 segmentA = lineA[linePos]
@@ -178,6 +180,8 @@ class XPlaneTestCase(unittest.TestCase):
         return out
 
     def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
+        if not '--quiet' in sys.argv:
+            print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
         out = self.exportLayer(layer, tmpFilename)
         self.assertFileEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
@@ -243,8 +247,11 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             out = xplaneFile.write()
             fixtureFile = os.path.join(__dirname__, mappings[name][layer])
 
-            self.assertTrue(os.path.exists(fixtureFile), 'File "%s" does not exits' % fixtureFile)
+            self.assertTrue(os.path.exists(fixtureFile), 'File "%s" does not exist' % fixtureFile)
             self.assertFileEqualsFixture(out, fixtureFile, filterLine)
+
+def make_fixture_path(dirname,filename,sub_dir=""):
+    return os.path.join(dirname, 'fixtures', sub_dir, filename + '.obj')
 
 def runTestCases(testCases):
     #Until a better solution for knowing if the logger's error count should be used to quit the testing,

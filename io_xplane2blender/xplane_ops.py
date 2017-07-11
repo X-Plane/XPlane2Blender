@@ -4,6 +4,7 @@
 import bpy
 from .xplane_config import *
 from .xplane_constants import MAX_LODS
+from .xplane_ops_dev import *
 
 # Function: findFCurveByPath
 # Helper function to find an FCurve by an data-path.
@@ -578,6 +579,9 @@ def addXPlaneOps():
     bpy.utils.register_class(OBJECT_OT_add_xplane_material_condition)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_material_condition)
 
+    #See xplane_ops_dev.py
+    bpy.utils.register_class(SCENE_OT_dev_export_to_current_dir)
+    bpy.utils.register_class(SCENE_OT_dev_layer_names_from_objects)
 
 # Function: removeXPlaneOps
 # Unregisters all Operators.
@@ -609,3 +613,7 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_condition)
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_condition)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_condition)
+
+    #See xplane_ops_dev.py
+    bpy.utils.unregister_class(SCENE_OT_dev_export_to_current_dir)
+    bpy.utils.unregister_class(SCENE_OT_dev_layer_names_from_objects)
