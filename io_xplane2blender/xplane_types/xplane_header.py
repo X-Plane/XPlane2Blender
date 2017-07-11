@@ -7,6 +7,8 @@ from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 from ..xplane_image_composer import getImageByFilepath, specularToGrayscale, normalWithoutAlpha, combineSpecularAndNormal
+from io_xplane2blender.xplane_constants import EXPORT_TYPE_AIRCRAFT,\
+    EXPORT_TYPE_SCENERY
 
 # Class: XPlaneHeader
 # Create an OBJ header.
@@ -72,8 +74,11 @@ class XPlaneHeader():
         self.draped_attributes.add(XPlaneAttribute("ATTR_LOD_draped", None))
 
     def init(self):
+        isAircraft = self.xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT
+        isCockpit  = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
         isInstance = self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY
-        isCockpit = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
+        isScenery  = self.xplaneFile.options.export_type == EXPORT_TYPE_SCENERY
+
         canHaveDraped = self.xplaneFile.options.export_type not in [EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT]
 
         # layer groups
@@ -110,12 +115,14 @@ class XPlaneHeader():
         if self.xplaneFile.options.texture_normal != '':
             self.non_draped_attributes['TEXTURE_NORMAL'].setValue(self.getTexturePath(self.xplaneFile.options.texture_normal, exportdir, blenddir))
 
+
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= 1100:
-            if self.xplaneFile.referenceMaterials[1] and self.non_draped_attributes['TEXTURE_NORMAL'].getValue(0) is not None:
-                mat = self.xplaneFile.referenceMaterials[1]
+            if self.xplaneFile.referenceMaterials[0] and self.non_draped_attributes['TEXTURE_NORMAL'].getValue(0) is not None:
+                mat = self.xplaneFile.referenceMaterials[0]
                 self.non_draped_attributes['NORMAL_METALNESS'].setValue(mat.getEffectiveNormalMetalness())
-                
+        
+        if xplane_version >= 1100:
             if self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]
                 self.non_draped_attributes['BLEND_GLASS'].setValue(mat.getEffectiveBlendGlass())
@@ -131,9 +138,9 @@ class XPlaneHeader():
                 #That makes a non-fatal error in x-plane. Without the normal map, the metalness directive is ignored" -Ben Supnik, 07/06/17 8:35pm
                 self.draped_attributes['TEXTURE_DRAPED_NORMAL'].setValue("1.0 " + self.getTexturePath(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
             
-            if self.xplaneFile.referenceMaterials[1] and self.draped_attributes['TEXTURE_DRAPED_NORMAL'].getValue(0) is not None:
+            if self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[1]
-                if xplane_version >= 1100:
+                if xplane_version >= 1100 and self.draped_attributes['TEXTURE_DRAPED_NORMAL'].getValue(0) is not None:
                     self.draped_attributes['NORMAL_METALNESS'].setValue(mat.getEffectiveNormalMetalness())
 
                 # draped bump level

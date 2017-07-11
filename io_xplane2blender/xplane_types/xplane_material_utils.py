@@ -44,7 +44,7 @@ def compareInstanced(refMat, mat, autodetectTextures):
     if mat.options.draw:
         if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
            mat.getEffectiveNormalMetalness() == False:
-                errors.append('Specularity must be %f, is %f' % (refMat.blenderMaterial.specular_intensity,mat.blenderMaterial.specular_intensity))
+            errors.append('Specularity must be %f, is %f' % (refMat.blenderMaterial.specular_intensity,mat.blenderMaterial.specular_intensity))
 
         if mat.options.blend != refMat.options.blend:
             if refMat.options.blend:
@@ -253,16 +253,20 @@ def getFirstMatchingMaterial(materials, validation):
 
     return None
 
-
-#find list of reference materials slots vary in their purpose based on purpose.
-#cockpit - main material is [0], panel is slot [1]?
-#scenery - draped is slot [1], scenery slot [0]
-
-#Why this is necissary
-#Draped Scenery - like two objects in one. Need two materials to represent it. Like an exemplar of a set of materaisl where a certain
-# aspect, 
-# Its al about textures.
+# Method: getReferenceMaterials
+# Returns a list of one or materials, the first valid ones it finds. The content of the slots has meaning based on
+# What the current export type is
 #
+# Aircraft:  [0] is the aircraft material, [1] is the (optional) panel material
+# Cockpit:   [0] is the cockpit material,  [1] is the (optional) panel material
+# Instanced: [0] is the instanced scenery, [1] is the (optional) draped material
+# Scenery:   [0] is the scenery material,  [1] is the (optional) draped material
+#
+# Parameters:
+#    List<XPlaneMaterial> - A list of materials found in an object
+#    string exportType - The export type given by xplane_file.options.export_type
+#
+#    Returns list of 1 or more reference materials
 def getReferenceMaterials(materials, exportType):
     refMats = []
 
