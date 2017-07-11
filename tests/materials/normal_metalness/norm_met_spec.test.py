@@ -45,6 +45,7 @@ def create_partial_test_env(self):
 
 __dirname__ = os.path.dirname(__file__)
 
+#There is a small chance that this filterLines function looks for more than it needs to, but that could only create (unlikely) false negatives, not false positives.
 def filterLines(line):
     return isinstance(line[0],str) and (line[0].find('ATTR_draped')      == 0 or \
                                         line[0].find('ATTR_no_draped')   == 0 or \

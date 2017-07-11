@@ -3,8 +3,8 @@ I
 OBJ
 
 POINT_COUNTS	48	0	0	72
-TEXTURE	tex/v10_cessna_wing_draped.png
-TEXTURE_NORMAL	tex/v10_cessna_wing_draped_NML_nm.png
+TEXTURE	tex/v10_cessna.png
+TEXTURE_NORMAL	tex/v10_cessna_NML_nm.png
 NORMAL_METALNESS
 GLOBAL_specular	1
 

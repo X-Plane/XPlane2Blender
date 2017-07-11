@@ -3,8 +3,8 @@ I
 OBJ
 
 POINT_COUNTS	24	0	0	36
-TEXTURE	tex/v10_cessna_wing_draped.png
-TEXTURE_NORMAL	tex/v10_cessna_wing_draped_NML_nm.png
+TEXTURE	tex/v10_cessna.png
+TEXTURE_NORMAL	tex/v10_cessna_NML_nm.png
 
 VT	-1	1	1	-1	0	0	0	0	# 0
 VT	-1	-1	1	-1	0	0	0	0	# 1
