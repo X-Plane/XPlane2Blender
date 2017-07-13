@@ -131,7 +131,7 @@ for root, dirs, files in os.walk('./tests'):
                 if not be_quiet: 
                     print(out)
                                    
-                if out.find('FAIL') != -1 or num_errors != 0:
+                if 'FAIL' in out or 'ERROR:' in out or 'Error:' in out or num_errors != 0:
                     if print_fails:
                         printTestBeginning("Running file %s - FAILED" % (pyFile))
                         print(out)
