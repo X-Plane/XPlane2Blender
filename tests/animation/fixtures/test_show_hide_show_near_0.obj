@@ -1,0 +1,54 @@
+I
+800
+OBJ
+
+POINT_COUNTS	24	0	0	36
+
+VT	-1	2	1	-1	0	0	0	0	# 0
+VT	-1	0	1	-1	0	0	0	0	# 1
+VT	-1	0	-1	-1	0	0	0	0	# 2
+VT	-1	2	-1	-1	0	0	0	0	# 3
+VT	1	0	-1	0	0	-1	0	0	# 4
+VT	1	2	-1	0	0	-1	0	0	# 5
+VT	-1	2	-1	0	0	-1	0	0	# 6
+VT	-1	0	-1	0	0	-1	0	0	# 7
+VT	1	0	1	1	0	0	0	0	# 8
+VT	1	2	1	1	0	0	0	0	# 9
+VT	1	2	-1	1	0	0	0	0	# 10
+VT	1	0	-1	1	0	0	0	0	# 11
+VT	1	2	1	0	0	1	0	0	# 12
+VT	1	0	1	0	0	1	0	0	# 13
+VT	-1	0	1	0	0	1	0	0	# 14
+VT	-1	2	1	0	0	1	0	0	# 15
+VT	1	0	-1	0	-1	0	0	0	# 16
+VT	-1	0	-1	0	-1	0	0	0	# 17
+VT	-1	0	1	0	-1	0	0	0	# 18
+VT	1	0	1	0	-1	0	0	0	# 19
+VT	-1	2	-1	0	1	0	0	0	# 20
+VT	1	2	-1	0	1	0	0	0	# 21
+VT	1	2	1	0	1	0	0	0	# 22
+VT	-1	2	1	0	1	0	0	0	# 23
+
+IDX10	0	1	2	2	3	0	4	5	6	6
+IDX10	7	4	8	9	10	10	11	8	12	13
+IDX10	14	14	15	12	16	17	18	18	19	16
+IDX	20
+IDX	21
+IDX	22
+IDX	22
+IDX	23
+IDX	20
+
+# 0 ROOT
+# 1 Object: Cube_anim_show_near_0
+ANIM_begin
+ANIM_hide	-1	-0.1	sim/joystick/yoke_pitch_ratio
+ANIM_hide	0.1	1	sim/joystick/yoke_pitch_ratio
+ANIM_show	-0.099	0.0999	sim/joystick/yoke_pitch_ratio
+# PRIMITIVE: Cube_anim_show_near_0	weight: 0
+# MATERIAL: Material
+ATTR_shiny_rat	0.5
+TRIS	0 36
+ANIM_end
+
+# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.13
