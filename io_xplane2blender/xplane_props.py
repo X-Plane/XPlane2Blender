@@ -1227,7 +1227,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     normal_metalness = bpy.props.BoolProperty(
         attr = "normal_metalness",
         name = "Normal Metalness",
-        description = "Blue channel is suitable for base reflectance.",
+        description = "Blue channel will be used for base reflectance.",
         default = False
         )
     
