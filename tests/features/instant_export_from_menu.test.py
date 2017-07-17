@@ -21,20 +21,18 @@ class TestInstantExportFromMenu(XPlaneTestCase):
         bpy.context.scene.layers[layer_num] = True
         bpy.ops.export.xplane_obj(filepath=EXPORT_FOLDER + "/fakefilename")
         
-        path = os.path.abspath(
-            os.path.join(
-                         os.path.dirname(bpy.context.blend_data.filepath),
-                         relpath
-                        )
-                     )
-
+        dirname = os.path.dirname(bpy.context.blend_data.filepath)
+        path = os.path.abspath(os.path.join(dirname,relpath))
+        print("ASSERT_FILE_EXISTS: dirname: %s, relpath %s, joined %s" % (dirname,relpath,path))
         self.assertTrue(os.path.isfile(path))
     
     
     def test_ensure_append(self):
+        print("ASSERT_ENSURE_APPEND")
         self.assert_file_exists(0,os.path.join(EXPORT_FOLDER, "ensure_append.obj"))
     
     def test_ensure_no_append(self):
+        print("ASSERT_ENSURE_NO_APPEND")
         self.assert_file_exists(1,os.path.join(EXPORT_FOLDER, "ensure_no_double_append.obj"))
 
     def test_ensure_no_folder_named_filename(self):
@@ -42,6 +40,7 @@ class TestInstantExportFromMenu(XPlaneTestCase):
         bpy.context.scene.layers[2] = True
         bpy.ops.export.xplane_obj(filepath=EXPORT_FOLDER +'/fakefilename') #Must include fake filename to be removed later
     
+        print("ASSERT_ENSURE_NO_FOLDER_NAMED_FILENAME")
         self.assertFalse(os.path.isdir(os.path.join(EXPORT_FOLDER,"ensure","no","folder","named","filename")))
 
     def test_ensure_no_abs_path_filename(self):
@@ -55,10 +54,12 @@ class TestInstantExportFromMenu(XPlaneTestCase):
             
         bpy.ops.export.xplane_obj(filepath=EXPORT_FOLDER+'/fakefilename') #Must include a fakefilename to be removed later
     
+        print("ENSURE_NO_ABS_PATH_FILENAME")
         self.assertEqual(len(logger.findErrors()), 1)
         logger.clearMessages()
  
     def test_ensure_paths_are_normalized_filename(self):
+        print("TESTING NORMALIZED FILENAME")
         self.assert_file_exists(5, os.path.join(EXPORT_FOLDER,"ensure","paths","are","normalized","filename.obj"))
         
     def test_ensure_blender_paths_resolve_filename(self):
