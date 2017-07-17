@@ -165,7 +165,10 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         
         if xplaneFile.filename.find('//') == 0:
             xplaneFile.filename = xplaneFile.filename.replace('//','',1)
-            
+        
+        #Change any backslashes to foward slashes for file paths
+        xplaneFile.filename = xplaneFile.filename.replace('\\','/')    
+        
         if os.path.isabs(xplaneFile.filename):
             logger.error("Bad export path %s: File paths must be relative to the .blend file" % (xplaneFile.filename))
             return False
@@ -177,8 +180,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         relpath = os.path.normpath(os.path.join(dir, xplaneFile.filename))
         if not '.obj' in relpath:
             relpath += '.obj'
-        
-        
+ 
         fullpath = os.path.abspath(os.path.join(os.path.dirname(bpy.context.blend_data.filepath),relpath))
         
         os.makedirs(os.path.dirname(fullpath),exist_ok=True)
