@@ -163,17 +163,12 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         if len(xplaneFile.objects) == 0:
             return
         
-        print("Original filename: %s" % (xplaneFile.filename))
-        
         if xplaneFile.filename.find('//') == 0:
             xplaneFile.filename = xplaneFile.filename.replace('//','',1)
-        
-        print("Stripped Blender prefix filename: %s" % (xplaneFile.filename))
         
         #Change any backslashes to foward slashes for file paths
         xplaneFile.filename = xplaneFile.filename.replace('\\','/')    
         
-        print("Change \\ to / Blender prefix filename: %s" % (xplaneFile.filename))
         if os.path.isabs(xplaneFile.filename):
             logger.error("Bad export path %s: File paths must be relative to the .blend file" % (xplaneFile.filename))
             return False
@@ -183,13 +178,10 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         #Make paths based on the absolute path
         #Write
         relpath = os.path.normpath(os.path.join(dir, xplaneFile.filename))
-        print("relpath: %s" % (relpath))
         if not '.obj' in relpath:
             relpath += '.obj'
-        print("relpath (appended): %s" % (relpath))
         
         fullpath = os.path.abspath(os.path.join(os.path.dirname(bpy.context.blend_data.filepath),relpath))
-        print("fullpath %s" % (fullpath))
         
         os.makedirs(os.path.dirname(fullpath),exist_ok=True)
         
