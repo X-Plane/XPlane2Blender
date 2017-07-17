@@ -554,9 +554,13 @@ class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
     bl_label = 'Export OBJs'
     bl_idname = 'scene.export_to_relative_dir'
     bl_description = 'Exports OBJs into the same folder as the .blend file, and/or specified sub-folders'
-
+    
+    #initial_dir that will be prepended to the path.
+    initial_dir = bpy.props.StringProperty()
+    
     def execute(self, context):
-        bpy.ops.export.xplane_obj(filepath="")
+        self.initial_dir += '/fakefilename' #We hide the fact that we need a fake filename that will be removed by the exporter
+        bpy.ops.export.xplane_obj(filepath=self.initial_dir)
         return {'FINISHED'}
 
 # Function: addXPlaneOps

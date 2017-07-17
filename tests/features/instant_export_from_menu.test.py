@@ -19,7 +19,7 @@ class TestInstantExportFromMenu(XPlaneTestCase):
     def assert_file_exists(self,layer_num,relpath):
         bpy.context.scene.layers = nearly_blank_layers
         bpy.context.scene.layers[layer_num] = True
-        bpy.ops.export.xplane_obj(filepath=EXPORT_FOLDER + "/fakefilename")
+        bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
         
         dirname = os.path.dirname(bpy.context.blend_data.filepath)
         path = os.path.abspath(os.path.join(dirname,relpath))
@@ -35,7 +35,7 @@ class TestInstantExportFromMenu(XPlaneTestCase):
     def test_ensure_no_folder_named_filename(self):
         bpy.context.scene.layers = nearly_blank_layers
         bpy.context.scene.layers[2] = True
-        bpy.ops.export.xplane_obj(filepath=EXPORT_FOLDER +'/fakefilename') #Must include fake filename to be removed later
+        bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
 
         self.assertFalse(os.path.isdir(os.path.join(EXPORT_FOLDER,"ensure","no","folder","named","filename")))
 
@@ -48,7 +48,7 @@ class TestInstantExportFromMenu(XPlaneTestCase):
         else:
             bpy.context.scene.layers[4] = True
             
-        bpy.ops.export.xplane_obj(filepath=EXPORT_FOLDER+'/fakefilename') #Must include a fakefilename to be removed later
+        bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
     
         self.assertEqual(len(logger.findErrors()), 1)
         logger.clearMessages()
