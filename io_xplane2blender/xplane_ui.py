@@ -158,6 +158,9 @@ def scene_layout(self, scene):
     row = layout.row()
     row.prop(scene.xplane, "debug", text = "Debug")
 
+    row = layout.row()
+    row.operator("scene.export_to_relative_dir")
+
     if scene.xplane.debug:
         box = layout.box()
         box.prop(scene.xplane, "profile", text = "Profiling")
@@ -172,8 +175,8 @@ def scene_layout(self, scene):
        row.prop(scene.xplane, "dev_enable_breakpoints")
        row = box.row()
        row.prop(scene.xplane, "dev_continue_export_on_error")
-       row = box.row()
-       row.operator("scene.dev_export_to_current_dir")
+       #row = box.row() #Enable if new export button is too inconvienent
+       #row.operator("scene.dev_export_to_current_dir")
        row = box.row()
        row.operator("scene.dev_layer_names_to_current_dir")
     row = layout.row()
@@ -252,9 +255,9 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     isInstanced = version >= 1000 and layerObj.export_type == 'instanced_scenery'
 
     column = layout.column()
-    column.prop(layerObj, "export", text = "Export")
-    column.prop(layerObj, "debug", text = "Debug")
-    column.prop(layerObj, "name", text = "Name")
+    column.prop(layerObj, "export",      text = "Export")
+    column.prop(layerObj, "debug",       text = "Debug")
+    column.prop(layerObj, "name",        text = "Name")
     column.prop(layerObj, "export_type", text = "Type")
 
     column.label('Textures')

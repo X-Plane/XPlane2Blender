@@ -3,6 +3,7 @@
 
 import bpy
 import os
+import io_xplane2blender
 
 FLOAT_PRECISION = 8
 
@@ -48,11 +49,28 @@ def resolveBlenderPath(path):
     else:
         return path
 
+#This a hack to help tests.py catch when an error is an error,
+#because everybody and their pet poodle like using the words 'Fail',
+#'Error', "FAIL", and "ERROR" making regex impossible.
+#
+#unittest prints a handy string of .'s, F's, and E's on the first line,
+#but due to reasons beyond my grasp, sometimes they don't print a newline
+#at the end of it when a failure occurs, making it useless, since we use the word
+#"INFO" with an F, meaning you can't search the first line for an F!
+#
+#Hence this stupid stupid hack, which, is hopefully useful in someway
+#Rather than a "did_print_once"
+#
+#This is yet another reminder about how relying on strings printed to a console
+#To tell how your unit test went is a bad idea, epsecially when you can't seem to control
+#What gets output when.
+message_to_str_count = 0
+
 class XPlaneLogger():
     def __init__(self):
         self.transports = []
         self.messages = []
-
+        
     def addTransport(self, transport, messageTypes = ['error', 'warning', 'info', 'success']):
         self.transports.append({
             'fn': transport,
@@ -129,9 +147,10 @@ class XPlaneLogger():
 
     def findInfos(self):
         return self.findOfType('info')
-
+    
     @staticmethod
     def messageToString(messageType, message, context = None):
+        io_xplane2blender.xplane_helpers.message_to_str_count += 1
         return '%s: %s' % (messageType.upper(), message)
 
     @staticmethod
@@ -151,6 +170,8 @@ class XPlaneLogger():
     @staticmethod
     def ConsoleTransport():
         def transport(messageType, message, context = None):
+            if io_xplane2blender.xplane_helpers.message_to_str_count == 1:
+                print('\n')
             print(XPlaneLogger.messageToString(messageType, message, context))
 
         return transport
