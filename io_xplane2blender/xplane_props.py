@@ -6,6 +6,7 @@ from .xplane_config import *
 from .xplane_helpers import getColorAndLitTextureSlots
 from .xplane_constants import *
 from io_xplane2blender import xplane_constants
+from bpy.props import StringProperty
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
@@ -42,6 +43,12 @@ class XPlaneCustomAttribute(bpy.types.PropertyGroup):
         default = 0,
         min = 0
     )
+
+class XPlaneExportPathDirective(bpy.types.PropertyGroup):
+    export_path = bpy.props.StringProperty(
+        name = "Export Path",
+        description="The export path that should be copied into a library.txt"
+        )
 
 # Class: XPlaneDataref
 # A X-Plane Dataref
@@ -504,7 +511,14 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "The blender layer index.",
         default = -1
     )
-
+    
+    expanded = bpy.props.BoolProperty(
+        attr = "expanded",
+        name = "Expanded",
+        description = "Toggles the layer settings visibility.",
+        default = False
+    )
+    
     export = bpy.props.BoolProperty(
         attr = "export",
         name = "Export",
@@ -512,12 +526,11 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = True
     )
 
-    expanded = bpy.props.BoolProperty(
-        attr = "expanded",
-        name = "Expanded",
-        description = "Toggles the layer settings visibility.",
-        default = False
-    )
+    export_path_directives = bpy.props.CollectionProperty(
+        name = "Export directives for layer",
+        description = "A collection of export paths intended for an OBJ's EXPORT directives.",
+        type = XPlaneExportPathDirective
+	)
 
     debug = bpy.props.BoolProperty(
         attr = "debug",
@@ -556,7 +569,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     slungLoadWeight = bpy.props.FloatProperty(
         attr = "slungLoadWeight",
-        name = "Slung Load weight",
+        name = "Slung Load Weight",
         description = "Weight of the object in pounds, for use in the physics engine if the object is being carried by a plane or helicopter.",
         default = 0.0,
         step = 1,
@@ -1363,6 +1376,7 @@ def addXPlaneRNA():
     bpy.utils.register_class(XPlaneDataref)
     bpy.utils.register_class(XPlaneCondition)
     #bpy.utils.register_class(XPlaneDatarefSearch)
+    bpy.utils.register_class(XPlaneExportPathDirective)
     bpy.utils.register_class(XPlaneManipulator)
     bpy.utils.register_class(XPlaneCockpitRegion)
     bpy.utils.register_class(XPlaneLOD)
@@ -1421,6 +1435,7 @@ def removeXPlaneRNA():
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
     #bpy.utils.unregister_class(XPlaneDatarefSearch)
+    bpy.utils.unregister_class(XPlaneExportPathDirective)
     bpy.utils.unregister_class(XPlaneManipulator)
     bpy.utils.unregister_class(XPlaneCockpitRegion)
     bpy.utils.unregister_class(XPlaneLOD)

@@ -418,6 +418,30 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class OBJECT_OT_add_xplane_export_path_directive(bpy.types.Operator):
+    bl_label = 'Add Export Path Directive'
+    bl_idname = 'object.add_xplane_export_path_directive'
+    bl_description = 'Add Export Path Directive'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self, context):
+        obj = context.object
+        obj.xplane.layer.export_path_directives.add()
+        return {'FINISHED'}
+ 
+class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
+    bl_label = 'Remove Export Path Directive'
+    bl_idname = 'object.remove_xplane_export_path_directive'
+    bl_description = 'Remove export path directive'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self, context):
+        obj = context.object
+        obj.xplane.layer.export_path_directives.remove(self.index)
+        return {'FINISHED'}
+    
 # Class: BONE_OT_add_xplane_dataref
 # Adds a <XPlaneDataref> to a Blender bone.
 class BONE_OT_add_xplane_dataref(bpy.types.Operator):
@@ -551,6 +575,8 @@ class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
 # Function: addXPlaneOps
 # Registers all Operators.
 def addXPlaneOps():
+    #List all adds, then all removes in alphabetical order.
+    #Insert line breaks between related groups
     bpy.utils.register_class(BONE_OT_add_xplane_dataref)
     bpy.utils.register_class(BONE_OT_add_xplane_dataref_keyframe)
     bpy.utils.register_class(BONE_OT_remove_xplane_dataref)
@@ -560,6 +586,9 @@ def addXPlaneOps():
     bpy.utils.register_class(OBJECT_OT_add_xplane_dataref_keyframe)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_dataref)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_dataref_keyframe)
+
+    bpy.utils.register_class(OBJECT_OT_add_xplane_export_path_directive)
+    bpy.utils.register_class(OBJECT_OT_remove_xplane_export_path_directive)
 
     bpy.utils.register_class(OBJECT_OT_add_xplane_lamp_attribute)
     bpy.utils.register_class(OBJECT_OT_add_xplane_material_attribute)
@@ -586,6 +615,8 @@ def addXPlaneOps():
 # Function: removeXPlaneOps
 # Unregisters all Operators.
 def removeXPlaneOps():
+    #List all adds, then all removes in alphabetical order.
+    #Insert line breaks between related groups
     bpy.utils.unregister_class(BONE_OT_add_xplane_dataref)
     bpy.utils.unregister_class(BONE_OT_add_xplane_dataref_keyframe)
     bpy.utils.unregister_class(BONE_OT_remove_xplane_dataref)
@@ -595,6 +626,9 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_dataref_keyframe)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_dataref)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_dataref_keyframe)
+
+    bpy.utils.unregister_class(OBJECT_OT_add_xplane_export_path_directive)
+    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_export_path_directive)
 
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_lamp_attribute)
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_attribute)

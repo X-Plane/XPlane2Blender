@@ -213,6 +213,7 @@ def scene_layer_layout(self, scene, layout, layer):
     if expanded:
         layer_layout(self, box, layerObj, version)
         custom_layer_layout(self, box, layerObj, version)
+        export_path_dir_layer_layout(self, box, layerObj, version)
 
 def object_layer_layout(self, obj):
     if bpy.context.scene.xplane.exportMode == 'root_objects':
@@ -238,6 +239,7 @@ def object_layer_layout(self, obj):
             if expanded:
                 layer_layout(self, box, layerObj, version, 'object')
                 custom_layer_layout(self, box, layerObj, version, 'object')
+                export_path_dir_layer_layout(self, box, layerObj, version, 'object')
 
 # Function: layer_layout
 # Draws the UI layout for <XPlaneLayers>. Uses <custom_layer_layout>.
@@ -432,6 +434,29 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
         if type in ("MATERIAL", "MESH"):
             subrow = subbox.row()
             subrow.prop(attr, "reset")
+
+def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'scene'):
+    layout.separator()
+    row = layout.row()
+    row.label("Export Path Directives")
+    
+    if context == 'scene':
+        pass
+    else:
+        row.operator("object.add_xplane_export_path_directive")
+        #row.operator('object.add_xplane_export_path_directive').index = layerObj.index
+        
+    box = layout.box()
+    
+    for i, attr in enumerate(layerObj.export_path_directives):
+        row = box.row() 
+        row.prop(attr,"export_path", text= "Export Path " + str(i))
+        
+        if context == 'scene':
+            pass
+            #row.operator("scene.remove_xplane_export_path_directive", text = "", emboss = False, icon = "X").index = i
+        elif context == 'object':
+            row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
 # Function: mesh_layout
 # Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling.
