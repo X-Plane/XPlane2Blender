@@ -514,4 +514,8 @@ class XPlaneHeader():
                         elif not is_bool: #True case already taken care of, don't care about False case - implicitly skipped
                             o += '%s\t%s\n' % (attr.name, attr.getValueAsString())
 
+        for export_path_directive in self.xplaneFile.options.export_path_directives:
+            if export_path_directive != None and export_path_directive.export_path != '':
+                o += 'EXPORT %s\n' % (export_path_directive.export_path)
+
         return o
