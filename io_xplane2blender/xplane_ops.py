@@ -213,7 +213,7 @@ class SCENE_OT_remove_xplane_layer_attribute(bpy.types.Operator):
         scene.xplane.layers[self.index[0]].customAttributes.remove(self.index[1])
         return {'FINISHED'}
 
-# Class: SCENE_OT_add_xplane_layer_attribute
+# Class: OBJECT_OT_add_xplane_layer_attribute
 # Adds a custom attribute to a <XPlaneLayer>.
 class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
     bl_label = 'Add Attribute'
@@ -442,6 +442,32 @@ class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
         obj.xplane.layer.export_path_directives.remove(self.index)
         return {'FINISHED'}
     
+class SCENE_OT_add_xplane_export_path_directive(bpy.types.Operator):
+    bl_label = 'Add Export Path Directive'
+    bl_idname = 'scene.add_xplane_export_path_directive'
+    bl_description = 'Add Export Path Directive'
+
+    # Index represents which xplane layer's export_path_directives list should
+    # be appended
+    index = bpy.props.IntProperty()
+
+    def execute(self, context):
+        scene = context.scene
+        scene.xplane.layers[self.index].export_path_directives.add()
+        return {'FINISHED'}
+ 
+class SCENE_OT_remove_xplane_export_path_directive(bpy.types.Operator):
+    bl_label = 'Remove Export Path Directive'
+    bl_idname = 'scene.remove_xplane_export_path_directive'
+    bl_description = 'Remove export path directive'
+
+    index = bpy.props.IntVectorProperty(size=2)
+
+    def execute(self, context):
+        scene = context.scene
+        scene.xplane.layers[self.index[0]].export_path_directives.remove(self.index[1])
+        return {'FINISHED'}
+
 # Class: BONE_OT_add_xplane_dataref
 # Adds a <XPlaneDataref> to a Blender bone.
 class BONE_OT_add_xplane_dataref(bpy.types.Operator):

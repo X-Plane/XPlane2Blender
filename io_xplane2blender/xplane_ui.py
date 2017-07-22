@@ -441,10 +441,9 @@ def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'sce
     row.label("Export Path Directives")
     
     if context == 'scene':
-        pass
-    else:
+        row.operator("scene.add_xplane_export_path_directive").index = layerObj.index
+    elif context == 'object':
         row.operator("object.add_xplane_export_path_directive")
-        #row.operator('object.add_xplane_export_path_directive').index = layerObj.index
         
     box = layout.box()
     
@@ -453,8 +452,7 @@ def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'sce
         row.prop(attr,"export_path", text= "Export Path " + str(i))
         
         if context == 'scene':
-            pass
-            #row.operator("scene.remove_xplane_export_path_directive", text = "", emboss = False, icon = "X").index = i
+            row.operator("scene.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = (layerObj.index, i)
         elif context == 'object':
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
