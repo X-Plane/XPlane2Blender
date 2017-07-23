@@ -598,6 +598,21 @@ class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
         obj.xplane.conditions.remove(self.index)
         return {'FINISHED'}
 
+# Class: SCENE_OT_export_to_relative_dir
+# Exports OBJS into the same folder as the .blend file, and/or folders beneath it
+class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
+    bl_label = 'Export OBJs'
+    bl_idname = 'scene.export_to_relative_dir'
+    bl_description = 'Exports OBJs into the same folder as the .blend file, and/or specified sub-folders'
+    
+    #initial_dir that will be prepended to the path.
+    initial_dir = bpy.props.StringProperty()
+    
+    def execute(self, context):
+        self.initial_dir += '/fakefilename' #We hide the fact that we need a fake filename that will be removed by the exporter
+        bpy.ops.export.xplane_obj(filepath=self.initial_dir)
+        return {'FINISHED'}
+
 # Function: addXPlaneOps
 # Registers all Operators.
 def addXPlaneOps():
@@ -633,9 +648,11 @@ def addXPlaneOps():
     bpy.utils.register_class(OBJECT_OT_remove_xplane_object_condition)
     bpy.utils.register_class(OBJECT_OT_add_xplane_material_condition)
     bpy.utils.register_class(OBJECT_OT_remove_xplane_material_condition)
+    
+    bpy.utils.register_class(SCENE_OT_export_to_relative_dir)
 
     #See xplane_ops_dev.py
-    bpy.utils.register_class(SCENE_OT_dev_export_to_current_dir)
+    #bpy.utils.register_class(SCENE_OT_dev_export_to_current_dir)
     bpy.utils.register_class(SCENE_OT_dev_layer_names_from_objects)
 
 # Function: removeXPlaneOps
@@ -674,6 +691,8 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_condition)
     bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_condition)
 
+    bpy.utils.unregister_class(SCENE_OT_export_to_relative_dir)
+
     #See xplane_ops_dev.py
-    bpy.utils.unregister_class(SCENE_OT_dev_export_to_current_dir)
+    #bpy.utils.unregister_class(SCENE_OT_dev_export_to_current_dir)
     bpy.utils.unregister_class(SCENE_OT_dev_layer_names_from_objects)

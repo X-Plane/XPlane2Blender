@@ -21,10 +21,10 @@ ERROR_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
 #WARNING_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED WARNING"
 if os.path.exists('./tests/tmp'):
     # empty temp directory
-    shutil.rmtree('./tests/tmp')
+    shutil.rmtree('./tests/tmp',ignore_errors=True)
 
 # create temp dir if not exists
-os.mkdir('./tests/tmp')
+os.makedirs('./tests/tmp',exist_ok=True)
 
 def getFlag(name):
     return name in sys.argv
@@ -130,8 +130,13 @@ for root, dirs, files in os.walk('./tests'):
  
                 if not be_quiet: 
                     print(out)
-                                   
-                if 'FAIL' in out or 'ERROR:' in out or 'Error:' in out or num_errors != 0:
+                
+                #Normalize line endings because Windows is dumb 
+                out = out.replace('\r\n','\n')
+                out_lines = out.split('\n')
+                
+                #First line of output is unittest's sequece of dots, E's and F's
+                if 'E' in out_lines[0] or 'F' in out_lines[0] or num_errors != 0:
                     if print_fails:
                         printTestBeginning("Running file %s - FAILED" % (pyFile))
                         print(out)

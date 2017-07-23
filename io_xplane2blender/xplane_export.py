@@ -5,6 +5,7 @@ import os.path
 import bpy
 import mathutils
 import os
+import sys
 from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
 from .xplane_config import getDebug, getLog, initConfig
@@ -21,7 +22,8 @@ class ExportLogDialog(bpy.types.Menu):
         row.label('Please take a look into the internall text file XPlane2Blender.log')
 
 def showLogDialog():
-    bpy.ops.wm.call_menu(name = "SCENE_MT_xplane_export_log")
+    if not ('-b' in sys.argv or '--background' in sys.argv):
+        bpy.ops.wm.call_menu(name = "SCENE_MT_xplane_export_log")
 
 # Class: ExportXPlane
 # Main Export class. Brings all parts together and creates the OBJ files.
@@ -160,17 +162,37 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         # only write layers that contain objects
         if len(xplaneFile.objects) == 0:
             return
-
-        fullpath = os.path.join(dir, xplaneFile.filename) + '.obj'
-
+        
+        if xplaneFile.filename.find('//') == 0:
+            xplaneFile.filename = xplaneFile.filename.replace('//','',1)
+        
+        #Change any backslashes to foward slashes for file paths
+        xplaneFile.filename = xplaneFile.filename.replace('\\','/')    
+        
+        if os.path.isabs(xplaneFile.filename):
+            logger.error("Bad export path %s: File paths must be relative to the .blend file" % (xplaneFile.filename))
+            return False
+        
+        #Get the relative path
+        #Append .obj if needed
+        #Make paths based on the absolute path
+        #Write
+        relpath = os.path.normpath(os.path.join(dir, xplaneFile.filename))
+        if not '.obj' in relpath:
+            relpath += '.obj'
+        
+        fullpath = os.path.abspath(os.path.join(os.path.dirname(bpy.context.blend_data.filepath),relpath))
+        
+        os.makedirs(os.path.dirname(fullpath),exist_ok=True)
+        
         out = xplaneFile.write()
-
+       
         if logger.hasErrors():
             return False
 
         # write the file
         logger.info("Writing %s" % fullpath)
-
+        
         objFile = open(fullpath, "w")
         objFile.write(out)
         objFile.close()
