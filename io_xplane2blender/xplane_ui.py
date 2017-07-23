@@ -215,8 +215,8 @@ def scene_layer_layout(self, scene, layout, layer):
 
     if expanded:
         layer_layout(self, box, layerObj, version)
-        custom_layer_layout(self, box, layerObj, version)
         export_path_dir_layer_layout(self, box, layerObj, version)
+        custom_layer_layout(self, box, layerObj, version)
 
 def object_layer_layout(self, obj):
     if bpy.context.scene.xplane.exportMode == 'root_objects':
@@ -241,8 +241,8 @@ def object_layer_layout(self, obj):
 
             if expanded:
                 layer_layout(self, box, layerObj, version, 'object')
-                custom_layer_layout(self, box, layerObj, version, 'object')
                 export_path_dir_layer_layout(self, box, layerObj, version, 'object')
+                custom_layer_layout(self, box, layerObj, version, 'object')
 
 # Function: layer_layout
 # Draws the UI layout for <XPlaneLayers>. Uses <custom_layer_layout>.
@@ -256,14 +256,12 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     canHaveDraped = version >= 1000 and layerObj.export_type not in ['aircraft', 'cockpit']
     isInstanced = version >= 1000 and layerObj.export_type == 'instanced_scenery'
 
-    column = layout.column()
-    column.prop(layerObj, "export")
-    column.prop(layerObj, "debug")
-    column.prop(layerObj, "name")
-    column.prop(layerObj, "export_type")
+    #column = layout.column()
+    layout.prop(layerObj, "name")
+    layout.prop(layerObj, "export_type")
 
-    column.label('Textures')
-    tex_box = column.box()
+    tex_box = layout.box()
+    tex_box.label('Textures')
 
     tex_box.prop(layerObj, "autodetectTextures")
 
@@ -278,9 +276,10 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 
     # cockpit regions
     if layerObj.export_type == 'cockpit':
-        cockpit_box = column.box()
+        cockpit_box = layout.box()
+        cockpit_box.label('Cockpits')
         #cockpit_box.prop(layerObj, "panel_texture")
-        cockpit_box.prop(layerObj, "cockpit_regions")
+        cockpit_box.prop(layerObj, "cockpit_regions", text= "Regions")
         num_regions = int(layerObj.cockpit_regions)
 
         if num_regions > 0:
@@ -291,7 +290,6 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
                     region_box.operator("scene.add_xplane_layer_cockpit_regions").index = layerObj.index
                 elif context == 'object':
                     region_box.operator("object.add_xplane_layer_cockpit_regions")
-
             else:
                 for i in range(0, num_regions):
                     # get cockpit region or create it if not present
@@ -318,17 +316,16 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 
         # v1010
         # cockpit_lit
-        cockpit_lit_box = column.row()
+        cockpit_lit_box = cockpit_box.row()
         cockpit_lit_box.prop(layerObj, "cockpit_lit", "3D-Cockpit lighting")
-
     # LODs
     else:
-        lods_box = column.box()
-        lods_box.prop(layerObj, "lods")
+        lods_box = layout.box()
+        lods_box.label('Levels of Detail')
+        lods_box.prop(layerObj, "lods", text="LODs")
         num_lods = int(layerObj.lods)
 
         if num_lods > 0:
-
             if len(layerObj.lod) < num_lods:
                 lod_box = lods_box.box()
 
@@ -357,37 +354,24 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         if canHaveDraped:
             lods_box.prop(layerObj, "lod_draped")
 
-    column.separator()
-    column.prop(layerObj, "slungLoadWeight")
+    #Scenery Properties Group
+    scenery_props_group_box = layout.box()
+    scenery_props_group_box.label("Scenery Properties")
 
-    # v1000
-    if version >= 1000:
-        # slope_limit
-        slope_box = column.box()
-        slope_box.prop(layerObj, "slope_limit")
+    layer_group_box = scenery_props_group_box.box()
+    layer_group_box.label("Layer Grouping")
+    layer_group_box.prop(layerObj, "layer_group")
+    layer_group_box.prop(layerObj, "layer_group_offset")
 
-        if (layerObj.slope_limit == True):
-            row = slope_box.row()
-            row.prop(layerObj, "slope_limit_min_pitch")
-            row = slope_box.row()
-            row.prop(layerObj, "slope_limit_max_pitch")
-            row = slope_box.row()
-            row.prop(layerObj, "slope_limit_min_roll")
-            row = slope_box.row()
-            row.prop(layerObj, "slope_limit_max_roll")
-
-        # tilted
-        tilted_box = column.row()
-        tilted_box.prop(layerObj, "tilted")
-
-        # require surface
-        require_box = column.row()
-        require_box.prop(layerObj, "require_surface", "Require surface")
+    if canHaveDraped:
+        layer_group_box.prop(layerObj, "layer_group_draped")
+        layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
     # v1010
     if version >= 1010:
+        #TODO: Shouldn't these be material properties instead?
         # shadow
-        shadow_box = column.box()
+        shadow_box = scenery_props_group_box.box()
         shadow_box.prop(layerObj, "shadow", "Cast shadows")
         row = shadow_box.row()
         row.prop(layerObj, "shadow_blend", "Shadow cutoff")
@@ -396,13 +380,34 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
             row = shadow_box.row()
             row.prop(layerObj, "shadow_blend_ratio", "Cutoff Ratio")
 
-    layer_group_box = column.box()
-    layer_group_box.prop(layerObj, "layer_group")
-    layer_group_box.prop(layerObj, "layer_group_offset")
+    # v1000
+    if version >= 1000:
+        # slope_limit
+        slope_box = scenery_props_group_box.box()
+        slope_box.label("Slope Properties")
+        slope_box.prop(layerObj, "slope_limit")
 
-    if canHaveDraped:
-        layer_group_box.prop(layerObj, "layer_group_draped")
-        layer_group_box.prop(layerObj, "layer_group_draped_offset")
+        if layerObj.slope_limit == True:
+            slope_box.row().prop(layerObj, "slope_limit_min_pitch")
+            slope_box.row().prop(layerObj, "slope_limit_max_pitch")
+            slope_box.row().prop(layerObj, "slope_limit_min_roll")
+            slope_box.row().prop(layerObj, "slope_limit_max_roll")
+
+        # tilted
+        slope_box.prop(layerObj, "tilted")
+
+        # require surface
+        require_box = scenery_props_group_box.row()
+        require_box.prop(layerObj, "require_surface", "Require surface")
+
+    # Other Options
+    #layout.separator()
+    advanced_box = layout.box()
+    advanced_box.label("Advanced Options")
+    advanced_box.prop(layerObj, "slungLoadWeight")
+
+    advanced_box.prop(layerObj, "export")
+    advanced_box.prop(layerObj, "debug")
 
 # Function: custom_layer_layout
 # Draws the UI layout for the custom attributes of a <XPlaneLayer>.
