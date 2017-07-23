@@ -40,6 +40,10 @@ class XPlaneHeader():
         self.export_path_dirs = []
 
         for export_path_directive in self.xplaneFile.options.export_path_directives:
+            export_path_directive.export_path = export_path_directive.export_path.lstrip()
+            if len(export_path_directive.export_path) == 0:
+                continue
+
             cleaned_path = bpy.data.filepath.replace('\\', '/')
             #              everything before
             #               |         scenery directory
