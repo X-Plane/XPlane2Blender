@@ -182,7 +182,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
 
     type = bpy.props.EnumProperty(
         attr = "type",
-        name = "Manipulator type",
+        name = "Manipulator Type",
         description = "The type of the manipulator",
         default = 'drag_xy',
         items = [
@@ -347,14 +347,14 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
 
     positive_command = bpy.props.StringProperty(
         attr = "positive_command",
-        name = "Positive command",
+        name = "Positive Command",
         description = "Positive command",
         default = ""
     )
 
     negative_command = bpy.props.StringProperty(
         attr = "negative_command",
-        name = "Negative command",
+        name = "Negative Command",
         description = "Negative command",
         default = ""
     )
@@ -381,21 +381,21 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
 
     click_step = bpy.props.FloatProperty(
         attr = "click_step",
-        name = "click step",
+        name = "Click Step",
         description = "Value change on click",
         default = 0.0
     )
 
     hold_step = bpy.props.FloatProperty(
         attr = "hold_step",
-        name = "hold step",
+        name = "Hold Step",
         description = "Value change on hold",
         default = 0.0
     )
 
     wheel_delta = bpy.props.FloatProperty(
         attr = "wheel_delta",
-        name = "wheel delta (v10.5x)",
+        name = "Wheel Delta (v10.5x)",
         description = "Value change on mouse wheel tick (v10.5x)",
         default = 0.0
     )
@@ -527,7 +527,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     export_path_directives = bpy.props.CollectionProperty(
-        name = "Export directives for layer",
+        name = "Export Directives for Layer",
         description = "A collection of export paths intended for an OBJ's EXPORT directives",
         type = XPlaneExportPathDirective
 	)
@@ -620,7 +620,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     cockpit_regions = bpy.props.EnumProperty(
         attr = "cockpit_regions",
-        name = "Cockpit regions",
+        name = "Cockpit Regions",
         description = "Number of Cockpit regions to use",
         default = "0",
         items = [
@@ -633,13 +633,13 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     cockpit_region = bpy.props.CollectionProperty(
-        name = "cockpit_region",
+        name = "Cockpit Region",
         type = XPlaneCockpitRegion,
         description = "Cockpit Region"
     )
 
     lods = bpy.props.EnumProperty(
-        name = "Levels of detail",
+        name = "Levels of Detail",
         description = "Levels of detail",
         default = "0",
         items = make_lods_array()
@@ -671,7 +671,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1000
     slope_limit = bpy.props.BoolProperty(
         attr = "slope_limit",
-        name = "Slope limit",
+        name = "Slope Limit",
         description = "Establishes the maximum slope limit an object will tolerate (in degrees) for library objects placed in a DSF",
         default = False
     )
@@ -679,7 +679,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1000
     slope_limit_min_pitch = bpy.props.FloatProperty(
         attr = "slope_limit_min_pitch",
-        name = "Min. pitch",
+        name = "Min. Pitch",
         description = "Represents the ground sloping down at the front of the object",
         default = 0.0
     )
@@ -687,7 +687,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1000
     slope_limit_max_pitch = bpy.props.FloatProperty(
         attr = "slope_limit_max_pitch",
-        name = "Max. pitch",
+        name = "Max. Pitch",
         description = "Represents the ground sloping down at the front of the object",
         default = 0.0
     )
@@ -695,7 +695,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1000
     slope_limit_min_roll = bpy.props.FloatProperty(
         attr = "slope_limit_min_roll",
-        name = "Min. roll",
+        name = "Min. Roll",
         description = "Represents the ground sloping down to the left of the object",
         default = 0.0
     )
@@ -703,7 +703,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1000
     slope_limit_max_roll = bpy.props.FloatProperty(
         attr = "slope_limit_max_roll",
-        name = "Max. roll",
+        name = "Max. Roll",
         description = "Represents the ground sloping down to the left of the object",
         default = 0.0
     )
@@ -711,7 +711,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1000
     require_surface = bpy.props.EnumProperty(
         attr = "require_surface",
-        name = "Require surface",
+        name = "Require Surface",
         description = "whether an object should be used over wet or dry terrain when placed from the library",
         default = "none",
         items = [
@@ -724,7 +724,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1010
     shadow = bpy.props.BoolProperty(
         attr = "shadow",
-        name = "Cast shadows",
+        name = "Cast Shadows",
         description = "If disabled object will not cast any shadows",
         default = True
     )
@@ -732,7 +732,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1010
     shadow_blend = bpy.props.BoolProperty(
         attr = "shadow_blend",
-        name = "Shadow cutoff",
+        name = "Shadow Cutoff",
         description = "If enabled, shadow blending will be done with a cutoff",
         default = False
     )
@@ -740,7 +740,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1010
     shadow_blend_ratio = bpy.props.FloatProperty(
         attr = "shadow_blend_ratio",
-        name = "Shadow cutoff ratio",
+        name = "Shadow Cutoff Ratio",
         description = "Shadow cutoff ratio",
         default = 0.5,
         min = 0.0,
@@ -806,7 +806,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
-        name = "Custom X-Plane header attributes",
+        name = "Custom X-Plane Header Attributes",
         description = "User defined header attributes for the X-Plane file",
         type = XPlaneCustomAttribute
     )
@@ -932,14 +932,14 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
 
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
-        name = "Custom X-Plane attributes",
+        name = "Custom X-Plane Attributes",
         description = "User defined attributes for the Object",
         type = XPlaneCustomAttribute
     )
 
     customAnimAttributes = bpy.props.CollectionProperty(
         attr = "customAnimAttributes",
-        name = "Custom X-Plane animation attributes",
+        name = "Custom X-Plane Animation Attributes",
         description = "User defined attributes for animation of the Object",
         type = XPlaneCustomAttribute
     )
@@ -952,14 +952,14 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     )
 
     lod = bpy.props.BoolVectorProperty(
-        name = "Levels of detail",
+        name = "Levels Of Detail",
         description = "Define in wich LODs this object will be used. If none is checked it will be used in all",
         default = (False, False, False, False),
         size = MAX_LODS-1
     )
 
     override_weight = bpy.props.BoolProperty(
-        name = "Override weight",
+        name = "Override Weight",
         description = "If checked you can override the internal weight of the object. Heavier objects will be written later in OBJ",
         default = False
     )
@@ -976,7 +976,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         exportMeshValues.append(True)
 
     export_mesh = bpy.props.BoolVectorProperty(
-        name = "Export mesh in layers",
+        name = "Export Mesh in Layers",
         description = "If disabled only object's animations will be exported in the selected layers, but not the mesh itself",
         default = exportMeshValues,
         size = 20,
@@ -1019,20 +1019,20 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
 
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
-        name = "Custom X-Plane attributes",
+        name = "Custom X-Plane Attributes",
         description = "User defined attributes for the Object",
         type = XPlaneCustomAttribute
     )
 
     customAnimAttributes = bpy.props.CollectionProperty(
         attr = "customAnimAttributes",
-        name = "Custom X-Plane animation attributes",
+        name = "Custom X-Plane Animation Attributes",
         description = "User defined attributes for animation of the Object",
         type = XPlaneCustomAttribute
     )
 
     override_weight = bpy.props.BoolProperty(
-        name = "Override weight",
+        name = "Override Weight",
         description = "If checked you can override the internal weight of the object. Heavier objects will be written later in OBJ",
         default = False
     )
@@ -1064,7 +1064,7 @@ def updateMaterialLitPreview(self, context):
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     draw = bpy.props.BoolProperty(
         attr = "draw",
-        name = "Draw enabled",
+        name = "Draw Enabled",
         description = "if turned off, objects with this material won't be drawn",
         default = True
     )
@@ -1096,14 +1096,14 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     solid_camera = bpy.props.BoolProperty(
-        name = "Camera collision",
+        name = "Camera Collision",
         description = "Will impede the movement of the 3-d camera. Works only in Cockpits",
         default = False
     )
 
     blend = bpy.props.BoolProperty(
         attr = "blend",
-        name = "Use Alpha cutoff",
+        name = "Use Alpha Cutoff",
         description = "If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio",
         default = False
     )
@@ -1136,7 +1136,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     
     blendRatio = bpy.props.FloatProperty(
         attr = "blendRatio",
-        name = "Alpha cutoff ratio",
+        name = "Alpha Cutoff Ratio",
         description = "Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque",
         default = 0.5,
         step = 0.1,
@@ -1147,14 +1147,14 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     panel = bpy.props.BoolProperty(
         attr = "panel",
-        name = "Part of cockpit panel",
+        name = "Part of Cockpit Panel",
         description = "If checked this object will use the panel texture and will be clickable",
         default = False
     )
 
     cockpit_region = bpy.props.EnumProperty(
         attr = "cockpit_region",
-        name = "Cockpit region",
+        name = "Cockpit Region",
         description = "Cockpit region to use",
         default = "0",
         items = [
@@ -1195,7 +1195,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     poly_os = bpy.props.IntProperty(
-        name = "Polygon offset",
+        name = "Polygon Offset",
         description = "Sets the polygon offset state. Leave at 0 for default behaviour",
         default = 0,
         step = 1,
@@ -1212,7 +1212,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
-        name = "Custom X-Plane material attributes",
+        name = "Custom X-Plane Material Attributes",
         description = "User defined material attributes for the X-Plane file",
         type = XPlaneCustomAttribute
     )
@@ -1344,7 +1344,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
     )
 
     uv = bpy.props.FloatVectorProperty(
-        name = "Texture coordinates",
+        name = "Texture Coordinates",
         description = "The texture coordinates in the following order: left,top,right,bottom (fractions from 0 to 1)",
         default = (0.0, 0.0, 1.0, 1.0),
         min = 0.0,
@@ -1355,7 +1355,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
-        name = "Custom X-Plane light attributes",
+        name = "Custom X-Plane Light Attributes",
         description = "User defined light attributes for the X-Plane file",
         type = XPlaneCustomAttribute
     )
