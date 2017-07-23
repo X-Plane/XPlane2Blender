@@ -150,24 +150,24 @@ class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
 def scene_layout(self, scene):
     layout = self.layout
     row = layout.row()
-    row.prop(scene.xplane, "version", text = "X-Plane Version")
+    row.prop(scene.xplane, "version")
 
     row = layout.row()
-    row.prop(scene.xplane, "optimize", text = "Optimize")
+    row.prop(scene.xplane, "optimize")
 
     row = layout.row()
-    row.prop(scene.xplane, "debug", text = "Debug")
+    row.prop(scene.xplane, "debug")
 
     row = layout.row()
     row.operator("scene.export_to_relative_dir")
 
     if scene.xplane.debug:
         box = layout.box()
-        box.prop(scene.xplane, "profile", text = "Profiling")
-        box.prop(scene.xplane, "log", text = "Log")
+        box.prop(scene.xplane, "profile")
+        box.prop(scene.xplane, "log")
     
     row = layout.row()
-    row.prop(scene.xplane, "plugin_development", text = "Plugin Development Tools")
+    row.prop(scene.xplane, "plugin_development")
     
     if scene.xplane.plugin_development:
        box = layout.box()
@@ -180,7 +180,7 @@ def scene_layout(self, scene):
        row = box.row()
        row.operator("scene.dev_layer_names_to_current_dir")
     row = layout.row()
-    row.prop(scene.xplane, "exportMode", text = "Export Mode")
+    row.prop(scene.xplane, "exportMode")
 
     row = layout.row()
     row.prop(scene.xplane, "compositeTextures")
@@ -224,7 +224,7 @@ def object_layer_layout(self, obj):
         layerObj = obj.xplane.layer
         row = self.layout.row()
 
-        row.prop(obj.xplane, 'isExportableRoot', text = 'Root Object')
+        row.prop(obj.xplane, 'isExportableRoot')
 
         if obj.xplane.isExportableRoot:
             row = self.layout.row()
@@ -257,15 +257,15 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     isInstanced = version >= 1000 and layerObj.export_type == 'instanced_scenery'
 
     column = layout.column()
-    column.prop(layerObj, "export",      text = "Export")
-    column.prop(layerObj, "debug",       text = "Debug")
-    column.prop(layerObj, "name",        text = "Name")
-    column.prop(layerObj, "export_type", text = "Type")
+    column.prop(layerObj, "export")
+    column.prop(layerObj, "debug")
+    column.prop(layerObj, "name")
+    column.prop(layerObj, "export_type")
 
     column.label('Textures')
     tex_box = column.box()
 
-    tex_box.prop(layerObj, "autodetectTextures", text = "Autodetect Textures")
+    tex_box.prop(layerObj, "autodetectTextures")
 
     if not layerObj.autodetectTextures:
         tex_box.prop(layerObj, "texture", text = "Default")
@@ -279,8 +279,8 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     # cockpit regions
     if layerObj.export_type == 'cockpit':
         cockpit_box = column.box()
-        #cockpit_box.prop(layerObj, "panel_texture", text = "Panel Texture")
-        cockpit_box.prop(layerObj, "cockpit_regions", text = "Cockpit regions")
+        #cockpit_box.prop(layerObj, "panel_texture")
+        cockpit_box.prop(layerObj, "cockpit_regions")
         num_regions = int(layerObj.cockpit_regions)
 
         if num_regions > 0:
@@ -324,7 +324,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     # LODs
     else:
         lods_box = column.box()
-        lods_box.prop(layerObj, "lods", text = "Levels of detail")
+        lods_box.prop(layerObj, "lods")
         num_lods = int(layerObj.lods)
 
         if num_lods > 0:
@@ -358,27 +358,27 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
             lods_box.prop(layerObj, "lod_draped")
 
     column.separator()
-    column.prop(layerObj, "slungLoadWeight", text = "Slung Load weight")
+    column.prop(layerObj, "slungLoadWeight")
 
     # v1000
     if version >= 1000:
         # slope_limit
         slope_box = column.box()
-        slope_box.prop(layerObj, "slope_limit", text = "Slope limit")
+        slope_box.prop(layerObj, "slope_limit")
 
         if (layerObj.slope_limit == True):
             row = slope_box.row()
-            row.prop(layerObj, "slope_limit_min_pitch", text = "Min. pitch")
+            row.prop(layerObj, "slope_limit_min_pitch")
             row = slope_box.row()
-            row.prop(layerObj, "slope_limit_max_pitch", text = "Max. pitch")
+            row.prop(layerObj, "slope_limit_max_pitch")
             row = slope_box.row()
-            row.prop(layerObj, "slope_limit_min_roll", text = "Min. roll")
+            row.prop(layerObj, "slope_limit_min_roll")
             row = slope_box.row()
-            row.prop(layerObj, "slope_limit_max_roll", text = "Max. roll")
+            row.prop(layerObj, "slope_limit_max_roll")
 
         # tilted
         tilted_box = column.row()
-        tilted_box.prop(layerObj, "tilted", text = "Tilted")
+        tilted_box.prop(layerObj, "tilted")
 
         # require surface
         require_box = column.row()
@@ -417,9 +417,9 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
     row.label("Custom Properties")
 
     if context == 'scene':
-        row.operator("scene.add_xplane_layer_attribute", text = "Add Property").index = layerObj.index
+        row.operator("scene.add_xplane_layer_attribute").index = layerObj.index
     elif context == 'object':
-        row.operator("object.add_xplane_layer_attribute", text = "Add Property")
+        row.operator("object.add_xplane_layer_attribute")
 
     box = layout.box()
 
@@ -624,7 +624,7 @@ def custom_layout(self, obj, type):
         # regular attributes
         row = layout.row()
         row.label("Custom Properties")
-        row.operator("object.add_xplane_"+oType+"_attribute", text = "Add Property")
+        row.operator("object.add_xplane_"+oType+"_attribute")
         box = layout.box()
         for i, attr in enumerate(obj.xplane.customAttributes):
             subbox = box.box()
@@ -643,7 +643,7 @@ def custom_layout(self, obj, type):
         if type in ("MESH", "ARMATURE", "OBJECT"):
             row = layout.row()
             row.label("Custom Animation Properties")
-            row.operator("object.add_xplane_object_anim_attribute", text = "Add Property")
+            row.operator("object.add_xplane_object_anim_attribute")
             box = layout.box()
             for i, attr in enumerate(obj.xplane.customAnimAttributes):
                 subbox = box.box()

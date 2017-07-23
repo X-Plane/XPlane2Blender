@@ -188,9 +188,9 @@ class OBJECT_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
 # Class: SCENE_OT_add_xplane_layer_attribute
 # Adds a custom attribute to a <XPlaneLayer>.
 class SCENE_OT_add_xplane_layer_attribute(bpy.types.Operator):
-    bl_label = 'Add Attribute'
+    bl_label = 'Add Layer Property'
     bl_idname = 'scene.add_xplane_layer_attribute'
-    bl_description = 'Add a custom X-Plane Property'
+    bl_description = 'Add a custom X-Plane Layer Property'
 
     index = bpy.props.IntProperty()
 
@@ -202,9 +202,9 @@ class SCENE_OT_add_xplane_layer_attribute(bpy.types.Operator):
 # Class: SCENE_OT_remove_xplane_layer_attribute
 # Removes a custom attribute from a <XPlaneLayer>.
 class SCENE_OT_remove_xplane_layer_attribute(bpy.types.Operator):
-    bl_label = 'Remove Attribute'
+    bl_label = 'Remove Layer Property'
     bl_idname = 'scene.remove_xplane_layer_attribute'
-    bl_description = 'Remove the custom X-Plane Property'
+    bl_description = 'Remove the custom X-Plane Layer Property'
 
     index = bpy.props.IntVectorProperty(size=2)
 
@@ -216,9 +216,9 @@ class SCENE_OT_remove_xplane_layer_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_add_xplane_layer_attribute
 # Adds a custom attribute to a <XPlaneLayer>.
 class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
-    bl_label = 'Add Attribute'
+    bl_label = 'Add Layer Property'
     bl_idname = 'object.add_xplane_layer_attribute'
-    bl_description = 'Add a custom X-Plane Property'
+    bl_description = 'Add a custom X-Plane Layer Property'
 
     index = bpy.props.IntProperty()
 
@@ -230,9 +230,9 @@ class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_remove_xplane_layer_attribute
 # Removes a custom attribute from a <XPlaneLayer>.
 class OBJECT_OT_remove_xplane_layer_attribute(bpy.types.Operator):
-    bl_label = 'Remove Attribute'
+    bl_label = 'Remove Layer Property'
     bl_idname = 'object.remove_xplane_layer_attribute'
-    bl_description = 'Remove the custom X-Plane Property'
+    bl_description = 'Remove the custom X-Plane Layer Property'
 
     index = bpy.props.IntProperty()
 
@@ -244,9 +244,9 @@ class OBJECT_OT_remove_xplane_layer_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_add_xplane_object_attribute
 # Adds a custom attribute to a Blender Object.
 class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
-    bl_label = 'Add Attribute'
+    bl_label = 'Add Object Property'
     bl_idname = 'object.add_xplane_object_attribute'
-    bl_description = 'Add a custom X-Plane Property'
+    bl_description = 'Add a custom X-Plane Object Property'
 
     def execute(self, context):
         obj = context.object
@@ -256,9 +256,9 @@ class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_remove_xplane_object_attribute
 # Removes a custom attribute from a Blender Object.
 class OBJECT_OT_remove_xplane_object_attribute(bpy.types.Operator):
-    bl_label = 'Remove Attribute'
+    bl_label = 'Remove Object Property'
     bl_idname = 'object.remove_xplane_object_attribute'
-    bl_description = 'Remove the custom X-Plane Property'
+    bl_description = 'Remove the custom X-Plane Object Property'
 
     index = bpy.props.IntProperty()
 
@@ -270,7 +270,7 @@ class OBJECT_OT_remove_xplane_object_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_add_xplane_object_anim_attribute
 # Adds a custom animation attribute to a Blender Object.
 class OBJECT_OT_add_xplane_object_anim_attribute(bpy.types.Operator):
-    bl_label = 'Add Attribute'
+    bl_label = 'Add Animation Property'
     bl_idname = 'object.add_xplane_object_anim_attribute'
     bl_description = 'Add a custom X-Plane Animation Property'
 
@@ -282,7 +282,7 @@ class OBJECT_OT_add_xplane_object_anim_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_remove_xplane_object_anim_attribute
 # Removes a custom animation attribute from a Blender Object.
 class OBJECT_OT_remove_xplane_object_anim_attribute(bpy.types.Operator):
-    bl_label = 'Remove Attribute'
+    bl_label = 'Remove Animation Property'
     bl_idname = 'object.remove_xplane_object_anim_attribute'
     bl_description = 'Remove the custom X-Plane Animation Property'
 
@@ -296,9 +296,9 @@ class OBJECT_OT_remove_xplane_object_anim_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_add_xplane_material_attribute
 # Adds a custom attribute to a Blender Material.
 class OBJECT_OT_add_xplane_material_attribute(bpy.types.Operator):
-    bl_label = 'Add Attribute'
+    bl_label = 'Add Material Property'
     bl_idname = 'object.add_xplane_material_attribute'
-    bl_description = 'Add a custom X-Plane Property'
+    bl_description = 'Add a custom X-Plane Material Property'
 
     def execute(self, context):
         obj = context.object.active_material
@@ -308,9 +308,9 @@ class OBJECT_OT_add_xplane_material_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_remove_xplane_object_attribute
 # Removes a custom attribute from a Blender Material.
 class OBJECT_OT_remove_xplane_material_attribute(bpy.types.Operator):
-    bl_label = 'Remove Attribute'
+    bl_label = 'Remove Material Property'
     bl_idname = 'object.remove_xplane_material_attribute'
-    bl_description = 'Remove the custom X-Plane Property'
+    bl_description = 'Remove the custom X-Plane Material Property'
 
     index = bpy.props.IntProperty()
 
@@ -322,9 +322,9 @@ class OBJECT_OT_remove_xplane_material_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_add_xplane_lamp_attribute
 # Adds a custom attribute to a Blender Lamp.
 class OBJECT_OT_add_xplane_lamp_attribute(bpy.types.Operator):
-    bl_label = 'Add Attribute'
+    bl_label = 'Add Lamp Property'
     bl_idname = 'object.add_xplane_lamp_attribute'
-    bl_description = 'Add a custom X-Plane Property'
+    bl_description = 'Add a custom X-Plane Lamp Property'
 
     def execute(self, context):
         obj = context.object.data
@@ -334,9 +334,9 @@ class OBJECT_OT_add_xplane_lamp_attribute(bpy.types.Operator):
 # Class: OBJECT_OT_remove_xplane_object_attribute
 # Removes a custom attribute from a Blender Lamp.
 class OBJECT_OT_remove_xplane_lamp_attribute(bpy.types.Operator):
-    bl_label = 'Remove Attribute'
+    bl_label = 'Remove Lamp Property'
     bl_idname = 'object.remove_xplane_lamp_attribute'
-    bl_description = 'Remove the custom X-Plane Property'
+    bl_description = 'Remove the custom X-Plane Lamp Property'
 
     index = bpy.props.IntProperty()
 
