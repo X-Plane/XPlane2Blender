@@ -362,13 +362,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         # shadow
         shadow_box = scenery_props_group_box.box()
         shadow_box.prop(layerObj, "shadow", "Cast shadows")
-        row = shadow_box.row()
-        row.prop(layerObj, "shadow_blend", "Shadow cutoff")
-
-        if layerObj.shadow_blend:
-            row = shadow_box.row()
-            row.prop(layerObj, "shadow_blend_ratio", "Cutoff Ratio")
-
+        
     # v1000
     if version >= 1000:
         # slope_limit

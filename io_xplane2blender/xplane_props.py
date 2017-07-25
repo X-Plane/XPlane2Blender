@@ -730,24 +730,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1010
-    shadow_blend = bpy.props.BoolProperty(
-        attr = "shadow_blend",
-        name = "Shadow Cutoff",
-        description = "If enabled, shadow blending will be done with a cutoff",
-        default = False
-    )
-
-    # v1010
-    shadow_blend_ratio = bpy.props.FloatProperty(
-        attr = "shadow_blend_ratio",
-        name = "Shadow Cutoff Ratio",
-        description = "Shadow cutoff ratio",
-        default = 0.5,
-        min = 0.0,
-        max = 1.0
-    )
-
-    # v1010
     cockpit_lit = bpy.props.BoolProperty(
         attr = "cockpit_lit",
         name = "3D-Cockpit lighting",
@@ -826,7 +808,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
     debug = bpy.props.BoolProperty(
         attr = "debug",
-        name = "Debug",
+        name = "Print Debug Info To Output, OBJ",
         description = "If checked debug information will be printed to the console and into OBJ files",
         default = False
     )
@@ -840,7 +822,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
     log = bpy.props.BoolProperty(
         attr = "log",
-        name = "Log",
+        name = "Create Log File",
         description = "If checked the debug information will be written to a log file",
         default = False
     )
@@ -906,6 +888,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     compositeTextures = bpy.props.BoolProperty(
         attr = "compositeTextures",
         name = "Compile Normal-Textures",
+        description = "Will automatically create and use corrected normal textures",
         default = True
     )
 
