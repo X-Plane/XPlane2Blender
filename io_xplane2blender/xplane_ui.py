@@ -149,45 +149,10 @@ class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
 #   scene - Blender scene.
 def scene_layout(self, scene):
     layout = self.layout
-    row = layout.row()
-    row.prop(scene.xplane, "version")
-
-    row = layout.row()
-    row.prop(scene.xplane, "optimize")
-
-    row = layout.row()
-    row.prop(scene.xplane, "debug")
-
-    row = layout.row()
-    row.operator("scene.export_to_relative_dir")
-
-    if scene.xplane.debug:
-        box = layout.box()
-        box.prop(scene.xplane, "profile")
-        box.prop(scene.xplane, "log")
-    
-    row = layout.row()
-    row.prop(scene.xplane, "plugin_development")
-    
-    if scene.xplane.plugin_development:
-       box = layout.box()
-       row = box.row()
-       row.prop(scene.xplane, "dev_enable_breakpoints")
-       row = box.row()
-       row.prop(scene.xplane, "dev_continue_export_on_error")
-       #row = box.row() #Enable if new export button is too inconvienent
-       #row.operator("scene.dev_export_to_current_dir")
-       row = box.row()
-       row.operator("scene.dev_layer_names_to_current_dir")
-    row = layout.row()
-    row.prop(scene.xplane, "exportMode")
-
-    row = layout.row()
-    row.prop(scene.xplane, "compositeTextures")
-    row = layout.row()
-    row.label("Will automaticly create and use corrected normal textures. (Recommended)", icon = "INFO")
-
-    row = layout.row()
+    layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
+    layout.row().prop(scene.xplane, "version")
+    layout.row().prop(scene.xplane, "exportMode")
+    layout.row().prop(scene.xplane, "compositeTextures")
 
     if scene.xplane.exportMode == 'layers':
         if len(scene.xplane.layers) != 0:
@@ -196,6 +161,30 @@ def scene_layout(self, scene):
                 scene_layer_layout(self, scene, row, i)
         else:
             row.operator('scene.add_xplane_layers')
+
+    
+    advanced_box = layout.box()
+    advanced_box.label("Advanced Settings")
+    advanced_column = advanced_box.column()
+    advanced_column.prop(scene.xplane, "optimize")
+    advanced_column.prop(scene.xplane, "debug")
+
+    if scene.xplane.debug:
+        debug_box = advanced_column.box()
+        debug_box.prop(scene.xplane, "profile")
+        debug_box.prop(scene.xplane, "log")
+
+    dev_box = layout.box()
+    dev_box.label(text="Plugin Development Tools (Experimental!)", icon="ERROR")
+    dev_box.prop(scene.xplane, "plugin_development")
+    
+    if scene.xplane.plugin_development:
+        dev_box_column = dev_box.column()
+        dev_box_column.prop(scene.xplane, "dev_enable_breakpoints")
+        dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
+        #row = box.row() #Enable if new export button is too inconvienent
+        #row.operator("scene.dev_export_to_current_dir")
+        dev_box_column.operator("scene.dev_layer_names_to_current_dir")
 
 def scene_layer_layout(self, scene, layout, layer):
     version = int(scene.xplane.version)
