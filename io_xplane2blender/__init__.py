@@ -22,7 +22,7 @@
 # Variable: bl_info
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
-    "name": "Import/Export: XPlane",
+    "name": "Export: X-Plane (.obj)",
     "author": "Ondrej Brinkel",
     "version": (3,3,13),
     "blender": (2, 7, 6),
