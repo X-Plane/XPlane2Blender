@@ -3,9 +3,11 @@
 
 import bpy
 from .xplane_ops import *
+from .xplane_props import *
 from .xplane_config import *
 from .xplane_constants import *
 from .xplane_helpers import getColorAndLitTextureSlots
+from io_xplane2blender import xplane_props
 
 # Class: LAMP_PT_xplane
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
@@ -243,7 +245,7 @@ def object_layer_layout(self, obj):
 #   int layer - <XPlaneLayer> index.
 def layer_layout(self, layout, layerObj, version, context = 'scene'):
     canHaveDraped = version >= 1000 and layerObj.export_type not in ['aircraft', 'cockpit']
-    isInstanced = version >= 1000 and layerObj.export_type == 'instanced_scenery'
+    isInstanced   = version >= 1000 and layerObj.export_type == 'instanced_scenery'
 
     #column = layout.column()
     layout.prop(layerObj, "name")
@@ -304,9 +306,10 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
                             region_split.label("= %d" % (2 ** cockpit_region.height))
 
         # v1010
-        # cockpit_lit
-        cockpit_lit_box = cockpit_box.row()
-        cockpit_lit_box.prop(layerObj, "cockpit_lit", "3D-Cockpit lighting")
+        if version < 1100:
+            # cockpit_lit
+            cockpit_lit_box = cockpit_box.row()
+            cockpit_lit_box.prop(layerObj, "cockpit_lit")
     # LODs
     else:
         lods_box = layout.box()
@@ -357,7 +360,9 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
     # v1010
-    if version >= 1010:
+    if version >= 1010 and (layerObj.export_type == EXPORT_TYPE_SCENERY or
+                            layerObj.export_type == EXPORT_TYPE_INSTANCED_SCENERY):
+        
         #TODO: Shouldn't these be material properties instead?
         # shadow
         shadow_box = scenery_props_group_box.box()

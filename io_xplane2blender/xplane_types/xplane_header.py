@@ -282,11 +282,14 @@ class XPlaneHeader():
         # v1010
         if xplane_version >= 1010:
             # shadow
-            if self.xplaneFile.options.shadow == False:
+            is_scenery_like_export = (self.xplaneFile.options.export_type == EXPORT_TYPE_SCENERY or \
+                                      self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY)
+
+            if self.xplaneFile.options.shadow == False and is_scenery_like_export:
                 self.non_draped_attributes['GLOBAL_no_shadow'].setValue(True)
 
             # cockpit_lit
-            if isCockpit and self.xplaneFile.options.cockpit_lit == True:
+            if isCockpit and (self.xplaneFile.options.cockpit_lit == True or xplane_version >= 1100):
                 self.general_attributes['GLOBAL_cockpit_lit'].setValue(True)
 
         # add custom attributes

@@ -732,7 +732,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1010
     cockpit_lit = bpy.props.BoolProperty(
         attr = "cockpit_lit",
-        name = "3D-Cockpit lighting",
+        name = "3D-Cockpit Lighting",
         default = True
     )
 
@@ -810,13 +810,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         attr = "debug",
         name = "Print Debug Info To Output, OBJ",
         description = "If checked debug information will be printed to the console and into OBJ files",
-        default = False
-    )
-
-    profile = bpy.props.BoolProperty(
-        attr = "profile",
-        name = "Profiling",
-        description = "If checked profiling information will be printed together with the debug information",
         default = False
     )
 
