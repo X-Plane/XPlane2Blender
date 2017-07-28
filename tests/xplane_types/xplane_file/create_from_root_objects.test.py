@@ -44,7 +44,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
                 '1 Object: root_1_child_2'
         ])
 
-        self.assertFileEqualsFixture(
+        self.assertFileOutputEqualsFixture(
             out,
             os.path.join(__dirname__, 'fixtures',  'test_export_root_objects_1.obj')
         )
@@ -73,7 +73,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
             '0 Object: root_2'
         ])
 
-        self.assertFileEqualsFixture(
+        self.assertFileOutputEqualsFixture(
             out,
             os.path.join(__dirname__, 'fixtures', 'test_export_root_objects_2.obj')
         )
