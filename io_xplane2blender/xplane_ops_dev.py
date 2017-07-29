@@ -10,7 +10,7 @@ class SCENE_OT_dev_export_to_current_dir(bpy.types.Operator):
     bl_description = 'Exports blender file to current working directory. Useful for quick plugin testing'
 
     def execute(self, context):
-        bpy.ops.export.xplane_obj(filepath="")
+        bpy.ops.export.xplane_obj(filepath=self.initial_dir, export_is_relative=True)
         return {'FINISHED'}
 
 class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
