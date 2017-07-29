@@ -13,13 +13,13 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper
 
 class ExportLogDialog(bpy.types.Menu):
     bl_idname = "SCENE_MT_xplane_export_log"
-    bl_label = "XPlane Export Log"
+    bl_label = "XPlane2Blender Export Log"
 
     def draw(self, context):
         row = self.layout.row()
         row.label('Export produced errors or warnings.')
         row = self.layout.row()
-        row.label('Please take a look into the internall text file XPlane2Blender.log')
+        row.label('Please take a look into the internal text file XPlane2Blender.log')
 
 def showLogDialog():
     if not ('-b' in sys.argv or '--background' in sys.argv):
@@ -28,13 +28,13 @@ def showLogDialog():
 # Class: ExportXPlane
 # Main Export class. Brings all parts together and creates the OBJ files.
 class ExportXPlane(bpy.types.Operator, ExportHelper):
-    '''Export to XPlane Object file format (.obj)'''
+    '''Export to X-Plane Object file format (.obj)'''
     bl_idname = "export.xplane_obj"
-    bl_label = 'Export XPlane Object'
+    bl_label = 'Export X-Plane Object'
 
     filepath = bpy.props.StringProperty(
         name = "File Path",
-        description = "Filepath used for exporting the XPlane file(s)",
+        description = "Filepath used for exporting the X-Plane file(s)",
         maxlen= 1024, default= ""
     )
     filename_ext = ''

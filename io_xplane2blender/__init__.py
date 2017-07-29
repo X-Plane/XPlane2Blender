@@ -27,8 +27,8 @@ bl_info = {
     "version": (3,3,13),
     "blender": (2, 7, 6),
     "api": 36273,
-    "location": "File > Import/Export > XPlane",
-    "description": "Import and Export XPlane objects/planes (.obj,.aif format)",
+    "location": "File > Import/Export > X-Plane",
+    "description": "Import and Export X-Plane objects/planes (.obj,.aif format)",
     "wiki_url": "https://github.com/der-On/XPlane2Blender/wiki",
     "tracker_url": "https://github.com/der-On/XPlane2Blender/issues",
     "category": "Import-Export"
@@ -59,7 +59,7 @@ else:
 #   self - Instance to something
 #   context - The Blender context object
 def menu_func(self, context):
-    self.layout.operator(xplane_export.ExportXPlane.bl_idname, text = "XPlane Object (.obj)")
+    self.layout.operator(xplane_export.ExportXPlane.bl_idname, text = "X-Plane Object (.obj)")
 
 # Function: register
 # Registers the addon with all its classes and the menu function.

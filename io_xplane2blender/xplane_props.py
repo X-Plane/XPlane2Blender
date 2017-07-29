@@ -1369,31 +1369,31 @@ def addXPlaneRNA():
         attr = "xplane",
         type = XPlaneSceneSettings,
         name = "XPlane",
-        description = "XPlane Export Settings"
+        description = "X-Plane Scene Settings"
     )
     bpy.types.Object.xplane = bpy.props.PointerProperty(
         attr = "xplane",
         type = XPlaneObjectSettings,
         name = "XPlane",
-        description = "XPlane Export Settings"
+        description = "X-Plane Object Settings"
     )
     bpy.types.Bone.xplane = bpy.props.PointerProperty(
         attr = "xplane",
         type = XPlaneBoneSettings,
         name = "XPlane",
-        description = "XPlane Export Settings"
+        description = "X-Plane Bone Settings"
     )
     bpy.types.Material.xplane = bpy.props.PointerProperty(
         attr = "xplane",
         type = XPlaneMaterialSettings,
         name = "XPlane",
-        description = "XPlane Export Settings"
+        description = "X-Plane Material Settings"
     )
     bpy.types.Lamp.xplane = bpy.props.PointerProperty(
         attr = "xplane",
         type = XPlaneLampSettings,
         name = "XPlane",
-        description = "XPlane Export Settings"
+        description = "X-Plane Lamp Settings"
     )
 
 # Function: removeXPlaneRNA

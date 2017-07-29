@@ -287,7 +287,7 @@ class XPlaneMaterial():
     # Predicate that returns the effective value of NORMAL_METALNESS, taking into account the current xplane version
     #
     # Returns:
-    # bool - True or false if the version of XPlane chosen supports NORMAL_METALNESS and what its value is,
+    # bool - True or false if the version of X-Plane chosen supports NORMAL_METALNESS and what its value is,
     # False if the current XPLane version doesn't support it
     def getEffectiveNormalMetalness(self):
         if int(bpy.context.scene.xplane.version) >= 1100:
@@ -299,7 +299,7 @@ class XPlaneMaterial():
     # Predicate that returns the effective value of BLEND_GLASS, taking into account the current xplane version
     #
     # Returns:
-    # bool - True or false if the version of XPlane chosen supports BLEND_GLASS and what its value is,
+    # bool - True or false if the version of X-Plane chosen supports BLEND_GLASS and what its value is,
     # False if the current XPLane version doesn't support it
     def getEffectiveBlendGlass(self):
         xplane_version  = int(bpy.context.scene.xplane.version)

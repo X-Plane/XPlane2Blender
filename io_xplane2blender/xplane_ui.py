@@ -909,7 +909,7 @@ class XPlaneError(bpy.types.Operator):
 
 class XPlaneDatarefSearch(bpy.types.Operator):
     bl_label = 'XPlane dataref search'
-    bl_description = 'Search for XPlane dataref'
+    bl_description = 'Search for X-Plane dataref'
     bl_idname = 'xplane.dataref_search'
 
     #datarefs = parseDatarefs()
