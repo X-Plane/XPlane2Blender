@@ -350,7 +350,7 @@ class OBJECT_OT_remove_xplane_lamp_attribute(bpy.types.Operator):
 class OBJECT_OT_add_xplane_dataref(bpy.types.Operator):
     bl_label = 'Add Dataref'
     bl_idname = 'object.add_xplane_dataref'
-    bl_description = 'Add a X-Plane Dataref'
+    bl_description = 'Add an X-Plane Dataref'
 
     def execute(self, context):
         obj = context.object
@@ -385,7 +385,7 @@ class OBJECT_OT_remove_xplane_dataref(bpy.types.Operator):
 class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     bl_label = 'Add Dataref keyframe'
     bl_idname = 'object.add_xplane_dataref_keyframe'
-    bl_description = 'Add a X-Plane Dataref keyframe'
+    bl_description = 'Add/Update an X-Plane Dataref keyframe'
 
     index = bpy.props.IntProperty()
 
@@ -473,7 +473,7 @@ class SCENE_OT_remove_xplane_export_path_directive(bpy.types.Operator):
 class BONE_OT_add_xplane_dataref(bpy.types.Operator):
     bl_label = 'Add Dataref'
     bl_idname = 'bone.add_xplane_dataref'
-    bl_description = 'Add a X-Plane Dataref'
+    bl_description = 'Add/Update an X-Plane Dataref'
 
     def execute(self, context):
         bone = context.bone
@@ -509,7 +509,7 @@ class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
 class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     bl_label = 'Add Dataref keyframe'
     bl_idname = 'bone.add_xplane_dataref_keyframe'
-    bl_description = 'Add a X-Plane Dataref keyframe'
+    bl_description = 'Add/Update an X-Plane Dataref keyframe'
 
     index = bpy.props.IntProperty()
 
@@ -551,7 +551,7 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
 class OBJECT_OT_add_xplane_object_condition(bpy.types.Operator):
     bl_label = 'Add Condition'
     bl_idname = 'object.add_xplane_object_condition'
-    bl_description = 'Add a X-Plane condition'
+    bl_description = 'Add an X-Plane condition'
 
     def execute(self, context):
         obj = context.object
@@ -577,7 +577,7 @@ class OBJECT_OT_remove_xplane_object_condition(bpy.types.Operator):
 class OBJECT_OT_add_xplane_material_condition(bpy.types.Operator):
     bl_label = 'Add Condition'
     bl_idname = 'object.add_xplane_material_condition'
-    bl_description = 'Add a X-Plane condition'
+    bl_description = 'Add an X-Plane condition'
 
     def execute(self, context):
         obj = context.object.active_material

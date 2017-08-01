@@ -5,7 +5,7 @@ import bpy
 import re
 
 class SCENE_OT_dev_export_to_current_dir(bpy.types.Operator):
-    bl_label = 'Export .blend file to current dir'
+    bl_label  = 'Export .blend file to current dir'
     bl_idname = 'scene.dev_export_to_current_dir'
     bl_description = 'Exports blender file to current working directory. Useful for quick plugin testing'
 

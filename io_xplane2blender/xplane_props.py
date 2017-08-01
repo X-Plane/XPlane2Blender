@@ -486,7 +486,7 @@ class XPlaneLOD(bpy.types.PropertyGroup):
     )
 
 def make_lods_array():
-    lods_arr = [("0","none","none")]
+    lods_arr = [("0","None","None")]
     for i in range(1,MAX_LODS):
         lods_arr.append((str(i),str(i),str(i)))
     return lods_arr
@@ -680,7 +680,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     slope_limit_min_pitch = bpy.props.FloatProperty(
         attr = "slope_limit_min_pitch",
         name = "Min. Pitch",
-        description = "Represents the ground sloping down at the front of the object",
+        description = "Represents the ground sloping down at the front of the object in degrees",
         default = 0.0
     )
 
@@ -688,7 +688,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     slope_limit_max_pitch = bpy.props.FloatProperty(
         attr = "slope_limit_max_pitch",
         name = "Max. Pitch",
-        description = "Represents the ground sloping down at the front of the object",
+        description = "Represents the ground sloping down at the front of the object in degrees",
         default = 0.0
     )
 
@@ -696,7 +696,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     slope_limit_min_roll = bpy.props.FloatProperty(
         attr = "slope_limit_min_roll",
         name = "Min. Roll",
-        description = "Represents the ground sloping down to the left of the object",
+        description = "Represents the ground sloping down to the left of the object in degrees",
         default = 0.0
     )
 
@@ -704,7 +704,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     slope_limit_max_roll = bpy.props.FloatProperty(
         attr = "slope_limit_max_roll",
         name = "Max. Roll",
-        description = "Represents the ground sloping down to the left of the object",
+        description = "Represents the ground sloping down to the left of the object in degrees",
         default = 0.0
     )
 
@@ -712,7 +712,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     require_surface = bpy.props.EnumProperty(
         attr = "require_surface",
         name = "Require Surface",
-        description = "whether an object should be used over wet or dry terrain when placed from the library",
+        description = "Whether an object should be used over wet or dry terrain when placed from the library",
         default = "none",
         items = [
             (REQUIRE_SURFACE_NONE, "Any", "Any surface"),
@@ -724,7 +724,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     # v1010
     shadow = bpy.props.BoolProperty(
         attr = "shadow",
-        name = "Cast Shadows",
+        name = "Cast Shadows (Global)",
         description = "If disabled object will not cast any shadows",
         default = True
     )
@@ -823,7 +823,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     # Plugin development tools
     plugin_development = bpy.props.BoolProperty(
         attr = "plugin_development",
-        name = "Plugin Development Tools",
+        name = "Plugin Development Tools (Experimental!)",
         description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
         default = False) # Set this to true during development to avoid re-checking it
     

@@ -177,15 +177,18 @@ def scene_layout(self, scene):
         debug_box.prop(scene.xplane, "log")
 
     dev_box = layout.box()
-    dev_box.label(text="Plugin Development Tools (Experimental!)", icon="ERROR")
-    dev_box.prop(scene.xplane, "plugin_development")
-    
+    dev_box_row = dev_box.column_flow(2,True)
+    dev_box_row.prop(scene.xplane, "plugin_development")
+    dev_box_row.label(text="", icon="ERROR")
     if scene.xplane.plugin_development:
         dev_box_column = dev_box.column()
         dev_box_column.prop(scene.xplane, "dev_enable_breakpoints")
         dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
+        dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
         #row = box.row() #Enable if new export button is too inconvienent
         #row.operator("scene.dev_export_to_current_dir")
+        #Exact same operator, more convient place 
+        dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
         dev_box_column.operator("scene.dev_layer_names_to_current_dir")
 
 def scene_layer_layout(self, scene, layout, layer):
@@ -681,7 +684,7 @@ def animation_layout(self, obj, bone = False):
         subrow = subbox.row()
         subrow.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
         subrow = subbox.row()
-        subrow.prop(attr, "anim_type", text = "Animation")
+        subrow.prop(attr, "anim_type")
         subrow = subbox.row()
 
         if attr.anim_type in ('transform', 'translate', 'rotate'):
