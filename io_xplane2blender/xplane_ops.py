@@ -609,8 +609,7 @@ class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
     initial_dir = bpy.props.StringProperty()
     
     def execute(self, context):
-        self.initial_dir += '/fakefilename' #We hide the fact that we need a fake filename that will be removed by the exporter
-        bpy.ops.export.xplane_obj(filepath=self.initial_dir)
+        bpy.ops.export.xplane_obj(filepath=self.initial_dir, export_is_relative=True)
         return {'FINISHED'}
 
 # Function: addXPlaneOps

@@ -95,7 +95,7 @@ for root, dirs, files in os.walk('./tests'):
                 blendFile = pyFile.replace('.py', '.blend')
 
                 if not be_quiet:
-                   printTestBeginning("Running file " + pyFile)
+                    printTestBeginning("Running file " + pyFile)
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 

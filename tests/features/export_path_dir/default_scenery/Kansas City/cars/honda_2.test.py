@@ -11,10 +11,12 @@ def filterLines(line):
     
 class TestExportPathCustomScen_2(XPlaneTestCase):
     def test_find_default_scenery(self):
-           self.assertLayerExportEqualsFixture(
-               0,
-               make_fixture_path(__dirname__,"honda_2"),
-                                             "honda_2",
-               filterLines)
+        tmp_path = os.path.abspath(os.path.join(__dirname__,'../../../../../tmp'))
+        filename = 'honda_2'
+        bpy.ops.scene.export_to_relative_dir(initial_dir=tmp_path)
+        self.assertFileTmpEqualsFixture(
+            os.path.join(tmp_path,filename + '.obj'),
+            make_fixture_path(__dirname__,"honda_2"),
+            filterLines)
 
 runTestCases([TestExportPathCustomScen_2])

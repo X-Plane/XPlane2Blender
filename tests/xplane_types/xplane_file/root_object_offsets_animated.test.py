@@ -47,7 +47,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
             # Confirm bone structure
             self.assertXplaneFileHasBoneTree(xplaneFile, bone_tree)
 
-            self.assertFileEqualsFixture(
+            self.assertFileOutputEqualsFixture(
                 out,
                 os.path.join(__dirname__, 'fixtures',  file_stem+'.obj')
             )

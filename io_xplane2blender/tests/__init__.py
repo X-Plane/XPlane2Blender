@@ -158,12 +158,19 @@ class XPlaneTestCase(unittest.TestCase):
                 else:
                     self.assertEquals(segmentA, segmentB)
 
-    def assertFileEqualsFixture(self, fileOutput, fixturePath, filterCallback = None, floatTolerance = None):
+    def assertFileOutputEqualsFixture(self, fileOutput, fixturePath, filterCallback = None, floatTolerance = None):
         fixtureFile = open(fixturePath, 'r')
         fixtureOutput = fixtureFile.read()
         fixtureFile.close()
 
         return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
+
+    def assertFileTmpEqualsFixture(self,tmpPath,fixturePath,filterCallback=None, floatTolerance=None):
+        tmpFile = open(tmpPath, 'r')
+        tmpOutput = tmpFile.read()
+        tmpFile.close()
+        
+        return self.assertFileOutputEqualsFixture(tmpOutput, fixturePath, filterCallback, floatTolerance)
 
     def exportLayer(self, layer, dest = None):
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
@@ -183,7 +190,7 @@ class XPlaneTestCase(unittest.TestCase):
         if not '--quiet' in sys.argv:
             print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
         out = self.exportLayer(layer, tmpFilename)
-        self.assertFileEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
+        self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     # asserts that an attributes object equals a dict
     def assertAttributesEqualDict(self, attrs, d, floatTolerance = None):
@@ -248,7 +255,7 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             fixtureFile = os.path.join(__dirname__, mappings[name][layer])
 
             self.assertTrue(os.path.exists(fixtureFile), 'File "%s" does not exist' % fixtureFile)
-            self.assertFileEqualsFixture(out, fixtureFile, filterLine)
+            self.assertFileOutputEqualsFixture(out, fixtureFile, filterLine)
 
 def make_fixture_path(dirname,filename,sub_dir=""):
     return os.path.join(dirname, 'fixtures', sub_dir, filename + '.obj')

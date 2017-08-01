@@ -10,6 +10,7 @@ from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
 from .xplane_config import getDebug, getLog, initConfig
 from bpy_extras.io_utils import ImportHelper, ExportHelper
+import io_xplane2blender
 
 class ExportLogDialog(bpy.types.Menu):
     bl_idname = "SCENE_MT_xplane_export_log"
@@ -37,7 +38,11 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         description = "Filepath used for exporting the X-Plane file(s)",
         maxlen= 1024, default= ""
     )
-    filename_ext = ''
+
+    export_is_relative = bpy.props.BoolProperty(
+        name = "Export Is Relative",
+        description="Set to true when starting the export via the button (with or without the GUI on in case of unit testing)",
+        default=False)
 
     # Method: execute
     # Used from Blender when user invokes export.
@@ -48,17 +53,22 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         initConfig()
         log = getLog()
-        debug = getDebug()
-
-        filepath = self.properties.filepath
-        if filepath == '':
-            filepath = bpy.context.blend_data.filepath
-
-        filepath = os.path.dirname(filepath)
-        # filepath = bpy.path.ensure_ext(filepath, ".obj")
-
         # prepare logging
         self._startLogging()
+        
+        debug = getDebug()
+        export_directory = self.properties.filepath
+        
+        if not self.properties.export_is_relative:
+            export_directory = os.path.dirname(export_directory)
+        else:
+            if bpy.context.blend_data.filepath == '':
+                #We can't just save files relative to nothing somewhere on a users HDD (bad usability!) so we say there is an error.
+                logger.error("Save your blend file before using the '%s' button" % io_xplane2blender.xplane_ops.SCENE_OT_export_to_relative_dir.bl_label)
+                self._endLogging()
+                showLogDialog()
+                return {'CANCELLED'}
+
         if bpy.context.scene.xplane.plugin_development and \
             bpy.context.scene.xplane.dev_enable_breakpoints:
             try:
@@ -103,7 +113,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
             xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
 
         for xplaneFile in xplaneFiles:
-            if self._writeXPlaneFile(xplaneFile, filepath) == False:
+            if self._writeXPlaneFile(xplaneFile, export_directory) == False:
                 if logger.hasErrors():
                     self._endLogging()
                     showLogDialog()
@@ -185,27 +195,25 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
             relpath += '.obj'
         
         fullpath = os.path.abspath(os.path.join(os.path.dirname(bpy.context.blend_data.filepath),relpath))
-        
-        os.makedirs(os.path.dirname(fullpath),exist_ok=True)
-        
         out = xplaneFile.write()
        
         if logger.hasErrors():
             return False
 
         # write the file
-        
         if (bpy.context.scene.xplane.plugin_development is False) or \
             (bpy.context.scene.xplane.plugin_development and         \
              bpy.context.scene.xplane.dev_export_as_dry_run is False):
             try:
+                os.makedirs(os.path.dirname(fullpath),exist_ok=True)
                 objFile = open(fullpath, "w")
                 logger.info("Writing %s" % fullpath)
                 objFile.write(out)
             except Exception as e:
                 logger.error(e)
             finally:
-                objFile.close()
+                if objFile != None:
+                    objFile.close()
         else:
             logger.info('Skipped writing %s due to "Dry Run"' % (fullpath))
 
