@@ -130,7 +130,6 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
     def _startLogging(self):
         log = getLog()
         debug = getDebug()
-        filepath = os.path.dirname(bpy.context.blend_data.filepath)
         logLevels = ['error', 'warning']
 
         self.logFile = None
@@ -143,14 +142,18 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
             logLevels.append('info')
             logLevels.append('success')
 
-        # log out to a file if logging is enabled
-        if log:
-            self.logFile = open(os.path.join(filepath, 'xplane2blender.log'), 'w')
-            logger.addTransport(XPlaneLogger.FileTransport(self.logFile), logLevels)
-
         # always log to internal text file and console
         logger.addTransport(XPlaneLogger.InternalTextTransport('xplane2blender.log'), logLevels)
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
+
+        # log out to a file if logging is enabled
+        if log:
+            if bpy.context.blend_data.filepath != '':
+                filepath = os.path.dirname(bpy.context.blend_data.filepath)
+                self.logFile = open(os.path.join(filepath, 'xplane2blender.log'), 'w')
+                logger.addTransport(XPlaneLogger.FileTransport(self.logFile), logLevels)
+            else:
+                logger.error("Cannot create log file if .blend file is not saved")
 
     def _endLogging(self):
         if self.logFile:
@@ -191,11 +194,21 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
             return False
 
         # write the file
-        logger.info("Writing %s" % fullpath)
         
-        objFile = open(fullpath, "w")
-        objFile.write(out)
-        objFile.close()
+        if (bpy.context.scene.xplane.plugin_development is False) or \
+            (bpy.context.scene.xplane.plugin_development and         \
+             bpy.context.scene.xplane.dev_export_as_dry_run is False):
+            try:
+                objFile = open(fullpath, "w")
+                logger.info("Writing %s" % fullpath)
+                objFile.write(out)
+            except Exception as e:
+                logger.error(e)
+            finally:
+                objFile.close()
+        else:
+            logger.info('Skipped writing %s due to "Dry Run"' % (fullpath))
+
 
     # Method: invoke
     # Used from Blender when user hits the Export-Entry in the File>Export menu.

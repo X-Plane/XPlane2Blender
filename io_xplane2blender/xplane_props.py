@@ -838,6 +838,11 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "Continue Export On Error",
         description = "Exporter continues even when an OBJ cannot be exported. It does not affect unit tests",
         default = False)
+    
+    dev_export_as_dry_run = bpy.props.BoolProperty(
+        name        = 'Dry Run',
+        description = 'Run exporter without actually writing .objs to disk',
+        default = False)
     #######################################
 
     layers = bpy.props.CollectionProperty(
