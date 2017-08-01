@@ -912,14 +912,14 @@ class XPlaneError(bpy.types.Operator):
 
 class XPlaneDatarefSearch(bpy.types.Operator):
     bl_label = 'XPlane dataref search'
-    bl_description = 'Search for X-Plane dataref'
+    bl_description = 'Search for X-Plane dataref. (LR does not own or provide support for SimInnovations. Use at own risk.'
     bl_idname = 'xplane.dataref_search'
 
     #datarefs = parseDatarefs()
 
     def execute(self, context):
         import webbrowser
-        webbrowser.open('http://xplane.anzui.de/dataref-search/')
+        webbrowser.open('https://www.siminnovations.com/xplane/dataref/index.php')
         return {'FINISHED'}
 
 #    def invoke(self, context, event):
