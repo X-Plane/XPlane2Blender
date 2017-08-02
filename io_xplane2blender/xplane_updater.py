@@ -3,10 +3,48 @@
 
 import bpy
 from .xplane_config import *
+from .xplane_constants import *
 from bpy.app.handlers import persistent
 
+def __upgradeManip(object):
+    #Since the order of the enum matters, the only way to really make this forwards compatabile is literally saving the old list.
+    pre_34_manips = [
+        MANIP_DRAG_XY,
+        MANIP_DRAG_AXIS,
+        MANIP_COMMAND,
+        MANIP_COMMAND_AXIS,
+        MANIP_PUSH,
+        MANIP_RADIO,
+        MANIP_DELTA,
+        MANIP_WRAP,
+        MANIP_TOGGLE,
+        MANIP_NOOP,
+        MANIP_DRAG_AXIS_PIX,
+        MANIP_COMMAND_KNOB,
+        MANIP_COMMAND_SWITCH_UP_DOWN,
+        MANIP_COMMAND_SWITCH_LEFT_RIGHT,
+        MANIP_AXIS_SWITCH_UP_DOWN,
+        MANIP_AXIS_SWITCH_LEFT_RIGHT
+        ]
+
+    #Since enum type_1050 contains all of type, this is okay
+    old_type = object.xplane.manip.get('type')
+    if old_type is None:
+        #Oddly enough, .get('type') for drag_xy is not an index of 0, but None!
+        #To have no manipulator, Manipulator must be unchecked
+        old_type = 0 
+ 
+    attr = pre_34_manips[old_type]
+    object.xplane.manip.type_1050 = attr
+
+# Function: update
+# updates parts of the data model to ensure forward
+# compatability between versions of XPlane2Blender
+#
+# Parameters:
+#     fromVersion - The old version of the blender file
 def update(fromVersion):
-    if fromVersion == '<3.3.0' or fromVersion == '3.2':
+    if fromVersion <= '3.3.0':
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
@@ -23,6 +61,10 @@ def update(fromVersion):
                         layer.export_type = 'cockpit'
                     else:
                         layer.export_type = 'aircraft'
+    
+    if fromVersion <= '3.4.0':
+        for object in bpy.data.objects:
+            __upgradeManip(object)
 
 @persistent
 def load_handler(dummy):
@@ -33,17 +75,18 @@ def load_handler(dummy):
     if not filepath:
         return
 
-    fileVersion = bpy.data.scenes[0].get('xplane2blender_version', '3.2')
+    fileVersion = bpy.data.scenes[0].get('xplane2blender_version','3.2.0')
 
     if fileVersion < currentVersion:
+        #If it is a missing string we'll just call it '3.3.0' for some reason. I really don't get it.
+        #-Ted 08/02/2017
         if len(fileVersion) == 0:
-            fileVersion = '<3.3.0'
+            fileVersion = '3.3.0'
 
-        print('This file was created with an older XPlane2Blender version (%s) and will now automaticly be updated' % fileVersion)
+        print('This file was created with an older XPlane2Blender version less than or equal to (%s) and will now automatically be updated to %s' % (fileVersion,currentVersion))
 
         update(fileVersion)
 
-        # store currentVersion
         bpy.data.scenes[0]['xplane2blender_version'] = currentVersion
         print('Your file was successfully updated to XPlane2Blender %s' % currentVersion)
 

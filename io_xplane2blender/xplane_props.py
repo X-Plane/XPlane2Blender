@@ -87,7 +87,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
         description = "Type of animation this Dataref will use",
         default = "transform",
         items = [
-            (ANIM_TYPE_TRANSFORM, "LocRot", "Location/Rotation"),
+            (ANIM_TYPE_TRANSFORM, "Transformtion", "Transformation"),
             (ANIM_TYPE_TRANSLATE, 'Loc', 'Location'),
             (ANIM_TYPE_ROTATE, 'Rot', 'Rotation'),
             (ANIM_TYPE_SHOW, "Show", "Show"),
@@ -180,30 +180,42 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         default = False
     )
 
+    manip_types_900 = [
+            (MANIP_DRAG_XY,      "Drag XY",      "Drag XY"),
+            (MANIP_DRAG_AXIS,    "Drag Axis",    "Drag Axis"),
+            (MANIP_COMMAND,      "Command",      "Command"),
+            (MANIP_COMMAND_AXIS, "Command Axis", "Command Axis"),
+            (MANIP_PUSH,         "Push",         "Push"),
+            (MANIP_RADIO,        "Radio",        "Radio"),
+            (MANIP_DELTA,        "Delta",        "Delta"),
+            (MANIP_WRAP,         "Wrap",         "Wrap"),
+            (MANIP_TOGGLE,       "Toggle",       "Toggle"),
+            (MANIP_NOOP,         "No op",        "No op"),
+        ]
+
+    manip_types_1050 = [
+            (MANIP_AXIS_SWITCH_LEFT_RIGHT,    "Axis Switch Left Right",    "Axis Switch Left Right"),
+            (MANIP_AXIS_SWITCH_UP_DOWN,       "Axis Switch Up Down",       "Axis Switch Up Down"),
+            (MANIP_COMMAND_KNOB,              "Command Knob",              "Command Knob"),
+            (MANIP_COMMAND_SWITCH_LEFT_RIGHT, "Command Switch Left Right", "Command Switch Left Right"),
+            (MANIP_COMMAND_SWITCH_UP_DOWN,    "Command Switch Up Down",    "Command Switch Up Down"),
+            (MANIP_DRAG_AXIS_PIX,             "Drag Axis Pix",             "Drag Axis Pix")
+        ]
+
     type = bpy.props.EnumProperty(
         attr = "type",
         name = "Manipulator Type",
         description = "The type of the manipulator",
-        default = 'drag_xy',
-        items = [
-            (MANIP_DRAG_XY, MANIP_DRAG_XY, MANIP_DRAG_XY),
-            (MANIP_DRAG_AXIS, MANIP_DRAG_AXIS, MANIP_DRAG_AXIS),
-            (MANIP_COMMAND, MANIP_COMMAND, MANIP_COMMAND),
-            (MANIP_COMMAND_AXIS, MANIP_COMMAND_AXIS, MANIP_COMMAND_AXIS),
-            (MANIP_PUSH, MANIP_PUSH, MANIP_PUSH),
-            (MANIP_RADIO, MANIP_RADIO, MANIP_RADIO),
-            (MANIP_DELTA, MANIP_DELTA, MANIP_DELTA),
-            (MANIP_WRAP, MANIP_WRAP, MANIP_WRAP),
-            (MANIP_TOGGLE, MANIP_TOGGLE, MANIP_TOGGLE),
-            (MANIP_NOOP, MANIP_NOOP, MANIP_NOOP),
-            (MANIP_DRAG_AXIS_PIX, MANIP_DRAG_AXIS_PIX + " (v10.10)", MANIP_DRAG_AXIS_PIX + " (v10.10)"),
-			(MANIP_COMMAND_KNOB, MANIP_COMMAND_KNOB + " (v10.50)", MANIP_COMMAND_KNOB + " (v10.50)"),
-			(MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_UP_DOWN + " (v10.50)", MANIP_COMMAND_SWITCH_UP_DOWN + " (v10.50)"),
-			(MANIP_COMMAND_SWITCH_LEFT_RIGHT, MANIP_COMMAND_SWITCH_LEFT_RIGHT + " (v10.50)", MANIP_COMMAND_SWITCH_LEFT_RIGHT + "(v10.50)"),
-			(MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_UP_DOWN + " (v10.50)", MANIP_AXIS_SWITCH_UP_DOWN + " (v10.50)"),
-			(MANIP_AXIS_SWITCH_LEFT_RIGHT, MANIP_AXIS_SWITCH_LEFT_RIGHT + " (v10.50)", MANIP_AXIS_SWITCH_LEFT_RIGHT + " (v10.50)")
-        ]
+        default = MANIP_DRAG_XY,
+        items = manip_types_900
     )
+
+    type_1050 = bpy.props.EnumProperty(
+        name = "Manipulator Type",
+        description = "The type of the manipulator",
+        default = MANIP_DRAG_XY,
+        items = manip_types_900 + manip_types_1050
+        )
 
     tooltip = bpy.props.StringProperty(
         attr = "tooltip",
@@ -216,124 +228,124 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         attr = "cursor",
         name = "Manipulator Cursor",
         description = "The mouse cursor type when hovering over the object",
-        default = "hand",
+        default = MANIP_CURSOR_HAND,
         items = [
-            (MANIP_CURSOR_FOUR_ARROWS, MANIP_CURSOR_FOUR_ARROWS, MANIP_CURSOR_FOUR_ARROWS),
-            (MANIP_CURSOR_HAND, MANIP_CURSOR_HAND, MANIP_CURSOR_HAND),
-            (MANIP_CURSOR_BUTTON, MANIP_CURSOR_BUTTON, MANIP_CURSOR_BUTTON),
-            (MANIP_CURSOR_ROTATE_SMALL, MANIP_CURSOR_ROTATE_SMALL, MANIP_CURSOR_ROTATE_SMALL),
-            (MANIP_CURSOR_ROTATE_SMALL_LEFT, MANIP_CURSOR_ROTATE_SMALL_LEFT, MANIP_CURSOR_ROTATE_SMALL_LEFT),
-            (MANIP_CURSOR_ROTATE_SMALL_RIGHT, MANIP_CURSOR_ROTATE_SMALL_RIGHT, MANIP_CURSOR_ROTATE_SMALL_RIGHT),
-            (MANIP_CURSOR_ROTATE_MEDIUM, MANIP_CURSOR_ROTATE_MEDIUM, MANIP_CURSOR_ROTATE_MEDIUM),
-            (MANIP_CURSOR_ROTATE_MEDIUM_LEFT, MANIP_CURSOR_ROTATE_MEDIUM_LEFT, MANIP_CURSOR_ROTATE_MEDIUM_LEFT),
-            (MANIP_CURSOR_ROTATE_MEDIUM_RIGHT, MANIP_CURSOR_ROTATE_MEDIUM_RIGHT, MANIP_CURSOR_ROTATE_MEDIUM_RIGHT),
-            (MANIP_CURSOR_ROTATE_LARGE, MANIP_CURSOR_ROTATE_LARGE, MANIP_CURSOR_ROTATE_LARGE),
-            (MANIP_CURSOR_ROTATE_LARGE_LEFT, MANIP_CURSOR_ROTATE_LARGE_LEFT, MANIP_CURSOR_ROTATE_LARGE_LEFT),
-            (MANIP_CURSOR_ROTATE_LARGE_RIGHT, MANIP_CURSOR_ROTATE_LARGE_RIGHT, MANIP_CURSOR_ROTATE_LARGE_RIGHT),
-            (MANIP_CURSOR_UP_DOWN, MANIP_CURSOR_UP_DOWN, MANIP_CURSOR_UP_DOWN),
-            (MANIP_CURSOR_DOWN, MANIP_CURSOR_DOWN, MANIP_CURSOR_DOWN),
-            (MANIP_CURSOR_UP, MANIP_CURSOR_UP, MANIP_CURSOR_UP),
-            (MANIP_CURSOR_LEFT_RIGHT, MANIP_CURSOR_LEFT_RIGHT, MANIP_CURSOR_LEFT_RIGHT),
-            (MANIP_CURSOR_LEFT, MANIP_CURSOR_LEFT, MANIP_CURSOR_LEFT),
-            (MANIP_CURSOR_RIGHT, MANIP_CURSOR_RIGHT, MANIP_CURSOR_RIGHT),
-            (MANIP_CURSOR_ARROW, MANIP_CURSOR_ARROW, MANIP_CURSOR_ARROW)
+            (MANIP_CURSOR_FOUR_ARROWS,          "Four Arrows",         "Four Arrows"),
+            (MANIP_CURSOR_HAND,                 "Hand",                "Hand"),
+            (MANIP_CURSOR_BUTTON,               "Button",              "Button"),
+            (MANIP_CURSOR_ROTATE_SMALL,         "Rotate Small",        "Rotate Small"),
+            (MANIP_CURSOR_ROTATE_SMALL_LEFT,    "Rotate Small Left",   "Rotate Small Left"),
+            (MANIP_CURSOR_ROTATE_SMALL_RIGHT,   "Rotate Small Right",  "Rotate Small Right"),
+            (MANIP_CURSOR_ROTATE_MEDIUM,        "Rotate Medium",       "Rotate Medium"),
+            (MANIP_CURSOR_ROTATE_MEDIUM_LEFT,   "Rotate Medium Left",  "Rotate Medium Left"),
+            (MANIP_CURSOR_ROTATE_MEDIUM_RIGHT,  "Rotate Medium Right", "Rotate Medium Right"),
+            (MANIP_CURSOR_ROTATE_LARGE,         "Rotate Large",        "Rotate Large"),
+            (MANIP_CURSOR_ROTATE_LARGE_LEFT,    "Rotate Large Left",   "Rotate Large Left"),
+            (MANIP_CURSOR_ROTATE_LARGE_RIGHT,   "Rotate Large Right",  "Rotate Large Right"),
+            (MANIP_CURSOR_UP_DOWN,              "Up Down",             "Up Down"),
+            (MANIP_CURSOR_DOWN,                 "Down",                "Down"),
+            (MANIP_CURSOR_UP,                   "Up",                  "Up"),
+            (MANIP_CURSOR_LEFT_RIGHT,           "Left Right",          "Left Right"),
+            (MANIP_CURSOR_LEFT,                 "Left",                "Left"),
+            (MANIP_CURSOR_RIGHT,                "Right",               "Right"),
+            (MANIP_CURSOR_ARROW,                "Arrow",               "Arrow"),
         ]
     )
 
     dx = bpy.props.FloatProperty(
         attr = "dx",
-        name = "dx",
+        name = "Drag X",
         description = "X-Drag axis length",
         default = 0.0
     )
 
     dy = bpy.props.FloatProperty(
         attr = "dy",
-        name = "dy",
+        name = "Drag Y",
         description = "Y-Drag axis length",
         default = 0.0
     )
 
     dz = bpy.props.FloatProperty(
         attr = "dz",
-        name = "dz",
+        name = "Drag Z",
         description = "Z-Drag axis length",
         default = 0.0
     )
 
     v1 = bpy.props.FloatProperty(
         attr = "v1",
-        name = "v1",
+        name = "Value 1",
         description = "Value 1",
         default = 0.0
     )
 
     v2 = bpy.props.FloatProperty(
         attr = "v2",
-        name = "v2",
+        name = "Value 2",
         description = "Value 2",
         default = 0.0
     )
 
     v1_min = bpy.props.FloatProperty(
         attr = "v1_min",
-        name = "v1 min",
+        name = "Value 1 Min",
         description = "Value 1 min",
         default = 0.0
     )
 
     v1_max = bpy.props.FloatProperty(
         attr = "v1_max",
-        name = "v1 min",
+        name = "Value 1 Max",
         description = "Value 1 max",
         default = 0.0
     )
 
     v2_min = bpy.props.FloatProperty(
         attr = "v2_min",
-        name = "v2 min",
+        name = "Value 2 Min",
         description = "Value 2 min",
         default = 0.0
     )
 
     v2_max = bpy.props.FloatProperty(
         attr = "v2_max",
-        name = "v2 min",
+        name = "Value 2 Max",
         description = "Value 2 max",
         default = 0.0
     )
 
     v_down = bpy.props.FloatProperty(
         attr = "v_down",
-        name = "v down",
+        name = "Value on mouse down",
         description = "Value on mouse down",
         default = 0.0
     )
 
     v_up = bpy.props.FloatProperty(
         attr = "v_up",
-        name = "v up",
+        name = "Value on mouse up",
         description = "Value on mouse up",
         default = 0.0
     )
 
     v_hold = bpy.props.FloatProperty(
         attr = "v_hold",
-        name = "v hold",
+        name = "Value on mouse hold",
         description = "Value on mouse hold",
         default = 0.0
     )
 
     v_on = bpy.props.FloatProperty(
         attr = "v_on",
-        name = "v on",
+        name = "On Value",
         description = "On value",
         default = 0.0
     )
 
     v_off = bpy.props.FloatProperty(
         attr = "v_off",
-        name = "v off",
+        name = "Off value",
         description = "Off value",
         default = 0.0
     )

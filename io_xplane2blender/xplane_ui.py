@@ -7,7 +7,7 @@ from .xplane_props import *
 from .xplane_config import *
 from .xplane_constants import *
 from .xplane_helpers import getColorAndLitTextureSlots
-from io_xplane2blender import xplane_props
+from io_xplane2blender import xplane_props, xplane_config
 
 # Class: LAMP_PT_xplane
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
@@ -730,66 +730,70 @@ def cockpit_layout(self, obj):
 def manipulator_layout(self, obj):
     layout = self.layout
     row = layout.row()
-    row.prop(obj.xplane.manip, 'enabled', text = 'Manipulator')
+    row.prop(obj.xplane.manip, 'enabled')
 
     if obj.xplane.manip.enabled:
         box = layout.box()
-        box.prop(obj.xplane.manip, 'type', text = "Type")
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= 1050:
+            box.prop(obj.xplane.manip, 'type_1050', text="Type")
+            manipType = obj.xplane.manip.type_1050
+        else:
+            box.prop(obj.xplane.manip, 'type', text="Type")
+            manipType = obj.xplane.manip.type
 
-        manipType = obj.xplane.manip.type
-
-        box.prop(obj.xplane.manip, 'cursor', text = "Cursor")
-        box.prop(obj.xplane.manip, 'tooltip', text = "Tooltip")
+        box.prop(obj.xplane.manip, 'cursor', text="Cursor")
+        box.prop(obj.xplane.manip, 'tooltip', text="Tooltip")
 
         if manipType not in (MANIP_COMMAND, MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
             if manipType != MANIP_DRAG_XY:
-                box.prop(obj.xplane.manip, 'dataref1', text = "Dataref")
-                box.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
+                box.prop(obj.xplane.manip, 'dataref1')
+                box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
             else:
-                box.prop(obj.xplane.manip, 'dataref1', text = "Dataref 1")
-                box.prop(obj.xplane.manip, 'dataref2', text = "Dataref 2")
-                box.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
+                box.prop(obj.xplane.manip, 'dataref1')
+                box.prop(obj.xplane.manip, 'dataref2')
+                box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
 
         # drag axis lenghts
         if manipType in (MANIP_DRAG_XY, MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
-            box.prop(obj.xplane.manip, 'dx', text = "dx")
-            box.prop(obj.xplane.manip, 'dy', text = "dy")
+            box.prop(obj.xplane.manip, 'dx')
+            box.prop(obj.xplane.manip, 'dy')
 
             if manipType in(MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
-                box.prop(obj.xplane.manip, 'dz', text = "dz")
+                box.prop(obj.xplane.manip, 'dz')
 
         elif manipType == MANIP_DRAG_AXIS_PIX:
-             box.prop(obj.xplane.manip, 'dx', text = "dx")
-             box.prop(obj.xplane.manip, 'step', text = "Step")
-             box.prop(obj.xplane.manip, 'exp', text = "Exp")
+             box.prop(obj.xplane.manip, 'dx')
+             box.prop(obj.xplane.manip, 'step')
+             box.prop(obj.xplane.manip, 'exp')
 
         # values
         if manipType == MANIP_DRAG_XY:
-            box.prop(obj.xplane.manip, 'v1_min', text = "v1 min")
-            box.prop(obj.xplane.manip, 'v1_max', text = "v1 max")
-            box.prop(obj.xplane.manip, 'v2_min', text = "v2 min")
-            box.prop(obj.xplane.manip, 'v2_max', text = "v2 max")
+            box.prop(obj.xplane.manip, 'v1_min')
+            box.prop(obj.xplane.manip, 'v1_max')
+            box.prop(obj.xplane.manip, 'v2_min')
+            box.prop(obj.xplane.manip, 'v2_max')
         elif manipType in (MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
-            box.prop(obj.xplane.manip, 'v1', text = "v1")
-            box.prop(obj.xplane.manip, 'v2', text = "v2")
+            box.prop(obj.xplane.manip, 'v1')
+            box.prop(obj.xplane.manip, 'v2')
         elif manipType == MANIP_COMMAND:
-            box.prop(obj.xplane.manip, MANIP_COMMAND, text = "Command")
+            box.prop(obj.xplane.manip, MANIP_COMMAND)
         elif manipType in (MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
-            box.prop(obj.xplane.manip, 'positive_command', text = "Pos. command")
-            box.prop(obj.xplane.manip, 'negative_command', text = "Neg. command")
+            box.prop(obj.xplane.manip, 'positive_command')
+            box.prop(obj.xplane.manip, 'negative_command')
         elif manipType == MANIP_PUSH:
-            box.prop(obj.xplane.manip, 'v_down', text = "v down")
-            box.prop(obj.xplane.manip, 'v_up', text = "v up")
+            box.prop(obj.xplane.manip, 'v_down')
+            box.prop(obj.xplane.manip, 'v_up')
         elif manipType == MANIP_RADIO:
-            box.prop(obj.xplane.manip, 'v_down', text = "v down")
+            box.prop(obj.xplane.manip, 'v_down')
         elif manipType == MANIP_TOGGLE:
-            box.prop(obj.xplane.manip, 'v_on', text = "v On")
-            box.prop(obj.xplane.manip, 'v_off', text = "v Off")
+            box.prop(obj.xplane.manip, 'v_on')
+            box.prop(obj.xplane.manip, 'v_off')
         elif manipType in (MANIP_DELTA, MANIP_WRAP):
-            box.prop(obj.xplane.manip, 'v_down', text = "v down")
-            box.prop(obj.xplane.manip, 'v_hold', text = "v hold")
-            box.prop(obj.xplane.manip, 'v1_min', text = "v min")
-            box.prop(obj.xplane.manip, 'v1_max', text = "v max")
+            box.prop(obj.xplane.manip, 'v_down')
+            box.prop(obj.xplane.manip, 'v_hold')
+            box.prop(obj.xplane.manip, 'v1_min')
+            box.prop(obj.xplane.manip, 'v1_max')
 
         if manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
             box.prop(obj.xplane.manip, 'click_step')
