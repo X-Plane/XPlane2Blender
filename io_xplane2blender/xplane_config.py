@@ -43,6 +43,10 @@ def getVersion():
     global version
     return version
 
+def getVersionStr():
+    global version
+    return '.'.join(map(str,version))
+
 def setDebug(d):
     global debug
     debug = d

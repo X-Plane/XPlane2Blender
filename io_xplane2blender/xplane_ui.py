@@ -182,6 +182,7 @@ def scene_layout(self, scene):
     dev_box_row.label(text="", icon="ERROR")
     if scene.xplane.plugin_development:
         dev_box_column = dev_box.column()
+        dev_box_column.label("XPlane2Blender Version: " + xplane_config.getVersionStr())
         dev_box_column.prop(scene.xplane, "dev_enable_breakpoints")
         dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
@@ -498,7 +499,7 @@ def lamp_layout(self, obj):
         row = layout.row()
         row.prop(obj.xplane, "dataref", text = "Dataref")
         row = layout.row()
-        row.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
+        row.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
 
 # Function: material_layout
 # Draws the UI layout for materials.
@@ -571,7 +572,7 @@ def material_layout(self, obj):
         row = box.row()
         row.prop(obj.xplane, "lightLevel_dataref", text = "Dataref")
         row = box.row()
-        row.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
+        row.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
 
     row = layout.row()
     box = row.box()
@@ -682,7 +683,7 @@ def animation_layout(self, obj, bone = False):
         else:
             subrow.operator("object.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
         subrow = subbox.row()
-        subrow.operator('xplane.dataref_search', text = "Search dataref", emboss = True, icon = "VIEWZOOM")
+        subrow.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
         subrow = subbox.row()
         subrow.prop(attr, "anim_type")
         subrow = subbox.row()
@@ -911,8 +912,8 @@ class XPlaneError(bpy.types.Operator):
 
 
 class XPlaneDatarefSearch(bpy.types.Operator):
-    bl_label = 'XPlane dataref search'
-    bl_description = 'Search for X-Plane dataref. (LR does not own or provide support for SimInnovations. Use at own risk.'
+    bl_label = 'Search for Dataref'
+    bl_description = 'Search for X-Plane dataref. (LR does not own or provide support for SimInnovations. Use at own risk.)'
     bl_idname = 'xplane.dataref_search'
 
     #datarefs = parseDatarefs()
