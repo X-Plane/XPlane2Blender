@@ -1057,8 +1057,8 @@ def updateMaterialLitPreview(self, context):
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     draw = bpy.props.BoolProperty(
         attr = "draw",
-        name = "Draw Enabled",
-        description = "if turned off, objects with this material won't be drawn",
+        name = "Draw Linked Objects",
+        description = "If turned off, objects with this material won't be drawn",
         default = True
     )
 
@@ -1068,17 +1068,17 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = 'Controls the bumpiness of material in X-Plane.',
         default = 'none',
         items = [
-            (SURFACE_TYPE_NONE, SURFACE_TYPE_NONE, SURFACE_TYPE_NONE),
-            (SURFACE_TYPE_WATER, SURFACE_TYPE_WATER, SURFACE_TYPE_WATER),
-            (SURFACE_TYPE_CONCRETE, SURFACE_TYPE_CONCRETE, SURFACE_TYPE_CONCRETE),
-            (SURFACE_TYPE_ASPHALT, SURFACE_TYPE_ASPHALT, SURFACE_TYPE_ASPHALT),
-            (SURFACE_TYPE_GRASS, SURFACE_TYPE_GRASS, SURFACE_TYPE_GRASS),
-            (SURFACE_TYPE_DIRT, SURFACE_TYPE_DIRT, SURFACE_TYPE_DIRT),
-            (SURFACE_TYPE_GRAVEL, SURFACE_TYPE_GRAVEL, SURFACE_TYPE_GRAVEL),
-            (SURFACE_TYPE_LAKEBED, SURFACE_TYPE_LAKEBED, SURFACE_TYPE_LAKEBED),
-            (SURFACE_TYPE_SNOW, SURFACE_TYPE_SNOW, SURFACE_TYPE_SNOW),
-            (SURFACE_TYPE_SHOULDER, SURFACE_TYPE_SHOULDER, SURFACE_TYPE_SHOULDER),
-            (SURFACE_TYPE_BLASTPAD, SURFACE_TYPE_BLASTPAD, SURFACE_TYPE_BLASTPAD)
+            (SURFACE_TYPE_NONE,     "None",    "None"),
+            (SURFACE_TYPE_WATER,    "Water",   "Water"),
+            (SURFACE_TYPE_CONCRETE, "Concrete","Concrete"),
+            (SURFACE_TYPE_ASPHALT,  "Asphalt", "Asphalt"),
+            (SURFACE_TYPE_GRASS,    "Grass",   "Grass"),
+            (SURFACE_TYPE_DIRT,     "Dirt",    "Dirt"),
+            (SURFACE_TYPE_GRAVEL,   "Gravel",  "Gravel"),
+            (SURFACE_TYPE_LAKEBED,  "Lakebed", "Lakebed"),
+            (SURFACE_TYPE_SNOW,     "Snow",    "Snow"),
+            (SURFACE_TYPE_SHOULDER, "Shoulder","Shoulder"),
+            (SURFACE_TYPE_BLASTPAD, "Blastpad","Blastpad"),
         ]
     )
 
@@ -1161,7 +1161,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     lightLevel = bpy.props.BoolProperty(
         attr = "lightLevel",
-        name = "Light Level",
+        name = "Override Light Level",
         description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
         default = False
     )
@@ -1212,8 +1212,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     litFactor = bpy.props.FloatProperty(
         attr = "litFactor",
-        name = "Lit-Factor",
-        description = "Previews the night texture",
+        name = "Day-Night Preview Balance",
+        description = "Adjusts 3D View's preview of day vs night texture",
         default = 0,
         min = 0,
         max = 1,

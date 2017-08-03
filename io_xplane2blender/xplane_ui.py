@@ -45,6 +45,7 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
 
         if(obj.type == "MESH"):
             material_layout(self, obj.active_material)
+            self.layout.separator()
             cockpit_layout(self, obj.active_material)
             custom_layout(self, obj.active_material, "MATERIAL")
 
@@ -467,7 +468,7 @@ def mesh_layout(self, obj):
 
     if bpy.context.scene.xplane.exportMode == 'layers':
         row = layout.row()
-        row.prop(obj.xplane, "export_mesh", text = "Export mesh in layers")
+        row.prop(obj.xplane, "export_mesh", text = "Export Animation In Layers")
 
     row = layout.row()
 
@@ -513,26 +514,24 @@ def material_layout(self, obj):
     version = int(bpy.context.scene.xplane.version)
     layout = self.layout
 
-    row = layout.row()
-    row.prop(obj.xplane, "draw", text = "Draw")
+    draw_box = layout.box()
+    draw_box.label("Draw Settings")
+    draw_box_column = draw_box.column()
+    draw_box_column.prop(obj.xplane, "draw")
 
     if (obj.xplane.draw):
-        row = layout.row()
-        row.prop(obj.xplane, "draped")
+        draw_box_column.prop(obj.xplane, "draped")
 
-        row = layout.row()
         if version >= 1100:
-            row = layout.row()
-            row.prop(obj.xplane, "normal_metalness")
+            draw_box_column.prop(obj.xplane, "normal_metalness")
 
-        row = layout.row()
         # v1000 blend / v9000 blend
         if version >= 1100:
-            row.prop(obj.xplane, "blend_v1100")
+            draw_box_column.prop(obj.xplane, "blend_v1100")
         elif version >= 1000:
-            row.prop(obj.xplane, "blend_v1000")
+            draw_box_column.prop(obj.xplane, "blend_v1000")
         else:
-            row.prop(obj.xplane, "blend")
+            draw_box_column.prop(obj.xplane, "blend")
         
         if version >= 1100:
             blend_prop_enum = obj.xplane.blend_v1100
@@ -542,30 +541,27 @@ def material_layout(self, obj):
             blend_prop_enum = None
             
         if obj.xplane.blend == True and version < 1000:
-            row = layout.row()
-            row.prop(obj.xplane, "blendRatio")
+            draw_box_column.prop(obj.xplane, "blendRatio")
         elif blend_prop_enum == BLEND_OFF and version >= 1000:
-            row = layout.row()
-            row.prop(obj.xplane, "blendRatio")
+            draw_box_column.prop(obj.xplane, "blendRatio")
 
-    row = layout.row()
-    row.prop(obj.xplane, "surfaceType", text = "Surface type")
+    surface_behavior_box = layout.box()
+    surface_behavior_box.label("Surface Behavior")
+    surface_behavior_box_column = surface_behavior_box.column()
+    surface_behavior_box_column.prop(obj.xplane, "surfaceType", text = "Surface type")
 
     if obj.xplane.surfaceType != 'none':
-        row = layout.row()
-        row.prop(obj.xplane, "deck", text = "Deck")
+        surface_behavior_box_column.prop(obj.xplane, "deck", text = "Deck")
 
-    row = layout.row()
-    row.prop(obj.xplane, "solid_camera", text = "Camera collision")
+    surface_behavior_box_column.prop(obj.xplane, "solid_camera", text = "Camera collision")
 
-    row = layout.row()
-    row.prop(obj.xplane, "poly_os", text = "Polygon offset")
-    row = layout.row()
-
-    row.prop(obj.xplane, "lightLevel", text = "Override light level")
+    ll_box = layout.box()
+    ll_box.label("Light Levels")
+    ll_box_column = ll_box.column() 
+    ll_box_column.prop(obj.xplane, "lightLevel")
 
     if obj.xplane.lightLevel:
-        box = layout.box()
+        box = ll_box_column.box()
         box.prop(obj.xplane, "lightLevel_v1", text = "Value 1")
         row = box.row()
         row.prop(obj.xplane, "lightLevel_v2", text = "Value 2")
@@ -574,13 +570,12 @@ def material_layout(self, obj):
         row = box.row()
         row.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
 
-    row = layout.row()
-    box = row.box()
-    box.prop(obj.xplane, "litFactor", text = "Night texture preview", slider = True)
-    row = box.row()
-
+    ll_box_column.row()
     if not canPreviewEmit(obj):
-        row.label("Add one texture affecting color and one affecting ambient and emit.", icon = "INFO")
+        ll_box_column.label("To enable the Day-Night Preview feature, add an albedo texture (uses Diffuse->Color) and a night texture (uses Shading->Emit)", icon = "INFO")
+    else:
+        ll_box_column.prop(obj.xplane, "litFactor", slider = True)
+
 
     # instancing effects
     instanced_box = layout.box()
@@ -590,9 +585,11 @@ def material_layout(self, obj):
         instanced_box.prop(obj.xplane, 'tint_albedo')
         instanced_box.prop(obj.xplane, 'tint_emissive')
 
+    row = layout.row()
+    row.prop(obj.xplane, "poly_os", text = "Polygon offset")
+
+
 def canPreviewEmit(mat):
-    hasTexture = False
-    hasTextureLit = False
     texture, textureLit = getColorAndLitTextureSlots(mat)
 
     return (texture != None and textureLit != None)
@@ -714,12 +711,12 @@ def animation_layout(self, obj, bone = False):
 #   obj - Blender object.
 def cockpit_layout(self, obj):
     layout = self.layout
-    row = layout.row()
-    row.prop(obj.xplane, 'panel', text = 'Part of Cockpit panel')
+    cockpit_box = layout.box()
+    cockpit_box_column = cockpit_box.column()
+    cockpit_box_column.prop(obj.xplane, 'panel')
 
     if obj.xplane.panel:
-        row = layout.row()
-        row.prop(obj.xplane, 'cockpit_region', text = "Cockpit region")
+        cockpit_box_column.prop(obj.xplane, 'cockpit_region')
 
 # Function: manipulator_layout
 # Draws the UI layout for manipulator settings.
