@@ -85,11 +85,9 @@ class XPlaneDataref(bpy.types.PropertyGroup):
         attr = "anim_type",
         name = "Animation Type",
         description = "Type of animation this Dataref will use",
-        default = "transform",
+        default = ANIM_TYPE_TRANSFORM,
         items = [
             (ANIM_TYPE_TRANSFORM, "Transformtion", "Transformation"),
-            (ANIM_TYPE_TRANSLATE, 'Loc', 'Location'),
-            (ANIM_TYPE_ROTATE, 'Rot', 'Rotation'),
             (ANIM_TYPE_SHOW, "Show", "Show"),
             (ANIM_TYPE_HIDE, "Hide", "Hide")
         ]

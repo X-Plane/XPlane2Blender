@@ -6,6 +6,33 @@ from .xplane_config import *
 from .xplane_constants import *
 from bpy.app.handlers import persistent
 
+def __upgradeLocRot(object):
+    for d in object.xplane.datarefs:
+        pre_34_anim_types = [
+            ANIM_TYPE_TRANSFORM,
+            ANIM_TYPE_TRANSLATE,
+            ANIM_TYPE_ROTATE,
+            ANIM_TYPE_SHOW,
+            ANIM_TYPE_HIDE
+            ]
+            
+        post_34_anim_types = [
+            ANIM_TYPE_TRANSFORM,
+            ANIM_TYPE_SHOW,
+            ANIM_TYPE_HIDE
+            ]
+        
+        old_anim_type = d.get('anim_type')
+        if old_anim_type is None:
+           old_anim_type = 0 #something about Blender properties requires this
+        
+        if old_anim_type < pre_34_anim_types.index(ANIM_TYPE_SHOW):
+            new_anim_type = 0 #_TRANSFORM, _TRANSLATE, and _ROTATE are all now merged to _TRANSFORM (0)
+        else:
+            new_anim_type = old_anim_type - 2 #We removed 2 constants, hence, subtract two to map to the new list
+
+        d.anim_type = post_34_anim_types[new_anim_type]
+        
 def __upgradeManip(object):
     #Since the order of the enum matters, the only way to really make this forwards compatabile is literally saving the old list.
     pre_34_manips = [
@@ -61,9 +88,10 @@ def update(fromVersion):
                         layer.export_type = 'cockpit'
                     else:
                         layer.export_type = 'aircraft'
-    
+
     if fromVersion <= '3.4.0':
         for object in bpy.data.objects:
+            __upgradeLocRot(object)
             __upgradeManip(object)
 
 @persistent

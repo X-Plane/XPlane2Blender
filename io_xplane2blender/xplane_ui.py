@@ -174,7 +174,8 @@ def scene_layout(self, scene):
 
     if scene.xplane.debug:
         debug_box = advanced_column.box()
-        debug_box.prop(scene.xplane, "profile")
+        #TODO: Remove profiler entirely?
+        #debug_box.prop(scene.xplane, "profile")
         debug_box.prop(scene.xplane, "log")
 
     dev_box = layout.box()
