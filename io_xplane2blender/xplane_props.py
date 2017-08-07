@@ -122,17 +122,17 @@ class XPlaneCondition(bpy.types.PropertyGroup):
         attr = "variable",
         name = "Variable",
         description = "Variable",
-        default = "GLOBAL_LIGHTING",
+        default = CONDITION_GLOBAL_LIGHTING,
         items = [
             (CONDITION_GLOBAL_LIGHTING, 'HDR', 'HDR mode On/Off'),
-            (CONDITION_GLOBAL_SHADOWS, 'Global shadows', 'Global shadows On/Off'),
+            (CONDITION_GLOBAL_SHADOWS, 'Global Shadows', 'Global shadows On/Off'),
             (CONDITION_VERSION10, 'Version 10.x', 'Always "On", as V9 does not support conditions.')
         ]
     )
 
     value = bpy.props.BoolProperty(
         attr = "value",
-        name = "On",
+        name = "Must Be On",
         description = "On/Off",
         default = True
     )
@@ -190,7 +190,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
             (MANIP_DELTA,        "Delta",        "Delta"),
             (MANIP_WRAP,         "Wrap",         "Wrap"),
             (MANIP_TOGGLE,       "Toggle",       "Toggle"),
-            (MANIP_NOOP,         "No op",        "No op"),
+            (MANIP_NOOP,         "No-op",        "No-op")
         ]
 
     manip_types_1050 = [
@@ -317,22 +317,22 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
 
     v_down = bpy.props.FloatProperty(
         attr = "v_down",
-        name = "Value on mouse down",
-        description = "Value on mouse down",
+        name = "Value On Mouse Down",
+        description = "Value to set dataref on mouse down",
         default = 0.0
     )
 
     v_up = bpy.props.FloatProperty(
         attr = "v_up",
-        name = "Value on mouse up",
-        description = "Value on mouse up",
+        name = "Value On Mouse Up",
+        description = "Value to set dataref on mouse up",
         default = 0.0
     )
 
     v_hold = bpy.props.FloatProperty(
         attr = "v_hold",
-        name = "Value on mouse hold",
-        description = "Value on mouse hold",
+        name = "Value On Mouse Hold",
+        description = "Value to set dataref on mouse hold",
         default = 0.0
     )
 
@@ -345,7 +345,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
 
     v_off = bpy.props.FloatProperty(
         attr = "v_off",
-        name = "Off value",
+        name = "Off Value",
         description = "Off value",
         default = 0.0
     )
@@ -353,7 +353,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
     command = bpy.props.StringProperty(
         attr = "command",
         name = "Command",
-        description = "Command",
+        description = "The command to fire when manipulator is used",
         default = ""
     )
 
@@ -407,8 +407,8 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
 
     wheel_delta = bpy.props.FloatProperty(
         attr = "wheel_delta",
-        name = "Wheel Delta (v10.5x)",
-        description = "Value change on mouse wheel tick (v10.5x)",
+        name = "Wheel Delta",
+        description = "Value change on mouse wheel tick",
         default = 0.0
     )
 
@@ -1064,7 +1064,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     surfaceType = bpy.props.EnumProperty(
         attr = 'surfaceType',
-        name = 'Surface type',
+        name = 'Surface Type',
         description = 'Controls the bumpiness of material in X-Plane.',
         default = 'none',
         items = [
@@ -1102,8 +1102,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     __blend_v1000_items = [
-            (BLEND_OFF, 'Alpha cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
-            (BLEND_ON, 'Alpha blend', 'Textures alpha channel will blended.'),
+            (BLEND_OFF, 'Alpha Cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
+            (BLEND_ON, 'Alpha Blend', 'Textures alpha channel will blended.'),
             (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
         ]
 
@@ -1140,7 +1140,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     panel = bpy.props.BoolProperty(
         attr = "panel",
-        name = "Part of Cockpit Panel",
+        name = "Part Of Cockpit Panel",
         description = "If checked this object will use the panel texture and will be clickable",
         default = False
     )
@@ -1151,7 +1151,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Cockpit region to use",
         default = "0",
         items = [
-            ("0", "none", "none"),
+            ("0", "None", "none"),
             ("1", "1", "1"),
             ("2", "2", "2"),
             ("3", "3", "3"),
@@ -1168,21 +1168,21 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     lightLevel_v1 = bpy.props.FloatProperty(
         attr = "lightLevel_v1",
-        name = "Light Level v1",
-        description = "Value 1",
+        name = "Value 1",
+        description = "Value 1 for light level",
         default = 0.0
     )
 
     lightLevel_v2 = bpy.props.FloatProperty(
         attr = "lightLevel_v2",
-        name = "Light Level v2",
-        description = "Value 2",
+        name = "Value 2",
+        description = "Value 2 for light level",
         default = 1.0
     )
 
     lightLevel_dataref = bpy.props.StringProperty(
         attr = "lightLevel_dataref",
-        name = "Light Level Dataref",
+        name = "Dataref",
         description = "The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped",
         default = ""
     )
@@ -1251,7 +1251,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     # v1000 (only for instances)
     tint = bpy.props.BoolProperty(
         attr = "tint",
-        name = "Tint",
+        name = "Tint", 
         description = "If active you can set the albedo and emissive tint",
         default = False
     )

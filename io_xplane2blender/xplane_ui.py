@@ -548,13 +548,12 @@ def material_layout(self, obj):
     surface_behavior_box = layout.box()
     surface_behavior_box.label("Surface Behavior")
     surface_behavior_box_column = surface_behavior_box.column()
-    surface_behavior_box_column.prop(obj.xplane, "surfaceType", text = "Surface type")
+    surface_behavior_box_column.prop(obj.xplane, "surfaceType")
 
     if obj.xplane.surfaceType != 'none':
-        surface_behavior_box_column.prop(obj.xplane, "deck", text = "Deck")
+        surface_behavior_box_column.prop(obj.xplane, "deck")
 
-    surface_behavior_box_column.prop(obj.xplane, "solid_camera", text = "Camera collision")
-
+    surface_behavior_box_column.prop(obj.xplane, "solid_camera")
     ll_box = layout.box()
     ll_box.label("Light Levels")
     ll_box_column = ll_box.column() 
@@ -562,11 +561,11 @@ def material_layout(self, obj):
 
     if obj.xplane.lightLevel:
         box = ll_box_column.box()
-        box.prop(obj.xplane, "lightLevel_v1", text = "Value 1")
+        box.prop(obj.xplane, "lightLevel_v1")
         row = box.row()
-        row.prop(obj.xplane, "lightLevel_v2", text = "Value 2")
+        row.prop(obj.xplane, "lightLevel_v2")
         row = box.row()
-        row.prop(obj.xplane, "lightLevel_dataref", text = "Dataref")
+        row.prop(obj.xplane, "lightLevel_dataref")
         row = box.row()
         row.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
 
@@ -579,14 +578,15 @@ def material_layout(self, obj):
 
     # instancing effects
     instanced_box = layout.box()
-    instanced_box.prop(obj.xplane, 'tint', 'Tint (Instanced Scenery only)')
+    instanced_box.label("Instancing Effects")
+    instanced_box_column = instanced_box.column()
+    instanced_box_column.prop(obj.xplane, 'tint')
 
     if obj.xplane.tint:
-        instanced_box.prop(obj.xplane, 'tint_albedo')
-        instanced_box.prop(obj.xplane, 'tint_emissive')
+        instanced_box_column.prop(obj.xplane, 'tint_albedo')
+        instanced_box_column.prop(obj.xplane, 'tint_emissive')
 
-    row = layout.row()
-    row.prop(obj.xplane, "poly_os", text = "Polygon offset")
+    layout.row().prop(obj.xplane, "poly_os")
 
 
 def canPreviewEmit(mat):
@@ -712,6 +712,7 @@ def animation_layout(self, obj, bone = False):
 def cockpit_layout(self, obj):
     layout = self.layout
     cockpit_box = layout.box()
+    cockpit_box.label("Cockpit Panel")
     cockpit_box_column = cockpit_box.column()
     cockpit_box_column.prop(obj.xplane, 'panel')
 
@@ -797,7 +798,7 @@ def manipulator_layout(self, obj):
             box.prop(obj.xplane.manip, 'hold_step')
 
         # v1050: mouse wheel support
-        if manipType in MOUSE_WHEEL_MANIPULATORS:
+        if manipType in MOUSE_WHEEL_MANIPULATORS and xplane_version >= 1050:
             box.prop(obj.xplane.manip, 'wheel_delta')
 
 # Function: conditions_layout
