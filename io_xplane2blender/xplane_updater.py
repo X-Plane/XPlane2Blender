@@ -90,6 +90,11 @@ def update(fromVersion):
                         layer.export_type = 'aircraft'
 
     if fromVersion <= '3.4.0':
+        for arm in bpy.data.armatures:
+            for bone in arm.bones:
+                #Thanks to Python's duck typing and Blender's PointerProperties, this works
+                __upgradeLocRot(bone)
+
         for object in bpy.data.objects:
             __upgradeLocRot(object)
             __upgradeManip(object)
