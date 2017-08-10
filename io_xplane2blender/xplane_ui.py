@@ -698,7 +698,7 @@ def animation_layout(self, obj, bone = False):
                 subrow = subbox.row()
                 subrow.prop(attr, "loop", text = "Loops")
             else:
-                subrow.label('Object not animated.')
+                subrow.label('Object not animated')
         elif attr.anim_type in ("show", "hide"):
             subrow.prop(attr, "show_hide_v1")
             subrow = subbox.row()

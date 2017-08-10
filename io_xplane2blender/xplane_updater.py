@@ -30,7 +30,6 @@ def __upgradeLocRot(object):
             new_anim_type = 0 #_TRANSFORM, _TRANSLATE, and _ROTATE are all now merged to _TRANSFORM (0)
         else:
             new_anim_type = old_anim_type - 2 #We removed 2 constants, hence, subtract two to map to the new list
-
         d.anim_type = post_34_anim_types[new_anim_type]
         
 def __upgradeManip(object):

@@ -60,7 +60,7 @@ class XPlaneExportPathDirective(bpy.types.PropertyGroup):
 class XPlaneDataref(bpy.types.PropertyGroup):
     path = bpy.props.StringProperty(
         attr = "path",
-        name = "Path",
+        name = "Dataref Path",
         description = "Dataref Path",
         default = ""
     )
@@ -124,7 +124,7 @@ class XPlaneCondition(bpy.types.PropertyGroup):
         items = [
             (CONDITION_GLOBAL_LIGHTING, 'HDR', 'HDR mode On/Off'),
             (CONDITION_GLOBAL_SHADOWS, 'Global Shadows', 'Global shadows On/Off'),
-            (CONDITION_VERSION10, 'Version 10.x', 'Always "On", as V9 does not support conditions.')
+            (CONDITION_VERSION10, 'Version 10.x', 'Always "On", as V9 does not support conditions')
         ]
     )
 
@@ -748,7 +748,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     # v1000
     layerGroups = [
-        (LAYER_GROUP_NONE, "None", "Does not draws this OBJ in any group."),
+        (LAYER_GROUP_NONE, "None", "Does not draws this OBJ in any group"),
         (LAYER_GROUP_TERRAIN, "Terrain", "Terrain"),
         (LAYER_GROUP_BEACHES, "Beaches", "Beaches"),
         (LAYER_GROUP_SHOULDERS, "Shoulders", "Shoulders"),
@@ -888,8 +888,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "Export Mode",
         default = "layers",
         items = [
-            (EXPORT_MODE_LAYERS, "Layers", "Allows to export an .obj file for each layer."),
-            (EXPORT_MODE_ROOT_OBJECTS, "Root Objects", "Allows to export all objects below a root object into a single .obj file.")
+            (EXPORT_MODE_LAYERS, "Layers", "Allows to export an .obj file for each layer"),
+            (EXPORT_MODE_ROOT_OBJECTS, "Root Objects", "Allows to export all objects below a root object into a single .obj file")
         ]
     )
 
@@ -984,7 +984,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     isExportableRoot = bpy.props.BoolProperty(
         attr = 'isExportableRoot',
         name = 'Root Object',
-        description = 'Activate to export this object and all its children into it\'s own .obj file.',
+        description = 'Activate to export this object and all its children into it\'s own .obj file',
         default = False
     )
 
@@ -1063,7 +1063,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     surfaceType = bpy.props.EnumProperty(
         attr = 'surfaceType',
         name = 'Surface Type',
-        description = 'Controls the bumpiness of material in X-Plane.',
+        description = 'Controls the bumpiness of material in X-Plane',
         default = 'none',
         items = [
             (SURFACE_TYPE_NONE,     "None",    "None"),
@@ -1088,7 +1088,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     solid_camera = bpy.props.BoolProperty(
         name = "Camera Collision",
-        description = "Will impede the movement of the 3-d camera. Works only in Cockpits",
+        description = "X-Plane's camera will be prevented from moving through objects with this material. Only allowed in Cockpit type exports",
         default = False
     )
 
@@ -1100,9 +1100,9 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     __blend_v1000_items = [
-            (BLEND_OFF, 'Alpha Cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio.'),
-            (BLEND_ON, 'Alpha Blend', 'Textures alpha channel will blended.'),
-            (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is.')
+            (BLEND_OFF, 'Alpha Cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio'),
+            (BLEND_ON, 'Alpha Blend', 'Textures alpha channel will blended'),
+            (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is')
         ]
 
     # v1000
@@ -1114,7 +1114,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         items = __blend_v1000_items
     )
 
-    __blend_v1100_items = [(BLEND_GLASS, 'Blend Glass', 'The alpha channel of the albedo (day texture) will be used to create translucent rendering.')]
+    __blend_v1100_items = [(BLEND_GLASS, 'Blend Glass', 'The alpha channel of the albedo (day texture) will be used to create translucent rendering')]
     
     # v1100
     blend_v1100 = bpy.props.EnumProperty(
