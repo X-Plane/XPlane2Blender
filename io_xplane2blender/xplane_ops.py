@@ -653,6 +653,7 @@ def addXPlaneOps():
     #See xplane_ops_dev.py
     #bpy.utils.register_class(SCENE_OT_dev_export_to_current_dir)
     bpy.utils.register_class(SCENE_OT_dev_layer_names_from_objects)
+    bpy.utils.register_class(SCENE_OT_dev_rerun_updater)
 
 # Function: removeXPlaneOps
 # Unregisters all Operators.
@@ -695,3 +696,4 @@ def removeXPlaneOps():
     #See xplane_ops_dev.py
     #bpy.utils.unregister_class(SCENE_OT_dev_export_to_current_dir)
     bpy.utils.unregister_class(SCENE_OT_dev_layer_names_from_objects)
+    bpy.utils.unregister_class(SCENE_OT_dev_rerun_updater)

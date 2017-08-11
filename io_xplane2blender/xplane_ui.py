@@ -192,7 +192,10 @@ def scene_dev_layout(self,scene,layout):
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
         #Exact same operator, more convient place 
         dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
-        dev_box_column.operator("scene.dev_layer_names_to_current_dir")
+        dev_box_column.operator("scene.dev_layer_names_from_objects")
+        updater_row = dev_box_column.row()
+        updater_row.prop(scene.xplane,"dev_fake_xplane2blender_version")
+        updater_row.operator("scene.dev_rerun_updater")
 
 def scene_layer_layout(self, scene, layout, layer):
     version = int(scene.xplane.version)

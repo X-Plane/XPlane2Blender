@@ -13,8 +13,6 @@ EXPORT_TYPE_SCENERY = "scenery"
 EXPORT_TYPE_INSTANCED_SCENERY = "instanced_scenery"
 
 ANIM_TYPE_TRANSFORM = "transform"
-ANIM_TYPE_TRANSLATE = "translate"
-ANIM_TYPE_ROTATE = "rotate"
 ANIM_TYPE_SHOW = "show"
 ANIM_TYPE_HIDE = "hide"
 

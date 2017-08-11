@@ -5,8 +5,9 @@ import bpy
 from .xplane_config import *
 from .xplane_helpers import getColorAndLitTextureSlots
 from .xplane_constants import *
-from io_xplane2blender import xplane_constants
+from io_xplane2blender import xplane_constants, xplane_config
 from bpy.props import StringProperty
+import io_xplane2blender
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
@@ -853,6 +854,11 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name        = 'Dry Run',
         description = 'Run exporter without actually writing .objs to disk',
         default = False)
+    
+    dev_fake_xplane2blender_version = bpy.props.StringProperty(
+        name       = "Fake XPlane2Blender Version",
+        description = "The Fake XPlane2Blender Version to re-run the upgrader with",
+        default = io_xplane2blender.xplane_config.getVersionStr())
     #######################################
 
     layers = bpy.props.CollectionProperty(

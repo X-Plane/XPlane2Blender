@@ -8,6 +8,10 @@ from bpy.app.handlers import persistent
 
 def __upgradeLocRot(object):
     for d in object.xplane.datarefs:
+        #Recreate the pre_34 animation types enum
+        ANIM_TYPE_TRANSLATE = "translate"
+        ANIM_TYPE_ROTATE = "rotate"
+
         pre_34_anim_types = [
             ANIM_TYPE_TRANSFORM,
             ANIM_TYPE_TRANSLATE,
@@ -64,8 +68,11 @@ def __upgradeManip(object):
     object.xplane.manip.type_1050 = attr
 
 # Function: update
-# updates parts of the data model to ensure forward
-# compatability between versions of XPlane2Blender
+# Updates parts of the data model to ensure forward
+# compatability between versions of XPlane2Blender.
+# 
+# Important: Running the updater on an already updated file
+# should result in no changes to it
 #
 # Parameters:
 #     fromVersion - The old version of the blender file
@@ -108,7 +115,6 @@ def load_handler(dummy):
         return
 
     fileVersion = bpy.data.scenes[0].get('xplane2blender_version','3.2.0')
-
     if fileVersion < currentVersion:
         #If it is a missing string we'll just call it '3.3.0' for some reason. I really don't get it.
         #-Ted 08/02/2017

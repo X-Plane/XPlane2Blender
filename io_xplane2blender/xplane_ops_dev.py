@@ -3,19 +3,20 @@
 
 import bpy
 import re
+import io_xplane2blender
 
-class SCENE_OT_dev_export_to_current_dir(bpy.types.Operator):
-    bl_label  = 'Export .blend file to current dir'
-    bl_idname = 'scene.dev_export_to_current_dir'
-    bl_description = 'Exports blender file to current working directory. Useful for quick plugin testing'
-
-    def execute(self, context):
-        bpy.ops.export.xplane_obj(filepath=self.initial_dir, export_is_relative=True)
-        return {'FINISHED'}
+#class SCENE_OT_dev_export_to_current_dir(bpy.types.Operator):
+#    bl_label  = 'Export .blend file to current dir'
+#    bl_idname = 'scene.dev_export_to_current_dir'
+#    bl_description = 'Exports blender file to current working directory. Useful for quick plugin testing'
+#
+#    def execute(self, context):
+#        bpy.ops.export.xplane_obj(filepath=self.initial_dir, export_is_relative=True)
+#        return {'FINISHED'}
 
 class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
     bl_label = 'Create Layer Names from Objects'
-    bl_idname = 'scene.dev_layer_names_to_current_dir'
+    bl_idname = 'scene.dev_layer_names_from_objects'
     bl_description = 'Create layer names from objects, stripping Cube_ and Empty_ and prepending "test_" to them'
     
     name_prefix = "test_"
@@ -45,3 +46,12 @@ class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
 
             xplane_layers[idx].name = self.name_prefix + cleaned_name
         return {'FINISHED'}
+
+class SCENE_OT_dev_rerun_updater(bpy.types.Operator):
+    bl_label = "Re-run Updater"
+    bl_idname = "scene.dev_rerun_updater"
+    bl_description = "Re-runs the updater. This does not undo an update that happened on load!"
+   
+    def execute(self,context):
+        io_xplane2blender.xplane_updater.update(bpy.context.scene.xplane.dev_fake_xplane2blender_version)
+        return { 'FINISHED' }
