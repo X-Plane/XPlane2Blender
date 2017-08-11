@@ -126,9 +126,6 @@ bpy.app.handlers.load_post.append(load_handler)
 
 @persistent
 def save_handler(dummy):
-    currentVersion = '.'.join(map(str,version))
-
-    # store currentVersion
-    bpy.data.scenes[0]['xplane2blender_version'] = currentVersion
+    pass
 
 bpy.app.handlers.save_pre.append(save_handler)

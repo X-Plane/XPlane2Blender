@@ -1354,14 +1354,6 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 # Function: addXPlaneRNA
 # Registers all properties.
 def addXPlaneRNA():
-    # XPlane2Blender version
-    bpy.types.World.xplane2blender_version = bpy.props.StringProperty(
-        attr = "xplane2blender_version",
-        name = "XPlane2Blender Version",
-        description = "XPlane2Blender Version used to create this blend",
-        default = ""
-    )
-
     # basic classes
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)

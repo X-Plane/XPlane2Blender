@@ -163,9 +163,8 @@ def scene_layout(self, scene):
                 row = layout.row()
                 scene_layer_layout(self, scene, row, i)
         else:
-            row.operator('scene.add_xplane_layers')
+            layout.row().operator('scene.add_xplane_layers')
 
-    
     advanced_box = layout.box()
     advanced_box.label("Advanced Settings")
     advanced_column = advanced_box.column()
@@ -177,7 +176,10 @@ def scene_layout(self, scene):
         #TODO: Remove profiler entirely?
         #debug_box.prop(scene.xplane, "profile")
         debug_box.prop(scene.xplane, "log")
+    
+    scene_dev_layout(self,scene,layout)
 
+def scene_dev_layout(self,scene,layout):
     dev_box = layout.box()
     dev_box_row = dev_box.column_flow(2,True)
     dev_box_row.prop(scene.xplane, "plugin_development")
@@ -188,8 +190,6 @@ def scene_layout(self, scene):
         dev_box_column.prop(scene.xplane, "dev_enable_breakpoints")
         dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
-        #row = box.row() #Enable if new export button is too inconvienent
-        #row.operator("scene.dev_export_to_current_dir")
         #Exact same operator, more convient place 
         dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
         dev_box_column.operator("scene.dev_layer_names_to_current_dir")
