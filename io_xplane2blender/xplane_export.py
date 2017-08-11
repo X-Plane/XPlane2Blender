@@ -39,6 +39,8 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         maxlen= 1024, default= ""
     )
 
+    filename_ext = '.obj'
+
     export_is_relative = bpy.props.BoolProperty(
         name = "Export Is Relative",
         description="Set to true when starting the export via the button (with or without the GUI on in case of unit testing)",
