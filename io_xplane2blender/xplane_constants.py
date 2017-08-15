@@ -31,13 +31,15 @@ MANIP_WRAP = "wrap"
 MANIP_TOGGLE = "toggle"
 MANIP_NOOP = "noop"
 
+#10.10 and greater manips
+MANIP_DRAG_AXIS_PIX             = "drag_axis_pix"
+
 #10.50 and greater manips
 MANIP_AXIS_SWITCH_LEFT_RIGHT    = "axis_switch_left_right"
 MANIP_AXIS_SWITCH_UP_DOWN       = "axis_switch_up_down"
 MANIP_COMMAND_KNOB              = "command_knob"
 MANIP_COMMAND_SWITCH_LEFT_RIGHT = "command_switch_left_right"
 MANIP_COMMAND_SWITCH_UP_DOWN    = "command_switch_up_down"
-MANIP_DRAG_AXIS_PIX             = "drag_axis_pix"
 
 MOUSE_WHEEL_MANIPULATORS = (
     MANIP_DRAG_XY,

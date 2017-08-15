@@ -737,16 +737,12 @@ def manipulator_layout(self, obj):
     if obj.xplane.manip.enabled:
         box = layout.box()
         xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= 1050:
-            box.prop(obj.xplane.manip, 'type_1050', text="Type")
-            manipType = obj.xplane.manip.type_1050
-        else:
-            box.prop(obj.xplane.manip, 'type', text="Type")
-            manipType = obj.xplane.manip.type
+        box.prop(obj.xplane.manip, 'type', text="Type")
 
         box.prop(obj.xplane.manip, 'cursor', text="Cursor")
         box.prop(obj.xplane.manip, 'tooltip', text="Tooltip")
 
+        manipType = obj.xplane.manip.type
         if manipType not in (MANIP_COMMAND, MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
             if manipType != MANIP_DRAG_XY:
                 box.prop(obj.xplane.manip, 'dataref1')

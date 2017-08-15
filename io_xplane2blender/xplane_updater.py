@@ -37,37 +37,6 @@ def __updateLocRot(object):
            old_anim_type = 0 #something about Blender properties requires this
         
         d.anim_type = convert_old_to_new(old_anim_type)
-        
-def __updateManip(object):
-    #Since the order of the enum matters, the only way to really make this forwards compatabile is literally saving the old list.
-    pre_34_manips = [
-        MANIP_DRAG_XY,
-        MANIP_DRAG_AXIS,
-        MANIP_COMMAND,
-        MANIP_COMMAND_AXIS,
-        MANIP_PUSH,
-        MANIP_RADIO,
-        MANIP_DELTA,
-        MANIP_WRAP,
-        MANIP_TOGGLE,
-        MANIP_NOOP,
-        MANIP_DRAG_AXIS_PIX,
-        MANIP_COMMAND_KNOB,
-        MANIP_COMMAND_SWITCH_UP_DOWN,
-        MANIP_COMMAND_SWITCH_LEFT_RIGHT,
-        MANIP_AXIS_SWITCH_UP_DOWN,
-        MANIP_AXIS_SWITCH_LEFT_RIGHT
-        ]
-
-    #Since enum type_1050 contains all of type, this is okay
-    old_type = object.xplane.manip.get('type')
-    if old_type is None:
-        #Oddly enough, .get('type') for drag_xy is not an index of 0, but None!
-        #To have no manipulator, Manipulator must be unchecked
-        old_type = 0 
- 
-    attr = pre_34_manips[old_type]
-    object.xplane.manip.type_1050 = attr
 
 # Function: update
 # Updates parts of the data model to ensure forward
@@ -105,7 +74,6 @@ def update(fromVersion):
 
         for object in bpy.data.objects:
             __updateLocRot(object)
-            __updateManip(object)
 
 @persistent
 def load_handler(dummy):

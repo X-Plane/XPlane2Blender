@@ -179,7 +179,12 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         default = False
     )
 
-    manip_types_900 = [
+    type = bpy.props.EnumProperty(
+        attr = "type",
+        name = "Manipulator Type",
+        description = "The type of the manipulator",
+        default = MANIP_DRAG_XY,
+        items = [
             (MANIP_DRAG_XY,      "Drag XY",      "Drag XY"),
             (MANIP_DRAG_AXIS,    "Drag Axis",    "Drag Axis"),
             (MANIP_COMMAND,      "Command",      "Command"),
@@ -189,32 +194,15 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
             (MANIP_DELTA,        "Delta",        "Delta"),
             (MANIP_WRAP,         "Wrap",         "Wrap"),
             (MANIP_TOGGLE,       "Toggle",       "Toggle"),
-            (MANIP_NOOP,         "No-op",        "No-op")
+            (MANIP_NOOP,         "No-op",        "No-op"),
+            (MANIP_DRAG_AXIS_PIX,             "Drag Axis Pix (v10.10)",             "Drag Axis Pix (requires at least v10.10)"),
+            (MANIP_COMMAND_KNOB,              "Command Knob (v10.50)",              "Command Knob (requires at least v10.50)"),
+            (MANIP_COMMAND_SWITCH_UP_DOWN,    "Command Switch Up Down (v10.50)",    "Command Switch Up Down (requires at least v10.50)"),
+            (MANIP_COMMAND_SWITCH_LEFT_RIGHT, "Command Switch Left Right (v10.50)", "Command Switch Left Right (requires at least v10.50)"),
+            (MANIP_AXIS_SWITCH_UP_DOWN,       "Axis Switch Up Down (v10.50)",       "Axis Switch Up Down (requires at least v10.50)"),
+            (MANIP_AXIS_SWITCH_LEFT_RIGHT,    "Axis Switch Left Right (v10.50)",    "Axis Switch Left Right (requires at least v10.50)")
         ]
-
-    manip_types_1050 = [
-            (MANIP_AXIS_SWITCH_LEFT_RIGHT,    "Axis Switch Left Right",    "Axis Switch Left Right"),
-            (MANIP_AXIS_SWITCH_UP_DOWN,       "Axis Switch Up Down",       "Axis Switch Up Down"),
-            (MANIP_COMMAND_KNOB,              "Command Knob",              "Command Knob"),
-            (MANIP_COMMAND_SWITCH_LEFT_RIGHT, "Command Switch Left Right", "Command Switch Left Right"),
-            (MANIP_COMMAND_SWITCH_UP_DOWN,    "Command Switch Up Down",    "Command Switch Up Down"),
-            (MANIP_DRAG_AXIS_PIX,             "Drag Axis Pix",             "Drag Axis Pix")
-        ]
-
-    type = bpy.props.EnumProperty(
-        attr = "type",
-        name = "Manipulator Type",
-        description = "The type of the manipulator",
-        default = MANIP_DRAG_XY,
-        items = manip_types_900
     )
-
-    type_1050 = bpy.props.EnumProperty(
-        name = "Manipulator Type",
-        description = "The type of the manipulator",
-        default = MANIP_DRAG_XY,
-        items = manip_types_900 + manip_types_1050
-        )
 
     tooltip = bpy.props.StringProperty(
         attr = "tooltip",
