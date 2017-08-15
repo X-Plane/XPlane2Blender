@@ -5,38 +5,40 @@ import bpy
 from .xplane_config import *
 from .xplane_constants import *
 from bpy.app.handlers import persistent
+import io_xplane2blender
+import io_xplane2blender.xplane_props
 
-def __upgradeLocRot(object):
-    for d in object.xplane.datarefs:
+def __updateLocRot(object):
+    
+    #In int
+    #Out string enum
+    def convert_old_to_new(old_anim_type):
         #Recreate the pre_34 animation types enum
         ANIM_TYPE_TRANSLATE = "translate"
         ANIM_TYPE_ROTATE = "rotate"
-
-        pre_34_anim_types = [
-            ANIM_TYPE_TRANSFORM,
-            ANIM_TYPE_TRANSLATE,
-            ANIM_TYPE_ROTATE,
-            ANIM_TYPE_SHOW,
-            ANIM_TYPE_HIDE
-            ]
-            
-        post_34_anim_types = [
-            ANIM_TYPE_TRANSFORM,
-            ANIM_TYPE_SHOW,
-            ANIM_TYPE_HIDE
-            ]
         
+        conversion_table = [
+                #pre_34_anim_types  : post_34_anim_types
+                (ANIM_TYPE_TRANSFORM, ANIM_TYPE_TRANSFORM),
+                (ANIM_TYPE_TRANSLATE, ANIM_TYPE_TRANSFORM),
+                (ANIM_TYPE_ROTATE,    ANIM_TYPE_TRANSFORM),
+                (ANIM_TYPE_SHOW,      ANIM_TYPE_SHOW),
+                (ANIM_TYPE_HIDE,      ANIM_TYPE_HIDE)
+            ]
+
+        if old_anim_type >= 0 and old_anim_type < len(conversion_table):
+            return conversion_table[old_anim_type][1]
+        else:
+            raise Exception("%s was not found in conversion table" % old_anim_type)
+
+    for d in object.xplane.datarefs:
         old_anim_type = d.get('anim_type')
         if old_anim_type is None:
            old_anim_type = 0 #something about Blender properties requires this
         
-        if old_anim_type < pre_34_anim_types.index(ANIM_TYPE_SHOW):
-            new_anim_type = 0 #_TRANSFORM, _TRANSLATE, and _ROTATE are all now merged to _TRANSFORM (0)
-        else:
-            new_anim_type = old_anim_type - 2 #We removed 2 constants, hence, subtract two to map to the new list
-        d.anim_type = post_34_anim_types[new_anim_type]
+        d.anim_type = convert_old_to_new(old_anim_type)
         
-def __upgradeManip(object):
+def __updateManip(object):
     #Since the order of the enum matters, the only way to really make this forwards compatabile is literally saving the old list.
     pre_34_manips = [
         MANIP_DRAG_XY,
@@ -77,7 +79,7 @@ def __upgradeManip(object):
 # Parameters:
 #     fromVersion - The old version of the blender file
 def update(fromVersion):
-    if fromVersion <= '3.3.0':
+    if fromVersion < '3.3.0':
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
@@ -95,15 +97,15 @@ def update(fromVersion):
                     else:
                         layer.export_type = 'aircraft'
 
-    if fromVersion <= '3.4.0':
+    if fromVersion < '3.4.0':
         for arm in bpy.data.armatures:
             for bone in arm.bones:
                 #Thanks to Python's duck typing and Blender's PointerProperties, this works
                 __upgradeLocRot(bone)
 
         for object in bpy.data.objects:
-            __upgradeLocRot(object)
-            __upgradeManip(object)
+            __updateLocRot(object)
+            __updateManip(object)
 
 @persistent
 def load_handler(dummy):
@@ -119,7 +121,7 @@ def load_handler(dummy):
         #If it is a missing string we'll just call it '3.3.0' for some reason. I really don't get it.
         #-Ted 08/02/2017
         if len(fileVersion) == 0:
-            fileVersion = '3.3.0'
+            fileVersion = '3.2.0'
 
         print('This file was created with an older XPlane2Blender version less than or equal to (%s) and will now automatically be updated to %s' % (fileVersion,currentVersion))
 
