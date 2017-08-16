@@ -120,7 +120,7 @@ class XPlaneHeader():
 
         # draped layer groups
         if canHaveDraped and self.xplaneFile.options.layer_group_draped != LAYER_GROUP_NONE:
-            self.general_attributes['ATTR_layer_group_draped'].setValue((self.xplaneFile.options.layer_group_draped, self.xplaneFile.options.layer_group_draped_offset))
+            self.draped_attributes['ATTR_layer_group_draped'].setValue((self.xplaneFile.options.layer_group_draped, self.xplaneFile.options.layer_group_draped_offset))
 
         # set slung load
         if self.xplaneFile.options.slungLoadWeight > 0:
