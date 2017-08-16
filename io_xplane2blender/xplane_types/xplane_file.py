@@ -430,7 +430,7 @@ class XPlaneFile():
         else:
             build = bpy.app.build_revision
 
-        return "# Build with Blender %s (build %s) Exported with XPlane2Blender %d.%d.%d" % (bpy.app.version_string,build, version[0], version[1], version[2])
+        return "# Build with Blender %s (build %s) Exported with XPlane2Blender %d.%d.%d.beta.3" % (bpy.app.version_string,build, version[0], version[1], version[2])
 
     # Method: write
     # Returns OBJ file code
