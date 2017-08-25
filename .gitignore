@@ -12,3 +12,5 @@ __pycache__
 *.swo
 *.swp
 *.orig
+
+*.zip
