@@ -186,7 +186,7 @@ def scene_dev_layout(self,scene,layout):
     dev_box_row.label(text="", icon="ERROR")
     if scene.xplane.plugin_development:
         dev_box_column = dev_box.column()
-        dev_box_column.label("XPlane2Blender Version: " + xplane_config.getVersionStr())
+        dev_box_column.label("XPlane2Blender Version: " + xplane_config.XPLANE2BLENDER_VER.fullVersionStr())
         dev_box_column.prop(scene.xplane, "dev_enable_breakpoints")
         dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")

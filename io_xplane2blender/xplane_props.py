@@ -2,11 +2,10 @@
 # Defines X-Plane Properties attached to regular Blender data types.
 
 import bpy
-from .xplane_config import *
+from .xplane_config import XPLANE2BLENDER_VER
 from .xplane_helpers import getColorAndLitTextureSlots
 from .xplane_constants import *
-from io_xplane2blender import xplane_constants, xplane_config
-from bpy.props import StringProperty
+from io_xplane2blender import xplane_constants
 import io_xplane2blender
 
 # Class: XPlaneCustomAttribute
@@ -88,7 +87,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
         description = "Type of animation this Dataref will use",
         default = ANIM_TYPE_TRANSFORM,
         items = [
-            (ANIM_TYPE_TRANSFORM, "Transformtion", "Transformation"),
+            (ANIM_TYPE_TRANSFORM, "Transformation", "Transformation"),
             (ANIM_TYPE_SHOW, "Show", "Show"),
             (ANIM_TYPE_HIDE, "Hide", "Hide")
         ]
@@ -846,7 +845,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     dev_fake_xplane2blender_version = bpy.props.StringProperty(
         name       = "Fake XPlane2Blender Version",
         description = "The Fake XPlane2Blender Version to re-run the upgrader with",
-        default = io_xplane2blender.xplane_config.getVersionStr())
+        default = XPLANE2BLENDER_VER.getVersionStr())
     #######################################
 
     layers = bpy.props.CollectionProperty(

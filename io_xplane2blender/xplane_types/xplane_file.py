@@ -12,7 +12,7 @@ from .xplane_lights import XPlaneLights
 from .xplane_mesh import XPlaneMesh
 from .xplane_header import XPlaneHeader
 from .xplane_commands import XPlaneCommands
-from ..xplane_config import version
+from ..xplane_config import XPLANE2BLENDER_VER
 from ..xplane_helpers import floatToStr, logger
 from .xplane_material_utils import getReferenceMaterials
 
@@ -429,8 +429,8 @@ class XPlaneFile():
             build = bpy.app.build_hash
         else:
             build = bpy.app.build_revision
-
-        return "# Build with Blender %s (build %s) Exported with XPlane2Blender %d.%d.%d.beta.3" % (bpy.app.version_string,build, version[0], version[1], version[2])
+        
+        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, XPLANE2BLENDER_VER)
 
     # Method: write
     # Returns OBJ file code

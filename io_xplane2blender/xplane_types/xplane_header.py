@@ -27,9 +27,9 @@ class XPlaneHeader():
     #
     # Parameters:
     #   XPlaneFile xplaneFile - A <XPlaneFile>.
-    #   int version - OBJ format version.
-    def __init__(self, xplaneFile, version):
-        self.version = version
+    #   int obj_version - OBJ format version.
+    def __init__(self, xplaneFile, obj_version):
+        self.obj_version = obj_version
         self.mode = "default"
         self.xplaneFile = xplaneFile
 
@@ -524,8 +524,8 @@ class XPlaneHeader():
         else:
             o = 'I\n'
 
-        # version number
-        if self.version >= 8:
+        # obj version number
+        if self.obj_version >= 8:
             o += '800\n'
 
         o += 'OBJ\n\n'

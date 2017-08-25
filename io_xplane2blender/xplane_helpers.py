@@ -4,6 +4,10 @@
 import bpy
 import os
 import io_xplane2blender
+from . import bl_info
+import datetime, time
+import re
+from builtins import str
 
 FLOAT_PRECISION = 8
 
@@ -41,6 +45,7 @@ def getColorAndLitTextureSlots(mat):
 
     return texture, textureLit
 
+#TODO: Pretty sure Blender has an API for this in bpy.path
 def resolveBlenderPath(path):
     blenddir = os.path.dirname(bpy.context.blend_data.filepath)
 
@@ -48,6 +53,261 @@ def resolveBlenderPath(path):
         return os.path.join(blenddir, path[2:])
     else:
         return path
+
+
+# Variable:
+# 
+# Since the build number will usually change by the second,
+# it is not often useful to include the build number in comparisons.
+# This can, however, be turned on as needed to debug problems
+debug_include_build_number = False
+    
+# Class: XPlane2Blender 
+#
+# Contains useful methods for getting information about the
+# version and build number of XPlane2Blender 
+#
+# Names are in the format of
+# io_xplane2blender_major_minor_release(|-(alpha|beta|rc)\.([1-9]+))+(YYYYMMDDHHMMSS).zip
+class XPlane2BlenderVersion():
+    # Variable: xplane2blender_version
+    # Tuple of Blender addon version, (major, minor, revision)
+    _xplane2blender_version = (0,0,0)
+    
+    # Variable: _build_type
+    # The type of build this is, always a value in BUILD_TYPES
+    _build_type = ""
+    
+    # Variable: _build_type_version
+    # The version of that build type, starting at 1 (except full, blank "",
+    # releases which have no version
+    _build_type_version = 0
+    
+    # Constant: BUILD_TYPES_
+    # Constants for relavent build types
+    BUILD_TYPES_ALPHA = "alpha"
+    BUILD_TYPES_BETA  = "beta"
+    BUILD_TYPES_RC    = "rc"
+    BUILD_TYPES_RELEASE = ""
+    
+    # Constant: BUILD_TYPES
+    # Types of builds available, ordered in tuple in ascending precedence
+    BUILD_TYPES = (BUILD_TYPES_ALPHA, BUILD_TYPES_BETA, BUILD_TYPES_RC, BUILD_TYPES_RELEASE)
+    
+    # Variable:
+    # If run as part of the plugin, this will be replaced
+    # with the current YYYYMMSSHHMMSS from the UNIX epoch.
+    # If created as a build, the build script will replace this
+    # number with the YYYYMMSSHHMMSS at that point.
+    __build_number = '{BUILD_NUMBER}'
+    
+    # __init__
+    # 
+    # version - Accepts a tuple in the form of (m,m,r), all ints
+    # build_type - Accepts one of the types found in BUILD_TYPES ("alpha","beta","rc","")
+    # build_type_version - Accepts a number >= 1
+    def __init__(self, version, build_type, build_type_version):
+        assert len(version) == 3
+            
+        #For a brief period of time, 3.2.x was known as 3.20.x.
+        #When actually get to version 3.20 we'll figure something out,
+        #probably related to the file creation date, use the fact that only
+        #3.20.0 and 3.20.6-14 are messed up, or we'll skip entirely over it
+        #straight to 3.30.0 - Ted, 8/24/2017 
+        if version[1] >= 20:
+            self._xplane2blender_version = (version[0],2,version[2])
+        else:
+            self._xplane2blender_version = version
+
+        assert build_type in self.BUILD_TYPES
+        self._build_type = build_type
+
+        if self._build_type  == "":
+            assert build_type_version == 0 
+        else:
+            assert build_type_version > 0
+
+        self._build_type_version = build_type_version
+
+        #build_number is not assigned here because it will either have been
+        #written when the build script was run or generated and returned with
+        #getBuildNumberStr()
+        
+    @property
+    def xplane2blender_version(self):
+        return self._xplane2blender_version
+    
+    def getVersionStr(self):
+        return '.'.join(map(str,self.xplane2blender_version))
+ 
+    # Method: getBuildType
+    #
+    # returns build type string
+    @property
+    def build_type(self):    
+        return self._build_type
+    
+    # Method: getBuildTypeVersion
+    #
+    # returns build type version (an <Int>)
+    @property
+    def build_type_version(self):
+        return self._build_type_version
+ 
+    # Method: getBuildNumber
+    #
+    # returns build number string
+    def getBuildNumberStr(self):
+        # If we are using a pre-built version, use that saved version
+        if self.__build_number != '{BUILD_NUMBER}':
+            return self.__build_number
+        else:
+            #You either have a build number or you don't.
+            return ''
+    
+    def getBuildNumberDateTime(self):
+        #Use the UNIX Timestamp in UTC 
+        return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
+
+    # Method: asFileName
+    #
+    # Gets the version in its filename version (all .'s replaced with version
+    def asFileName(self):
+        return str(self).replace('.','_')
+
+    def __eq__(self,other):
+        if isinstance(other, XPlane2BlenderVersion):
+            if self.xplane2blender_version == other.xplane2blender_version:
+                if self.build_type == other.build_type:
+                    if self._build_type_version == other._build_type_version:
+                        if debug_include_build_number and self.__build_number == other.__build_number:
+                            return True
+
+            return False
+        else:
+            raise NotImplemented
+
+    def __ne__(self,other):
+        return self.__eq__(other)
+
+    def __lt__(self,other):
+        if isinstance(other, XPlane2BlenderVersion):
+            if self.xplane2blender_version < other.xplane2blender_version:
+                return True
+            elif self.BUILD_TYPES.index(self.build_type) < self.BUILD_TYPES.index(other.build_type):
+                return True
+            elif self._build_type_version < other._build_type_version:
+                return True
+            elif debug_include_build_number and self.__build_number < other.__build_number:
+                return True
+
+            return False
+        else:
+            raise NotImplemented
+
+    def __gt__(self,other):
+        if isinstance(other, XPlane2BlenderVersion):
+            if self.xplane2blender_version > other.xplane2blender_version:
+                return True
+            elif self.BUILD_TYPES.index(self.build_type) > self.BUILD_TYPES.index(other.build_type):
+                return True
+            elif self._build_type_version > other._build_type_version:
+                return True
+            elif debug_include_build_number and self.__build_number > other.__build_number:
+                return True
+
+            return False
+        else:
+            raise NotImplemented
+
+    def __le__(self,other):
+        if isinstance(other, XPlane2BlenderVersion):
+            return self < other or self == other
+        
+    def __ge__(self,other):
+        if isinstance(other, XPlane2BlenderVersion):
+            return self > other or self == other
+
+    def __hash__(self):
+        if debug_include_build_number:
+            return hash((self.xplane2blender_version, self._build_type, self._build_type_version, self.__build_number))
+        else:
+            return hash((self.xplane2blender_version, self._build_type, self._build_type_version))
+            
+    def __str__(self):
+        if self.build_type == '':
+            return self.getVersionStr()
+        else:
+            return "%s%s%s.%s" % (self.getVersionStr(), '' if self.build_type == '' else '.',  self.build_type, self.build_type_version)
+ 
+    def fullVersionStr(self):
+        return "%s%s%s.%s+%s" % (self.xplane2blender_version,
+                                '' if self.build_type == '' else '.',
+                                self.build_type,
+                                self.build_type_version,
+                                'NONE' if self.getBuildNumberStr() == '' else self.getBuildNumberStr())
+
+    @staticmethod
+    def parseVersion(version_string):
+        if version_string.startswith('v'):
+            version_string = version_string[1:]
+
+        #If we're going from a file name, got back to a Blender name
+        version_string = version_string.replace('_','.')
+        
+        if '-' in version_string and '+' in version_string:
+            #Group 1: Major.Minor.revision
+            #Group 2: Build type (3) and literal '.' and number (4)
+            #Literal +
+             #Group 5: YYYYMMDDHHMMSS
+            format_str = r"(\d+\.\d+\.\d+)" + \
+                         r"(|-(alpha|beta|rc)\.([1-9]+))" + \
+                         r"\+" + \
+                         r"(\d{14})"
+                         
+            version_matches = re.match(format_str,version_string)
+            
+            if version_matches:
+                version_tuple    = tuple(version_matches.group(1).split('.'))
+                build_type       = "" if len(version_matches.group(2)) == 0 else version_matches.group(3)
+                build_type_version   = 0 if build_type == "" else version_matches.group(4)
+                build_number_str     = version_matches.group(5)
+                
+                #Regex groups for (hopefully matching) YYYYMMDDHHMMSS
+                datetime_matches = re.match(r"(\d){4}" + \
+                                            r"(\d){2}" + \
+                                            r"(\d){2}" + \
+                                            r"(\d){2}" + \
+                                            r"(\d){2}" + \
+                                            r"(\d){2}")
+
+                datetime_groups = datetime_matches.groups[1:]
+                year   = int(datetime_matches.group(1))
+                month  = int(datetime_matches.group(2))
+                day    = int(datetime_matches.group(3))
+                hour   = int(datetime_matches.group(4))
+                minute = int(datetime_matches.group(5))
+                second = int(datetime_matches.group(6))
+                
+                # Following the dry principle, we'll just let the datetime class validate this data
+                # for us
+                try:
+                    datetime.datetime(*datetime_groups)
+                except:
+                    assert False #Make sure we never reach here!
+                
+                return XPlane2BlenderVersion(version_tuple,build_type,build_type_version)
+            else:
+                return None
+        else:
+            #Old style without build number or types
+            version_matches = re.match(r"((\d+)\.(\d+)\.(\d+))",version_string)
+            assert version_matches is not None
+            return XPlane2BlenderVersion((int(version_matches.groups()[1]),
+                                          int(version_matches.groups()[2]),
+                                          int(version_matches.groups()[3])),
+                                         "",
+                                         0)
 
 #This a hack to help tests.py catch when an error is an error,
 #because everybody and their pet poodle like using the words 'Fail',
@@ -258,7 +518,6 @@ class XPlaneDebugger():
     def end(self):
         self.log = False
 #        sys.excepthook = self.excepthook
-
 
 # Class: XPlaneProfiler
 # Stores profiling information of processes.

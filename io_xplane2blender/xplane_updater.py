@@ -8,7 +8,7 @@ from bpy.app.handlers import persistent
 import io_xplane2blender
 import io_xplane2blender.xplane_props
 
-def __updateLocRot(object):
+def __updateLocRot(obj):
     
     #In int
     #Out string enum
@@ -31,7 +31,7 @@ def __updateLocRot(object):
         else:
             raise Exception("%s was not found in conversion table" % old_anim_type)
 
-    for d in object.xplane.datarefs:
+    for d in obj.xplane.datarefs:
         old_anim_type = d.get('anim_type')
         if old_anim_type is None:
            old_anim_type = 0 #something about Blender properties requires this
@@ -48,7 +48,7 @@ def __updateLocRot(object):
 # Parameters:
 #     fromVersion - The old version of the blender file
 def update(fromVersion):
-    if fromVersion < '3.3.0':
+    if fromVersion < XPlane2BlenderVersion.parseVersion('3.3.0'):
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
@@ -66,37 +66,35 @@ def update(fromVersion):
                     else:
                         layer.export_type = 'aircraft'
 
-    if fromVersion < '3.4.0':
+    if fromVersion < XPlane2BlenderVersion.parseVersion('3.4.0'):
         for arm in bpy.data.armatures:
             for bone in arm.bones:
                 #Thanks to Python's duck typing and Blender's PointerProperties, this works
-                __upgradeLocRot(bone)
+                __updateLocRot(bone)
 
-        for object in bpy.data.objects:
-            __updateLocRot(object)
+        for obj in bpy.data.objects:
+            __updateLocRot(obj)
 
 @persistent
 def load_handler(dummy):
-    currentVersion = '.'.join(map(str,version))
     filepath = bpy.context.blend_data.filepath
 
     # do not update newly created files
     if not filepath:
         return
 
-    fileVersion = bpy.data.scenes[0].get('xplane2blender_version','3.2.0')
-    if fileVersion < currentVersion:
-        #If it is a missing string we'll just call it '3.3.0' for some reason. I really don't get it.
-        #-Ted 08/02/2017
-        if len(fileVersion) == 0:
-            fileVersion = '3.2.0'
+    # Before we do anything to the blend file,
+    # save what version of the code we're doing it
+    bpy.data.scenes[0]['xplane2blender_build_number'] = XPLANE2BLENDER_VER.getBuildNumberStr()
 
-        print('This file was created with an older XPlane2Blender version less than or equal to (%s) and will now automatically be updated to %s' % (fileVersion,currentVersion))
-
+    # "3.2.0 was the last version without an updater, so default to that."
+    # Best guess as to this decision -Ted 08/02/2017
+    fileVersion = XPlane2BlenderVersion.parseVersion(bpy.data.scenes[0].get('xplane2blender_version','3.2.0'))
+    if fileVersion < XPLANE2BLENDER_VER:
+        print('This file was created with an older XPlane2Blender version less than or equal to (%s) and will now automatically be updated to %s' % (fileVersion,XPLANE2BLENDER_VER.fullVersionStr()))
         update(fileVersion)
-
-        bpy.data.scenes[0]['xplane2blender_version'] = currentVersion
-        print('Your file was successfully updated to XPlane2Blender %s' % currentVersion)
+        bpy.data.scenes[0]['xplane2blender_version'] = str(XPLANE2BLENDER_VER)
+        print('Your file was successfully updated to XPlane2Blender %s' % XPLANE2BLENDER_VER.fullVersionStr())
 
 bpy.app.handlers.load_post.append(load_handler)
 
