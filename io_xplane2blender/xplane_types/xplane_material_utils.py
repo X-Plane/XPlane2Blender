@@ -14,7 +14,7 @@ def compare(refMat, mat, exportType, autodetectTextures):
     elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
         return compareInstanced(refMat, mat, autodetectTextures)
     elif exportType == EXPORT_TYPE_COCKPIT or exportType == EXPORT_TYPE_AIRCRAFT:
-        return compareAircraft(refMat, mat)
+        return compareAircraft(refMat, mat, autodetectTextures)
 
 def compareScenery(refMat, mat, autodetectTextures):
     errors = []
@@ -67,11 +67,11 @@ def compareInstanced(refMat, mat, autodetectTextures):
 
     return errors
 
-def compareAircraft(refMat, mat):
+def compareAircraft(refMat, mat, autodetectTextures):
     errors = []
     if mat.options.draw:
         # panel parts can have anything
-        if not mat.options.panel and not refMat.options.panel:
+        if not mat.options.panel and not refMat.options.panel and autodetectTextures:
             if mat.texture != refMat.texture:
                 errors.append('Texture must be "%s".' % refMat.texture)
 
