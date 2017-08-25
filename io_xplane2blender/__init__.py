@@ -28,7 +28,7 @@ bl_info = {
     "blender": (2, 7, 6),
     "api": 36273,
     "location": "File > Import/Export > X-Plane",
-    "description": "Import and Export X-Plane objects/planes (.obj,.aif format)",
+    "description": "Import and Export X-Plane objects/planes (.obj format)",
     "wiki_url": "https://github.com/der-On/XPlane2Blender/wiki",
     "tracker_url": "https://github.com/der-On/XPlane2Blender/issues",
     "category": "Import-Export"
