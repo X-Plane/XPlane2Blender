@@ -76,7 +76,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
 
     loop = bpy.props.FloatProperty(
         name = "Loop Animation Every",
-        description = "Loop amount of animation, usefull for ever increasing Datarefs. A value of 0 will ignore this setting",
+        description = "Loop amount of animation, useful for ever increasing Datarefs. A value of 0 will ignore this setting",
         min = 0.0,
         precision = 3
     )
@@ -87,7 +87,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
         description = "Type of animation this Dataref will use",
         default = ANIM_TYPE_TRANSFORM,
         items = [
-            (ANIM_TYPE_TRANSFORM, "Transformtion", "Transformation"),
+            (ANIM_TYPE_TRANSFORM, "Transformation", "Transformation"),
             (ANIM_TYPE_SHOW, "Show", "Show"),
             (ANIM_TYPE_HIDE, "Hide", "Hide")
         ]
@@ -622,7 +622,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "Number of Cockpit regions to use",
         default = "0",
         items = [
-            ("0", "none", "none"),
+            ("0", "None", "None"),
             ("1", "1", "1"),
             ("2", "2", "2"),
             ("3", "3", "3"),
@@ -736,18 +736,18 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     # v1000
     layerGroups = [
-        (LAYER_GROUP_NONE, "None", "Does not draws this OBJ in any group"),
-        (LAYER_GROUP_TERRAIN, "Terrain", "Terrain"),
-        (LAYER_GROUP_BEACHES, "Beaches", "Beaches"),
-        (LAYER_GROUP_SHOULDERS, "Shoulders", "Shoulders"),
-        (LAYER_GROUP_TAXIWAYS, "Taxiways", "Taxiways"),
-        (LAYER_GROUP_RUNWAYS, "Runways", "Runways"),
-        (LAYER_GROUP_MARKINGS, "Markings", "Markings"),
-        (LAYER_GROUP_AIRPORTS, "Airports", "Airports"),
-        (LAYER_GROUP_ROADS, "Roads", "Roads"),
-        (LAYER_GROUP_OBJECTS, "Objects", "Objects"),
+        (LAYER_GROUP_NONE,          "None",          "Does not draws this OBJ in any group"),
+        (LAYER_GROUP_TERRAIN,       "Terrain",       "Terrain"),
+        (LAYER_GROUP_BEACHES,       "Beaches",       "Beaches"),
+        (LAYER_GROUP_SHOULDERS,     "Shoulders",     "Shoulders"),
+        (LAYER_GROUP_TAXIWAYS,      "Taxiways",      "Taxiways"),
+        (LAYER_GROUP_RUNWAYS,       "Runways",       "Runways"),
+        (LAYER_GROUP_MARKINGS,      "Markings",      "Markings"),
+        (LAYER_GROUP_AIRPORTS,      "Airports",      "Airports"),
+        (LAYER_GROUP_ROADS,         "Roads",         "Roads"),
+        (LAYER_GROUP_OBJECTS,       "Objects",       "Objects"),
         (LAYER_GROUP_LIGHT_OBJECTS, "Light Objects", "Light Objects"),
-        (LAYER_GROUP_CARS, "Cars", "Cars")
+        (LAYER_GROUP_CARS,          "Cars",          "Cars")
     ]
 
     layer_group = bpy.props.EnumProperty(
@@ -867,7 +867,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "X-Plane Version",
         default = VERSION_1100,
         items = [
-            (VERSION_900, "9.x", "9.x"),
+            (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
             (VERSION_1010, "10.1x", "10.1x"),
             (VERSION_1040, "10.4x", "10.4x"),
@@ -1142,7 +1142,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Cockpit region to use",
         default = "0",
         items = [
-            ("0", "None", "none"),
+            ("0", "None", "None"),
             ("1", "1", "1"),
             ("2", "2", "2"),
             ("3", "3", "3"),
@@ -1285,16 +1285,16 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
         attr = "type",
         name = "Type",
         description = "Defines the type of the light in X-Plane",
-        default = "default",
+        default = LIGHT_DEFAULT,
         items = [
-            (LIGHT_DEFAULT, LIGHT_DEFAULT, LIGHT_DEFAULT),
-            (LIGHT_FLASHING, LIGHT_FLASHING + " (deprecated)", LIGHT_FLASHING + " (deprecated)"),
-            (LIGHT_PULSING, LIGHT_PULSING + " (deprecated)", LIGHT_PULSING + " (deprecated)"),
-            (LIGHT_STROBE, LIGHT_STROBE + " (deprecated)", LIGHT_STROBE + " (deprecated)"),
-            (LIGHT_TRAFFIC, LIGHT_TRAFFIC + " (deprecated)", LIGHT_TRAFFIC + " (deprecated)"),
-            (LIGHT_NAMED, LIGHT_NAMED, LIGHT_NAMED),
-            (LIGHT_CUSTOM, LIGHT_CUSTOM, LIGHT_CUSTOM),
-            (LIGHT_PARAM, LIGHT_PARAM, LIGHT_PARAM)
+                (LIGHT_DEFAULT,  "Default",                     "Default"),
+                (LIGHT_FLASHING, "Flashing" + " (deprecated)",  "Flashing" + " (deprecated)"),
+                (LIGHT_PULSING,  "Pulsing"  + " (deprecated)",  "Pulsing"  + " (deprecated)"),
+                (LIGHT_STROBE,   "Strobe"   + " (deprecated)",  "Strobe"   + " (deprecated)"),
+                (LIGHT_TRAFFIC,  "Traffic"  + " (deprecated)",  "Traffic"  + " (deprecated)"),
+                (LIGHT_NAMED,    "Named",                       "Named"),
+                (LIGHT_CUSTOM,   "Custom",                      "Custom"),
+                (LIGHT_PARAM,    "Param",                       "Param")
         ]
     )
 
