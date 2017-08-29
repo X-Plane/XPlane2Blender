@@ -70,7 +70,7 @@ def update(fromVersion):
         for arm in bpy.data.armatures:
             for bone in arm.bones:
                 #Thanks to Python's duck typing and Blender's PointerProperties, this works
-                __upgradeLocRot(bone)
+                __updateLocRot(bone)
 
         for object in bpy.data.objects:
             __updateLocRot(object)

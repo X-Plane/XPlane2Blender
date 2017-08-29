@@ -430,7 +430,7 @@ class XPlaneFile():
         else:
             build = bpy.app.build_revision
 
-        return "# Build with Blender %s (build %s) Exported with XPlane2Blender %d.%d.%d" % (bpy.app.version_string,build, version[0], version[1], version[2])
+        return "# Build with Blender %s (build %s) Exported with XPlane2Blender %d.%d.%d.beta.3" % (bpy.app.version_string,build, version[0], version[1], version[2])
 
     # Method: write
     # Returns OBJ file code
@@ -458,7 +458,7 @@ class XPlaneFile():
         # retrieve reference materials
         # and compare all materials against reference materials
         if self.options.autodetectTextures == False:
-            logger.info('Autodetect textures overriden for file %s: not fully checking manually entered textures against Blender-based reference materials\' textures' % (self.filename))
+            logger.info('Autodetect textures overridden for file %s: not fully checking manually entered textures against Blender-based reference materials\' textures' % (self.filename))
         
         if not self.compareMaterials(self.referenceMaterials):
             return ''
