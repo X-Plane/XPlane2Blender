@@ -9,6 +9,53 @@ from io_xplane2blender import xplane_constants, xplane_config
 from bpy.props import StringProperty
 import io_xplane2blender
 
+'''
+ #####     ##   ##  ##   ####  ####  ####  #
+  #   #   # #    #  #   ##  #  ## #  #  #  #
+ ##   #   # #   # # #  ##      ###   ###   #
+ ##   #  ####   # # #  #  ###  #     # #   #
+ #   #   #  #   #  ##  ##  #   # #   # # 
+#####   ##  ## ##  #    ####  ####  ## ## #
+
+ ### ##  ####  ####  ####      ##   ###    ###   ###     ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  #
+  #  #   ## #  #  #  ## #     # #    #    #  #  #   #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
+ #####   ###   ###   ###      # #   ##    ##   ##   #    ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
+ #  ##   #     # #   #       ####   #      ##  #    #    # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   #
+ #  #    # #   # #   # #     #  #   #  # #  #  #   #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  # 
+## ###  ####  ## ## ####    ##  ## ##### ####   ###     ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #
+                                                                                                                          
+BEWARE! This file contains, basically, the whole definition for the XPlane2Blender data model! Whatever you add will last
+until it is deprecated and/or updated (more dragons!) Whatever you remove will create backwards compatibility issues!
+
+For wanting to change xplane_props.py, YOU MUST NOW READ THE HEADER OF xplane_updater.py OR YOU'LL RECIEVE AN ANCIENT CURSE:
+    
+    "Due to an undocumented bad decision during the development of B, all your time and date functions will begin
+    randomly choosing different default timezones arguments and changing your OS's timezone at the same time!"
+    The curse will only end after 03:14:08 UTC on 19 January 2038 because of another bad decision from the early 1970's"
+
+Actual Practical Notes
+======================
+- Since Blender saves the **index** the user chose of a drop down menu, not the content, re-ordering the items list member of an EnumProperty
+is a great way to RUIN EVERYTHING. Re-arranging the items list requires great care and is backwards-compatibility breaking
+
+- Main documentation: https://docs.blender.org/api/current/bpy.props.html?highlight=bpy%20props%20prop#module-bpy.props
+
+- The attr member does not appear to be necessary or have an effect on the program. Future props should not use it. Otherwise, I'd like to
+see them culled over time
+
+- This file contains 99% of the properties. xplane2blender is set in xplane_updater.py and now we're stuck with it there
+ 
+- Name is in the form of "Title Case Always", description is "Sentence case, no period". Don't be lazy and just copy and paste the constant name for all three columns.
+A good deal of time was spent making the UI look pretty for 3.4.0 so please don't undo that overtime
+
+- If you've actually read this far, congratulations! You get a cookie!
+
+- For defaults, use the constants. 
+
+- Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
+
+'''
+
 # Class: XPlaneCustomAttribute
 # A custom attribute.
 #

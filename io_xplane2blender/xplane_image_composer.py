@@ -76,7 +76,7 @@ def combineSpecularAndNormal(specularImage, normalImage, targetName):
     if not imageSizesEqual(specularImage, normalImage):
         # TODO: provide more usefull output
         # and eventually use the debugger to log this error instead of rasining it
-        raise Error('Image sizes do not match')
+        raise Exception('Image sizes do not match')
 
     width = specularImage.size[0]
     height = specularImage.size[1]

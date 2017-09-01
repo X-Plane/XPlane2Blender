@@ -8,6 +8,42 @@ from bpy.app.handlers import persistent
 import io_xplane2blender
 import io_xplane2blender.xplane_props
 
+'''
+ #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
+  #   #   # #    #  #   ##  #  ## #  #  #  #     #  #   ## #  #  #  ## #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  # 
+ ##   #   # #   # # #  ##      ###   ###   #    #####   ###   ###   ###     ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    # 
+ ##   #  ####   # # #  #  ###  #     # #   #    #  ##   #     # #   #       # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   # 
+ #   #   #  #   #  ##  ##  #   # #   # #        #  #    # #   # #   # #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #     
+#####   ##  ## ##  #    ####  ####  ## ## #    ## ###  ####  ## ## ####    ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #  
+
+BEFORE CHANGING THIS FILE have you:
+1. Fully understood what parts of the data model you are changing?
+2. Written a spec and documented it?
+3. Reviewed existing unit tests for correctness?
+4. Created unit tests __before__ you start?
+5. Quadruple checked every character, even the ones you didn't write?
+6. Tested it with all versions of Blender people could be using?
+7. Cross tested loading and unloading between different versions of XPlane2Blender?
+8. Immediately went into a beta cycle?
+
+Put this in your mind:
+    A poor defenseless .blend file, with big watery wobbly eyes is lying on the operating table, eyeing the sharp text editors and esoteric command line commands
+    about to be used on the codebase that supports it. It says
+            
+            Will it hurt to change the update function? Is it necessary?
+            Is it deterministic and fulfills the "Only update what's needed, when needed" contract?
+            Do you remember the 3.4.0 loc/rot/locrot fiasco of Aug. 2017?
+    
+    You hold the anesthesia mask in one hand, and a terminal prompt in the other. Are you ready to take responsibility for this data model and
+    the artists who depend on it? Are you ready to make a change to this file? Or are you another wanna-be console cowboy who is poking their mouse
+    in the wrong part of the codebase again?
+    ...
+    ...
+    ...
+    
+You may now proceed to the rest of the file.
+'''
+
 def __updateLocRot(object):
     
     #In int
