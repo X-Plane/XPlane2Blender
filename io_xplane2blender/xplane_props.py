@@ -8,6 +8,53 @@ from .xplane_constants import *
 from io_xplane2blender import xplane_constants
 import io_xplane2blender
 
+'''
+ #####     ##   ##  ##   ####  ####  ####  #
+  #   #   # #    #  #   ##  #  ## #  #  #  #
+ ##   #   # #   # # #  ##      ###   ###   #
+ ##   #  ####   # # #  #  ###  #     # #   #
+ #   #   #  #   #  ##  ##  #   # #   # # 
+#####   ##  ## ##  #    ####  ####  ## ## #
+
+ ### ##  ####  ####  ####      ##   ###    ###   ###     ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  #
+  #  #   ## #  #  #  ## #     # #    #    #  #  #   #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
+ #####   ###   ###   ###      # #   ##    ##   ##   #    ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
+ #  ##   #     # #   #       ####   #      ##  #    #    # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   #
+ #  #    # #   # #   # #     #  #   #  # #  #  #   #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  # 
+## ###  ####  ## ## ####    ##  ## ##### ####   ###     ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #
+                                                                                                                          
+BEWARE! This file contains, basically, the whole definition for the XPlane2Blender data model! Whatever you add will last
+until it is deprecated and/or updated (more dragons!) Whatever you remove will create backwards compatibility issues!
+
+For wanting to change xplane_props.py, YOU MUST NOW READ THE HEADER OF xplane_updater.py OR YOU'LL RECIEVE AN ANCIENT CURSE:
+    
+    "Due to an undocumented bad decision during the development of B, all your time and date functions will begin
+    randomly choosing different default timezones arguments and changing your OS's timezone at the same time!"
+    The curse will only end after 03:14:08 UTC on 19 January 2038 because of another bad decision from the early 1970's"
+
+Actual Practical Notes
+======================
+- Since Blender saves the **index** the user chose of a drop down menu, not the content, re-ordering the items list member of an EnumProperty
+is a great way to RUIN EVERYTHING. Re-arranging the items list requires great care and is backwards-compatibility breaking
+
+- Main documentation: https://docs.blender.org/api/current/bpy.props.html?highlight=bpy%20props%20prop#module-bpy.props
+
+- The attr member does not appear to be necessary or have an effect on the program. Future props should not use it. Otherwise, I'd like to
+see them culled over time
+
+- This file contains 99% of the properties. xplane2blender is set in xplane_updater.py and now we're stuck with it there
+ 
+- Name is in the form of "Title Case Always", description is "Sentence case, no period". Don't be lazy and just copy and paste the constant name for all three columns.
+A good deal of time was spent making the UI look pretty for 3.4.0 so please don't undo that overtime
+
+- If you've actually read this far, congratulations! You get a cookie!
+
+- For defaults, use the constants. 
+
+- Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
+
+'''
+
 # Class: XPlaneCustomAttribute
 # A custom attribute.
 #
@@ -74,9 +121,8 @@ class XPlaneDataref(bpy.types.PropertyGroup):
     )
 
     loop = bpy.props.FloatProperty(
-        attr = "loop",
-        name = "Loop Amount",
-        description = "Loop amount of animation, usefull for ever increasing Datarefs. A value of 0 will ignore this setting",
+        name = "Loop Animation Every",
+        description = "Loop amount of animation, useful for ever increasing Datarefs. A value of 0 will ignore this setting",
         min = 0.0,
         precision = 3
     )
@@ -622,7 +668,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "Number of Cockpit regions to use",
         default = "0",
         items = [
-            ("0", "none", "none"),
+            ("0", "None", "None"),
             ("1", "1", "1"),
             ("2", "2", "2"),
             ("3", "3", "3"),
@@ -736,18 +782,18 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     # v1000
     layerGroups = [
-        (LAYER_GROUP_NONE, "None", "Does not draws this OBJ in any group"),
-        (LAYER_GROUP_TERRAIN, "Terrain", "Terrain"),
-        (LAYER_GROUP_BEACHES, "Beaches", "Beaches"),
-        (LAYER_GROUP_SHOULDERS, "Shoulders", "Shoulders"),
-        (LAYER_GROUP_TAXIWAYS, "Taxiways", "Taxiways"),
-        (LAYER_GROUP_RUNWAYS, "Runways", "Runways"),
-        (LAYER_GROUP_MARKINGS, "Markings", "Markings"),
-        (LAYER_GROUP_AIRPORTS, "Airports", "Airports"),
-        (LAYER_GROUP_ROADS, "Roads", "Roads"),
-        (LAYER_GROUP_OBJECTS, "Objects", "Objects"),
+        (LAYER_GROUP_NONE,          "None",          "Does not draws this OBJ in any group"),
+        (LAYER_GROUP_TERRAIN,       "Terrain",       "Terrain"),
+        (LAYER_GROUP_BEACHES,       "Beaches",       "Beaches"),
+        (LAYER_GROUP_SHOULDERS,     "Shoulders",     "Shoulders"),
+        (LAYER_GROUP_TAXIWAYS,      "Taxiways",      "Taxiways"),
+        (LAYER_GROUP_RUNWAYS,       "Runways",       "Runways"),
+        (LAYER_GROUP_MARKINGS,      "Markings",      "Markings"),
+        (LAYER_GROUP_AIRPORTS,      "Airports",      "Airports"),
+        (LAYER_GROUP_ROADS,         "Roads",         "Roads"),
+        (LAYER_GROUP_OBJECTS,       "Objects",       "Objects"),
         (LAYER_GROUP_LIGHT_OBJECTS, "Light Objects", "Light Objects"),
-        (LAYER_GROUP_CARS, "Cars", "Cars")
+        (LAYER_GROUP_CARS,          "Cars",          "Cars")
     ]
 
     layer_group = bpy.props.EnumProperty(
@@ -867,7 +913,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "X-Plane Version",
         default = VERSION_1100,
         items = [
-            (VERSION_900, "9.x", "9.x"),
+            (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
             (VERSION_1010, "10.1x", "10.1x"),
             (VERSION_1040, "10.4x", "10.4x"),
@@ -1142,7 +1188,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Cockpit region to use",
         default = "0",
         items = [
-            ("0", "None", "none"),
+            ("0", "None", "None"),
             ("1", "1", "1"),
             ("2", "2", "2"),
             ("3", "3", "3"),
@@ -1285,16 +1331,16 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
         attr = "type",
         name = "Type",
         description = "Defines the type of the light in X-Plane",
-        default = "default",
+        default = LIGHT_DEFAULT,
         items = [
-            (LIGHT_DEFAULT, LIGHT_DEFAULT, LIGHT_DEFAULT),
-            (LIGHT_FLASHING, LIGHT_FLASHING + " (deprecated)", LIGHT_FLASHING + " (deprecated)"),
-            (LIGHT_PULSING, LIGHT_PULSING + " (deprecated)", LIGHT_PULSING + " (deprecated)"),
-            (LIGHT_STROBE, LIGHT_STROBE + " (deprecated)", LIGHT_STROBE + " (deprecated)"),
-            (LIGHT_TRAFFIC, LIGHT_TRAFFIC + " (deprecated)", LIGHT_TRAFFIC + " (deprecated)"),
-            (LIGHT_NAMED, LIGHT_NAMED, LIGHT_NAMED),
-            (LIGHT_CUSTOM, LIGHT_CUSTOM, LIGHT_CUSTOM),
-            (LIGHT_PARAM, LIGHT_PARAM, LIGHT_PARAM)
+                (LIGHT_DEFAULT,  "Default",                     "Default"),
+                (LIGHT_FLASHING, "Flashing" + " (deprecated)",  "Flashing" + " (deprecated)"),
+                (LIGHT_PULSING,  "Pulsing"  + " (deprecated)",  "Pulsing"  + " (deprecated)"),
+                (LIGHT_STROBE,   "Strobe"   + " (deprecated)",  "Strobe"   + " (deprecated)"),
+                (LIGHT_TRAFFIC,  "Traffic"  + " (deprecated)",  "Traffic"  + " (deprecated)"),
+                (LIGHT_NAMED,    "Named",                       "Named"),
+                (LIGHT_CUSTOM,   "Custom",                      "Custom"),
+                (LIGHT_PARAM,    "Param",                       "Param")
         ]
     )
 

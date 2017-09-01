@@ -603,7 +603,7 @@ class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
 class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
     bl_label = 'Export OBJs'
     bl_idname = 'scene.export_to_relative_dir'
-    bl_description = 'Exports OBJs into the same folder as the .blend file, and/or specified sub-folders'
+    bl_description = 'Exports OBJs relative to the .blend file'
     
     #initial_dir that will be prepended to the path.
     initial_dir = bpy.props.StringProperty()
