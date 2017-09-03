@@ -44,7 +44,7 @@ Put this in your mind:
 You may now proceed to the rest of the file.
 '''
 
-def __updateLocRot(object):
+def __updateLocRot(obj):
     
     #In int
     #Out string enum
