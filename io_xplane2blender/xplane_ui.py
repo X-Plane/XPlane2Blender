@@ -196,6 +196,9 @@ def scene_dev_layout(self,scene,layout):
         updater_row = dev_box_column.row()
         updater_row.prop(scene.xplane,"dev_fake_xplane2blender_version")
         updater_row.operator("scene.dev_rerun_updater")
+        downgrader_row = dev_box_column.row()
+        downgrader_row.prop(scene.xplane,"dev_manip_1050_downgrader_overwrite_all")
+        downgrader_row.operator("scene.dev_manip_1050_downgrader")
 
 def scene_layer_layout(self, scene, layout, layer):
     version = int(scene.xplane.version)

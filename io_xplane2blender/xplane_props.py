@@ -888,11 +888,15 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name        = 'Dry Run',
         description = 'Run exporter without actually writing .objs to disk',
         default = False)
-    
     dev_fake_xplane2blender_version = bpy.props.StringProperty(
         name       = "Fake XPlane2Blender Version",
         description = "The Fake XPlane2Blender Version to re-run the upgrader with",
         default = io_xplane2blender.xplane_config.getVersionStr())
+
+    dev_manip_1050_downgrader_overwrite_all = bpy.props.BoolProperty(
+        name = "Always Overwrite manip.type",
+        description = "When using the manip.type_1050 Manipulator Downgrader, overwrite every manipulator, including potential new work",
+        default = False)
     #######################################
 
     layers = bpy.props.CollectionProperty(
