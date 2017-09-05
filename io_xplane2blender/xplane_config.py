@@ -2,7 +2,7 @@
 # Holds config variables that are used throughout the addon.
 
 from . import bl_info
-from .xplane_helpers import XPlane2BlenderVersion
+from .xplane_props import XPlane2BlenderVersion
 # Variable: debug
 # Set to True for debugging output using <debugger>. Default is True, as we are still dealing with a development release.
 debug = False
@@ -14,16 +14,23 @@ log = False
 # Constant: CURRENT_BUILD_TYPE
 #
 # The current build type, must be a member of XPlane2BlenderVersion.BUILD_TYPES 
-CURRENT_BUILD_TYPE = XPlane2BlenderVersion.BUILD_TYPES_BETA 
+CURRENT_BUILD_TYPE = XPlane2BlenderVersion.BUILD_TYPES_BETA
 
 # Constant: CURRENT_BUILD_TYPE_VERSION
 #
-# The current build type version, must be 0 for RELEASE, > 0 for all others 
+# The current build type version, must be > 0
 CURRENT_BUILD_TYPE_VERSION = 4
 
-# Variable: version
-# An <XPlane2Blender> containing the current version of the addon.
-XPLANE2BLENDER_VER = XPlane2BlenderVersion(tuple([int(v) for v in bl_info["version"]]),CURRENT_BUILD_TYPE,CURRENT_BUILD_TYPE_VERSION)
+# Constant: CURRENT_DATA_MODEL_VERSION
+#
+# The current data model version, incrementing every time xplane_constants, xplane_props, or xplane_updater
+# 3.3.9 and earlier have a version of 0 
+CURRENT_DATA_MODEL_VERSION = 0
+
+# Constant: CURRENT_BUILD_NUMBER
+#
+# The build number, hardcoded by the build script when there is one, other wise it is left "" for "NONE"
+CURRENT_BUILD_NUMBER = ""
 
 def initConfig():
     global debug

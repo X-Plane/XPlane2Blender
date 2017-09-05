@@ -26,9 +26,9 @@ bl_info = {
     "author": "Ondrej Brinkel",
     "version": (3,4,0),
     "blender": (2, 7, 6),
-    "api": 36273,
     "location": "File > Import/Export > X-Plane",
     "description": "Import and Export X-Plane objects/planes (.obj format)",
+    "warning": "",
     "wiki_url": "https://github.com/der-On/XPlane2Blender/wiki",
     "tracker_url": "https://github.com/der-On/XPlane2Blender/issues",
     "category": "Import-Export"
