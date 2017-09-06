@@ -111,6 +111,26 @@ def update(fromVersion):
         for obj in bpy.data.objects:
             __updateLocRot(obj)
 
+def add_history(legacy_version_str=None):
+    scene   = bpy.context.scene
+    history = scene.xplane.xplane2blender_ver_history
+    
+    if legacy_version_str is not None:
+        parsed_ver = scene.xplane.xplane2blender_ver.parse_version(legacy_version_str)
+        if parsed_ver is None:
+            return False
+    else:
+        parsed_ver = scene.xplane.xplane2blender_ver
+    
+    repr_of_ver = repr(scene.xplane.xplane2blender_ver)
+     
+    if history[-1].name == repr_of_ver:
+        new_hist_entry = history.add()
+        new_hist_entry.name = repr_of_ver
+        success = new_hist_entry.mutate_data()
+        if success is False:
+            history.remove(len(history)-1)
+    
 @persistent
 def load_handler(dummy):
     filepath = bpy.context.blend_data.filepath
@@ -118,20 +138,45 @@ def load_handler(dummy):
     # do not update newly created files
     if not filepath:
         return
+    
+    scene = bpy.context.scene
 
-    # Before we do anything to the blend file,
-    # save what version of the code we're doing it
-    bpy.data.scenes[0]['xplane2blender_build_number'] = XPLANE2BLENDER_VER.getBuildNumberStr()
+#   you can put anything in there that makes 3.30 think the version is 3.30 or newer
+#   you cannot put something in there that makes 3.30 think the file is from 3.20 or older
+
+    # L: means log this    
+    if scene.get('xplane2blender_ver') is not None:
+        legacy_ver = scene.get('xplane2blender_ver','3.2.0').replace("20","2")
+    #    if it is 3.20.x:
+    #     L:replace with 3.2.x
+    #     L:add the current history
+    #     L:insert "DEPREICATED"
+    #
+    # If we have an empty history (new file, post beta.5)
+    #     L:add the current history
+    #
+    # Get the old_version (end of list)
+    # L:Compare old_vs_new
+    # If the version is out of date
+    #     L:Run update
+    #
+    # If the end of the list is not equal to the current version
+    #     L:Append current version
 
     # "3.2.0 was the last version without an updater, so default to that."
     # Best guess as to this decision -Ted 08/02/2017
-    fileVersion = XPlane2BlenderVersion.parseVersion(bpy.data.scenes[0].get('xplane2blender_version','3.2.0'))
-    if fileVersion < XPLANE2BLENDER_VER:
+    raw_version_str = bpy.data.scenes[0].get('xplane2blender_ver','3.2.0')
+
+    fileVersion, prev_build_number = XPlane2BlenderVersion.parseVersion(raw_version_str)
+    if fileVersion < bpy.context.scene.xplane.xplane2blender_ver:
         print('This file was created with an older XPlane2Blender version less than or equal to (%s) and will now automatically be updated to %s' % (fileVersion,XPLANE2BLENDER_VER.fullVersionStr()))
         update(fileVersion)
-        bpy.data.scenes[0]['xplane2blender_version'] = str(XPLANE2BLENDER_VER)
+        bpy.data.scenes[0]['xplane2blender_ver'] = str(XPLANE2BLENDER_VER)
+        
+        
         print('Your file was successfully updated to XPlane2Blender %s' % XPLANE2BLENDER_VER.fullVersionStr())
-
+    
+        
 bpy.app.handlers.load_post.append(load_handler)
 
 @persistent

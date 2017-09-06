@@ -157,6 +157,7 @@ def scene_layout(self, scene):
     layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
 
+    #layout.row().label("XPlane2Blender Version: " + xplane_config.XPLANE2BLENDER_VER.fullVersionStr())
     if scene.xplane.exportMode == 'layers':
         if len(scene.xplane.layers) != 0:
             for i in range(0, len(scene.layers)):
@@ -186,7 +187,6 @@ def scene_dev_layout(self,scene,layout):
     dev_box_row.label(text="", icon="ERROR")
     if scene.xplane.plugin_development:
         dev_box_column = dev_box.column()
-        dev_box_column.label("XPlane2Blender Version: " + xplane_config.XPLANE2BLENDER_VER.fullVersionStr())
         dev_box_column.prop(scene.xplane, "dev_enable_breakpoints")
         dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")

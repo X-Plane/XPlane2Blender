@@ -1,4 +1,30 @@
-# holds all kinds of constants
+"""
+  #####     ##   ##  ##   ####  ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  #
+   #   #   # #    #  #   ##  #  ## #  #  #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
+  ##   #   # #   # # #  ##      ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
+  ##   #  ####   # # #  #  ###  #     # #     ##   #  # #   ####  #  ### #    #  # # #    ##   #
+  #   #   #  #   #  ##  ##  #   # #   # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  # 
+ #####   ##  ## ##  #    ####  ####  ## ##   #####   ## ## ##  ##  ####   ###   ##  #   ####  #
+
+This file is also an important file for the data model! See the special care
+instructions in xplane_updater.py before changing, especially for changing or removing constants!
+
+Please sort this file's sections alphabetically and align the = signs going forward. -Ted, 9/6/17
+"""
+
+
+# Section: Build Types
+# Names for builds types stages we have in
+# our software life cycle
+BUILD_TYPE_ALPHA  = "alpha"
+BUILD_TYPE_BETA   = "beta"
+BUILD_TYPE_DEV    = "dev" #Our pre-alpha stage, generally the most unstable build type
+BUILD_TYPE_LEGACY = "leg" #Any build before the XPlane2BlenderVersion property (< 3.4.0-beta.5)
+BUILD_TYPE_RC     = "rc"
+
+# Constant: BUILD_TYPES
+# Types of builds available, ordered in tuple in ascending precedence
+BUILD_TYPES = (BUILD_TYPE_LEGACY, BUILD_TYPE_DEV, BUILD_TYPE_ALPHA, BUILD_TYPE_BETA, BUILD_TYPE_RC)
 
 #none, 1, 2, 3, 4
 MAX_LODS = 5

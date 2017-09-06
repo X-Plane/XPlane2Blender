@@ -3,6 +3,7 @@
 
 import bpy
 from datetime import datetime
+from re import match, sub
 from .__init__ import bl_info
 from .xplane_config import CURRENT_BUILD_TYPE, CURRENT_BUILD_TYPE_VERSION
 from .xplane_config import CURRENT_DATA_MODEL_VERSION, CURRENT_BUILD_NUMBER
@@ -53,12 +54,12 @@ A good deal of time was spent making the UI look pretty for 3.4.0 so please don'
 
 - If you've actually read this far, congratulations! You get a cookie!
 
-- For defaults, use the constants. 
+- For defaults, use the constants, not redundantly copying their values 
 
 - Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
-
 '''
 
+#TODO: get rid of these
 debug_include_data_model_version = False
 
 # Variable:
@@ -67,7 +68,7 @@ debug_include_data_model_version = False
 # it is not often useful to include the build number in comparisons.
 # This can, however, be turned on as needed to debug problems
 debug_include_build_number = False
-    
+        
 # Class: XPlane2Blender 
 #
 # Contains useful methods for getting information about the
@@ -76,70 +77,87 @@ debug_include_build_number = False
 # Names are in the format of
 # io_xplane2blender_major_minor_release(|-(alpha|beta|rc)\.([1-9]+))+(YYYYMMDDHHMMSS).zip
 class XPlane2BlenderVersion(bpy.types.PropertyGroup):
-    def get_xplane2blender_version(self):
-        return bl_info["version"]
+    # This is a convience struct to help prevent people from having to repeateld copy and paste
+    # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
+    class VerStruct():
+        def __init__(self,addon_version=None,build_type=None,build_type_version=None,data_model_version=None,build_number=None):
+            self.addon_version      = addon_version if addon_version is not None else (0,0,0)
+            self.build_type         = build_type if build_type is not None else BUILD_TYPE_DEV
+            self.build_type_version = build_type_version if build_type_version is not None else 0
+            self.data_model_version = data_model_version if data_model_version is not None else 0
+            self.build_number       = build_number if build_number is not None else ""
 
-    # Variable: xplane2blender_version
+    # In an unfortunate move on Blender's part, it is impossible to "construct" a property,
+    # making our history of immutable version numbers tricky to implement.
+    #
+    # When needed (storing a past version), a special mutated version of the properties
+    # is used. The mutated data can only be set with the mutate_data function.
+    # A version is either entirely generated from data or entirely mutated with saved
+    # information
+ 
+    #Mutable addon_version
+    __addon_version = None
+    def get_addon_version(self):
+        return bl_info["version"] if self.__addon_version is None else self.__addon_version
+    
+    # Variable: addon_version
     # Tuple of Blender addon version, (major, minor, revision)
-    xplane2blender_version = bpy.props.IntVectorProperty(
+    addon_version = bpy.props.IntVectorProperty(
         name = "XPlane2Blender Addon Version",
         description = "The version of the addon (also found in it's addons information",
         default=(0,0,0),
         size=3,
-        get=get_xplane2blender_version,
+        get=None,#get_addon_version,
         set=None)
-
-    # Constant: BUILD_TYPES
-    # Names for builds types stages we have in
-    # our software life cycle
-    BUILD_TYPES_ALPHA  = "alpha"
-    BUILD_TYPES_BETA   = "beta"
-    BUILD_TYPES_DEV    = "dev"
-    BUILD_TYPES_LEGACY = "leg"
-    BUILD_TYPES_RC     = "rc"
     
-    # Constant: BUILD_TYPES
-    # Types of builds available, ordered in tuple in ascending precedence
-    BUILD_TYPES = (BUILD_TYPES_LEGACY, BUILD_TYPES_DEV, BUILD_TYPES_ALPHA, BUILD_TYPES_BETA, BUILD_TYPES_RC)
-
+    #Mutable build_type
+    __build_type = None
+    
     # Variable: build_type
     # The type of build this is, always a value in BUILD_TYPES
     def get_build_type(self):
-        return io_xplane2blender.xplane_config.CURRENT_BUILD_TYPE
+        return io_xplane2blender.xplane_config.CURRENT_BUILD_TYPE if self.__build_type is None else self.__build_type
 
     # Variable: build_type
-    build_type = bpy.props.IntProperty(
+    build_type = bpy.props.StringProperty(
         name="Build Type",
         description="Which iteration in the development cycle of the chosen build type we're at",
-        default=0,
-        get=get_build_type,
+        default=xplane_constants.BUILD_TYPE_DEV,
+        get=None,#get_build_type,
         set=None)
+
+    # Mutable build_type_version
+    __build_type_version = None
 
     # Variable: _build_type
     # The type of build this is, always a value in BUILD_TYPES
     def get_build_type_version(self):
-        return io_xplane2blender.xplane_config.CURRENT_BUILD_TYPE_VERSION
+        return io_xplane2blender.xplane_config.CURRENT_BUILD_TYPE_VERSION if self.__build_type_version is None else self.__build_type_version
 
     # Variable: _build_type_version
     build_type_version = bpy.props.IntProperty(
         name="Build Type Version",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=0,
-        get=get_build_type_version,
+        get=None,#get_build_type_version,
         set=None)
-    
+
+    # Mutable data_model_version
+    __data_model_version = None
     def get_data_model_version(self):
-        return io_xplane2blender.xplane_config.CURRENT_DATA_MODEL_VERSION
+        return io_xplane2blender.xplane_config.CURRENT_DATA_MODEL_VERSION if self.__data_model_version is None else self.__build_type_version
 
     data_model_version = bpy.props.IntProperty(
         name="Data Model Version",
         description="Version of the data model (constants,props, and updater functionality) this version of the addon is. Always incrementing on changes",
         default=0,
-        get=get_data_model_version,
+        get=None,#get_data_model_version,
         set=None)
     
+    # Mutable data_model_version
+    __build_number = None
     def get_build_number(self):
-        return io_xplane2blender.xplane_config.CURRENT_BUILD_NUMBER
+        return io_xplane2blender.xplane_config.CURRENT_BUILD_NUMBER if self.__build_number is None else self.__build_number
 
     # Variable:
     # If run as part of the plugin, this will be replaced
@@ -148,9 +166,9 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # string with the YYYYMMSSHHMMSS at that point.
     build_number = bpy.props.StringProperty(
         name="Build Number",
-        desc="Build number of XPlane2Blender. If blank, this is a development build!",
+        description="Build number of XPlane2Blender. If blank, this is a development build!",
         default="",
-        get=get_build_number,
+        get=None,#get_build_number,
         set=None)
     
     def is_valid(self):
@@ -163,9 +181,9 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         #3.20.0 and 3.20.6-14 are messed up, or we'll skip entirely over it
         #straight to 3.30.0 - Ted, 8/24/2017 
         if version[1] >= 20:
-            self._xplane2blender_version = (version[0],2,version[2])
+            self._addon_version = (version[0],2,version[2])
         else:
-            self._xplane2blender_version = version
+            self._addon_version = version
 
         assert build_type in self.BUILD_TYPES
         self._build_type = build_type
@@ -179,8 +197,28 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         """
         return True
     
-    def getVersionStr(self):
-        return '.'.join(map(str,self.xplane2blender_version))
+    # Method: mutate_version_data
+    #
+    # Irreversibly changes the XPlane2Blender Version to a mutated version with custom data
+    def mutate_version_data(self,addon_version,build_type,build_type_version,data_model_version,build_number):
+        self.__addon_version      = addon_version
+        self.__build_type         = build_type
+        self.__build_type_version = build_type_version
+        self.__data_model_version = data_model_version
+        self.__build_number       = build_number
+
+    # Method: is_mutated
+    #
+    # Tests if any of the methods are mutated
+    def is_mutated(self):
+        return self.__addon_version is not None or \
+               self.__build_type    is not None or \
+               self.__build_type_version is not None or \
+               self.__data_model_number  is not None or \
+               self.__build_number  is not None
+
+    def addon_version_clean_str(self):
+        return '.'.join(map(str,self.addon_version))
  
     # Method: asFileName
     #
@@ -188,163 +226,204 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     def asFileName(self):
         return str(self).replace('.','_')
 
-    def __eq__(self,other):
+    # Returns -1 for self < other, 0 for self == other, and 1 for self > other
+    # Also can optionally include to comparse data model version and build number. data_model is re
+    def cmp(self,other,include_data_model_version,include_build_number):
         if isinstance(other, XPlane2BlenderVersion):
-            if self.xplane2blender_version == other.xplane2blender_version:
+            if self.addon_version < other.addon_version:
+                if self.BUILD_TYPES.index(self.build_type) < self.BUILD_TYPES.index(other.build_type):
+                    if self._build_type_version < other._build_type_version:
+                        is_data_model_lt = self.data_model_version < other.data_model_version
+                        is_build_num_lt  = self.build_number < other.build_number
+                        
+                        if include_data_model_version and is_data_model_lt and include_build_number and is_build_num_lt:
+                            return 0
+                        if include_data_model_version and is_data_model_lt:
+                            return 0
+                        if include_build_number and is_build_num_lt:
+                            return 0
+                    else:
+                        pass #Move on to equality
+                    
+            if self.addon_version == other.addon_version:
                 if self.build_type == other.build_type:
                     if self.build_type_version == other.build_type_version:
-                        if debug_include_data_model_version and self.data_model_version == other.data_model_version:
-                            if debug_include_build_number and self._build_number == other._build_number:
-                                return True
-
-            return False
-        else:
-            raise NotImplemented
-
-    def __ne__(self,other):
-        return self.__eq__(other)
-
-    def __lt__(self,other):
-        if isinstance(other, XPlane2BlenderVersion):
-            if self.xplane2blender_version > other.xplane2blender_version:
-                return False
-            elif self.BUILD_TYPES.index(self.build_type) > self.BUILD_TYPES.index(other.build_type):
-                return False
-            elif self._build_type_version > other._build_type_version:
-                return False
-            elif debug_include_data_model_version and self.debug_include_data_model_version > other.debug_include_data_model_version:
-                return False
-            elif debug_include_build_number and self.build_number > other.build_number:
-                return False
-
-            return True
-        else:
-            raise NotImplemented
-
-    def __gt__(self,other):
-        if isinstance(other, XPlane2BlenderVersion):
-            if self.xplane2blender_version > other.xplane2blender_version:
-                return True
-            elif self.BUILD_TYPES.index(self.build_type) > self.BUILD_TYPES.index(other.build_type):
-                return True
-            elif self.build_type_version > other.build_type_version:
-                return True
-            elif debug_include_data_model_version and self.debug_include_data_model_version > other.debug_include_data_model_version:
-                return True
-            elif debug_include_build_number and self.build_number > other.build_number:
-                return True
-
-            return False
-        else:
-            raise NotImplemented
-
-    def __le__(self,other):
-        if isinstance(other, XPlane2BlenderVersion):
-            return self < other or self == other
-        
-    def __ge__(self,other):
-        if isinstance(other, XPlane2BlenderVersion):
-            return self > other or self == other
-
-    def __hash__(self):
-        props_to_hash = [self.xplane2blender_version, self.build_type, self.build_type_version]
-        if debug_include_data_model_version:
-            props_to_hash += self.data_model_version
-        if debug_include_build_number:
-            props_to_hash += self.build_number
-
-        return hash(tuple(props_to_hash))
+                        is_data_model_eq = self.data_model_version == other.data_model_version
+                        is_build_num_eq =  self.build_number == other.build_number
+                        
+                        if include_data_model_version and is_data_model_eq and include_build_number and is_build_num_eq:
+                            return 0
+                        if include_data_model_version and is_data_model_eq:
+                            return 0
+                        if include_build_number and is_build_num_eq:
+                            return 0
+                    else:
+                        pass #Move on to greater than
+                    
+            if self.addon_version > other.addon_version:
+                if self.BUILD_TYPES.index(self.build_type) > self.BUILD_TYPES.index(other.build_type):
+                    if self._build_type_version > other._build_type_version:
+                        is_data_model_gt = self.data_model_version > other.data_model_version
+                        is_build_num_gt  = self.build_number > other.build_number
+                        
+                        if include_data_model_version and is_data_model_gt and include_build_number and is_build_num_gt:
+                            return 0
+                        if include_data_model_version and is_data_model_gt:
+                            return 0
+                        if include_build_number and is_build_num_gt:
+                            return 0
+                    else:
+                        pass #Move on to equality
             
-    def __repr__(self):
-        return "%s-%s.%s+%s.%s" % (self.xplane2blender_version,
-                                    self.build_type,
-                                    self.build_type_version,
-                                    self.data_model_version,
-                                    self.build_number)
-        
+            raise Exception("cmp function not implemented properly")
+        else:
+            raise NotImplemented
+
+    #repr and repr of the parsed version return the same thing
+    def __repr__(self):    
+        return "(%s, %s, %s, %s, %s)" % (repr(self.addon_version),
+                                       repr(self.build_type),
+                                       repr(self.build_type_version),
+                                       repr(self.data_model_version),
+                                       repr(self.build_number))
     def __str__(self):
-        return "%s-%s.%s+%s.%s" % (self.xplane2blender_version,
-                                    self.build_type,
-                                    self.build_type_version,
-                                    self.data_model_version,
-                                    self.build_number if len(self.build_number) > 0 else "NONE")
+        return "%s-%s.%s+%s.%s" % (self.addon_version_clean_str(),
+                                   self.build_type,
+                                   self.build_type_version,
+                                   self.data_model_version,
+                                   self.build_number if len(self.build_number) > 0 else "NONE")
         
     def shortStr(self):
-        return "%s%s%s.%s" % (self.xplane2blender_version, self.build_type, self.build_type_version)
+        return re.match("(.*)+",str(self)).groups[1]
 
-    @staticmethod
-    def getBuildNumberDateTime(self):
-        #Use the UNIX Timestamp in UTC 
-        return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
-
-    # Method: parseVersion
+    # Method: parse_version
     #
     # Parameters:
     #    version_string: The string to attempt to parse
     # Parses a variety of strings and attempts to extract a valid version number and a build number
-    # Returns a tuple of (XPlane2BlenderVersion, and a "" or "YYYYMMDDHHMMSS" build number string, or None
-    # if the string was unparsable
+    # Returns a tuple of the components of an XPlane2BlenderVersion or None if the parse was unsuccessful
+    #
+    # Formats
+    # Old version numbers: '3.2.0', '3.2', or '3.3.13'
+    # New, moder format: '3.4.0-beta.5+1.20170906154330'
     @staticmethod    
-    def parseVersion(version_string):
-        ####################################
-        # String cleaning and reformatting #
-        ####################################
-        if version_string.startswith('v'):
+    def parse_version(version_str):
+        addon_version = (0,0,0)
+        build_type = xplane_constants.BUILD_TYPE_LEGACY
+        build_type_version = 0
+        data_model_version = 0
+        build_number = ""
+
+        #We're dealing with modern
+        if version_str.find('-'):
+            ######################################
+            # Regex matching and data extraction #
+            ######################################
+            format_str = r"(\d+\.\d+\.\d+)(|-(alpha|beta|rc)\.([1-9]+))"
+                
+            if '+' in version_string:
+                format_str += r"\+(\d{14})"
+                             
+            version_matches = re.match(format_str,version_string)
+            
+            # Part 1: Major.Minor.revision (1)
+            # Part 2: No build type, '', (2) or '-' and a build type (3) and literal '.' and number (4)
+            # Literal + (optional, requires '+' in string)
+            # Part 3: YYYYMMDDHHMMSS (5) (optional, requires '+' in string)
+            if version_matches:
+                version_tuple      = tuple(version_matches.group(1).split('.'))
+                build_type         = "" if len(version_matches.group(2)) == 0 else version_matches.group(3)
+                build_type_version = 0 if build_type == "" else version_matches.group(4)
+                build_number       = ''
+    
+                #If we have a build number, we can take this opportunity to validate it
+                if '+' in version_string:
+                    #Regex groups for (hopefully matching) YYYYMMDDHHMMSS
+                    datetime_matches = re.match(r"(\d){4}" + \
+                                                r"(\d){2}" + \
+                                                r"(\d){2}" + \
+                                                r"(\d){2}" + \
+                                                r"(\d){2}" + \
+                                                r"(\d){2}",
+                                                version_matches.group(5))
+                    
+                    if datetime_matches is not None:
+                        # Following the dry principle, we'll just let the datetime class validate this data for us
+                        try:
+                            build_number = datetime.datetime(*datetime_matches.groups()[1:]).strftime("%Y%m%d%H%M%S")
+                        except Exception as e:
+                            print('Exception %s occurred while trying to parse datetime' % e)
+                            print('"%s" is an invalid build number' % (version_matches.group(5)))
+                            return None
+            pass
+        else:
+            addon_version = tuple(version_str.split('.'))
+            
+        return (addon_version,build_type,build_type_version,data_model_version,build_number)
+        #####################################
+        ## String cleaning and reformatting #
+        #####################################
+        #if version_str.startswith('v'):
             # Remove a starting 'v'
             # and change from it's as file representation to the data representation
-            version_string = version_string[1:]
+            #version_str = version_str[1:]
 
-        version_string.replace('_','.')
-            
-        # If the format is (m.m.r), remove surrounding parenthesis 
-        if version_string[0] == '(' and version_string[-1] == ')':
-            version_string = version_string[1:-2]
-         
-        ######################################
-        # Regex matching and data extraction #
-        ######################################
-        format_str = r"(\d+\.\d+\.\d+)(|-(alpha|beta|rc)\.([1-9]+))"
-            
-        if '+' in version_string:
-            format_str += r"\+(\d{14})"
-                         
-        version_matches = re.match(format_str,version_string)
-        
-        # Part 1: Major.Minor.revision (1)
-        # Part 2: No build type, '', (2) or '-' and a build type (3) and literal '.' and number (4)
-        # Literal + (optional, requires '+' in string)
-        # Part 3: YYYYMMDDHHMMSS (5) (optional, requires '+' in string)
-        if version_matches:
-            version_tuple      = tuple(version_matches.group(1).split('.'))
-            build_type         = "" if len(version_matches.group(2)) == 0 else version_matches.group(3)
-            build_type_version = 0 if build_type == "" else version_matches.group(4)
-            build_number       = ''
+        #version_str = version_str.replace('_','.')
 
-            #If we have a build number, we can take this opportunity to validate it
-            if '+' in version_string:
-                #Regex groups for (hopefully matching) YYYYMMDDHHMMSS
-                datetime_matches = re.match(r"(\d){4}" + \
-                                            r"(\d){2}" + \
-                                            r"(\d){2}" + \
-                                            r"(\d){2}" + \
-                                            r"(\d){2}" + \
-                                            r"(\d){2}",
-                                            version_matches.group(5))
-                
-                if datetime_matches is not None:
-                    # Following the dry principle, we'll just let the datetime class validate this data for us
-                    try:
-                        build_number = datetime.datetime(*datetime_matches.groups()[1:]).strftime("%Y%m%d%H%M%S")
-                    except Exception as e:
-                        print('Exception %s occurred while trying to parse datetime' % e)
-                        print('"%s" is an invalid build number' % (version_matches.group(5)))
-                        return None
-                else:
-                    return None
-                
-            return (version_tuple,build_type,build_type_version), build_number 
-        else:
-            return None
+        ## If the format is (m.m.r), remove surrounding parenthesis 
+        #if version_string[0] == '(' and version_string[-1] == ')':
+            #version_string = version_string[1:-2]
+         #
+        #######################################
+        ## Regex matching and data extraction #
+        #######################################
+        #format_str = r"(\d+\.\d+\.\d+)(|-(alpha|beta|rc)\.([1-9]+))"
+            #
+        #if '+' in version_string:
+            #format_str += r"\+(\d{14})"
+                         #
+        #version_matches = re.match(format_str,version_string)
+        #
+        ## Part 1: Major.Minor.revision (1)
+        ## Part 2: No build type, '', (2) or '-' and a build type (3) and literal '.' and number (4)
+        ## Literal + (optional, requires '+' in string)
+        ## Part 3: YYYYMMDDHHMMSS (5) (optional, requires '+' in string)
+        #if version_matches:
+            #version_tuple      = tuple(version_matches.group(1).split('.'))
+            #build_type         = "" if len(version_matches.group(2)) == 0 else version_matches.group(3)
+            #build_type_version = 0 if build_type == "" else version_matches.group(4)
+            #build_number       = ''
+#
+            ##If we have a build number, we can take this opportunity to validate it
+            #if '+' in version_string:
+                ##Regex groups for (hopefully matching) YYYYMMDDHHMMSS
+                #datetime_matches = re.match(r"(\d){4}" + \
+                                            #r"(\d){2}" + \
+                                            #r"(\d){2}" + \
+                                            #r"(\d){2}" + \
+                                            #r"(\d){2}" + \
+                                            #r"(\d){2}",
+                                            #version_matches.group(5))
+                #
+                #if datetime_matches is not None:
+                    ## Following the dry principle, we'll just let the datetime class validate this data for us
+                    #try:
+                        #build_number = datetime.datetime(*datetime_matches.groups()[1:]).strftime("%Y%m%d%H%M%S")
+                    #except Exception as e:
+                        #print('Exception %s occurred while trying to parse datetime' % e)
+                        #print('"%s" is an invalid build number' % (version_matches.group(5)))
+                        #return None
+                #else:
+                    #return None
+                #
+            #return (version_tuple,build_type,build_type_version), build_number 
+        #else:
+            #return None
+    @staticmethod
+    def get_build_number_datetime(self):
+        #Use the UNIX Timestamp in UTC 
+        return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
+
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
@@ -1182,7 +1261,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     dev_fake_xplane2blender_version = bpy.props.StringProperty(
         name       = "Fake XPlane2Blender Version",
         description = "The Fake XPlane2Blender Version to re-run the upgrader with",
-        default = XPLANE2BLENDER_VER.getVersionStr())
+        default = "")#str(bpy.context.scene.xplane.get("xplane2blender_ver")))
     #######################################
 
     layers = bpy.props.CollectionProperty(
@@ -1230,9 +1309,14 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = True
     )
     
-    xplane2blender_version = XPlane2BlenderVersion
+    # This always represents the current version of the code,
+    # or a deliberate build of it. It's values are configured
+    # in __init__.py and xplane_config.py
+    xplane2blender_ver = XPlane2BlenderVersion
     
-    xplane2blender_version_history = bpy.props.CollectionProperty(
+    # This list of version histories the .blend file has encountered,
+    # from the earliest
+    xplane2blender_ver_history = bpy.props.CollectionProperty(
         name="XPlane2Blender History",
         description="Every version of XPlane2Blender this .blend file has been opened with",
         type=XPlane2BlenderVersion)
@@ -1692,6 +1776,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 # Registers all properties.
 def addXPlaneRNA():
     # basic classes
+    bpy.utils.register_class(XPlane2BlenderVersion)
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
     bpy.utils.register_class(XPlaneCondition)
@@ -1752,6 +1837,7 @@ def removeXPlaneRNA():
     bpy.utils.unregister_class(XPlaneLayer)
 
     # basic classes
+    bpy.utils.unregister_class(XPlane2BlenderVersion)
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
     #bpy.utils.unregister_class(XPlaneDatarefSearch)

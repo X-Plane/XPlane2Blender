@@ -12,7 +12,6 @@ from .xplane_lights import XPlaneLights
 from .xplane_mesh import XPlaneMesh
 from .xplane_header import XPlaneHeader
 from .xplane_commands import XPlaneCommands
-from ..xplane_config import XPLANE2BLENDER_VER
 from ..xplane_helpers import floatToStr, logger
 from .xplane_material_utils import getReferenceMaterials
 
@@ -430,7 +429,7 @@ class XPlaneFile():
         else:
             build = bpy.app.build_revision
         
-        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, XPLANE2BLENDER_VER)
+        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, bpy.context.scene.xplane.xplane2blender_ver)
 
     # Method: write
     # Returns OBJ file code
@@ -543,8 +542,3 @@ class XPlaneFile():
         while(len(self._tempBlenderObjects) > 0):
             tempBlenderObject = self._tempBlenderObjects.pop()
             bpy.data.objects.remove(tempBlenderObject)
-    
-# Method: getEffectiveXPlaneVersion
-# Returns the current chosen X-Plane version as an int
-def getXPlaneVersion():
-    return int(bpy.context.scene.xplane.version)
