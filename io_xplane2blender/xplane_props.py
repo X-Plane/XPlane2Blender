@@ -104,10 +104,10 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Tuple of Blender addon version, (major, minor, revision)
     addon_version = bpy.props.IntVectorProperty(
         name = "XPlane2Blender Addon Version",
-        description = "The version of the addon (also found in it's addons information",
+        description = "The version of the addon (also found in it's addons information)",
         default=(0,0,0),
         size=3,
-        get=None,#get_addon_version,
+        get=get_addon_version,
         set=None)
     
     #Mutable build_type
@@ -116,6 +116,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Variable: build_type
     # The type of build this is, always a value in BUILD_TYPES
     def get_build_type(self):
+        print("here build type")
         return io_xplane2blender.xplane_config.CURRENT_BUILD_TYPE if self.__build_type is None else self.__build_type
 
     # Variable: build_type
@@ -123,7 +124,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         name="Build Type",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=xplane_constants.BUILD_TYPE_DEV,
-        get=None,#get_build_type,
+        get=get_build_type,
         set=None)
 
     # Mutable build_type_version
@@ -139,7 +140,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         name="Build Type Version",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=0,
-        get=None,#get_build_type_version,
+        get=get_build_type_version,
         set=None)
 
     # Mutable data_model_version
@@ -151,7 +152,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         name="Data Model Version",
         description="Version of the data model (constants,props, and updater functionality) this version of the addon is. Always incrementing on changes",
         default=0,
-        get=None,#get_data_model_version,
+        get=get_data_model_version,
         set=None)
     
     # Mutable data_model_version
@@ -168,7 +169,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         name="Build Number",
         description="Build number of XPlane2Blender. If blank, this is a development build!",
         default="",
-        get=None,#get_build_number,
+        get=get_build_number,
         set=None)
     
     def is_valid(self):
@@ -1312,7 +1313,11 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     # This always represents the current version of the code,
     # or a deliberate build of it. It's values are configured
     # in __init__.py and xplane_config.py
-    xplane2blender_ver = XPlane2BlenderVersion
+    xplane2blender_ver = bpy.props.PointerProperty(
+        name = "Current XPlane2Blender Version",
+        description = "The current version of XPlane2Blender",
+        type = XPlane2BlenderVersion
+    )
     
     # This list of version histories the .blend file has encountered,
     # from the earliest
