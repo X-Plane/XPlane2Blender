@@ -1,9 +1,11 @@
 # File: xplane_config.py
 # Holds config variables that are used throughout the addon.
 
+from io_xplane2blender import bl_info
+from io_xplane2blender import xplane_constants
 from .xplane_constants import BUILD_TYPE_ALPHA,BUILD_TYPE_BETA,BUILD_TYPE_DEV
 from .xplane_constants import BUILD_TYPE_LEGACY,BUILD_TYPE_RC     
-from io_xplane2blender import xplane_constants
+
 
 # Variable: debug
 # Set to True for debugging output using <debugger>. Default is True, as we are still dealing with a development release.
@@ -16,6 +18,9 @@ debug = False
 # TODO: This is a duplicate for bpy.context.scene.xplane.log, no matter what you set here it won't matter. In addition,
 # at most of it's call sites, it is a barely used variable. This redundent global state variable really aught to be cleaned
 log = False
+
+# We make a copy here so as not to cause a circular dependency in xplane_props and other places
+CURRENT_ADDON_VERSION = bl_info["version"]
 
 # Constant: CURRENT_BUILD_TYPE
 #
@@ -31,7 +36,7 @@ CURRENT_BUILD_TYPE_VERSION = 4
 #
 # The current data model version, incrementing every time xplane_constants, xplane_props, or xplane_updater
 # changes. Builds earlier than 3.4.0-beta.5 have and a version of 0 
-CURRENT_DATA_MODEL_VERSION = 0
+CURRENT_DATA_MODEL_VERSION = 1
 
 # Constant: CURRENT_BUILD_NUMBER
 #

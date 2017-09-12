@@ -26,6 +26,17 @@ BUILD_TYPE_RC     = "rc"
 # Types of builds available, ordered in tuple in ascending precedence
 BUILD_TYPES = (BUILD_TYPE_LEGACY, BUILD_TYPE_DEV, BUILD_TYPE_ALPHA, BUILD_TYPE_BETA, BUILD_TYPE_RC)
 
+# Constant: BUILD_NUMBER_NONE
+#
+# The string for having no build number, chosen for being descriptive,
+# same length as YYYYMMDDHHMMSS, and having no numbers
+BUILD_NUMBER_NONE = "NO_BUILD_NUM"
+
+# Constant: DEPRECATED_XP2B_VER
+#
+# The string found in scene.xplane2blender after 3.4.0-beta.5
+DEPRECATED_XP2B_VER = "DEPRECATED"
+
 #none, 1, 2, 3, 4
 MAX_LODS = 5
 MAX_COCKPIT_REGIONS = 4

@@ -4,6 +4,7 @@
 import bpy
 import re
 import io_xplane2blender
+from io_xplane2blender import xplane_helpers
 
 #class SCENE_OT_dev_export_to_current_dir(bpy.types.Operator):
 #    bl_label  = 'Export .blend file to current dir'
@@ -53,5 +54,5 @@ class SCENE_OT_dev_rerun_updater(bpy.types.Operator):
     bl_description = "Re-runs the updater. This does not undo an update that happened on load!"
    
     def execute(self,context):
-        io_xplane2blender.xplane_updater.update(bpy.context.scene.xplane.dev_fake_xplane2blender_version)
+        io_xplane2blender.xplane_updater.update(xplane_helpers.VerStruct.parse_version(bpy.context.scene.xplane.dev_fake_xplane2blender_version))
         return { 'FINISHED' }

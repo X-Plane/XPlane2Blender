@@ -5,8 +5,8 @@ import bpy
 from .xplane_config import *
 from .xplane_constants import *
 from bpy.app.handlers import persistent
-import io_xplane2blender
-import io_xplane2blender.xplane_props
+from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
+from .xplane_props import *
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
@@ -83,8 +83,8 @@ def __updateLocRot(obj):
 #
 # Parameters:
 #     fromVersion - The old version of the blender file
-def update(fromVersion):
-    if fromVersion < XPlane2BlenderVersion.parseVersion('3.3.0'):
+def update(last_version):
+    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.parse_version('3.3.0'),False,False) == -1:
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
@@ -102,7 +102,7 @@ def update(fromVersion):
                     else:
                         layer.export_type = 'aircraft'
 
-    if fromVersion < XPlane2BlenderVersion.parseVersion('3.4.0'):
+    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.parse_version('3.4.0'),False,False) == -1:
         for arm in bpy.data.armatures:
             for bone in arm.bones:
                 #Thanks to Python's duck typing and Blender's PointerProperties, this works
@@ -111,25 +111,6 @@ def update(fromVersion):
         for obj in bpy.data.objects:
             __updateLocRot(obj)
 
-def add_history(legacy_version_str=None):
-    scene   = bpy.context.scene
-    history = scene.xplane.xplane2blender_ver_history
-    
-    if legacy_version_str is not None:
-        parsed_ver = scene.xplane.xplane2blender_ver.parse_version(legacy_version_str)
-        if parsed_ver is None:
-            return False
-    else:
-        parsed_ver = scene.xplane.xplane2blender_ver
-    
-    repr_of_ver = repr(scene.xplane.xplane2blender_ver)
-     
-    if history[-1].name == repr_of_ver:
-        new_hist_entry = history.add()
-        new_hist_entry.name = repr_of_ver
-        success = new_hist_entry.mutate_data()
-        if success is False:
-            history.remove(len(history)-1)
     
 @persistent
 def load_handler(dummy):
@@ -140,47 +121,55 @@ def load_handler(dummy):
         return
     
     scene = bpy.context.scene
-
-#   you can put anything in there that makes 3.30 think the version is 3.30 or newer
-#   you cannot put something in there that makes 3.30 think the file is from 3.20 or older
+    ver_history = scene.xplane.xplane2blender_ver_history
+    current_version = scene.xplane.xplane2blender_ver
 
     # L: means log this    
-    if scene.get('xplane2blender_ver') is not None:
-        legacy_ver = scene.get('xplane2blender_ver','3.2.0').replace("20","2")
     #    if it is 3.20.x:
     #     L:replace with 3.2.x
     #     L:add the current history
-    #     L:insert "DEPREICATED"
-    #
-    # If we have an empty history (new file, post beta.5)
-    #     L:add the current history
-    #
-    # Get the old_version (end of list)
-    # L:Compare old_vs_new
+    
+    # Thanks to some python magic, this works for the old style-scene scene['xplane2blender']
+    # and new style named read-only default scene.xplane2blender_version, thanks to the names
+    # being the exact same.
+    
+    import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
+    import pydevd;pydevd.settrace()
+    if scene.get('xplane2blender_version') is not xplane_constants.DEPRECATED_XP2B_VER:
+        # "3.2.0 was the last version without an updater, so default to that."
+        # 3.20 was a mistake. If we get to a real version 3.20, we'll deprecate support for 3.2.0
+        legacy_version_str = scene.get('xplane2blender_version','3.2.0').replace('20','2')
+        legacy_version = xplane_helpers.VerStruct.parse_version(legacy_version_str)
+        if legacy_version is not None:
+            xplane_helpers.VerStruct.add_to_version_history(legacy_version)
+            scene['xplane2blender_version'] = xplane_constants.DEPRECATED_XP2B_VER
+        elif len(ver_history) == 0:
+            raise Exception("pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."\
+                            " Re-open file in a previous version and/or fix manually in Scene->Custom Properties" % (legacy_version_str))
+            
+    #We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we save that on first save!
+
+    # Get the old_version (end of list, which by now is guaranteed to have something in it)
+    last_version = ver_history[-1]
+
+    # L:Compare last vs current
     # If the version is out of date
     #     L:Run update
-    #
-    # If the end of the list is not equal to the current version
-    #     L:Append current version
+    if xplane_helpers.VerStruct.cmp(last_version,scene.xplane.xplane2blender_ver,False,False) == -1:
+        print('This file was created with an older XPlane2Blender version less than or equal to (%s)' +\
+              ' and will now automatically be updated to %s' % (last_version,current_version))
+        update(last_version)
 
-    # "3.2.0 was the last version without an updater, so default to that."
-    # Best guess as to this decision -Ted 08/02/2017
-    raw_version_str = bpy.data.scenes[0].get('xplane2blender_ver','3.2.0')
-
-    fileVersion, prev_build_number = XPlane2BlenderVersion.parseVersion(raw_version_str)
-    if fileVersion < bpy.context.scene.xplane.xplane2blender_ver:
-        print('This file was created with an older XPlane2Blender version less than or equal to (%s) and will now automatically be updated to %s' % (fileVersion,XPLANE2BLENDER_VER.fullVersionStr()))
-        update(fileVersion)
-        bpy.data.scenes[0]['xplane2blender_ver'] = str(XPLANE2BLENDER_VER)
-        
-        
-        print('Your file was successfully updated to XPlane2Blender %s' % XPLANE2BLENDER_VER.fullVersionStr())
-    
+        # Add the current version to the history
+        xplane_helpers.XP2BVerStruct.add_to_version_history(scene.xplane.xplane2blender_ver)
+        print('Your file was successfully updated to XPlane2Blender %s' % scene.xplane.xplane2blender_ver)
         
 bpy.app.handlers.load_post.append(load_handler)
 
 @persistent
 def save_handler(dummy):
-    pass
+    scene = bpy.context.scene
+    if len(scene.xplane.xplane2blender_ver_history) == 0:
+        xplane_helpers.XP2BVerStruct.add_to_version_history(scene.xplane.xplane2blender_ver) 
 
 bpy.app.handlers.save_pre.append(save_handler)
