@@ -20,7 +20,6 @@ class LAMP_PT_xplane(bpy.types.Panel):
 
     def draw(self, context):
         obj = context.object
-
         if(obj.type == "LAMP"):
             lamp_layout(self, obj.data)
             custom_layout(self, obj.data, "LAMP")
@@ -157,7 +156,7 @@ def scene_layout(self, scene):
     layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
 
-    #layout.row().label("XPlane2Blender Version: " + xplane_config.XPLANE2BLENDER_VER.fullVersionStr())
+    layout.row().label("XPlane2Blender Version: " + str(scene.xplane.xplane2blender_ver))
     if scene.xplane.exportMode == 'layers':
         if len(scene.xplane.layers) != 0:
             for i in range(0, len(scene.layers)):
@@ -950,7 +949,6 @@ def addXPlaneUI():
 #    for dataref in datarefs:
 #        prop = bpy.data.scenes[0].xplane_datarefs.add()
 #        prop.name = dataref
-
     bpy.utils.register_class(BONE_PT_xplane)
     bpy.utils.register_class(LAMP_PT_xplane)
     bpy.utils.register_class(MATERIAL_PT_xplane)

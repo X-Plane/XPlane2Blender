@@ -1,9 +1,12 @@
-from ..xplane_config import getDebug
-from ..xplane_helpers import firstMatchInList, logger
-from ..xplane_constants import *
-from .xplane_attributes import XPlaneAttributes
-import re
 import bpy
+import re
+
+from .xplane_attributes import XPlaneAttributes
+from ..xplane_config import getDebug
+from ..xplane_constants import *
+from io_xplane2blender import xplane_helpers
+from ..xplane_helpers import firstMatchInList, floatToStr, logger
+
 
 # Setters, resetters, and counterparts:
 #
@@ -61,8 +64,6 @@ import bpy
 # we expect to leave things in their currently broken state; for 3.5, we can then add specific panel attribute labeling
 # to the UI and have authors migrate their projects forward.
 #
-
-
 # Class: XPlaneCommands
 # Creates the OBJ commands table.
 class XPlaneCommands():
@@ -254,9 +255,9 @@ class XPlaneCommands():
     def parseAttributeValue(self, value, blenderObject):
         if str(value).find('{{xyz}}') != -1:
             return str(value).replace('{{xyz}}', '%6.8f\t%6.8f\t%6.8f' % (
-                floatToStr(blenderObject.location[0]),
-                floatToStr(blenderObject.location[2]),
-                floatToStr(-blenderObject.location[1])
+                xplane_helpers.floatToStr(blenderObject.location[0]),
+                xplane_helpers.floatToStr(blenderObject.location[2]),
+                xplane_helpers.floatToStr(-blenderObject.location[1])
             ))
 
         return value

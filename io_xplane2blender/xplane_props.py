@@ -13,6 +13,8 @@ from .xplane_constants import *
 
 from . import xplane_helpers
 from .xplane_helpers import getColorAndLitTextureSlots
+from io_xplane2blender.xplane_config import CURRENT_ADDON_VERSION,\
+    CURRENT_BUILD_TYPE
 
 
 '''
@@ -87,7 +89,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     addon_version = bpy.props.IntVectorProperty(
         name = "XPlane2Blender Addon Version",
         description = "The version of the addon (also found in it's addons information)",
-        default=(0,0,0),
+        default=CURRENT_ADDON_VERSION,
         update=update_version_property,
         size=3)
     
@@ -100,7 +102,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     build_type = bpy.props.StringProperty(
         name="Build Type",
         description="Which iteration in the development cycle of the chosen build type we're at",
-        default=xplane_constants.BUILD_TYPE_DEV,
+        default=CURRENT_BUILD_TYPE,
         update=update_version_property
     )
 
@@ -110,7 +112,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     build_type_version = bpy.props.IntProperty(
         name="Build Type Version",
         description="Which iteration in the development cycle of the chosen build type we're at",
-        default=0,
+        default=CURRENT_BUILD_TYPE_VERSION,
         update=update_version_property
     )
 
@@ -120,11 +122,10 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     data_model_version = bpy.props.IntProperty(
         name="Data Model Version",
         description="Version of the data model (constants,props, and updater functionality) this version of the addon is. Always incrementing on changes",
-        default=0,
+        default=CURRENT_DATA_MODEL_VERSION,
         update=update_version_property
     )
     
-
     # Property: build_number
     #
     # If run as a public facing build, this value will be replaced
@@ -132,8 +133,8 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Otherwise, it defaults to xplane_constants.BUILD_NUMBER_NONE
     build_number = bpy.props.StringProperty(
         name="Build Number",
-        description="Build number of XPlane2Blender. If blank, this is a development build!",
-        default=xplane_constants.BUILD_NUMBER_NONE,
+        description="Build number of XPlane2Blender. If xplane_constants.BUILD_NUMBER_NONE, this is a development or legacy build!",
+        default=CURRENT_BUILD_NUMBER,
         update=update_version_property
     )
     
@@ -159,25 +160,29 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         else:
             return False
 
-    # Method: asFileName
+    # Method: as_file_name
     #
-    # Gets the version in its filename version (all .'s replaced with version
+    # Gets the version in its filename version (all .'s replaced with ,'s)
     def as_file_name(self):
         return str(self).replace('.','_')
 
     def make_struct(self):
         return xplane_helpers.VerStruct(self.addon_version, self.build_type, self.build_type_version, self.data_model_version, self.build_number)
 
-    #repr and repr of the parsed version return the same thing
+    # Method: __repr__
+    #
+    # repr and repr of VerStruct are the same. It is used as a key for scene.xplane.xplane2blender_ver_history
     def __repr__(self):    
         return "(%s, %s, %s, %s, %s)" % ('(' + ','.join(map(str,self.addon_version)) + ')',
                                          "'" + str(self.build_type) + "'",
                                                str(self.build_type_version),
                                                str(self.data_model_version),
                                          "'" + str(self.build_number) + "'")
-    #str Used for most purposes
+    # Method: __str__
+    #
+    # str and str of VerStruct are the same. It is used for printing to the user
     def __str__(self):
-        return "%s-%s.%s+%s.%s" % ('(' + '.'.join(map(str,self.addon_version)) + ')',
+        return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)), 
                                    self.build_type,
                                    self.build_type_version,
                                    self.data_model_version,

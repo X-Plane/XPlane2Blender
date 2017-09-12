@@ -84,7 +84,7 @@ def __updateLocRot(obj):
 # Parameters:
 #     fromVersion - The old version of the blender file
 def update(last_version):
-    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.parse_version('3.3.0'),False,False) == -1:
+    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.parse_version('3.3.0')) == -1:
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
@@ -102,7 +102,7 @@ def update(last_version):
                     else:
                         layer.export_type = 'aircraft'
 
-    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.parse_version('3.4.0'),False,False) == -1:
+    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.parse_version('3.4.0')) == -1:
         for arm in bpy.data.armatures:
             for bone in arm.bones:
                 #Thanks to Python's duck typing and Blender's PointerProperties, this works
@@ -111,7 +111,6 @@ def update(last_version):
         for obj in bpy.data.objects:
             __updateLocRot(obj)
 
-    
 @persistent
 def load_handler(dummy):
     filepath = bpy.context.blend_data.filepath
@@ -121,8 +120,8 @@ def load_handler(dummy):
         return
     
     scene = bpy.context.scene
-    ver_history = scene.xplane.xplane2blender_ver_history
     current_version = scene.xplane.xplane2blender_ver
+    ver_history = scene.xplane.xplane2blender_ver_history
 
     # L: means log this    
     #    if it is 3.20.x:
@@ -153,14 +152,14 @@ def load_handler(dummy):
     # L:Compare last vs current
     # If the version is out of date
     #     L:Run update
-    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.current(),False,False) == -1:
-        print('This file was created with an older XPlane2Blender version less than or equal to (%s)' +\
-              ' and will now automatically be updated to %s' % (last_version,current_version))
+    if xplane_helpers.VerStruct.cmp(last_version,current_version) == -1:
+        print("This file was created with an older XPlane2Blender version less than or equal to (%s) "
+              "and will now be updated to %s" % (str(last_version),str(current_version)))
         update(last_version)
 
         # Add the current version to the history
-        xplane_helpers.XP2BVerStruct.add_to_version_history(xplane_helpers.VerStruct.current())
-        print('Your file was successfully updated to XPlane2Blender %s' % scene.xplane.xplane2blender_ver)
+        xplane_helpers.VerStruct.add_to_version_history(current_version)
+        print('Your file was successfully updated to XPlane2Blender %s' % str(current_version))
         
 bpy.app.handlers.load_post.append(load_handler)
 
@@ -168,6 +167,6 @@ bpy.app.handlers.load_post.append(load_handler)
 def save_handler(dummy):
     scene = bpy.context.scene
     if len(scene.xplane.xplane2blender_ver_history) == 0:
-        xplane_helpers.XP2BVerStruct.add_to_version_history(xplane_helpers.VerStruct.current()) 
+        xplane_helpers.VerStruct.add_to_version_history(scene.xplane.xplane2blender_ver)
 
 bpy.app.handlers.save_pre.append(save_handler)

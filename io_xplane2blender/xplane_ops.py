@@ -3,7 +3,7 @@
 
 import bpy
 from .xplane_config import *
-from .xplane_constants import MAX_LODS
+from .xplane_constants import MAX_COCKPIT_REGIONS, MAX_LODS
 from .xplane_ops_dev import *
 
 # Function: findFCurveByPath
@@ -180,7 +180,7 @@ class OBJECT_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
 
         num_regions = int(obj.xplane.layer.cockpit_regions)
 
-        while len(obj.xplane.layer.cockpit_region) < MAX_COCKPIT_REGIONS:
+        while len(obj.xplane.layer.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
             obj.xplane.layer.cockpit_region.add()
 
         return {'FINISHED'}

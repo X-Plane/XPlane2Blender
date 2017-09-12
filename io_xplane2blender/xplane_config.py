@@ -41,7 +41,7 @@ CURRENT_DATA_MODEL_VERSION = 1
 # Constant: CURRENT_BUILD_NUMBER
 #
 # The build number, hardcoded by the build script when there is one, other wise it is left "" for "NONE"
-CURRENT_BUILD_NUMBER = ""
+CURRENT_BUILD_NUMBER = xplane_constants.BUILD_NUMBER_NONE
 
 def initConfig():
     global debug

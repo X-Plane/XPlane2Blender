@@ -2,15 +2,16 @@
 # Defines Helpers
 
 import bpy
-import os
+
 import datetime
+from datetime import timezone
+import os
 import re
-from builtins import str
+
 import io_xplane2blender
-from io_xplane2blender import xplane_config
-from .xplane_config import *
-from . import xplane_constants
+from io_xplane2blender import xplane_constants
 from xplane_constants import BUILD_TYPE_DEV, BUILD_TYPES
+from io_xplane2blender import xplane_config
 
 FLOAT_PRECISION = 8
 
@@ -61,7 +62,7 @@ def resolveBlenderPath(path):
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():
     def __init__(self,addon_version=None,build_type=None,build_type_version=None,data_model_version=None,build_number=None):
-        self.addon_version      = addon_version if addon_version is not None else (0,0,0)
+        self.addon_version      = tuple(addon_version) if addon_version is not None else (0,0,0)
         self.build_type         = build_type if build_type is not None else BUILD_TYPE_DEV
         self.build_type_version = build_type_version if build_type_version is not None else 0
         self.data_model_version = data_model_version if data_model_version is not None else 0
@@ -70,18 +71,25 @@ class VerStruct():
     def __repr__(self):
         #WARNING! Make sure this is the same as XPlane2BlenderVersion's!!!
         return "(%s, %s, %s, %s, %s)" % ('(' + ','.join(map(str,self.addon_version)) + ')',
-                                         str(self.build_type),
-                                         str(self.build_type_version),
-                                         str(self.data_model_version),
-                                         str(self.build_number))
+                                         "'" + str(self.build_type) + "'",
+                                               str(self.build_type_version),
+                                               str(self.data_model_version),
+                                         "'" + str(self.build_number) + "'")
     
     def __str__(self):
         #WARNING! Make sure this is the same as XPlane2BlenderVersion's!!!
-        return "%s-%s.%s+%s.%s" % ('(' + '.'.join(map(str,self.addon_version)) + ')',
+        return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)), 
                                    self.build_type,
                                    self.build_type_version,
                                    self.data_model_version,
                                    self.build_number)
+
+    # Method: is_valid
+    #
+    # Tests if all members of VerStruct are the right type and semantically valid
+    # according to our spec
+    #
+    # Returns True or False
     def is_valid(self):
         types_correct = isinstance(self.addon_version,tuple) and len(self.addon_version) == 3 and\
                         isinstance(self.build_type,str)         and \
@@ -106,8 +114,7 @@ class VerStruct():
                 else:
                     build_cycle_fails_reqs = False
                     build_cycle_fails_reqs |= self.build_type_version <= 0
-                    build_cycle_fails_reqs |= self.build_number == xplane_constants.BUILD_NUMBER_NONE
-                    if dev_legacy_fails_reqs is True:
+                    if build_cycle_fails_reqs is True:
                         return False
                 
                 if self.build_type == xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version != 0:
@@ -121,10 +128,10 @@ class VerStruct():
                     datetime_matches = re.match(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})", self.build_number)
                     try:
                         # a timezone aware datetime object preforms the validations on construction. 
-                        self.build_number = datetime.datetime(*datetime_matches.groups()[1:],tzinfo=timezone.utc)
+                        dt = datetime.datetime(*datetime_matches.groups()[1:],tzinfo=timezone.utc)
                     except Exception as e:
                         print('Exception %s occurred while trying to parse datetime' % e)
-                        print('"%s" is an invalid build number' % (datetime_matches.group(0)))
+                        print('"%s" is an invalid build number' % (self.build_number))
                         return False
                     else:
                         return True
@@ -133,24 +140,6 @@ class VerStruct():
     # Also can optionally include to compare data model version and build number.
     @staticmethod
     def cmp(lhs,rhs,include_data_model_version=False,include_build_number=False):
-        import pydevd;pydevd.settrace()
-        if tuple(lhs.addon_version) < tuple(rhs.addon_version):
-            if xplane_constants.BUILD_TYPES.index(lhs.build_type) < xplane_constants.BUILD_TYPES.index(rhs.build_type):
-                if lhs.build_type_version < rhs.build_type_version:
-                    is_data_model_lt = lhs.data_model_version < rhs.data_model_version
-                    is_build_num_lt  = lhs.build_number < rhs.build_number
-
-                    if include_data_model_version and is_data_model_lt and include_build_number and is_build_num_lt:
-                        return -1
-                    if include_data_model_version and is_data_model_lt:
-                        return -1
-                    if include_build_number and is_build_num_lt:
-                        return -1
-
-                    return -1
-                else:
-                    pass #Move on to equality
-                
         if tuple(lhs.addon_version) == tuple(rhs.addon_version):
             if lhs.build_type == rhs.build_type:
                 if lhs.build_type_version == rhs.build_type_version:
@@ -167,10 +156,28 @@ class VerStruct():
                     return 0
                 else:
                     pass #Move on to greater than
+
+        if tuple(lhs.addon_version) <= tuple(rhs.addon_version):
+            if xplane_constants.BUILD_TYPES.index(lhs.build_type) <= xplane_constants.BUILD_TYPES.index(rhs.build_type):
+                if lhs.build_type_version <= rhs.build_type_version:
+                    is_data_model_lt = lhs.data_model_version < rhs.data_model_version
+                    is_build_num_lt  = lhs.build_number < rhs.build_number
+
+                    if include_data_model_version and is_data_model_lt and include_build_number and is_build_num_lt:
+                        return -1
+                    if include_data_model_version and is_data_model_lt:
+                        return -1
+                    if include_build_number and is_build_num_lt:
+                        return -1
+
+                    return -1
+                else:
+                    pass #Move on to equality
                 
-        if tuple(lhs.addon_version) > tuple(rhs.addon_version):
-            if xplane_constants.BUILD_TYPES.index(lhs.build_type) > xplane_constants.BUILD_TYPES.index(rhs.build_type):
-                if lhs.build_type_version > rhs.build_type_version:
+                
+        if tuple(lhs.addon_version) >= tuple(rhs.addon_version):
+            if xplane_constants.BUILD_TYPES.index(lhs.build_type) >= xplane_constants.BUILD_TYPES.index(rhs.build_type):
+                if lhs.build_type_version >= rhs.build_type_version:
                     is_data_model_gt = lhs.data_model_version > rhs.data_model_version
                     is_build_num_gt  = lhs.build_number > rhs.build_number
                     
@@ -186,13 +193,6 @@ class VerStruct():
                     pass #Move on to exception
         
         raise Exception("cmp function not implemented properly")
-
-    # Method: current
-    #
-    # Gets the current XPlane2Blender version based on data in xplane2blender
-    @staticmethod
-    def current():
-        return VerStruct(xplane_config.CURRENT_ADDON_VERSION, xplane_config.CURRENT_BUILD_TYPE, xplane_config.CURRENT_BUILD_TYPE_VERSION, xplane_config.CURRENT_DATA_MODEL_VERSION, xplane_config.CURRENT_BUILD_NUMBER)
 
     # Method: parse_version
     #
@@ -248,7 +248,7 @@ class VerStruct():
     def get_build_number_datetime():
         #Use the UNIX Timestamp in UTC 
         return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
-    
+
     #Works for XPlane2BlenderVersion or VerStruct
     @staticmethod
     def add_to_version_history(version_to_add):
