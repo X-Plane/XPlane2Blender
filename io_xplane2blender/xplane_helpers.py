@@ -3,10 +3,12 @@
 
 import bpy
 import os
-import io_xplane2blender
 import datetime
 import re
 from builtins import str
+import io_xplane2blender
+from io_xplane2blender import xplane_config
+from .xplane_config import *
 from . import xplane_constants
 from xplane_constants import BUILD_TYPE_DEV, BUILD_TYPES
 
@@ -185,6 +187,13 @@ class VerStruct():
         
         raise Exception("cmp function not implemented properly")
 
+    # Method: current
+    #
+    # Gets the current XPlane2Blender version based on data in xplane2blender
+    @staticmethod
+    def current():
+        return VerStruct(xplane_config.CURRENT_ADDON_VERSION, xplane_config.CURRENT_BUILD_TYPE, xplane_config.CURRENT_BUILD_TYPE_VERSION, xplane_config.CURRENT_DATA_MODEL_VERSION, xplane_config.CURRENT_BUILD_NUMBER)
+
     # Method: parse_version
     #
     # Parameters:
@@ -248,11 +257,11 @@ class VerStruct():
         if len(history) == 0 or history[-1].name != repr(version_to_add):
             new_hist_entry = history.add()
             new_hist_entry.name = repr(version_to_add)
-            success = new_hist_entry.mutate_version_data(version_to_add.addon_version,
-                                                         version_to_add.build_type,
-                                                         version_to_add.build_type_version,
-                                                         version_to_add.data_model_version,
-                                                         version_to_add.build_number)
+            success = new_hist_entry.safe_set_version_data(version_to_add.addon_version,
+                                                           version_to_add.build_type,
+                                                           version_to_add.build_type_version,
+                                                           version_to_add.data_model_version,
+                                                           version_to_add.build_number)
             if not success:
                 history.remove(len(history)-1)
                 return None

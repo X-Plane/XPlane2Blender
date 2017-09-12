@@ -67,137 +67,97 @@ A good deal of time was spent making the UI look pretty for 3.4.0 so please don'
 #
 # Contains useful methods for getting information about the
 # version and build number of XPlane2Blender 
-#
-# Names are in the format of
-# io_xplane2blender_major_minor_release(|-(alpha|beta|rc)\.([1-9]+))+(YYYYMMDDHHMMSS).zip
+# 
+# Names are usually in the format of
+# major.minor.release-(alpha|beta|dev|leg|rc)\.[0-9]+)\+\d+\.(YYYYMMDDHHMMSS)
+
+# Internal variable to enable and disable the ability to update the value of XPlane2Blender's properties
+# Do not change outside of safe_set_version_data! 
+__version_safety_off = False
 class XPlane2BlenderVersion(bpy.types.PropertyGroup):
-    # In an unfortunate move on Blender's part, it is impossible to "construct" a property,
-    # making our history of immutable version numbers tricky to implement.
-    #
-    # When needed (storing a past version), a special mutated version of the properties
-    # is used. The mutated data can only be set with the mutate_data function.
-    # A version is either entirely generated from data or entirely mutated with saved
-    # information
- 
-
-    def __init__(self):
-        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-        import pydevd;pydevd.settrace()
-        super.__init__(self)
-        
-        #Mutable addon_version
-        self.__addon_version = None
-        #Mutable build_type
-        self.__build_type = None
-
-        # Mutable build_type_version
-        self.__build_type_version = None
-
-        # Mutable data_model_version
-        self.__data_model_version = None
-
-        # Mutable data_model_version
-        self.__build_number = None
-
-    def get_addon_version(self):
-        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-        import pydevd;pydevd.settrace()
-        return xplane_config.CURRENT_ADDON_VERSION if self.__addon_version is None else self.__addon_version
     
-    # Variable: addon_version
+    #Guards against being updated without being validated
+    def update_version_property(self,context):
+        if __version_safety_off is False:
+            raise Exception("Do not modify version property outside of safe_set_version_data!")
+        return None
+
+    # Property: addon_version
     # Tuple of Blender addon version, (major, minor, revision)
     addon_version = bpy.props.IntVectorProperty(
         name = "XPlane2Blender Addon Version",
         description = "The version of the addon (also found in it's addons information)",
         default=(0,0,0),
-        size=3,
-        get=get_addon_version,
-        set=None)
+        update=update_version_property,
+        size=3)
     
     #Addon string in the form of "m.m.r", no parenthesis
     def addon_version_clean_str(self):
         return '.'.join(map(str,self.addon_version))
- 
     
-    # Variable: build_type
+    # Property: build_type
     # The type of build this is, always a value in BUILD_TYPES
-    def get_build_type(self):
-        return io_xplane2blender.xplane_config.CURRENT_BUILD_TYPE if self.__build_type is None else self.__build_type
-
-    # Variable: build_type
     build_type = bpy.props.StringProperty(
         name="Build Type",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=xplane_constants.BUILD_TYPE_DEV,
-        get=get_build_type,
-        set=None)
+        update=update_version_property
+    )
 
-    # Variable: _build_type
-    # The type of build this is, always a value in BUILD_TYPES
-    def get_build_type_version(self):
-        return io_xplane2blender.xplane_config.CURRENT_BUILD_TYPE_VERSION if self.__build_type_version is None else self.__build_type_version
-
-    # Variable: _build_type_version
+    # Property: build_type_version
+    #
+    # The iteration in the build cycle, 0 for dev and legacy, > 0 for everything else
     build_type_version = bpy.props.IntProperty(
         name="Build Type Version",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=0,
-        get=get_build_type_version,
-        set=None)
+        update=update_version_property
+    )
 
-    def get_data_model_version(self):
-        return io_xplane2blender.xplane_config.CURRENT_DATA_MODEL_VERSION if self.__data_model_version is None else self.__build_type_version
-
+    # Property: data_model_version
+    #
+    # The version of the data model, tracked seperately. Always incrementing.
     data_model_version = bpy.props.IntProperty(
         name="Data Model Version",
         description="Version of the data model (constants,props, and updater functionality) this version of the addon is. Always incrementing on changes",
         default=0,
-        get=get_data_model_version,
-        set=None)
+        update=update_version_property
+    )
     
-    def get_build_number(self):
-        return xplane_config.CURRENT_BUILD_NUMBER if self.__build_number is None else self.__build_number
 
-    # Variable:
-    # If run as part of the plugin, this will be replaced
-    # with the current YYYYMMSSHHMMSS from the UNIX epoch.
-    # If created as a build, the build script will replace this
-    # string with the YYYYMMSSHHMMSS at that point.
+    # Property: build_number
+    #
+    # If run as a public facing build, this value will be replaced
+    # with the YYYYMMSSHHMMSS at build creation date.
+    # Otherwise, it defaults to xplane_constants.BUILD_NUMBER_NONE
     build_number = bpy.props.StringProperty(
         name="Build Number",
         description="Build number of XPlane2Blender. If blank, this is a development build!",
         default=xplane_constants.BUILD_NUMBER_NONE,
-        get=get_build_number,
-        set=None)
+        update=update_version_property
+    )
     
-    # Method: mutate_version_data
+    # Method: safe_set_version_data
     #
-    # Irreversibly changes the XPlane2Blender Version to a mutated version with custom data.
+    # The only way to change version data! Use responsibly for suffer the Dragons described above!
     # Returns True if it succeeded, or False if it failed due to invalid data.
-    def mutate_version_data(self,addon_version,build_type,build_type_version,data_model_version,build_number):
+    def safe_set_version_data(self,addon_version,build_type,build_type_version,data_model_version,build_number):
         if xplane_helpers.VerStruct(addon_version,
                           build_type,
                           build_type_version,
                           data_model_version,
                           build_number).is_valid():
-            self.__addon_version      = addon_version
-            self.__build_type         = build_type
-            self.__build_type_version = build_type_version
-            self.__data_model_version = data_model_version
-            self.__build_number       = build_number
+            global __version_safety_off
+            __version_safety_off = True
+            self.addon_version      = addon_version
+            self.build_type         = build_type
+            self.build_type_version = build_type_version
+            self.data_model_version = data_model_version
+            self.build_number       = build_number
+            __version_safety_off = False
             return True
         else:
             return False
-
-    # Method: is_mutated
-    #
-    # Tests if any of the methods are mutated
-    def is_mutated(self):
-        return self.__addon_version is not None or \
-               self.__build_type    is not None or \
-               self.__build_type_version is not None or \
-               self.__data_model_number  is not None or \
-               self.__build_number  is not None
 
     # Method: asFileName
     #
@@ -263,11 +223,10 @@ class XPlaneCustomAttribute(bpy.types.PropertyGroup):
     )
 
 class XPlaneExportPathDirective(bpy.types.PropertyGroup):
-    test_var = "a"
     export_path = bpy.props.StringProperty(
         name = "Export Path",
-        description="The export path that should be copied into a library.txt"
-        )
+        description="The export path that should be copied into a library.txt",
+    )
 
 # Class: XPlaneDataref
 # A X-Plane Dataref
@@ -1631,17 +1590,6 @@ def addXPlaneRNA():
         name = "XPlane",
         description = "X-Plane Lamp Settings"
     )
-    
-    #def get_old_xplan2blender_version(self):
-        #return "DEPRECATED"
-#
-    #bpy.types.Scene.xplane2blender_version = bpy.props.StringProperty(
-        #name="XPlane2Blender Version (deprecated)",
-        #description="A readonly named version of the deprecated version string",
-        #default=xplane_constants.DEPRECATED_XP2B_VER,
-        #get=get_old_xplan2blender_version,
-        #set=None
-    #)
 
 # Function: removeXPlaneRNA
 # Unregisters all properties.

@@ -133,8 +133,6 @@ def load_handler(dummy):
     # and new style named read-only default scene.xplane2blender_version, thanks to the names
     # being the exact same.
     
-    import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-    import pydevd;pydevd.settrace()
     if scene.get('xplane2blender_version') is not xplane_constants.DEPRECATED_XP2B_VER:
         # "3.2.0 was the last version without an updater, so default to that."
         # 3.20 was a mistake. If we get to a real version 3.20, we'll deprecate support for 3.2.0
@@ -151,17 +149,17 @@ def load_handler(dummy):
 
     # Get the old_version (end of list, which by now is guaranteed to have something in it)
     last_version = ver_history[-1]
-
+    
     # L:Compare last vs current
     # If the version is out of date
     #     L:Run update
-    if xplane_helpers.VerStruct.cmp(last_version,scene.xplane.xplane2blender_ver,False,False) == -1:
+    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.current(),False,False) == -1:
         print('This file was created with an older XPlane2Blender version less than or equal to (%s)' +\
               ' and will now automatically be updated to %s' % (last_version,current_version))
         update(last_version)
 
         # Add the current version to the history
-        xplane_helpers.XP2BVerStruct.add_to_version_history(scene.xplane.xplane2blender_ver)
+        xplane_helpers.XP2BVerStruct.add_to_version_history(xplane_helpers.VerStruct.current())
         print('Your file was successfully updated to XPlane2Blender %s' % scene.xplane.xplane2blender_ver)
         
 bpy.app.handlers.load_post.append(load_handler)
@@ -170,6 +168,6 @@ bpy.app.handlers.load_post.append(load_handler)
 def save_handler(dummy):
     scene = bpy.context.scene
     if len(scene.xplane.xplane2blender_ver_history) == 0:
-        xplane_helpers.XP2BVerStruct.add_to_version_history(scene.xplane.xplane2blender_ver) 
+        xplane_helpers.XP2BVerStruct.add_to_version_history(xplane_helpers.VerStruct.current()) 
 
 bpy.app.handlers.save_pre.append(save_handler)
