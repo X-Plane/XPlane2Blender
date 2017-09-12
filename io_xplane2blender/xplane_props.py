@@ -142,6 +142,9 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     #
     # The only way to change version data! Use responsibly for suffer the Dragons described above!
     # Returns True if it succeeded, or False if it failed due to invalid data.
+    #
+    # Warning! Do not directly modify scene.xplane.xplane2blender without knowing EXACTLY what you're doing!
+    # It will break the ability to get a current version from xplane2blender_ver!
     def safe_set_version_data(self,addon_version,build_type,build_type_version,data_model_version,build_number):
         if xplane_helpers.VerStruct(addon_version,
                           build_type,

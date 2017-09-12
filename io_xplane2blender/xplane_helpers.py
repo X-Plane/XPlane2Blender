@@ -128,7 +128,7 @@ class VerStruct():
                     datetime_matches = re.match(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})", self.build_number)
                     try:
                         # a timezone aware datetime object preforms the validations on construction. 
-                        dt = datetime.datetime(*datetime_matches.groups()[1:],tzinfo=timezone.utc)
+                        dt = datetime.datetime(*[int(group) for group in datetime_matches.groups()],tzinfo=timezone.utc)
                     except Exception as e:
                         print('Exception %s occurred while trying to parse datetime' % e)
                         print('"%s" is an invalid build number' % (self.build_number))
