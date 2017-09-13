@@ -144,7 +144,7 @@ def load_handler(dummy):
             raise Exception("pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."\
                             " Re-open file in a previous version and/or fix manually in Scene->Custom Properties" % (legacy_version_str))
             
-    #We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we won't save that on first save or it'll already be deprecated!
+    #We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we save that on first save or it'll already be deprecated!
 
     # Get the old_version (end of list, which by now is guaranteed to have something in it)
     last_version = ver_history[-1]

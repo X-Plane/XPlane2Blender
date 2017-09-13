@@ -105,8 +105,7 @@ for root, dirs, files in os.walk('./tests'):
                     print("WARNING: Blender file " + blendFile + " does not exist")
                     if not be_quiet:
                         printTestEnd()
-                    continue
-                
+
                 args.append('--python')
                 args.append(pyFile)
 

@@ -93,10 +93,6 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         update=update_version_property,
         size=3)
     
-    #Addon string in the form of "m.m.r", no parenthesis
-    def addon_version_clean_str(self):
-        return '.'.join(map(str,self.addon_version))
-    
     # Property: build_type
     # The type of build this is, always a value in BUILD_TYPES
     build_type = bpy.props.StringProperty(
@@ -163,14 +159,13 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         else:
             return False
 
-    # Method: as_file_name
-    #
-    # Gets the version in its filename version (all .'s replaced with ,'s)
-    def as_file_name(self):
-        return str(self).replace('.','_')
-
     def make_struct(self):
         return xplane_helpers.VerStruct(self.addon_version, self.build_type, self.build_type_version, self.data_model_version, self.build_number)
+
+    
+    #Addon string in the form of "m.m.r", no parenthesis
+    def addon_version_clean_str(self):
+        return '.'.join(map(str,self.addon_version))
 
     # Method: __repr__
     #
@@ -191,6 +186,12 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
                                    self.data_model_version,
                                    self.build_number)
         
+    # Method: as_file_name
+    #
+    # Gets the version in its filename version (all .'s replaced with ,'s)
+    def as_file_name(self):
+        return str(self).replace('.','_')
+
     def short_str(self):
         return str(self)[:str(self).index('+')]
 

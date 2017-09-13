@@ -84,59 +84,37 @@ class VerStruct():
                                    self.data_model_version,
                                    self.build_number)
 
-    # Method: is_valid
+    #Works for XPlane2BlenderVersion or VerStruct
+    @staticmethod
+    def add_to_version_history(version_to_add):
+        history = bpy.context.scene.xplane.xplane2blender_ver_history
+         
+        if len(history) == 0 or history[-1].name != repr(version_to_add):
+            new_hist_entry = history.add()
+            new_hist_entry.name = repr(version_to_add)
+            success = new_hist_entry.safe_set_version_data(version_to_add.addon_version,
+                                                           version_to_add.build_type,
+                                                           version_to_add.build_type_version,
+                                                           version_to_add.data_model_version,
+                                                           version_to_add.build_number)
+            if not success:
+                history.remove(len(history)-1)
+                return None
+            else:
+                return new_hist_entry
+        else:
+            return False
+
+    # Method: cmp
     #
-    # Tests if all members of VerStruct are the right type and semantically valid
-    # according to our spec
+    # Parameters:
+    # - lsh - a VerStruct or XPlane2BlenderVersion
+    # - rsh - a VerStruct or XPlane2BlenderVersion
+    # - include_data_model_version - a bool, includes the data_model_version in comparing
+    # - include_build_number       - a bool, includes the build_number in comparing
     #
-    # Returns True or False
-    def is_valid(self):
-        types_correct = isinstance(self.addon_version,tuple) and len(self.addon_version) == 3 and\
-                        isinstance(self.build_type,str)         and \
-                        isinstance(self.build_type_version,int) and \
-                        isinstance(self.data_model_version,int) and \
-                        isinstance(self.build_number,str)
-
-        if not types_correct:
-            raise Exception("Incorrect types passed into VerStruct")
-
-        if self.addon_version[0]  >= 3 and \
-            self.addon_version[1] >= 0 and \
-            self.addon_version[2] >= 0:
-            if xplane_constants.BUILD_TYPES.index(self.build_type) != -1:
-                if self.build_type == xplane_constants.BUILD_TYPE_DEV or \
-                    self.build_type == xplane_constants.BUILD_TYPE_LEGACY:
-                    dev_legacy_fails_reqs = False
-                    dev_legacy_fails_reqs |= self.build_type_version > 0
-                    dev_legacy_fails_reqs |= self.build_number != xplane_constants.BUILD_NUMBER_NONE
-                    if dev_legacy_fails_reqs is True:
-                        return False
-                else:
-                    build_cycle_fails_reqs = False
-                    build_cycle_fails_reqs |= self.build_type_version <= 0
-                    if build_cycle_fails_reqs is True:
-                        return False
-                
-                if self.build_type == xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version != 0:
-                    return False
-                elif self.build_type != xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version <= 0:
-                    return False
-                
-                if self.build_number == xplane_constants.BUILD_NUMBER_NONE:
-                    return True
-                else:
-                    datetime_matches = re.match(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})", self.build_number)
-                    try:
-                        # a timezone aware datetime object preforms the validations on construction. 
-                        dt = datetime.datetime(*[int(group) for group in datetime_matches.groups()],tzinfo=timezone.utc)
-                    except Exception as e:
-                        print('Exception %s occurred while trying to parse datetime' % e)
-                        print('"%s" is an invalid build number' % (self.build_number))
-                        return False
-                    else:
-                        return True
-
-    # Returns -1 for lhs < rhs, 0 for lhs == rhs, and 1 for lhs > rhs
+    # Returns:
+    # - -1 for lhs < rhs, 0 for lhs == rhs, and 1 for lhs > rhs
     # Also can optionally include to compare data model version and build number.
     @staticmethod
     def cmp(lhs,rhs,include_data_model_version=False,include_build_number=False):
@@ -194,6 +172,71 @@ class VerStruct():
         
         raise Exception("cmp function not implemented properly")
 
+    @staticmethod
+    def get_build_number_datetime():
+        #Use the UNIX Timestamp in UTC 
+        return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
+
+    # Method: is_valid
+    #
+    # Tests if all members of VerStruct are the right type and semantically valid
+    # according to our spec
+    #
+    # Returns True or False
+    def is_valid(self):
+        types_correct = isinstance(self.addon_version,tuple) and len(self.addon_version) == 3 and\
+                        isinstance(self.build_type,str)         and \
+                        isinstance(self.build_type_version,int) and \
+                        isinstance(self.data_model_version,int) and \
+                        isinstance(self.build_number,str)
+
+        if not types_correct:
+            raise Exception("Incorrect types passed into VerStruct")
+
+        if self.addon_version[0]  >= 3 and \
+            self.addon_version[1] >= 0 and \
+            self.addon_version[2] >= 0:
+            if xplane_constants.BUILD_TYPES.index(self.build_type) != -1:
+                if self.build_type == xplane_constants.BUILD_TYPE_DEV or \
+                    self.build_type == xplane_constants.BUILD_TYPE_LEGACY:
+                    dev_legacy_fails_reqs = False
+                    dev_legacy_fails_reqs |= self.build_type_version > 0
+                    dev_legacy_fails_reqs |= self.build_number != xplane_constants.BUILD_NUMBER_NONE
+                    if dev_legacy_fails_reqs is True:
+                        print("build_type %s has failed 'build_type_version == 0' or 'build_number == BUILD_NUMBER_NONE' tests" % self.build_type)
+                        return False
+                else:
+                    build_cycle_fails_reqs = False
+                    build_cycle_fails_reqs |= self.build_type_version <= 0
+                    if build_cycle_fails_reqs is True:
+                        print("build_type %s has failed build_type_version > 0 test" % self.build_type)
+                        return False
+                
+                if self.build_type == xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version != 0:
+                    print("Invalid build_type,data_model_version combo: legacy and data_model_version is not 0")
+                    return False
+                elif self.build_type != xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version <= 0:
+                    print("Invalid build_type,data_model_version combo: non-legacy and data_model_version is > 0")
+                    return False
+                
+                if self.build_number == xplane_constants.BUILD_NUMBER_NONE:
+                    return True
+                else:
+                    datetime_matches = re.match(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})", self.build_number)
+                    try:
+                        # a timezone aware datetime object preforms the validations on construction. 
+                        dt = datetime.datetime(*[int(group) for group in datetime_matches.groups()],tzinfo=timezone.utc)
+                    except Exception as e:
+                        print('Exception %s occurred while trying to parse datetime' % e)
+                        print('"%s" is an invalid build number' % (self.build_number))
+                        return False
+                    else:
+                        return True
+            else:
+                print("build_type %s was not found in BUILD_TYPES" % self.build_type)
+        else:
+            print("addon_version %s is invalid" % str(self.addon_version))
+            return False
     # Method: parse_version
     #
     # Parameters:
@@ -216,7 +259,7 @@ class VerStruct():
             format_str = r"(\d+\.\d+\.\d+)-(alpha|beta|dev|leg|rc)\.([1-9]+)"
                 
             if '+' in version_str:
-                format_str += r"\+(\d+)\.(\d{14})"
+                format_str += r"\+(\d+)\.(\w{14})"
                              
             version_matches = re.match(format_str,version_str)
             
@@ -226,7 +269,7 @@ class VerStruct():
                 # Part 3: 1 or more digits for data model number (4), a literal '.',
                 # then a YYYYMMDDHHMMSS (5)
             if version_matches:
-                version_struct.addon_version      = tuple(version_matches.group(1).split('.'))
+                version_struct.addon_version      = tuple([int(comp) for comp in version_matches.group(1).split('.')])
                 version_struct.build_type         = version_matches.group(2)
                 version_struct.build_type_version = int(version_matches.group(3))
     
@@ -244,31 +287,6 @@ class VerStruct():
         else:
             return None
 
-    @staticmethod
-    def get_build_number_datetime():
-        #Use the UNIX Timestamp in UTC 
-        return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
-
-    #Works for XPlane2BlenderVersion or VerStruct
-    @staticmethod
-    def add_to_version_history(version_to_add):
-        history = bpy.context.scene.xplane.xplane2blender_ver_history
-         
-        if len(history) == 0 or history[-1].name != repr(version_to_add):
-            new_hist_entry = history.add()
-            new_hist_entry.name = repr(version_to_add)
-            success = new_hist_entry.safe_set_version_data(version_to_add.addon_version,
-                                                           version_to_add.build_type,
-                                                           version_to_add.build_type_version,
-                                                           version_to_add.data_model_version,
-                                                           version_to_add.build_number)
-            if not success:
-                history.remove(len(history)-1)
-                return None
-            else:
-                return new_hist_entry
-        else:
-            return False
 
 #This a hack to help tests.py catch when an error is an error,
 #because everybody and their pet poodle like using the words 'Fail',
