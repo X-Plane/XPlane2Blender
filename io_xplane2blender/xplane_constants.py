@@ -30,7 +30,7 @@ BUILD_TYPES = (BUILD_TYPE_LEGACY, BUILD_TYPE_DEV, BUILD_TYPE_ALPHA, BUILD_TYPE_B
 #
 # The string for having no build number, chosen for being descriptive,
 # same length as YYYYMMDDHHMMSS, and having no numbers
-BUILD_NUMBER_NONE = "NO_BUILD_NUM"
+BUILD_NUMBER_NONE = "NO_BUILD_NUMBR"
 
 # Constant: DEPRECATED_XP2B_VER
 #

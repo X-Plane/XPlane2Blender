@@ -16,9 +16,7 @@ class TestBlendBuildNumberObjFooter(XPlaneTestCase):
     def test_build_number_obj_footer(self):
         bpy.ops.scene.add_xplane_layers()
         out = self.exportLayer(0)
-        print(out)
-        #import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-        #import pydevd;pydevd.settrace()
+
         version_match = re.search("Exported with XPlane2Blender (.*)", out)
         self.assertTrue(version_match is not None, "Version string not found in footer of obj")
         

@@ -132,7 +132,7 @@ def load_handler(dummy):
     # and new style named read-only default scene.xplane2blender_version, thanks to the names
     # being the exact same.
     
-    if scene.get('xplane2blender_version') is not xplane_constants.DEPRECATED_XP2B_VER:
+    if scene.get('xplane2blender_version') != xplane_constants.DEPRECATED_XP2B_VER:
         # "3.2.0 was the last version without an updater, so default to that."
         # 3.20 was a mistake. If we get to a real version 3.20, we'll deprecate support for 3.2.0
         legacy_version_str = scene.get('xplane2blender_version','3.2.0').replace('20','2')
@@ -144,7 +144,7 @@ def load_handler(dummy):
             raise Exception("pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."\
                             " Re-open file in a previous version and/or fix manually in Scene->Custom Properties" % (legacy_version_str))
             
-    #We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we save that on first save!
+    #We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we won't save that on first save or it'll already be deprecated!
 
     # Get the old_version (end of list, which by now is guaranteed to have something in it)
     last_version = ver_history[-1]
@@ -168,5 +168,7 @@ def save_handler(dummy):
     scene = bpy.context.scene
     if len(scene.xplane.xplane2blender_ver_history) == 0:
         xplane_helpers.VerStruct.add_to_version_history(scene.xplane.xplane2blender_ver)
+        scene['xplane2blender_version'] = xplane_constants.DEPRECATED_XP2B_VER
+
 
 bpy.app.handlers.save_pre.append(save_handler)
