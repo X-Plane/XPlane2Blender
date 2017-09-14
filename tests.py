@@ -26,41 +26,46 @@ if os.path.exists('./tests/tmp'):
 # create temp dir if not exists
 os.makedirs('./tests/tmp',exist_ok=True)
 
-def getFlag(name):
-    return name in sys.argv
+def getFlag(names):
+    for name in names:
+        if name in sys.argv:
+            return True
+    return False
 
-def getOption(name, default):
+def getOption(names, default):
     index = -1
 
-    try:
-        index = sys.argv.index(name)
-    except:
-        pass
+    for name in names:
+            
+        try:
+            index = sys.argv.index(name)
+        except:
+            pass
 
-    if index > 0 and len(sys.argv) > index + 1:
-        return sys.argv[index + 1]
+        if index > 0 and len(sys.argv) > index + 1:
+            return sys.argv[index + 1]
 
     return default
 
-fileFilter = getOption('--filter', None)
+fileFilter = getOption(['-f','--filter'], None)
 exclude = getOption('--exclude', None)
 blenderExecutable = getOption('--blender', 'blender')
 debug = getFlag('--debug')
-keep_going = getFlag('--continue')
-be_quiet = getFlag('--quiet') or getFlag('--print-fails')
-print_fails = getFlag('--print-fails')
+keep_going = getFlag(['-c','--continue'])
+print_fails = getFlag(['-p','--print-fails'])
+be_quiet = getFlag(['-q', '--quiet']) or print_fails
 showHelp = getFlag('--help')
 
 if showHelp:
     print(
         'Usage: python tests.py [options]\n\n' +
         'Options:\n\n' +
-        '  --filter [regex]\tfilter test files with a regular expression\n' +
+        '  -f, --filter [regex]\tfilter test files with a regular expression\n' +
         '  --exclude [regex]\texclude test files with a regular expression\n' +
         '  --debug\t\tenable debugging\n' +
-        '  --continue\tKeep running after test failure\n' +
-        '  --quiet\tReduce output from tests\n' +
-        '  --print-fails\tSets --quiet, but also prints the output of failed tests\n'
+        '  -c, --continue\tKeep running after test failure\n' +
+        '  -q, --quiet\tReduce output from tests\n' +
+        '  -p, --print-fails\tSets --quiet, but also prints the output of failed tests\n'
         '  --blender [path]\tProvide alternative path to blender executable\n' +
         '  --help\t\tdisplay this help\n\n'
     )

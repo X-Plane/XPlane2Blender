@@ -12,7 +12,7 @@ __dirname__ = os.path.dirname(__file__)
 #def filterLines(line):
     #return isinstance(line[0],str) and...
     
-class TestBlendBuildNumberObjFooter(XPlaneTestCase):
+class TestBlendBuildNumberObjFooter(XPlaneBuildNumberTestCase):
     def test_build_number_obj_footer(self):
         bpy.ops.scene.add_xplane_layers()
         out = self.exportLayer(0)
@@ -22,7 +22,7 @@ class TestBlendBuildNumberObjFooter(XPlaneTestCase):
         
         version = VerStruct.parse_version(version_match.group(1))
         self.assertTrue(version is not None, "%s could not be parsed to a valid VerStruct" % version_match.group(1))
-        self.assertTrue(VerStruct.cmp(version,bpy.context.scene.xplane.xplane2blender_ver,True,True) == 0,
+        self.assertTrue(VerStruct.cmp(version,self.xplane2blender_ver,True,True) == 0,
                         "Version in obj is not equal to current version")
         
 runTestCases([TestBlendBuildNumberObjFooter])
