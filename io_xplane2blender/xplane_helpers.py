@@ -12,6 +12,7 @@ import io_xplane2blender
 from io_xplane2blender import xplane_constants
 from xplane_constants import BUILD_TYPE_DEV, BUILD_TYPES
 from io_xplane2blender import xplane_config
+from xml.etree.ElementInclude import include
 
 FLOAT_PRECISION = 8
 
@@ -121,59 +122,136 @@ class VerStruct():
         if tuple(lhs.addon_version) == tuple(rhs.addon_version):
             if lhs.build_type == rhs.build_type:
                 if lhs.build_type_version == rhs.build_type_version:
-                    is_data_model_eq = lhs.data_model_version == rhs.data_model_version
-                    is_build_num_eq  = lhs.build_number == rhs.build_number
-                    
-                    if include_data_model_version and is_data_model_eq and include_build_number and is_build_num_eq:
-                        return 0
-                    if include_data_model_version and is_data_model_eq:
-                        return 0
-                    if include_build_number and is_build_num_eq:
-                        return 0
-                    
-                    return 0
-                else:
-                    pass #Move on to greater than
+                    is_eq = True
+                    if include_data_model_version:
+                        is_eq &= lhs.data_model_version == rhs.data_model_version
+                    if include_build_number:
+                        is_eq &= lhs.build_number == rhs.build_number
 
-        if tuple(lhs.addon_version) <= tuple(rhs.addon_version):
-            if xplane_constants.BUILD_TYPES.index(lhs.build_type) <= xplane_constants.BUILD_TYPES.index(rhs.build_type):
-                if lhs.build_type_version <= rhs.build_type_version:
-                    is_data_model_lt = lhs.data_model_version < rhs.data_model_version
-                    is_build_num_lt  = lhs.build_number < rhs.build_number
-
-                    if include_data_model_version and is_data_model_lt and include_build_number and is_build_num_lt:
-                        return -1
-                    if include_data_model_version and is_data_model_lt:
-                        return -1
-                    if include_build_number and is_build_num_lt:
-                        return -1
-
-                    return -1
+                    if is_eq:
+                        return 0
                 else:
-                    pass #Move on to equality
-                
-                
-        if tuple(lhs.addon_version) >= tuple(rhs.addon_version):
-            if xplane_constants.BUILD_TYPES.index(lhs.build_type) >= xplane_constants.BUILD_TYPES.index(rhs.build_type):
-                if lhs.build_type_version >= rhs.build_type_version:
-                    is_data_model_gt = lhs.data_model_version > rhs.data_model_version
-                    is_build_num_gt  = lhs.build_number > rhs.build_number
-                    
-                    if include_data_model_version and is_data_model_gt and include_build_number and is_build_num_gt:
-                        return 1
-                    if include_data_model_version and is_data_model_gt:
-                        return 1
-                    if include_build_number and is_build_num_gt:
-                        return 1
-                    
-                    return 1
+                    pass #Move on to less than
+
+        if tuple(lhs.addon_version) > tuple(rhs.addon_version):
+            pass
+        elif xplane_constants.BUILD_TYPES.index(lhs.build_type) > xplane_constants.BUILD_TYPES.index(rhs.build_type):
+            pass
+        elif lhs.build_type_version > rhs.build_type_version:
+            pass
+        else:
+            if include_data_model_version or include_build_number:
+                data_model_is_gt   = lhs.data_model_version > rhs.data_model_version
+                build_number_is_gt = lhs.build_number > rhs.build_number
+                if include_data_model_version and include_build_number:
+                   if lhs.data_model_version <= rhs.data_model_version:
+                       return -1
+                       #Because a number like 1.2018 < 2.2017 is impossible to compare, we call it here.
+                   else:
+                       pass
                 else:
-                    pass #Move on to exception
+                    is_not_gt = True
+                    if include_data_model_version:
+                        is_not_gt &= not data_model_is_gt
+                    if include_build_number:
+                        is_not_gt &= not build_number_is_gt
+
+                    if is_not_gt:
+                        return -1
+            else:
+                return -1
+
+        if tuple(lhs.addon_version) < tuple(rhs.addon_version):
+            pass
+        elif xplane_constants.BUILD_TYPES.index(lhs.build_type) < xplane_constants.BUILD_TYPES.index(rhs.build_type):
+            pass
+        elif lhs.build_type_version < rhs.build_type_version:
+            pass
+        else:
+            if include_data_model_version or include_build_number:
+                data_model_is_lt   = lhs.data_model_version < rhs.data_model_version
+                build_number_is_lt = lhs.build_number < rhs.build_number
+                if include_data_model_version and include_build_number:
+                   if lhs.data_model_version >= rhs.data_model_version:
+                       return 1
+                       #Because a number like 1.2018 < 2.2017 is impossible to compare, we call it here.
+                   else:
+                       pass
+                else:
+                    is_not_lt = True
+                    if include_data_model_version:
+                        is_not_lt &= not data_model_is_lt
+                    if include_build_number:
+                        is_not_lt &= not build_number_is_lt
+
+                    if is_not_lt:
+                        return 1
+            else:
+                return 1
         
+        #if tuple(lhs.addon_version) < tuple(rhs.addon_version):
+            #return -1
+        #elif tuple(lhs.addon_version) == tuple(rhs.addon_version):
+            #lhs_bt_index = xplane_constants.BUILD_TYPES.index(lhs.build_type)
+            #rhs_bt_index = xplane_constants.BUILD_TYPES.index(rhs.build_type)
+            #if lhs_bt_index < rhs_bt_index:
+                #return -1
+            #elif lhs_bt_index == rhs_bt_index:
+                #if lhs.build_type_version < rhs.build_type_version:
+                    #return -1
+                #elif lhs.build_type_versionkkkkkkkkkk or include_data_model_version or include_build_number:
+            #data_model_is_lt   = lhs.data_model_version < rhs.data_model_version
+            #build_number_is_lt = lhs.build_number < rhs.build_number
+            #if include_data_model_version and include_build_number:
+               #if data_model_is_lt:
+                   #return -1
+               #elif build_number_is_lt:
+                   #return -1
+               #else:
+                   #pass #On to greater than
+            #else:
+                #is_lt = True
+                #if include_data_model_version:
+                    #is_lt &= data_model_is_lt
+                #if include_build_number:
+                    #is_lt &= build_number_is_lt
+#
+                #if is_lt:
+                    #return -1
+        #else:
+            #pass #Move on to greater than
+                #
+                #
+        #if tuple(lhs.addon_version) > tuple(rhs.addon_version):
+            #return 1
+        #elif xplane_constants.BUILD_TYPES.index(lhs.build_type) > xplane_constants.BUILD_TYPES.index(rhs.build_type):
+            #return 1
+        #elif lhs.build_type_version > rhs.build_type_version or include_data_model_version or include_build_number:
+            #data_model_is_gt   = lhs.data_model_version > rhs.data_model_version
+            #build_number_is_gt = lhs.build_number > rhs.build_number
+            #if include_data_model_version and include_build_number:
+               #if data_model_is_gt:
+                   #return -1
+               #elif build_number_is_gt:
+                   #return -1
+               #else:
+                   #pass #On to exception
+            #else:
+                #is_gt = True
+                #if include_data_model_version:
+                    #is_gt &= data_model_is_gt
+                #if include_build_number:
+                    #is_gt &= build_number_is_gt
+#
+                #if is_gt:
+                    #return 1
+        #else:
+            #pass #Move on to exception
+    
         raise Exception("cmp function not implemented properly")
 
     @staticmethod
-    def get_build_number_datetime():
+    def make_new_build_number():
         #Use the UNIX Timestamp in UTC 
         return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
 
@@ -278,9 +356,14 @@ class VerStruct():
                     version_struct.data_model_version = int(version_matches.group(4))
                     #Regex groups for (hopefully matching) YYYYMMDDHHMMSS
                     version_struct.build_number = version_matches.group(5)
+            else:
+                return None
         else:
-            version_struct.addon_version = tuple([int(v) for v in version_str.split('.')])
-            version_struct.build_type = xplane_constants.BUILD_TYPE_LEGACY
+            if re.search("[^\d.]",version_str) is not None:
+                return None
+            else:
+                version_struct.addon_version = tuple([int(v) for v in version_str.split('.')])
+                version_struct.build_type = xplane_constants.BUILD_TYPE_LEGACY
 
         if version_struct.is_valid():
             return version_struct

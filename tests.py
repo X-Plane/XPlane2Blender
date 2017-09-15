@@ -151,7 +151,7 @@ for root, dirs, files in os.walk('./tests'):
                         printTestEnd()
 
                     if not keep_going:
-                        exit(1)
+                        sys.exit(1)
                 elif be_quiet:
                     print('%s passed' % pyFile)
                 
