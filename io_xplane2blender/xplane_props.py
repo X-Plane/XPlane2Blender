@@ -74,13 +74,13 @@ A good deal of time was spent making the UI look pretty for 3.4.0 so please don'
 # major.minor.release-(alpha|beta|dev|leg|rc)\.[0-9]+)\+\d+\.(YYYYMMDDHHMMSS)
 
 # Internal variable to enable and disable the ability to update the value of XPlane2Blender's properties
-# Do not change outside of safe_set_version_data! 
-__version_safety_off = False
+# DO NOT CHANGE OUTSIDE OF safe_set_version_data! 
+_version_safety_off = False
 class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     
     #Guards against being updated without being validated
     def update_version_property(self,context):
-        if __version_safety_off is False:
+        if _version_safety_off is False:
             raise Exception("Do not modify version property outside of safe_set_version_data!")
         return None
 
@@ -147,14 +147,14 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
                           build_type_version,
                           data_model_version,
                           build_number).is_valid():
-            global __version_safety_off
-            __version_safety_off = True
+            global _version_safety_off
+            _version_safety_off = True
             self.addon_version      = addon_version
             self.build_type         = build_type
             self.build_type_version = build_type_version
             self.data_model_version = data_model_version
             self.build_number       = build_number
-            __version_safety_off = False
+            _version_safety_off = False
             return True
         else:
             return False

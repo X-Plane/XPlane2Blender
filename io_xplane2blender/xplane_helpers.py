@@ -172,11 +172,11 @@ class VerStruct():
                 data_model_is_lt   = lhs.data_model_version < rhs.data_model_version
                 build_number_is_lt = lhs.build_number < rhs.build_number
                 if include_data_model_version and include_build_number:
-                   if lhs.data_model_version >= rhs.data_model_version:
-                       return 1
-                       #Because a number like 1.2018 < 2.2017 is impossible to compare, we call it here.
-                   else:
-                       pass
+                    if lhs.data_model_version >= rhs.data_model_version:
+                        #Because a number like 1.2018 < 2.2017 is impossible to compare, we call it here.
+                        return 1
+                    else:
+                        pass
                 else:
                     is_not_lt = True
                     if include_data_model_version:
@@ -188,66 +188,7 @@ class VerStruct():
                         return 1
             else:
                 return 1
-        
-        #if tuple(lhs.addon_version) < tuple(rhs.addon_version):
-            #return -1
-        #elif tuple(lhs.addon_version) == tuple(rhs.addon_version):
-            #lhs_bt_index = xplane_constants.BUILD_TYPES.index(lhs.build_type)
-            #rhs_bt_index = xplane_constants.BUILD_TYPES.index(rhs.build_type)
-            #if lhs_bt_index < rhs_bt_index:
-                #return -1
-            #elif lhs_bt_index == rhs_bt_index:
-                #if lhs.build_type_version < rhs.build_type_version:
-                    #return -1
-                #elif lhs.build_type_versionkkkkkkkkkk or include_data_model_version or include_build_number:
-            #data_model_is_lt   = lhs.data_model_version < rhs.data_model_version
-            #build_number_is_lt = lhs.build_number < rhs.build_number
-            #if include_data_model_version and include_build_number:
-               #if data_model_is_lt:
-                   #return -1
-               #elif build_number_is_lt:
-                   #return -1
-               #else:
-                   #pass #On to greater than
-            #else:
-                #is_lt = True
-                #if include_data_model_version:
-                    #is_lt &= data_model_is_lt
-                #if include_build_number:
-                    #is_lt &= build_number_is_lt
-#
-                #if is_lt:
-                    #return -1
-        #else:
-            #pass #Move on to greater than
-                #
-                #
-        #if tuple(lhs.addon_version) > tuple(rhs.addon_version):
-            #return 1
-        #elif xplane_constants.BUILD_TYPES.index(lhs.build_type) > xplane_constants.BUILD_TYPES.index(rhs.build_type):
-            #return 1
-        #elif lhs.build_type_version > rhs.build_type_version or include_data_model_version or include_build_number:
-            #data_model_is_gt   = lhs.data_model_version > rhs.data_model_version
-            #build_number_is_gt = lhs.build_number > rhs.build_number
-            #if include_data_model_version and include_build_number:
-               #if data_model_is_gt:
-                   #return -1
-               #elif build_number_is_gt:
-                   #return -1
-               #else:
-                   #pass #On to exception
-            #else:
-                #is_gt = True
-                #if include_data_model_version:
-                    #is_gt &= data_model_is_gt
-                #if include_build_number:
-                    #is_gt &= build_number_is_gt
-#
-                #if is_gt:
-                    #return 1
-        #else:
-            #pass #Move on to exception
-    
+
         raise Exception("cmp function not implemented properly")
 
     @staticmethod

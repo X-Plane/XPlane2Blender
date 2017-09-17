@@ -25,6 +25,18 @@ class TestBuildNumberVerStruct(XPlaneBuildNumberTestCase):
         self.assertTrue(repr(ver_s) == repr(self.current), "VerStuct and XPlane2BlenderVersion's repr implenentation are not the same: %s vs %s" % (repr(ver_s),repr(self.current)))
         self.assertTrue(str(ver_s) == str(self.current), "VerStuct and XPlane2BlenderVersion's str implenentation are not the same: %s vs %s" % (str(ver_s),str(self.current)))
 
+    def test_repr_makes_struct_in_eval(self):
+        ver_s = self.xplane2blender_ver.make_struct()
+        
+        try:
+            VerStruct(*eval(repr(ver_s)))
+        except:
+            self.assertTrue(False,"repr of VerStruct was unable to turn back into a VerStruct: %s" % repr(ver_s))
+
+    def test_xplane2blender_str(self):
+        parsed_str = str(VerStruct.parse_version('3.4.0'))
+        self.assertEqual("3.4.0-leg.0+0.NO_BUILD_NUMBR", parsed_str, "VerStruct.__str__ does not format string into proper form %s" % parsed_str)
+ 
     def test_invalid_ver_addition(self):
         orig_history_len = len(self.history)
         new_entry = VerStruct.add_to_version_history(VerStruct((-1,-1,-1),"INVALID",-1,-1,"INVALID"))
