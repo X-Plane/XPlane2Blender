@@ -127,10 +127,14 @@ def load_handler(dummy):
     #     L:replace with 3.2.x
     #     L:add the current history
 
-    # Thanks to some python magic, this works for the old style-scene scene['xplane2blender']
-    # and new style named read-only default scene.xplane2blender_version, thanks to the names
-    # being the exact same.
-
+    # Test if we're coming from a legacy build
+    # Caveats:
+    #    - New "modern" files don't touch this
+    #    - Edge case: If someone takes a modern file and saves it in a legacy version
+    #    the history will be updated (if the legacy version found is valid),
+    #    but update won't be re-run. User is on their own if they made real changes to the
+    #    data model
+    legacy_build_number_w_history = False
     if scene.get('xplane2blender_version') != xplane_constants.DEPRECATED_XP2B_VER:
         # "3.2.0 was the last version without an updater, so default to that."
         # 3.20 was a mistake. If we get to a real version 3.20, we'll deprecate support for 3.2.0
@@ -139,6 +143,13 @@ def load_handler(dummy):
         if legacy_version is not None:
             xplane_helpers.VerStruct.add_to_version_history(legacy_version)
             scene['xplane2blender_version'] = xplane_constants.DEPRECATED_XP2B_VER
+            # Edge case: If someone creates a modern file and saves it with a legacy version
+            # (no protection against real breaking edits, however)
+            if len(ver_history) > 0:
+                legacy_build_number_w_history = True
+                #Since we changed the data of this file, we still need to save the version, even if no updating gets done
+                xplane_helpers.VerStruct.add_to_version_history(current_version)
+
         elif len(ver_history) == 0:
             raise Exception("pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."\
                             " Re-open file in a previous version and/or fix manually in Scene->Custom Properties" % (legacy_version_str))
@@ -151,7 +162,7 @@ def load_handler(dummy):
     # L:Compare last vs current
     # If the version is out of date
     #     L:Run update
-    if xplane_helpers.VerStruct.cmp(last_version,current_version) == -1:
+    if xplane_helpers.VerStruct.cmp(last_version,current_version) == -1 and legacy_build_number_w_history is False:
         print("This file was created with an older XPlane2Blender version less than or equal to (%s) "
               "and will now be updated to %s" % (str(last_version),str(current_version)))
         update(last_version)
