@@ -10,9 +10,6 @@ import re
 
 import io_xplane2blender
 from io_xplane2blender import xplane_constants
-from xplane_constants import BUILD_TYPE_DEV, BUILD_TYPES
-from io_xplane2blender import xplane_config
-from xml.etree.ElementInclude import include
 
 FLOAT_PRECISION = 8
 
@@ -64,7 +61,7 @@ def resolveBlenderPath(path):
 class VerStruct():
     def __init__(self,addon_version=None,build_type=None,build_type_version=None,data_model_version=None,build_number=None):
         self.addon_version      = tuple(addon_version) if addon_version is not None else (0,0,0)
-        self.build_type         = build_type if build_type is not None else BUILD_TYPE_DEV
+        self.build_type         = build_type if build_type is not None else xplane_constants.BUILD_TYPE_DEV
         self.build_type_version = build_type_version if build_type_version is not None else 0
         self.data_model_version = data_model_version if data_model_version is not None else 0
         self.build_number       = build_number if build_number is not None else xplane_constants.BUILD_NUMBER_NONE
@@ -144,11 +141,11 @@ class VerStruct():
                 data_model_is_gt   = lhs.data_model_version > rhs.data_model_version
                 build_number_is_gt = lhs.build_number > rhs.build_number
                 if include_data_model_version and include_build_number:
-                   if lhs.data_model_version <= rhs.data_model_version:
-                       return -1
-                       #Because a number like 1.2018 < 2.2017 is impossible to compare, we call it here.
-                   else:
-                       pass
+                    if lhs.data_model_version <= rhs.data_model_version:
+                        return -1
+                        #Because a number like 1.2018 < 2.2017 is impossible to compare, we call it here.
+                    else:
+                        pass
                 else:
                     is_not_gt = True
                     if include_data_model_version:

@@ -3,9 +3,6 @@
 
 from io_xplane2blender import bl_info
 from io_xplane2blender import xplane_constants
-from .xplane_constants import BUILD_TYPE_ALPHA,BUILD_TYPE_BETA,BUILD_TYPE_DEV
-from .xplane_constants import BUILD_TYPE_LEGACY,BUILD_TYPE_RC     
-
 
 # Variable: debug
 # Set to True for debugging output using <debugger>. Default is True, as we are still dealing with a development release.

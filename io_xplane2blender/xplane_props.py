@@ -2,20 +2,12 @@
 # Defines X-Plane Properties attached to regular Blender data types.
 
 import bpy
-import datetime
-import re
 import io_xplane2blender
-from . import xplane_constants
-from . import xplane_config
-from .xplane_config import CURRENT_BUILD_TYPE, CURRENT_BUILD_TYPE_VERSION
-from .xplane_config import CURRENT_DATA_MODEL_VERSION, CURRENT_BUILD_NUMBER
+from io_xplane2blender import xplane_constants
+from io_xplane2blender import xplane_config
 from .xplane_constants import *
 
-from . import xplane_helpers
-from .xplane_helpers import getColorAndLitTextureSlots
-from io_xplane2blender.xplane_config import CURRENT_ADDON_VERSION,\
-    CURRENT_BUILD_TYPE
-
+from io_xplane2blender import xplane_helpers
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #
@@ -89,7 +81,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     addon_version = bpy.props.IntVectorProperty(
         name = "XPlane2Blender Addon Version",
         description = "The version of the addon (also found in it's addons information)",
-        default=CURRENT_ADDON_VERSION,
+        default=xplane_config.CURRENT_ADDON_VERSION,
         update=update_version_property,
         size=3)
     
@@ -98,7 +90,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     build_type = bpy.props.StringProperty(
         name="Build Type",
         description="Which iteration in the development cycle of the chosen build type we're at",
-        default=CURRENT_BUILD_TYPE,
+        default=xplane_config.CURRENT_BUILD_TYPE,
         update=update_version_property
     )
 
@@ -108,7 +100,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     build_type_version = bpy.props.IntProperty(
         name="Build Type Version",
         description="Which iteration in the development cycle of the chosen build type we're at",
-        default=CURRENT_BUILD_TYPE_VERSION,
+        default=xplane_config.CURRENT_BUILD_TYPE_VERSION,
         update=update_version_property
     )
 
@@ -118,7 +110,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     data_model_version = bpy.props.IntProperty(
         name="Data Model Version",
         description="Version of the data model (constants,props, and updater functionality) this version of the addon is. Always incrementing on changes",
-        default=CURRENT_DATA_MODEL_VERSION,
+        default=xplane_config.CURRENT_DATA_MODEL_VERSION,
         update=update_version_property
     )
     
@@ -130,7 +122,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     build_number = bpy.props.StringProperty(
         name="Build Number",
         description="Build number of XPlane2Blender. If xplane_constants.BUILD_NUMBER_NONE, this is a development or legacy build!",
-        default=CURRENT_BUILD_NUMBER,
+        default=xplane_config.CURRENT_BUILD_NUMBER,
         update=update_version_property
     )
     
@@ -1231,7 +1223,7 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
     )
 
 def updateMaterialLitPreview(self, context):
-    texture, textureLit = getColorAndLitTextureSlots(context.material)
+    texture, textureLit = xplane_helpers.getColorAndLitTextureSlots(context.material)
 
     if texture and textureLit:
         factor = context.material.xplane.litFactor

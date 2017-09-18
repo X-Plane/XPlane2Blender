@@ -2,11 +2,10 @@
 # Automagically updates blend data created with older XPlane2Blender Versions
 
 import bpy
-from .xplane_config import *
-from .xplane_constants import *
 from bpy.app.handlers import persistent
+
+import io_xplane2blender
 from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
-from .xplane_props import *
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
@@ -45,21 +44,21 @@ You may now proceed to the rest of the file.
 '''
 
 def __updateLocRot(obj):
-    
+
     #In int
     #Out string enum
     def convert_old_to_new(old_anim_type):
         #Recreate the pre_34 animation types enum
         ANIM_TYPE_TRANSLATE = "translate"
         ANIM_TYPE_ROTATE = "rotate"
-        
+
         conversion_table = [
                 #pre_34_anim_types  : post_34_anim_types
-                (ANIM_TYPE_TRANSFORM, ANIM_TYPE_TRANSFORM),
-                (ANIM_TYPE_TRANSLATE, ANIM_TYPE_TRANSFORM),
-                (ANIM_TYPE_ROTATE,    ANIM_TYPE_TRANSFORM),
-                (ANIM_TYPE_SHOW,      ANIM_TYPE_SHOW),
-                (ANIM_TYPE_HIDE,      ANIM_TYPE_HIDE)
+                (xplane_constants.ANIM_TYPE_TRANSFORM, xplane_constants.ANIM_TYPE_TRANSFORM),
+                (                 ANIM_TYPE_TRANSLATE, xplane_constants.ANIM_TYPE_TRANSFORM),
+                (                 ANIM_TYPE_ROTATE,    xplane_constants.ANIM_TYPE_TRANSFORM),
+                (xplane_constants.ANIM_TYPE_SHOW,      xplane_constants.ANIM_TYPE_SHOW),
+                (xplane_constants.ANIM_TYPE_HIDE,      xplane_constants.ANIM_TYPE_HIDE)
             ]
 
         if old_anim_type >= 0 and old_anim_type < len(conversion_table):
@@ -70,14 +69,14 @@ def __updateLocRot(obj):
     for d in obj.xplane.datarefs:
         old_anim_type = d.get('anim_type')
         if old_anim_type is None:
-           old_anim_type = 0 #something about Blender properties requires this
-        
+            old_anim_type = 0 #something about Blender properties requires this
+
         d.anim_type = convert_old_to_new(old_anim_type)
 
 # Function: update
 # Updates parts of the data model to ensure forward
 # compatability between versions of XPlane2Blender.
-# 
+#
 # Important: Running the updater on an already updated file
 # should result in no changes to it
 #
@@ -118,7 +117,7 @@ def load_handler(dummy):
     # do not update newly created files
     if not filepath:
         return
-    
+
     scene = bpy.context.scene
     current_version = scene.xplane.xplane2blender_ver
     ver_history = scene.xplane.xplane2blender_ver_history
@@ -127,11 +126,11 @@ def load_handler(dummy):
     #    if it is 3.20.x:
     #     L:replace with 3.2.x
     #     L:add the current history
-    
+
     # Thanks to some python magic, this works for the old style-scene scene['xplane2blender']
     # and new style named read-only default scene.xplane2blender_version, thanks to the names
     # being the exact same.
-    
+
     if scene.get('xplane2blender_version') != xplane_constants.DEPRECATED_XP2B_VER:
         # "3.2.0 was the last version without an updater, so default to that."
         # 3.20 was a mistake. If we get to a real version 3.20, we'll deprecate support for 3.2.0
@@ -143,7 +142,7 @@ def load_handler(dummy):
         elif len(ver_history) == 0:
             raise Exception("pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."\
                             " Re-open file in a previous version and/or fix manually in Scene->Custom Properties" % (legacy_version_str))
-            
+    
     #We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we save that on first save or it'll already be deprecated!
 
     # Get the old_version (end of list, which by now is guaranteed to have something in it)
@@ -160,7 +159,7 @@ def load_handler(dummy):
         # Add the current version to the history
         xplane_helpers.VerStruct.add_to_version_history(current_version)
         print('Your file was successfully updated to XPlane2Blender %s' % str(current_version))
-        
+
 bpy.app.handlers.load_post.append(load_handler)
 
 @persistent
@@ -169,6 +168,5 @@ def save_handler(dummy):
     if len(scene.xplane.xplane2blender_ver_history) == 0:
         xplane_helpers.VerStruct.add_to_version_history(scene.xplane.xplane2blender_ver)
         scene['xplane2blender_version'] = xplane_constants.DEPRECATED_XP2B_VER
-
 
 bpy.app.handlers.save_pre.append(save_handler)

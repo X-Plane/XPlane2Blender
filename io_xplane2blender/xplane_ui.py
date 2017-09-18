@@ -7,7 +7,6 @@ from .xplane_props import *
 from .xplane_config import *
 from .xplane_constants import *
 from .xplane_helpers import getColorAndLitTextureSlots
-from io_xplane2blender import xplane_props, xplane_config
 
 # Class: LAMP_PT_xplane
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.

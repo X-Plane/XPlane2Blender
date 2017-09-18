@@ -1,4 +1,3 @@
-from io_xplane2blender import xplane_helpers, xplane_config
 import os
 import shutil
 import sys
@@ -7,6 +6,9 @@ import unittest
 import bpy
 
 from ..xplane_config import setDebug, getDebug
+import io_xplane2blender
+from io_xplane2blender import xplane_config
+from io_xplane2blender import xplane_helpers
 from ..xplane_helpers import logger, XPlaneLogger
 from ..xplane_types import xplane_file, XPlanePrimitive
 from .animation_file_mappings import mappings
