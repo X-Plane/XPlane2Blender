@@ -79,7 +79,7 @@ class TestBuildNumberVerStruct(XPlaneBuildNumberTestCase):
             "3.4.0-rc.1+1.2017" #Build string is numbers, but not long enough
             ]
         
-        for test_v in incorrect_versions_legacy:
+        for test_v in incorrect_versions_modern:
             try:
                 self.assertFalse(VerStruct.parse_version(test_v) != None, "VerStruct.parse_version allowed bad modern style version %s through" % test_v)
             except Exception as e:
@@ -97,14 +97,13 @@ class TestBuildNumberVerStruct(XPlaneBuildNumberTestCase):
             self.assertTrue(VerStruct.cmp(test_v_res,v_res,True,True) == 0, "Test string %s did not parse to expected data %s" % (test_v,str(v_res)))
             
         correct_versions_modern = [
-            ("3.4.0-beta.5",               VerStruct(addon_version=(3,4,0),build_type=xplane_constants.BUILD_TYPE_BETA,build_type_version=5)),
             ("3.4.0-rc.5+1.20170914160830",VerStruct(addon_version=(3,4,0),build_type=xplane_constants.BUILD_TYPE_RC,  build_type_version=5,
                                                        data_model_version=1,build_number="20170914160830"))
             ]
              
-        for test_v, test_v_res in correct_versions_legacy:
+        for test_v, test_v_res in correct_versions_modern:
             v_res = VerStruct.parse_version(test_v)
-            self.assertTrue(v_res != None, "VerStruct.parse_version did not allow valid legacy style version %s through" % test_v)
+            self.assertTrue(v_res != None, "VerStruct.parse_version did not allow valid modern style version %s through" % test_v)
             self.assertTrue(VerStruct.cmp(test_v_res,v_res,True,True) == 0, "Test string %s did not parse to expected data %s" % (test_v,str(v_res)))
         
     def test_cmp(self):
@@ -121,8 +120,6 @@ class TestBuildNumberVerStruct(XPlaneBuildNumberTestCase):
             
             self.assertTrue(actual_cmp_res == expected_result, "Comparing %s and %s expected %d but got %d" % (str(v1),str(v2),expected_result,actual_cmp_res))
 
-        fmt = "%s-%s.%d+%d.%s"
-        
         #Test addon_version vs addon_version
         for i in range(len(addon_versions)-1):
             v1 = VerStruct(addon_versions[i]  ,xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[0])
