@@ -215,17 +215,11 @@ class VerStruct():
             if xplane_constants.BUILD_TYPES.index(self.build_type) != -1:
                 if self.build_type == xplane_constants.BUILD_TYPE_DEV or \
                     self.build_type == xplane_constants.BUILD_TYPE_LEGACY:
-                    dev_legacy_fails_reqs = False
-                    dev_legacy_fails_reqs |= self.build_type_version > 0
-                    dev_legacy_fails_reqs |= self.build_number != xplane_constants.BUILD_NUMBER_NONE
-                    if dev_legacy_fails_reqs is True:
-                        print("build_type %s has failed 'build_type_version == 0' or 'build_number == BUILD_NUMBER_NONE' tests" % self.build_type)
+                    if self.build_type_version > 0:
+                        print("build_type_version must be 0 when build_type is %s" % self.build_type)
                         return False
-                else:
-                    build_cycle_fails_reqs = False
-                    build_cycle_fails_reqs |= self.build_type_version <= 0
-                    if build_cycle_fails_reqs is True:
-                        print("build_type %s has failed build_type_version > 0 test" % self.build_type)
+                elif self.build_type_version <= 0:
+                        print("build_type_version must be > 0 when build_type is %s" % self.build_type)
                         return False
                 
                 if self.build_type == xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version != 0:

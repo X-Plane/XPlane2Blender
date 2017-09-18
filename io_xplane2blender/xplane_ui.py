@@ -7,6 +7,7 @@ from .xplane_props import *
 from .xplane_config import *
 from .xplane_constants import *
 from .xplane_helpers import getColorAndLitTextureSlots
+from io_xplane2blender import xplane_constants
 
 # Class: LAMP_PT_xplane
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
@@ -155,7 +156,29 @@ def scene_layout(self, scene):
     layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
 
-    layout.row().label("XPlane2Blender Version: " + str(scene.xplane.xplane2blender_ver))
+    xp2b_ver = scene.xplane.xplane2blender_ver
+    if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_RC and xp2b_ver.build_number != xplane_constants.BUILD_NUMBER_NONE:
+        layout.row().label("XPlane2Blender Version: " + xp2b_ver.short_str(), icon="FILE_TICK")
+    else:
+        layout.row().label("XPlane2Blender Version: " + xp2b_ver.short_str(), icon="NONE")
+        
+    
+    needs_warning = False
+    if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_ALPHA or\
+        xp2b_ver.build_type == xplane_constants.BUILD_TYPE_BETA:
+        layout.row().label("BEWARE: " + xp2b_ver.build_type.capitalize() + " versions can damage files!", icon="ERROR")
+        needs_warning = True
+    elif xp2b_ver.build_type == xplane_constants.BUILD_TYPE_DEV:
+        layout.row().label("Developer versions are DANGEROUS and UNSTABLE!", icon="RADIO")
+        needs_warning = True
+
+    if xp2b_ver.build_number == xplane_constants.BUILD_NUMBER_NONE:
+        layout.row().label("No build number: addon may be EXTRA UNSTABLE.", icon="CANCEL")
+        needs_warning = True
+
+    if needs_warning is True:
+        layout.row().label("     Make backups or switch to a more stable release!")
+
     if scene.xplane.exportMode == 'layers':
         if len(scene.xplane.layers) != 0:
             for i in range(0, len(scene.layers)):
@@ -194,6 +217,24 @@ def scene_dev_layout(self,scene,layout):
         updater_row = dev_box_column.row()
         updater_row.prop(scene.xplane,"dev_fake_xplane2blender_version")
         updater_row.operator("scene.dev_rerun_updater")
+        
+        history_box = dev_box_column.box()
+        history_box.label("XPlane2Blender Version History")
+        history_list = list(scene.xplane.xplane2blender_ver_history)
+        history_list.reverse()
+        for entry in history_list:
+            icon_str = "NONE"
+            if entry.build_type == xplane_constants.BUILD_TYPE_LEGACY:
+                icon_str = "GHOST_ENABLED"
+            if entry.build_type == xplane_constants.BUILD_TYPE_DEV:
+                icon_str = "RADIO"
+            elif entry.build_type == xplane_constants.BUILD_TYPE_ALPHA or\
+                entry.build_type == xplane_constants.BUILD_TYPE_BETA:
+                icon_str="ERROR"
+            elif entry.build_type == xplane_constants.BUILD_TYPE_RC and entry.build_number != BUILD_NUMBER_NONE:
+                icon_str="FILE_TICK"
+            
+            history_box.label(text=str(entry), icon=icon_str)
 
 def scene_layer_layout(self, scene, layout, layer):
     version = int(scene.xplane.version)

@@ -129,11 +129,27 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Method: safe_set_version_data
     #
     # The only way to change version data! Use responsibly for suffer the Dragons described above!
-    # Returns True if it succeeded, or False if it failed due to invalid data.
+    # Returns True if it succeeded, or False if it failed due to invalid data. debug_add_to_history only works
+    # when the data is valid
+    #
+    # Passing nothing in results in no change
     #
     # Warning! Do not directly modify scene.xplane.xplane2blender without knowing EXACTLY what you're doing!
     # It will break the ability to get a current version from xplane2blender_ver!
-    def safe_set_version_data(self,addon_version,build_type,build_type_version,data_model_version,build_number):
+    def safe_set_version_data(self, addon_version=None, build_type=None,
+                              build_type_version=None, data_model_version=None,
+                              build_number=None, debug_add_to_history=False):
+        if addon_version is None:
+            addon_version = self.addon_version
+        if build_type  is None:
+            build_type  = self.build_type
+        if build_type_version is None:
+            build_type_version =  self.build_type_version
+        if data_model_version is None:
+            data_model_version = self.data_model_version
+        if build_number is None:
+            build_number = self.build_number
+
         if xplane_helpers.VerStruct(addon_version,
                           build_type,
                           build_type_version,
@@ -147,6 +163,8 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
             self.data_model_version = data_model_version
             self.build_number       = build_number
             _version_safety_off = False
+            if debug_add_to_history:
+                xplane_helpers.VerStruct.add_to_version_history(self)
             return True
         else:
             return False
