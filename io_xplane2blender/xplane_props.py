@@ -77,15 +77,17 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         return None
 
     # Property: addon_version
+    #
     # Tuple of Blender addon version, (major, minor, revision)
     addon_version = bpy.props.IntVectorProperty(
         name = "XPlane2Blender Addon Version",
-        description = "The version of the addon (also found in it's addons information)",
+        description = "The version of the addon (also found in it's addon information)",
         default=xplane_config.CURRENT_ADDON_VERSION,
         update=update_version_property,
         size=3)
     
     # Property: build_type
+    #
     # The type of build this is, always a value in BUILD_TYPES
     build_type = bpy.props.StringProperty(
         name="Build Type",
@@ -106,7 +108,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
 
     # Property: data_model_version
     #
-    # The version of the data model, tracked seperately. Always incrementing.
+    # The version of the data model, tracked separately. Always incrementing.
     data_model_version = bpy.props.IntProperty(
         name="Data Model Version",
         description="Version of the data model (constants,props, and updater functionality) this version of the addon is. Always incrementing on changes",
@@ -169,6 +171,9 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         else:
             return False
 
+    # Method: make_struct
+    #
+    # Make a VerStruct version of itself
     def make_struct(self):
         return xplane_helpers.VerStruct(self.addon_version, self.build_type, self.build_type_version, self.data_model_version, self.build_number)
 

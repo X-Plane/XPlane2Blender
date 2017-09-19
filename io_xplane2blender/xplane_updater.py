@@ -124,11 +124,6 @@ def load_handler(dummy):
     current_version = scene.xplane.xplane2blender_ver
     ver_history = scene.xplane.xplane2blender_ver_history
 
-    # L: means log this    
-    #    if it is 3.20.x:
-    #     L:replace with 3.2.x
-    #     L:add the current history
-
     # Test if we're coming from a legacy build
     # Caveats:
     #    - New "modern" files don't touch this

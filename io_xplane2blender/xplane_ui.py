@@ -161,8 +161,7 @@ def scene_layout(self, scene):
         layout.row().label("XPlane2Blender Version: " + xp2b_ver.short_str(), icon="FILE_TICK")
     else:
         layout.row().label("XPlane2Blender Version: " + xp2b_ver.short_str(), icon="NONE")
-        
-    
+
     needs_warning = False
     if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_ALPHA or\
         xp2b_ver.build_type == xplane_constants.BUILD_TYPE_BETA:
