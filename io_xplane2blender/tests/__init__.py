@@ -264,28 +264,6 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             self.assertTrue(os.path.exists(fixtureFile), 'File "%s" does not exist' % fixtureFile)
             self.assertFileOutputEqualsFixture(out, fixtureFile, filterLine)
 
-class XPlaneBuildNumberTestCase(XPlaneTestCase):
-    # Method: current
-    #
-    # Returns a VerStruct with all the current xplane_config information.
-    # Note: This SHOULD be the same as scene.xplane.xplane2blender_ver, and it is better to use that version.
-    # This is provided to reduce error-prone copy and pasting, as needed only!
-    @property
-    def current(self):
-        return xplane_helpers.VerStruct(xplane_config.CURRENT_ADDON_VERSION,
-                                        xplane_config.CURRENT_BUILD_TYPE,
-                                        xplane_config.CURRENT_BUILD_TYPE_VERSION,
-                                        xplane_config.CURRENT_DATA_MODEL_VERSION,
-                                        xplane_config.CURRENT_BUILD_NUMBER)
-    @property
-    def xplane2blender_ver(self):
-        return bpy.context.scene.xplane.xplane2blender_ver
-    
-    #Concise shortcut provided
-    @property
-    def history(self):
-        return bpy.context.scene.xplane.xplane2blender_ver_history
-    
 def make_fixture_path(dirname,filename,sub_dir=""):
     return os.path.join(dirname, 'fixtures', sub_dir, filename + '.obj')
 

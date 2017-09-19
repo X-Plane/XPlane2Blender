@@ -11,9 +11,11 @@ from io_xplane2blender.tests import *
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestBuildNumberProp(XPlaneBuildNumberTestCase):
+class TestBuildNumberProp(XPlaneTestCase):
+    current = xplane_helpers.VerStruct.current()
+    xplane2blender_ver = bpy.context.scene.xplane.xplane2blender_ver
     def test_xplane2blender_returns_config_currents(self):
-        self.assertTrue(VerStruct.cmp(self.xplane2blender_ver,self.current) == 0, "xplane2blender_ver is not equal to the current values defined in xplane_config")
+        self.assertTrue(self.xplane2blender_ver.make_struct() == self.current, "xplane2blender_ver is not equal to the current values defined in xplane_config")
         
     def test_safe_set_version_data(self): 
         self.assertTrue(self.xplane2blender_ver.safe_set_version_data((3,4,0),"leg",0,0,xplane_constants.BUILD_NUMBER_NONE),
@@ -43,6 +45,6 @@ class TestBuildNumberProp(XPlaneBuildNumberTestCase):
         #self.xplane2blender_ver.build_type_version = 0
         #self.xplane2blender_ver.data_model_version = 0
         #self.xplane2blender_ver.build_number = "20170915041130"
-        #self.assertTrue(VerStruct.cmp(old_values,self.xplane2blender_ver.make_struct()) == 0, "XPlane2BlenderVersion properties changed outside of safe_set_version_data")
+        #self.assertTrue(old_values == self.xplane2blender_ver.make_struct(), "XPlane2BlenderVersion properties changed outside of safe_set_version_data")
 
 runTestCases([TestBuildNumberProp])

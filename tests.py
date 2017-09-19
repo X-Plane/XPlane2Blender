@@ -24,7 +24,7 @@ if os.path.exists('./tests/tmp'):
     shutil.rmtree('./tests/tmp',ignore_errors=True)
 
 # create temp dir if not exists
-os.makedirs('./tests/tmp',exist_ok=True)
+os.makedirs('./tests/tmp')
 
 def getFlag(names):
     for name in names:
@@ -48,13 +48,13 @@ def getOption(names, default):
     return default
 
 fileFilter = getOption(['-f','--filter'], None)
-exclude = getOption('--exclude', None)
-blenderExecutable = getOption('--blender', 'blender')
-debug = getFlag('--debug')
+exclude = getOption(['--exclude'], None)
+blenderExecutable = getOption(['--blender'], 'blender')
+debug = getFlag(['--debug'])
 keep_going = getFlag(['-c','--continue'])
 print_fails = getFlag(['-p','--print-fails'])
 be_quiet = getFlag(['-q', '--quiet']) or print_fails
-showHelp = getFlag('--help')
+showHelp = getFlag(['--help'])
 
 if showHelp:
     print(

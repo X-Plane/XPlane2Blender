@@ -9,6 +9,7 @@ import os
 import re
 
 import io_xplane2blender
+from io_xplane2blender import xplane_config
 from io_xplane2blender import xplane_constants
 
 FLOAT_PRECISION = 8
@@ -60,12 +61,39 @@ def resolveBlenderPath(path):
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():
     def __init__(self,addon_version=None,build_type=None,build_type_version=None,data_model_version=None,build_number=None):
-        self.addon_version      = tuple(addon_version) if addon_version is not None else (0,0,0)
-        self.build_type         = build_type if build_type is not None else xplane_constants.BUILD_TYPE_DEV
-        self.build_type_version = build_type_version if build_type_version is not None else 0
-        self.data_model_version = data_model_version if data_model_version is not None else 0
-        self.build_number       = build_number if build_number is not None else xplane_constants.BUILD_NUMBER_NONE
+        self.addon_version      = tuple(addon_version) if addon_version      is not None else (0,0,0)
+        self.build_type         = build_type           if build_type         is not None else xplane_constants.BUILD_TYPE_DEV
+        self.build_type_version = build_type_version   if build_type_version is not None else 0
+        self.data_model_version = data_model_version   if data_model_version is not None else 0
+        self.build_number       = build_number         if build_number       is not None else xplane_constants.BUILD_NUMBER_NONE
 
+    def __eq__(self,other):
+        if tuple(self.addon_version) == tuple(other.addon_version):
+            if self.build_type == other.build_type:
+                if self.build_type_version == other.build_type_version:
+                    if self.data_model_version == other.data_model_version:
+                        if self.build_number == other.build_number:
+                            return True
+        return False
+
+    def __ne__(self,other):
+        return not self == other
+
+    def __lt__(self,other):
+        return (self.addon_version,xplane_constants.BUILD_TYPES.index(self.build_type),self.build_type_version,self.data_model_version,self.build_number) <\
+               (other.addon_version,xplane_constants.BUILD_TYPES.index(other.build_type),other.build_type_version,other.data_model_version,other.build_number)
+
+    def __gt__(self,other):
+        return (self.addon_version,xplane_constants.BUILD_TYPES.index(self.build_type),self.build_type_version,self.data_model_version,self.build_number) >\
+               (other.addon_version,xplane_constants.BUILD_TYPES.index(other.build_type),other.build_type_version,other.data_model_version,other.build_number)
+
+    def __ge__(self, other):
+        return (self > other) or (self == other)
+
+    def __le__(self, other):
+        return (self < other) or (self == other)
+
+    #Works for XPlane2BlenderVersion or VerStruct
     def __repr__(self):
         #WARNING! Make sure this is the same as XPlane2BlenderVersion's!!!
         return "(%s, %s, %s, %s, %s)" % ('(' + ','.join(map(str,self.addon_version)) + ')',
@@ -81,117 +109,6 @@ class VerStruct():
                                    self.build_type_version,
                                    self.data_model_version,
                                    self.build_number)
-
-    #Works for XPlane2BlenderVersion or VerStruct
-    @staticmethod
-    def add_to_version_history(version_to_add):
-        history = bpy.context.scene.xplane.xplane2blender_ver_history
-         
-        if len(history) == 0 or history[-1].name != repr(version_to_add):
-            new_hist_entry = history.add()
-            new_hist_entry.name = repr(version_to_add)
-            success = new_hist_entry.safe_set_version_data(version_to_add.addon_version,
-                                                           version_to_add.build_type,
-                                                           version_to_add.build_type_version,
-                                                           version_to_add.data_model_version,
-                                                           version_to_add.build_number)
-            if not success:
-                history.remove(len(history)-1)
-                return None
-            else:
-                return new_hist_entry
-        else:
-            return False
-
-    # Method: cmp
-    #
-    # Parameters:
-    # - lsh - a VerStruct or XPlane2BlenderVersion
-    # - rsh - a VerStruct or XPlane2BlenderVersion
-    # - include_data_model_version - a bool, includes the data_model_version in comparing
-    # - include_build_number       - a bool, includes the build_number in comparing
-    #
-    # Returns:
-    # - -1 for lhs < rhs, 0 for lhs == rhs, and 1 for lhs > rhs
-    # Also can optionally include to compare data model version and build number.
-    @staticmethod
-    def cmp(lhs,rhs,include_data_model_version=False,include_build_number=False):
-        if tuple(lhs.addon_version) == tuple(rhs.addon_version):
-            if lhs.build_type == rhs.build_type:
-                if lhs.build_type_version == rhs.build_type_version:
-                    is_eq = True
-                    if include_data_model_version:
-                        is_eq &= lhs.data_model_version == rhs.data_model_version
-                    if include_build_number:
-                        is_eq &= lhs.build_number == rhs.build_number
-
-                    if is_eq:
-                        return 0
-                else:
-                    pass #Move on to less than
-
-        if tuple(lhs.addon_version) > tuple(rhs.addon_version):
-            pass
-        elif xplane_constants.BUILD_TYPES.index(lhs.build_type) > xplane_constants.BUILD_TYPES.index(rhs.build_type):
-            pass
-        elif lhs.build_type_version > rhs.build_type_version:
-            pass
-        else:
-            if include_data_model_version or include_build_number:
-                data_model_is_gt   = lhs.data_model_version > rhs.data_model_version
-                build_number_is_gt = lhs.build_number > rhs.build_number
-                if include_data_model_version and include_build_number:
-                    if lhs.data_model_version <= rhs.data_model_version:
-                        return -1
-                        #Because a number like 1.2018 < 2.2017 is impossible to compare, we call it here.
-                    else:
-                        pass
-                else:
-                    is_not_gt = True
-                    if include_data_model_version:
-                        is_not_gt &= not data_model_is_gt
-                    if include_build_number:
-                        is_not_gt &= not build_number_is_gt
-
-                    if is_not_gt:
-                        return -1
-            else:
-                return -1
-
-        if tuple(lhs.addon_version) < tuple(rhs.addon_version):
-            pass
-        elif xplane_constants.BUILD_TYPES.index(lhs.build_type) < xplane_constants.BUILD_TYPES.index(rhs.build_type):
-            pass
-        elif lhs.build_type_version < rhs.build_type_version:
-            pass
-        else:
-            if include_data_model_version or include_build_number:
-                data_model_is_lt   = lhs.data_model_version < rhs.data_model_version
-                build_number_is_lt = lhs.build_number < rhs.build_number
-                if include_data_model_version and include_build_number:
-                    if lhs.data_model_version >= rhs.data_model_version:
-                        #Because a number like 1.2018 < 2.2017 is impossible to compare, we call it here.
-                        return 1
-                    else:
-                        pass
-                else:
-                    is_not_lt = True
-                    if include_data_model_version:
-                        is_not_lt &= not data_model_is_lt
-                    if include_build_number:
-                        is_not_lt &= not build_number_is_lt
-
-                    if is_not_lt:
-                        return 1
-            else:
-                return 1
-
-        raise Exception("cmp function not implemented properly")
-
-    @staticmethod
-    def make_new_build_number():
-        #Use the UNIX Timestamp in UTC 
-        return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
 
     # Method: is_valid
     #
@@ -247,6 +164,46 @@ class VerStruct():
         else:
             print("addon_version %s is invalid" % str(self.addon_version))
             return False
+
+    @staticmethod
+    def add_to_version_history(version_to_add):
+        history = bpy.context.scene.xplane.xplane2blender_ver_history
+         
+        if len(history) == 0 or history[-1].name != repr(version_to_add):
+            new_hist_entry = history.add()
+            new_hist_entry.name = repr(version_to_add)
+            success = new_hist_entry.safe_set_version_data(version_to_add.addon_version,
+                                                           version_to_add.build_type,
+                                                           version_to_add.build_type_version,
+                                                           version_to_add.data_model_version,
+                                                           version_to_add.build_number)
+            if not success:
+                history.remove(len(history)-1)
+                return None
+            else:
+                return new_hist_entry
+        else:
+            return False
+
+    # Method: current
+    #
+    # Returns a VerStruct with all the current xplane_config information.
+    # Note: This SHOULD be the same as scene.xplane.xplane2blender_ver, and it is better to use that version.
+    # This is provided to reduce error-prone copy and pasting, as needed only!
+
+    @staticmethod
+    def current():
+        return VerStruct(xplane_config.CURRENT_ADDON_VERSION,
+                         xplane_config.CURRENT_BUILD_TYPE,
+                         xplane_config.CURRENT_BUILD_TYPE_VERSION,
+                         xplane_config.CURRENT_DATA_MODEL_VERSION,
+                         xplane_config.CURRENT_BUILD_NUMBER)
+
+    @staticmethod
+    def make_new_build_number():
+        #Use the UNIX Timestamp in UTC 
+        return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
+
     # Method: parse_version
     #
     # Parameters:
@@ -266,7 +223,7 @@ class VerStruct():
             ######################################
             # Regex matching and data extraction #
             ######################################
-            format_str = r"(\d+\.\d+\.\d+)-(alpha|beta|dev|leg|rc)\.([1-9]+)"
+            format_str = r"(\d+\.\d+\.\d+)-(alpha|beta|dev|leg|rc)\.(\d+)"
                 
             if '+' in version_str:
                 format_str += r"\+(\d+)\.(\w{14})"

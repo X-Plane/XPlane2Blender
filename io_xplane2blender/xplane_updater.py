@@ -83,7 +83,7 @@ def __updateLocRot(obj):
 # Parameters:
 #     fromVersion - The old version of the blender file
 def update(last_version):
-    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.parse_version('3.3.0')) == -1:
+    if last_version < xplane_helpers.VerStruct.parse_version('3.3.0'):
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
@@ -101,7 +101,7 @@ def update(last_version):
                     else:
                         layer.export_type = 'aircraft'
 
-    if xplane_helpers.VerStruct.cmp(last_version,xplane_helpers.VerStruct.parse_version('3.4.0')) == -1:
+    if last_version < xplane_helpers.VerStruct.parse_version('3.4.0'):
         for arm in bpy.data.armatures:
             for bone in arm.bones:
                 #Thanks to Python's duck typing and Blender's PointerProperties, this works
@@ -162,14 +162,17 @@ def load_handler(dummy):
     # L:Compare last vs current
     # If the version is out of date
     #     L:Run update
-    if xplane_helpers.VerStruct.cmp(last_version,current_version) == -1 and legacy_build_number_w_history is False:
+    if last_version.make_struct() < current_version.make_struct() and legacy_build_number_w_history is False:
         print("This file was created with an older XPlane2Blender version less than or equal to (%s) "
               "and will now be updated to %s" % (str(last_version),str(current_version)))
-        update(last_version)
+        update(last_version.make_struct())
 
         # Add the current version to the history
         xplane_helpers.VerStruct.add_to_version_history(current_version)
         print('Your file was successfully updated to XPlane2Blender %s' % str(current_version))
+    elif last_version.make_struct() > current_version.make_struct():
+        print('This file was last edited by a more advanced version, %s, than the current version %s.'\
+        ' Changes may be lost or corrupt your work!' % (last_version,current_version))
 
 bpy.app.handlers.load_post.append(load_handler)
 

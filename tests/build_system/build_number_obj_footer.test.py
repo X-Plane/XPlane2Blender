@@ -8,11 +8,7 @@ from io_xplane2blender.xplane_helpers import VerStruct
 
 __dirname__ = os.path.dirname(__file__)
 
-#TEMPLATE_INFO filter obj output. Define above or in the class level 
-#def filterLines(line):
-    #return isinstance(line[0],str) and...
-    
-class TestBlendBuildNumberObjFooter(XPlaneBuildNumberTestCase):
+class TestBlendBuildNumberObjFooter(XPlaneTestCase):
     def test_build_number_obj_footer(self):
         bpy.ops.scene.add_xplane_layers()
         out = self.exportLayer(0)
@@ -22,7 +18,7 @@ class TestBlendBuildNumberObjFooter(XPlaneBuildNumberTestCase):
         
         version = VerStruct.parse_version(version_match.group(1))
         self.assertTrue(version is not None, "%s could not be parsed to a valid VerStruct" % version_match.group(1))
-        self.assertTrue(VerStruct.cmp(version,self.xplane2blender_ver,True,True) == 0,
+        self.assertTrue(version == bpy.context.scene.xplane.xplane2blender_ver.make_struct(),
                         "Version in obj is not equal to current version")
         
 runTestCases([TestBlendBuildNumberObjFooter])

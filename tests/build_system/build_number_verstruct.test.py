@@ -9,7 +9,11 @@ from bpy.app import build_type
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestBuildNumberVerStruct(XPlaneBuildNumberTestCase):
+class TestBuildNumberVerStruct(XPlaneTestCase):
+    current = xplane_helpers.VerStruct.current()
+    xplane2blender_ver = bpy.context.scene.xplane.xplane2blender_ver
+    history = bpy.context.scene.xplane.xplane2blender_ver_history
+    
     def test_constructor_defaults_correct(self):
         ver_s = VerStruct()
 
@@ -72,7 +76,7 @@ class TestBuildNumberVerStruct(XPlaneBuildNumberTestCase):
         
         incorrect_versions_modern = [
             "3.4.0.beta.1", #Bad separator
-            "3.4.0-alpha.-1", #Int, but not > 0
+            "3.4.0-alpha.-1", #Int, but not < 0
             "3.4.0-rc", #Missing revision number
             "3.4.0-rc.1-1.20170906153430", #Bad separator
             "3.4.0-rc.1+1.YYYYMMDDHHMMSS", #Parsing the description, not the contents
@@ -93,8 +97,8 @@ class TestBuildNumberVerStruct(XPlaneBuildNumberTestCase):
         
         for test_v, test_v_res in correct_versions_legacy:
             v_res = VerStruct.parse_version(test_v)
-            self.assertTrue(v_res != None, "VerStruct.parse_version did not allow valid legacy style version %s through" % test_v)
-            self.assertTrue(VerStruct.cmp(test_v_res,v_res,True,True) == 0, "Test string %s did not parse to expected data %s" % (test_v,str(v_res)))
+            self.assertTrue(v_res is not None, "VerStruct.parse_version did not allow valid legacy style version %s through" % test_v)
+            self.assertTrue(test_v_res == v_res, "Test string %s did not parse to expected data %s" % (test_v,str(v_res)))
             
         correct_versions_modern = [
             ("3.4.0-rc.5+1.20170914160830",VerStruct(addon_version=(3,4,0),build_type=xplane_constants.BUILD_TYPE_RC,  build_type_version=5,
@@ -103,63 +107,31 @@ class TestBuildNumberVerStruct(XPlaneBuildNumberTestCase):
              
         for test_v, test_v_res in correct_versions_modern:
             v_res = VerStruct.parse_version(test_v)
-            self.assertTrue(v_res != None, "VerStruct.parse_version did not allow valid modern style version %s through" % test_v)
-            self.assertTrue(VerStruct.cmp(test_v_res,v_res,True,True) == 0, "Test string %s did not parse to expected data %s" % (test_v,str(v_res)))
+            self.assertTrue(v_res is not None, "VerStruct.parse_version did not allow valid modern style version %s through" % test_v)
+            self.assertTrue(test_v_res == v_res, "Test string %s did not parse to expected data %s" % (test_v,str(v_res)))
         
-    def test_cmp(self):
-        addon_versions = [(3,2,0),(4,3,1),(5,4,2)]
-        build_numbers = ["20170915103830","20180915103830"]
+    def test_rich_compare(self):
+        #The following are made up and may not represent reality or the history
+        # of XPlane2Blender's development
+        legacy = VerStruct.parse_version('3.3.12')
+        beta_4 = VerStruct.parse_version('3.4.0')
+        beta_5 = VerStruct.parse_version('3.4.0-beta.5+1.NO_BUILD_NUMBR')
+        rc_1_rebuild_1 = VerStruct.parse_version('3.4.0-rc.1+1.20170923121212')
+        rc_1_rebuild_2 = VerStruct.parse_version('3.4.0-rc.1+1.20170924121212')
+        rc_1 = VerStruct.parse_version('3.4.0-rc.1+1.NO_BUILD_NUMBR')
+        rc_2 = VerStruct.parse_version('3.4.0-rc.2+2.20170922121212')
+        rc_2_rebuild = VerStruct.parse_version('3.4.0-rc.2+3.20170921121212') #Here the data model version has increased but was built a day before. Represents checkign out a previous commit and building from it
+
+        ver_future_dev = VerStruct.parse_version('3.4.1-dev.0+3.NO_BUILD_NUMBR')
+        ver_future_alpha = VerStruct.parse_version('3.4.1-alpha.1+3.20170925121212')
         
-        def test_variations(v1, v2, expected_result,include_data_model_version=True,include_build_number=True):
-            if expected_result == -1 or expected_result == 0:
-                actual_cmp_res = VerStruct.cmp(v1,v2,include_data_model_version,include_build_number)
-            elif expected_result == 1:
-                actual_cmp_res = VerStruct.cmp(v2,v1,include_data_model_version,include_build_number)
-            else:
-                raise Exception("expected_result parameter in test_variations must be -1,0,1")
-            
-            self.assertTrue(actual_cmp_res == expected_result, "Comparing %s and %s expected %d but got %d" % (str(v1),str(v2),expected_result,actual_cmp_res))
+        self.assertTrue(legacy < beta_4 < beta_5 < rc_1_rebuild_1 < rc_1_rebuild_2 < rc_1 < rc_2 < rc_2_rebuild  < ver_future_dev < ver_future_alpha,
+                         "VerStruct.__lt__ not implemented correctly")
+        self.assertTrue(ver_future_alpha > ver_future_dev > rc_2_rebuild  > rc_2 > rc_1 > rc_1_rebuild_2 > rc_1_rebuild_1 > beta_5 > beta_4 > legacy,
+                         "VerStruct.__gt__ not implemented correctly")
 
-        #Test addon_version vs addon_version
-        for i in range(len(addon_versions)-1):
-            v1 = VerStruct(addon_versions[i]  ,xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[0])
-            v2 = VerStruct(addon_versions[i+1],xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[0])
-            test_variations(v1, v2, -1)
-            test_variations(v1, v2, 1)
-
-        #Test build_type precedence
-        for i in range(len(xplane_constants.BUILD_TYPES)-1):
-            v1 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPES[i]  ,1,1,build_numbers[0])
-            v2 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPES[i+1],1,1,build_numbers[0])
-            test_variations(v1, v2, -1)
-            test_variations(v1, v2, 1)
-         
-        #Test build_type_version
-        v1 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[0])
-        v2 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,2,1,build_numbers[0])
-        test_variations(v1, v2, -1,False,False)
-        test_variations(v1, v2, 1, False,False)
-
-        #Test data model
-        v1 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[0])
-        v2 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,2,build_numbers[0])
-        test_variations(v1, v2, -1,True,False)
-        test_variations(v1, v2, 1,True,False)
-
-        #Test build number
-        v1 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[0])
-        v2 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[1])
-        test_variations(v1, v2, -1,False,True)
-        test_variations(v1, v2, 1,False,True)
-
-        #Test data model build number precedence (data model chosen first)
-        v1 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[1])
-        v2 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,2,build_numbers[0])
-        test_variations(v1, v2, -1)
-        
-        #Test equality  
-        v1 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[1])
-        v2 = VerStruct(addon_versions[1],xplane_constants.BUILD_TYPE_RC,1,1,build_numbers[1])
-        test_variations(v1, v2, 0)
+        legacy_copy = VerStruct.parse_version('3.3.12')
+        self.assertTrue(legacy == legacy_copy, "VerStruct.__eq__ not implemented correctly")
+        self.assertTrue(legacy != beta_4, "VerStruct.__ne__ not implemented correctly")
 
 runTestCases([TestBuildNumberVerStruct])
