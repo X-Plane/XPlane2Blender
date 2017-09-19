@@ -69,9 +69,11 @@ def __updateLocRot(obj):
     for d in obj.xplane.datarefs:
         old_anim_type = d.get('anim_type')
         if old_anim_type is None:
-            old_anim_type = 0 #something about Blender properties requires this
+            old_anim_type = 0 # If anim_type was never set in the first place, it's value is the default, aka 0 for the old anim_type
 
-        d.anim_type = convert_old_to_new(old_anim_type)
+        new_anim_type = convert_old_to_new(old_anim_type)
+        print("Updating %s's animation dataref (%s)'s animation type from %s to %s" % (obj.name,d.path,old_anim_type,new_anim_type))
+        d.anim_type = new_anim_type 
 
 # Function: update
 # Updates parts of the data model to ensure forward
@@ -141,19 +143,24 @@ def load_handler(dummy):
         legacy_version_str = scene.get('xplane2blender_version','3.2.0').replace('20','2')
         legacy_version = xplane_helpers.VerStruct.parse_version(legacy_version_str)
         if legacy_version is not None:
-            xplane_helpers.VerStruct.add_to_version_history(legacy_version)
-            scene['xplane2blender_version'] = xplane_constants.DEPRECATED_XP2B_VER
             # Edge case: If someone creates a modern file and saves it with a legacy version
             # (no protection against real breaking edits, however)
             if len(ver_history) > 0:
+                print("Legacy build number, %s, found %d entries in version history. Not updating, still adding new version numbers" % (str(legacy_version),len(ver_history)))
                 legacy_build_number_w_history = True
-                #Since we changed the data of this file, we still need to save the version, even if no updating gets done
+                # Since we changed the data of this file, we still need to save the version,
+                # even if no updating gets done
+                xplane_helpers.VerStruct.add_to_version_history(legacy_version)
                 xplane_helpers.VerStruct.add_to_version_history(current_version)
+            else:
+                xplane_helpers.VerStruct.add_to_version_history(legacy_version)
 
-        elif len(ver_history) == 0:
+            scene['xplane2blender_version'] = xplane_constants.DEPRECATED_XP2B_VER
+        else:
             raise Exception("pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."\
                             " Re-open file in a previous version and/or fix manually in Scene->Custom Properties" % (legacy_version_str))
-    
+            return
+
     #We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we save that on first save or it'll already be deprecated!
 
     # Get the old_version (end of list, which by now is guaranteed to have something in it)
