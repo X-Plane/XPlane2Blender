@@ -60,9 +60,19 @@ class TestBuildNumberUpdater(XPlaneTestCase):
         self.run_update_cycle(filename,to_parse)
     
     def test_update_from_new_file(self):
-       bpy.ops.wm.read_homefile() 
-       blend_path = os.path.join(__dirname__,"..","tmp","build_number_new_save_test.blend")
-       bpy.ops.wm.save_mainfile(filepath=blend_path, check_existing=False)
-       self.run_update_cycle(blend_path,str(xplane_helpers.VerStruct.current()))
+        bpy.ops.wm.read_homefile()
+        blend_path = os.path.join(__dirname__,"..","tmp","build_number_new_save_test.blend")
+        bpy.ops.wm.save_mainfile(filepath=blend_path, check_existing=False)
+        bpy.ops.wm.open_mainfile(filepath=blend_path)
+
+        self.assertTrue(bpy.context.scene['xplane2blender_version'] == xplane_constants.DEPRECATED_XP2B_VER,
+                         "scene['xplane2blender_version'] was not deprecated on load")
+
+        history = bpy.context.scene.xplane.xplane2blender_ver_history
+        self.assertTrue(len(history) == 1,
+                        'xplane2blender_ver_history is %d long, not 2' % (len(history)))
+
+        self.assertTrue(history[0].make_struct() == xplane_helpers.VerStruct.current(),
+                        'Second entry in history %s is not current' % str(history[0]))
 
 runTestCases([TestBuildNumberUpdater])
