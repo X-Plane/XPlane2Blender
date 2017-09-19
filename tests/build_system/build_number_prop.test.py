@@ -6,7 +6,6 @@ from io_xplane2blender import bl_info
 from io_xplane2blender import xplane_config
 from io_xplane2blender import xplane_constants
 from io_xplane2blender import xplane_helpers
-from xplane_helpers import VerStruct
 from io_xplane2blender.tests import *
 
 __dirname__ = os.path.dirname(__file__)
