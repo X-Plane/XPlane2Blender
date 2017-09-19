@@ -28,7 +28,7 @@ class TestBuildNumberUpdater(XPlaneTestCase):
 
             history = bpy.context.scene.xplane.xplane2blender_ver_history
             self.assertTrue(len(history) == 2,
-                            'xplane2blender_ver_history is %d long, not 2' % len(history))
+                            'xplane2blender_ver_history is %d long, not 2' % (len(history)))
 
             self.assertTrue(history[0].make_struct() == VerStruct.parse_version(to_parse),
                             'First entry in history %s is wrong or not the legacy string' % str(history[0]))
