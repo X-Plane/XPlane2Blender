@@ -165,16 +165,17 @@ def load_handler(dummy):
     # If the version is out of date
     #     L:Run update
     if last_version.make_struct() < current_version.make_struct() and legacy_build_number_w_history is False:
-        print("This file was created with an older XPlane2Blender version less than or equal to (%s) "
-              "and will now be updated to %s" % (str(last_version),str(current_version)))
+        print("This file was created with an older XPlane2Blender version (%s) less than or equal to (%s) "
+              "and will now be updated" % (str(last_version),str(current_version)))
         update(last_version.make_struct())
 
-        # Add the current version to the history
-        xplane_helpers.VerStruct.add_to_version_history(current_version)
         print('Your file was successfully updated to XPlane2Blender %s' % str(current_version))
     elif last_version.make_struct() > current_version.make_struct():
         print('This file was last edited by a more advanced version, %s, than the current version %s.'\
         ' Changes may be lost or corrupt your work!' % (last_version,current_version))
+
+    # Add the current version to the history, no matter what. Just in case it means something
+    xplane_helpers.VerStruct.add_to_version_history(current_version)
 
 bpy.app.handlers.load_post.append(load_handler)
 
