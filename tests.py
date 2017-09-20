@@ -55,7 +55,7 @@ keep_going = getFlag(['-c','--continue'])
 print_fails = getFlag(['-p','--print-fails'])
 be_quiet = getFlag(['-q', '--quiet']) or print_fails
 showHelp = getFlag(['--help'])
-
+no_factory_startup = getFlag(['-n', '--no-factory-startup'])
 if showHelp:
     print(
         'Usage: python tests.py [options]\n\n' +
@@ -66,6 +66,7 @@ if showHelp:
         '  -c, --continue\tKeep running after test failure\n' +
         '  -q, --quiet\tReduce output from tests\n' +
         '  -p, --print-fails\tSets --quiet, but also prints the output of failed tests\n'
+        '  -n, --no-factory-startup\tRun Blender with current prefs rather than factory prefs\n'
         '  --blender [path]\tProvide alternative path to blender executable\n' +
         '  --help\t\tdisplay this help\n\n'
     )
@@ -104,11 +105,14 @@ for root, dirs, files in os.walk('./tests'):
 
                 args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
+                if no_factory_startup:
+                    args.remove('--factory-startup')
+
                 if os.path.exists(blendFile):
                     args.append(blendFile)
                 else:
-                    print("WARNING: Blender file " + blendFile + " does not exist")
                     if not be_quiet:
+                        print("WARNING: Blender file " + blendFile + " does not exist")
                         printTestEnd()
 
                 args.append('--python')
