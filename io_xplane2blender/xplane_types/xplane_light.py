@@ -3,6 +3,7 @@ from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
 from ..xplane_constants import *
 from ..xplane_config import getDebug
 import math
+import mathutils
 
 # Class: XPlaneLight
 # A Light
@@ -131,6 +132,14 @@ class XPlaneLight(XPlaneObject):
         o = super(XPlaneLight, self).write()
 
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
+		
+        if self.lightName == 'airplane_landing_sp':
+            print (bakeMatrix)
+            r = mathutils.Euler((math.radians(-90.0),0,0),'XYZ')
+            print (r)
+            bakeMatrix = bakeMatrix * r.to_matrix().to_4x4()
+            print (bakeMatrix)
+		
         translation = bakeMatrix.to_translation()
         rotation = bakeMatrix.to_euler('XYZ')
         
