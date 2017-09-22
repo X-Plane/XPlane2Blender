@@ -4,6 +4,41 @@ from ..xplane_constants import *
 from ..xplane_config import getDebug
 import math
 import mathutils
+from mathutils import Vector, Matrix, Euler
+
+#### BEN NEEDS TO DOC THIS LATER
+
+def vec_b_to_x(v):
+    return Vector((v.x, v.z, -v.y))
+
+def vec_x_to_b(v):
+    return Vector((v.x, -v.z, v.y))
+
+
+def basis_for_dir(neg_z_axis):
+    m = Matrix.Identity(3)
+    z_axis = -neg_z_axis
+    if z_axis.x == 0.0 and z_axis.y == 0.0:
+        if z_axis.z > 0:
+            x_axis = Vector((1,0,0))
+            y_axis = Vector((0,1,0))
+        else:
+            x_axis = Vector((-1,0,0))
+            y_axis = Vector((0,1,0))
+    else:
+        more_or_less_x = ((1,0,0))
+        y_axis = z_axis.cross(more_or_less_x)
+        x_axis = y_axis.cross(z_axis)
+    m[0] = x_axis
+    m[1] = y_axis
+    m[2] = z_axis
+    return m
+
+
+####
+
+
+
 
 # Class: XPlaneLight
 # A Light
@@ -133,12 +168,14 @@ class XPlaneLight(XPlaneObject):
 
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
 		
-        if self.lightName == 'airplane_landing_sp':
-            print (bakeMatrix)
-            r = mathutils.Euler((math.radians(-90.0),0,0),'XYZ')
-            print (r)
-            bakeMatrix = bakeMatrix * r.to_matrix().to_4x4()
-            print (bakeMatrix)
+        if self.lightName == 'airplane_landing_sp' or self.lightName == 'headlight':
+            # b is a matrix to correct for X-Plane pointing the light in 0,0,-1 (x-plane coords)
+            b = basis_for_dir(vec_x_to_b(Vector((0.0,0.0,-1.0))))
+            bakeMatrix = bakeMatrix * b.to_4x4()
+        if self.lightName == 'taillight':
+            # b is a matrix to correct for X-Plane pointing the light in 0,0,1 (x-plane coords)
+            b = basis_for_dir(vec_x_to_b(Vector((0.0,0.0,1.0))))
+            bakeMatrix = bakeMatrix * b.to_4x4()
 		
         translation = bakeMatrix.to_translation()
         rotation = bakeMatrix.to_euler('XYZ')
