@@ -14,7 +14,6 @@ def vec_b_to_x(v):
 def vec_x_to_b(v):
     return Vector((v.x, -v.z, v.y))
 
-
 def basis_for_dir(neg_z_axis):
     m = Matrix.Identity(3)
     z_axis = -neg_z_axis
@@ -161,49 +160,53 @@ class XPlaneLight(XPlaneObject):
 
         return o
 
-
     def write(self):
         indent = self.xplaneBone.getIndent()
         o = super(XPlaneLight, self).write()
 
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
-		
-        if self.lightName == 'airplane_landing_sp' or self.lightName == 'headlight':
-            # b is a matrix to correct for X-Plane pointing the light in 0,0,-1 (x-plane coords)
-            b = basis_for_dir(vec_x_to_b(Vector((0.0,0.0,-1.0))))
+        if self.blenderObject.data.type == 'POINT':
+            translation = bakeMatrix.to_translation()
+            has_anim = False
+        elif self.blenderObject.data.type != 'POINT':
+            fixed_lights = {
+                'airplane_landing_sp': (0.0, 0.0,-1.0),
+                'headlight'          : (0.0, 0.0,-1.0),
+                'taillight'          : (0.0, 0.0, 1.0),
+                'taxi_b'             : (0.0,-1.0, 0.0),
+                'taxi_r'             : (0.0,-1.0, 0.0),
+                'full_custom_halo'   : (0.0,-1.0, 0.0)
+                }
+                
+            b = basis_for_dir(vec_x_to_b(Vector(fixed_lights[self.lightName])))
             bakeMatrix = bakeMatrix * b.to_4x4()
-        if self.lightName == 'taillight':
-            # b is a matrix to correct for X-Plane pointing the light in 0,0,1 (x-plane coords)
-            b = basis_for_dir(vec_x_to_b(Vector((0.0,0.0,1.0))))
-            bakeMatrix = bakeMatrix * b.to_4x4()
-		
-        translation = bakeMatrix.to_translation()
-        rotation = bakeMatrix.to_euler('XYZ')
+
+            translation = bakeMatrix.to_translation()
+            rotation = bakeMatrix.to_euler('XYZ')
+            
+            rotation[0] = round(rotation[0],5)
+            rotation[1] = round(rotation[1],5)
+            rotation[2] = round(rotation[2],5)
+            
+            has_anim = False
         
-        rotation[0] = round(rotation[0],5)
-        rotation[1] = round(rotation[1],5)
-        rotation[2] = round(rotation[2],5)
-        
-        has_anim = False
-        
-        # Ben says: lights always have some kind of offset because the light itself
-        # is "at" 0,0,0, so we treat the translation as the light position.
-        # But if there is a ROTATION then in the light's bake matrix, the
-        # translation is pre-rotation.  but we want to write a single static rotation
-        # and then NOT write a translation every time.
-        #
-        # Soooo... we write a bake matrix and then we transform the translation by the
-        # inverse to change our animation order (so we really have rot, trans when we
-        # originally had trans, rot) and now we can use the translation in the lamp
-        # itself.
-        
-        if rotation[0] != 0.0 or rotation[1] != 0.0 or rotation[2] != 0.0:
-            rot_matrix = rotation.to_matrix().to_4x4()
-            o += "%sANIM_begin\n" % indent
-            o += self._writeStaticRotationForLight(rot_matrix)
-            translation = rot_matrix.inverted() * translation
-            has_anim = True
-        
+            # Ben says: lights always have some kind of offset because the light itself
+            # is "at" 0,0,0, so we treat the translation as the light position.
+            # But if there is a ROTATION then in the light's bake matrix, the
+            # translation is pre-rotation.  but we want to write a single static rotation
+            # and then NOT write a translation every time.
+            #
+            # Soooo... we write a bake matrix and then we transform the translation by the
+            # inverse to change our animation order (so we really have rot, trans when we
+            # originally had trans, rot) and now we can use the translation in the lamp
+            # itself.
+            
+            if rotation[0] != 0.0 or rotation[1] != 0.0 or rotation[2] != 0.0:
+                rot_matrix = rotation.to_matrix().to_4x4()
+                o += "%sANIM_begin\n" % indent
+                o += self._writeStaticRotationForLight(rot_matrix)
+                translation = rot_matrix.inverted() * translation
+                has_anim = True
         if self.lightType == LIGHT_NAMED:
             o += "%sLIGHT_NAMED\t%s %s %s %s\n" % (
                 indent, self.lightName,
