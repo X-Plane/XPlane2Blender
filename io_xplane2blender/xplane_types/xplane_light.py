@@ -164,11 +164,46 @@ class XPlaneLight(XPlaneObject):
         indent = self.xplaneBone.getIndent()
         o = super(XPlaneLight, self).write()
 
+        test_param_lights = {
+            # NAMED LIGHTS
+            #Spill version
+            'taillight' : ((),(0.4 ,0.05,0, 0.8,3,0,-0.5,0.86,0.0,0)),
+            
+            # PARAMETER LIGHTS
+            'airplane_nav_left_size':(('SIZE','FOCUS'), 
+                ('FOCUS',0,0,1,'SIZE',(1,7,7),0,0,0,1,'sim/graphics/animation/lights/airplane_navigation_light_dir')),
+
+            'airplane_nav_right_size':(('SIZE','FOCUS'), 
+                ('FOCUS',0,0,1,'SIZE',(1,6,7),0,0,0,1,'sim/graphics/animation/lights/airplane_navigation_light_dir')),
+
+            'area_lt_param_sp': (('DX','DY','DZ','THROW'),
+                                 (0.85, 0.75, 1.0, 0.6,'THROW','DX', 'DY', 'DZ', 0.3, 0)),
+
+            'full_custom_halo': (('R','G','B','A','S','X','Y','Z','F'),
+                                 ('R', 'G', 'B', 'A', 'S','X','Y','Z','F',1)),
+
+            'helipad_flood_sp': (('BRIGHT', 'THROW', 'X', 'Y', 'Z', 'FOCUS'),
+                                 (0.996, 0.945, 0.882, 'BRIGHT', 'THROW', 'X', 'Y', 'Z', 'FOCUS', 0)),
+
+            'helipad_flood_bb': (('X', 'Y', 'Z', 'WIDTH'),
+                                 (1, 1, 1, 0.5, (1, 2, 6), 'X', 'Y', 'Z', 'WIDTH', 0, 0, 0, 0)),
+
+            'spot_params_sp':   (('R','G','B','BRIGHT','THROW','X','Y','Z','FOCUS'),
+                                 ('R','G','B','BRIGHT','THROW','X','Y','Z','FOCUS')),
+
+            'spot_params_bb':   (('R','G','B','SIZE','X','Y','Z','WIDTH'),
+                                 ('R', 'G', 'B', 1.0, 'SIZE',  (2,  5,  2), 'X', 'Y', 'Z', 'WIDTH',  0,  0,  0,  0)),
+
+            'radio_obs_flash':  (('X','Y','Z'),
+                                 (1, 0.8, 0.8, 1, 1.5, (1, 4, 5),  'X', 'Y', 'Z', 0.5, 0.25, 0, 1.5, 1))
+            }
+
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
         if self.blenderObject.data.type == 'POINT':
             translation = bakeMatrix.to_translation()
             has_anim = False
         elif self.blenderObject.data.type != 'POINT':
+            
             fixed_lights = {
                 'airplane_landing_sp': (0.0, 0.0,-1.0),
                 'headlight'          : (0.0, 0.0,-1.0),
@@ -178,7 +213,8 @@ class XPlaneLight(XPlaneObject):
                 'full_custom_halo'   : (0.0,-1.0, 0.0)
                 }
                 
-            b = basis_for_dir(vec_x_to_b(Vector(fixed_lights[self.lightName])))
+            b = basis_for_dir(vec_x_to_b(self.blenderObject.location.normalize()))
+            
             bakeMatrix = bakeMatrix * b.to_4x4()
 
             translation = bakeMatrix.to_translation()
