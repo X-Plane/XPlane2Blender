@@ -1,8 +1,9 @@
+import math
+import re
 from .xplane_object import XPlaneObject
 from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
 from ..xplane_constants import *
 from ..xplane_config import getDebug
-import math
 import mathutils
 from mathutils import Vector, Matrix, Euler
 
@@ -14,30 +15,87 @@ def vec_b_to_x(v):
 def vec_x_to_b(v):
     return Vector((v.x, -v.z, v.y))
 
-def basis_for_dir(neg_z_axis):
+def basis_for_dir(neg_input_axis):
     m = Matrix.Identity(3)
-    z_axis = -neg_z_axis
-    if z_axis.x == 0.0 and z_axis.y == 0.0:
-        if z_axis.z > 0:
-            x_axis = Vector((1,0,0))
-            y_axis = Vector((0,1,0))
-        else:
-            x_axis = Vector((-1,0,0))
-            y_axis = Vector((0,1,0))
+    rotate_basis_x = -neg_input_axis
+    rotate_basis_y = Vector((0,0,0))
+    rotate_basis_z = Vector((0,0,0))
+    
+    #If 
+    if abs(rotate_basis_x[0]) > max(abs(rotate_basis_x[1]),abs(rotate_basis_x[2])):
+        rotate_basis_y[0] = 0.0
+        rotate_basis_y[1] = 1.0 if rotate_basis_x[0] > 0.0 else -1.0
+        rotate_basis_y[2] = 0.0
+    elif abs(rotate_basis_x[1]) > abs(rotate_basis_x[2]):
+        # User's axis is approximately Y - use Z for second axis.
+        rotate_basis_y[0] = 0.0
+        rotate_basis_y[1] = 0.0
+        rotate_basis_y[2] = 1.0 if rotate_basis_x[1] > 0.0 else -1.0        
     else:
-        more_or_less_x = ((1,0,0))
-        y_axis = z_axis.cross(more_or_less_x)
-        x_axis = y_axis.cross(z_axis)
-    m[0] = x_axis
-    m[1] = y_axis
-    m[2] = z_axis
+        #User's axis is approxiamtely Z - use X for second axis.
+        rotate_basis_y[0] = 1.0 if rotate_basis_x[2] else -1.0
+        rotate_basis_y[1] = 0.0
+        rotate_basis_y[2] = 0.0
+
+    #// Third axis is cross of first and second - chosen to not be degenerate.
+    rotate_basis_z = rotate_basis_x.cross(rotate_basis_y).normalized()
+    #// Recalculate second axis to truly be orthogonal to BOTH first and third.
+    rotate_basis_y = rotate_basis_z.cross(rotate_basis_x)
+    m[2] = rotate_basis_x
+    m[0] = rotate_basis_y
+    m[1] = rotate_basis_z
+    
+    def nearly_equal_number(number,max_diff):
+        return abs(number) <= max_diff
+
+    def nearly_equal_vec(vec_1, vec_2, max_diff=0.00001):
+        return nearly_equal_number(vec_2.x - vec_1.x, max_diff) and\
+               nearly_equal_number(vec_2.y - vec_1.y, max_diff) and\
+               nearly_equal_number(vec_2.z - vec_1.z, max_diff)
+    
+    assert nearly_equal_vec(rotate_basis_x, -neg_input_axis)
+    assert 0.98999999 <= rotate_basis_x.magnitude <= 1.00001  and\
+           0.98999999 <= rotate_basis_y.magnitude <= 1.00001  and\
+           0.98999999 <= rotate_basis_z.magnitude <= 1.00001
+    assert nearly_equal_vec(rotate_basis_x.cross(rotate_basis_y),rotate_basis_z)
+    assert nearly_equal_vec(rotate_basis_z.cross(rotate_basis_x),rotate_basis_y)
     return m
 
+test_param_lights = {
+    # NAMED LIGHTS
+    #Spill version
+    'taillight' : ((),('0.4','0.05','0','0.8','3','0','-0.5','0.86','0.0','0')),
+    
+    # PARAMETER LIGHTS
+    'airplane_nav_left_size':(('SIZE','FOCUS'), 
+        ('FOCUS','0','0','1','SIZE','1','7','7','0','0','0','1','sim/graphics/animation/lights/airplane_navigation_light_dir')),
+
+    'airplane_nav_right_size':(('SIZE','FOCUS'), 
+        ('FOCUS','0','0','1','SIZE','1','6','7','0','0','0','1','sim/graphics/animation/lights/airplane_navigation_light_dir')),
+
+    'area_lt_param_sp': (('DX','DY','DZ','THROW'),
+                         ('0.85', '0.75', '1.0', '0.6','THROW','DX', 'DY', 'DZ', '0.3', '0')),
+
+    'full_custom_halo': (('R','G','B','A','S','X','Y','Z','F'),
+                         ('R', 'G', 'B', 'A', 'S','X','Y','Z','F','1')),
+
+    'helipad_flood_sp': (('BRIGHT', 'THROW', 'X', 'Y', 'Z', 'FOCUS'),
+                         ('0.996', '0.945', '0.882', 'BRIGHT', 'THROW', 'X', 'Y', 'Z', 'FOCUS', '0')),
+
+    'helipad_flood_bb': (('X', 'Y', 'Z', 'WIDTH'),
+                         ('1', '1', '1', '0.5', '1', '2', '6', 'X', 'Y', 'Z', 'WIDTH', '0', '0', '0', '0')),
+
+    'spot_params_sp':   (('R','G','B','BRIGHT','THROW','X','Y','Z','FOCUS'),
+                         ('R','G','B','BRIGHT','THROW','X','Y','Z','FOCUS')),
+
+    'spot_params_bb':   (('R','G','B','SIZE','X','Y','Z','WIDTH'),
+                         ('R', 'G', 'B', '1.0', 'SIZE',  '2',  '5',  '2', 'X', 'Y', 'Z', 'WIDTH',  '0',  '0',  '0',  '0')),
+
+    'radio_obs_flash':  (('X','Y','Z'),
+                         ('1', '0.8', '0.8', '1', '1.5', '1', '4', '5', 'X', 'Y', 'Z', '0.5', '0.25', '0', '1.5', '1'))
+}
 
 ####
-
-
-
 
 # Class: XPlaneLight
 # A Light
@@ -82,7 +140,31 @@ class XPlaneLight(XPlaneObject):
         self.lightType = blenderObject.data.xplane.type
         self.size = blenderObject.data.xplane.size
         self.lightName = blenderObject.data.xplane.name
+        
         self.params = blenderObject.data.xplane.params
+        self.parsed_params = {
+                'R':None,
+                'G':None,
+                'B':None,
+                'A':None,
+                'INDEX':None,
+                'SIZE':None,
+                'BRIGHT':None,
+                'THROW':None,
+                'SPREAD':None,
+                'X':None,
+                'Y':None,
+                'Z':None,
+                'DX':None,
+                'DY':None,
+                'DZ':None,
+                'W':None,
+                'WIDTH':None,
+                'FOCUS':None
+            }
+
+        self.is_omni = False
+        
         self.uv = blenderObject.data.xplane.uv
         self.dataref = blenderObject.data.xplane.dataref
 
@@ -160,65 +242,65 @@ class XPlaneLight(XPlaneObject):
 
         return o
 
+    def collect(self):
+        # We ask:
+        # - Are do the length of the actual params match the length of the formal params
+        # - Are the actual params all numbers
+        # - Are there 'FOCUS' or 'WIDTH' parameters at play? If there are, is this light omni_directional?
+        if self.lightType == LIGHT_PARAM:
+            params_formal = test_param_lights[self.lightName][0]
+            params_actual = self.params.split()
+            if len(params_formal) != len(params_actual):
+                logger.error("PARAM_DEF: %s and actual params: %s are different lengths (%d,%d)" % (
+                                    len(' '.join(params_formal)),
+                                    len(' '.join(params_actual))
+                                )
+                            )
+
+            def is_number(number_str):
+                try:
+                    float(number_str)
+                except:
+                    return False
+                else:
+                    return True
+
+            parsed_params_actual = [p for p in params_actual if not is_number(p)]
+            if len(parsed_params_actual) != 0:
+                logger.error("Invalid light params for %s:(%s) All light params must be a number" % (
+                                    self.lightName,
+                                    ','.join([str(p) for p in parsed_params_actual])
+                                )
+                            )
+
+            if logger.hasErrors():
+                return
+
+            if "FOCUS" in params_formal:
+                idx = params_formal.index("FOCUS")
+            elif "WIDTH" in params_formal:
+                idx = params_formal.index("WIDTH")
+            else:
+                idx = -1
+
+            if idx != -1:
+                self.is_omni = float(params_actual[idx]) >= 1.0
+
+            #parse_them_all
+            for i,p in enumerate(params_actual):
+                self.parsed_params[params_formal[i]] = float(p)
+
     def write(self):
         indent = self.xplaneBone.getIndent()
         o = super(XPlaneLight, self).write()
-
-        test_param_lights = {
-            # NAMED LIGHTS
-            #Spill version
-            'taillight' : ((),('0.4','0.05','0','0.8','3','0','-0.5','0.86','0.0','0')),
-            
-            # PARAMETER LIGHTS
-            'airplane_nav_left_size':(('SIZE','FOCUS'), 
-                ('FOCUS','0','0','1','SIZE','1','7','7','0','0','0','1','sim/graphics/animation/lights/airplane_navigation_light_dir')),
-
-            'airplane_nav_right_size':(('SIZE','FOCUS'), 
-                ('FOCUS','0','0','1','SIZE','1','6','7','0','0','0','1','sim/graphics/animation/lights/airplane_navigation_light_dir')),
-
-            'area_lt_param_sp': (('DX','DY','DZ','THROW'),
-                                 ('0.85', '0.75', '1.0', '0.6','THROW','DX', 'DY', 'DZ', '0.3', '0')),
-
-            'full_custom_halo': (('R','G','B','A','S','X','Y','Z','F'),
-                                 ('R', 'G', 'B', 'A', 'S','X','Y','Z','F','1')),
-
-            'helipad_flood_sp': (('BRIGHT', 'THROW', 'X', 'Y', 'Z', 'FOCUS'),
-                                 ('0.996', '0.945', '0.882', 'BRIGHT', 'THROW', 'X', 'Y', 'Z', 'FOCUS', '0')),
-
-            'helipad_flood_bb': (('X', 'Y', 'Z', 'WIDTH'),
-                                 ('1', '1', '1', '0.5', '1', '2', '6', 'X', 'Y', 'Z', 'WIDTH', '0', '0', '0', '0')),
-
-            'spot_params_sp':   (('R','G','B','BRIGHT','THROW','X','Y','Z','FOCUS'),
-                                 ('R','G','B','BRIGHT','THROW','X','Y','Z','FOCUS')),
-
-            'spot_params_bb':   (('R','G','B','SIZE','X','Y','Z','WIDTH'),
-                                 ('R', 'G', 'B', '1.0', 'SIZE',  '2',  '5',  '2', 'X', 'Y', 'Z', 'WIDTH',  '0',  '0',  '0',  '0')),
-
-            'radio_obs_flash':  (('X','Y','Z'),
-                                 ('1', '0.8', '0.8', '1', '1.5', '1', '4', '5', 'X', 'Y', 'Z', '0.5', '0.25', '0', '1.5', '1'))
-            }
 
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
         if self.blenderObject.data.type == 'POINT':
             translation = bakeMatrix.to_translation()
             has_anim = False
         elif self.blenderObject.data.type != 'POINT':
-
-            fixed_lights = {
-                'airplane_landing_sp': (0.0, 0.0,-1.0),
-                'headlight'          : (0.0, 0.0,-1.0),
-                'taillight'          : (0.0, 0.0, 1.0),
-                'taxi_b'             : (0.0,-1.0, 0.0),
-                'taxi_r'             : (0.0,-1.0, 0.0),
-                'full_custom_halo'   : (0.0,-1.0, 0.0)
-                }
-
-            if  round(self.blenderObject.rotation_euler[0],5) == 0.00 and \
-                round(self.blenderObject.rotation_euler[1],5) == 0.00 and \
-                round(self.blenderObject.rotation_euler[2],5) == 0.00:
-                rot_vec_norm = Vector((0,0,0))
-            else:
-                rot_vec_norm = Vector(self.blenderObject.rotation_euler[:3]).normalized()
+            # Create rotation offset
+            rot_vec_norm = Vector((self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"])).normalized()
 
             b = basis_for_dir(vec_x_to_b(rot_vec_norm))
 
@@ -244,7 +326,7 @@ class XPlaneLight(XPlaneObject):
             # originally had trans, rot) and now we can use the translation in the lamp
             # itself.
             
-            if rotation[0] != 0.0 or rotation[1] != 0.0 or rotation[2] != 0.0:
+            if (rotation[0] != 0.0 or rotation[1] != 0.0 or rotation[2] != 0.0) and self.is_omni is False:
                 rot_matrix = rotation.to_matrix().to_4x4()
                 o += "%sANIM_begin\n" % indent
                 o += self._writeStaticRotationForLight(rot_matrix)
