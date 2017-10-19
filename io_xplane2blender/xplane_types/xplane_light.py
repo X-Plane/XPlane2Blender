@@ -63,7 +63,7 @@ def basis_for_dir(neg_input_axis):
 
 test_param_lights = {
     # NAMED LIGHTS
-    #Spill version
+    # Spill version
     'taillight' : ((),('0.4','0.05','0','0.8','3','0','-0.5','0.86','0.0','0')),
     
     # PARAMETER LIGHTS
@@ -290,7 +290,15 @@ class XPlaneLight(XPlaneObject):
             for i,p in enumerate(params_actual):
                 self.parsed_params[params_formal[i]] = float(p)
 
+    def clamp(self, num, minimum, maximum):
+        if num < minimum:
+            num = minimum
+        elif num > maximum:
+            num = maximum
+        return num
+
     def write(self):
+        debug = getDebug()
         indent = self.xplaneBone.getIndent()
         o = super(XPlaneLight, self).write()
 
@@ -299,19 +307,33 @@ class XPlaneLight(XPlaneObject):
             translation = bakeMatrix.to_translation()
             has_anim = False
         elif self.blenderObject.data.type != 'POINT':
-            # Create rotation offset
-            rot_vec_norm = Vector((self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"])).normalized()
+            def prettyprint(template_str, content):
+                return "{:<40} %s".format(template_str) % content
+            
+            print("------------")
+            # Vector P(arameters), in Blender Space
+            dir_vec_p_x = Vector((self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"]))
+            print(prettyprint("Direction Vector P:", str(dir_vec_p_x)))
+            
+            dir_vec_p_norm_x = dir_vec_p_x.normalized()
+            print(prettyprint("Direction Vector P (norm, XP Co-ords):",str(dir_vec_p_norm_x)))
+            
+            dir_vec_p_norm_b = vec_x_to_b(dir_vec_p_norm_x)
+            print(prettyprint("Direction Vector P (norm, BL Co-ords):" , str(dir_vec_p_norm_b)))
+            
+            # Multiple bake matrix by Vector to get the direction of the Blender object
+            dir_vec_b_norm = bakeMatrix.to_3x3() * Vector((0,0,-1))
 
-            b = basis_for_dir(vec_x_to_b(rot_vec_norm))
+            axis_angle_vec3 = dir_vec_p_norm.cross(dir_vec_b_normb)
+            print(prettyprint("Cross Product (Dir Vecs B X P) (norm):" , (str(axis_angle_vec3))))
 
-            bakeMatrix = bakeMatrix * b.to_4x4()
+            axis_angle_theta = math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0)) 
+            print(prettyprint("AA Theta:", "%s (rad), %s (deg)" % (str(axis_angle_theta),str(axis_angle_theta * (180/math.pi)))))
+
+            axis_angle = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec3)
+            print(prettyprint("AA:\n", (str(axis_angle))))
 
             translation = bakeMatrix.to_translation()
-            rotation = bakeMatrix.to_euler('XYZ')
-            
-            rotation[0] = round(rotation[0],5)
-            rotation[1] = round(rotation[1],5)
-            rotation[2] = round(rotation[2],5)
             
             has_anim = False
         
@@ -326,11 +348,26 @@ class XPlaneLight(XPlaneObject):
             # originally had trans, rot) and now we can use the translation in the lamp
             # itself.
             
-            if (rotation[0] != 0.0 or rotation[1] != 0.0 or rotation[2] != 0.0) and self.is_omni is False:
-                rot_matrix = rotation.to_matrix().to_4x4()
+            if round(axis_angle_theta,5) != 0.0 and self.is_omni is False:
                 o += "%sANIM_begin\n" % indent
-                o += self._writeStaticRotationForLight(rot_matrix)
+                
+                if debug:
+                    o += indent + '# static rotation\n'
+                
+                axis_angle_vec3_x = vec_b_to_x(axis_angle_vec3)
+                anim_rotate_dir =  indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
+                    floatToStr(axis_angle_vec3_x[0]),
+                    floatToStr(axis_angle_vec3_x[1]),
+                    floatToStr(axis_angle_vec3_x[2]),
+                    floatToStr(axis_angle_theta), floatToStr(axis_angle_theta)
+                )
+                print(prettyprint("ANIM_rotate:",anim_rotate_dir))
+                o += anim_rotate_dir
+                print(prettyprint("rot_matrix",bakeMatrix.to_euler('XYZ')))
+                rot_matrix = bakeMatrix.to_euler('XYZ').to_matrix().to_4x4()
+                print(prettyprint("translation pre-transform:",translation))
                 translation = rot_matrix.inverted() * translation
+                print(prettyprint("translation post-transform:",translation))
                 has_anim = True
         if self.lightType == LIGHT_NAMED:
             o += "%sLIGHT_NAMED\t%s %s %s %s\n" % (
