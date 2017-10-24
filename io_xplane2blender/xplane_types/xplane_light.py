@@ -313,6 +313,8 @@ class XPlaneLight(XPlaneObject):
                 return "{:<40} %s".format(template_str) % content
             
             print("------------")
+            print(self.blenderObject.name)
+            #import pydevd;pydevd.settrace()
             # Vector P(arameters), in Blender Space
             dir_vec_p_x = Vector((self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"]))
             print(prettyprint("Direction Vector P:", str(dir_vec_p_x)))
@@ -329,18 +331,18 @@ class XPlaneLight(XPlaneObject):
             dir_vec_b_norm = bakeMatrix.to_3x3() * Vector((0,0,-1))
             print(prettyprint("Direction Vector B (norm):", str(dir_vec_b_norm)))
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#A is the start rotation and B is the stop rotation
-#so naively i'd speculate u want
-#A is the XP dir and B is the blender dir
-# You want to take that x-plane light (it's GONNA face the way x-plane lights) and TURN it until it matches what the ARTIST wanted
-
-            # Choice 2
+            # P is start rotation, and B is stop. As such, we have our axis of rotation.
+            # "We take the X-Plane light and turn it until it matches what the artist wanted"
             axis_angle_vec3 = dir_vec_p_norm_b.cross(dir_vec_b_norm)
             print(prettyprint("Cross Product (Dir Vecs P X B) (norm):" , (str(axis_angle_vec3))))
 
-            # Choice 3, negate angle
-            axis_angle_theta = math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
+            dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm) 
+            print(prettyprint("Dot Product (P * B):",str(dot_product_p_b)))
+
+            if dot_product_p_b < 0:
+                axis_angle_theta = math.pi - math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
+            else:
+                axis_angle_theta = math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
             print(prettyprint("AA Theta:", "%s (rad), %s (deg)" % (str(axis_angle_theta),str(axis_angle_theta * (180/math.pi)))))
             
             translation = bakeMatrix.to_translation()
@@ -353,8 +355,7 @@ class XPlaneLight(XPlaneObject):
             # translation is pre-rotation.  but we want to write a single static rotation
             # and then NOT write a translation every time.
             #
-            #Soooo... we write a bake matrix{? Is this still what we want?} and then we transform the translation by the
-            # inverse to change our animation order (so we really have rot, trans when we
+            # Inverse to change our animation order (so we really have rot, trans when we
             # originally had trans, rot) and now we can use the translation in the lamp
             # itself.
             
@@ -368,7 +369,7 @@ class XPlaneLight(XPlaneObject):
                 if debug:
                     o += indent + '# static rotation\n'
                 
-                axis_angle_vec3_x = vec_b_to_x(axis_angle_vec3)
+                axis_angle_vec3_x = vec_b_to_x(axis_angle_vec3).normalized()
                 anim_rotate_dir =  indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
                     floatToStr(axis_angle_vec3_x[0]),
                     floatToStr(axis_angle_vec3_x[1]),
@@ -378,7 +379,7 @@ class XPlaneLight(XPlaneObject):
                 print(prettyprint("ANIM_rotate:",anim_rotate_dir))
                 o += anim_rotate_dir
 
-                rot_matrix = bakeMatrix.to_3x3()
+                rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec3)
                 print(prettyprint("rot_matrix",rot_matrix))
                 print(prettyprint("translation pre-transform:",translation))
                 translation = rot_matrix.inverted() * translation
