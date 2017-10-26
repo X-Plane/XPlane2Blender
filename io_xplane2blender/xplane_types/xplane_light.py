@@ -7,6 +7,7 @@ from ..xplane_config import getDebug
 import mathutils
 from mathutils import Vector, Matrix, Euler
 from itertools import zip_longest
+from io_xplane2blender import xplane_constants
 
 #### BEN NEEDS TO DOC THIS LATER
 
@@ -143,6 +144,9 @@ class XPlaneLight(XPlaneObject):
         self.lightName = blenderObject.data.xplane.name
         
         self.params = blenderObject.data.xplane.params
+        
+        #Keys come from modified lights.txt struct
+        #TODO: Currently coming from test_param_lights
         self.parsed_params = {
                 'R':None,
                 'G':None,
@@ -202,8 +206,6 @@ class XPlaneLight(XPlaneObject):
         # - Ensure a warning is emmited for bad comment styles
         # - Are there 'FOCUS' or 'WIDTH' parameters at play? If there are, is this light omni_directional?
         if self.lightType == LIGHT_PARAM:
-            import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-            import pydevd;pydevd.settrace()
             params_formal = test_param_lights[self.lightName][0]
             params_actual = re.findall(r" *[^ ]*",self.params)
             del params_actual[-1] #'' will always be the last match in the group
@@ -229,7 +231,7 @@ class XPlaneLight(XPlaneObject):
                         logger.warn("Comment in param light %s does not start with '//' or '#'")
 
 
-            #TODO: test if self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"] are all not 0,0,0
+            #TODO: test if self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"] are all not 0,0,0 when not omni
             dx = self.parsed_params["X"] if self.parsed_params["X"] != None else self.parsed_params["DX"]
             dy = self.parsed_params["Y"] if self.parsed_params["Y"] != None else self.parsed_params["DY"]
             dz = self.parsed_params["Z"] if self.parsed_params["Z"] != None else self.parsed_params["DZ"]
@@ -259,18 +261,25 @@ class XPlaneLight(XPlaneObject):
         o = super(XPlaneLight, self).write()
 
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
+        translation = bakeMatrix.to_translation()
+        has_anim = False
+
         if self.blenderObject.data.type == 'POINT':
-            translation = bakeMatrix.to_translation()
-            has_anim = False
-        elif self.blenderObject.data.type != 'POINT':
+            pass
+        elif self.blenderObject.data.type != 'POINT' and self.lightType == xplane_constants.LIGHT_PARAM:
             def prettyprint(template_str, content):
                 return "{:<40} %s".format(template_str) % content
             
             print("------------")
             print(self.blenderObject.name)
-            #import pydevd;pydevd.settrace()
             # Vector P(arameters), in Blender Space
-            dir_vec_p_x = Vector((self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"]))
+            dx = self.parsed_params["X"] if self.parsed_params["X"] != None else self.parsed_params["DX"]
+            dy = self.parsed_params["Y"] if self.parsed_params["Y"] != None else self.parsed_params["DY"]
+            dz = self.parsed_params["Z"] if self.parsed_params["Z"] != None else self.parsed_params["DZ"]
+            
+            assert dx is not None and dy is not None and dz is not None
+            
+            dir_vec_p_x = Vector((dx,dy,dz))
             print(prettyprint("Direction Vector P:", str(dir_vec_p_x)))
             
             dir_vec_p_norm_x = dir_vec_p_x.normalized()
@@ -280,8 +289,6 @@ class XPlaneLight(XPlaneObject):
             print(prettyprint("Direction Vector P (norm, BL Co-ords):" , str(dir_vec_p_norm_b)))
             
             # Multiple bake matrix by Vector to get the direction of the Blender object
-            # Choice 1
-            #dir_vec_b_norm = Vector((0,0,-1)) * bakeMatrix.to_3x3()
             dir_vec_b_norm = bakeMatrix.to_3x3() * Vector((0,0,-1))
             print(prettyprint("Direction Vector B (norm):", str(dir_vec_b_norm)))
 
@@ -300,8 +307,6 @@ class XPlaneLight(XPlaneObject):
             print(prettyprint("AA Theta:", "%s (rad), %s (deg)" % (str(axis_angle_theta),str(axis_angle_theta * (180/math.pi)))))
             
             translation = bakeMatrix.to_translation()
-            
-            has_anim = False
         
             # Ben says: lights always have some kind of offset because the light itself
             # is "at" 0,0,0, so we treat the translation as the light position.
@@ -339,6 +344,7 @@ class XPlaneLight(XPlaneObject):
                 translation = rot_matrix.inverted() * translation
                 print(prettyprint("translation post-transform:",translation))
                 has_anim = True
+
         if self.lightType == LIGHT_NAMED:
             o += "%sLIGHT_NAMED\t%s %s %s %s\n" % (
                 indent, self.lightName,

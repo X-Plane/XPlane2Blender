@@ -1,0 +1,14 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+# 1 Object: named
+# EMPTY: named	weight: 0
+	# 2 Object: taillight
+	# LAMP: taillight	weight: 10000
+	LIGHT_NAMED	taillight 0 6 0
+
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-beta.4+1.NO_BUILD_NUMBR

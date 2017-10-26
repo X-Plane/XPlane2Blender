@@ -9,11 +9,11 @@ __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
     return isinstance(line[0],str) and\
-           "LIGHT_NAMED" in line[0] or\
-           "LIGHT_PARAM" in line[0]
+           ("LIGHT_NAMED" in line[0] or\
+           "LIGHT_PARAM" in line[0])
            
 class TestOmniDirParamNameBbSpBoth(XPlaneTestCase):
-    def test_bb_and_sp_and_named(self):
+    def test_bb_and_sp_both(self):
         filename = inspect.stack()[0][3]
 
         self.assertLayerExportEqualsFixture(
@@ -48,3 +48,5 @@ class TestOmniDirParamNameBbSpBoth(XPlaneTestCase):
             filename,
             filterLines
         )
+
+runTestCases([TestOmniDirParamNameBbSpBoth])

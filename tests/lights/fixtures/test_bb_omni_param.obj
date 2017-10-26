@@ -1,0 +1,14 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+# 1 Object: bb_omni_param
+# EMPTY: bb_omni_param	weight: 0
+	# 2 Object: helipad_flood_bb
+	# LAMP: helipad_flood_bb	weight: 10000
+	LIGHT_PARAM	helipad_flood_bb 0 6 0 -0.769 -0.184 0.612 1
+
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-beta.4+1.NO_BUILD_NUMBR

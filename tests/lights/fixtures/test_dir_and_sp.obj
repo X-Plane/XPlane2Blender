@@ -1,0 +1,14 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+# 1 Object: dir_and_sp
+# EMPTY: dir_and_sp	weight: 0
+	# 2 Object: area_lt_param_sp
+	# LAMP: area_lt_param_sp	weight: 10000
+	LIGHT_PARAM	area_lt_param_sp 0 6 0 0 -1 0    75
+
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-beta.4+1.NO_BUILD_NUMBR
