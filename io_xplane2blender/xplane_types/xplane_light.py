@@ -6,6 +6,7 @@ from ..xplane_constants import *
 from ..xplane_config import getDebug
 import mathutils
 from mathutils import Vector, Matrix, Euler
+from itertools import zip_longest
 
 #### BEN NEEDS TO DOC THIS LATER
 
@@ -160,7 +161,8 @@ class XPlaneLight(XPlaneObject):
                 'DZ':None,
                 'W':None,
                 'WIDTH':None,
-                'FOCUS':None
+                'FOCUS':None,
+                'COMMENT':None # Comment string
             }
 
         self.is_omni = False
@@ -186,111 +188,63 @@ class XPlaneLight(XPlaneObject):
 
         self.getWeight(10000)
 
-    # COPY PASTA WARNING!!!
-    #
-    # This is stolen from the bone code's bake matrix exporter.  I wanted this copied out
-    # to 1. avoid re-test late in beta and 2. to have the option to optimize this later
-    # for lights that can have direction vectors.
-
-    def _writeStaticRotationForLight(self, bakeMatrix):
-        debug = getDebug()
-        indent = self.xplaneBone.getIndent()
-        o = ''
-        bakeMatrix = bakeMatrix
-        rotation = bakeMatrix.to_euler('XYZ')
-        rotation[0] = round(rotation[0],5)
-        rotation[1] = round(rotation[1],5)
-        rotation[2] = round(rotation[2],5)
-        
-        # ignore noop rotations
-        if rotation[0] == 0 and rotation[1] == 0 and rotation[2] == 0:
-            return o
-
-        if debug:
-            o += indent + '# static rotation\n'
-
-		# Ben says: this is SLIGHTLY counter-intuitive...Blender axes are
-		# globally applied in a Euler, so in our XYZ, X is affected -by- Y
-		# and both are affected by Z.
-		#
-		# Since X-Plane works opposite this, we are going to apply the
-		# animations exactly BACKWARD! ZYX.  The order here must
-		# be opposite the decomposition order above.
-		#
-		# Note that since our axis naming is ALSO different this will
-		# appear in the OBJ file as Y -Z X.
-		#
-		# see also: http://hacksoflife.blogspot.com/2015/11/blender-notepad-eulers.html
-
-        axes = (2, 1, 0)
-        eulerAxes = [(0.0,0.0,1.0),(0.0,1.0,0.0),(1.0,0.0,0.0)]
-        i = 0
-
-        for axis in eulerAxes:
-            deg = math.degrees(rotation[axes[i]])
-
-            # ignore zero rotation
-            if not deg == 0:
-                o += indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
-                    floatToStr(axis[0]),
-                    floatToStr(axis[2]),
-                    floatToStr(-axis[1]),
-                    floatToStr(deg), floatToStr(deg)
-                )
-
-            i += 1
-
-        return o
-
     def collect(self):
+        def is_number(number_str):
+            try:
+                float(number_str)
+            except:
+                return False
+            else:
+                return True
         # We ask:
-        # - Are do the length of the actual params match the length of the formal params
-        # - Are the actual params all numbers
+        # - Are there enough parameters to fill the LIGHT_PARAM_DEF?
+        # - Are the actual params all numbers (except comments)
+        # - Ensure a warning is emmited for bad comment styles
         # - Are there 'FOCUS' or 'WIDTH' parameters at play? If there are, is this light omni_directional?
         if self.lightType == LIGHT_PARAM:
+            import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
+            import pydevd;pydevd.settrace()
             params_formal = test_param_lights[self.lightName][0]
-            params_actual = self.params.split()
-            if len(params_formal) != len(params_actual):
-                logger.error("PARAM_DEF: %s and actual params: %s are different lengths (%d,%d)" % (
-                                    len(' '.join(params_formal)),
-                                    len(' '.join(params_actual))
-                                )
-                            )
-
-            def is_number(number_str):
-                try:
-                    float(number_str)
-                except:
-                    return False
+            params_actual = re.findall(r" *[^ ]*",self.params)
+            del params_actual[-1] #'' will always be the last match in the group
+            
+            if len(params_actual) > len(params_formal):
+                self.parsed_params["COMMENT"] = (''.join(params_actual[len(params_formal):]))[1:]
+            
+            params_actual = [p.strip() for p in params_actual]
+            
+            # Iterate through the formal (pf) and actual (pa) params, parsing and checking errors
+            for pf, pa in zip_longest(params_formal,params_actual,fillvalue=None):
+                #If we've run out of actual parameters before 
+                if pa is None:
+                    logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
+                if pf is not None:
+                    if is_number(pa):
+                        self.parsed_params[pf] = float(pa)
+                    else:
+                        logger.error("Parameter %s is not a number" % pa)
                 else:
-                    return True
+                    #We're done with pf, this must be a comment.
+                    if not (pa.startswith("//") or pa.startswith("#")):
+                        logger.warn("Comment in param light %s does not start with '//' or '#'")
 
-            parsed_params_actual = [p for p in params_actual if not is_number(p)]
-            if len(parsed_params_actual) != 0:
-                logger.error("Invalid light params for %s:(%s) All light params must be a number" % (
-                                    self.lightName,
-                                    ','.join([str(p) for p in parsed_params_actual])
-                                )
-                            )
 
+            #TODO: test if self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"] are all not 0,0,0
+            dx = self.parsed_params["X"] if self.parsed_params["X"] != None else self.parsed_params["DX"]
+            dy = self.parsed_params["Y"] if self.parsed_params["Y"] != None else self.parsed_params["DY"]
+            dz = self.parsed_params["Z"] if self.parsed_params["Z"] != None else self.parsed_params["DZ"]
+           
+            #if not None in (dx,dy,dz): 
+            
             if logger.hasErrors():
                 return
 
-            if "FOCUS" in params_formal:
-                idx = params_formal.index("FOCUS")
-            elif "WIDTH" in params_formal:
-                idx = params_formal.index("WIDTH")
+            if self.parsed_params["FOCUS"]:
+                self.is_omni = float(self.parsed_params["FOCUS"]) >= 1.0
+            elif self.parsed_params["WIDTH"]:
+                self.is_omni = float(self.parsed_params["WIDTH"]) >= 1.0
             else:
-                idx = -1
-
-            if idx != -1:
-                self.is_omni = float(params_actual[idx]) >= 1.0
-
-            #parse_them_all
-            for i,p in enumerate(params_actual):
-                self.parsed_params[params_formal[i]] = float(p)
-            
-            #TODO: test if self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"] are all not 0,0,0
+                self.is_omni = False
 
     def clamp(self, num, minimum, maximum):
         if num < minimum:
