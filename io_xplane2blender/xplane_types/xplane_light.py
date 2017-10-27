@@ -211,7 +211,9 @@ class XPlaneLight(XPlaneObject):
             del params_actual[-1] #'' will always be the last match in the group
             
             if len(params_actual) > len(params_formal):
-                self.parsed_params["COMMENT"] = (''.join(params_actual[len(params_formal):]))[1:]
+                self.parsed_params["COMMENT"] = (''.join(params_actual[len(params_formal):])).lstrip()
+                if not (self.parsed_params["COMMENT"].startswith("//") or self.parsed_params["COMMENT"].startswith("#")):
+                    logger.warn("Comment in param light %s does not start with '//' or '#'" % self.parsed_params["COMMENT"])
             
             params_actual = [p.strip() for p in params_actual]
             
@@ -220,26 +222,16 @@ class XPlaneLight(XPlaneObject):
                 #If we've run out of actual parameters before 
                 if pa is None:
                     logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
+                    return
                 if pf is not None:
                     if is_number(pa):
                         self.parsed_params[pf] = float(pa)
                     else:
                         logger.error("Parameter %s is not a number" % pa)
+                        return
                 else:
-                    #We're done with pf, this must be a comment.
-                    if not (pa.startswith("//") or pa.startswith("#")):
-                        logger.warn("Comment in param light %s does not start with '//' or '#'")
-
-
-            #TODO: test if self.parsed_params["X"],self.parsed_params["Y"],self.parsed_params["Z"] are all not 0,0,0 when not omni
-            dx = self.parsed_params["X"] if self.parsed_params["X"] != None else self.parsed_params["DX"]
-            dy = self.parsed_params["Y"] if self.parsed_params["Y"] != None else self.parsed_params["DY"]
-            dz = self.parsed_params["Z"] if self.parsed_params["Z"] != None else self.parsed_params["DZ"]
-           
-            #if not None in (dx,dy,dz): 
-            
-            if logger.hasErrors():
-                return
+                    #We're done with pf, the rest must be a comment
+                    break
 
             if self.parsed_params["FOCUS"]:
                 self.is_omni = float(self.parsed_params["FOCUS"]) >= 1.0
@@ -247,6 +239,18 @@ class XPlaneLight(XPlaneObject):
                 self.is_omni = float(self.parsed_params["WIDTH"]) >= 1.0
             else:
                 self.is_omni = False
+
+            dx = self.parsed_params["X"] if self.parsed_params["X"] != None else self.parsed_params["DX"]
+            dy = self.parsed_params["Y"] if self.parsed_params["Y"] != None else self.parsed_params["DY"]
+            dz = self.parsed_params["Z"] if self.parsed_params["Z"] != None else self.parsed_params["DZ"]
+           
+            if not None in (dx,dy,dz) and\
+                Vector((dx,dy,dz)).magnitude == 0.0 and self.is_omni is False: 
+                logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
+
+            if logger.hasErrors():
+                return
+
 
     def clamp(self, num, minimum, maximum):
         if num < minimum:

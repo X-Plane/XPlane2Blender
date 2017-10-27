@@ -178,6 +178,24 @@ class XPlaneTestCase(unittest.TestCase):
         tmpFile.close()
         
         return self.assertFileOutputEqualsFixture(tmpOutput, fixturePath, filterCallback, floatTolerance)
+    
+
+    # Method: assertLoggerErrors
+    #
+    # expected_logger_errors - The number of errors you expected to have happen
+    # asserts the number of errors and clears the logger of all messages
+    def assertLoggerErrors(self, expected_logger_errors):
+        self.assertEqual(len(logger.findErrors()), expected_logger_errors)
+        logger.clearMessages()
+    
+    #TODO: Must filter warnings to have this be useful
+    # Method: assertLoggerWarnings
+    #
+    # expected_logger_warnings - The number of warnings you expected to have happen
+    # asserts the number of warnings and clears the logger of all messages
+    #def assertLoggerWarnings(self, expected_logger_warnings):    
+    #    self.assertEqual(len(logger.findWarnings()), expected_logger_warnings)
+    #    logger.clearMessages()
 
     def exportLayer(self, layer, dest = None):
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
