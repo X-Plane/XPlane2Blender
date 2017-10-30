@@ -124,7 +124,6 @@ class XPlaneLight(XPlaneObject):
             }
 
         self.is_omni = False
-        
         self.uv = blenderObject.data.xplane.uv
         self.dataref = blenderObject.data.xplane.dataref
 
@@ -159,7 +158,7 @@ class XPlaneLight(XPlaneObject):
         # - Are the actual params all numbers (except comments)
         # - Ensure a warning is emmited for bad comment styles
         # - Are there 'FOCUS' or 'WIDTH' parameters at play? If there are, is this light omni_directional?
-        if self.lightType == LIGHT_PARAM:
+        if self.lightType == LIGHT_PARAM and self.lightName in test_param_lights:
             params_formal = test_param_lights[self.lightName][0]
             params_actual = re.findall(r" *[^ ]*",self.params)
             del params_actual[-1] #'' will always be the last match in the group
@@ -204,7 +203,8 @@ class XPlaneLight(XPlaneObject):
 
             if logger.hasErrors():
                 return
-
+        elif self.lightName not in test_param_lights:
+            logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or updates to lights.txt" % self.lightName)
 
     def clamp(self, num, minimum, maximum):
         if num < minimum:
@@ -230,7 +230,9 @@ class XPlaneLight(XPlaneObject):
 
         if self.blenderObject.data.type == 'POINT':
             pass
-        elif self.blenderObject.data.type != 'POINT' and self.lightType == xplane_constants.LIGHT_PARAM:
+        elif self.blenderObject.data.type != 'POINT' and\
+            self.lightType == xplane_constants.LIGHT_PARAM and\
+            self.lightName in test_param_lights:
             def prettyprint(template_str, content):
                 return "{:<40} %s".format(template_str) % content
             

@@ -23,4 +23,8 @@ class TestLights(XPlaneTestCase):
             filterLines
         )
 
+        # TODO: When we have this capability, there is a warning that
+        # needs assertion
+        # assertLoggerWarnings
+
 runTestCases([TestLights])

@@ -8,16 +8,16 @@ VLIGHT	0	0	0	0	1	0
 
 # 0 ROOT
 # 1 Object: Lamp.003
-# LAMP: Lamp.003	weight: 10000
+# LIGHT: Lamp.003	weight: 10000
 LIGHT_CUSTOM	3 3 -3 1 1 0 1 2 0 0 1 1 test
 # 1 Object: Lamp.002
-# LAMP: Lamp.002	weight: 10000
-LIGHT_PARAM	area_lt_param_sp 1 1 -1 0 -1 0 75
+# LIGHT: Lamp.002	weight: 10000
+LIGHT_PARAM	param_2 1 1 -1
 # 1 Object: Lamp.001
-# LAMP: Lamp.001	weight: 10000
-LIGHT_PARAM	area_lt_param_sp 2 2 -2 1 0 0 75
+# LIGHT: Lamp.001	weight: 10000
+LIGHT_PARAM	param_1 2 2 -2
 # 1 Object: Lamp
-# LAMP: Lamp	weight: 10000
+# LIGHT: Lamp	weight: 10000
 LIGHTS	0 1
 
-# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-beta.4+1.NO_BUILD_NUMBR
+# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.4
