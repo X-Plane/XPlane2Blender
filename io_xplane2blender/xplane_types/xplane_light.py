@@ -9,14 +9,6 @@ from mathutils import Vector, Matrix, Euler
 from itertools import zip_longest
 from io_xplane2blender import xplane_constants
 
-#### BEN NEEDS TO DOC THIS LATER
-
-def vec_b_to_x(v):
-    return Vector((v.x, v.z, -v.y))
-
-def vec_x_to_b(v):
-    return Vector((v.x, -v.z, v.y))
-
 test_param_lights = {
     # NAMED LIGHTS
     # Spill version
@@ -50,8 +42,6 @@ test_param_lights = {
     'radio_obs_flash':  (('X','Y','Z'),
                          ('1', '0.8', '0.8', '1', '1.5', '1', '4', '5', 'X', 'Y', 'Z', '0.5', '0.25', '0', '1.5', '1'))
 }
-
-####
 
 # Class: XPlaneLight
 # A Light
