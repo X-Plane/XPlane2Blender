@@ -17,52 +17,6 @@ def vec_b_to_x(v):
 def vec_x_to_b(v):
     return Vector((v.x, -v.z, v.y))
 
-def basis_for_dir(neg_input_axis):
-    m = Matrix.Identity(3)
-    rotate_basis_x = -neg_input_axis
-    rotate_basis_y = Vector((0,0,0))
-    rotate_basis_z = Vector((0,0,0))
-    
-    #If 
-    if abs(rotate_basis_x[0]) > max(abs(rotate_basis_x[1]),abs(rotate_basis_x[2])):
-        rotate_basis_y[0] = 0.0
-        rotate_basis_y[1] = 1.0 if rotate_basis_x[0] > 0.0 else -1.0
-        rotate_basis_y[2] = 0.0
-    elif abs(rotate_basis_x[1]) > abs(rotate_basis_x[2]):
-        # User's axis is approximately Y - use Z for second axis.
-        rotate_basis_y[0] = 0.0
-        rotate_basis_y[1] = 0.0
-        rotate_basis_y[2] = 1.0 if rotate_basis_x[1] > 0.0 else -1.0        
-    else:
-        #User's axis is approxiamtely Z - use X for second axis.
-        rotate_basis_y[0] = 1.0 if rotate_basis_x[2] else -1.0
-        rotate_basis_y[1] = 0.0
-        rotate_basis_y[2] = 0.0
-
-    #// Third axis is cross of first and second - chosen to not be degenerate.
-    rotate_basis_z = rotate_basis_x.cross(rotate_basis_y).normalized()
-    #// Recalculate second axis to truly be orthogonal to BOTH first and third.
-    rotate_basis_y = rotate_basis_z.cross(rotate_basis_x)
-    m[2] = rotate_basis_x
-    m[0] = rotate_basis_y
-    m[1] = rotate_basis_z
-    
-    def nearly_equal_number(number,max_diff):
-        return abs(number) <= max_diff
-
-    def nearly_equal_vec(vec_1, vec_2, max_diff=0.00001):
-        return nearly_equal_number(vec_2.x - vec_1.x, max_diff) and\
-               nearly_equal_number(vec_2.y - vec_1.y, max_diff) and\
-               nearly_equal_number(vec_2.z - vec_1.z, max_diff)
-    
-    assert nearly_equal_vec(rotate_basis_x, -neg_input_axis)
-    assert 0.98999999 <= rotate_basis_x.magnitude <= 1.00001  and\
-           0.98999999 <= rotate_basis_y.magnitude <= 1.00001  and\
-           0.98999999 <= rotate_basis_z.magnitude <= 1.00001
-    assert nearly_equal_vec(rotate_basis_x.cross(rotate_basis_y),rotate_basis_z)
-    assert nearly_equal_vec(rotate_basis_z.cross(rotate_basis_x),rotate_basis_y)
-    return m
-
 test_param_lights = {
     # NAMED LIGHTS
     # Spill version
@@ -268,6 +222,12 @@ class XPlaneLight(XPlaneObject):
         translation = bakeMatrix.to_translation()
         has_anim = False
 
+        def vec_b_to_x(v):
+            return Vector((v.x, v.z, -v.y))
+
+        def vec_x_to_b(v):
+            return Vector((v.x, -v.z, v.y))
+
         if self.blenderObject.data.type == 'POINT':
             pass
         elif self.blenderObject.data.type != 'POINT' and self.lightType == xplane_constants.LIGHT_PARAM:
@@ -321,11 +281,6 @@ class XPlaneLight(XPlaneObject):
             # Inverse to change our animation order (so we really have rot, trans when we
             # originally had trans, rot) and now we can use the translation in the lamp
             # itself.
-            
-            # How we got bakematrix
-            # 1. Translation
-            # 2. Rotation
-            
             if round(axis_angle_theta,5) != 0.0 and self.is_omni is False:
                 o += "%sANIM_begin\n" % indent
                 
