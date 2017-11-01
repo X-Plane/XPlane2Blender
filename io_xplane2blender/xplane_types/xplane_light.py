@@ -143,11 +143,7 @@ class XPlaneLight(XPlaneObject):
                 return False
             else:
                 return True
-        # We ask:
-        # - Are there enough parameters to fill the LIGHT_PARAM_DEF?
-        # - Are the actual params all numbers (except comments)
-        # - Ensure a warning is emmited for bad comment styles
-        # - Are there 'FOCUS' or 'WIDTH' parameters at play? If there are, is this light omni_directional?
+
         if self.lightType == LIGHT_PARAM and self.lightName in test_param_lights:
             params_formal = test_param_lights[self.lightName][0]
             params_actual = re.findall(r" *[^ ]*",self.params)
@@ -223,11 +219,7 @@ class XPlaneLight(XPlaneObject):
         elif self.blenderObject.data.type != 'POINT' and\
             self.lightType == xplane_constants.LIGHT_PARAM and\
             self.lightName in test_param_lights:
-            def prettyprint(template_str, content):
-                return "{:<40} %s".format(template_str) % content
             
-            print("------------")
-            print(self.blenderObject.name)
             # Vector P(arameters), in Blender Space
             dx = self.parsed_params["X"] if self.parsed_params["X"] != None else self.parsed_params["DX"]
             dy = self.parsed_params["Y"] if self.parsed_params["Y"] != None else self.parsed_params["DY"]
@@ -235,32 +227,21 @@ class XPlaneLight(XPlaneObject):
             
             assert dx is not None and dy is not None and dz is not None
             
-            dir_vec_p_x = Vector((dx,dy,dz))
-            print(prettyprint("Direction Vector P:", str(dir_vec_p_x)))
-            
-            dir_vec_p_norm_x = dir_vec_p_x.normalized()
-            print(prettyprint("Direction Vector P (norm, XP Co-ords):",str(dir_vec_p_norm_x)))
-            
-            dir_vec_p_norm_b = vec_x_to_b(dir_vec_p_norm_x)
-            print(prettyprint("Direction Vector P (norm, BL Co-ords):" , str(dir_vec_p_norm_b)))
+            dir_vec_p_norm_b = vec_x_to_b(Vector((dx,dy,dz)).normalized())
             
             # Multiple bake matrix by Vector to get the direction of the Blender object
             dir_vec_b_norm = bakeMatrix.to_3x3() * Vector((0,0,-1))
-            print(prettyprint("Direction Vector B (norm):", str(dir_vec_b_norm)))
 
             # P is start rotation, and B is stop. As such, we have our axis of rotation.
             # "We take the X-Plane light and turn it until it matches what the artist wanted"
             axis_angle_vec3 = dir_vec_p_norm_b.cross(dir_vec_b_norm)
-            print(prettyprint("Cross Product (Dir Vecs P X B) (norm):" , (str(axis_angle_vec3))))
 
             dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm) 
-            print(prettyprint("Dot Product (P * B):",str(dot_product_p_b)))
 
             if dot_product_p_b < 0:
                 axis_angle_theta = math.pi - math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
             else:
                 axis_angle_theta = math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
-            print(prettyprint("AA Theta:", "%s (rad), %s (deg)" % (str(axis_angle_theta),str(axis_angle_theta * (180/math.pi)))))
             
             translation = bakeMatrix.to_translation()
         
@@ -286,14 +267,10 @@ class XPlaneLight(XPlaneObject):
                     floatToStr(axis_angle_vec3_x[2]),
                     floatToStr(math.degrees(axis_angle_theta)), floatToStr(math.degrees(axis_angle_theta))
                 )
-                print(prettyprint("ANIM_rotate:",anim_rotate_dir))
                 o += anim_rotate_dir
 
                 rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec3)
-                print(prettyprint("rot_matrix",rot_matrix))
-                print(prettyprint("translation pre-transform:",translation))
                 translation = rot_matrix.inverted() * translation
-                print(prettyprint("translation post-transform:",translation))
                 has_anim = True
 
         if self.lightType == LIGHT_NAMED:
