@@ -1,0 +1,27 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+# 1 Object: spot_vs_is_omni_vs_is_optimized
+# EMPTY: spot_vs_is_omni_vs_is_optimized	weight: 0
+	# 2 Object: spot_non_omni_non_opt
+	# LAMP: spot_non_omni_non_opt	weight: 10000
+	ANIM_begin
+	# static rotation
+	ANIM_rotate	0	0	1	90	90
+	LIGHT_PARAM	spot_params_sp 9.99999809 20 -20 1 0 1    20 15   -1 0 0   .95
+	ANIM_end
+	# 2 Object: spot_non_omni_opt
+	# LAMP: spot_non_omni_opt	weight: 10000
+	LIGHT_PARAM	spot_params_sp 0 10 -30 1 1 0    20 15   0 -1  0   .95
+	# 2 Object: spot_omni_non_opt
+	# LAMP: spot_omni_non_opt	weight: 10000
+	LIGHT_PARAM	spot_params_sp 20 10 -40 1 1 1    20 15   0 -1 0   1
+	# 2 Object: spot_omni_opt
+	# LAMP: spot_omni_opt	weight: 10000
+	LIGHT_PARAM	spot_params_sp 40 10 -50 1 .5 0    20 15   0 -1  0   1
+
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-beta.4+1.NO_BUILD_NUMBR
