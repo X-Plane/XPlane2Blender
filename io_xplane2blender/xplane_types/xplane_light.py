@@ -86,32 +86,11 @@ class XPlaneLight(XPlaneObject):
         self.lightType = blenderObject.data.xplane.type
         self.size = blenderObject.data.xplane.size
         self.lightName = blenderObject.data.xplane.name
-        
         self.params = blenderObject.data.xplane.params
         
-        #Keys come from modified lights.txt struct
-        #TODO: Currently coming from test_param_lights
-        self.parsed_params = {
-                'R':None,
-                'G':None,
-                'B':None,
-                'A':None,
-                'INDEX':None,
-                'SIZE':None,
-                'BRIGHT':None,
-                'THROW':None,
-                'SPREAD':None,
-                'X':None,
-                'Y':None,
-                'Z':None,
-                'DX':None,
-                'DY':None,
-                'DZ':None,
-                'W':None,
-                'WIDTH':None,
-                'FOCUS':None,
-                'COMMENT':None # Comment string
-            }
+        self.lightOverload = None
+        
+        self.comment = None
 
         self.is_omni = False
         self.uv = blenderObject.data.xplane.uv
@@ -136,6 +115,8 @@ class XPlaneLight(XPlaneObject):
         self.getWeight(10000)
 
     def collect(self):
+        xplane_lights_txt_parser.parse_lights_file()
+        
         def is_number(number_str):
             try:
                 float(number_str)
@@ -144,52 +125,45 @@ class XPlaneLight(XPlaneObject):
             else:
                 return True
 
-        if self.lightType == LIGHT_PARAM and self.lightName in test_param_lights:
-            params_formal = test_param_lights[self.lightName][0]
+        self.lightOverload = parsed_lights[self.lightName]
+        if self.lightName == LIGHT_NAMED:
+            pass
+        elif self.lightType == LIGHT_PARAM:
+            params_formal = self.lightOverload.light_param_def.prototype
             params_actual = re.findall(r" *[^ ]*",self.params)
             del params_actual[-1] #'' will always be the last match in the group
             
             if len(params_actual) > len(params_formal):
-                self.parsed_params["COMMENT"] = (''.join(params_actual[len(params_formal):])).lstrip()
-                if not (self.parsed_params["COMMENT"].startswith("//") or self.parsed_params["COMMENT"].startswith("#")):
-                    logger.warn("Comment in param light %s does not start with '//' or '#'" % self.parsed_params["COMMENT"])
+                self.comment = (''.join(params_actual[len(params_formal):])).lstrip()
+                if not (self.comment.startswith("//") or self.comment.startswith("#")):
+                    logger.warn("Comment in param light %s does not start with '//' or '#'" % self.comment)
             
             params_actual = [p.strip() for p in params_actual]
             
-            # Iterate through the formal (pf) and actual (pa) params, parsing and checking errors
-            for pf, pa in zip_longest(params_formal,params_actual,fillvalue=None):
-                #If we've run out of actual parameters before 
-                if pa is None:
-                    logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
-                    return
-                if pf is not None:
-                    if is_number(pa):
-                        self.parsed_params[pf] = float(pa)
-                    else:
-                        logger.error("Parameter %s is not a number" % pa)
-                        return
+            if len(params_actual) < len(params_formal):
+                logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
+            
+            params_actual = params_actual[0:len(params_formal)]
+            for i,param in enumerate(params_actual):
+                if is_number(param):
+                    self.lightOverload.light_param_def.user_values[i] = float(param) 
                 else:
-                    #We're done with pf, the rest must be a comment
-                    break
+                    logger.error("Parameter %s is not a number" % param)
+                    return
 
-            if self.parsed_params["FOCUS"]:
-                self.is_omni = float(self.parsed_params["FOCUS"]) >= 1.0
-            elif self.parsed_params["WIDTH"]:
-                self.is_omni = float(self.parsed_params["WIDTH"]) >= 1.0
-            else:
-                self.is_omni = False
-
-            dx = self.parsed_params["X"] if self.parsed_params["X"] != None else self.parsed_params["DX"]
-            dy = self.parsed_params["Y"] if self.parsed_params["Y"] != None else self.parsed_params["DY"]
-            dz = self.parsed_params["Z"] if self.parsed_params["Z"] != None else self.parsed_params["DZ"]
-           
+            self.lightOverload.finalize_data()
+            (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
+            
             if not None in (dx,dy,dz) and\
-                Vector((dx,dy,dz)).magnitude == 0.0 and self.is_omni is False: 
+                Vector([float(d) for d in (dx,dy,dz)]).magnitude == 0.0 and self.is_omni is False: 
                 logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
-
+             
+            self.is_omni = float(self.lightOverload.get("WIDTH")) >= 1.0
+           
             if logger.hasErrors():
                 return
-        elif self.lightName not in test_param_lights:
+
+        elif self.lightName not in parsed_lights:
             logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or updates to lights.txt" % self.lightName)
 
     def clamp(self, num, minimum, maximum):

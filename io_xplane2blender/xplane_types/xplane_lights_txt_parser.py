@@ -1,12 +1,14 @@
+import copy
 import functools
 import os
 import math
 import collections
 from collections import OrderedDict
+from gc import collect
+from numbers import Number
 
 def sort_by_trust(overload_lhs,overload_rhs):
     rankings = [
-                "LIGHT_PARAM_DEF",
                 "SPILL_HW_DIR",
                 "SPILL_HW_FLA",
                 "SPILL_SW",
@@ -56,15 +58,15 @@ def _set_width(type,lhs,value):
 # returns transformed data as a new list
 def do_nav_light(type,data):
     r = data
+    _set_xyz(type, r, r[type.index("R"):type.index("B")])
     dir_vec = [float(i) for i in _get_xyz(type,r)]
     mag = math.sqrt(sum([d**2 for d in dir_vec]))
     norm = (dir_vec[0]/mag,dir_vec[1]/mag,dir_vec[2]/mag)
 
-    _set_xyz(type, r, r[type.index("R"):type.index("B")])
     _set_width(type, r, 1 - mag)
     _set_xyz(type, r, norm)
     _set_rgb(type, r, [1,1,1])
-    return r
+    #return r
 
 drefs = { "sim/graphics/animation/lights/airplane_navigation_light_dir" : do_nav_light }
 
@@ -73,42 +75,102 @@ drefs = { "sim/graphics/animation/lights/airplane_navigation_light_dir" : do_nav
  2. We know how to manipulate and use all valid data perfectly
  '''
 
-TYPE_PROTOTYPES = (
+class ParsedLightParamDef():
+    def __init__(self,light_prototype):
+        self.prototype = tuple(light_prototype)
+        #To be filled in later during xplane_light's collect method
+        self.user_values = [None]*len(self.prototype)
+
+class ParsedDataSource():
+    TYPE_PROTOTYPES = {
+        "":(),#TODO: this is just for debugging , get rid of it!
 # Keys         :   1/2 of value (data provides other half)
 #("LIGHT_PARAM_DEF",(...)
 #                  1,  2,  3,  4,  5      6,          7,         8,         9,   10, 11,   12,     13,    14,     15,   16
-("BILLBOARD_HW", ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH","FREQ","PHASE","AMP","DAY")),
+"BILLBOARD_HW": ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH","FREQ","PHASE","AMP","DAY"),
 #                  1,  2,  3,  4,  5      6,          7,         8,         9,   10, 11,   12,                                13
-("BILLBOARD_SW", ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH",                           "DREF")),
+"BILLBOARD_SW": ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH",                           "DREF"),
 #                  1,  2,  3,  4,  5,                                       6,   7,   8,   9,                           10
-("SPILL_HW_DIR", ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                     "DAY")),
+"SPILL_HW_DIR": ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                     "DAY"),
 #                  1,  2,  3,  4,  5,                                                              6,   7,   8,   9,    10
-("SPILL_HW_FLA", ("R","G","B","A","SIZE",                                                         "FREQ","PHASE","AMP","DAY")),
+"SPILL_HW_FLA": ("R","G","B","A","SIZE",                                                         "FREQ","PHASE","AMP","DAY"),
 #                  1,  2,  3,  4,  5,                                       6,   7,   8,   9,                                 10
-("SPILL_SW",     ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                           "DREF"))
-)
+"SPILL_SW":     ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                           "DREF")
+}
+    def __init__(self,light_type,light_data):
+        self.type = light_type
+        assert isinstance(light_data,list)
+        self.data = light_data
 
-def get_proto(l_type_str):
-    for l_type in TYPE_PROTOTYPES:
-        if l_type_str in l_type[0]:
-            return l_type
+    def get_prototype(self):
+            return self.TYPE_PROTOTYPES[self.type]
 
+#TODO: Use the word overload!
+class ParsedLightOverload():
+    
+    #self.light_prototype - keys are prototype, values are only for LIGHT_PARAM_DEFs to keep track of their positional arguments
+    def __init__(self):
+        #self.prototype = None prptotype is derived from, not stored
+        self.light_param_def = None # kept for doing data_source.data replacements
+        
+        #TODO: This is unnecissary to have both o these
+        self.original_data_source = None
+        #TODO: This should eventually be all numbers instead of all text
+        self.final_data_source = None
+
+    #query must be a valid number or one of the column names
+    def get(self,query):
+        if isinstance(query,Number):
+            return self.final_data_source.data[query]
+        elif isinstance(query,str):
+            keys = self.final_data_source.get_prototype()
+            values = self.final_data_source.data
+            value = dict(zip(keys,values))[query]
+            return value
+        else:
+            raise TypeError
+
+    def set(self,query,value):
+        if isinstance(query,Number):
+            self.final_data_source.data[query] = value
+        elif isinstance(query,str):
+            keys = self.final_data_source.get_prototype()
+            values = self.final_data_source.data
+            collections.OrderedDict(zip(keys,values))[query] = value
+        else:
+            raise TypeError
+
+
+    def finalize_data(self):
+        self.final_data_source = copy.deepcopy(self.original_data_source)
+        if self.light_param_def is not None:
+            for i,param in enumerate(self.light_param_def.prototype):
+                new_value = str(self.light_param_def.user_values[i])
+                actual_param_idx = self.final_data_source.data.index(param)
+                old_value = self.final_data_source.data[actual_param_idx]
+                print("Replacing final_data['%s'] (%s) with user_value (%s)" % (actual_param_idx,old_value,new_value))
+                self.final_data_source.data[actual_param_idx] = new_value
+                print("LIGHT_PARAM_DEF: %s" % str(self.light_param_def.prototype))
+                print("USER_VALUES: %s" % str(self.light_param_def.user_values))
+                print("Original Data")
+                print("%s: %s" % (str(self.original_data_source.type),str(self.original_data_source.data)))
+                print("Final Data")
+                print("%s: %s" % (str(self.final_data_source.type),str(self.final_data_source.data)))
+                print("----------")
+            if "DREF" in self.final_data_source.get_prototype():
+                print("DREF: %s" % self.get("DREF"))
+                print("Original Data")
+                print("%s: %s" % (str(self.final_data_source.type),str(self.final_data_source.data)))
+                drefs[self.get("DREF")](self.final_data_source.get_prototype(),self.final_data_source.data)
+                print("Final Data")
+                print("%s: %s" % (str(self.final_data_source.type),str(self.final_data_source.data)))
+            
 # ["Name"] -> ([prototypes],[data sources])
-# [prototypes]   = [("LIGHT_TYPE",TYPE_PROTOTYPES["LIGHT_TYPE" or data of LIGHT_PARAM_DEF)]
-# [data_sources] = [("LIGHT_TYPE",parsed data)]
+# [prototypes]   = ParsedProtoype
+# [data_sources] = ParsedData
 
 '''
-# ["Name"] -> (
-                [("LIGHT_TYPE",TYPE_PROTOTYPE["LIGHT_TYPE"]),...],*
-                [("LIGHT_TYPE",light_data),...]
-            )
-
-When "LIGHT_TYPE" is "LIGHT_PARAM_DEF", TYPE_PROTOTYPE = light_data, and nothing is appended to the data_sources 
-value<-<tuple>
-value[0]<-prototype<list>
-value[0][0]<-prototype's first entry<tuple>
-value[0][0][0]<-prototype's first entry's "LIGHT_TYPE"<str>
-value[0][0][1]<-prototype's first entry's prototype tuple<tuple<str>>
+# ["Name"] -> Overload
 '''
 parsed_lights = collections.OrderedDict()
 
@@ -120,47 +182,62 @@ parsed_lights = collections.OrderedDict()
 # light_data<list>    - The data of the light after the name.
 def add_light(light_type_str,light_name,light_data):
     if light_name not in parsed_lights:
-        parsed_lights[light_name] = ([],[])
+        parsed_lights[light_name] = ParsedLightOverload()
 
     if light_type_str == "LIGHT_PARAM_DEF":
         #import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
         #import pydevd;pydevd.settrace()
-        light_prototype = tuple((light_type_str,light_data[1:]))#light_data[1:0] skips over the first number in param def 
+        parsed_lights[light_name].light_param_def = ParsedLightParamDef(light_data[1:])#light_data[1:0] skips over the first number in param def 
         
-    else:#if len([i for i in parsed_lights[light_name][0] if i[0] == "LIGHT_PARAM_DEF"]) == 0: #If there are no LIGHT_PARAM_DEFS in in 
-        light_prototype = get_proto(light_type_str)
-        parsed_lights[light_name][1].append((light_type_str,light_data))
+    else:
+        rankings = [
+                    "SPILL_HW_DIR",
+                    "SPILL_HW_FLA",
+                    "SPILL_SW",
+                    "BILLBOARD_HW",
+                    "BILLBOARD_SW",
+                    "SPILL_GND",
+                    "SPILL_GND_REV",
+                    "CONE_HW",
+                    "CONE_SW"
+                    ]
+        rankings.reverse()
+        if parsed_lights[light_name].original_data_source is not None:
+            existing_trust = rankings.index(parsed_lights[light_name].original_data_source.type)
+        else:
+            existing_trust = -1 
+        new_trust      = rankings.index(light_type_str)
+        if new_trust > existing_trust:
+            parsed_lights[light_name].original_data_source = ParsedDataSource(light_type_str,light_data)
 
-    parsed_lights[light_name][0].append(light_prototype)
-    parsed_lights[light_name][0].sort(key=functools.cmp_to_key(sort_by_trust))
-    parsed_lights[light_name][1].sort(key=functools.cmp_to_key(sort_by_trust))
-
-
-    last_overload = parsed_lights[light_name]
-    prototype = last_overload[0][-1]
+    overload = parsed_lights[light_name]
+    light_param_def = overload.light_param_def
+    
+    
     try:
-        datasource = last_overload[1][-1]
+        data_source = overload.original_data_source
+        if data_source == None:
+            raise Exception
     except:
-        datasource = []
+        data_source = ParsedDataSource("",[])
 
-    if light_name == "airplane_taxi_sp":
+    if light_name == "airplane_taxi_sp" or data_source is None:
         import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-        import pydevd;pydevd.settrace()
+        #import pydevd;pydevd.settrace()
         
     print("Parsed %s:\n"
-          "Best prototype (of %d):\n"
+          "Light Param Def:\n"
+          "\t-%s\n"
+          "Best Prototype:\n"
           "\t-%s\n"
           "\t-%s\n"
-          "Best data source (of %d)\n"
-          "\t-%s\n"
+          "Data Source:\n"
           "\t-%s\n"
           % (light_name,
-                len(last_overload[0]),
-                str(prototype[0]),
-                str(prototype[1]),
-                len(last_overload[1]),
-                str(datasource[0]) if datasource != [] else "None",
-                str(datasource[1]) if datasource != [] else "None",
+                str(light_param_def.prototype) if light_param_def is not None else "None",
+                str(data_source.type),
+                str(data_source.get_prototype()),
+                str(data_source.data)
                 ))
 
 def parse_lights_file():
@@ -173,23 +250,23 @@ def parse_lights_file():
         for line in lines:
             line = line.strip()
             #has_whitelist_sw_light = (line.startswith("SPILL_SW") or line.startswith("BILLBOARD_SW"))\
-                                     #and\
-                                     #("sim/graphics/animation/lights/airplane_navigation_light_dir" in line)
+             #                        and\
+              #                       ("sim/graphics/animation/lights/airplane_navigation_light_dir" in line)
 
-            #if has_whitelist_sw_light or "airplane_nav_" in line and "_size" in line:
-            #    clean_lines.append(line)
+            if "airplane_nav_" in line and "_size" in line:
+                clean_lines.append(line)
 
             if not (len(line) == 0   or\
                 line.startswith("#") or\
                 line.startswith("TEXTURE")     or\
                 line.startswith("X_DIVISIONS") or\
                 line.startswith("Y_DIVISIONS") or\
-                #line.startswith("BILLBOARD_SW")  or\
+                line.startswith("BILLBOARD_SW")  or\
                 line.startswith("CONE_HW")       or\
                 line.startswith("CONE_SW")       or\
                 line.startswith("SPILL_GND")     or\
                 line.startswith("SPILL_GND_REV")):
-                #line.startswith("SPILL_SW") or\
+                line.startswith("SPILL_SW") or\
                 clean_lines.append(line)
 
         for l in clean_lines:
@@ -202,17 +279,17 @@ def parse_lights_file():
     for overload in parsed_lights.values():
         import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
         #import pydevd;pydevd.settrace()
-        prototypes,data_sources = overload[:]
-        prototypes.sort(key=functools.cmp_to_key(sort_by_trust))
-        data_sources.sort(key=functools.cmp_to_key(sort_by_trust))
+        #overload.finalize_data()
 
 if __name__ == "__main__":
     parse_lights_file()
 
     for name,value in sorted(parsed_lights.items()):
-        print("%s:" % str(name))
-        for prototype,datasource in zip(value[0],value[1]):
-            pass
+        print("%s:" % name)
+        #kl
+        #print("%s:")
+        #for prototype,datasource in valuezip(value[0],value[1]):
+        #    pass
         #print("%s,%s"%(str(prototype),str(datasource)))
             
             #for p in prototype:
