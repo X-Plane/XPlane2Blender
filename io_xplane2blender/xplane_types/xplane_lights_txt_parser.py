@@ -107,24 +107,20 @@ class ParsedDataSource():
 
 #TODO: Use the word overload!
 class ParsedLightOverload():
-    
-    #self.light_prototype - keys are prototype, values are only for LIGHT_PARAM_DEFs to keep track of their positional arguments
-    def __init__(self):
+    def __init__(self,light_name):
+        self.light_name = light_name
         #self.prototype = None prptotype is derived from, not stored
         self.light_param_def = None # kept for doing data_source.data replacements
         
-        #TODO: This is unnecissary to have both o these
-        self.original_data_source = None
-        #TODO: This should eventually be all numbers instead of all text
-        self.final_data_source = None
+        self.data_source = None
 
     #query must be a valid number or one of the column names
     def get(self,query):
         if isinstance(query,Number):
-            return self.final_data_source.data[query]
+            return self.data_source.data[query]
         elif isinstance(query,str):
-            keys = self.final_data_source.get_prototype()
-            values = self.final_data_source.data
+            keys = self.data_source.get_prototype()
+            values = self.data_source.data
             value = dict(zip(keys,values))[query]
             return value
         else:
@@ -132,38 +128,36 @@ class ParsedLightOverload():
 
     def set(self,query,value):
         if isinstance(query,Number):
-            self.final_data_source.data[query] = value
+            self.data_source.data[query] = value
         elif isinstance(query,str):
-            keys = self.final_data_source.get_prototype()
-            values = self.final_data_source.data
+            keys = self.data_source.get_prototype()
+            values = self.data_source.data
             collections.OrderedDict(zip(keys,values))[query] = value
         else:
             raise TypeError
 
-
     def finalize_data(self):
-        self.final_data_source = copy.deepcopy(self.original_data_source)
         if self.light_param_def is not None:
             for i,param in enumerate(self.light_param_def.prototype):
-                new_value = str(self.light_param_def.user_values[i])
-                actual_param_idx = self.final_data_source.data.index(param)
-                old_value = self.final_data_source.data[actual_param_idx]
+                new_value = self.light_param_def.user_values[i]
+                actual_param_idx = self.data_source.data.index(param)
+                old_value = self.data_source.data[actual_param_idx]
                 print("Replacing final_data['%s'] (%s) with user_value (%s)" % (actual_param_idx,old_value,new_value))
-                self.final_data_source.data[actual_param_idx] = new_value
                 print("LIGHT_PARAM_DEF: %s" % str(self.light_param_def.prototype))
                 print("USER_VALUES: %s" % str(self.light_param_def.user_values))
                 print("Original Data")
-                print("%s: %s" % (str(self.original_data_source.type),str(self.original_data_source.data)))
+                print("%s: %s" % (self.data_source.type,str(self.data_source.data)))
+                self.data_source.data[actual_param_idx] = new_value
                 print("Final Data")
-                print("%s: %s" % (str(self.final_data_source.type),str(self.final_data_source.data)))
+                print("%s: %s" % (self.data_source.type,str(self.data_source.data)))
                 print("----------")
-            if "DREF" in self.final_data_source.get_prototype():
+            if "DREF" in self.data_source.get_prototype():
                 print("DREF: %s" % self.get("DREF"))
                 print("Original Data")
-                print("%s: %s" % (str(self.final_data_source.type),str(self.final_data_source.data)))
-                drefs[self.get("DREF")](self.final_data_source.get_prototype(),self.final_data_source.data)
+                print("%s: %s" % (self.data_source.type,str(self.data_source.data)))
+                drefs[self.get("DREF")](self.data_source.get_prototype(),self.data_source.data)
                 print("Final Data")
-                print("%s: %s" % (str(self.final_data_source.type),str(self.final_data_source.data)))
+                print("%s: %s" % (self.data_source.type,str(self.data_source.data)))
             
 # ["Name"] -> ([prototypes],[data sources])
 # [prototypes]   = ParsedProtoype
@@ -172,7 +166,9 @@ class ParsedLightOverload():
 '''
 # ["Name"] -> Overload
 '''
-parsed_lights = collections.OrderedDict()
+#TODO: Make actual API based on "get_generic_light_overload", make user_values get passed into finalize
+parsed_lights = None
+#collections.OrderedDict()
 
 #TODO: should combine light_type and light_data into ordered dict so we can stop with the data[type.index("KEY")] pattern
 #add a light to the parsed_lights dictionary
@@ -182,7 +178,7 @@ parsed_lights = collections.OrderedDict()
 # light_data<list>    - The data of the light after the name.
 def add_light(light_type_str,light_name,light_data):
     if light_name not in parsed_lights:
-        parsed_lights[light_name] = ParsedLightOverload()
+        parsed_lights[light_name] = ParsedLightOverload(light_name)
 
     if light_type_str == "LIGHT_PARAM_DEF":
         #import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
@@ -190,38 +186,34 @@ def add_light(light_type_str,light_name,light_data):
         parsed_lights[light_name].light_param_def = ParsedLightParamDef(light_data[1:])#light_data[1:0] skips over the first number in param def 
         
     else:
-        rankings = [
-                    "SPILL_HW_DIR",
-                    "SPILL_HW_FLA",
-                    "SPILL_SW",
-                    "BILLBOARD_HW",
-                    "BILLBOARD_SW",
-                    "SPILL_GND",
-                    "SPILL_GND_REV",
+        rankings = ["CONE_SW" #Least trustworthy
                     "CONE_HW",
-                    "CONE_SW"
-                    ]
-        rankings.reverse()
-        if parsed_lights[light_name].original_data_source is not None:
-            existing_trust = rankings.index(parsed_lights[light_name].original_data_source.type)
+                    "SPILL_GND_REV",
+                    "SPILL_GND",
+                    "BILLBOARD_SW",
+                    "BILLBOARD_HW",
+                    "SPILL_SW",
+                    "SPILL_HW_FLA",
+                    "SPILL_HW_DIR"] #Most trustworthy
+
+        if parsed_lights[light_name].data_source is not None:
+            existing_trust = rankings.index(parsed_lights[light_name].data_source.type)
         else:
             existing_trust = -1 
-        new_trust      = rankings.index(light_type_str)
+        new_trust = rankings.index(light_type_str)
         if new_trust > existing_trust:
-            parsed_lights[light_name].original_data_source = ParsedDataSource(light_type_str,light_data)
+            parsed_lights[light_name].data_source = ParsedDataSource(light_type_str,light_data)
 
     overload = parsed_lights[light_name]
     light_param_def = overload.light_param_def
+    data_source = overload.data_source
     
-    
-    try:
-        data_source = overload.original_data_source
-        if data_source == None:
-            raise Exception
-    except:
-        data_source = ParsedDataSource("",[])
+    return
 
-    if light_name == "airplane_taxi_sp" or data_source is None:
+    if data_source == None:
+        return
+
+    if overload.light_name == "airplane_taxi_sp" or data_source is None:
         import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
         #import pydevd;pydevd.settrace()
         
@@ -233,7 +225,7 @@ def add_light(light_type_str,light_name,light_data):
           "\t-%s\n"
           "Data Source:\n"
           "\t-%s\n"
-          % (light_name,
+          % (overload.light_name,
                 str(light_param_def.prototype) if light_param_def is not None else "None",
                 str(data_source.type),
                 str(data_source.get_prototype()),
@@ -241,6 +233,13 @@ def add_light(light_type_str,light_name,light_data):
                 ))
 
 def parse_lights_file():
+    global parsed_lights
+    if parsed_lights is not None:
+        return
+    else:
+        parsed_lights = collections.OrderedDict()#TODO: Not good. What if parsing fails part way through? where best to put this to parse as few times as posible.
+        #Must for unit test have in xplanefile level
+
     LIGHTS_FILEPATH = "./lights.txt"
     __dirname__ = os.path.dirname(__file__)
 

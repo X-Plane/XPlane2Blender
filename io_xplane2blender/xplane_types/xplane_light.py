@@ -8,11 +8,15 @@ import mathutils
 from mathutils import Vector, Matrix, Euler
 from itertools import zip_longest
 from io_xplane2blender import xplane_constants
+from io_xplane2blender.xplane_types.xplane_lights_txt_parser import *
+from io_xplane2blender.xplane_types import xplane_lights_txt_parser
+from copy import deepcopy
 
 test_param_lights = {
     # NAMED LIGHTS
     # Spill version
-    'taillight' : ((),('0.4','0.05','0','0.8','3','0','-0.5','0.86','0.0','0')),
+    'taillight' : ((), ('0.4','0.05','0','0.8','3','0','-0.5','0.86','0.0','0')),
+        #("R","G","B","A","SIZE","CELL","DX","DY","DZ","WIDTH","FRQ","PHASE","AMP","DAY","DATAREF"),
     
     # PARAMETER LIGHTS
     'airplane_nav_left_size':(('SIZE','FOCUS'), 
@@ -82,7 +86,6 @@ class XPlaneLight(XPlaneObject):
         self.indices = [0,0]
         self.color = [blenderObject.data.color[0], blenderObject.data.color[1], blenderObject.data.color[2]]
         self.energy = blenderObject.data.energy
-        self.type = XPLANE_OBJECT_TYPE_LIGHT
         self.lightType = blenderObject.data.xplane.type
         self.size = blenderObject.data.xplane.size
         self.lightName = blenderObject.data.xplane.name
@@ -125,7 +128,15 @@ class XPlaneLight(XPlaneObject):
             else:
                 return True
 
-        self.lightOverload = parsed_lights[self.lightName]
+        if self.lightName not in xplane_lights_txt_parser.parsed_lights:
+            logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or updates to lights.txt" % self.lightName)
+            return
+        try:
+            self.lightOverload = copy.deepcopy(xplane_lights_txt_parser.parsed_lights[self.lightName])
+        except:
+            pass #TODO: Fix this
+            #self.lightOverload = xplane_lights_txt_parser.ParsedLightOverload()
+
         if self.lightName == LIGHT_NAMED:
             pass
         elif self.lightType == LIGHT_PARAM:
@@ -151,20 +162,18 @@ class XPlaneLight(XPlaneObject):
                     logger.error("Parameter %s is not a number" % param)
                     return
 
+            import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
+            #import pydevd;pydevd.settrace()
             self.lightOverload.finalize_data()
+
             (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
-            
-            if not None in (dx,dy,dz) and\
-                Vector([float(d) for d in (dx,dy,dz)]).magnitude == 0.0 and self.is_omni is False: 
+            if Vector((dx,dy,dz)).magnitude == 0.0 and self.is_omni is False: 
                 logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
              
             self.is_omni = float(self.lightOverload.get("WIDTH")) >= 1.0
            
             if logger.hasErrors():
                 return
-
-        elif self.lightName not in parsed_lights:
-            logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or updates to lights.txt" % self.lightName)
 
     def clamp(self, num, minimum, maximum):
         if num < minimum:
@@ -195,9 +204,7 @@ class XPlaneLight(XPlaneObject):
             self.lightName in test_param_lights:
             
             # Vector P(arameters), in Blender Space
-            dx = self.parsed_params["X"] if self.parsed_params["X"] != None else self.parsed_params["DX"]
-            dy = self.parsed_params["Y"] if self.parsed_params["Y"] != None else self.parsed_params["DY"]
-            dz = self.parsed_params["Z"] if self.parsed_params["Z"] != None else self.parsed_params["DZ"]
+            (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
             
             assert dx is not None and dy is not None and dz is not None
             
