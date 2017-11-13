@@ -119,23 +119,10 @@ class XPlaneLight(XPlaneObject):
 
     def collect(self):
         xplane_lights_txt_parser.parse_lights_file()
-        
-        def is_number(number_str):
-            try:
-                float(number_str)
-            except:
-                return False
-            else:
-                return True
-
-        if self.lightName not in xplane_lights_txt_parser.parsed_lights:
+        self.lightOverload = xplane_lights_txt_parser.get_overload(self.lightName)
+        if self.lightOverload is None:
             logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or updates to lights.txt" % self.lightName)
             return
-        try:
-            self.lightOverload = copy.deepcopy(xplane_lights_txt_parser.parsed_lights[self.lightName])
-        except:
-            pass #TODO: Fix this
-            #self.lightOverload = xplane_lights_txt_parser.ParsedLightOverload()
 
         if self.lightName == LIGHT_NAMED:
             pass
@@ -149,28 +136,31 @@ class XPlaneLight(XPlaneObject):
                 if not (self.comment.startswith("//") or self.comment.startswith("#")):
                     logger.warn("Comment in param light %s does not start with '//' or '#'" % self.comment)
             
-            params_actual = [p.strip() for p in params_actual]
-            
             if len(params_actual) < len(params_formal):
                 logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
-            
-            params_actual = params_actual[0:len(params_formal)]
+
+            params_actual = [p.strip() for p in params_actual[0:len(params_formal)]]
+            user_values   = [None]*len(params_actual)
             for i,param in enumerate(params_actual):
-                if is_number(param):
-                    self.lightOverload.light_param_def.user_values[i] = float(param) 
+                def isfloat(number_str):
+                    try:
+                        val = float(number_str)
+                    except:
+                        return False
+                    else:
+                        return True
+                if isfloat(param):
+                    user_values[i] = float(param) 
                 else:
-                    logger.error("Parameter %s is not a number" % param)
+                    logger.error("Parameter %s (%s) is not a number" % (i,param))
                     return
 
-            import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-            #import pydevd;pydevd.settrace()
-            self.lightOverload.finalize_data()
+            self.lightOverload.bake_user_values(user_values)
 
-            (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
-            if Vector((dx,dy,dz)).magnitude == 0.0 and self.is_omni is False: 
-                logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
-             
             self.is_omni = float(self.lightOverload.get("WIDTH")) >= 1.0
+            dir_vec = Vector((self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ")))
+            if dir_vec.magnitude == 0.0 and self.is_omni is False: 
+                logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
            
             if logger.hasErrors():
                 return
@@ -201,10 +191,11 @@ class XPlaneLight(XPlaneObject):
             pass
         elif self.blenderObject.data.type != 'POINT' and\
             self.lightType == xplane_constants.LIGHT_PARAM and\
-            self.lightName in test_param_lights:
+            self.lightOverload is not None:
             
             # Vector P(arameters), in Blender Space
             (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
+            #TODO: what about lights without DXYZ parameters?
             
             assert dx is not None and dy is not None and dz is not None
             

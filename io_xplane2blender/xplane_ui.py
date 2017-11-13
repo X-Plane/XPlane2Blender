@@ -737,7 +737,7 @@ def animation_layout(self, obj, bone = False):
                     subrow.operator("object.remove_xplane_dataref_keyframe", text = "", icon = "KEY_DEHLT").index = i
                 subrow.prop(attr, "value")
                 subrow = subbox.row()
-                subrow.prop(attr, "loop", text = "Loops")
+                subrow.prop(attr, "loop")
             else:
                 subrow.label('Object not animated')
         elif attr.anim_type in ("show", "hide"):
@@ -895,7 +895,7 @@ def weight_layout(self, obj):
 #def parseDatarefs():
 #    import os
 #    search_data = []
-#    filePath = os.path.dirname(__file__)+'/DataRefs.txt'
+#    filePath = os.path.join(xplane_helpers.getResourcesFolder(),'DataRefs.txt')
 #    if os.path.exists(filePath):
 #        try:
 #            file = open(filePath, 'r')
