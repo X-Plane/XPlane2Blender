@@ -8,7 +8,6 @@ from numbers import Number
 from mathutils import Vector
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
-from test.leakers import test_selftype
 
 '''
 API Rules:
