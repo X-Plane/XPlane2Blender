@@ -12,41 +12,6 @@ from io_xplane2blender.xplane_types.xplane_lights_txt_parser import *
 from io_xplane2blender.xplane_types import xplane_lights_txt_parser
 from copy import deepcopy
 
-test_param_lights = {
-    # NAMED LIGHTS
-    # Spill version
-    'taillight' : ((), ('0.4','0.05','0','0.8','3','0','-0.5','0.86','0.0','0')),
-        #("R","G","B","A","SIZE","CELL","DX","DY","DZ","WIDTH","FRQ","PHASE","AMP","DAY","DATAREF"),
-    
-    # PARAMETER LIGHTS
-    'airplane_nav_left_size':(('SIZE','FOCUS'), 
-        ('FOCUS','0','0','1','SIZE','1','7','7','0','0','0','1','sim/graphics/animation/lights/airplane_navigation_light_dir')),
-
-    'airplane_nav_right_size':(('SIZE','FOCUS'), 
-        ('FOCUS','0','0','1','SIZE','1','6','7','0','0','0','1','sim/graphics/animation/lights/airplane_navigation_light_dir')),
-
-    'area_lt_param_sp': (('DX','DY','DZ','THROW'),
-                         ('0.85', '0.75', '1.0', '0.6','THROW','DX', 'DY', 'DZ', '0.3', '0')),
-
-    'full_custom_halo': (('R','G','B','A','S','X','Y','Z','F'),
-                         ('R', 'G', 'B', 'A', 'S','X','Y','Z','F','1')),
-
-    'helipad_flood_sp': (('BRIGHT', 'THROW', 'X', 'Y', 'Z', 'FOCUS'),
-                         ('0.996', '0.945', '0.882', 'BRIGHT', 'THROW', 'X', 'Y', 'Z', 'FOCUS', '0')),
-
-    'helipad_flood_bb': (('X', 'Y', 'Z', 'WIDTH'),
-                         ('1', '1', '1', '0.5', '1', '2', '6', 'X', 'Y', 'Z', 'WIDTH', '0', '0', '0', '0')),
-
-    'spot_params_sp':   (('R','G','B','BRIGHT','THROW','X','Y','Z','FOCUS'),
-                         ('R','G','B','BRIGHT','THROW','X','Y','Z','FOCUS')),
-
-    'spot_params_bb':   (('R','G','B','SIZE','X','Y','Z','WIDTH'),
-                         ('R', 'G', 'B', '1.0', 'SIZE',  '2',  '5',  '2', 'X', 'Y', 'Z', 'WIDTH',  '0',  '0',  '0',  '0')),
-
-    'radio_obs_flash':  (('X','Y','Z'),
-                         ('1', '0.8', '0.8', '1', '1.5', '1', '4', '5', 'X', 'Y', 'Z', '0.5', '0.25', '0', '1.5', '1'))
-}
-
 # Class: XPlaneLight
 # A Light
 #
@@ -125,26 +90,34 @@ class XPlaneLight(XPlaneObject):
 
         self.lightOverload = xplane_lights_txt_parser.get_overload(self.lightName)
         if self.lightOverload is None:
-            logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or updates to lights.txt" % self.lightName)
+            logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or update lights.txt" % self.lightName)
 
-        if self.lightType == LIGHT_NAMED:
+        if self.lightType == LIGHT_NAMED and self.lightOverload is not None:
+            if self.lightOverload.is_param_light():
+                logger.error("light name %s is a known param light, being used as a name light. Check the light name or light type" % self.lightName)
+                return
+
             if self.lightOverload.get("DREF") is not None:
                 self.lightOverload.apply_sw_light_callback()
-        elif self.lightType == LIGHT_PARAM:
-            if self.lightOverload is not None and not self.lightOverload.is_param_light():
-                logger.warn("Light name %s appears to be known as a named light, not a param light. Check the light's Type drop down menu")
+        elif self.lightType == LIGHT_PARAM and self.lightOverload is not None:
+
+            if self.lightOverload.is_param_light() is False:
+                logger.error("Light name %s appears to be known as a named light, not a param light."
+                             "Check the light type drop down menu" % self.lightName)
+                return
 
             params_formal = self.lightOverload.light_param_def.prototype
             params_actual = re.findall(r" *[^ ]*",self.params)[:-1]
             
+            if len(params_actual) < len(params_formal):
+                logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
+                return
+
             if len(params_actual) > len(params_formal):
                 self.comment = (''.join(params_actual[len(params_formal):])).lstrip()
                 if not (self.comment.startswith("//") or self.comment.startswith("#")):
                     logger.warn("Comment in param light %s does not start with '//' or '#'" % self.comment)
             
-            if len(params_actual) < len(params_formal):
-                logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
-                return
 
             params_actual = [p.strip() for p in params_actual[0:len(params_formal)]]
             user_values   = [None]*len(params_actual)
@@ -171,6 +144,10 @@ class XPlaneLight(XPlaneObject):
            
             if logger.hasErrors():
                 return
+        elif self.lightType == LIGHT_PARAM and self.lightOverload is None:
+            if len(self.params.split()) == 0:
+                logger.error("light name %s has an empty parameters box" % self.lightName)
+                return
 
     def clamp(self, num, minimum, maximum):
         if num < minimum:
@@ -194,61 +171,58 @@ class XPlaneLight(XPlaneObject):
         def vec_x_to_b(v):
             return Vector((v.x, -v.z, v.y))
 
-        # Vector P(arameters), in Blender Space
-        (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
            
         if self.blenderObject.data.type == 'POINT':
             pass
-        elif self.blenderObject.data.type != 'POINT' and\
-            (dx,dy,dz) != (None,None,None) and\
-            self.lightOverload is not None:
-            
-            
-            dir_vec_p_norm_b = vec_x_to_b(Vector((dx,dy,dz)).normalized())
-            
-            # Multiple bake matrix by Vector to get the direction of the Blender object
-            dir_vec_b_norm = bakeMatrix.to_3x3() * Vector((0,0,-1))
-
-            # P is start rotation, and B is stop. As such, we have our axis of rotation.
-            # "We take the X-Plane light and turn it until it matches what the artist wanted"
-            axis_angle_vec3 = dir_vec_p_norm_b.cross(dir_vec_b_norm)
-
-            dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm) 
-
-            if dot_product_p_b < 0:
-                axis_angle_theta = math.pi - math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
-            else:
-                axis_angle_theta = math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
-            
-            translation = bakeMatrix.to_translation()
-        
-            # Ben says: lights always have some kind of offset because the light itself
-            # is "at" 0,0,0, so we treat the translation as the light position.
-            # But if there is a ROTATION then in the light's bake matrix, the
-            # translation is pre-rotation.  but we want to write a single static rotation
-            # and then NOT write a translation every time.
-            #
-            # Inverse to change our animation order (so we really have rot, trans when we
-            # originally had trans, rot) and now we can use the translation in the lamp
-            # itself.
-            if round(axis_angle_theta,5) != 0.0 and self.is_omni is False:
-                o += "%sANIM_begin\n" % indent
+        elif self.blenderObject.data.type != 'POINT' and self.lightOverload is not None:
+            # Vector P(arameters), in Blender Space
+            (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
+            if dx is not None and dy is not None and dz is not None:
+                dir_vec_p_norm_b = vec_x_to_b(Vector((dx,dy,dz)).normalized())
                 
-                if debug:
-                    o += indent + '# static rotation\n'
-                
-                axis_angle_vec3_x = vec_b_to_x(axis_angle_vec3).normalized()
-                anim_rotate_dir =  indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
-                    floatToStr(axis_angle_vec3_x[0]),
-                    floatToStr(axis_angle_vec3_x[1]),
-                    floatToStr(axis_angle_vec3_x[2]),
-                    floatToStr(math.degrees(axis_angle_theta)), floatToStr(math.degrees(axis_angle_theta))
-                )
-                o += anim_rotate_dir
+                # Multiple bake matrix by Vector to get the direction of the Blender object
+                dir_vec_b_norm = bakeMatrix.to_3x3() * Vector((0,0,-1))
 
-                rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec3)
-                translation = rot_matrix.inverted() * translation
-                has_anim = True
+                # P is start rotation, and B is stop. As such, we have our axis of rotation.
+                # "We take the X-Plane light and turn it until it matches what the artist wanted"
+                axis_angle_vec3 = dir_vec_p_norm_b.cross(dir_vec_b_norm)
+
+                dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm) 
+
+                if dot_product_p_b < 0:
+                    axis_angle_theta = math.pi - math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
+                else:
+                    axis_angle_theta = math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
+                
+                translation = bakeMatrix.to_translation()
+            
+                # Ben says: lights always have some kind of offset because the light itself
+                # is "at" 0,0,0, so we treat the translation as the light position.
+                # But if there is a ROTATION then in the light's bake matrix, the
+                # translation is pre-rotation.  but we want to write a single static rotation
+                # and then NOT write a translation every time.
+                #
+                # Inverse to change our animation order (so we really have rot, trans when we
+                # originally had trans, rot) and now we can use the translation in the lamp
+                # itself.
+                if round(axis_angle_theta,5) != 0.0 and self.is_omni is False:
+                    o += "%sANIM_begin\n" % indent
+                    
+                    if debug:
+                        o += indent + '# static rotation\n'
+                    
+                    axis_angle_vec3_x = vec_b_to_x(axis_angle_vec3).normalized()
+                    anim_rotate_dir =  indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
+                        floatToStr(axis_angle_vec3_x[0]),
+                        floatToStr(axis_angle_vec3_x[1]),
+                        floatToStr(axis_angle_vec3_x[2]),
+                        floatToStr(math.degrees(axis_angle_theta)), floatToStr(math.degrees(axis_angle_theta))
+                    )
+                    o += anim_rotate_dir
+
+                    rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec3)
+                    translation = rot_matrix.inverted() * translation
+                    has_anim = True
 
         if self.lightType == LIGHT_NAMED:
             o += "%sLIGHT_NAMED\t%s %s %s %s\n" % (

@@ -205,15 +205,7 @@ class ParsedLightOverload():
                 new_value = self.light_param_def.user_values[i]
                 actual_param_idx = self.data_source.data.index(param)
                 old_value = self.data_source.data[actual_param_idx]
-                print("Replacing final_data['%s'] (%s) with user_value (%s,type:%s)" % (actual_param_idx,old_value,new_value,type(new_value)))
-                print("LIGHT_PARAM_DEF: %s" % str(self.light_param_def.prototype))
-                print("USER_VALUES: %s" % str(self.light_param_def.user_values))
-                print("Original Data")
-                print("%s: %s" % (self.data_source.type,str(self.data_source.data)))
                 self.data_source.data[actual_param_idx] = new_value
-                print("Final Data")
-                print("%s: %s" % (self.data_source.type,str(self.data_source.data)))
-                print("----------")
 
             if "DREF" in self.data_source.get_prototype():
                 self.apply_sw_light_callback()
@@ -256,28 +248,8 @@ def _add_light(light_type_str,light_name,light_data):
         if new_trust > existing_trust:
             _parsed_lights[light_name].data_source = ParsedDataSource(light_type_str,light_data)
 
-    overload = _parsed_lights[light_name]
-    light_param_def = overload.light_param_def
-    data_source     = overload.data_source
-    return
 
-    if data_source == None:
-        return
 
-    print("Parsed %s:\n"
-          "Light Param Def:\n"
-          "\t-%s\n"
-          "Best Prototype:\n"
-          "\t-%s\n"
-          "\t-%s\n"
-          "Data Source:\n"
-          "\t-%s\n"
-          % (overload.light_name,
-                str(light_param_def.prototype) if light_param_def is not None else "None",
-                str(data_source.type),
-                str(data_source.get_prototype()),
-                str(data_source.data)
-                ))
 # Function: parse_lights_file
 #
 # Parses lights.txt file as needed.
