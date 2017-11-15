@@ -27,13 +27,13 @@ CURRENT_BUILD_TYPE = xplane_constants.BUILD_TYPE_BETA
 # Constant: CURRENT_BUILD_TYPE_VERSION
 #
 # The current build type version, must be > 0
-CURRENT_BUILD_TYPE_VERSION = 5
+CURRENT_BUILD_TYPE_VERSION = 6
 
 # Constant: CURRENT_DATA_MODEL_VERSION
 #
 # The current data model version, incrementing every time xplane_constants, xplane_props, or xplane_updater
 # changes. Builds earlier than 3.4.0-beta.5 have and a version of 0 
-CURRENT_DATA_MODEL_VERSION = 1
+CURRENT_DATA_MODEL_VERSION = 2
 
 # Constant: CURRENT_BUILD_NUMBER
 #
