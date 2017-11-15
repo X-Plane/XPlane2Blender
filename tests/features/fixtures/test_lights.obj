@@ -12,10 +12,10 @@ VLIGHT	0	0	0	0	1	0
 LIGHT_CUSTOM	3 3 -3 1 1 0 1 2 0 0 1 1 test
 # 1 Object: Lamp.002
 # LIGHT: Lamp.002	weight: 10000
-LIGHT_PARAM	param_2 1 1 -1
+LIGHT_PARAM	param_2 1 1 -1 1 2 3 #fake params
 # 1 Object: Lamp.001
 # LIGHT: Lamp.001	weight: 10000
-LIGHT_PARAM	param_1 2 2 -2
+LIGHT_PARAM	param_1 2 2 -2 1 2 3 #fake params
 # 1 Object: Lamp
 # LIGHT: Lamp	weight: 10000
 LIGHTS	0 1
