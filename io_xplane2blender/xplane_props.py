@@ -1502,9 +1502,9 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
         attr = "type",
         name = "Type",
         description = "Defines the type of the light in X-Plane",
-        default = LIGHT_DEFAULT,
+        default = LIGHT_NAMED,
         items = [
-                (LIGHT_DEFAULT,  "Default",                     "Default"),
+                (LIGHT_DEFAULT,  "Default"  + " (deprecated)",  "Default"),
                 (LIGHT_FLASHING, "Flashing" + " (deprecated)",  "Flashing" + " (deprecated)"),
                 (LIGHT_PULSING,  "Pulsing"  + " (deprecated)",  "Pulsing"  + " (deprecated)"),
                 (LIGHT_STROBE,   "Strobe"   + " (deprecated)",  "Strobe"   + " (deprecated)"),
