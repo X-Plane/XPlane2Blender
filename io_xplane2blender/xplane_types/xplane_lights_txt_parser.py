@@ -8,6 +8,7 @@ from numbers import Number
 from mathutils import Vector
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
+from io_xplane2blender import xplane_constants
 
 '''
 API Rules:
@@ -260,9 +261,9 @@ def parse_lights_file():
     if _parsed_lights is not None:
         return True
 
-    LIGHTS_FILEPATH = os.path.join(xplane_helpers.getResourcesFolder(),"lights.txt")
+    LIGHTS_FILEPATH = os.path.join(xplane_constants.ADDON_RESOURCES_FOLDER,"lights.txt")
     if not os.path.isfile(LIGHTS_FILEPATH):
-        logger.error("lights.txt file was not found in resource folder.")
+        logger.error("lights.txt file was not found in resource folder %s" % (LIGHTS_FILEPATH))
         return False
 
     try:

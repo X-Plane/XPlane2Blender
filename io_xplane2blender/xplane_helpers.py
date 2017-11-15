@@ -56,13 +56,8 @@ def resolveBlenderPath(path):
         return os.path.join(blenddir, path[2:])
     else:
         return path
-
-def getAddonFolder():
-    return os.path.join(bpy.utils.user_resource('SCRIPTS', "addons"),"io_xplane2blender")
-
-def getResourcesFolder():
-    return os.path.join(getAddonFolder(),"resources")
  
+
 # This is a convience struct to help prevent people from having to repeateld copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():

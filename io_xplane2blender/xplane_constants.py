@@ -12,6 +12,17 @@ instructions in xplane_updater.py before changing, especially for changing or re
 Please sort this file's sections alphabetically and align the = signs going forward. -Ted, 9/6/17
 """
 
+def _get_addon_folder():
+    import os
+    return os.path.dirname(os.path.abspath(__file__))
+
+ADDON_FOLDER = _get_addon_folder()
+
+def _get_resources_folder():
+    import os
+    return os.path.join(_get_addon_folder(),"resources")
+
+ADDON_RESOURCES_FOLDER = _get_resources_folder()
 
 # Section: Build Types
 # Names for builds types stages we have in

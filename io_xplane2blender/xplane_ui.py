@@ -895,7 +895,7 @@ def weight_layout(self, obj):
 #def parseDatarefs():
 #    import os
 #    search_data = []
-#    filePath = os.path.join(xplane_helpers.getResourcesFolder(),'DataRefs.txt')
+#    filePath = os.path.join(xplane_constants.ADDON_RESOURCES_FOLDER,'DataRefs.txt')
 #    if os.path.exists(filePath):
 #        try:
 #            file = open(filePath, 'r')
