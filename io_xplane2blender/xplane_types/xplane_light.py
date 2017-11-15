@@ -83,6 +83,8 @@ class XPlaneLight(XPlaneObject):
         self.getWeight(10000)
 
     def collect(self):
+        super().collect()
+
         is_parsed = xplane_lights_txt_parser.parse_lights_file()
         if is_parsed == False:
             logger.error("lights.txt file could not be parsed")
