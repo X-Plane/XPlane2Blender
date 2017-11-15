@@ -118,18 +118,24 @@ class XPlaneLight(XPlaneObject):
         self.getWeight(10000)
 
     def collect(self):
-        xplane_lights_txt_parser.parse_lights_file()
+        is_parsed = xplane_lights_txt_parser.parse_lights_file()
+        if is_parsed == False:
+            logger.error("lights.txt file could not be parsed")
+            return
+
         self.lightOverload = xplane_lights_txt_parser.get_overload(self.lightName)
         if self.lightOverload is None:
             logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or updates to lights.txt" % self.lightName)
-            return
 
-        if self.lightName == LIGHT_NAMED:
-            pass
+        if self.lightType == LIGHT_NAMED:
+            if self.lightOverload.get("DREF") is not None:
+                self.lightOverload.apply_sw_light_callback()
         elif self.lightType == LIGHT_PARAM:
+            if self.lightOverload is not None and not self.lightOverload.is_param_light():
+                logger.warn("Light name %s appears to be known as a named light, not a param light. Check the light's Type drop down menu")
+
             params_formal = self.lightOverload.light_param_def.prototype
-            params_actual = re.findall(r" *[^ ]*",self.params)
-            del params_actual[-1] #'' will always be the last match in the group
+            params_actual = re.findall(r" *[^ ]*",self.params)[:-1]
             
             if len(params_actual) > len(params_formal):
                 self.comment = (''.join(params_actual[len(params_formal):])).lstrip()
@@ -138,6 +144,7 @@ class XPlaneLight(XPlaneObject):
             
             if len(params_actual) < len(params_formal):
                 logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
+                return
 
             params_actual = [p.strip() for p in params_actual[0:len(params_formal)]]
             user_values   = [None]*len(params_actual)
@@ -187,17 +194,15 @@ class XPlaneLight(XPlaneObject):
         def vec_x_to_b(v):
             return Vector((v.x, -v.z, v.y))
 
+        # Vector P(arameters), in Blender Space
+        (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
+           
         if self.blenderObject.data.type == 'POINT':
             pass
         elif self.blenderObject.data.type != 'POINT' and\
-            self.lightType == xplane_constants.LIGHT_PARAM and\
+            (dx,dy,dz) != (None,None,None) and\
             self.lightOverload is not None:
             
-            # Vector P(arameters), in Blender Space
-            (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
-            #TODO: what about lights without DXYZ parameters?
-            
-            assert dx is not None and dy is not None and dz is not None
             
             dir_vec_p_norm_b = vec_x_to_b(Vector((dx,dy,dz)).normalized())
             

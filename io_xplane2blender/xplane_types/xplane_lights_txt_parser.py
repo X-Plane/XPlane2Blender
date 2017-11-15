@@ -1,14 +1,22 @@
-import copy
-import functools
-import os
-import math
 import collections
 from collections import OrderedDict
-from gc import collect
+import copy
+import functools
+import math
+import os
 from numbers import Number
 from mathutils import Vector
 from io_xplane2blender import xplane_helpers
+from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
+from test.leakers import test_selftype
 
+'''
+API Rules:
+1. After reading the file, we only have valid data
+2. All data is transformed to it's correct state ("float"->float) before entering _parsed_lights
+3. If we don't know a light name, it can't be used by this API
+4. If we don't know a dataref, it is a noop
+'''
 def _get_rgb(prototype,lhs):
     return lhs[prototype.index("R"):prototype.index("B") + 1]
 
@@ -24,7 +32,7 @@ def _set_a(prototype,lhs,value):
 def _get_xyz(prototype,lhs):
     return lhs[prototype.index("DX"):prototype.index("DZ")+1]
 
-def _set_xyz(prototype,lhs,value):    
+def _set_xyz(prototype,lhs,value):
     lhs[prototype.index("DX"):prototype.index("DZ")+1] = value
 
 def _get_width(prototype,lhs,value):
@@ -33,77 +41,64 @@ def _get_width(prototype,lhs,value):
 def _set_width(prototype,lhs,value):
     lhs[prototype.index("WIDTH")] = value
 
-def do_rgba_to_dxyz_w(prototype,data):
+def _do_rgba_to_dxyz_w(prototype,data):
     r = data
     _set_xyz(prototype, data, _get_rgb(prototype, data))
     _set_width(prototype, data, r[prototype.index("A")])
     _set_rgb(prototype,data,[1,1,1])
     _set_a(prototype,data,1)
 
-#dataref transform functions
-#
-# takes in a tuple of prototype information to be used to get indicies of the data and the data itself
-# returns transformed data as a new list
-def do_rgb_to_xyz_w_calc(prototype,data):
+def _do_rgb_to_dxyz_w_calc(prototype,data):
     r = data
     _set_xyz(prototype, r, r[prototype.index("R"):prototype.index("B")])
     dir_vec = Vector((_get_xyz(prototype,r)))
     _set_width(prototype, r, 1 - dir_vec.magnitude)
     _set_xyz(prototype, r, dir_vec.normalized())
     _set_rgb(prototype, r, [1,1,1])
-    #return r
 
-def do_force_omni(prototype,data):
+def _do_force_omni(prototype,data):
     r = data
     _set_width(prototype,r,1)
 
-def do_noop(prototype,data):
+def _do_noop(prototype,data):
     pass
 
-def get_sw_light_callback(dref):
+def _get_sw_light_callback(dref):
     drefs = {
-        "sim/graphics/animation/lights/airplane_beacon_light_dir":     do_rgb_to_xyz_w_calc,
-        "sim/graphics/animation/lights/airplane_generic_light":        do_rgb_to_xyz_w_calc,
-        "sim/graphics/animation/lights/airplane_generic_light_flash":  do_rgb_to_xyz_w_calc,
-        "sim/graphics/animation/lights/airplane_generic_light_spill":  do_rgb_to_xyz_w_calc,
-        "sim/graphics/animation/lights/airplane_landing_light":        do_rgb_to_xyz_w_calc,
-        "sim/graphics/animation/lights/airplane_landing_light_flash":  do_rgb_to_xyz_w_calc,
-        "sim/graphics/animation/lights/airplane_navigation_light_dir": do_rgb_to_xyz_w_calc,
-        "sim/graphics/animation/lights/airplane_strobe_light_dir":     do_rgb_to_xyz_w_calc,
+        "sim/graphics/animation/lights/airplane_beacon_light_dir":     _do_rgb_to_dxyz_w_calc,
+        "sim/graphics/animation/lights/airplane_generic_light":        _do_rgb_to_dxyz_w_calc,
+        "sim/graphics/animation/lights/airplane_generic_light_flash":  _do_rgb_to_dxyz_w_calc,
+        "sim/graphics/animation/lights/airplane_generic_light_spill":  _do_rgb_to_dxyz_w_calc,
+        "sim/graphics/animation/lights/airplane_landing_light":        _do_rgb_to_dxyz_w_calc,
+        "sim/graphics/animation/lights/airplane_landing_light_flash":  _do_rgb_to_dxyz_w_calc,
+        "sim/graphics/animation/lights/airplane_navigation_light_dir": _do_rgb_to_dxyz_w_calc,
+        "sim/graphics/animation/lights/airplane_strobe_light_dir":     _do_rgb_to_dxyz_w_calc,
 
-        "sim/graphics/animation/lights/airport_beacon":                do_rgba_to_dxyz_w,
-        "sim/graphics/animation/lights/airport_beacon_flash":          do_rgba_to_dxyz_w,
+        "sim/graphics/animation/lights/airport_beacon":                _do_rgba_to_dxyz_w, #As of 11/14/2017, all lights with this are commented out
+        "sim/graphics/animation/lights/airport_beacon_flash":          _do_rgba_to_dxyz_w, #As of 11/14/2017, none of this dataref appears in lights.txt
 
-        "sim/graphics/animation/lights/airplane_beacon_light_rotate":  do_force_omni,
-        "sim/graphics/animation/lights/carrier_waveoff":               do_force_omni,
+        "sim/graphics/animation/lights/airplane_beacon_light_rotate":  _do_force_omni,
+        "sim/graphics/animation/lights/carrier_waveoff":               _do_force_omni,
 
-        "sim/graphics/animation/lights/fresnel_horizontal":            do_force_omni,
-        "sim/graphics/animation/lights/fresnel_vertical":              do_force_omni,
-        "sim/graphics/animation/lights/strobe":                        do_force_omni,
-        "sim/graphics/animation/lights/strobe_sp":                     do_force_omni,
-        "sim/graphics/animation/lights/vasi_papi":                     do_force_omni,
-        "sim/graphics/animation/lights/vasi_papi_tint":                do_force_omni,
-        "sim/graphics/animation/lights/vasi3":                         do_force_omni,
-        "sim/graphics/animation/lights/rabbit":                        do_force_omni,
-        "sim/graphics/animation/lights/rabbit_sp":                     do_force_omni,
-        "sim/graphics/animation/lights/wigwag":                        do_force_omni,
-        "sim/graphics/animation/lights/wigwag_sp":                     do_force_omni
+        "sim/graphics/animation/lights/fresnel_horizontal":            _do_force_omni,
+        "sim/graphics/animation/lights/fresnel_vertical":              _do_force_omni,
+        "sim/graphics/animation/lights/strobe":                        _do_force_omni,
+        "sim/graphics/animation/lights/strobe_sp":                     _do_force_omni,
+        "sim/graphics/animation/lights/vasi_papi":                     _do_force_omni,
+        "sim/graphics/animation/lights/vasi_papi_tint":                _do_force_omni,
+        "sim/graphics/animation/lights/vasi3":                         _do_force_omni,
+        "sim/graphics/animation/lights/rabbit":                        _do_force_omni,
+        "sim/graphics/animation/lights/rabbit_sp":                     _do_force_omni,
+        "sim/graphics/animation/lights/wigwag":                        _do_force_omni,
+        "sim/graphics/animation/lights/wigwag_sp":                     _do_force_omni
     }
     try:
         return drefs[dref]
-    except Exception as e:
-        return do_noop
+    except:
+        return _do_noop
 
-'''Garuntees:
- 1. After cleaning lines, we only have valid data
- 2. We know how to manipulate and use all valid data perfectly
- 3. If we don't know a light name, it can't be used by this API
- 4. If we dn't know a dataref, it is a noop? #TODO?
- '''
-# ["Name"] -> Overload
-# ["Name"] -> ([prototypes],[data sources])
-# [prototypes]   = ParsedProtoype
-# [data_sources] = ParsedData
+# The parsed lights dictionary, where the key is the light name (str)
+# and the value is a ParsedOverload
 _parsed_lights = None
 
 class ParsedLightParamDef():
@@ -122,6 +117,7 @@ class ParsedLightParamDef():
                 return True
         assert len(user_values) == len(self.user_values)
         self.user_values = [float(v) if isfloat(v) else v for v in user_values]
+
 
 class ParsedDataSource():
     TYPE_PROTOTYPES = {
@@ -142,6 +138,7 @@ class ParsedDataSource():
 #                  1,  2,  3,  4,  5,                                       6,   7,   8,   9,                                 10
 "SPILL_SW":     ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                           "DREF")
 }
+
     def __init__(self,light_type,light_data):
         self.type = light_type
         assert isinstance(light_data,list)
@@ -157,6 +154,7 @@ class ParsedDataSource():
 
     def get_prototype(self):
             return self.TYPE_PROTOTYPES[self.type]
+
 
 class ParsedLightOverload():
     def __init__(self,light_name):
@@ -192,6 +190,12 @@ class ParsedLightOverload():
         else:
             raise TypeError
 
+    def is_param_light(self):
+        return self.light_param_def is not None
+    
+    def apply_sw_light_callback(self):
+        _get_sw_light_callback(self.get("DREF"))(self.data_source.get_prototype(),self.data_source.data)
+
     def bake_user_values(self,user_values=None):
         if self.light_param_def is not None:
             assert user_values is not None
@@ -212,15 +216,10 @@ class ParsedLightOverload():
                 print("----------")
 
             if "DREF" in self.data_source.get_prototype():
-                print("DREF: %s" % self.get("DREF"))
-                print("Original Data")
-                print("%s: %s" % (self.data_source.type,str(self.data_source.data)))
-                get_sw_light_callback(self.get("DREF"))(self.data_source.get_prototype(),self.data_source.data)
-                print("Final Data")
-                print("%s: %s" % (self.data_source.type,str(self.data_source.data)))
-    
+                self.apply_sw_light_callback()
 
-def get_overload(light_name): 
+
+def get_overload(light_name):
     try:
         return copy.deepcopy(_parsed_lights[light_name])
     except:
@@ -237,7 +236,7 @@ def _add_light(light_type_str,light_name,light_data):
 
     if light_type_str == "LIGHT_PARAM_DEF":
         #light_data[1:0] skips over the first number in the LIGHT_PARAM_DEF
-        _parsed_lights[light_name].light_param_def = ParsedLightParamDef(light_data[1:])        
+        _parsed_lights[light_name].light_param_def = ParsedLightParamDef(light_data[1:])
     else:
         rankings = ["CONE_SW", #Least trustworthy
                     "CONE_HW",
@@ -252,7 +251,7 @@ def _add_light(light_type_str,light_name,light_data):
         if _parsed_lights[light_name].data_source is not None:
             existing_trust = rankings.index(_parsed_lights[light_name].data_source.type)
         else:
-            existing_trust = -1 
+            existing_trust = -1
         new_trust = rankings.index(light_type_str)
         if new_trust > existing_trust:
             _parsed_lights[light_name].data_source = ParsedDataSource(light_type_str,light_data)
@@ -260,7 +259,7 @@ def _add_light(light_type_str,light_name,light_data):
     overload = _parsed_lights[light_name]
     light_param_def = overload.light_param_def
     data_source     = overload.data_source
-    #return
+    return
 
     if data_source == None:
         return
@@ -279,21 +278,30 @@ def _add_light(light_type_str,light_name,light_data):
                 str(data_source.get_prototype()),
                 str(data_source.data)
                 ))
-
+# Function: parse_lights_file
+#
+# Parses lights.txt file as needed.
+#
+# Returns:
+#    True when file is parsed, False when there was an error or exception
 def parse_lights_file():
     global _parsed_lights
     if _parsed_lights is not None:
-        return None
-    else:
-        _parsed_lights = collections.OrderedDict()#TODO: Not good. What if parsing fails part way through? where best to put this to parse as few times as posible.
-        #Must for unit test have in xplanefile level
+        return True
 
     LIGHTS_FILEPATH = os.path.join(xplane_helpers.getResourcesFolder(),"lights.txt")
     if not os.path.isfile(LIGHTS_FILEPATH):
-        raise Exception("Lights file not found!")
+        logger.error("lights.txt file was not found in resource folder.")
+        return False
 
-    with open(LIGHTS_FILEPATH,'r') as f:
-        lines = f.read().splitlines()[3:]
+    try:
+        _parsed_lights = collections.OrderedDict()
+        filename = open(LIGHTS_FILEPATH,'r')
+        lines = filename.read().splitlines()[3:]
+        if len(lines) == 0:
+            logger.error("lights.txt file is empty")
+            raise Exception
+        
         for line in lines:
             line = line.strip()
 
@@ -308,9 +316,9 @@ def parse_lights_file():
                 light_name = light_str_split[1]
                 light_data = light_str_split[2:]
                 _add_light(light_type,light_name,light_data)
+    except:
+        _parsed_lights = None
+    finally:
+        filename.close()
 
-if __name__ == "__main__":
-    parse_lights_file()
-
-    for name,value in sorted(_parsed_lights.items()):
-        print("%s:" % name)
+    return True
