@@ -216,6 +216,8 @@ def scene_dev_layout(self,scene,layout):
         updater_row = dev_box_column.row()
         updater_row.prop(scene.xplane,"dev_fake_xplane2blender_version")
         updater_row.operator("scene.dev_rerun_updater")
+        updater_row = dev_box_column.row()
+        updater_row.operator("scene.dev_create_lights_txt_summary")
         
         history_box = dev_box_column.box()
         history_box.label("XPlane2Blender Version History")
@@ -536,7 +538,7 @@ def lamp_layout(self, obj):
         row = layout.row()
         row.prop(obj.xplane, "size", text = "Size")
         row = layout.row()
-        row.label("Texture coordinates:")
+        row.label("Texture Coordinates:")
         row = layout.row()
         row.prop(obj.xplane, "uv", text = "")
         row = layout.row()

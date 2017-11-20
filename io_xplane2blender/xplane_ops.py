@@ -654,6 +654,7 @@ def addXPlaneOps():
     #bpy.utils.register_class(SCENE_OT_dev_export_to_current_dir)
     bpy.utils.register_class(SCENE_OT_dev_layer_names_from_objects)
     bpy.utils.register_class(SCENE_OT_dev_rerun_updater)
+    bpy.utils.register_class(SCENE_OT_dev_create_lights_txt_summary)
 
 # Function: removeXPlaneOps
 # Unregisters all Operators.
@@ -697,3 +698,4 @@ def removeXPlaneOps():
     #bpy.utils.unregister_class(SCENE_OT_dev_export_to_current_dir)
     bpy.utils.unregister_class(SCENE_OT_dev_layer_names_from_objects)
     bpy.utils.unregister_class(SCENE_OT_dev_rerun_updater)
+    bpy.utils.unregister_class(SCENE_OT_dev_create_lights_txt_summary)
