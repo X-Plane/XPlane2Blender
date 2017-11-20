@@ -91,7 +91,7 @@ class XPlaneLight(XPlaneObject):
             return
 
         self.lightOverload = xplane_lights_txt_parser.get_overload(self.lightName)
-        if self.lightOverload is None:
+        if self.lightOverload is None and (self.lightType == LIGHT_NAMED or self.lightType == LIGHT_PARAM):
             logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or update lights.txt" % self.lightName)
 
         if self.lightType == LIGHT_NAMED and self.lightOverload is not None:
