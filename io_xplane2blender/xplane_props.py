@@ -8,6 +8,7 @@ from io_xplane2blender import xplane_config
 from .xplane_constants import *
 
 from io_xplane2blender import xplane_helpers
+from io_xplane2blender.xplane_constants import VERSION_1100
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #
@@ -379,12 +380,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         default = False
     )
 
-    type = bpy.props.EnumProperty(
-        attr = "type",
-        name = "Manipulator Type",
-        description = "The type of the manipulator",
-        default = MANIP_DRAG_XY,
-        items = [
+    __type_items = [
             (MANIP_DRAG_XY,      "Drag XY",      "Drag XY"),
             (MANIP_DRAG_AXIS,    "Drag Axis",    "Drag Axis"),
             (MANIP_COMMAND,      "Command",      "Command"),
@@ -401,7 +397,29 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
             (MANIP_COMMAND_SWITCH_LEFT_RIGHT, "Command Switch Left Right (v10.50)", "Command Switch Left Right (requires at least v10.50)"),
             (MANIP_AXIS_SWITCH_UP_DOWN,       "Axis Switch Up Down (v10.50)",       "Axis Switch Up Down (requires at least v10.50)"),
             (MANIP_AXIS_SWITCH_LEFT_RIGHT,    "Axis Switch Left Right (v10.50)",    "Axis Switch Left Right (requires at least v10.50)")
+            ]
+
+    type = bpy.props.EnumProperty(
+        attr = "type",
+        name = "Manipulator Type",
+        description = "The type of the manipulator",
+        default = MANIP_DRAG_XY,
+        items = __type_items
+    )
+    
+    __type_v1100_items = [
+            (MANIP_AXIS_DETENT,                "Axis Detent",                 "Axis Detent (requires at least v11.00)"),
+            (MANIP_COMMAND_KNOB2,              "Command Knob 2",              "Command Knob 2 (requires at least v11.00)"),
+            (MANIP_COMMAND_SWITCH_LEFT_RIGHT2, "Command Switch Left Right 2", "Command Switch Left Right 2 (requires at least v11.00)"),
+            (MANIP_COMMAND_SWITCH_UP_DOWN2,    "Command Switch Up Down 2",    "Command Switch Up Down 2 (requires at least v11.00)"),
+            (MANIP_COMMAND_ROTATE_DRAG,        "Rotate Drag",                 "Rotate Drag (requires at least v11.00)")
         ]
+    
+    type_v1100 = bpy.props.EnumProperty(
+        name = "Manipulator Type",
+        description = "The type of the manipulator",
+        default = MANIP_COMMAND_KNOB2,
+        items = __type_items + __type_v1100_items
     )
 
     tooltip = bpy.props.StringProperty(

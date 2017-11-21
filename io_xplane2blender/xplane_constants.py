@@ -68,16 +68,16 @@ CONDITION_GLOBAL_LIGHTING = 'GLOBAL_LIGHTING'
 CONDITION_GLOBAL_SHADOWS = 'GLOBAL_SHADOWS'
 CONDITION_VERSION10 = 'VERSION10'
 
-MANIP_DRAG_XY = "drag_xy"
+MANIP_DRAG_XY   = "drag_xy"
 MANIP_DRAG_AXIS = "drag_axis"
-MANIP_COMMAND = "command"
+MANIP_COMMAND   = "command"
 MANIP_COMMAND_AXIS = "command_axis"
-MANIP_PUSH = "push"
-MANIP_RADIO = "radio"
-MANIP_DELTA = "delta"
-MANIP_WRAP = "wrap"
+MANIP_PUSH   = "push"
+MANIP_RADIO  = "radio"
+MANIP_DELTA  = "delta"
+MANIP_WRAP   = "wrap"
 MANIP_TOGGLE = "toggle"
-MANIP_NOOP = "noop"
+MANIP_NOOP   = "noop"
 
 #10.10 and greater manips
 MANIP_DRAG_AXIS_PIX             = "drag_axis_pix"
@@ -88,6 +88,13 @@ MANIP_AXIS_SWITCH_UP_DOWN       = "axis_switch_up_down"
 MANIP_COMMAND_KNOB              = "command_knob"
 MANIP_COMMAND_SWITCH_LEFT_RIGHT = "command_switch_left_right"
 MANIP_COMMAND_SWITCH_UP_DOWN    = "command_switch_up_down"
+
+#11.00 and greater manips
+MANIP_AXIS_DETENT                = "axis_detent"
+MANIP_COMMAND_KNOB2              = "command_knob2"
+MANIP_COMMAND_ROTATE_DRAG        = "rotate_drag"
+MANIP_COMMAND_SWITCH_LEFT_RIGHT2 = "command_switch_left_right2"
+MANIP_COMMAND_SWITCH_UP_DOWN2    = "command_switch_up_down2"
 
 MOUSE_WHEEL_MANIPULATORS = (
     MANIP_DRAG_XY,

@@ -776,14 +776,27 @@ def manipulator_layout(self, obj):
 
     if obj.xplane.manip.enabled:
         box = layout.box()
+
         xplane_version = int(bpy.context.scene.xplane.version)
-        box.prop(obj.xplane.manip, 'type', text="Type")
+        if xplane_version >= int(VERSION_1100):
+            box.prop(obj.xplane.manip, 'type_v1100', text="Type")
+            manipType = obj.xplane.manip.type_v1100
+        else:
+            box.prop(obj.xplane.manip, 'type', text="Type")
+            manipType = obj.xplane.manip.type
 
         box.prop(obj.xplane.manip, 'cursor', text="Cursor")
         box.prop(obj.xplane.manip, 'tooltip', text="Tooltip")
 
-        manipType = obj.xplane.manip.type
-        if manipType not in (MANIP_COMMAND, MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
+        if manipType not in (MANIP_COMMAND,
+                             MANIP_COMMAND_AXIS,
+                             MANIP_COMMAND_KNOB,
+                             MANIP_COMMAND_SWITCH_LEFT_RIGHT,
+                             MANIP_COMMAND_SWITCH_UP_DOWN,
+                             MANIP_COMMAND_KNOB2,
+                             MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
+                             MANIP_COMMAND_SWITCH_UP_DOWN2):
+
             if manipType != MANIP_DRAG_XY:
                 box.prop(obj.xplane.manip, 'dataref1')
                 box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
@@ -816,7 +829,14 @@ def manipulator_layout(self, obj):
             box.prop(obj.xplane.manip, 'v2')
         elif manipType == MANIP_COMMAND:
             box.prop(obj.xplane.manip, MANIP_COMMAND)
-        elif manipType in (MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
+        elif manipType in (MANIP_COMMAND,
+                           MANIP_COMMAND_AXIS,
+                           MANIP_COMMAND_KNOB,
+                           MANIP_COMMAND_SWITCH_LEFT_RIGHT,
+                           MANIP_COMMAND_SWITCH_UP_DOWN,
+                           MANIP_COMMAND_KNOB2,
+                           MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
+                           MANIP_COMMAND_SWITCH_UP_DOWN2):
             box.prop(obj.xplane.manip, 'positive_command')
             box.prop(obj.xplane.manip, 'negative_command')
         elif manipType == MANIP_PUSH:
