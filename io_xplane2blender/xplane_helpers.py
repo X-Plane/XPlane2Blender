@@ -289,6 +289,10 @@ class XPlaneLogger():
             'types': messageTypes
         })
 
+    def clear(self):
+        self.clearTransports()
+        self.clearMessages()
+
     def clearTransports(self):
         del self.transports[:]
 

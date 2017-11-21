@@ -170,6 +170,18 @@ LIGHT_NAMED = "named"
 LIGHT_CUSTOM = "custom"
 LIGHT_PARAM = "param"
 
+LOGGER_LEVEL_ERROR   = "error"
+LOGGER_LEVEL_INFO    = "info"
+LOGGER_LEVEL_SUCCESS = "success"
+LOGGER_LEVEL_WARN    = "warn"
+
+LOGGER_LEVELS_ALL = (
+    LOGGER_LEVEL_ERROR,
+    LOGGER_LEVEL_INFO,
+    LOGGER_LEVEL_SUCCESS,
+    LOGGER_LEVEL_WARN
+)
+
 #TODO: What is the point of these? Why duplicate this data from blenderObject?
 XPLANE_OBJECT_TYPE_PRIMITIVE = 'PRIMITIVE'
 XPLANE_OBJECT_TYPE_LIGHT = 'LIGHT'
