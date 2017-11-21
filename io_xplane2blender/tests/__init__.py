@@ -196,21 +196,6 @@ class XPlaneTestCase(unittest.TestCase):
     #def assertLoggerWarnings(self, expected_logger_warnings):    
     #    self.assertEqual(len(logger.findWarnings()), expected_logger_warnings)
     #    logger.clearMessages()
-
-    def exportLayer(self, layer, dest = None):
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
-
-        out = xplaneFile.write()
-
-        if dest:
-            tmpDir = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
-            tmpFile = os.path.join(tmpDir, dest + '.obj')
-            fh = open(tmpFile, 'w')
-            fh.write(out)
-            fh.close()
-
-        return out
-
     def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
         if not '--quiet' in sys.argv:
             print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
@@ -240,6 +225,34 @@ class XPlaneTestCase(unittest.TestCase):
                         self.assertEquals(expectedV, v, 'Attribute list value %d for "%s" is different' % (i, name))
             else:
                 self.assertEquals(expectedValue, value, 'Attribute "%s" is not equal' % name)
+
+    def exportLayer(self, layer, dest = None):
+        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+
+        out = xplaneFile.write()
+
+        if dest:
+            tmpDir = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
+            tmpFile = os.path.join(tmpDir, dest + '.obj')
+            fh = open(tmpFile, 'w')
+            fh.write(out)
+            fh.close()
+
+        return out
+
+    def exportXPlaneFileFromLayerIndex(self,layer):
+        #COPY-PASTA WARNING from xplane_file: 65-75
+        # What we need is an xplaneFile in the data model and interrupt
+        # the export before the xplane_file gets deleted when going out of scope
+        xplaneLayer = xplane_file.getXPlaneLayerForBlenderLayerIndex(layer)
+
+        assert xplaneLayer is not None
+        xplaneFile = xplane_file.XPlaneFile(xplane_file.getFilenameFromXPlaneLayer(xplaneLayer), xplaneLayer)
+
+        assert xplaneFile is not None
+        xplaneFile.collectFromBlenderLayerIndex(layer)
+
+        return xplaneFile
 
 class XPlaneAnimationTestCase(XPlaneTestCase):
     def setUp(self):
