@@ -833,12 +833,13 @@ def manipulator_layout(self, obj):
                            MANIP_COMMAND_AXIS,
                            MANIP_COMMAND_KNOB,
                            MANIP_COMMAND_SWITCH_LEFT_RIGHT,
-                           MANIP_COMMAND_SWITCH_UP_DOWN,
-                           MANIP_COMMAND_KNOB2,
-                           MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
-                           MANIP_COMMAND_SWITCH_UP_DOWN2):
+                           MANIP_COMMAND_SWITCH_UP_DOWN):
             box.prop(obj.xplane.manip, 'positive_command')
             box.prop(obj.xplane.manip, 'negative_command')
+        elif manipType in (MANIP_COMMAND_KNOB2,
+                           MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
+                           MANIP_COMMAND_SWITCH_UP_DOWN2):
+            box.prop(obj.xplane.manip, 'command')
         elif manipType == MANIP_PUSH:
             box.prop(obj.xplane.manip, 'v_down')
             box.prop(obj.xplane.manip, 'v_up')

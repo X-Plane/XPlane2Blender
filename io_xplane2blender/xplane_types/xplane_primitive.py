@@ -1,9 +1,10 @@
 import bpy
+from .xplane_attribute import XPlaneAttribute
+from .xplane_material import XPlaneMaterial
+from .xplane_object import XPlaneObject
 from ..xplane_config import getDebug
 from ..xplane_constants import *
-from .xplane_object import XPlaneObject
-from .xplane_material import XPlaneMaterial
-from .xplane_attribute import XPlaneAttribute
+from ..xplane_helpers import logger
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -134,6 +135,12 @@ class XPlanePrimitive(XPlaneObject):
                     manip.negative_command,
                     manip.tooltip
                 )
+            elif manipType in (MANIP_COMMAND_KNOB2, MANIP_COMMAND_SWITCH_UP_DOWN2, MANIP_COMMAND_SWITCH_LEFT_RIGHT2):
+                value = (
+                    manip.cursor,
+                    manip.command,
+                    manip.tooltip
+                )
             elif manipType == MANIP_PUSH:
                 value = (
                     manip.cursor,
@@ -182,6 +189,10 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
+            else:
+                msg = "Manipulator type %s is unknown or unimplemented" % manipType
+                logger.error(msg)
+                raise Exception(msg)
 
         else:
             attr = None
