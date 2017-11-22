@@ -89,10 +89,10 @@ MANIP_COMMAND_KNOB              = "command_knob"
 MANIP_COMMAND_SWITCH_LEFT_RIGHT = "command_switch_left_right"
 MANIP_COMMAND_SWITCH_UP_DOWN    = "command_switch_up_down"
 
-#11.00 and greater manips
+#11.10 and greater manips
 MANIP_AXIS_DETENT                = "axis_detent"
+MANIP_DRAG_ROTATE                = "drag_rotate"
 MANIP_COMMAND_KNOB2              = "command_knob2"
-MANIP_COMMAND_ROTATE_DRAG        = "rotate_drag"
 MANIP_COMMAND_SWITCH_LEFT_RIGHT2 = "command_switch_left_right2"
 MANIP_COMMAND_SWITCH_UP_DOWN2    = "command_switch_up_down2"
 
@@ -150,6 +150,7 @@ VERSION_1010 = "1010"
 VERSION_1040 = "1040"
 VERSION_1050 = "1050"
 VERSION_1100 = "1100"
+VERSION_1110 = "1110"
 
 SURFACE_TYPE_NONE = "none"
 SURFACE_TYPE_WATER = "water"

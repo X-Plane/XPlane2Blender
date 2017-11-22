@@ -73,7 +73,10 @@ class XPlanePrimitive(XPlaneObject):
         if self.blenderObject.xplane.manip.enabled:
             manip = self.blenderObject.xplane.manip
             xplane_version = int(bpy.context.scene.xplane.version)
-            manipType = manip.type
+            if xplane_version >= int(VERSION_1110):
+                manipType = manip.type_v1110
+            else:
+                manipType = manip.type
 
             attr += manipType
 

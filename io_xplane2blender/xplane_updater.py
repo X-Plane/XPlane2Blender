@@ -88,11 +88,11 @@ def __updateLocRot(obj,logger):
 
 
 def __updateManipulatorType(obj,logger):
-    if obj.xplane.manip.type_v1100:
+    if obj.xplane.manip.get("type_v1110"):
         logger.warn("v11 manipulator type is not empty, will be overwritten")
         
-    obj.xplane.manip.type_v1100 = obj.xplane.manip.type
-    logger.info("Copied %s from v9-v10 manipulator type to v11 manipulator type" % obj.xplane.manip.type)
+    obj.xplane.manip.type_v1110 = obj.xplane.manip.type
+    logger.info("Copied %s from v9-v10 manipulator type to v11.10 manipulator type" % obj.xplane.manip.type)
 
 # Function: update
 # Updates parts of the data model to ensure forward

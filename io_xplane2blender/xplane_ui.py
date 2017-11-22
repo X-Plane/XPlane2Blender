@@ -778,9 +778,9 @@ def manipulator_layout(self, obj):
         box = layout.box()
 
         xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= int(VERSION_1100):
-            box.prop(obj.xplane.manip, 'type_v1100', text="Type")
-            manipType = obj.xplane.manip.type_v1100
+        if xplane_version >= int(VERSION_1110):
+            box.prop(obj.xplane.manip, 'type_v1110', text="Type")
+            manipType = obj.xplane.manip.type_v1110
         else:
             box.prop(obj.xplane.manip, 'type', text="Type")
             manipType = obj.xplane.manip.type
@@ -860,6 +860,25 @@ def manipulator_layout(self, obj):
         # v1050: mouse wheel support
         if manipType in MOUSE_WHEEL_MANIPULATORS and xplane_version >= 1050:
             box.prop(obj.xplane.manip, 'wheel_delta')
+
+        if manipType == MANIP_DRAG_ROTATE:
+            box.prop(obj.xplane.manip, 'cursor')
+            box.prop(obj.xplane.manip, 'x')
+            box.prop(obj.xplane.manip, 'y')
+            box.prop(obj.xplane.manip, 'z')
+            box.prop(obj.xplane.manip, 'dx')
+            box.prop(obj.xplane.manip, 'dy')
+            box.prop(obj.xplane.manip, 'dz')
+            box.prop(obj.xplane.manip, 'angle1')
+            box.prop(obj.xplane.manip, 'angle2')
+            box.prop(obj.xplane.manip, 'v1_min')
+            box.prop(obj.xplane.manip, 'v1_max')
+            box.prop(obj.xplane.manip, 'dataref1')
+            box.prop(obj.xplane.manip, 'lift')
+            box.prop(obj.xplane.manip, 'v2_min')
+            box.prop(obj.xplane.manip, 'v2_max')
+            box.prop(obj.xplane.manip, 'dataref2')
+            box.prop(obj.xplane.manip, 'tooltip')
 
 # Function: conditions_layout
 # Draws the UI layout for conditions.

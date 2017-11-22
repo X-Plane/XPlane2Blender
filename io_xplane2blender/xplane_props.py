@@ -351,6 +351,7 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 # Properties:
 #   bool enabled - True if object is a manipulator
 #   enum type - Manipulator types as defined in OBJ specs.
+#   enum type_v1110 - Manipulator types including new v11.1x VR types
 #   string tooltip - Manipulator Tooltip
 #   enum cursor - Manipulator cursors as defined in OBJ specs.
 #   int dx - X-Drag axis length
@@ -407,19 +408,19 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         items = __type_items
     )
     
-    __type_v1100_items = [
-            (MANIP_AXIS_DETENT,                "Axis Detent",                 "Axis Detent (requires at least v11.00)"),
-            (MANIP_COMMAND_KNOB2,              "Command Knob 2",              "Command Knob 2 (requires at least v11.00)"),
-            (MANIP_COMMAND_SWITCH_LEFT_RIGHT2, "Command Switch Left Right 2", "Command Switch Left Right 2 (requires at least v11.00)"),
-            (MANIP_COMMAND_SWITCH_UP_DOWN2,    "Command Switch Up Down 2",    "Command Switch Up Down 2 (requires at least v11.00)"),
-            (MANIP_COMMAND_ROTATE_DRAG,        "Rotate Drag",                 "Rotate Drag (requires at least v11.00)")
+    __type_v1110_items = [
+            (MANIP_AXIS_DETENT,                "Axis Detent",                 "Axis Detent (requires at least v11.10)"),
+            (MANIP_COMMAND_KNOB2,              "Command Knob 2",              "Command Knob 2 (requires at least v11.10)"),
+            (MANIP_COMMAND_SWITCH_UP_DOWN2,    "Command Switch Up Down 2",    "Command Switch Up Down 2 (requires at least v11.10)"),
+            (MANIP_COMMAND_SWITCH_LEFT_RIGHT2, "Command Switch Left Right 2", "Command Switch Left Right 2 (requires at least v11.10)"),
+            (MANIP_DRAG_ROTATE,        "Drag Rotate",                 "Drag Rotate (requires at least v11.10)")
         ]
     
-    type_v1100 = bpy.props.EnumProperty(
+    type_v1110 = bpy.props.EnumProperty(
         name = "Manipulator Type",
         description = "The type of the manipulator",
         default = MANIP_COMMAND_KNOB2,
-        items = __type_items + __type_v1100_items
+        items = __type_items + __type_v1110_items
     )
 
     tooltip = bpy.props.StringProperty(
@@ -1084,14 +1085,15 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
-        default = VERSION_1100,
+        default = VERSION_1110,
         items = [
             (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
             (VERSION_1010, "10.1x", "10.1x"),
             (VERSION_1040, "10.4x", "10.4x"),
             (VERSION_1050, "10.5x", "10.5x"),
-            (VERSION_1100, "11.0x", "11.0x")
+            (VERSION_1100, "11.0x", "11.0x"),
+            (VERSION_1110, "11.1x", "11.1x")
         ]
     )
 
