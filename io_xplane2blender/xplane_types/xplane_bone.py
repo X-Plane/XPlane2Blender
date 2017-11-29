@@ -91,7 +91,6 @@ class XPlaneBone():
     #   bool - True if bone is animated, False if not.
     def isAnimated(self):
         return self.isDataRefAnimatedForTranslation() or self.isDataRefAnimatedForRotation()
-#       return (hasattr(self, 'animations') and len(self.animations) > 0)
 
     # Method: collectAnimations
     # Stores all animations in <animations>.
@@ -594,7 +593,6 @@ class XPlaneBone():
                     indent,
                     self.datarefs[dataref].loop
                 )
-								
         return o
 
     def _writeTranslationKeyframes(self, dataref):
@@ -636,39 +634,74 @@ class XPlaneBone():
 
         return o
 
-    def _writeAxisAngleRotationKeyframes(self, dataref):
+    def getAnimationAxes(self,keyframes):
+        axes = []
+        
+        rotationMode = keyframes[0].rotationMode
+        eulerAxisMap = {
+            'ZYX': (0, 1, 2),
+            'ZXY': (1, 0, 2),
+            'YZX': (0, 2, 1),
+            'YXZ': (2, 0, 1),
+            'XZY': (1, 2, 0),
+            'XYZ': (2, 1, 0)
+        }
+        
+        if rotationMode == 'QUATERNION':
+            for keyframe in keyframes:
+                axisAngle = keyframe.rotation.normalized().to_axis_angle()
+                keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
+                keyframe.rotationMode = "AXIS_ANGLE"
+            return self.getAnimationAxes(keyframes)
+
+        if rotationMode == 'AXIS_ANGLE':
+            refAxis    = None
+            refAxisInv = None
+            # find reference axis
+            for keyframe in keyframes:
+                rotation = keyframe.rotation
+                axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
+
+                if rotation[0] == 0:
+                    continue
+                elif refAxis == None:
+                    refAxis = axis
+                    refAxisInv = refAxis * -1
+                elif refAxis.x == axis.x and\
+                     refAxis.y == axis.y and\
+                     refAxis.z == axis.z:
+                    continue
+                elif refAxisInv.x == axis.x and\
+                     refAxisInv.y == axis.y and\
+                     refAxisInv.z == axis.z:
+                    keyframe.rotation = rotation * -1
+                else:
+                    self._axisAngleRotationKeyframesToEuler(keyframes)
+                    return self.getAnimationAxes(keyframes)
+
+            axes.append(refAxis)
+
+        if rotationMode in eulerAxisMap:
+            axes = eulerAxisMap[rotationMode]
+
+        assert len(axes) == 1 or len(axes) == 3
+        return axes
+
+    def _writeAxisAngleRotationKeyframes(self, dataref, keyframes):
         o = ''
         indent = self.getIndent()
         keyframes = self.animations[dataref]
         totalRot = 0
 
-        # our reference axis
-        refAxis = None
-        refAxisInv = None
+        # our reference axis (or axes)
+        axes = self.getAnimationAxes(keyframes)
 
-        # find reference axis
-        for keyframe in keyframes:
-            rotation = keyframe.rotation
-            axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
-
-            if rotation[0] == 0:
-                continue
-            elif refAxis == None:
-                refAxis = axis
-                refAxisInv = refAxis * -1
-            elif refAxis.x == axis.x and \
-                 refAxis.y == axis.y and \
-                 refAxis.z == axis.z:
-                continue
-            elif refAxisInv.x == axis.x and \
-                 refAxisInv.y == axis.y and \
-                 refAxisInv.z == axis.z:
-                keyframe.rotation = rotation * -1
-            else:
-                # decompose to eulers and return euler rotation instead
-                self._axisAngleRotationKeyframesToEuler(keyframes)
-                o = self._writeEulerRotationKeyframes(dataref)
-                return o
+        if len(axes) == 3:
+            # decompose to eulers and return euler rotation instead
+            o = self._writeEulerRotationKeyframes(dataref,keyframes)
+            return o
+        elif len(axes) == 1:
+            refAxis = axes[0]
 
         if refAxis == None:
             refAxis = mathutils.Vector((0, 0, 1))
@@ -700,33 +733,18 @@ class XPlaneBone():
 
         return o
 
-    def _writeQuaternionRotationKeyframes(self, dataref):
-        keyframes = self.animations[dataref]
+    def _writeQuaternionRotationKeyframes(self, dataref, keyframes):
+        # Writing axis angle will automatically convert quaternions to AA and write it
+        return self._writeAxisAngleRotationKeyframes(dataref, keyframes)
 
-        # convert rotations to axis angle
-        for keyframe in keyframes:
-            axisAngle = keyframe.rotation.normalized().to_axis_angle()
-            keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
-
-        # now simply write axis angle
-        return self._writeAxisAngleRotationKeyframes(dataref)
-
-    def _writeEulerRotationKeyframes(self, dataref):
+    def _writeEulerRotationKeyframes(self, dataref, keyframes):
+        #import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
+        #import pydevd;pydevd.settrace()
         debug = getDebug()
-        keyframes = self.animations[dataref]
         o = ''
         indent = self.getIndent()
-        rotationMode = keyframes[0].rotationMode
-        eulerAxisMap = {
-            'ZYX': (0, 1, 2),
-            'ZXY': (1, 0, 2),
-            'YZX': (0, 2, 1),
-            'YXZ': (2, 0, 1),
-            'XZY': (1, 2, 0),
-            'XYZ': (2, 1, 0)
-        }
+        axes = self.getAnimationAxes(keyframes)
         eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
-        axes = eulerAxisMap[rotationMode]
         totalRot = 0
 
         for axis in axes:
@@ -781,11 +799,11 @@ class XPlaneBone():
         rotationMode = keyframes[0].rotationMode
 
         if rotationMode == 'AXIS_ANGLE':
-            o += self._writeAxisAngleRotationKeyframes(dataref)
+            o += self._writeAxisAngleRotationKeyframes(dataref,keyframes)
         elif rotationMode == 'QUATERNION':
-            o += self._writeQuaternionRotationKeyframes(dataref)
+            o += self._writeQuaternionRotationKeyframes(dataref,keyframes)
         else:
-            o += self._writeEulerRotationKeyframes(dataref)
+            o += self._writeEulerRotationKeyframes(dataref,keyframes)
 
         return o
 
