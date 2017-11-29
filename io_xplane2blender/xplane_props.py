@@ -354,9 +354,15 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 #   enum type_v1110 - Manipulator types including new v11.1x VR types
 #   string tooltip - Manipulator Tooltip
 #   enum cursor - Manipulator cursors as defined in OBJ specs.
-#   int dx - X-Drag axis length
-#   int dy - Y-Drag axis length
-#   int dz - Z-Drag axis length
+# 
+#   float x - x co-ordinate of point of rotation
+#   float y - y co-ordinate of point of rotation
+#   float z - z co-ordinate of point of rotation
+
+#   float dx - X-Drag axis length
+#   float dy - Y-Drag axis length
+#   float dz - Z-Drag axis length
+#
 #   float v1 - Value 1
 #   float v2 - Value 2
 #   float v1_min - Value 1 min.
@@ -379,6 +385,24 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         name = "Manipulator",
         description = "If checked this object will be treated as a manipulator",
         default = False
+    )
+
+    angle1 = bpy.props.FloatProperty(
+            name = "Angle Range Start",
+            description = "The start of the range of angles the manipulator is allowed to rotate in (inclusive)",
+            default = 0.0
+    )
+
+    angle2 = bpy.props.FloatProperty(
+            name = "Angle Range End",
+            description = "The end of the range of angles the manipulator is allowed to rotate in (inclusive)",
+            default = 0.0
+    )
+
+    lift = bpy.props.FloatProperty(
+            name = "Detent Lift Distance",
+            description = "Lift (in meters) distance away from center of rotation when dataref2 is between v2 min/max",
+            default = 0.0
     )
 
     __type_items = [
@@ -624,6 +648,24 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         description = "Power of an exponential curve that controls the speed at which the dataref changes. Higher numbers cause a more “non-linear” response, where small drags are very precise and large drags are very fast",
         default = 1.0
     )
+
+    x = bpy.props.FloatProperty(
+            name = "X Of Rotation Point",
+            description = "The X coordinate of the rotation point",
+            default = 0.0
+            )
+
+    y = bpy.props.FloatProperty(
+            name = "Y Of Rotation Point",
+            description = "The Y coordinate of the rotation point",
+            default = 0.0
+            )
+
+    z = bpy.props.FloatProperty(
+            name = "Z Of Rotation Point",
+            description = "The Z coordinate of the rotation point",
+            default = 0.0
+            )
 
 # Class: XPlaneCockpitRegion
 # Defines settings for a cockpit region.

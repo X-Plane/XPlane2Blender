@@ -116,6 +116,26 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
+            elif manipType == MANIP_DRAG_ROTATE:
+                value = (
+                        manip.cursor,
+                        manip.x,  #getFromAnimationData, not UI
+                        manip.y,  #getFromAnimationData, not UI
+                        manip.z,  #getFromAnimationData, not UI
+                        manip.dx, #getFromAnimationData, not UI
+                        manip.dy, #getFromAnimationData, not UI
+                        manip.dz, #getFromAnimationData, not UI
+                        manip.angle1, #getFromAnimation, not UI
+                        manip.angle2, #getFromAnimation, not UI
+                        manip.lift, #getFromAnimation, not UI
+                        manip.v1_min,
+                        manip.v1_max,
+                        manip.v2_min,
+                        manip.v2_max,
+                        manip.dataref1,
+                        manip.dataref2,
+                        manip.tooltip
+                )
             elif manipType == MANIP_COMMAND:
                 value = (manip.cursor, manip.command, manip.tooltip)
             elif manipType == MANIP_COMMAND_AXIS:
@@ -227,6 +247,26 @@ class XPlanePrimitive(XPlaneObject):
         # if the file is a cockpit file write all cockpit attributes
         if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
             for attr in self.cockpitAttributes:
+                if attr == "ATTR_manip_drag_rotate":
+                    v = ('#' + attr,
+                        'cursor',
+                        'x',
+                        'y',
+                        'z',
+                        'dx',
+                        'dy',
+                        'dz',
+                        'angle1',
+                        'angle2',
+                        'lift',
+                        'v1min',
+                        'v1max',
+                        'v2min',
+                        'v2max',
+                        'dataref1',
+                        'dataref2',
+                        'tooltip')
+                    o += '\t'.join(v) +'\n'
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self)
 
         if self.indices[1] > self.indices[0]:
