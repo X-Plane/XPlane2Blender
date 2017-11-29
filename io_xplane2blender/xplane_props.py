@@ -354,10 +354,6 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 #   enum type_v1110 - Manipulator types including new v11.1x VR types
 #   string tooltip - Manipulator Tooltip
 #   enum cursor - Manipulator cursors as defined in OBJ specs.
-# 
-#   float x - x co-ordinate of point of rotation
-#   float y - y co-ordinate of point of rotation
-#   float z - z co-ordinate of point of rotation
 
 #   float dx - X-Drag axis length
 #   float dy - Y-Drag axis length
@@ -648,24 +644,6 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         description = "Power of an exponential curve that controls the speed at which the dataref changes. Higher numbers cause a more “non-linear” response, where small drags are very precise and large drags are very fast",
         default = 1.0
     )
-
-    x = bpy.props.FloatProperty(
-            name = "X Of Rotation Point",
-            description = "The X coordinate of the rotation point",
-            default = 0.0
-            )
-
-    y = bpy.props.FloatProperty(
-            name = "Y Of Rotation Point",
-            description = "The Y coordinate of the rotation point",
-            default = 0.0
-            )
-
-    z = bpy.props.FloatProperty(
-            name = "Z Of Rotation Point",
-            description = "The Z coordinate of the rotation point",
-            default = 0.0
-            )
 
 # Class: XPlaneCockpitRegion
 # Defines settings for a cockpit region.

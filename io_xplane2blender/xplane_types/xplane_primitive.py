@@ -117,11 +117,12 @@ class XPlanePrimitive(XPlaneObject):
                     manip.tooltip
                 )
             elif manipType == MANIP_DRAG_ROTATE:
+                rotation_origin = self.xplaneBone.getBlenderWorldMatrix().to_translation()
                 value = (
                         manip.cursor,
-                        manip.x,  #getFromAnimationData, not UI
-                        manip.y,  #getFromAnimationData, not UI
-                        manip.z,  #getFromAnimationData, not UI
+                        rotation_origin[0],
+                        rotation_origin[1],
+                        rotation_origin[2],
                         manip.dx, #getFromAnimationData, not UI
                         manip.dy, #getFromAnimationData, not UI
                         manip.dz, #getFromAnimationData, not UI
