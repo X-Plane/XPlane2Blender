@@ -620,78 +620,13 @@ class XPlaneBone():
 
         return o
 
-    def getAnimationAxes(self,dataref=None,keyframes=None):
-        assert (keyframes is not None and dataref is not None) or\
-               (keyframes is     None and dataref is     None)
-
-        axes = []
-
-        if keyframes is None and dataref is None:
-            assert len(self.animation.keys()) == 0
-            keyframes = self.animations[self.animations.keys()[0]]
- 
-        rotationMode = keyframes[0].rotationMode
-        
-        if rotationMode == 'QUATERNION':
-            for keyframe in keyframes:
-                axisAngle = keyframe.rotation.normalized().to_axis_angle()
-                keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
-                keyframe.rotationMode = "AXIS_ANGLE"
-            return self.getAnimationAxes(dataref,keyframes)
-
-        if rotationMode == 'AXIS_ANGLE':
-            refAxis    = None
-            refAxisInv = None
-            # find reference axis
-            for keyframe in keyframes:
-                rotation = keyframe.rotation
-                axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
-
-                if rotation[0] == 0:
-                    continue
-                elif refAxis == None:
-                    refAxis = axis
-                    refAxisInv = refAxis * -1
-                elif refAxis.x == axis.x and\
-                     refAxis.y == axis.y and\
-                     refAxis.z == axis.z:
-                    continue
-                elif refAxisInv.x == axis.x and\
-                     refAxisInv.y == axis.y and\
-                     refAxisInv.z == axis.z:
-                    keyframe.rotation = rotation * -1
-                else:
-                    return self.getAnimationAxes(dataref, keyframes.keyframesAsEuler())
-
-            axes.append(refAxis)
-
-        eulerAxisMap = {
-            'ZYX': (0, 1, 2),
-            'ZXY': (1, 0, 2),
-            'YZX': (0, 2, 1),
-            'YXZ': (2, 0, 1),
-            'XZY': (1, 2, 0),
-            'XYZ': (2, 1, 0)
-        }
-
-        if rotationMode in eulerAxisMap:
-            eulerAxesOrdering = eulerAxisMap[rotationMode]
-            eulerAxes = [(1.0,0.0,0.0),\
-                         (0.0,1.0,0.0),\
-                         (0.0,0.0,1.0)]
-            for axis in eulerAxesOrdering:
-                axes.append(eulerAxes[axis]) 
-
-        assert len(axes) == 1 or len(axes) == 3
-        return axes
-
     def _writeAxisAngleRotationKeyframes(self, dataref, keyframes):
         o = ''
         indent = self.getIndent()
         totalRot = 0
 
         # our reference axis (or axes)
-        axes = self.getAnimationAxes(dataref, keyframes)
+        axes = keyframes.getReferenceAxes()
 
         if len(axes) == 3:
             # decompose to eulers and return euler rotation instead
@@ -701,6 +636,7 @@ class XPlaneBone():
             refAxis = axes[0]
 
         if refAxis == None:
+            assert False
             refAxis = mathutils.Vector((0, 0, 1))
 
         o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
@@ -738,8 +674,7 @@ class XPlaneBone():
         debug = getDebug()
         o = ''
         indent = self.getIndent()
-        #import pydevd;pydevd.settrace()
-        axes = self.getAnimationAxes(dataref, keyframes)
+        axes = keyframes.getReferenceAxes()
         totalRot = 0
 
         eulerAxisMap = {

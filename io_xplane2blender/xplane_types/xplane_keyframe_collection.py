@@ -5,7 +5,9 @@ import bpy
 import mathutils
 
 # Class: XPlaneKeyframeCollection
-# A list of at least 2 XPlaneKeyframes
+#
+# A list of at least 2 XPlaneKeyframes. All keyframes should share the same dataref and
+# have the same rotation mode
 class XPlaneKeyframeCollection(MutableSequence):
     # Constructor: __init__
     #
@@ -43,6 +45,82 @@ class XPlaneKeyframeCollection(MutableSequence):
     def append(self, val):
         self.insert(len(self._list), val)
 
+    def getReferenceAxes(self,rotation_mode=None):
+        def _makeReferenceAxes(keyframes):
+            axes = []
+            rotationMode = keyframes.getRotationMode()
+            if rotationMode == 'QUATERNION':
+                return _makeReferenceAxes(keyframes.keyframesAsAA())
+
+            if rotationMode == 'AXIS_ANGLE':
+                refAxis    = None
+                refAxisInv = None
+                # find reference axis
+                for keyframe in keyframes:
+                    rotation = keyframe.rotation
+                    axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
+
+                    if rotation[0] == 0:
+                        continue
+                    elif refAxis == None:
+                        refAxis = axis
+                        refAxisInv = refAxis * -1
+                    elif refAxis.x == axis.x and\
+                         refAxis.y == axis.y and\
+                         refAxis.z == axis.z:
+                        continue
+                    elif refAxisInv.x == axis.x and\
+                         refAxisInv.y == axis.y and\
+                         refAxisInv.z == axis.z:
+                        keyframe.rotation = rotation * -1
+                    else:
+                        return _makeReferenceAxes(keyframes.keyframesAsEuler())
+
+                axes.append(refAxis)
+            else:
+                eulerAxisMap = {
+                    'ZYX': (0, 1, 2),
+                    'ZXY': (1, 0, 2),
+                    'YZX': (0, 2, 1),
+                    'YXZ': (2, 0, 1),
+                    'XZY': (1, 2, 0),
+                    'XYZ': (2, 1, 0)
+                }
+
+                try:
+                    eulerAxesOrdering = eulerAxisMap[rotationMode]
+                    eulerAxes = [mathutils.Vector((1.0,0.0,0.0)),\
+                                 mathutils.Vector((0.0,1.0,0.0)),\
+                                 mathutils.Vector((0.0,0.0,1.0))]
+                    for axis in eulerAxesOrdering:
+                        axes.append(eulerAxes[axis]) 
+                except:
+                    raise Exception("Rotation mode %s doesn't exist in eulerAxisMap" % (rotationMode))
+
+            assert len(axes) == 1 or len(axes) == 3
+            assert len([axis for axis in axes if not isinstance(axis,mathutils.Vector)]) == 0
+            return axes
+
+        if rotation_mode is None:
+            rotation_mode = self.getRotationMode()
+        
+        if rotation_mode == 'QUATERNION':
+            keyframes = self.keyframesAsQuaternion()
+        elif rotation_mode == 'AXIS_ANGLE':
+            keyframes = self.keyframesAsAA()
+        elif {'X','Y','Z'}  == set(rotation_mode):
+            keyframes = self.keyframesAsEuler()
+        else:
+            raise Exception("% is not a known rotation mode" % rotation_mode)
+
+        return  _makeReferenceAxes(keyframes)
+
+
+    def getAnimatedAxes(self):
+       axes = self.getReferenceAxes("XYZ") 
+       return axes
+
+
     def getDataref(self):
         return self._list[0].dataref
 
@@ -50,19 +128,37 @@ class XPlaneKeyframeCollection(MutableSequence):
         return self._list[0].rotationMode
 
     def keyframesAsAA(self):
+        #TODO: This copy operation still isn't enough
+        keyframes = copy.copy(self)
         if self.getRotationMode() == "AXIS_ANGLE":
-            return self.keyframes
+            return keyframes
         elif self.getRotationMode() == "QUATERNION":
-            return
+            for keyframe in keyframes:
+                axisAngle = keyframe.rotation.normalized().to_axis_angle()
+                keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
+                keyframe.rotationMode = "AXIS_ANGLE"
+            return keyframes
         else:
-            return
-        
-    def keyframesAsEuler(self):
-        if self.getRotationMode() == "AXIS_ANGLE":
-            keyframes = copy.copy(self._list)
             for keyframe in keyframes:
                 rotation = keyframe.rotation
-                axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
+                euler_axis = mathutils.Euler((rotation.x,rotation.y,rotation.z),rotation.order)
+                keyframe.rotationMode = "AXIS_ANGLE"
+
+                # Very annoyingly, to_axis_angle and blenderObject.rotation_axis_angle disagree
+                # about (angle, axis_x, axis_y, axis_z) vs (axis, (angle))
+                new_rotation = euler_axis.to_quaternion().to_axis_angle()
+                new_rotation_axis  = new_rotation[0]
+                new_rotation_angle = new_rotation[1]
+                keyframe.rotation = (new_rotation_angle, new_rotation_axis[0], new_rotation_axis[1], new_rotation_axis[2])
+
+            return keyframes
+        
+    def keyframesAsEuler(self):
+        keyframes = copy.copy(self)
+        if self.getRotationMode() == "AXIS_ANGLE":
+            for keyframe in keyframes:
+                rotation = keyframe.rotation
+                axis = mathutils.Vector((rotation[1:4]))
                 # Why the heck XZY?  Jonathan's 2.49 exporter decomposes Eulers using XYZ (because that is the ONLY
                 # decomposition available in 2.49), but it does so in X-Plane space.  So this is an axis renaming
                 # (since we alway work in Blender space) so that it comes out the same in X-Plane.
@@ -73,5 +169,8 @@ class XPlaneKeyframeCollection(MutableSequence):
         elif self.getRotationMode() == "QUATERNION":
             return
         else:
-            return
+            return keyframes
             
+    def keyframesAsQuaternion(self):
+        #TODO: implement
+        raise NotImplemented
