@@ -17,12 +17,12 @@ class XPlaneBone():
     #   blenderObject - Blender Object
     #   xplaneObject - <XPlaneObject>
     #   parent - (optional) parent <XPlaneAnimBone>
-    def __init__(self, blenderObject = None, xplaneObject = None, parent = None):
+    def __init__(self, blenderObject=None, xplaneObject=None, parent=None, xplaneFile=None):
         self.xplaneObject = xplaneObject
         self.blenderObject = blenderObject
         self.blenderBone = None
         self.parent = parent
-        self.xplaneFile = None
+        self.xplaneFile = xplaneFile
         self.children = []
 
         if self.xplaneObject:

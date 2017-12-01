@@ -151,8 +151,7 @@ class XPlaneFile():
                         blenderObjects.append(blenderObject)
 
         self.collectBlenderObjects(blenderObjects)
-        self.rootBone = XPlaneBone()
-        self.rootBone.xplaneFile = self
+        self.rootBone = XPlaneBone(None,None,None,self)
         self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
         # restore frame before export
@@ -225,15 +224,13 @@ class XPlaneFile():
             if blenderObject.name in self.objects:
                 xplaneObject = self.objects[blenderObject.name]
 
-            bone = XPlaneBone(blenderObject, xplaneObject, parentBone)
-            bone.xplaneFile = self
+            bone = XPlaneBone(blenderObject, xplaneObject, parentBone, self)
             parentBone.children.append(bone)
+            bone.collectAnimations()
 
             # xplaneObject is now complete and can collect all data
             if xplaneObject:
                 xplaneObject.collect()
-
-            bone.collectAnimations()
 
             # expand group objects to temporary objects
             if blenderObject.dupli_type == 'GROUP' and blenderObject.name not in self._resolvedBlenderGroupInstances:
@@ -265,8 +262,7 @@ class XPlaneFile():
             blenderBones = filter(boneFilter, blenderBones)
 
         for blenderBone in blenderBones:
-            bone = XPlaneBone(blenderArmature, None, parentBone)
-            bone.xplaneFile = self
+            bone = XPlaneBone(blenderArmature, None, parentBone,self)
             bone.blenderBone = blenderBone
             parentBone.children.append(bone)
 
@@ -315,8 +311,7 @@ class XPlaneFile():
 
         # setup root bone and root xplane object
         rootXPlaneObject = self.objects[blenderRootObject.name]
-        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject)
-        self.rootBone.xplaneFile = self
+        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject,None,self)
 
         # need to collect data
         rootXPlaneObject.collect()
