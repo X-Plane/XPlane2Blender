@@ -2,9 +2,10 @@
 # import math
 import mathutils
 import math
-from .xplane_keyframe import XPlaneKeyframe
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
+from .xplane_keyframe import XPlaneKeyframe
+from .xplane_keyframe_collection import XPlaneKeyframeCollection
 
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
@@ -33,7 +34,7 @@ class XPlaneBone():
         if self.parent:
             self.level = self.parent.level + 1
 
-        # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframes>.
+        # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
         self.animations = {}
 
         # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
@@ -157,7 +158,6 @@ class XPlaneBone():
 
                     if len(fcurve.keyframe_points) > 1:
                         # time to add dataref to animations
-                        self.animations[dataref] = []
 
                         if bone:
                             self.datarefs[dataref] = bone.xplane.datarefs[index]
@@ -167,15 +167,13 @@ class XPlaneBone():
                         # store keyframes temporary, so we can resort them
                         keyframes = []
 
-                        for keyframe in fcurve.keyframe_points:
+                        for i,keyframe in enumerate(fcurve.keyframe_points):
                             logger.info("\t\t adding keyframe: %6.3f" % keyframe.co[0])
-                            keyframes.append(keyframe)
+                            keyframes.append(XPlaneKeyframe(keyframe,i,dataref,self))
 
                         # sort keyframes by frame number
-                        keyframesSorted = sorted(keyframes, key = lambda keyframe: keyframe.co[0])
-
-                        for i in range(0, len(keyframesSorted)):
-                            self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i], i, dataref, self))
+                        keyframesSorted = sorted(keyframes, key = lambda keyframe: keyframe.index)
+                        self.animations[dataref] = XPlaneKeyframeCollection(keyframesSorted)
 
     def getName(self):
         if self.blenderBone:
@@ -429,17 +427,6 @@ class XPlaneBone():
     def __str__(self):
         return self.toString()
 
-    def _axisAngleRotationKeyframesToEuler(self, keyframes):
-        for keyframe in keyframes:
-            rotation = keyframe.rotation
-            axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
-			# Why the heck XZY?  Jonathan's 2.49 exporter decomposes Eulers using XYZ (because that is the ONLY
-			# decomposition available in 2.49), but it does so in X-Plane space.  So this is an axis renaming
-			# (since we alway work in Blender space) so that it comes out the same in X-Plane.
-            keyframe.rotationMode = 'XZY'
-            keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XZY')
-
-        return keyframes
 
     def writeAnimationPrefix(self):
         debug = getDebug()
@@ -490,7 +477,6 @@ class XPlaneBone():
         if isAnimated:# and postMatrix is not preMatrix:
             # write out static translations of bake
             bakeMatrix = self.getBakeMatrixForMyAnimations()
-    
             o += self._writeStaticTranslation(bakeMatrix)
             o += self._writeStaticRotation(bakeMatrix)
 
@@ -675,8 +661,7 @@ class XPlaneBone():
                      refAxisInv.z == axis.z:
                     keyframe.rotation = rotation * -1
                 else:
-                    self._axisAngleRotationKeyframesToEuler(keyframes)
-                    return self.getAnimationAxes(dataref, keyframes)
+                    return self.getAnimationAxes(dataref, keyframes.keyframesAsEuler())
 
             axes.append(refAxis)
 
@@ -766,8 +751,6 @@ class XPlaneBone():
             'XYZ': (2, 1, 0)
         }
         for axis,order in zip(axes,eulerAxisMap[keyframes[0].rotationMode]):
-            print(axis)
-            print(order)
             ao = ''
             totalAxisRot = 0
 
