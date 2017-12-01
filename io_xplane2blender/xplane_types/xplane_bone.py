@@ -634,25 +634,24 @@ class XPlaneBone():
 
         return o
 
-    def getAnimationAxes(self,keyframes):
+    def getAnimationAxes(self,dataref=None,keyframes=None):
+        assert (keyframes is not None and dataref is not None) or\
+               (keyframes is     None and dataref is     None)
+
         axes = []
-        
+
+        if keyframes is None and dataref is None:
+            assert len(self.animation.keys()) == 0
+            keyframes = self.animations[self.animations.keys()[0]]
+ 
         rotationMode = keyframes[0].rotationMode
-        eulerAxisMap = {
-            'ZYX': (0, 1, 2),
-            'ZXY': (1, 0, 2),
-            'YZX': (0, 2, 1),
-            'YXZ': (2, 0, 1),
-            'XZY': (1, 2, 0),
-            'XYZ': (2, 1, 0)
-        }
         
         if rotationMode == 'QUATERNION':
             for keyframe in keyframes:
                 axisAngle = keyframe.rotation.normalized().to_axis_angle()
                 keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
                 keyframe.rotationMode = "AXIS_ANGLE"
-            return self.getAnimationAxes(keyframes)
+            return self.getAnimationAxes(dataref,keyframes)
 
         if rotationMode == 'AXIS_ANGLE':
             refAxis    = None
@@ -677,12 +676,26 @@ class XPlaneBone():
                     keyframe.rotation = rotation * -1
                 else:
                     self._axisAngleRotationKeyframesToEuler(keyframes)
-                    return self.getAnimationAxes(keyframes)
+                    return self.getAnimationAxes(dataref, keyframes)
 
             axes.append(refAxis)
 
+        eulerAxisMap = {
+            'ZYX': (0, 1, 2),
+            'ZXY': (1, 0, 2),
+            'YZX': (0, 2, 1),
+            'YXZ': (2, 0, 1),
+            'XZY': (1, 2, 0),
+            'XYZ': (2, 1, 0)
+        }
+
         if rotationMode in eulerAxisMap:
-            axes = eulerAxisMap[rotationMode]
+            eulerAxesOrdering = eulerAxisMap[rotationMode]
+            eulerAxes = [(1.0,0.0,0.0),\
+                         (0.0,1.0,0.0),\
+                         (0.0,0.0,1.0)]
+            for axis in eulerAxesOrdering:
+                axes.append(eulerAxes[axis]) 
 
         assert len(axes) == 1 or len(axes) == 3
         return axes
@@ -690,11 +703,10 @@ class XPlaneBone():
     def _writeAxisAngleRotationKeyframes(self, dataref, keyframes):
         o = ''
         indent = self.getIndent()
-        keyframes = self.animations[dataref]
         totalRot = 0
 
         # our reference axis (or axes)
-        axes = self.getAnimationAxes(keyframes)
+        axes = self.getAnimationAxes(dataref, keyframes)
 
         if len(axes) == 3:
             # decompose to eulers and return euler rotation instead
@@ -738,29 +750,38 @@ class XPlaneBone():
         return self._writeAxisAngleRotationKeyframes(dataref, keyframes)
 
     def _writeEulerRotationKeyframes(self, dataref, keyframes):
-        #import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-        #import pydevd;pydevd.settrace()
         debug = getDebug()
         o = ''
         indent = self.getIndent()
-        axes = self.getAnimationAxes(keyframes)
-        eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
+        #import pydevd;pydevd.settrace()
+        axes = self.getAnimationAxes(dataref, keyframes)
         totalRot = 0
 
-        for axis in axes:
+        eulerAxisMap = {
+            'ZYX': (0, 1, 2),
+            'ZXY': (1, 0, 2),
+            'YZX': (0, 2, 1),
+            'YXZ': (2, 0, 1),
+            'XZY': (1, 2, 0),
+            'XYZ': (2, 1, 0)
+        }
+        for axis,order in zip(axes,eulerAxisMap[keyframes[0].rotationMode]):
+            print(axis)
+            print(order)
             ao = ''
             totalAxisRot = 0
 
             ao += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
                 indent,
-                floatToStr(eulerAxes[axis][0]),
-                floatToStr(eulerAxes[axis][2]),
-                floatToStr(-eulerAxes[axis][1]),
+                floatToStr(axis[0]),
+                floatToStr(axis[2]),
+                floatToStr(-axis[1]),
                 dataref
             )
 
+
             for keyframe in keyframes:
-                deg = math.degrees(keyframe.rotation[axis])
+                deg = math.degrees(keyframe.rotation[order])
                 totalRot += abs(deg)
                 totalAxisRot += abs(deg)
 
