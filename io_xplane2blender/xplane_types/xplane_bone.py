@@ -677,15 +677,7 @@ class XPlaneBone():
         axes = keyframes.getReferenceAxes()
         totalRot = 0
 
-        eulerAxisMap = {
-            'ZYX': (0, 1, 2),
-            'ZXY': (1, 0, 2),
-            'YZX': (0, 2, 1),
-            'YXZ': (2, 0, 1),
-            'XZY': (1, 2, 0),
-            'XYZ': (2, 1, 0)
-        }
-        for axis,order in zip(axes,eulerAxisMap[keyframes[0].rotationMode]):
+        for axis,order in zip(axes,XPlaneKeyframeCollection.EULER_AXIS_ORDERING[keyframes[0].rotationMode]):
             ao = ''
             totalAxisRot = 0
 

@@ -9,6 +9,15 @@ import mathutils
 # A list of at least 2 XPlaneKeyframes. All keyframes should share the same dataref and
 # have the same rotation mode
 class XPlaneKeyframeCollection(MutableSequence):
+    EULER_AXIS_ORDERING = {
+        'ZYX': (0, 1, 2),
+        'ZXY': (1, 0, 2),
+        'YZX': (0, 2, 1),
+        'YXZ': (2, 0, 1),
+        'XZY': (1, 2, 0),
+        'XYZ': (2, 1, 0)
+    }
+
     # Constructor: __init__
     #
     # Parameters:
@@ -78,17 +87,9 @@ class XPlaneKeyframeCollection(MutableSequence):
 
                 axes.append(refAxis)
             else:
-                eulerAxisMap = {
-                    'ZYX': (0, 1, 2),
-                    'ZXY': (1, 0, 2),
-                    'YZX': (0, 2, 1),
-                    'YXZ': (2, 0, 1),
-                    'XZY': (1, 2, 0),
-                    'XYZ': (2, 1, 0)
-                }
 
                 try:
-                    eulerAxesOrdering = eulerAxisMap[rotationMode]
+                    eulerAxesOrdering = self.EULER_AXIS_ORDERING[rotationMode]
                     eulerAxes = [mathutils.Vector((1.0,0.0,0.0)),\
                                  mathutils.Vector((0.0,1.0,0.0)),\
                                  mathutils.Vector((0.0,0.0,1.0))]
@@ -115,11 +116,23 @@ class XPlaneKeyframeCollection(MutableSequence):
 
         return  _makeReferenceAxes(keyframes)
 
-
-    def getAnimatedAxes(self):
-       axes = self.getReferenceAxes("XYZ") 
-       return axes
-
+    #Returns a list of tuples of axis, total degrees rotated, and list of rotation values
+    # [(axis,total_deg_rotated,[rotations]),...]
+    def getRotationValues(self):
+        axes = self.getReferenceAxes()
+        value = []
+        if self.getRotationMode() == "AXIS_ANGLE" or\
+           self.getRotationMode() == "QUATERNION":
+            rotations = [key.rotation[0] for key in self]
+            value.append((axes[0], sum(rotations), rotations))
+            return value
+        else:
+            for axis,order in zip(axes,self.EULER_AXIS_ORDERING[self.getRotationMode()]):
+                rotations = []
+                for keyframe in self:
+                    rotations.append(keyframe.rotation[order]) 
+                value.append((axis, sum(rotations), rotations))
+            return value
 
     def getDataref(self):
         return self._list[0].dataref
@@ -172,5 +185,14 @@ class XPlaneKeyframeCollection(MutableSequence):
             return keyframes
             
     def keyframesAsQuaternion(self):
-        #TODO: implement
-        raise NotImplemented
+        keyframes = copy.copy(self)
+        if self.getRotationMode() == "AXIS_ANGLE":
+            for keyframe in keyframes:
+                rotation = keyframe.rotation
+                keyframe.rotation = mathutils.Quaternion(*rotation[0:4])
+                keyframe.rotationMode = "QUATERNION"
+        elif self.getRotationMode() == "QUATERNION":
+            return keyframes
+        else:
+            return
+    

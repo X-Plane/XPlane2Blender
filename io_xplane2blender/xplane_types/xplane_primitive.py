@@ -118,17 +118,17 @@ class XPlanePrimitive(XPlaneObject):
                 )
             elif manipType == MANIP_DRAG_ROTATE:
                 rotation_origin = self.xplaneBone.getBlenderWorldMatrix().to_translation()
-                #1. Figure out if something is animated on multiple axis
-                rotation_axes   = self.xplaneBone.animations[\
-                                                             list(self.xplaneBone.datarefs.keys())[0]\
-                                                             ].getReferenceAxes("AXIS_ANGLE")
+                keyframe_col = self.xplaneBone.animations[list(self.xplaneBone.datarefs.keys())[0]]
+                keyframe_col = keyframe_col.keyframesAsAA()
+                rotation_axes = keyframe_col.getReferenceAxes()
                 if len(rotation_axes) > 1:
                     logger.error("Drag rotate manipulator cannot be rotate around more than one axis")
                     #TODO add in more message suggesting changing Euler to AA, or not animiating Axis
                 rotation_axis = rotation_axes[0]
                     
                 assert rotation_axes
-                
+                rotation_values = sorted(keyframe_col.getRotationValues()[0][2])
+
                 value = (
                         manip.cursor,
                         rotation_origin[0],
@@ -137,8 +137,8 @@ class XPlanePrimitive(XPlaneObject):
                         rotation_axis[0],
                         rotation_axis[1],
                         rotation_axis[2],
-                        manip.angle1, #getFromAnimation, not UI
-                        manip.angle2, #getFromAnimation, not UI
+                        math.degrees(rotation_values[0]),
+                        math.degrees(rotation_values[-1]),
                         manip.lift, #getFromAnimation, not UI
                         manip.v1_min,
                         manip.v1_max,
