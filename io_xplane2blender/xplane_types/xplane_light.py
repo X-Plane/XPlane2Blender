@@ -90,7 +90,11 @@ class XPlaneLight(XPlaneObject):
             logger.error("lights.txt file could not be parsed")
             return
 
-        self.lightOverload = xplane_lights_txt_parser.get_overload(self.lightName)
+        if self.lightType != LIGHT_CUSTOM:
+            self.lightOverload = xplane_lights_txt_parser.get_overload(self.lightName)
+        else:
+            self.lightOverload = None
+
         if self.lightOverload is None and (self.lightType == LIGHT_NAMED or self.lightType == LIGHT_PARAM):
             logger.warn("Light name %s is not a known light name, no autocorrection will occur. Check spelling or update lights.txt" % self.lightName)
 
