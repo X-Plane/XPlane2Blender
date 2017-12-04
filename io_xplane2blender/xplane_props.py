@@ -383,18 +383,6 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         default = False
     )
 
-    angle1 = bpy.props.FloatProperty(
-            name = "Angle Range Start",
-            description = "The start of the range of angles the manipulator is allowed to rotate in (inclusive)",
-            default = 0.0
-    )
-
-    angle2 = bpy.props.FloatProperty(
-            name = "Angle Range End",
-            description = "The end of the range of angles the manipulator is allowed to rotate in (inclusive)",
-            default = 0.0
-    )
-
     lift = bpy.props.FloatProperty(
             name = "Detent Lift Distance",
             description = "Lift (in meters) distance away from center of rotation when dataref2 is between v2 min/max",
@@ -476,27 +464,6 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
             (MANIP_CURSOR_RIGHT,                "Right",               "Right"),
             (MANIP_CURSOR_ARROW,                "Arrow",               "Arrow"),
         ]
-    )
-
-    dx = bpy.props.FloatProperty(
-        attr = "dx",
-        name = "Drag X",
-        description = "X-Drag axis length",
-        default = 0.0
-    )
-
-    dy = bpy.props.FloatProperty(
-        attr = "dy",
-        name = "Drag Y",
-        description = "Y-Drag axis length",
-        default = 0.0
-    )
-
-    dz = bpy.props.FloatProperty(
-        attr = "dz",
-        name = "Drag Z",
-        description = "Z-Drag axis length",
-        default = 0.0
     )
 
     v1 = bpy.props.FloatProperty(

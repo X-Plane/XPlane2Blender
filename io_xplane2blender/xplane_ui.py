@@ -864,11 +864,6 @@ def manipulator_layout(self, obj):
 
         if manipType == MANIP_DRAG_ROTATE:
             box.prop(obj.xplane.manip, 'cursor')
-            box.prop(obj.xplane.manip, 'dx')
-            box.prop(obj.xplane.manip, 'dy')
-            box.prop(obj.xplane.manip, 'dz')
-            box.prop(obj.xplane.manip, 'angle1')
-            box.prop(obj.xplane.manip, 'angle2')
             box.prop(obj.xplane.manip, 'v1_min')
             box.prop(obj.xplane.manip, 'v1_max')
             box.prop(obj.xplane.manip, 'dataref1')
