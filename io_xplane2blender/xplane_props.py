@@ -466,6 +466,27 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         ]
     )
 
+    dx = bpy.props.FloatProperty(
+        attr = "dx",
+        name = "Drag X",
+        description = "X-Drag axis length",
+        default = 0.0
+    )
+
+    dy = bpy.props.FloatProperty(
+        attr = "dy",
+        name = "Drag Y",
+        description = "Y-Drag axis length",
+        default = 0.0
+    )
+
+    dz = bpy.props.FloatProperty(
+        attr = "dz",
+        name = "Drag Z",
+        description = "Z-Drag axis length",
+        default = 0.0
+    )
+
     v1 = bpy.props.FloatProperty(
         attr = "v1",
         name = "Value 1",
