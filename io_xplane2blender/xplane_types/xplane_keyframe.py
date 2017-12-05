@@ -38,7 +38,6 @@ class XPlaneKeyframe():
     def __init__(self, keyframe, index, dataref, xplaneBone):
         self.value = keyframe.co[1]
         self.dataref = dataref
-        self.translation = [0.0,0.0,0.0]
         self.rotation = [0.0,0.0,0.0]
         self.scale = [0.0,0.0,0.0]
         self.index = index

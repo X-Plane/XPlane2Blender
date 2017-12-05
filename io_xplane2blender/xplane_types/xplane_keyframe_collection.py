@@ -133,6 +133,9 @@ class XPlaneKeyframeCollection(MutableSequence):
                     rotations.append(keyframe.rotation[order]) 
                 value.append((axis, sum(rotations), rotations))
             return value
+    
+    def getTranslationValues(self):
+        return [keyframe.location for keyframe in self]
 
     def getDataref(self):
         return self._list[0].dataref

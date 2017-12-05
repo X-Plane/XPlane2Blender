@@ -1,3 +1,5 @@
+import math
+
 import bpy
 from .xplane_attribute import XPlaneAttribute
 from .xplane_material import XPlaneMaterial
@@ -5,6 +7,7 @@ from .xplane_object import XPlaneObject
 from ..xplane_config import getDebug
 from ..xplane_constants import *
 from ..xplane_helpers import logger
+import io_xplane2blender.xplane_types
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -37,7 +40,10 @@ class XPlanePrimitive(XPlaneObject):
         self.type = XPLANE_OBJECT_TYPE_PRIMITIVE
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
-        self.faces = None
+
+        #TODO: If it is currently unused, then maybe we shouldn't have it!
+        # To qoute: "You aren't going to need it!
+        self.faces = None 
 
         self.getWeight()
 
@@ -117,18 +123,55 @@ class XPlanePrimitive(XPlaneObject):
                     manip.tooltip
                 )
             elif manipType == MANIP_DRAG_ROTATE:
-                rotation_origin = self.xplaneBone.getBlenderWorldMatrix().to_translation()
-                keyframe_col = self.xplaneBone.animations[list(self.xplaneBone.datarefs.keys())[0]]
-                keyframe_col = keyframe_col.keyframesAsAA()
-                rotation_axes = keyframe_col.getReferenceAxes()
-                if len(rotation_axes) > 1:
-                    logger.error("Drag rotate manipulator cannot be rotate around more than one axis")
-                    #TODO add in more message suggesting changing Euler to AA, or not animiating Axis
-                rotation_axis = rotation_axes[0]
-                    
-                assert rotation_axes
-                rotation_values = sorted(keyframe_col.getRotationValues()[0][2])
+                #1. Are we the leaf with translation datarefs and a rotating parent
+                #2. Are we the leaf with rotations and it doesn't matter what the parent is?
+                rotation_bone = None
+                translation_bone = None
 
+                lift_at_max = 0.0 
+                if len(self.xplaneBone.children) > 0:
+                    logger.error("drag rotate manipulator must be a leaf mesh")
+                    return
+                elif self.xplaneBone.isDataRefAnimatedForTranslation():
+                    if self.xplaneBone.parent is None or not self.xplaneBone.parent.isDataRefAnimatedForRotation():
+                        logger.error("drag rotate manipulator has detent component, but no parent with rotation")
+                        return
+                    else: 
+                        rotation_bone = self.xplaneBone.parent
+                        
+                        translation_bone = self.xplaneBone
+                        if len(translation_bone.animations) == 1:
+                            keyframe_col = next(iter(translation_bone.animations.values()))
+                        else:
+                            logger.error("drag rotate manipulator cannot be driven by more than one datarefs cannot have more than 1 dataref")
+                            return
+
+                        translation_values = keyframe_col.getTranslationValues()
+                        if len(translation_values) == 2:
+                            lift_at_max = (translation_values[1] - translation_values[0]).magnitude
+                        else:
+                            logger.error("drag rotate manipulator does not have exactly two keyframes for it's movement")
+                            return
+                elif self.xplaneBone.isDataRefAnimatedForRotation():
+                    rotation_bone = self.xplaneBone
+                
+                rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
+                if len(rotation_bone.animations) == 1:
+                    keyframe_col_parent = next(iter(rotation_bone.animations.values())).keyframesAsAA()
+                    rotation_axes = keyframe_col_parent.getReferenceAxes()
+                    if len(rotation_axes) > 1:
+                        logger.error("Drag rotate manipulator cannot be rotate around more than one axis")
+                        #TODO add in more message suggesting changing Euler to AA, or not animiating Axis
+                    rotation_axis = rotation_axes[0]
+
+                    assert rotation_axes
+                    rotation_values = sorted(keyframe_col.getRotationValues()[0][2])
+                    dref2 = "none" if manip.dataref2.strip() == "" else manip.dataref2
+                else:
+                    logger.error("drag rotate manipulator parent rotation bone cannot be driven by more than one dataref")
+                    return
+
+                    
                 value = (
                         manip.cursor,
                         rotation_origin[0],
@@ -139,13 +182,13 @@ class XPlanePrimitive(XPlaneObject):
                         rotation_axis[2],
                         math.degrees(rotation_values[0]),
                         math.degrees(rotation_values[-1]),
-                        manip.lift, #getFromAnimation, not UI
+                        lift_at_max,
                         manip.v1_min,
                         manip.v1_max,
                         manip.v2_min,
                         manip.v2_max,
-                        manip.dataref1,
-                        manip.dataref2,
+                        manip.dataref1, #TODO warning if dataref1 is empty?
+                        dref2,
                         manip.tooltip
                 )
             elif manipType == MANIP_COMMAND:

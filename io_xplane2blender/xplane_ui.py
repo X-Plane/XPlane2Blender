@@ -867,7 +867,6 @@ def manipulator_layout(self, obj):
             box.prop(obj.xplane.manip, 'v1_min')
             box.prop(obj.xplane.manip, 'v1_max')
             box.prop(obj.xplane.manip, 'dataref1')
-            box.prop(obj.xplane.manip, 'lift')
             box.prop(obj.xplane.manip, 'v2_min')
             box.prop(obj.xplane.manip, 'v2_max')
             box.prop(obj.xplane.manip, 'dataref2')
