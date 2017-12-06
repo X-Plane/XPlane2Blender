@@ -2,6 +2,7 @@
 # Defines Helpers
 
 import bpy
+import mathutils
 
 import datetime
 from datetime import timezone
@@ -58,6 +59,11 @@ def resolveBlenderPath(path):
         return path
  
 
+def vec_b_to_x(v):
+    return mathutils.Vector((v.x, v.z, -v.y))
+
+def vec_x_to_b(v):
+    return mathutils.Vector((v.x, -v.z, v.y))
 # This is a convience struct to help prevent people from having to repeateld copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():

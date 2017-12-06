@@ -8,6 +8,7 @@ from ..xplane_config import getDebug
 from ..xplane_constants import *
 from ..xplane_helpers import logger
 import io_xplane2blender.xplane_types
+from io_xplane2blender import xplane_helpers
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -165,21 +166,22 @@ class XPlanePrimitive(XPlaneObject):
                     rotation_axis = rotation_axes[0]
 
                     assert rotation_axes
-                    rotation_values = sorted(keyframe_col.getRotationValues()[0][2])
+                    rotation_values = sorted(keyframe_col_parent.getRotationValues()[0][2])
                     dref2 = "none" if manip.dataref2.strip() == "" else manip.dataref2
                 else:
                     logger.error("drag rotate manipulator parent rotation bone cannot be driven by more than one dataref")
                     return
 
-                    
+                rotation_origin_x = xplane_helpers.vec_b_to_x(rotation_origin)
+                rotation_axis_x   = xplane_helpers.vec_b_to_x(rotation_axis)
                 value = (
                         manip.cursor,
-                        rotation_origin[0],
-                        rotation_origin[1],
-                        rotation_origin[2],
-                        rotation_axis[0],
-                        rotation_axis[1],
-                        rotation_axis[2],
+                        rotation_origin_x[0],
+                        rotation_origin_x[1],
+                        rotation_origin_x[2],
+                        rotation_axis_x[0],
+                        rotation_axis_x[1],
+                        rotation_axis_x[2],
                         math.degrees(rotation_values[0]),
                         math.degrees(rotation_values[-1]),
                         lift_at_max,
