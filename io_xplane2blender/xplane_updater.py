@@ -88,11 +88,9 @@ def __updateLocRot(obj,logger):
 
 
 def __updateManipulatorType(obj,logger):
-    if obj.xplane.manip.get("type_v1110"):
-        logger.warn("v11 manipulator type is not empty, will be overwritten")
-        
-    obj.xplane.manip.type_v1110 = obj.xplane.manip.type
-    logger.info("Copied %s from v9-v10 manipulator type to v11.10 manipulator type" % obj.xplane.manip.type)
+    if obj.xplane.manip.get("type_v1110") is None:
+        obj.xplane.manip.type_v1110 = obj.xplane.manip.type
+        logger.info("Copied %s from v9-v10 manipulator type to v11.10 manipulator type" % obj.xplane.manip.type)
 
 # Function: update
 # Updates parts of the data model to ensure forward
@@ -136,7 +134,7 @@ def update(last_version,logger):
         for obj in bpy.data.objects:
             __updateLocRot(obj,logger)
 
-    #TODO, there has to be a better way to compare these without know the future of when a build will happen...
+    #TODO, there has to be a better way to compare these without knowing the future of when a build will happen...
     if last_version < xplane_helpers.VerStruct((3,4,0),xplane_constants.BUILD_TYPE_BETA,7,2):
         for obj in bpy.data.objects:
             __updateManipulatorType(obj, logger)

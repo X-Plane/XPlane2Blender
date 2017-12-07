@@ -41,6 +41,8 @@ is a great way to RUIN EVERYTHING. Re-arranging the items list requires great ca
 
 - Main documentation: https://docs.blender.org/api/current/bpy.props.html?highlight=bpy%20props%20prop#module-bpy.props
 
+- Make sure to increment the CURRENT_DATA_MODEL_VERSION number in xplane_config
+
 - The attr member does not appear to be necessary or have an effect on the program. Future props should not use it. Otherwise, I'd like to
 see them culled over time
 
@@ -48,6 +50,8 @@ see them culled over time
  
 - Name is in the form of "Title Case Always", description is "Sentence case, no period". Don't be lazy and just copy and paste the constant name for all three columns.
 A good deal of time was spent making the UI look pretty for 3.4.0 so please don't undo that overtime
+
+- Please organize new properties by alphabetical order instead of how they'll appear in the UI
 
 - If you've actually read this far, congratulations! You get a cookie!
 
@@ -137,7 +141,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     #
     # Passing nothing in results in no change
     #
-    # Warning! Do not directly modify scene.xplane.xplane2blender without knowing EXACTLY what you're doing!
+    # Warning! Do not directly modify scene.xplane.xplane2blender_ver without knowing EXACTLY what you're doing!
     # It will break the ability to get a current version from xplane2blender_ver!
     def safe_set_version_data(self, addon_version=None, build_type=None,
                               build_type_version=None, data_model_version=None,
