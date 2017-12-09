@@ -797,7 +797,9 @@ def manipulator_layout(self, obj):
                              MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
                              MANIP_COMMAND_SWITCH_UP_DOWN2):
 
-            if manipType != MANIP_DRAG_XY:
+            if manipType == MANIP_DRAG_ROTATE:
+                pass
+            elif manipType != MANIP_DRAG_XY:
                 box.prop(obj.xplane.manip, 'dataref1')
                 box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
             else:
@@ -864,13 +866,13 @@ def manipulator_layout(self, obj):
 
         if manipType == MANIP_DRAG_ROTATE:
             box.prop(obj.xplane.manip, 'cursor')
-            box.prop(obj.xplane.manip, 'v1_min')
-            box.prop(obj.xplane.manip, 'v1_max')
-            box.prop(obj.xplane.manip, 'dataref1')
-            box.prop(obj.xplane.manip, 'v2_min')
-            box.prop(obj.xplane.manip, 'v2_max')
-            box.prop(obj.xplane.manip, 'dataref2')
             box.prop(obj.xplane.manip, 'tooltip')
+            box.prop(obj.xplane.manip, 'autodetect_datarefs')
+
+            if obj.xplane.manip.autodetect_datarefs is False:
+                box.prop(obj.xplane.manip, 'dataref1')
+                box.prop(obj.xplane.manip, 'dataref2')
+                box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
 
 # Function: conditions_layout
 # Draws the UI layout for conditions.

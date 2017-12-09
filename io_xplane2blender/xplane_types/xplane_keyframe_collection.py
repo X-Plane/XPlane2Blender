@@ -1,8 +1,11 @@
+from collections import namedtuple
 from collections.abc import MutableSequence
 import copy
+import math
 
 import bpy
 import mathutils
+from mathutils import Vector
 
 # Class: XPlaneKeyframeCollection
 #
@@ -116,26 +119,6 @@ class XPlaneKeyframeCollection(MutableSequence):
 
         return  _makeReferenceAxes(keyframes)
 
-    #Returns a list of tuples of axis, total degrees rotated, and list of rotation values
-    # [(axis,total_deg_rotated,[rotations]),...]
-    def getRotationValues(self):
-        axes = self.getReferenceAxes()
-        value = []
-        if self.getRotationMode() == "AXIS_ANGLE" or\
-           self.getRotationMode() == "QUATERNION":
-            rotations = [key.rotation[0] for key in self]
-            value.append((axes[0], sum(rotations), rotations))
-            return value
-        else:
-            for axis,order in zip(axes,self.EULER_AXIS_ORDERING[self.getRotationMode()]):
-                rotations = []
-                for keyframe in self:
-                    rotations.append(keyframe.rotation[order]) 
-                value.append((axis, sum(rotations), rotations))
-            return value
-    
-    def getTranslationValues(self):
-        return [keyframe.location for keyframe in self]
 
     def getDataref(self):
         return self._list[0].dataref
@@ -143,8 +126,50 @@ class XPlaneKeyframeCollection(MutableSequence):
     def getRotationMode(self):
         return self._list[0].rotationMode
 
+    # Returns a list of tuples of axis, total degrees rotated, and list of rotation values
+    # List[Tuple[axis, List[Tuple[value,deg]]]
+    #
+    def getRotationKeyframeTable(self):
+        axes = self.getReferenceAxes()
+
+        ret = [[axis,None] for axis in axes]
+        TableEntry = namedtuple('TableEntry', ['value','degrees'])
+        if self.getRotationMode() == "AXIS_ANGLE" or\
+           self.getRotationMode() == "QUATERNION":
+            keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[0])) for keyframe in self] 
+            ret[0][1] = keyframe_table
+        else:
+            for axis,order in zip(axes,self.EULER_AXIS_ORDERING[self.getRotationMode()]):
+                keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[order])) for keyframe in self]
+                ret[ret.index(axis)] = keyframe_table
+    
+        ret = [(info[0],info[1]) for info in ret]
+        assert isinstance(ret,list)
+        for axis_info in ret:
+            assert isinstance(axis_info,tuple)
+            assert isinstance(axis_info[0],Vector)
+            assert isinstance(axis_info[1],list)
+
+            for table_entry in axis_info[1]:
+                assert isinstance(table_entry,tuple)
+                assert isinstance(table_entry.value,float)
+                assert isinstance(table_entry.degrees,float)
+
+        return ret
+
+    # Returns list  of tuples of (keyframe.value, keyframe.location)
+    # with location being a Vector in Blender form
+    def getTranslationKeyframeTable(self):
+        return [(keyframe.value, keyframe.location) for keyframe in self]
+
+    # Returns list  of tuples of (keyframe.value, keyframe.location)
+    # with location being a Vector in Blender form and scaled by the scaling amount
+    def getTranslationKeyframeTableWScale(self):
+        pre_scale = self[0].xplaneBone.getPreAnimationMatrix().decompose()[2]
+        return [(value, location * pre_scale) for value, location in self.getTranslationKeyframeTable()]
+
     def keyframesAsAA(self):
-        #TODO: This copy operation still isn't enough
+        #TODO: This copy operation still isn't enough to make it clean without sideeffects
         keyframes = copy.copy(self)
         if self.getRotationMode() == "AXIS_ANGLE":
             return keyframes

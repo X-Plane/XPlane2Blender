@@ -380,10 +380,16 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 #   string dataref1 - Dataref 1
 #   string dataref2 - Dataref 2
 class XPlaneManipulator(bpy.types.PropertyGroup):
+    autodetect_datarefs = bpy.props.BoolProperty(
+        name = "Autodetect Datarefs",
+        description = "If checked, dataref(s) for this manipulator will be taken from its mesh's animations",
+        default = True
+        )
+
     enabled = bpy.props.BoolProperty(
         attr = "enabled",
         name = "Manipulator",
-        description = "If checked this object will be treated as a manipulator",
+        description = "If checked, this object will be treated as a manipulator",
         default = False
     )
 

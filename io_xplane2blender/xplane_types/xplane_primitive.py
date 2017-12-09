@@ -9,6 +9,7 @@ from ..xplane_constants import *
 from ..xplane_helpers import logger
 import io_xplane2blender.xplane_types
 from io_xplane2blender import xplane_helpers
+from pydev_ipython.inputhook import current_gui
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -124,10 +125,27 @@ class XPlanePrimitive(XPlaneObject):
                     manip.tooltip
                 )
             elif manipType == MANIP_DRAG_ROTATE:
-                #1. Are we the leaf with translation datarefs and a rotating parent
-                #2. Are we the leaf with rotations and it doesn't matter what the parent is?
+                '''
+                Drag rotate manipulators must follow either one of two patterns
+                1. The manipulator is attached to a translating XPlaneBone which has a rotating parent bone
+                2. The manipulaotr is attached to a rotation bone
+
+                Rules for rotation bone and translation bone
+
+                - Must only be driven by 1 dataref
+                - Keyframe tables must be in order
+
+                Special rules for Rotation Bone
+                - The rotation bone can only rotate about one axis
+
+                - The translation bone must have exactly 2 keyframes
+                - The positions at each keyframe must not be the same, including both being 0 
+                - The animation must start or end at the origin of the bone (not implemented yet)
+
+                '''
                 rotation_bone = None
                 translation_bone = None
+                translation_values = None
 
                 lift_at_max = 0.0 
                 if len(self.xplaneBone.children) > 0:
@@ -147,9 +165,9 @@ class XPlanePrimitive(XPlaneObject):
                             logger.error("drag rotate manipulator cannot be driven by more than one datarefs cannot have more than 1 dataref")
                             return
 
-                        translation_values = keyframe_col.getTranslationValues()
+                        translation_values = keyframe_col.getTranslationKeyframeTable()
                         if len(translation_values) == 2:
-                            lift_at_max = (translation_values[1] - translation_values[0]).magnitude
+                            lift_at_max = (translation_values[1][1] - translation_values[0][1]).magnitude
                         else:
                             logger.error("drag rotate manipulator does not have exactly two keyframes for it's movement")
                             return
@@ -159,39 +177,91 @@ class XPlanePrimitive(XPlaneObject):
                 rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
                 if len(rotation_bone.animations) == 1:
                     keyframe_col_parent = next(iter(rotation_bone.animations.values())).keyframesAsAA()
-                    rotation_axes = keyframe_col_parent.getReferenceAxes()
-                    if len(rotation_axes) > 1:
+                    rotation_keyframe_table = keyframe_col_parent.getRotationKeyframeTable()
+                    if len(rotation_keyframe_table) > 1:
                         logger.error("Drag rotate manipulator cannot be rotate around more than one axis")
                         #TODO add in more message suggesting changing Euler to AA, or not animiating Axis
-                    rotation_axis = rotation_axes[0]
+                    rotation_axis = rotation_keyframe_table[0][0]
 
-                    assert rotation_axes
-                    rotation_values = sorted(keyframe_col_parent.getRotationValues()[0][2])
+                    rotation_keyframe_data = keyframe_col_parent.getRotationKeyframeTable()[0][1]
+                    if rotation_keyframe_data != sorted(rotation_keyframe_data):
+                        logger.error("Drag rotate manipulator's mesh's rotational keyframe table is not in order by dataref value given")
+                        return
+                    elif len(rotation_keyframe_data) == 2:
+                        logger.error("Drag rotate manipulator's mesh's rotational keyframe table must have at least 2 rotations")
+                        return
+
+                    # Remove clamp values
+                    # List[Tuple[float,float]]
+                    def remove_clamp_keyframes(keyframes):
+                        itr = iter(keyframes)
+                        while True:
+                            current       = next(itr)
+                            next_keyframe = next(itr,None)
+
+                            if next_keyframe is not None:
+                                if current.degrees == next_keyframe.degrees:
+                                    del keyframes[keyframes.index(current)]
+                                    itr = iter(keyframes)
+                                else:
+                                    break
+
+                    remove_clamp_keyframes(rotation_keyframe_data)
+                    rotation_keyframe_data.reverse()
+                    remove_clamp_keyframes(rotation_keyframe_data)
+                    rotation_keyframe_data.reverse()
+                    
                     dref2 = "none" if manip.dataref2.strip() == "" else manip.dataref2
                 else:
                     logger.error("drag rotate manipulator parent rotation bone cannot be driven by more than one dataref")
                     return
+                
+                if translation_values is not None and translation_values[0] == translation_values[1]:
+                    logger.error("drag rotate manipulator translation translation min max cannot be the same")
+                elif translation_values is None:
+                    v2_values = [0,0]
+                else:
+                    v2_values = [0.0, lift_at_max] 
+                
+                if manip.autodetect_datarefs:
+                    manip.dataref1 = next(iter(rotation_bone.datarefs))
+                    if translation_bone is not None:
+                        manip.dataref2 = next(iter(translation_bone.datarefs))
+                    else:
+                        manip.dataref2 = "none"
 
-                rotation_origin_x = xplane_helpers.vec_b_to_x(rotation_origin)
-                rotation_axis_x   = xplane_helpers.vec_b_to_x(rotation_axis)
+                rotation_origin_xp = xplane_helpers.vec_b_to_x(rotation_origin)
+                rotation_axis_xp   = xplane_helpers.vec_b_to_x(rotation_axis)
+                
+                angle1 = rotation_keyframe_data[0].degrees
+                angle2 = rotation_keyframe_data[-1].degrees
+
+                for entry in rotation_keyframe_data:
+                    if entry.degrees == angle1:
+                        v1_min = entry.value
+
+                for entry in reversed(rotation_keyframe_data):
+                    if entry.degrees == angle2:
+                        v1_max = entry.value
+
                 value = (
-                        manip.cursor,
-                        rotation_origin_x[0],
-                        rotation_origin_x[1],
-                        rotation_origin_x[2],
-                        rotation_axis_x[0],
-                        rotation_axis_x[1],
-                        rotation_axis_x[2],
-                        math.degrees(rotation_values[0]),
-                        math.degrees(rotation_values[-1]),
-                        lift_at_max,
-                        manip.v1_min,
-                        manip.v1_max,
-                        manip.v2_min,
-                        manip.v2_max,
-                        manip.dataref1, #TODO warning if dataref1 is empty?
-                        dref2,
-                        manip.tooltip
+                        manip.cursor,          #cursor
+                        rotation_origin_xp[0], #x
+                        rotation_origin_xp[1], #y
+                        rotation_origin_xp[2], #z
+                        rotation_axis_xp[0],   #dx
+                        rotation_axis_xp[1],   #dy
+                        rotation_axis_xp[2],   #dz
+                        angle1,
+                        angle2,
+                        lift_at_max, #lift
+                        v1_min, #v1_min
+                        v1_max, #v1_max
+                        v2_values[0], #v2_min
+                        v2_values[1], #v2_max
+                        manip.dataref1, #dataref1
+                        manip.dataref2, #dataref2
+                        manip.tooltip   #tooltip
                 )
             elif manipType == MANIP_COMMAND:
                 value = (manip.cursor, manip.command, manip.tooltip)

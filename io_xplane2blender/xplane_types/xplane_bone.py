@@ -636,6 +636,7 @@ class XPlaneBone():
             refAxis = axes[0]
 
         if refAxis == None:
+            #TODO: Pretty sure this is impossible to reach
             assert False
             refAxis = mathutils.Vector((0, 0, 1))
 
