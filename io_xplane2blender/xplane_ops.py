@@ -92,6 +92,28 @@ def getPoseBoneIndex(armature, name):
             return i
     return -1
 
+class OBJECT_OT_add_xplane_axis_detent_range(bpy.types.Operator):
+    bl_label = 'Add X-Plane Axis Detent Range'
+    bl_idname = 'object.add_xplane_axis_detent_range'
+    bl_description = 'Add X-Plane Axis Detent Range'
+
+    def execute(self, context):
+        obj = context.object
+        obj.xplane.manip.axis_detent_ranges.add()
+        return {'FINISHED'}
+ 
+class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
+    bl_label = 'Remove Axis Detent Range'
+    bl_idname = 'object.remove_xplane_axis_detent_range'
+    bl_description = 'Remove axis detent range'
+
+    index = bpy.props.IntProperty()
+
+    def execute(self, context):
+        obj = context.object
+        obj.xplane.manip.axis_detent_ranges.remove(self.index)
+        return {'FINISHED'}
+    
 # Class: SCENE_OT_add_xplane_layers
 # Initially creates xplane relevant data for <XPlaneLayers> in the current Blender scene.
 class SCENE_OT_add_xplane_layers(bpy.types.Operator):

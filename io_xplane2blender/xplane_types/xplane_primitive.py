@@ -210,8 +210,7 @@ class XPlanePrimitive(XPlaneObject):
                     rotation_keyframe_data.reverse()
                     remove_clamp_keyframes(rotation_keyframe_data)
                     rotation_keyframe_data.reverse()
-                    
-                    dref2 = "none" if manip.dataref2.strip() == "" else manip.dataref2
+                    cleaned_rotation_keyframe_data = rotation_keyframe_data
                 else:
                     logger.error("drag rotate manipulator parent rotation bone cannot be driven by more than one dataref")
                     return
@@ -219,9 +218,11 @@ class XPlanePrimitive(XPlaneObject):
                 if translation_values is not None and translation_values[0] == translation_values[1]:
                     logger.error("drag rotate manipulator translation translation min max cannot be the same")
                 elif translation_values is None:
-                    v2_values = [0,0]
+                    v2_min = 0.0
+                    v2_max = 0.0
                 else:
-                    v2_values = [0.0, lift_at_max] 
+                    v2_min = 0.0
+                    v2_max = lift_at_max
                 
                 if manip.autodetect_datarefs:
                     manip.dataref1 = next(iter(rotation_bone.datarefs))
@@ -245,7 +246,7 @@ class XPlanePrimitive(XPlaneObject):
                         v1_max = entry.value
 
                 value = (
-                        manip.cursor,          #cursor
+                        manip.cursor,
                         rotation_origin_xp[0], #x
                         rotation_origin_xp[1], #y
                         rotation_origin_xp[2], #z
@@ -254,14 +255,14 @@ class XPlanePrimitive(XPlaneObject):
                         rotation_axis_xp[2],   #dz
                         angle1,
                         angle2,
-                        lift_at_max, #lift
-                        v1_min, #v1_min
-                        v1_max, #v1_max
-                        v2_values[0], #v2_min
-                        v2_values[1], #v2_max
-                        manip.dataref1, #dataref1
-                        manip.dataref2, #dataref2
-                        manip.tooltip   #tooltip
+                        lift_at_max,
+                        v1_min,
+                        v1_max,
+                        v2_min,
+                        v2_max,
+                        manip.dataref1,
+                        manip.dataref2,
+                        manip.tooltip
                 )
             elif manipType == MANIP_COMMAND:
                 value = (manip.cursor, manip.command, manip.tooltip)
@@ -346,10 +347,23 @@ class XPlanePrimitive(XPlaneObject):
 
         if attr is not None:
             self.cockpitAttributes.add(XPlaneAttribute(attr, value))
+            if manipType == MANIP_DRAG_ROTATE and bpy.context.scene.xplane.version >= VERSION_1110:
+                for axis_detent_range in manip.axis_detent_ranges:
+                    self.cockpitAttributes.add(XPlaneAttribute('ATTR_axis_detent_range',
+                        (axis_detent_range.start, axis_detent_range.end, axis_detent_range.height)))
+                if len(cleaned_rotation_keyframe_data) > 2:
+                    for rot_keyframe in cleaned_rotation_keyframe_data[1:-1]:
+                        self.cockpitAttributes.add(
+                            XPlaneAttribute(
+                                'ATTR_manip_keyframe',
+                                (rot_keyframe.value,rot_keyframe.degrees)
+                            )
+                        )
+            else:
+                # add mouse wheel delta
+                if manipType in MOUSE_WHEEL_MANIPULATORS and bpy.context.scene.xplane.version >= VERSION_1050 and manip.wheel_delta != 0:
+                    self.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', manip.wheel_delta))
 
-            # add mouse wheel delta
-            if manipType in MOUSE_WHEEL_MANIPULATORS and bpy.context.scene.xplane.version >= VERSION_1050 and manip.wheel_delta != 0:
-                self.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', manip.wheel_delta))
 
     def write(self):
         debug = getDebug()

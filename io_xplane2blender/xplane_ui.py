@@ -763,6 +763,23 @@ def cockpit_layout(self, obj):
     if obj.xplane.panel:
         cockpit_box_column.prop(obj.xplane, 'cockpit_region')
 
+def axis_detent_ranges_layout(self, layout, manip):
+    layout.separator()
+    row = layout.row()
+    row.label("Axis Detent Range")
+    
+    row.operator("object.add_xplane_axis_detent_range")
+        
+    box = layout.box()
+    
+    for i, attr in enumerate(manip.axis_detent_ranges):
+        row = box.row() 
+        row.prop(attr,"start")#, text= "Axis_Detent Range ")
+        row.prop(attr,"end")#, text= "Axis_Detent Range ")
+        row.prop(attr,"height")#, text= "Axis_Detent Range ")
+        
+        row.operator("object.remove_xplane_axis_detent_range", text="", emboss=False, icon="X").index = i
+
 # Function: manipulator_layout
 # Draws the UI layout for manipulator settings.
 #
@@ -873,6 +890,7 @@ def manipulator_layout(self, obj):
                 box.prop(obj.xplane.manip, 'dataref1')
                 box.prop(obj.xplane.manip, 'dataref2')
                 box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+            axis_detent_ranges_layout(self, box, obj.xplane.manip)
 
 # Function: conditions_layout
 # Draws the UI layout for conditions.

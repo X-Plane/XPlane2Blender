@@ -215,6 +215,20 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     def short_str(self):
         return str(self)[:str(self).index('+')]
 
+class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
+    start = bpy.props.FloatProperty(
+            name = "Start",
+            description = "Start value (from Dataref 1) of the detent region",
+            default=0.0)
+    end = bpy.props.FloatProperty(
+            name = "End",
+            description = "End value (from Dataref 1) of the detent region",
+            default=0.0)
+    height = bpy.props.FloatProperty(
+            name = "Height",
+            description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
+            default=0.0)
+
 # Class: XPlaneCustomAttribute
 # A custom attribute.
 #
@@ -256,7 +270,7 @@ class XPlaneExportPathDirective(bpy.types.PropertyGroup):
         name = "Export Path",
         description="The export path that should be copied into a library.txt",
     )
-
+    
 # Class: XPlaneDataref
 # A X-Plane Dataref
 #
@@ -386,6 +400,12 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         default = True
         )
 
+    axis_detent_ranges = bpy.props.CollectionProperty(
+        name = "Axis Detent Range",
+        description = "The ranges where a drag rotate manipulator can move freely, and what heights must be overcome to enter each range",
+        type=XPlaneAxisDetentRange
+    )
+
     enabled = bpy.props.BoolProperty(
         attr = "enabled",
         name = "Manipulator",
@@ -431,7 +451,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
             (MANIP_COMMAND_KNOB2,              "Command Knob 2",              "Command Knob 2 (requires at least v11.10)"),
             (MANIP_COMMAND_SWITCH_UP_DOWN2,    "Command Switch Up Down 2",    "Command Switch Up Down 2 (requires at least v11.10)"),
             (MANIP_COMMAND_SWITCH_LEFT_RIGHT2, "Command Switch Left Right 2", "Command Switch Left Right 2 (requires at least v11.10)"),
-            (MANIP_DRAG_ROTATE,        "Drag Rotate",                 "Drag Rotate (requires at least v11.10)")
+            (MANIP_DRAG_ROTATE,                "Drag Rotate",                 "Drag Rotate (requires at least v11.10)")
         ]
     
     type_v1110 = bpy.props.EnumProperty(
@@ -1605,6 +1625,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 def addXPlaneRNA():
     # basic classes
     bpy.utils.register_class(XPlane2BlenderVersion)
+    bpy.utils.register_class(XPlaneAxisDetentRange)
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
     bpy.utils.register_class(XPlaneCondition)
@@ -1666,6 +1687,7 @@ def removeXPlaneRNA():
 
     # basic classes
     bpy.utils.unregister_class(XPlane2BlenderVersion)
+    bpy.utils.unregister_class(XPlaneAxisDetentRange)
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
     #bpy.utils.unregister_class(XPlaneDatarefSearch)
