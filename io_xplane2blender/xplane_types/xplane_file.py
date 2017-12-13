@@ -202,11 +202,13 @@ class XPlaneFile():
         return tempBlenderObjects
 
     # collects all child bones for a given parent bone given a list of blender objects
-    def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True):
+    def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True, noRealBones = False):
         parentBlenderObject = parentBone.blenderObject
         parentBlenderBone = parentBone.blenderBone
 
         def objectFilter(blenderObject):
+            if noRealBones and blenderObject.parent_type == 'BONE':
+                return False
             if parentBlenderObject:
                 return blenderObject.parent == parentBlenderObject
             elif parentBlenderBone:
@@ -244,6 +246,12 @@ class XPlaneFile():
             # collect armature bones
             elif blenderObject.type == 'ARMATURE':
                 self.collectBonesFromBlenderBones(bone, blenderObject, blenderObject.data.bones)
+                # Collect direct data-block children - some authors parent data blocks directly to the
+                # armature, then pose the armature via data block key framing.  The second 'true' here
+                # tells us to SKIP any direct child with a bone parent.  In Blender, a data block that
+                # is parented to a bone shows up as a datablock child of the armature, so without this
+                # we'd export each data block twice, which is bad.
+                self.collectBonesFromBlenderObjects(bone, blenderObject.children, True, True)
 
             # collect regular children
             else:

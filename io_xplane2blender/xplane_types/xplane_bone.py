@@ -126,6 +126,16 @@ class XPlaneBone():
             #check for dataref animation by getting fcurves with the dataref group
             for fcurve in animationData.action.fcurves:
                 logger.info("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
+				
+				# Ben says: I'm not sure if this is the right way to do this -- when we iterate the fcurve data for this
+				# armature, EVERY bone is included in a big pile.  So we parse the data_path and if it's clearly (1) for a bone and
+				# (2) NOT for us, we skip it.  Without this, the key frames from differing bones get cross-contaminated in a multi-
+				# bone case.
+                if fcurve.data_path.startswith("bones[\"") and bone != None:
+                    path_we_want = "bones[\"%s\"]" % bone.name
+                    if not fcurve.data_path.startswith(path_we_want):
+                        continue
+                
                 #if (fcurve.group != None and fcurve.group.name == groupName): # since 2.61 group names are not set so we have to check the datapath
                 if ('xplane.datarefs' in fcurve.data_path):
                     # get dataref name
