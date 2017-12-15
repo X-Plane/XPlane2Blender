@@ -8,9 +8,6 @@ POINT_COUNTS	0	0	0	0
 # 1 Object: Armature_arm_no_anim_bone_anim
 # ARMATURE: Armature_arm_no_anim_bone_anim	weight: 0
 	# 2 Bone: Bone_anim
-		# 3 Object: arm_no_anim_bone_anim_parent_bone_lamp_no_anim
-		# LAMP: arm_no_anim_bone_anim_parent_bone_lamp_no_anim	weight: 10000
-		LIGHT_PARAM	airplane_landing_sp -1 5 5 1 1 1    0.00    800      0.9
 		# 3 Object: arm_no_anim_bone_anim_parent_bone_lamp_anim
 		ANIM_begin
 		# static translation
@@ -30,5 +27,8 @@ POINT_COUNTS	0	0	0	0
 		LIGHT_PARAM	airplane_landing_sp -0.00000022 0.00000002 -0.00000017 1 1 1    0.00    800      0.9
 		ANIM_end
 		ANIM_end
+		# 3 Object: arm_no_anim_bone_anim_parent_bone_lamp_no_anim
+		# LAMP: arm_no_anim_bone_anim_parent_bone_lamp_no_anim	weight: 10000
+		LIGHT_PARAM	airplane_landing_sp -1 5 5 1 1 1    0.00    800      0.9
 
 # Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-beta.6+2.NO_BUILD_NUMBR
