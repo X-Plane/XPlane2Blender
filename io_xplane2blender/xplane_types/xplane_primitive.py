@@ -179,6 +179,7 @@ class XPlanePrimitive(XPlaneObject):
                 elif self.xplaneBone.isDataRefAnimatedForRotation():
                     rotation_bone = self.xplaneBone
                 
+                
                 rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
                 if len(rotation_bone.animations) == 1:
                     keyframe_col_parent = next(iter(rotation_bone.animations.values())).keyframesAsAA()
@@ -187,12 +188,12 @@ class XPlanePrimitive(XPlaneObject):
                         logger.error("Drag Rotate manipulator can only rotate around one axis")
                     rotation_axis = rotation_keyframe_table[0][0]
 
-                    rotation_keyframe_data = keyframe_col_parent.getRotationKeyframeTable()[0][1]
+                    rotation_keyframe_data = rotation_keyframe_table[0][1]
                     if not (rotation_keyframe_data == sorted(rotation_keyframe_data) or\
                             rotation_keyframe_data == sorted(rotation_keyframe_data[::-1])):
                         logger.error("Drag Rotate manipulator's dataref values are not in ascending or descending order")
                         return
-                    elif len(rotation_keyframe_data) >= 2:
+                    if len(rotation_keyframe_data) < 2:
                         logger.error("Drag Rotate manipulator must have at least 2 rotation keyframes")
                         return
 
@@ -262,6 +263,10 @@ class XPlanePrimitive(XPlaneObject):
                     if entry.degrees == angle2:
                         v1_max = entry.value
                 
+                if v1_min == v1_max:
+                    logger.error("Drag Rotate manipulator's Dataref 1 minimum cannot equal Dataref 1 maximum")
+                    return
+
                 value = (
                         manip.cursor,
                         rotation_origin_xp[0], #x
@@ -433,7 +438,8 @@ class XPlanePrimitive(XPlaneObject):
                         except:
                             detent_range_prev = AxisDetentStruct(v1_min, detent_range.start, float('inf'))
                             
-                        if not detent_range_prev.height > detent_range.height < detent_range_next.height:
+                        if detent_range.start == detent_range.end and\
+                           not detent_range_prev.height > detent_range.height < detent_range_next.height:
                             logger.error("Stop pit created by detent_range {0} must be lower than"
                                          " previous {1} and next detent ranges {2}".format(
                                             (detent_range),
@@ -445,7 +451,7 @@ class XPlanePrimitive(XPlaneObject):
                     return True
 
                 if len(manip.axis_detent_ranges) > 0:
-                    if not validate_axis_detent_ranges(manip.axis_detent_ranges):
+                    if not validate_axis_detent_ranges(manip.axis_detent_ranges,manip.v1_min,manip.v1_max, lift_at_max):
                         return
 
                 for axis_detent_range in manip.axis_detent_ranges:

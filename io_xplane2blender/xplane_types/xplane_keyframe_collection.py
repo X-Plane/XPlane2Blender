@@ -126,10 +126,11 @@ class XPlaneKeyframeCollection(MutableSequence):
     def getRotationMode(self):
         return self._list[0].rotationMode
 
-    # Returns a list of tuples of axis, total degrees rotated, and list of rotation values
-    # List[Tuple[axis, List[Tuple[value,deg]]]
-    #
     def getRotationKeyframeTable(self):
+        '''
+        Return the rotation portion of a keyframe collection in the form of
+        List[Tuple[axis, List[Tuple[value,deg]]]], where axis is Vector.
+        '''
         axes = self.getReferenceAxes()
 
         ret = [[axis,None] for axis in axes]

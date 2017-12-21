@@ -228,6 +228,9 @@ class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
             name = "Height",
             description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
             default=0.0)
+    
+    def __str__(self):
+       return "({0},{1},{2})".format(self.start,self.end,self.height) 
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
