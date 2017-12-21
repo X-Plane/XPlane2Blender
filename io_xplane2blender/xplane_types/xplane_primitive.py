@@ -1,4 +1,6 @@
+import collections
 import math
+import sys
 
 import bpy
 from .xplane_attribute import XPlaneAttribute
@@ -9,7 +11,6 @@ from ..xplane_constants import *
 from ..xplane_helpers import logger
 import io_xplane2blender.xplane_types
 from io_xplane2blender import xplane_helpers
-from pydev_ipython.inputhook import current_gui
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -128,32 +129,35 @@ class XPlanePrimitive(XPlaneObject):
                 '''
                 Drag rotate manipulators must follow either one of two patterns
                 1. The manipulator is attached to a translating XPlaneBone which has a rotating parent bone
-                2. The manipulaotr is attached to a rotation bone
+                2. The manipulator is attached to a rotation bone
 
-                Rules for rotation bone and translation bone
+                Common Rules for Rotation Bone and Translation Bone
 
                 - Must only be driven by 1 dataref
-                - Keyframe tables must be in order
+                - Keyframe tables must be sorted in ascending or decending order
 
-                Special rules for Rotation Bone
-                - The rotation bone can only rotate about one axis
+                Special rules for Rotation Bone:
+                - The rotation bone can only rotate about one axis,
+                whether that is one AA, Quaternion, or only one component of a Euler
+                - Clockwise and counterclockwise rotations are supported
 
+                Special rules for Translation Bone:
                 - The translation bone must have exactly 2 keyframes
                 - The positions at each keyframe must not be the same, including both being 0 
                 - The animation must start or end at the origin of the bone (not implemented yet)
-
                 '''
                 rotation_bone = None
                 translation_bone = None
                 translation_values = None
 
                 lift_at_max = 0.0 
+                drag_rot_manip_name = "Drag Rotate manipulator %s" % self.name
                 if len(self.xplaneBone.children) > 0:
-                    logger.error("drag rotate manipulator must be a leaf mesh")
+                    logger.error("Drag Rotate manipulator must attached to a childless object")
                     return
                 elif self.xplaneBone.isDataRefAnimatedForTranslation():
                     if self.xplaneBone.parent is None or not self.xplaneBone.parent.isDataRefAnimatedForRotation():
-                        logger.error("drag rotate manipulator has detent component, but no parent with rotation")
+                        logger.error("Drag Rotate manipulator has detents but no parent with rotation")
                         return
                     else: 
                         rotation_bone = self.xplaneBone.parent
@@ -162,15 +166,16 @@ class XPlanePrimitive(XPlaneObject):
                         if len(translation_bone.animations) == 1:
                             keyframe_col = next(iter(translation_bone.animations.values()))
                         else:
-                            logger.error("drag rotate manipulator cannot be driven by more than one datarefs cannot have more than 1 dataref")
+                            logger.error("Drag Rotate manipulator cannot be driven by more than one datarefs cannot have more than 1 dataref")
                             return
 
                         translation_values = keyframe_col.getTranslationKeyframeTable()
                         if len(translation_values) == 2:
                             lift_at_max = (translation_values[1][1] - translation_values[0][1]).magnitude
                         else:
-                            logger.error("drag rotate manipulator does not have exactly two keyframes for it's movement")
+                            logger.error("Drag Rotate manipulator must have exactly two keyframes for its movement")
                             return
+
                 elif self.xplaneBone.isDataRefAnimatedForRotation():
                     rotation_bone = self.xplaneBone
                 
@@ -179,44 +184,51 @@ class XPlanePrimitive(XPlaneObject):
                     keyframe_col_parent = next(iter(rotation_bone.animations.values())).keyframesAsAA()
                     rotation_keyframe_table = keyframe_col_parent.getRotationKeyframeTable()
                     if len(rotation_keyframe_table) > 1:
-                        logger.error("Drag rotate manipulator cannot be rotate around more than one axis")
-                        #TODO add in more message suggesting changing Euler to AA, or not animiating Axis
+                        logger.error("Drag Rotate manipulator can only rotate around one axis")
                     rotation_axis = rotation_keyframe_table[0][0]
 
                     rotation_keyframe_data = keyframe_col_parent.getRotationKeyframeTable()[0][1]
-                    if rotation_keyframe_data != sorted(rotation_keyframe_data):
-                        logger.error("Drag rotate manipulator's mesh's rotational keyframe table is not in order by dataref value given")
+                    if not (rotation_keyframe_data == sorted(rotation_keyframe_data) or\
+                            rotation_keyframe_data == sorted(rotation_keyframe_data[::-1])):
+                        logger.error("Drag Rotate manipulator's dataref values are not in ascending or descending order")
                         return
-                    elif len(rotation_keyframe_data) == 2:
-                        logger.error("Drag rotate manipulator's mesh's rotational keyframe table must have at least 2 rotations")
+                    elif len(rotation_keyframe_data) >= 2:
+                        logger.error("Drag Rotate manipulator must have at least 2 rotation keyframes")
                         return
 
-                    # Remove clamp values
-                    # List[Tuple[float,float]]
-                    def remove_clamp_keyframes(keyframes):
-                        itr = iter(keyframes)
-                        while True:
-                            current       = next(itr)
-                            next_keyframe = next(itr,None)
+                    # Clean any clamped keyframes away
+                    # List[Tuple[float,float]] -> List[Tuple[float,float]]
+                    def clean_clamped_keyframes(keyframes):
+                        cleaned_keyframes = keyframes[:]
+                        # Remove clamp values
+                        # List[Tuple[float,float]] -> None
+                        def remove_clamp_keyframes(keyframes):
+                            itr = iter(keyframes)
+                            while True:
+                                current       = next(itr)
+                                next_keyframe = next(itr,None)
 
-                            if next_keyframe is not None:
-                                if current.degrees == next_keyframe.degrees:
-                                    del keyframes[keyframes.index(current)]
-                                    itr = iter(keyframes)
-                                else:
-                                    break
+                                if next_keyframe is not None:
+                                    if current.degrees == next_keyframe.degrees:
+                                        del keyframes[keyframes.index(current)]
+                                        itr = iter(keyframes)
+                                    else:
+                                        break
 
-                    remove_clamp_keyframes(rotation_keyframe_data)
-                    rotation_keyframe_data.reverse()
-                    remove_clamp_keyframes(rotation_keyframe_data)
-                    rotation_keyframe_data.reverse()
-                    cleaned_rotation_keyframe_data = rotation_keyframe_data
+                        remove_clamp_keyframes(cleaned_keyframes)
+                        cleaned_keyframes.reverse()
+                        remove_clamp_keyframes(cleaned_keyframes)
+                        cleaned_keyframes.reverse()
+                        
+                        return cleaned_keyframes
+
+                    cleaned_rotation_keyframe_data = clean_clamped_keyframes(rotation_keyframe_data)
                 else:
-                    logger.error("drag rotate manipulator parent rotation bone cannot be driven by more than one dataref")
+                    logger.error("Drag Rotate manipulator's parent rotation bone cannot be driven by more than one dataref")
                     return
                 
                 if translation_values is not None and translation_values[0] == translation_values[1]:
-                    logger.error("drag rotate manipulator translation translation min max cannot be the same")
+                    logger.error("Drag Rotate manipulator's translation min %s and max %s cannot be the same" % (translation_values[0],translation_values[1]))
                 elif translation_values is None:
                     v2_min = 0.0
                     v2_max = 0.0
@@ -234,9 +246,14 @@ class XPlanePrimitive(XPlaneObject):
                 rotation_origin_xp = xplane_helpers.vec_b_to_x(rotation_origin)
                 rotation_axis_xp   = xplane_helpers.vec_b_to_x(rotation_axis)
                 
-                angle1 = rotation_keyframe_data[0].degrees
-                angle2 = rotation_keyframe_data[-1].degrees
+                angle1 = cleaned_rotation_keyframe_data[0].degrees
+                angle2 = cleaned_rotation_keyframe_data[-1].degrees
 
+                if round(angle1,5) == round(angle2,5):
+                    logger.error("0 degree rotation not allowed")
+                    return
+                
+                #TODO: Should be cleaned keyframe data instead?
                 for entry in rotation_keyframe_data:
                     if entry.degrees == angle1:
                         v1_min = entry.value
@@ -244,7 +261,7 @@ class XPlanePrimitive(XPlaneObject):
                 for entry in reversed(rotation_keyframe_data):
                     if entry.degrees == angle2:
                         v1_max = entry.value
-
+                
                 value = (
                         manip.cursor,
                         rotation_origin_xp[0], #x
@@ -348,16 +365,97 @@ class XPlanePrimitive(XPlaneObject):
         if attr is not None:
             self.cockpitAttributes.add(XPlaneAttribute(attr, value))
             if manipType == MANIP_DRAG_ROTATE and bpy.context.scene.xplane.version >= VERSION_1110:
+                
+                #List[AxisDetentRange] -> bool
+                def validate_axis_detent_ranges(axis_detent_ranges,v1_min,v1_max,lift_at_max):
+                    '''
+                    Rules for Axis Detent Ranges
+                    
+                    Basic rules
+                    - The detent ranges must cover [v1_min,v1_max] without gaps.
+                      Therefore
+                          - The start of one range must be the end of another
+                          - ranges[0].start == v1_min, ranges[-1].end == v1_max
+                    - A range's start must be <= its end
+                    - Height must be between 0 and lift_at_max
+                    
+                    Stop Pits
+                    - A stop pit is defined as range.start == range.end, range.height is less than each of it's neighbors.
+                    - A pit can be the first or last detent range, but never the only one
+                    - Stop pegs, where height is equal to or greater than it's neighbor's height, are never allowed
+                    '''
+                    assert len(axis_detent_ranges) > 0
+
+                    if not axis_detent_ranges[0].start == v1_min:
+                        logger.error("Axis detent range list must start at Dataref 1's minimum value {0}".format(v1_min))
+                        return False
+                        
+                    if not axis_detent_ranges[-1].end == v1_max:
+                        logger.error("Axis detent range list must end at Dataref 1's maximum value {0}".format(v1_max))
+                        return False
+
+                    if len({range.height for range in axis_detent_ranges}) == 1:
+                        logger.warn("All axis detent ranges have the same height. Check your entered data")
+
+                    for i in range(len(axis_detent_ranges)):
+                        detent_range = axis_detent_ranges[i]
+                        if not detent_range.start <= detent_range.end:
+                            logger.error(
+                                "The start of axis detent range {0} must be less than or equal to its end".format(detent_range)
+                                )
+                            return False
+
+                        if not 0.0 <= detent_range.height <= lift_at_max:
+                            logger.error(
+                                "Height in axis detent range {0} must be between 0.0 and the maximum lift height ({1})".format(detent_range,lift_at_max))
+                            return False
+
+                        # Pit detection portion
+                        if len(axis_detent_ranges) == 1 and detent_range.start == detent_range.end:
+                            logger.error("Cannot have stop pit on detent range with only one detent")
+                            return False
+
+                        AxisDetentStruct = collections.namedtuple("AxisDetentStruct", ['start','end','height'])
+                        try:
+                            detent_range_next = axis_detent_ranges[i+1]
+                        except:
+                            detent_range_next = AxisDetentStruct(detent_range.end, v1_max, float('inf'))
+
+
+                        if not detent_range.end == detent_range_next.start:
+                            logger.error("The start of a detent range must be the end of the previous detent range {0},{1}".format(
+                                detent_range,
+                                (detent_range_next.start,detent_range_next.end,detent_range.height)))
+                            return False
+                        
+                        try:
+                            detent_range_prev = axis_detent_ranges[i-1]
+                        except:
+                            detent_range_prev = AxisDetentStruct(v1_min, detent_range.start, float('inf'))
+                            
+                        if not detent_range_prev.height > detent_range.height < detent_range_next.height:
+                            logger.error("Stop pit created by detent_range {0} must be lower than"
+                                         " previous {1} and next detent ranges {2}".format(
+                                            (detent_range),
+                                            (detent_range_prev.start,detent_range_prev.end,detent_range.height),
+                                            (detent_range_next.start,detent_range_next.end,detent_range_next.height))
+                                         )
+                            return False
+
+                    return True
+
+                if len(manip.axis_detent_ranges) > 0:
+                    if not validate_axis_detent_ranges(manip.axis_detent_ranges):
+                        return
+
                 for axis_detent_range in manip.axis_detent_ranges:
                     self.cockpitAttributes.add(XPlaneAttribute('ATTR_axis_detent_range',
                         (axis_detent_range.start, axis_detent_range.end, axis_detent_range.height)))
+
                 if len(cleaned_rotation_keyframe_data) > 2:
                     for rot_keyframe in cleaned_rotation_keyframe_data[1:-1]:
                         self.cockpitAttributes.add(
-                            XPlaneAttribute(
-                                'ATTR_manip_keyframe',
-                                (rot_keyframe.value,rot_keyframe.degrees)
-                            )
+                            XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
             else:
                 # add mouse wheel delta
