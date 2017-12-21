@@ -416,12 +416,6 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         default = False
     )
 
-    lift = bpy.props.FloatProperty(
-            name = "Detent Lift Distance",
-            description = "Lift (in meters) distance away from center of rotation when dataref2 is between v2 min/max",
-            default = 0.0
-    )
-
     __type_items = [
             (MANIP_DRAG_XY,      "Drag XY",      "Drag XY"),
             (MANIP_DRAG_AXIS,    "Drag Axis",    "Drag Axis"),
