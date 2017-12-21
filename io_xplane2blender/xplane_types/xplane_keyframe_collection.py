@@ -158,9 +158,10 @@ class XPlaneKeyframeCollection(MutableSequence):
 
         return ret
 
-    # Returns list  of tuples of (keyframe.value, keyframe.location)
-    # with location being a Vector in Blender form
     def getTranslationKeyframeTable(self):
+        '''
+        Returns List[Tuple[keyframe.value, keyframe.location]] where location is a Vector
+        '''
         return [(keyframe.value, keyframe.location) for keyframe in self]
 
     # Returns list  of tuples of (keyframe.value, keyframe.location)

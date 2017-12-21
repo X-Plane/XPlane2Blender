@@ -3,6 +3,8 @@ import math
 import sys
 
 import bpy
+from mathutils import Vector
+
 from .xplane_attribute import XPlaneAttribute
 from .xplane_material import XPlaneMaterial
 from .xplane_object import XPlaneObject
@@ -144,14 +146,13 @@ class XPlanePrimitive(XPlaneObject):
                 Special rules for Translation Bone:
                 - The translation bone must have exactly 2 keyframes
                 - The positions at each keyframe must not be the same, including both being 0 
-                - The animation must start or end at the origin of the bone (not implemented yet)
+                - The animation must start or end at the origin of the bone
                 '''
                 rotation_bone = None
                 translation_bone = None
                 translation_values = None
 
                 lift_at_max = 0.0 
-                drag_rot_manip_name = "Drag Rotate manipulator %s" % self.name
                 if len(self.xplaneBone.children) > 0:
                     logger.error("Drag Rotate manipulator must attached to a childless object")
                     return
@@ -173,14 +174,28 @@ class XPlanePrimitive(XPlaneObject):
                         if len(translation_values) == 2:
                             lift_at_max = (translation_values[1][1] - translation_values[0][1]).magnitude
                         else:
-                            logger.error("Drag Rotate manipulator must have exactly two keyframes for its movement")
+                            logger.error("Drag Rotate manipulator must have exactly two keyframes for its location animation")
+                            return
+                        
+                        def round_vector(vec):
+                            return Vector([round(comp,5) for comp in vec])
+                        
+                        origin  = round_vector(rotation_bone.getBlenderWorldMatrix().to_translation())
+                        end_one = round_vector(translation_values[0][1])
+                        end_two = round_vector(translation_values[1][1])
+
+                        # TODO: Which of these dataref values goes with the start of the animation?
+                        # Last time we said assume the smaller dataref value is the start.
+                        # TODO: Does it matter?
+                        if not end_one == origin and not end_two == origin: 
+                            logger.error("Drag Rotate manipulator's location animation must start or end at the origin of rotation")
                             return
 
                 elif self.xplaneBone.isDataRefAnimatedForRotation():
                     rotation_bone = self.xplaneBone
-                
-                
+
                 rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
+
                 if len(rotation_bone.animations) == 1:
                     keyframe_col_parent = next(iter(rotation_bone.animations.values())).keyframesAsAA()
                     rotation_keyframe_table = keyframe_col_parent.getRotationKeyframeTable()
