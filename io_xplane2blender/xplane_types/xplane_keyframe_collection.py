@@ -133,18 +133,21 @@ class XPlaneKeyframeCollection(MutableSequence):
         '''
         axes = self.getReferenceAxes()
 
+        #List[List[Vector,List[Keyframe]]]
         ret = [[axis,None] for axis in axes]
         TableEntry = namedtuple('TableEntry', ['value','degrees'])
         if self.getRotationMode() == "AXIS_ANGLE" or\
            self.getRotationMode() == "QUATERNION":
             keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[0])) for keyframe in self] 
-            ret[0][1] = keyframe_table
+            ret[0][1]  = keyframe_table
         else:
-            for axis,order in zip(axes,self.EULER_AXIS_ORDERING[self.getRotationMode()]):
-                keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[order])) for keyframe in self]
-                ret[ret.index(axis)] = keyframe_table
-    
-        ret = [(info[0],info[1]) for info in ret]
+            cur_order = self.EULER_AXIS_ORDERING[self.getRotationMode()]
+            ret[0][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[0]])) for keyframe in self]
+            ret[1][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[1]])) for keyframe in self]
+            ret[2][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[2]])) for keyframe in self]
+
+        ret = [tuple((axis_info[0],axis_info[1])) for axis_info in ret]
+
         assert isinstance(ret,list)
         for axis_info in ret:
             assert isinstance(axis_info,tuple)

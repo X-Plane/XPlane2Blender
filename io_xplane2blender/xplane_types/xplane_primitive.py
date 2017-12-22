@@ -133,7 +133,7 @@ class XPlanePrimitive(XPlaneObject):
                 1. The manipulator is attached to a translating XPlaneBone which has a rotating parent bone
                 2. The manipulator is attached to a rotation bone
 
-                Special rules for Rotation Bone:
+                Special rules for the Rotation Bone:
                 - Can only be rotated around one axis, no matter the rotation mode
                 - Rotation keyframe tables must be sorted in ascending or decending order
                 - Rotation keyframe table must have at least 2 rotation keyframes
@@ -141,7 +141,7 @@ class XPlanePrimitive(XPlaneObject):
                 - 0 degree rotation not allowed
                 - Clockwise and counterclockwise rotations are supported
 
-                Special rules for Translation Bone:
+                Special rules for the Translation Bone:
                 - Must be a leaf bone
                 - Must have a parent with rotation
                 - Must only be driven by only 1 dataref
@@ -182,7 +182,7 @@ class XPlanePrimitive(XPlaneObject):
 
                 lift_at_max = 0.0 
                 if len(self.xplaneBone.children) > 0:
-                    logger.error("Drag Rotate manipulator must attached to a childless object")
+                    logger.error("Drag Rotate manipulator must have no children")
                     return
                 elif self.xplaneBone.isDataRefAnimatedForTranslation():
                     if self.xplaneBone.parent is None or not self.xplaneBone.parent.isDataRefAnimatedForRotation():
@@ -195,7 +195,7 @@ class XPlanePrimitive(XPlaneObject):
                         if len(translation_bone.animations) == 1:
                             keyframe_col = next(iter(translation_bone.animations.values()))
                         else:
-                            logger.error("Drag Rotate manipulator cannot be driven by more than one datarefs cannot have more than 1 dataref")
+                            logger.error("Drag Rotate manipulator's location animation cannot be driven by more than one datarefs")
                             return
 
                         translation_values = keyframe_col.getTranslationKeyframeTable()
@@ -224,7 +224,7 @@ class XPlanePrimitive(XPlaneObject):
                     rotation_bone = self.xplaneBone
                 else:
                     #isDataRefAnimatedFor* checks if there is at least two unique keyframes, by this point there are none
-                    logger.error("Drag Rotate manipulator's translation keyframes must have different locations")
+                    logger.error("Drag Rotate manipulator's location keyframes must be different")
                     return
 
 
@@ -242,7 +242,7 @@ class XPlanePrimitive(XPlaneObject):
                     rotation_keyframe_data = rotation_keyframe_table[0][1]
                     if not (rotation_keyframe_data == sorted(rotation_keyframe_data) or\
                             rotation_keyframe_data == sorted(rotation_keyframe_data[::-1])):
-                        logger.error("Drag Rotate manipulator's dataref values are not in ascending or descending order")
+                        logger.error("Drag Rotate manipulator's rotation dataref values are not in ascending or descending order")
                         return
                     if len(rotation_keyframe_data) < 2:
                         logger.error("Drag Rotate manipulator must have at least 2 rotation keyframes")
@@ -250,7 +250,7 @@ class XPlanePrimitive(XPlaneObject):
 
                     rotation_keyframe_values_cleaned = clean_clamped_keyframes(rotation_keyframe_data,"degrees")
                 else:
-                    logger.error("Drag Rotate manipulator's parent rotation bone cannot be driven by more than one dataref")
+                    logger.error("Drag Rotate manipulator's rotation animation cannot be driven by more than one dataref")
                     return
                 
                 if translation_values is None:
