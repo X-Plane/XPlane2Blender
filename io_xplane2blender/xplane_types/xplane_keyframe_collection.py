@@ -160,9 +160,10 @@ class XPlaneKeyframeCollection(MutableSequence):
 
     def getTranslationKeyframeTable(self):
         '''
-        Returns List[Tuple[keyframe.value, keyframe.location]] where location is a Vector
+        Returns List[TranslationKeyframe[keyframe.value, keyframe.location]] where location is a Vector
         '''
-        return [(keyframe.value, keyframe.location) for keyframe in self]
+        TranslationKeyframe = namedtuple('TranslationKeyframe', ['value','location'])
+        return [TranslationKeyframe(keyframe.value, keyframe.location) for keyframe in self]
 
     # Returns list  of tuples of (keyframe.value, keyframe.location)
     # with location being a Vector in Blender form and scaled by the scaling amount

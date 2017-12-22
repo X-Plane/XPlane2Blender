@@ -133,24 +133,52 @@ class XPlanePrimitive(XPlaneObject):
                 1. The manipulator is attached to a translating XPlaneBone which has a rotating parent bone
                 2. The manipulator is attached to a rotation bone
 
-                Common Rules for Rotation Bone and Translation Bone
-
-                - Must only be driven by 1 dataref
-                - Keyframe tables must be sorted in ascending or decending order
-
                 Special rules for Rotation Bone:
-                - The rotation bone can only rotate about one axis,
-                whether that is one AA, Quaternion, or only one component of a Euler
+                - Can only be rotated around one axis, no matter the rotation mode
+                - Rotation keyframe tables must be sorted in ascending or decending order
+                - Rotation keyframe table must have at least 2 rotation keyframes
+                - Must be driven by only 1 dataref
+                - 0 degree rotation not allowed
                 - Clockwise and counterclockwise rotations are supported
 
                 Special rules for Translation Bone:
-                - The translation bone must have exactly 2 keyframes
-                - The positions at each keyframe must not be the same, including both being 0 
+                - Must be a leaf bone
+                - Must have a parent with rotation
+                - Must only be driven by only 1 dataref
+                - Must have exactly 2 keyframes
                 - The animation must start or end at the origin of the bone
+                - The positions at each keyframe must not be the same, including both being 0 
                 '''
                 rotation_bone = None
                 translation_bone = None
                 translation_values = None
+
+                # Clean any clamped keyframes away
+                # List[Tuple[float,float]] -> List[Tuple[float,float]]
+                def clean_clamped_keyframes(keyframes,attr):
+                    assert isinstance(attr,str)
+                    cleaned_keyframes = keyframes[:]
+                    # Remove clamp values
+                    # List[Tuple[float,float]],value_str -> None
+                    def remove_clamp_keyframes(keyframes,attr):
+                        itr = iter(keyframes)
+                        while True:
+                            current       = next(itr)
+                            next_keyframe = next(itr,None)
+
+                            if next_keyframe is not None:
+                                if getattr(current,attr) == getattr(next_keyframe,attr):
+                                    del keyframes[keyframes.index(current)]
+                                    itr = iter(keyframes)
+                                else:
+                                    break
+
+                    remove_clamp_keyframes(cleaned_keyframes,attr)
+                    cleaned_keyframes.reverse()
+                    remove_clamp_keyframes(cleaned_keyframes,attr)
+                    cleaned_keyframes.reverse()
+                    
+                    return cleaned_keyframes
 
                 lift_at_max = 0.0 
                 if len(self.xplaneBone.children) > 0:
@@ -171,8 +199,9 @@ class XPlanePrimitive(XPlaneObject):
                             return
 
                         translation_values = keyframe_col.getTranslationKeyframeTable()
-                        if len(translation_values) == 2:
-                            lift_at_max = (translation_values[1][1] - translation_values[0][1]).magnitude
+                        translation_values_cleaned = clean_clamped_keyframes(translation_values,"location")
+                        if len(translation_values_cleaned) == 2:
+                            lift_at_max = (translation_values_cleaned[1][1] - translation_values_cleaned[0][1]).magnitude
                         else:
                             logger.error("Drag Rotate manipulator must have exactly two keyframes for its location animation")
                             return
@@ -181,13 +210,13 @@ class XPlanePrimitive(XPlaneObject):
                             return Vector([round(comp,5) for comp in vec])
                         
                         origin  = round_vector(rotation_bone.getBlenderWorldMatrix().to_translation())
-                        end_one = round_vector(translation_values[0][1])
-                        end_two = round_vector(translation_values[1][1])
+                        anim_stop_one = round_vector(translation_values_cleaned[0][1])
+                        anim_stop_two = round_vector(translation_values_cleaned[1][1])
 
                         # TODO: Which of these dataref values goes with the start of the animation?
                         # Last time we said assume the smaller dataref value is the start.
                         # TODO: Does it matter?
-                        if not end_one == origin and not end_two == origin: 
+                        if not anim_stop_one == origin and not anim_stop_two == origin: 
                             logger.error("Drag Rotate manipulator's location animation must start or end at the origin of rotation")
                             return
 
@@ -212,33 +241,7 @@ class XPlanePrimitive(XPlaneObject):
                         logger.error("Drag Rotate manipulator must have at least 2 rotation keyframes")
                         return
 
-                    # Clean any clamped keyframes away
-                    # List[Tuple[float,float]] -> List[Tuple[float,float]]
-                    def clean_clamped_keyframes(keyframes):
-                        cleaned_keyframes = keyframes[:]
-                        # Remove clamp values
-                        # List[Tuple[float,float]] -> None
-                        def remove_clamp_keyframes(keyframes):
-                            itr = iter(keyframes)
-                            while True:
-                                current       = next(itr)
-                                next_keyframe = next(itr,None)
-
-                                if next_keyframe is not None:
-                                    if current.degrees == next_keyframe.degrees:
-                                        del keyframes[keyframes.index(current)]
-                                        itr = iter(keyframes)
-                                    else:
-                                        break
-
-                        remove_clamp_keyframes(cleaned_keyframes)
-                        cleaned_keyframes.reverse()
-                        remove_clamp_keyframes(cleaned_keyframes)
-                        cleaned_keyframes.reverse()
-                        
-                        return cleaned_keyframes
-
-                    cleaned_rotation_keyframe_data = clean_clamped_keyframes(rotation_keyframe_data)
+                    rotation_keyframe_values_cleaned = clean_clamped_keyframes(rotation_keyframe_data,"degrees")
                 else:
                     logger.error("Drag Rotate manipulator's parent rotation bone cannot be driven by more than one dataref")
                     return
@@ -262,8 +265,8 @@ class XPlanePrimitive(XPlaneObject):
                 rotation_origin_xp = xplane_helpers.vec_b_to_x(rotation_origin)
                 rotation_axis_xp   = xplane_helpers.vec_b_to_x(rotation_axis)
                 
-                angle1 = cleaned_rotation_keyframe_data[0].degrees
-                angle2 = cleaned_rotation_keyframe_data[-1].degrees
+                angle1 = rotation_keyframe_values_cleaned[0].degrees
+                angle2 = rotation_keyframe_values_cleaned[-1].degrees
 
                 if round(angle1,5) == round(angle2,5):
                     logger.error("0 degree rotation not allowed")
@@ -473,8 +476,8 @@ class XPlanePrimitive(XPlaneObject):
                     self.cockpitAttributes.add(XPlaneAttribute('ATTR_axis_detent_range',
                         (axis_detent_range.start, axis_detent_range.end, axis_detent_range.height)))
 
-                if len(cleaned_rotation_keyframe_data) > 2:
-                    for rot_keyframe in cleaned_rotation_keyframe_data[1:-1]:
+                if len(rotation_keyframe_values_cleaned) > 2:
+                    for rot_keyframe in rotation_keyframe_values_cleaned[1:-1]:
                         self.cockpitAttributes.add(
                             XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
