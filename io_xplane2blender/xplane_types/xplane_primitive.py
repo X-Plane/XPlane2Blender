@@ -145,7 +145,7 @@ class XPlanePrimitive(XPlaneObject):
                 - Must be a leaf bone
                 - Must have a parent with rotation
                 - Must only be driven by only 1 dataref
-                - Must have exactly 2 keyframes
+                - Must have exactly 2 (non-clamping) keyframes
                 - The animation must start or end at the origin of the bone
                 - The positions at each keyframe must not be the same, including both being 0 
                 '''
@@ -162,7 +162,7 @@ class XPlanePrimitive(XPlaneObject):
                     # List[Tuple[float,float]],value_str -> None
                     def remove_clamp_keyframes(keyframes,attr):
                         itr = iter(keyframes)
-                        while True:
+                        while len(keyframes) > 2:
                             current       = next(itr)
                             next_keyframe = next(itr,None)
 
@@ -203,7 +203,7 @@ class XPlanePrimitive(XPlaneObject):
                         if len(translation_values_cleaned) == 2:
                             lift_at_max = (translation_values_cleaned[1][1] - translation_values_cleaned[0][1]).magnitude
                         else:
-                            logger.error("Drag Rotate manipulator must have exactly two keyframes for its location animation")
+                            logger.error("Drag Rotate manipulator must have exactly two non-clamping keyframes for its location animation")
                             return
                         
                         def round_vector(vec):
@@ -222,6 +222,11 @@ class XPlanePrimitive(XPlaneObject):
 
                 elif self.xplaneBone.isDataRefAnimatedForRotation():
                     rotation_bone = self.xplaneBone
+                else:
+                    #isDataRefAnimatedFor* checks if there is at least two unique keyframes, by this point there are none
+                    logger.error("Drag Rotate manipulator's translation keyframes must have different locations")
+                    return
+
 
                 rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
 
@@ -246,9 +251,7 @@ class XPlanePrimitive(XPlaneObject):
                     logger.error("Drag Rotate manipulator's parent rotation bone cannot be driven by more than one dataref")
                     return
                 
-                if translation_values is not None and translation_values[0] == translation_values[1]:
-                    logger.error("Drag Rotate manipulator's translation min %s and max %s cannot be the same" % (translation_values[0],translation_values[1]))
-                elif translation_values is None:
+                if translation_values is None:
                     v2_min = 0.0
                     v2_max = 0.0
                 else:
