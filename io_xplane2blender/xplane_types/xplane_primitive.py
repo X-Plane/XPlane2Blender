@@ -235,6 +235,8 @@ class XPlanePrimitive(XPlaneObject):
                     rotation_keyframe_table = keyframe_col_parent.getRotationKeyframeTable()
                     if len(rotation_keyframe_table) > 1:
                         logger.error("Drag Rotate manipulator can only rotate around one axis")
+                        return
+
                     rotation_axis = rotation_keyframe_table[0][0]
 
                     rotation_keyframe_data = rotation_keyframe_table[0][1]
