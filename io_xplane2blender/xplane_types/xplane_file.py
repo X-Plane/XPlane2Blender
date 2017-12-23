@@ -15,6 +15,7 @@ from .xplane_header import XPlaneHeader
 from .xplane_commands import XPlaneCommands
 from ..xplane_helpers import floatToStr, logger
 from .xplane_material_utils import getReferenceMaterials
+from io_xplane2blender import xplane_helpers
 
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
@@ -438,7 +439,7 @@ class XPlaneFile():
         else:
             build = bpy.app.build_revision
         
-        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, bpy.context.scene.xplane.xplane2blender_ver)
+        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, xplane_helpers.VerStruct.current())
 
     # Method: write
     # Returns OBJ file code

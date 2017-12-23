@@ -20,11 +20,8 @@ class TestBuildNumberUpdater(XPlaneTestCase):
 
         def try_asserts():
             current = xplane_helpers.VerStruct.current()
-            xplane2blender_ver = bpy.context.scene.xplane.xplane2blender_ver
             self.assertTrue(bpy.context.scene['xplane2blender_version'] == xplane_constants.DEPRECATED_XP2B_VER,
                              "scene['xplane2blender_version'] was not deprecated on load")
-
-            self.assertTrue(current == xplane2blender_ver.make_struct(), 'xplane2blender_ver has been mutated after loading')
 
             history = bpy.context.scene.xplane.xplane2blender_ver_history
             self.assertTrue(len(history) == 2,

@@ -156,11 +156,11 @@ def scene_layout(self, scene):
     layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
 
-    xp2b_ver = scene.xplane.xplane2blender_ver
+    xp2b_ver = xplane_helpers.VerStruct.current()
     if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_RC and xp2b_ver.build_number != xplane_constants.BUILD_NUMBER_NONE:
-        layout.row().label("XPlane2Blender Version: " + xp2b_ver.short_str(), icon="FILE_TICK")
+        layout.row().label("XPlane2Blender Version: " + str(xp2b_ver), icon="FILE_TICK")
     else:
-        layout.row().label("XPlane2Blender Version: " + xp2b_ver.short_str(), icon="NONE")
+        layout.row().label("XPlane2Blender Version: " + str(xp2b_ver), icon="NONE")
 
     needs_warning = False
     if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_ALPHA or\

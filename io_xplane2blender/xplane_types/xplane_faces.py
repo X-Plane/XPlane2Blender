@@ -1,3 +1,5 @@
+#TODO: This class also seems to be completely unused! Remove it!
+
 # Class: XPlaneFaces
 # A collection of <XPlaneFace>.
 class XPlaneFaces():

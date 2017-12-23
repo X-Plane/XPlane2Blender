@@ -1,7 +1,11 @@
+raise Exception
+import argparse
 import os
 import sys
 import re
 import subprocess
+
+from io_xplane2blender.xplane_helpers import VerStruct
 
 def execCmd(args):
     out = subprocess.check_output(args, stderr = subprocess.STDOUT)
@@ -23,6 +27,45 @@ f = open(filepath, 'r')
 
 initFile = f.read()
 f.close()
+
+parser = argparse.ArgumentParser(description='Change the version number information of XPlane2Blender')
+parser.add_argument(
+
+import collections
+
+args = collections.OrderedDict(
+        {
+            #Args
+            '--version':('')
+                }
+        )
+
+def main(argv):
+    # args
+    # --version put in new version to overwrite
+    # --skip-validation
+    # --use-time
+    # --make-commit
+    # -f, --force
+
+optoin for typing in full string, simple string but with beta-6, or individual components
+    # write new timestamp and 
+    # run validation test on new io_xplane2blender (will need addon flag added to python tests saying which folder it should look into)
+
+    #copy contents of io_xplane2blender to io_xplane2blender_3_4_0_asdlsdf
+    use path object
+    config_file = os.path.join(__file__,'..','io_xplane2blender','xplane_config.py')
+    
+    build_number = VerStruct.make_new_build_number()
+
+    #Find all dot and __ folders and delete them
+    #Find all .orig and .blend# files and delete them
+    #Zip contents, place in builds folder
+    #delete tmp folder
+    #Append build log information
+
+if __name__ == "main":
+    main(sys.argv)
 
 initFile = re.sub(r"\"version\"\: \(\d+,\d+,\d+\)", '"version": (%s)' % version.replace('.', ','), initFile)
 

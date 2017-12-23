@@ -119,7 +119,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Property: build_number
     #
     # If run as a public facing build, this value will be replaced
-    # with the YYYYMMSSHHMMSS at build creation date.
+    # with the YYYYMMSSHHMMSS at build creation date in UTC.
     # Otherwise, it defaults to xplane_constants.BUILD_NUMBER_NONE
     build_number = bpy.props.StringProperty(
         name="Build Number",
@@ -135,9 +135,6 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # when the data is valid
     #
     # Passing nothing in results in no change
-    #
-    # Warning! Do not directly modify scene.xplane.xplane2blender without knowing EXACTLY what you're doing!
-    # It will break the ability to get a current version from xplane2blender_ver!
     def safe_set_version_data(self, addon_version=None, build_type=None,
                               build_type_version=None, data_model_version=None,
                               build_number=None, debug_add_to_history=False):
@@ -1092,15 +1089,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "Compile Normal-Textures",
         description = "Will automatically create and use corrected normal textures",
         default = True
-    )
-    
-    # This always represents the current version of the code,
-    # or a deliberate build of it. It's values are configured
-    # in __init__.py and xplane_config.py
-    xplane2blender_ver = bpy.props.PointerProperty(
-        name = "Current XPlane2Blender Version",
-        description = "The current version of XPlane2Blender",
-        type = XPlane2BlenderVersion
     )
     
     # This list of version histories the .blend file has encountered,
