@@ -79,20 +79,19 @@ class VerStruct():
             if self.build_type == other.build_type:
                 if self.build_type_version == other.build_type_version:
                     if self.data_model_version == other.data_model_version:
-                        if self.build_number == other.build_number:
-                            return True
+                        return True
         return False
 
     def __ne__(self,other):
         return not self == other
 
     def __lt__(self,other):
-        return (self.addon_version,xplane_constants.BUILD_TYPES.index(self.build_type),self.build_type_version,self.data_model_version,self.build_number) <\
-               (other.addon_version,xplane_constants.BUILD_TYPES.index(other.build_type),other.build_type_version,other.data_model_version,other.build_number)
+        return (self.addon_version,xplane_constants.BUILD_TYPES.index(self.build_type),self.build_type_version,self.data_model_version) <\
+               (other.addon_version,xplane_constants.BUILD_TYPES.index(other.build_type),other.build_type_version,other.data_model_version)
 
     def __gt__(self,other):
-        return (self.addon_version,xplane_constants.BUILD_TYPES.index(self.build_type),self.build_type_version,self.data_model_version,self.build_number) >\
-               (other.addon_version,xplane_constants.BUILD_TYPES.index(other.build_type),other.build_type_version,other.data_model_version,other.build_number)
+        return (self.addon_version,xplane_constants.BUILD_TYPES.index(self.build_type),self.build_type_version,self.data_model_version) >\
+               (other.addon_version,xplane_constants.BUILD_TYPES.index(other.build_type),other.build_type_version,other.data_model_version)
 
     def __ge__(self, other):
         return (self > other) or (self == other)

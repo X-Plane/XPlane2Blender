@@ -11,7 +11,6 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestBuildNumberVerStruct(XPlaneTestCase):
     current = xplane_helpers.VerStruct.current()
-    xplane2blender_ver = bpy.context.scene.xplane.xplane2blender_ver
     history = bpy.context.scene.xplane.xplane2blender_ver_history
     
     def test_constructor_defaults_correct(self):
@@ -23,14 +22,8 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
         self.assertTrue(ver_s.data_model_version == 0, "data_model_version %s does not match it's default %s" % (ver_s.data_model_version,0))
         self.assertTrue(ver_s.build_number       == xplane_constants.BUILD_NUMBER_NONE,"build_number %s does not match it's default %s" % (ver_s.build_number,xplane_constants.BUILD_NUMBER_NONE))
 
-    def test_repr_str_are_same(self):
-        ver_s = self.xplane2blender_ver.make_struct()
-        
-        self.assertTrue(repr(ver_s) == repr(self.current), "VerStuct and XPlane2BlenderVersion's repr implenentation are not the same: %s vs %s" % (repr(ver_s),repr(self.current)))
-        self.assertTrue(str(ver_s) == str(self.current), "VerStuct and XPlane2BlenderVersion's str implenentation are not the same: %s vs %s" % (str(ver_s),str(self.current)))
-
     def test_repr_makes_struct_in_eval(self):
-        ver_s = self.xplane2blender_ver.make_struct()
+        ver_s = VerStruct.current()
         
         try:
             VerStruct(*eval(repr(ver_s)))
@@ -54,7 +47,7 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
         self.assertTrue(orig_history_len != orig_history_len+1, "History length was not incremented by one after valid addition")
 
     def test_make_new_build_number(self):
-        ver_s = self.xplane2blender_ver.make_struct()
+        ver_s = VerStruct.current()
         ver_s.build_number = VerStruct.make_new_build_number()
         self.assertTrue(ver_s.is_valid(), "VerStruct.get_build_number_datetime does not generate vaild build numbers")
         
@@ -125,9 +118,9 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
         ver_future_dev = VerStruct.parse_version('3.4.1-dev.0+3.NO_BUILD_NUMBR')
         ver_future_alpha = VerStruct.parse_version('3.4.1-alpha.1+3.20170925121212')
         
-        self.assertTrue(legacy < beta_4 < beta_5 < rc_1_rebuild_1 < rc_1_rebuild_2 < rc_1 < rc_2 < rc_2_rebuild  < ver_future_dev < ver_future_alpha,
+        self.assertTrue(legacy < beta_4 < beta_5 < rc_1_rebuild_1 <= rc_1_rebuild_2 <= rc_1 < rc_2 <= rc_2_rebuild < ver_future_dev < ver_future_alpha,
                          "VerStruct.__lt__ not implemented correctly")
-        self.assertTrue(ver_future_alpha > ver_future_dev > rc_2_rebuild  > rc_2 > rc_1 > rc_1_rebuild_2 > rc_1_rebuild_1 > beta_5 > beta_4 > legacy,
+        self.assertTrue(ver_future_alpha > ver_future_dev > rc_2_rebuild >= rc_2 > rc_1 >= rc_1_rebuild_2 >= rc_1_rebuild_1 > beta_5 > beta_4 > legacy,
                          "VerStruct.__gt__ not implemented correctly")
 
         legacy_copy = VerStruct.parse_version('3.3.12')

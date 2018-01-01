@@ -18,7 +18,6 @@ class TestBlendBuildNumberObjFooter(XPlaneTestCase):
         
         version = VerStruct.parse_version(version_match.group(1))
         self.assertTrue(version is not None, "%s could not be parsed to a valid VerStruct" % version_match.group(1))
-        self.assertTrue(version == bpy.context.scene.xplane.xplane2blender_ver.make_struct(),
-                        "Version in obj is not equal to current version")
+        self.assertTrue(version == xplane_helpers.VerStruct.current(),"Version in obj is not equal to current version")
         
 runTestCases([TestBlendBuildNumberObjFooter])

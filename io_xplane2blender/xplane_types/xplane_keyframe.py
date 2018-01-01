@@ -74,3 +74,14 @@ class XPlaneKeyframe():
             self.rotation[2] = round(self.rotation[2],KEYFRAME_PRECISION)
 
         self.scale = copy.copy(blenderObject.scale)
+
+    def __str__(self):
+        bone_name="None"
+        if self.xplaneBone.blenderBone != None:
+            bone_name = self.xplaneBone.blenderBone.name
+        if self.xplaneBone.blenderObject != None:
+            bone_name = self.xplaneBone.blenderObject.name
+        return "Value=%f Dataref=%s bone=%s rotation_mode=%s trans=(%f,%f,%f) rot=(%f,%f,%f)" % (
+            self.value, self.dataref, bone_name, self.rotationMode,
+                self.translation[0],self.translation[1],self.translation[2],
+                self.rotation[0],self.rotation[1],self.rotation[2])

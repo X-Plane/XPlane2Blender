@@ -3,9 +3,10 @@
 
 import bpy
 import mathutils
+import collections
 from .xplane_bone import XPlaneBone
 from .xplane_light import XPlaneLight
-# from .xplane_line import XPlaneLine
+#TODO: Delete all traces of XPlaneLine from .xplane_line import XPlaneLine
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 from .xplane_lights import XPlaneLights
@@ -14,6 +15,7 @@ from .xplane_header import XPlaneHeader
 from .xplane_commands import XPlaneCommands
 from ..xplane_helpers import floatToStr, logger
 from .xplane_material_utils import getReferenceMaterials
+from io_xplane2blender import xplane_helpers
 
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
@@ -122,7 +124,7 @@ class XPlaneFile():
         self._resolvedBlenderGroupInstances = []
 
         # dict of xplane objects within the file
-        self.objects = {}
+        self.objects = collections.OrderedDict()
 
         self.exportMode = 'layers'
 
@@ -201,11 +203,13 @@ class XPlaneFile():
         return tempBlenderObjects
 
     # collects all child bones for a given parent bone given a list of blender objects
-    def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True):
+    def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True, noRealBones = False):
         parentBlenderObject = parentBone.blenderObject
         parentBlenderBone = parentBone.blenderBone
 
         def objectFilter(blenderObject):
+            if noRealBones and blenderObject.parent_type == 'BONE':
+                return False
             if parentBlenderObject:
                 return blenderObject.parent == parentBlenderObject
             elif parentBlenderBone:
@@ -241,6 +245,12 @@ class XPlaneFile():
             # collect armature bones
             elif blenderObject.type == 'ARMATURE':
                 self.collectBonesFromBlenderBones(bone, blenderObject, blenderObject.data.bones)
+                # Collect direct data-block children - some authors parent data blocks directly to the
+                # armature, then pose the armature via data block key framing.  The second 'true' here
+                # tells us to SKIP any direct child with a bone parent.  In Blender, a data block that
+                # is parented to a bone shows up as a datablock child of the armature, so without this
+                # we'd export each data block twice, which is bad.
+                self.collectBonesFromBlenderObjects(bone, blenderObject.children, True, True)
 
             # collect regular children
             else:
@@ -424,7 +434,7 @@ class XPlaneFile():
         else:
             build = bpy.app.build_revision
         
-        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, bpy.context.scene.xplane.xplane2blender_ver)
+        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, xplane_helpers.VerStruct.current())
 
     # Method: write
     # Returns OBJ file code

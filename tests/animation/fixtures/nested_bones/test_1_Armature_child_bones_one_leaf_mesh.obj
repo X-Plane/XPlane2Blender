@@ -1,0 +1,71 @@
+I
+800
+OBJ
+
+POINT_COUNTS	24	0	0	36
+
+VT	-0.25	0.25	-1.25	-1	0	0	0	0	# 0
+VT	-0.25	0.25	-0.75	-1	0	0	0	0	# 1
+VT	-0.25	-0.25	-0.75	-1	0	0	0	0	# 2
+VT	-0.25	-0.25	-1.25	-1	0	0	0	0	# 3
+VT	0.25	0.25	-1.25	0	0	-1	0	0	# 4
+VT	-0.25	0.25	-1.25	0	0	-1	0	0	# 5
+VT	-0.25	-0.25	-1.25	0	0	-1	0	0	# 6
+VT	0.25	-0.25	-1.25	0	0	-1	0	0	# 7
+VT	0.25	0.25	-0.75	1	0	0	0	0	# 8
+VT	0.25	0.25	-1.25	1	0	0	0	0	# 9
+VT	0.25	-0.25	-1.25	1	0	0	0	0	# 10
+VT	0.25	-0.25	-0.75	1	0	0	0	0	# 11
+VT	0.25	-0.25	-0.75	0	0	1	0	0	# 12
+VT	-0.25	-0.25	-0.75	0	0	1	0	0	# 13
+VT	-0.25	0.25	-0.75	0	0	1	0	0	# 14
+VT	0.25	0.25	-0.75	0	0	1	0	0	# 15
+VT	-0.25	-0.25	-1.25	0	-1	0	0	0	# 16
+VT	-0.25	-0.25	-0.75	0	-1	0	0	0	# 17
+VT	0.25	-0.25	-0.75	0	-1	0	0	0	# 18
+VT	0.25	-0.25	-1.25	0	-1	0	0	0	# 19
+VT	-0.25	0.25	-0.75	0	1	0	0	0	# 20
+VT	-0.25	0.25	-1.25	0	1	0	0	0	# 21
+VT	0.25	0.25	-1.25	0	1	0	0	0	# 22
+VT	0.25	0.25	-0.75	0	1	0	0	0	# 23
+
+IDX10	0	1	2	2	3	0	4	5	6	6
+IDX10	7	4	8	9	10	10	11	8	12	13
+IDX10	14	14	15	12	16	17	18	18	19	16
+IDX	20
+IDX	21
+IDX	22
+IDX	22
+IDX	23
+IDX	20
+
+# 0 ROOT
+# 1 Object: 1_Armature_child_bones_one_leaf_mesh
+# ARMATURE: 1_Armature_child_bones_one_leaf_mesh	weight: 0
+	# 2 Bone: Bone_1_2
+	ANIM_begin
+	# static rotation
+	ANIM_rotate	1	0	0	90.00020741	90.00020741
+	# rotation keyframes
+	ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio_all
+	ANIM_rotate_key	0	0
+	ANIM_rotate_key	1	45.00010371
+	ANIM_rotate_end
+		# 3 Bone: Bone_2_leaf
+		ANIM_begin
+		# static translation
+		ANIM_trans	0	0	-1	0	0	-1
+		# rotation keyframes
+		ANIM_rotate_begin	1	0	0	sim/graphics/animation/sin_wave_2
+		ANIM_rotate_key	-1	0
+		ANIM_rotate_key	1	45.00010371
+		ANIM_rotate_end
+			# 4 Object: 1_Cube_2_leaf
+			# PRIMITIVE: 1_Cube_2_leaf	weight: 0
+			# MATERIAL: Material
+			ATTR_shiny_rat	0.5
+			TRIS	0 36
+		ANIM_end
+	ANIM_end
+
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-beta.6+2.20171216045526

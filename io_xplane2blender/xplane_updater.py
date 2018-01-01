@@ -148,7 +148,7 @@ def load_handler(dummy):
         return
 
     scene = bpy.context.scene
-    current_version = scene.xplane.xplane2blender_ver
+    current_version = xplane_helpers.VerStruct.current()
     ver_history = scene.xplane.xplane2blender_ver_history
     logger = xplane_helpers.logger
     logger.clear()
@@ -202,13 +202,13 @@ def load_handler(dummy):
     # L:Compare last vs current
     # If the version is out of date
     #     L:Run update
-    if last_version.make_struct() < current_version.make_struct() and legacy_build_number_w_history is False:
+    if last_version.make_struct() < current_version and legacy_build_number_w_history is False:
         logger.info("This file was created with an older XPlane2Blender version (%s) less than or equal to (%s) "
               "and will now be updated" % (str(last_version),str(current_version)))
         update(last_version.make_struct(),logger)
 
         logger.success('Your file was successfully updated to XPlane2Blender %s' % str(current_version))
-    elif last_version.make_struct() > current_version.make_struct():
+    elif last_version.make_struct() > current_version:
         logger.warn('This file was last edited by a more advanced version, %s, than the current version %s.'\
         ' Changes may be lost or corrupt your work!' % (last_version,current_version))
 
@@ -222,7 +222,7 @@ bpy.app.handlers.load_post.append(load_handler)
 def save_handler(dummy):
     scene = bpy.context.scene
     if len(scene.xplane.xplane2blender_ver_history) == 0:
-        xplane_helpers.VerStruct.add_to_version_history(scene.xplane.xplane2blender_ver)
+        xplane_helpers.VerStruct.add_to_version_history(xplane_helpers.VerStruct.current())
         scene['xplane2blender_version'] = xplane_constants.DEPRECATED_XP2B_VER
 
 bpy.app.handlers.save_pre.append(save_handler)
