@@ -49,7 +49,11 @@ class XPlaneLight(XPlaneObject):
     def __init__(self, blenderObject):
         super(XPlaneLight, self).__init__(blenderObject)
         self.indices = [0,0]
-        self.color = [blenderObject.data.color[0], blenderObject.data.color[1], blenderObject.data.color[2]]
+        if blenderObject.data.xplane.enable_rgb_override:
+            self.color = blenderObject.data.xplane.rgb_override_values[:]
+        else:
+            self.color = blenderObject.data.color[:]
+        
         self.energy = blenderObject.data.energy
         self.lightType = blenderObject.data.xplane.type
         self.size = blenderObject.data.xplane.size

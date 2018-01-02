@@ -1478,6 +1478,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 # Settings for Blender lamps.
 #
 # Properties:
+#   bool enable_rgb_manual_override - Overrides the use of Blender's color picker
+#   float vector rgb_override_values - The values to be use if override is enabled
 #   enum type - Light type as defined in OBJ specs.
 #   string name - Light name, if "type" is 'named'.
 #   string params - Light params, if "type" is 'param'.
@@ -1485,7 +1487,22 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 #   string dataref - Dataref driving the light, if "type" is 'custom'.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneLampSettings(bpy.types.PropertyGroup):
-    # TODO: deprecate named, flashing, pulising, strobe, traffic lights in v3.4
+    # TODO: deprecate named{?}, flashing, pulising, strobe, traffic lights in v3.4
+    enable_rgb_override = bpy.props.BoolProperty(
+        name = "Enable RGB Picker Override",
+        description = "Used instead of the Blender color picker to input any RGB values. Useful for certain datarefs",
+        default = False
+        )
+    
+    rgb_override_values = bpy.props.FloatVectorProperty(
+        name = "RGB Override Values",
+        description = "The values that will be used instead of the RGB picker",
+        default = (0.0,0.0,0.0),
+        subtype = "NONE",
+        unit    = "NONE",
+        size = 3
+        )
+
     type = bpy.props.EnumProperty(
         attr = "type",
         name = "Type",
