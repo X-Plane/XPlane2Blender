@@ -811,7 +811,7 @@ def manipulator_layout(self, obj):
             box.prop(obj.xplane.manip, 'v1_max')
             box.prop(obj.xplane.manip, 'v2_min')
             box.prop(obj.xplane.manip, 'v2_max')
-        elif manipType in (MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
+        elif manipType in (MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT, MANIP_AXIS_KNOB):
             box.prop(obj.xplane.manip, 'v1')
             box.prop(obj.xplane.manip, 'v2')
         elif manipType == MANIP_COMMAND:
@@ -833,7 +833,7 @@ def manipulator_layout(self, obj):
             box.prop(obj.xplane.manip, 'v1_min')
             box.prop(obj.xplane.manip, 'v1_max')
 
-        if manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
+        if manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT, MANIP_AXIS_KNOB):
             box.prop(obj.xplane.manip, 'click_step')
             box.prop(obj.xplane.manip, 'hold_step')
 

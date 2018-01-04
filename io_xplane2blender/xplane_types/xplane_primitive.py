@@ -164,7 +164,7 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
-            elif manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
+            elif manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT, MANIP_AXIS_KNOB):
                 value = (
                     manip.cursor,
                     manip.v1,
