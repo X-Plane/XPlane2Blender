@@ -441,7 +441,7 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
     )
     
     __type_v1110_items = [
-            (MANIP_AXIS_DETENT,                "Axis Detent",                 "Axis Detent (requires at least v11.10)"),
+            (MANIP_DRAG_AXIS_DETENT,           "Drag Axis With Detents",      "Drag Axis With Detents (requires at least v11.10)"),
             (MANIP_COMMAND_KNOB2,              "Command Knob 2",              "Command Knob 2 (requires at least v11.10)"),
             (MANIP_COMMAND_SWITCH_UP_DOWN2,    "Command Switch Up Down 2",    "Command Switch Up Down 2 (requires at least v11.10)"),
             (MANIP_COMMAND_SWITCH_LEFT_RIGHT2, "Command Switch Left Right 2", "Command Switch Left Right 2 (requires at least v11.10)"),

@@ -814,7 +814,9 @@ def manipulator_layout(self, obj):
                              MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
                              MANIP_COMMAND_SWITCH_UP_DOWN2):
 
-            if manipType == MANIP_DRAG_ROTATE:
+            #New style auto detect
+            if manipType == MANIP_DRAG_AXIS_DETENT or\
+               manipType == MANIP_DRAG_ROTATE:
                 pass
             elif manipType != MANIP_DRAG_XY:
                 box.prop(obj.xplane.manip, 'dataref1')
@@ -881,14 +883,14 @@ def manipulator_layout(self, obj):
         if manipType in MOUSE_WHEEL_MANIPULATORS and xplane_version >= 1050:
             box.prop(obj.xplane.manip, 'wheel_delta')
 
-        if manipType == MANIP_DRAG_ROTATE:
-            box.prop(obj.xplane.manip, 'cursor')
-            box.prop(obj.xplane.manip, 'tooltip')
+        if manipType == MANIP_DRAG_AXIS_DETENT or\
+           manipType == MANIP_DRAG_ROTATE:
             box.prop(obj.xplane.manip, 'autodetect_datarefs')
 
             if obj.xplane.manip.autodetect_datarefs is False:
                 box.prop(obj.xplane.manip, 'dataref1')
-                box.prop(obj.xplane.manip, 'dataref2')
+                if manipType != MANIP_DRAG_AXIS_DETENT:
+                    box.prop(obj.xplane.manip, 'dataref2')
                 box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
             axis_detent_ranges_layout(self, box, obj.xplane.manip)
 
