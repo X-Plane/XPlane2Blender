@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import Iterable, namedtuple
 from collections.abc import MutableSequence
 import copy
 import math
@@ -230,3 +230,35 @@ class XPlaneKeyframeCollection(MutableSequence):
         else:
             return
     
+
+    @staticmethod
+    def filter_clamping_keyframes(keyframes,attr):
+        '''
+        Returns a new keyframe collection without clamping keyframes
+        attr specifies which keyframe attribute will be used to filter,
+        and must be "location" or "degrees"
+        '''
+        assert attr in ("location","degrees")
+
+        cleaned_keyframes = keyframes[:]
+        # Remove clamp values
+        # List[Tuple[float,float]],value_str -> None
+        def remove_clamp_keyframes(keyframes,attr):
+            itr = iter(keyframes)
+            while len(keyframes) > 2:
+                current       = next(itr)
+                next_keyframe = next(itr,None)
+
+                if next_keyframe is not None:
+                    if getattr(current,attr) == getattr(next_keyframe,attr):
+                        del keyframes[keyframes.index(current)]
+                        itr = iter(keyframes)
+                    else:
+                        break
+
+        remove_clamp_keyframes(cleaned_keyframes,attr)
+        cleaned_keyframes.reverse()
+        remove_clamp_keyframes(cleaned_keyframes,attr)
+        cleaned_keyframes.reverse()
+        
+        return cleaned_keyframes

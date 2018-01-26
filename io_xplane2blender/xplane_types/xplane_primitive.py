@@ -13,6 +13,8 @@ from ..xplane_constants import *
 from ..xplane_helpers import logger
 import io_xplane2blender.xplane_types
 from io_xplane2blender import xplane_helpers
+from io_xplane2blender.xplane_constants import MANIP_DRAG_AXIS_DETENT
+from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -127,6 +129,74 @@ class XPlanePrimitive(XPlaneObject):
                     manip.dataref1,
                     manip.tooltip
                 )
+            elif manipType == MANIP_DRAG_AXIS_DETENT:
+                # Semantically speaking we don't have a new manipulator type. The magic is in ATTR_axis_detented
+                attr = "ATTR_manip_" + MANIP_DRAG_AXIS 
+                '''
+                Drag rotate manipulators must follow either one of two patterns
+                1. The manipulator is attached to a translating XPlaneBone which has a rotating parent bone
+
+                Special rules for the Translation Bone:
+                - Must be a leaf bone
+                - Must have a parent with rotation
+                - Must only be driven by only 1 dataref
+                - Must have exactly 2 (non-clamping) keyframes
+                - The animation must start or end at the origin of the bone
+                - The positions at each keyframe must not be the same, including both being 0 
+                '''
+                parent_bone = self.xplaneBone.parent
+                if parent_bone is None:
+                    logger.error("Must have parent bone")
+                    return
+                elif not parent_bone.isDataRefAnimatedForTranslation():
+                    logger.error("Parent bone must be animated for translation")
+                    return
+
+                translation_bone = self.xplaneBone
+
+                if len(parent_bone.animations) > 1:
+                    logger.error("Parent has more than one animation")
+                    return
+                
+                if len(translation_bone.animations) > 1:
+                    logger.error("Manip bone has more than one animation")
+                    return
+
+                #bone.animations - <DataRef,List<KeyframeCollection>>
+                drag_axis_dataref = next(iter(parent_bone.animations))
+                drag_axis_frames  = next(iter(parent_bone.animations.values())).getTranslationKeyframeTable()
+                drag_axis_frames_cleaned = XPlaneKeyframeCollection.filter_clamping_keyframes(drag_axis_frames, "location")
+                drag_axis_b = drag_axis_frames_cleaned[1].location - drag_axis_frames_cleaned[0].location
+                drag_axis_xp = xplane_helpers.vec_b_to_x(drag_axis_b)
+                drag_axis_dataref_values = (drag_axis_frames_cleaned[0].value, drag_axis_frames_cleaned[1].value)
+                        
+                if len(translation_bone.animations) == 1:
+                    keyframe_col = next(iter(translation_bone.animations.values()))
+                else:
+                    logger.error("Drag Axis manipulator's location animation cannot be driven by more than one datarefs")
+                    return
+
+                translation_values = keyframe_col.getTranslationKeyframeTable()
+                translation_values_cleaned = XPlaneKeyframeCollection.filter_clamping_keyframes(translation_values,"location")
+                if len(translation_values_cleaned) == 2:
+                    lift_at_max = (translation_values_cleaned[1].location - translation_values_cleaned[0].location).magnitude
+                else:
+                    logger.error("Drag Axis manipulator must have exactly two non-clamping keyframes for its location animation")
+                    return
+
+                v1_min = translation_values_cleaned[0].value
+                v1_max = translation_values_cleaned[1].value
+
+                value = (
+                    manip.cursor,
+                    drag_axis_xp.x,
+                    drag_axis_xp.y,
+                    drag_axis_xp.z,
+                    drag_axis_dataref_values[0],
+                    drag_axis_dataref_values[1],
+                    drag_axis_dataref,
+                    manip.tooltip
+                )
             elif manipType == MANIP_DRAG_ROTATE:
                 '''
                 Drag rotate manipulators must follow either one of two patterns
@@ -153,33 +223,6 @@ class XPlanePrimitive(XPlaneObject):
                 translation_bone = None
                 translation_values = None
 
-                # Clean any clamped keyframes away
-                # List[Tuple[float,float]] -> List[Tuple[float,float]]
-                def clean_clamped_keyframes(keyframes,attr):
-                    assert isinstance(attr,str)
-                    cleaned_keyframes = keyframes[:]
-                    # Remove clamp values
-                    # List[Tuple[float,float]],value_str -> None
-                    def remove_clamp_keyframes(keyframes,attr):
-                        itr = iter(keyframes)
-                        while len(keyframes) > 2:
-                            current       = next(itr)
-                            next_keyframe = next(itr,None)
-
-                            if next_keyframe is not None:
-                                if getattr(current,attr) == getattr(next_keyframe,attr):
-                                    del keyframes[keyframes.index(current)]
-                                    itr = iter(keyframes)
-                                else:
-                                    break
-
-                    remove_clamp_keyframes(cleaned_keyframes,attr)
-                    cleaned_keyframes.reverse()
-                    remove_clamp_keyframes(cleaned_keyframes,attr)
-                    cleaned_keyframes.reverse()
-                    
-                    return cleaned_keyframes
-
                 lift_at_max = 0.0 
                 if len(self.xplaneBone.children) > 0:
                     logger.error("Drag Rotate manipulator must have no children")
@@ -199,15 +242,15 @@ class XPlanePrimitive(XPlaneObject):
                             return
 
                         translation_values = keyframe_col.getTranslationKeyframeTable()
-                        translation_values_cleaned = clean_clamped_keyframes(translation_values,"location")
+                        translation_values_cleaned = XPlaneKeyframeCollection.filter_clamping_keyframes(translation_values,"location")
                         if len(translation_values_cleaned) == 2:
                             lift_at_max = (translation_values_cleaned[1][1] - translation_values_cleaned[0][1]).magnitude
                         else:
                             logger.error("Drag Rotate manipulator must have exactly two non-clamping keyframes for its location animation")
                             return
                         
-                        def round_vector(vec):
-                            return Vector([round(comp,5) for comp in vec])
+                        def round_vector(vec,ndigits=5):
+                            return Vector([round(comp,ndigits) for comp in vec])
                         
                         origin  = round_vector(rotation_bone.getBlenderWorldMatrix().to_translation())
                         anim_stop_one = round_vector(translation_values_cleaned[0][1])
@@ -248,7 +291,7 @@ class XPlanePrimitive(XPlaneObject):
                         logger.error("Drag Rotate manipulator must have at least 2 rotation keyframes")
                         return
 
-                    rotation_keyframe_values_cleaned = clean_clamped_keyframes(rotation_keyframe_data,"degrees")
+                    rotation_keyframe_values_cleaned = XPlaneKeyframeCollection.filter_clamping_keyframes(rotation_keyframe_data,"degrees")
                 else:
                     logger.error("Drag Rotate manipulator's rotation animation cannot be driven by more than one dataref")
                     return
@@ -391,9 +434,31 @@ class XPlanePrimitive(XPlaneObject):
             attr = None
 
         if attr is not None:
+            # Order in OBJ (only added if applicable)
+            # 1. "ATTR_manip_"+type
             self.cockpitAttributes.add(XPlaneAttribute(attr, value))
-            if manipType == MANIP_DRAG_ROTATE and bpy.context.scene.xplane.version >= VERSION_1110:
-                
+            
+            ver_ge_1100 = int(bpy.context.scene.xplane.version) >= int(VERSION_1110)
+
+            # 2. ATTR_axis_detented (DRAG_AXIS_DETENT)
+            if (manipType == MANIP_DRAG_AXIS_DETENT) and ver_ge_1100:
+                detent_axis_dataref = next(iter(translation_bone.animations))
+                detent_axis_frames  = next(iter(translation_bone.animations.values())).getTranslationKeyframeTable()
+                detent_axis_frames_cleaned = XPlaneKeyframeCollection.filter_clamping_keyframes(detent_axis_frames, "location")
+                detent_axis_b = detent_axis_frames_cleaned[1].location - detent_axis_frames_cleaned[0].location
+                detent_axis_xp = xplane_helpers.vec_b_to_x(detent_axis_b)
+                self.cockpitAttributes.add(XPlaneAttribute("ATTR_axis_detented",
+                                                           (detent_axis_xp.x,
+                                                            detent_axis_xp.y,
+                                                            detent_axis_xp.z,
+                                                            detent_axis_frames_cleaned[0].value,
+                                                            detent_axis_frames_cleaned[1].value,
+                                                            detent_axis_dataref),
+                                                           ))
+
+            # 3. All ATTR_axis_detent_range (DRAG_AXIS_DETENT or DRAG_ROTATE)
+            if (manipType == MANIP_DRAG_AXIS_DETENT or manipType == MANIP_DRAG_ROTATE) and ver_ge_1100:
+
                 #List[AxisDetentRange] -> bool
                 def validate_axis_detent_ranges(axis_detent_ranges,v1_min,v1_max,lift_at_max):
                     '''
@@ -474,22 +539,23 @@ class XPlanePrimitive(XPlaneObject):
                     return True
 
                 if len(manip.axis_detent_ranges) > 0:
-                    if not validate_axis_detent_ranges(manip.axis_detent_ranges,manip.v1_min,manip.v1_max, lift_at_max):
+                    if not validate_axis_detent_ranges(manip.axis_detent_ranges, v1_min, v1_max, lift_at_max):
                         return
 
                 for axis_detent_range in manip.axis_detent_ranges:
                     self.cockpitAttributes.add(XPlaneAttribute('ATTR_axis_detent_range',
                         (axis_detent_range.start, axis_detent_range.end, axis_detent_range.height)))
 
+            # 4. All ATTR_manip_keyframes (DRAG_ROTATE)
+            if manipType == MANIP_DRAG_ROTATE:
                 if len(rotation_keyframe_values_cleaned) > 2:
                     for rot_keyframe in rotation_keyframe_values_cleaned[1:-1]:
                         self.cockpitAttributes.add(
                             XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
-            else:
-                # add mouse wheel delta
-                if manipType in MOUSE_WHEEL_MANIPULATORS and bpy.context.scene.xplane.version >= VERSION_1050 and manip.wheel_delta != 0:
-                    self.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', manip.wheel_delta))
+            # add mouse wheel delta
+            if manipType in MOUSE_WHEEL_MANIPULATORS and bpy.context.scene.xplane.version >= VERSION_1050 and manip.wheel_delta != 0:
+                self.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', manip.wheel_delta))
 
 
     def write(self):
@@ -515,26 +581,6 @@ class XPlanePrimitive(XPlaneObject):
         # if the file is a cockpit file write all cockpit attributes
         if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
             for attr in self.cockpitAttributes:
-                if attr == "ATTR_manip_drag_rotate":
-                    v = ('#' + attr,
-                        'cursor',
-                        'x',
-                        'y',
-                        'z',
-                        'dx',
-                        'dy',
-                        'dz',
-                        'angle1',
-                        'angle2',
-                        'lift',
-                        'v1min',
-                        'v1max',
-                        'v2min',
-                        'v2max',
-                        'dataref1',
-                        'dataref2',
-                        'tooltip')
-                    o += '\t'.join(v) +'\n'
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self)
 
         if self.indices[1] > self.indices[0]:

@@ -774,9 +774,12 @@ def axis_detent_ranges_layout(self, layout, manip):
     
     for i, attr in enumerate(manip.axis_detent_ranges):
         row = box.row() 
-        row.prop(attr,"start")#, text= "Axis_Detent Range ")
-        row.prop(attr,"end")#, text= "Axis_Detent Range ")
-        row.prop(attr,"height")#, text= "Axis_Detent Range ")
+        row.prop(attr,"start")
+        row.prop(attr,"end")
+        if manip.type_v1110 == MANIP_DRAG_AXIS_DETENT:
+            row.prop(attr,"height", text="Length")
+        else:
+            row.prop(attr,"height")
         
         row.operator("object.remove_xplane_axis_detent_range", text="", emboss=False, icon="X").index = i
 

@@ -6,10 +6,15 @@ from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
 from .xplane_keyframe import XPlaneKeyframe
 from .xplane_keyframe_collection import XPlaneKeyframeCollection
+from collections import OrderedDict
 
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
 class XPlaneBone():
+    '''
+    Property: animations
+    Dictionary<DataRefPath,List<XPlaneKeyframeCollection>>
+    '''
 
     # Constructor: __init__
     #
