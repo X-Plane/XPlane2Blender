@@ -184,8 +184,8 @@ class XPlanePrimitive(XPlaneObject):
                     logger.error("Drag Axis manipulator must have exactly two non-clamping keyframes for its location animation")
                     return
 
-                v1_min = translation_values_cleaned[0].value
-                v1_max = translation_values_cleaned[1].value
+                v1_min = drag_axis_frames_cleaned[0].value
+                v1_max = drag_axis_frames_cleaned[1].value
 
                 value = (
                     manip.cursor,
