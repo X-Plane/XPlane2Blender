@@ -254,10 +254,7 @@ class XPlanePrimitive(XPlaneObject):
                 translation_values = None
 
                 lift_at_max = 0.0 
-                if len(self.xplaneBone.children) > 0:
-                    logger.error("Drag Rotate manipulator must have no children")
-                    return
-                elif self.xplaneBone.isDataRefAnimatedForTranslation():
+                if self.xplaneBone.isDataRefAnimatedForTranslation():
                     if self.xplaneBone.parent is None or not self.xplaneBone.parent.isDataRefAnimatedForRotation():
                         logger.error("Drag Rotate manipulator has detents but no parent with rotation")
                         return
@@ -605,6 +602,20 @@ class XPlanePrimitive(XPlaneObject):
 
         # if the file is a cockpit file write all cockpit attributes
         if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
+            if self.blenderObject.xplane.manip.enabled:
+                manip = self.blenderObject.xplane.manip
+                xplane_version = int(bpy.context.scene.xplane.version)
+                if xplane_version >= int(VERSION_1110):
+                    manipType = manip.type_v1110
+                else:
+                    manipType = manip.type
+
+                if (manipType == MANIP_DRAG_AXIS_DETENT or\
+                    manipType == MANIP_DRAG_ROTATE) and\
+                    len(self.xplaneBone.children) > 0:
+                        logger.error("Drag Rotate manipulator must have no children")
+                        return ''
+
             for attr in self.cockpitAttributes:
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self)
 
