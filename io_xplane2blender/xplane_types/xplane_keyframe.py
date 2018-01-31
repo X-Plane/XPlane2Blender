@@ -45,6 +45,7 @@ class XPlaneKeyframe():
     #   string dataref - Path of the dataref this keyframe refers to.
     #   XPlaneObject xplaneObject - A <XPlaneObject>.
     def __init__(self, keyframe, index, dataref, xplaneBone):
+        currentFrame = bpy.context.scene.frame_current
         self.value = keyframe.co[1]
         self.dataref = dataref
         self.index = index
@@ -81,6 +82,7 @@ class XPlaneKeyframe():
             self.rotation[2] = round(self.rotation[2],KEYFRAME_PRECISION)
 
         self.scale = copy.copy(blenderObject.scale)
+        bpy.context.scene.frame_set(frame = currentFrame)
 
     def __str__(self):
         bone_name="None"

@@ -80,6 +80,7 @@ class XPlanePrimitive(XPlaneObject):
         if self.material:
             self.material.collect()
 
+                        
     # Method: collectManipulatorAttributes
     # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.
     def collectManipulatorAttributes(self):
@@ -133,19 +134,23 @@ class XPlanePrimitive(XPlaneObject):
                 )
             elif manipType == MANIP_DRAG_AXIS_DETENT:
                 # Semantically speaking we don't have a new manipulator type. The magic is in ATTR_axis_detented
-                attr = "ATTR_manip_" + MANIP_DRAG_AXIS 
+                attr = "ATTR_manip_" + MANIP_DRAG_AXIS
                 '''
-                Drag rotate manipulators must follow either one of two patterns
-                1. The manipulator is attached to a translating XPlaneBone which has a rotating parent bone
-
+                Drag Axis/Drag Axis With Detents
+                Empty/Bone -> main drag axis animation and (optionally) v1_min/max for validating axis_detent_ranges
+                |_Child mesh -> manipulator settings and (optionally) detent axis animation
+                  
+                Common Rules:
+                - Animations must only be driven by only 1 dataref
+                - Animations must have exactly 2 (non-clamping) keyframes
+                
                 Special rules for the Translation Bone:
                 - Must be a leaf bone
-                - Must have a parent with rotation
-                - Must only be driven by only 1 dataref
-                - Must have exactly 2 (non-clamping) keyframes
+                - Must have a parent with translation
                 - The animation must start or end at the origin of the bone
                 - The positions at each keyframe must not be the same, including both being 0 
                 '''
+                
                 parent_bone = self.xplaneBone.parent
                 if parent_bone is None:
                     logger.error("Must have parent bone")
@@ -161,7 +166,11 @@ class XPlanePrimitive(XPlaneObject):
                     return
                 
                 if len(translation_bone.animations) > 1:
-                    logger.error("Manip bone has more than one animation")
+                    logger.error("Manipulator bone has more than one animation")
+                    return
+                
+                if len(translation_bone.children) > 0:
+                    logger.error("Manipulator must be the leaf bone")
                     return
 
                 #bone.animations - <DataRef,List<KeyframeCollection>>
@@ -172,9 +181,14 @@ class XPlanePrimitive(XPlaneObject):
                 drag_axis_xp = xplane_helpers.vec_b_to_x(drag_axis_b)
                 drag_axis_dataref_values = (drag_axis_frames_cleaned[0].value, drag_axis_frames_cleaned[1].value)
                         
+                if len(drag_axis_frames_cleaned) != 2:
+                    logger.error("Drag Axis manipulator must have exactly two non-clamping keyframes for its drag axis animation")
+                    return
+
                 if len(translation_bone.animations) == 1:
                     keyframe_col = next(iter(translation_bone.animations.values()))
                 else:
+                    #TODO duplicate of above
                     logger.error("Drag Axis manipulator's location animation cannot be driven by more than one datarefs")
                     return
 
@@ -184,6 +198,17 @@ class XPlanePrimitive(XPlaneObject):
                     lift_at_max = (translation_values_cleaned[1].location - translation_values_cleaned[0].location).magnitude
                 else:
                     logger.error("Drag Axis manipulator must have exactly two non-clamping keyframes for its location animation")
+                    return
+
+                origin  = round_vector(parent_bone.getBlenderWorldMatrix().to_translation())
+                anim_stop_one = round_vector(translation_values_cleaned[0][1])
+                anim_stop_two = round_vector(translation_values_cleaned[1][1])
+
+                # TODO: Which of these dataref values goes with the start of the animation?
+                # Last time we said assume the smaller dataref value is the start.
+                # TODO: Does it matter?
+                if not anim_stop_one == origin and not anim_stop_two == origin: 
+                    logger.error("Drag Axis manipulator's location animation must start or end at the origin of rotation")
                     return
 
                 v1_min = drag_axis_frames_cleaned[0].value
