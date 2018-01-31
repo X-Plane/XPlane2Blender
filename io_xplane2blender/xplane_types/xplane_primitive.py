@@ -16,6 +16,8 @@ from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_constants import MANIP_DRAG_AXIS_DETENT
 from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
 
+def round_vector(vec,ndigits=5):
+    return Vector([round(comp,ndigits) for comp in vec])
 # Class: XPlanePrimitive
 # A Mesh object.
 #
@@ -203,10 +205,13 @@ class XPlanePrimitive(XPlaneObject):
                 1. The manipulator is attached to a translating XPlaneBone which has a rotating parent bone
                 2. The manipulator is attached to a rotation bone
 
+                Common
+                - Manipulator must be animated
+
                 Special rules for the Rotation Bone:
                 - Can only be rotated around one axis, no matter the rotation mode
                 - Rotation keyframe tables must be sorted in ascending or decending order
-                - Rotation keyframe table must have at least 2 rotation keyframes
+                - Rotation keyframe table must have at least 2 rotation keyframes (taken care of by other animation code)
                 - Must be driven by only 1 dataref
                 - 0 degree rotation not allowed
                 - Clockwise and counterclockwise rotations are supported
@@ -249,9 +254,6 @@ class XPlanePrimitive(XPlaneObject):
                             logger.error("Drag Rotate manipulator must have exactly two non-clamping keyframes for its location animation")
                             return
                         
-                        def round_vector(vec,ndigits=5):
-                            return Vector([round(comp,ndigits) for comp in vec])
-                        
                         origin  = round_vector(rotation_bone.getBlenderWorldMatrix().to_translation())
                         anim_stop_one = round_vector(translation_values_cleaned[0][1])
                         anim_stop_two = round_vector(translation_values_cleaned[1][1])
@@ -266,10 +268,8 @@ class XPlanePrimitive(XPlaneObject):
                 elif self.xplaneBone.isDataRefAnimatedForRotation():
                     rotation_bone = self.xplaneBone
                 else:
-                    #isDataRefAnimatedFor* checks if there is at least two unique keyframes, by this point there are none
-                    logger.error("Drag Rotate manipulator's location keyframes must be different")
+                    logger.error("Drag Rotate manipulator must be animated according to your intended manipulation goal (throttle vs trim wheel styel)")
                     return
-
 
                 rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
 
