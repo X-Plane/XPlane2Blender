@@ -393,7 +393,7 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 #   string negative_command - Negative command
 #   string dataref1 - Dataref 1
 #   string dataref2 - Dataref 2
-class XPlaneManipulator(bpy.types.PropertyGroup):
+class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
     autodetect_datarefs = bpy.props.BoolProperty(
         name = "Autodetect Datarefs",
         description = "If checked, dataref(s) for this manipulator will be taken from its mesh's animations",
@@ -1192,7 +1192,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         attr = "manip",
         name = "Manipulator",
         description = "X-Plane Manipulator Settings",
-        type = XPlaneManipulator
+        type = XPlaneManipulatorSettings
     )
 
     lod = bpy.props.BoolVectorProperty(
@@ -1616,7 +1616,7 @@ def addXPlaneRNA():
     bpy.utils.register_class(XPlaneCondition)
     #bpy.utils.register_class(XPlaneDatarefSearch)
     bpy.utils.register_class(XPlaneExportPathDirective)
-    bpy.utils.register_class(XPlaneManipulator)
+    bpy.utils.register_class(XPlaneManipulatorSettings)
     bpy.utils.register_class(XPlaneCockpitRegion)
     bpy.utils.register_class(XPlaneLOD)
 
@@ -1677,6 +1677,6 @@ def removeXPlaneRNA():
     bpy.utils.unregister_class(XPlaneDataref)
     #bpy.utils.unregister_class(XPlaneDatarefSearch)
     bpy.utils.unregister_class(XPlaneExportPathDirective)
-    bpy.utils.unregister_class(XPlaneManipulator)
+    bpy.utils.unregister_class(XPlaneManipulatorSettings)
     bpy.utils.unregister_class(XPlaneCockpitRegion)
     bpy.utils.unregister_class(XPlaneLOD)

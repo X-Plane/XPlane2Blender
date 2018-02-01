@@ -161,12 +161,28 @@ class XPlaneKeyframeCollection(MutableSequence):
 
         return ret
 
+    def getRotationKeyframeTableNoClamps(self):
+        '''
+        Return the rotation portion of a keyframe collection in the form of
+        List[Tuple[axis, List[Tuple[value,deg]]]], where axis is Vector.
+        
+        Does not contain any clamping keyframes.
+        '''
+        return XPlaneKeyframeCollection.filter_clamping_keyframes(self.getRotationKeyframeTable(), "rotation")
+
     def getTranslationKeyframeTable(self):
         '''
         Returns List[TranslationKeyframe[keyframe.value, keyframe.location]] where location is a Vector
         '''
         TranslationKeyframe = namedtuple('TranslationKeyframe', ['value','location'])
         return [TranslationKeyframe(keyframe.value, keyframe.location) for keyframe in self]
+
+    def getTranslationKeyframeTableNoClamps(self):
+        '''
+        ()->List[TranslationKeyframe[keyframe.value, keyframe.location]] where location is a Vector
+        without any clamping values in the keyframe table
+        '''
+        return XPlaneKeyframeCollection.filter_clamping_keyframes(self.getTranslationKeyframeTable(), "location")
 
     # Returns list  of tuples of (keyframe.value, keyframe.location)
     # with location being a Vector in Blender form and scaled by the scaling amount
