@@ -641,11 +641,11 @@ class XPlaneBone():
         totalRot = 0
 
         # our reference axis (or axes)
-        axes = keyframes.getReferenceAxes()
+        axes, final_rotation_mode = keyframes.getReferenceAxes()
 
         if len(axes) == 3:
             # decompose to eulers and return euler rotation instead
-            o = self._writeEulerRotationKeyframes(dataref,keyframes)
+            o = self._writeEulerRotationKeyframes(dataref,keyframes.keyframesAsEuler())
             return o
         elif len(axes) == 1:
             refAxis = axes[0]
@@ -684,16 +684,16 @@ class XPlaneBone():
 
     def _writeQuaternionRotationKeyframes(self, dataref, keyframes):
         # Writing axis angle will automatically convert quaternions to AA and write it
-        return self._writeAxisAngleRotationKeyframes(dataref, keyframes)
+        return self._writeAxisAngleRotationKeyframes(dataref, keyframes.keyframesAsAA())
 
     def _writeEulerRotationKeyframes(self, dataref, keyframes):
         debug = getDebug()
         o = ''
         indent = self.getIndent()
-        axes = keyframes.getReferenceAxes()
+        axes, final_rotation_mode = keyframes.getReferenceAxes()
         totalRot = 0
 
-        for axis,order in zip(axes,XPlaneKeyframeCollection.EULER_AXIS_ORDERING[keyframes[0].rotationMode]):
+        for axis,order in zip(axes,XPlaneKeyframeCollection.EULER_AXIS_ORDERING[final_rotation_mode]):
             ao = ''
             totalAxisRot = 0
 

@@ -49,13 +49,12 @@ class XPlaneKeyframe():
         self.value = keyframe.co[1]
         self.dataref = dataref
         self.index = index
-        self.xplaneBone = xplaneBone
 
-        if self.xplaneBone.blenderBone:
+        if xplaneBone.blenderBone:
             # we need the pose bone
-            blenderObject = self.xplaneBone.blenderObject.pose.bones[self.xplaneBone.blenderBone.name]
+            blenderObject = xplaneBone.blenderObject.pose.bones[xplaneBone.blenderBone.name]
         else:
-            blenderObject = self.xplaneBone.blenderObject
+            blenderObject = xplaneBone.blenderObject
 
         # goto keyframe and read out object values
         # TODO: support subframes?
@@ -85,12 +84,7 @@ class XPlaneKeyframe():
         bpy.context.scene.frame_set(frame = currentFrame)
 
     def __str__(self):
-        bone_name="None"
-        if self.xplaneBone.blenderBone != None:
-            bone_name = self.xplaneBone.blenderBone.name
-        if self.xplaneBone.blenderObject != None:
-            bone_name = self.xplaneBone.blenderObject.name
         return "Value=%f Dataref=%s bone=%s rotation_mode=%s trans=(%f,%f,%f) rot=(%f,%f,%f)" % (
-            self.value, self.dataref, bone_name, self.rotationMode,
+            self.value, self.dataref, self.rotationMode,
                 self.translation[0],self.translation[1],self.translation[2],
                 self.rotation[0],self.rotation[1],self.rotation[2])

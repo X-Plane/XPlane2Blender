@@ -58,6 +58,9 @@ class XPlaneKeyframeCollection(MutableSequence):
         self.insert(len(self._list), val)
 
     def getReferenceAxes(self,rotation_mode=None):
+        '''
+        rotation_mode:str->List[Vector], str (final rotation mode)
+        '''
         def _makeReferenceAxes(keyframes):
             axes = []
             rotationMode = keyframes.getRotationMode()
@@ -103,7 +106,7 @@ class XPlaneKeyframeCollection(MutableSequence):
 
             assert len(axes) == 1 or len(axes) == 3
             assert len([axis for axis in axes if not isinstance(axis,mathutils.Vector)]) == 0
-            return axes
+            return axes, keyframes.getRotationMode()
 
         if rotation_mode is None:
             rotation_mode = self.getRotationMode()
@@ -131,17 +134,17 @@ class XPlaneKeyframeCollection(MutableSequence):
         Return the rotation portion of a keyframe collection in the form of
         List[Tuple[axis, List[Tuple[value,deg]]]], where axis is Vector.
         '''
-        axes = self.getReferenceAxes()
+        axes, final_rotation_mode = self.getReferenceAxes()
 
         #List[List[Vector,List[Keyframe]]]
         ret = [[axis,None] for axis in axes]
         TableEntry = namedtuple('TableEntry', ['value','degrees'])
-        if self.getRotationMode() == "AXIS_ANGLE" or\
-           self.getRotationMode() == "QUATERNION":
+        if final_rotation_mode == "AXIS_ANGLE" or\
+           final_rotation_mode == "QUATERNION":
             keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[0])) for keyframe in self] 
             ret[0][1]  = keyframe_table
         else:
-            cur_order = self.EULER_AXIS_ORDERING[self.getRotationMode()]
+            cur_order = self.EULER_AXIS_ORDERING[final_rotation_mode]
             ret[0][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[0]])) for keyframe in self]
             ret[1][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[1]])) for keyframe in self]
             ret[2][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[2]])) for keyframe in self]
@@ -192,7 +195,7 @@ class XPlaneKeyframeCollection(MutableSequence):
 
     def keyframesAsAA(self):
         #TODO: This copy operation still isn't enough to make it clean without sideeffects
-        keyframes = copy.copy(self)
+        keyframes = copy.deepcopy(self)
         if self.getRotationMode() == "AXIS_ANGLE":
             return keyframes
         elif self.getRotationMode() == "QUATERNION":
@@ -217,7 +220,7 @@ class XPlaneKeyframeCollection(MutableSequence):
             return keyframes
         
     def keyframesAsEuler(self):
-        keyframes = copy.copy(self)
+        keyframes = copy.deepcopy(self)
         if self.getRotationMode() == "AXIS_ANGLE":
             for keyframe in keyframes:
                 rotation = keyframe.rotation
@@ -230,12 +233,15 @@ class XPlaneKeyframeCollection(MutableSequence):
 
             return keyframes
         elif self.getRotationMode() == "QUATERNION":
-            return
+            for keyframe in keyframes:
+                keyframe.rotationMode = "XZY"
+                keyframe.rotation = keyframe.rotation.to_euler('XZY')
+            return keyframes
         else:
             return keyframes
             
     def keyframesAsQuaternion(self):
-        keyframes = copy.copy(self)
+        keyframes = copy.deepcopy(self)
         if self.getRotationMode() == "AXIS_ANGLE":
             for keyframe in keyframes:
                 rotation = keyframe.rotation

@@ -317,8 +317,6 @@ class XPlaneManipulator():
                 rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
 
                 if autodetect_must_be_driven_by_exactly_n_datarefs(rotation_bone, 1):
-                    import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc')
-                    import pydevd;pydevd.settrace()
                     if not autodetect_bone_rotated_around_n_axis(rotation_bone,1):
                         return
                     else:

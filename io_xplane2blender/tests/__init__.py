@@ -1,4 +1,5 @@
 import os
+
 import shutil
 import sys
 import unittest
@@ -159,8 +160,16 @@ class XPlaneTestCase(unittest.TestCase):
                 if isinstance(segmentB, str):
                     segmentB = toFloat(segmentB, segmentB)
 
+                def isdegree(segment,line):
+                    if isnumber(segment):
+                        return not isnumber(line) and ("rotate" in line or "manip_keyframe" in line) and isnumber(segment)
+                    else:
+                        return False
+
                 # assure same values (floats must be compared with tolerance)
                 if isnumber(segmentA) and isnumber(segmentB):
+                    segmentA = abs(segmentA) if isdegree(segmentA,lineA[0]) else segmentA
+                    segmentB = abs(segmentB) if isdegree(segmentB,lineB[0]) else segmentB
                     self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
                 else:
                     self.assertEquals(segmentA, segmentB)
