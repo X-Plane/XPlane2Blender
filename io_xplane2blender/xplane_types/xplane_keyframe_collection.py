@@ -65,7 +65,7 @@ class XPlaneKeyframeCollection(MutableSequence):
             axes = []
             rotationMode = keyframes.getRotationMode()
             if rotationMode == 'QUATERNION':
-                return _makeReferenceAxes(keyframes.keyframesAsAA())
+                return _makeReferenceAxes(keyframes.asAA())
 
             if rotationMode == 'AXIS_ANGLE':
                 refAxis    = None
@@ -89,7 +89,7 @@ class XPlaneKeyframeCollection(MutableSequence):
                          refAxisInv.z == axis.z:
                         keyframe.rotation = rotation * -1
                     else:
-                        return _makeReferenceAxes(keyframes.keyframesAsEuler())
+                        return _makeReferenceAxes(keyframes.asEuler())
 
                 axes.append(refAxis)
             else:
@@ -112,11 +112,11 @@ class XPlaneKeyframeCollection(MutableSequence):
             rotation_mode = self.getRotationMode()
         
         if rotation_mode == 'QUATERNION':
-            keyframes = self.keyframesAsQuaternion()
+            keyframes = self.asQuaternion()
         elif rotation_mode == 'AXIS_ANGLE':
-            keyframes = self.keyframesAsAA()
+            keyframes = self.asAA()
         elif {'X','Y','Z'}  == set(rotation_mode):
-            keyframes = self.keyframesAsEuler()
+            keyframes = self.asEuler()
         else:
             raise Exception("% is not a known rotation mode" % rotation_mode)
 
@@ -193,13 +193,13 @@ class XPlaneKeyframeCollection(MutableSequence):
         pre_scale = self[0].xplaneBone.getPreAnimationMatrix().decompose()[2]
         return [(value, location * pre_scale) for value, location in self.getTranslationKeyframeTable()]
 
-    def keyframesAsAA(self):
+    def asAA(self):
         return XPlaneKeyframeCollection([keyframe.asAA() for keyframe in self])
         
-    def keyframesAsEuler(self):
+    def asEuler(self):
         return XPlaneKeyframeCollection([keyframe.asEuler() for keyframe in self])
             
-    def keyframesAsQuaternion(self):
+    def asQuaternion(self):
         return XPlaneKeyframeCollection([keyframe.asQuaternion() for keyframe in self])
 
     @staticmethod

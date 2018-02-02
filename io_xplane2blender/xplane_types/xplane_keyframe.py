@@ -62,7 +62,8 @@ class XPlaneKeyframe():
         self.frame = int(round(keyframe.co[0]))
         bpy.context.scene.frame_set(frame = self.frame)
 
-        self.location = [round(comp,KEYFRAME_PRECISION) for comp in copy.copy(blenderObject.location)]
+        self.location = mathutils.Vector([round(comp,KEYFRAME_PRECISION) for comp in copy.copy(blenderObject.location)])
+        assert isinstance(self.location,mathutils.Vector)
         self.rotationMode = blenderObject.rotation_mode
 
         # TODO: rotationMode should reside in keyframes collection as it is the same for each keyframe

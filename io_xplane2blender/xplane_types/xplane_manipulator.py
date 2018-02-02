@@ -64,7 +64,7 @@ def autodetect_keyframe_count_translation(translation_bone, count, exclude_clamp
             return True 
 
 def autodetect_bone_rotated_around_n_axis(bone,num_axis_of_rotation):
-    rotation_keyframe_table = next(iter(bone.animations.values())).keyframesAsAA().getRotationKeyframeTable()
+    rotation_keyframe_table = next(iter(bone.animations.values())).asAA().getRotationKeyframeTable()
     if len(rotation_keyframe_table) != num_axis_of_rotation:
         logger.error("Drag Rotate manipulator can only rotate around one axis")
         return False
@@ -322,7 +322,7 @@ class XPlaneManipulator():
                     else:
                         rotation_keyframe_table =\
                             next(iter(rotation_bone.animations.values()))\
-                            .keyframesAsAA()\
+                            .asAA()\
                             .getRotationKeyframeTable()
 
                         rotation_axis = rotation_keyframe_table[0][0]

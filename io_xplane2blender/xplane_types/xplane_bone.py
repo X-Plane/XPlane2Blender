@@ -645,7 +645,7 @@ class XPlaneBone():
 
         if len(axes) == 3:
             # decompose to eulers and return euler rotation instead
-            o = self._writeEulerRotationKeyframes(dataref,keyframes.keyframesAsEuler())
+            o = self._writeEulerRotationKeyframes(dataref,keyframes.asEuler())
             return o
         elif len(axes) == 1:
             refAxis = axes[0]
@@ -684,7 +684,7 @@ class XPlaneBone():
 
     def _writeQuaternionRotationKeyframes(self, dataref, keyframes):
         # Writing axis angle will automatically convert quaternions to AA and write it
-        return self._writeAxisAngleRotationKeyframes(dataref, keyframes.keyframesAsAA())
+        return self._writeAxisAngleRotationKeyframes(dataref, keyframes.asAA())
 
     def _writeEulerRotationKeyframes(self, dataref, keyframes):
         debug = getDebug()
