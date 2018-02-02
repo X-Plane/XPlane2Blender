@@ -194,64 +194,13 @@ class XPlaneKeyframeCollection(MutableSequence):
         return [(value, location * pre_scale) for value, location in self.getTranslationKeyframeTable()]
 
     def keyframesAsAA(self):
-        #TODO: This copy operation still isn't enough to make it clean without sideeffects
-        keyframes = copy.deepcopy(self)
-        if self.getRotationMode() == "AXIS_ANGLE":
-            return keyframes
-        elif self.getRotationMode() == "QUATERNION":
-            for keyframe in keyframes:
-                axisAngle = keyframe.rotation.normalized().to_axis_angle()
-                keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
-                keyframe.rotationMode = "AXIS_ANGLE"
-            return keyframes
-        else:
-            for keyframe in keyframes:
-                rotation = keyframe.rotation
-                euler_axis = mathutils.Euler((rotation.x,rotation.y,rotation.z),rotation.order)
-                keyframe.rotationMode = "AXIS_ANGLE"
-
-                # Very annoyingly, to_axis_angle and blenderObject.rotation_axis_angle disagree
-                # about (angle, axis_x, axis_y, axis_z) vs (axis, (angle))
-                new_rotation = euler_axis.to_quaternion().to_axis_angle()
-                new_rotation_axis  = new_rotation[0]
-                new_rotation_angle = new_rotation[1]
-                keyframe.rotation = (new_rotation_angle, new_rotation_axis[0], new_rotation_axis[1], new_rotation_axis[2])
-
-            return keyframes
+        return XPlaneKeyframeCollection([keyframe.asAA() for keyframe in self])
         
     def keyframesAsEuler(self):
-        keyframes = copy.deepcopy(self)
-        if self.getRotationMode() == "AXIS_ANGLE":
-            for keyframe in keyframes:
-                rotation = keyframe.rotation
-                axis = mathutils.Vector((rotation[1:4]))
-                # Why the heck XZY?  Jonathan's 2.49 exporter decomposes Eulers using XYZ (because that is the ONLY
-                # decomposition available in 2.49), but it does so in X-Plane space.  So this is an axis renaming
-                # (since we alway work in Blender space) so that it comes out the same in X-Plane.
-                keyframe.rotationMode = 'XZY'
-                keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XZY')
-
-            return keyframes
-        elif self.getRotationMode() == "QUATERNION":
-            for keyframe in keyframes:
-                keyframe.rotationMode = "XZY"
-                keyframe.rotation = keyframe.rotation.to_euler('XZY')
-            return keyframes
-        else:
-            return keyframes
+        return XPlaneKeyframeCollection([keyframe.asEuler() for keyframe in self])
             
     def keyframesAsQuaternion(self):
-        keyframes = copy.deepcopy(self)
-        if self.getRotationMode() == "AXIS_ANGLE":
-            for keyframe in keyframes:
-                rotation = keyframe.rotation
-                keyframe.rotation = mathutils.Quaternion(*rotation[0:4])
-                keyframe.rotationMode = "QUATERNION"
-        elif self.getRotationMode() == "QUATERNION":
-            return keyframes
-        else:
-            return
-    
+        return XPlaneKeyframeCollection([keyframe.asQuaternion() for keyframe in self])
 
     @staticmethod
     def filter_clamping_keyframes(keyframes,attr):

@@ -1,5 +1,6 @@
-import bpy
 import copy
+import bpy
+import mathutils
 
 KEYFRAME_PRECISION = 5
 
@@ -46,9 +47,9 @@ class XPlaneKeyframe():
     #   XPlaneObject xplaneObject - A <XPlaneObject>.
     def __init__(self, keyframe, index, dataref, xplaneBone):
         currentFrame = bpy.context.scene.frame_current
-        self.value = keyframe.co[1]
         self.dataref = dataref
         self.index = index
+        self.value = keyframe.co[1]
 
         if xplaneBone.blenderBone:
             # we need the pose bone
@@ -61,24 +62,25 @@ class XPlaneKeyframe():
         self.frame = int(round(keyframe.co[0]))
         bpy.context.scene.frame_set(frame = self.frame)
 
-        self.location = copy.copy(blenderObject.location)
-        self.location[0] = round(self.location[0],KEYFRAME_PRECISION)
-        self.location[1] = round(self.location[1],KEYFRAME_PRECISION)
-        self.location[2] = round(self.location[2],KEYFRAME_PRECISION)
-        self.rotation = None
+        self.location = [round(comp,KEYFRAME_PRECISION) for comp in copy.copy(blenderObject.location)]
         self.rotationMode = blenderObject.rotation_mode
 
         # TODO: rotationMode should reside in keyframes collection as it is the same for each keyframe
         if self.rotationMode == 'QUATERNION':
             self.rotation = blenderObject.rotation_quaternion.copy()
+            assert isinstance(self.rotation, mathutils.Quaternion)
+
         elif self.rotationMode == 'AXIS_ANGLE':
             rot = blenderObject.rotation_axis_angle
             self.rotation = (round(rot[0],KEYFRAME_PRECISION), rot[1], rot[2], rot[3])
+            assert isinstance(self.rotation, tuple)
+            for comp in self.rotation:
+                assert isinstance(comp, float)
         else:
-            self.rotation = blenderObject.rotation_euler.copy()
-            self.rotation[0] = round(self.rotation[0],KEYFRAME_PRECISION)
-            self.rotation[1] = round(self.rotation[1],KEYFRAME_PRECISION)
-            self.rotation[2] = round(self.rotation[2],KEYFRAME_PRECISION)
+            angles = [round(comp,KEYFRAME_PRECISION) for comp in blenderObject.rotation_euler.copy()]
+            order = blenderObject.rotation_euler.order
+            self.rotation = mathutils.Euler(angles,order)
+            assert isinstance(self.rotation, mathutils.Euler)
 
         self.scale = copy.copy(blenderObject.scale)
         bpy.context.scene.frame_set(frame = currentFrame)
@@ -88,3 +90,56 @@ class XPlaneKeyframe():
             self.value, self.dataref, self.rotationMode,
                 self.translation[0],self.translation[1],self.translation[2],
                 self.rotation[0],self.rotation[1],self.rotation[2])
+
+    def asAA(self):
+        keyframe = copy.deepcopy(self)
+
+        if self.rotationMode == "AXIS_ANGLE":
+            pass
+        elif self.rotationMode == "QUATERNION":
+            axisAngle = keyframe.rotation.normalized().to_axis_angle()
+            keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
+        else:
+            rotation = keyframe.rotation
+            euler_axis = mathutils.Euler((rotation.x,rotation.y,rotation.z),rotation.order)
+
+            # Very annoyingly, to_axis_angle and blenderObject.rotation_axis_angle disagree
+            # about (angle, axis_x, axis_y, axis_z) vs (axis, (angle))
+            new_rotation = euler_axis.to_quaternion().to_axis_angle()
+            new_rotation_axis  = new_rotation[0]
+            new_rotation_angle = new_rotation[1]
+            keyframe.rotation = (new_rotation_angle, new_rotation_axis[0], new_rotation_axis[1], new_rotation_axis[2])
+
+        keyframe.rotationMode = "AXIS_ANGLE"
+        return keyframe
+        
+    def asEuler(self):
+        keyframe = copy.deepcopy(self)
+        if self.rotationMode == "AXIS_ANGLE":
+            rotation = keyframe.rotation
+            axis = mathutils.Vector((rotation[1:4]))
+            # Why the heck XZY?  Jonathan's 2.49 exporter decomposes Eulers using XYZ (because that is the ONLY
+            # decomposition available in 2.49), but it does so in X-Plane space.  So this is an axis renaming
+            # (since we alway work in Blender space) so that it comes out the same in X-Plane.
+            keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XZY')
+            keyframe.rotationMode = keyframe.rotation.order
+            return keyframe
+        elif self.rotationMode == "QUATERNION":
+            keyframe.rotation = keyframe.rotation.to_euler('XZY')
+            keyframe.rotationMode = keyframe.rotation.order
+            return keyframe
+        else:
+            return keyframe
+            
+    def asQuaternion(self):
+        keyframe = copy.deepcopy(self)
+        if self.rotationMode == "AXIS_ANGLE":
+            keyframe.rotation = mathutils.Quaternion(*keyframe.rotation[0:4])
+            keyframe.rotationMode = "QUATERNION"
+            return keyframe
+        elif self.rotationMode == "QUATERNION":
+            return keyframe
+        else:
+            keyframe.rotation = keyframe.rotation.to_quaternion()
+            keyframe.rotationMode = "QUATERNION"
+            return keyframe
