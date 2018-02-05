@@ -73,7 +73,11 @@ class XPlaneKeyframeCollection(MutableSequence):
                 # find reference axis
                 for keyframe in keyframes:
                     rotation = keyframe.rotation
-                    axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
+
+                    def round_vector(vec,ndigits=5):
+                        return Vector([round(comp,ndigits) for comp in vec])
+
+                    axis = round_vector(mathutils.Vector((rotation[1], rotation[2], rotation[3])))
 
                     if rotation[0] == 0:
                         continue

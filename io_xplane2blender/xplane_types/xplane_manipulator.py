@@ -12,6 +12,7 @@ from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_constants import *
 from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
 from io_xplane2blender.xplane_types.xplane_attribute import XPlaneAttribute
+from gettext import translation
 
 def round_vector(vec,ndigits=5):
     return Vector([round(comp,ndigits) for comp in vec])
@@ -80,20 +81,28 @@ def autodetect_parent_must_be_animated_for_rotation(bone):
     else:
         return True
 
+ 
+ # X-Plane note: X-Plane implements Drag Rotate manipulator using a system akin to polar co-ordinates
+ # If the rotation axis is on Z, the Detent can be draged on the X,Y axis, have this translated into an angle.
+ # The distance from the origin corresponds to the distance dragged. If a detent is animated at all on the Z axis,
+ # X-Plane won't drag along there at all and it'll have problems
+ # We take the dot product between the rotation axis and detent axis to discover if there is any compontent along that axis 
+def translation_animation_at_origin_check(rotation_bone,child_bone):
+    rotation_keyframe_table =\
+        next(iter(rotation_bone.animations.values()))\
+        .asAA()\
+        .getRotationKeyframeTable()
 
-def translation_animation_at_origin_check(parent_bone,child_bone):
-    origin  = round_vector(parent_bone.getBlenderWorldMatrix().to_translation())
-    keyframe_col = next(iter(child_bone.animations.values()))
-    translation_values_cleaned = keyframe_col.getTranslationKeyframeTableNoClamps()
+    rotation_axis = rotation_keyframe_table[0][0]
 
-    anim_stop_one = round_vector(translation_values_cleaned[0][1])
-    anim_stop_two = round_vector(translation_values_cleaned[1][1])
+    child_values_cleaned = next(iter(child_bone.animations.values()))\
+        .getTranslationKeyframeTableNoClamps()
 
-    # TODO: Which of these dataref values goes with the start of the animation?
-    # Last time we said assume the smaller dataref value is the start.
-    # TODO: Does it matter?
-    if not anim_stop_one == origin and not anim_stop_two == origin: 
-        logger.error("Drag Axis manipulator's location animation must start or end at the origin of rotation")
+    child_axis = child_values_cleaned[1][1] - child_values_cleaned[0][1]
+
+    dot_product = child_axis.dot(rotation_axis)
+    if not -0.01 < dot_product < 0.01:
+        logger.error("Drag Rotate manipulator's location animation must be orthoganal to rotation animation")
         return False
     else:
         return True
@@ -107,10 +116,10 @@ def get_lift_at_max(translation_bone):
 
 def get_rotation_bone(manipulator, manip_type):
     if manip_type == MANIP_DRAG_ROTATE:
-        if manipulator.xplanePrimative.xplaneBone.isDataRefAnimatedForTranslation():
-            return manipulator.xplanePrimative.xplaneBone.parent
-        elif manipulator.xplanePrimative.xplaneBone.isDataRefAnimatedForRotation():
+        if manipulator.xplanePrimative.xplaneBone.isDataRefAnimatedForRotation():
             return manipulator.xplanePrimative.xplaneBone
+        else:
+            return manipulator.xplanePrimative.xplaneBone.parent
     else:
         assert False, "How did we get here?!"
 
@@ -119,7 +128,8 @@ def get_translation_bone(manipulator, manip_type):
     if manip_type == MANIP_DRAG_AXIS_DETENT:
         return manipulator.xplanePrimative.xplaneBone
     if manip_type == MANIP_DRAG_ROTATE:
-        if manipulator.xplanePrimative.xplaneBone.isDataRefAnimatedForTranslation():
+        if not manipulator.xplanePrimative.xplaneBone.isDataRefAnimatedForRotation():
+            # Accounts for translation_bones that have detents or not
             return manipulator.xplanePrimative.xplaneBone
         else:
             return None
@@ -239,7 +249,7 @@ class XPlaneManipulator():
                 else:
                     lift_at_max = get_lift_at_max(translation_bone)
 
-                if not translation_animation_at_origin_check(parent_bone, translation_bone):
+                if not translation_animation_at_origin_check(drag_axis, translation_bone):
                     return
     
                 v1_min = drag_axis_frames_cleaned[0].value
@@ -272,13 +282,15 @@ class XPlaneManipulator():
                 - 0 degree rotation not allowed
                 - Clockwise and counterclockwise rotations are supported
 
-                Special rules for the Translation Bone:
+                Special rules for Translation Bone:
                 - Must be a leaf bone
                 - Must have a parent with rotation
                 - Must only be driven by only 1 dataref
-                - Must have exactly 2 (non-clamping) keyframes
-                - The animation must start or end at the origin of the bone
+                - Must have exactly 2 (non-clampping) keyframes
+                - Must not animate along rotation bone's axis
                 - The positions at each keyframe must not be the same, including both being 0 
+                - Detents are optional
+                - If detents are not used, axis detent ranges are not allowed
                 '''
                 if not autodetect_must_have_parent(self.xplanePrimative.xplaneBone):
                     return
@@ -288,7 +300,9 @@ class XPlaneManipulator():
                 lift_at_max = 0.0
                 
                 if translation_bone:
-                    if rotation_bone is not None and rotation_bone.isDataRefAnimatedForRotation():
+                    if rotation_bone is not None and\
+                       rotation_bone.isDataRefAnimatedForRotation() and\
+                       len(translation_bone.animations) > 0:
                         if not autodetect_must_be_driven_by_exactly_n_datarefs(translation_bone,1):
                             return
                         else:
@@ -299,14 +313,12 @@ class XPlaneManipulator():
                         else:
                             lift_at_max = get_lift_at_max(translation_bone)
 
-                        if not translation_animation_at_origin_check(rotation_bone,translation_bone):
-                            return
                     elif not autodetect_must_have_parent(translation_bone):
                         return
                     elif not autodetect_parent_must_be_animated_for_rotation(translation_bone):
                         return
                     else:
-                        assert False, "bool_stmt was changed to include other case and was not taken care!"    
+                        pass
 
                 elif rotation_bone:
                     rotation_bone = self.xplanePrimative.xplaneBone
@@ -341,12 +353,15 @@ class XPlaneManipulator():
                     v2_min = 0.0
                     v2_max = 0.0
                 else:
+                    if len(rotation_bone.animations) > 0 and len(translation_bone.animations) > 0:
+                        if not translation_animation_at_origin_check(rotation_bone,translation_bone):
+                            return
                     v2_min = 0.0
                     v2_max = lift_at_max
                 
                 if self.manip.autodetect_datarefs:
                     self.manip.dataref1 = next(iter(rotation_bone.datarefs))
-                    if translation_bone is not None:
+                    if translation_bone is not None and len(translation_bone.datarefs) == 1:
                         self.manip.dataref2 = next(iter(translation_bone.datarefs))
                     else:
                         self.manip.dataref2 = "none"
@@ -500,7 +515,7 @@ class XPlaneManipulator():
             if (self.type() == MANIP_DRAG_AXIS_DETENT or self.type() == MANIP_DRAG_ROTATE) and ver_ge_1100:
 
                 #List[AxisDetentRange] -> bool
-                def validate_axis_detent_ranges(axis_detent_ranges,v1_min,v1_max,lift_at_max):
+                def validate_axis_detent_ranges(axis_detent_ranges, translation_bone, v1_min, v1_max, lift_at_max):
                     '''
                     Rules for Axis Detent Ranges
                     
@@ -517,7 +532,10 @@ class XPlaneManipulator():
                     - A pit can be the first or last detent range, but never the only one
                     - Stop pegs, where height is equal to or greater than it's neighbor's height, are never allowed
                     '''
-                    assert len(axis_detent_ranges) > 0
+                    if not translation_bone.isDataRefAnimatedForTranslation() or len(axis_detent_ranges) > 0:
+                        if not len(axis_detent_ranges) > 0 and translation_bone.isDataRefAnimatedForTranslation():
+                            logger.error("Must have axis detent range if translation bone is animated")
+                            return
 
                     if not axis_detent_ranges[0].start == v1_min:
                         logger.error("Axis detent range list must start at Dataref 1's minimum value {0}".format(v1_min))
@@ -579,7 +597,7 @@ class XPlaneManipulator():
                     return True
 
                 if len(self.manip.axis_detent_ranges) > 0:
-                    if not validate_axis_detent_ranges(self.manip.axis_detent_ranges, v1_min, v1_max, lift_at_max):
+                    if not validate_axis_detent_ranges(self.manip.axis_detent_ranges, translation_bone, v1_min, v1_max, lift_at_max):
                         return
 
                 for axis_detent_range in self.manip.axis_detent_ranges:
@@ -600,3 +618,4 @@ class XPlaneManipulator():
     def write(self):
         pass
     
+

@@ -31,8 +31,12 @@ class TestRotationBoneRules(XPlaneTestCase):
         self.assertLoggerErrors(1)
 
     def test_5_counter_clockwise_also_allowed(self):
-        out = self.exportLayer(4)
-        self.assertLoggerErrors(1)
+        filename = inspect.stack()[0][3]
+        self.assertLayerExportEqualsFixture(
+            4, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
 
     def test_6_known_good_rotation_bone(self):
         filename = inspect.stack()[0][3]
