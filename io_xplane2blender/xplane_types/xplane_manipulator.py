@@ -312,6 +312,9 @@ class XPlaneManipulator():
                             return
                         else:
                             lift_at_max = get_lift_at_max(translation_bone)
+                            if round(lift_at_max,5) == 0.0:
+                                logger.error("Translation bone detent animation must have movement")
+                                return
 
                     elif not autodetect_must_have_parent(translation_bone):
                         return
