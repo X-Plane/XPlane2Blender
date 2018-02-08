@@ -3,44 +3,44 @@ I
 OBJ
 
 POINT_COUNTS	36	0	0	36
-TEXTURE	../../../../../../../../../../../alxunru/Desktop/X-Plane 10/Aircraft/Test Cases/objects/test.png
+TEXTURE	../../../../alxunru/Desktop/X-Plane 10/Aircraft/Test Cases/objects/test.png
 
-VT	-0.5	0.5	0.5	-1	0	0	0	0	# 0
-VT	-0.5	-0.5	0.5	-1	0	0	0	0	# 1
-VT	-0.5	-0.5	-0.5	-1	0	0	0	0	# 2
-VT	-0.5	-0.5	-0.5	-1	0	0	0	0	# 3
-VT	-0.5	0.5	-0.5	-1	0	0	0	0	# 4
-VT	-0.5	0.5	0.5	-1	0	0	0	0	# 5
-VT	0.5	-0.5	-0.5	0	0	-1	0	0	# 6
-VT	0.5	0.5	-0.5	0	0	-1	0	0	# 7
-VT	-0.5	0.5	-0.5	0	0	-1	0	0	# 8
-VT	-0.5	0.5	-0.5	0	0	-1	0	0	# 9
-VT	-0.5	-0.5	-0.5	0	0	-1	0	0	# 10
-VT	0.5	-0.5	-0.5	0	0	-1	0	0	# 11
-VT	0.5	-0.5	0.5	1	0	0	0	0	# 12
-VT	0.5	0.5	0.5	1	0	0	0	0	# 13
-VT	0.5	0.5	-0.5	1	0	0	0	0	# 14
-VT	0.5	0.5	-0.5	1	0	0	0	0	# 15
-VT	0.5	-0.5	-0.5	1	0	0	0	0	# 16
-VT	0.5	-0.5	0.5	1	0	0	0	0	# 17
-VT	0.5	0.5	0.5	0	0	1	0	0	# 18
-VT	0.5	-0.5	0.5	0	0	1	0	0	# 19
-VT	-0.5	-0.5	0.5	0	0	1	0	0	# 20
-VT	-0.5	-0.5	0.5	0	0	1	0	0	# 21
-VT	-0.5	0.5	0.5	0	0	1	0	0	# 22
-VT	0.5	0.5	0.5	0	0	1	0	0	# 23
-VT	0.5	-0.5	-0.5	0	-1	0	0	0	# 24
-VT	-0.5	-0.5	-0.5	0	-1	0	0	0	# 25
-VT	-0.5	-0.5	0.5	0	-1	0	0	0	# 26
-VT	-0.5	-0.5	0.5	0	-1	0	0	0	# 27
-VT	0.5	-0.5	0.5	0	-1	0	0	0	# 28
-VT	0.5	-0.5	-0.5	0	-1	0	0	0	# 29
-VT	-0.5	0.5	-0.5	0	1	0	0	0	# 30
-VT	0.5	0.5	-0.5	0	1	0	0	0	# 31
-VT	0.5	0.5	0.5	0	1	0	0	0	# 32
-VT	0.5	0.5	0.5	0	1	0	0	0	# 33
-VT	-0.5	0.5	0.5	0	1	0	0	0	# 34
-VT	-0.5	0.5	-0.5	0	1	0	0	0	# 35
+VT	-0.5	0.5	0.5	-1	0	0	0	0
+VT	-0.5	-0.5	0.5	-1	0	0	0	0
+VT	-0.5	-0.5	-0.5	-1	0	0	0	0
+VT	-0.5	-0.5	-0.5	-1	0	0	0	0
+VT	-0.5	0.5	-0.5	-1	0	0	0	0
+VT	-0.5	0.5	0.5	-1	0	0	0	0
+VT	0.5	-0.5	-0.5	0	0	-1	0	0
+VT	0.5	0.5	-0.5	0	0	-1	0	0
+VT	-0.5	0.5	-0.5	0	0	-1	0	0
+VT	-0.5	0.5	-0.5	0	0	-1	0	0
+VT	-0.5	-0.5	-0.5	0	0	-1	0	0
+VT	0.5	-0.5	-0.5	0	0	-1	0	0
+VT	0.5	-0.5	0.5	1	0	0	0	0
+VT	0.5	0.5	0.5	1	0	0	0	0
+VT	0.5	0.5	-0.5	1	0	0	0	0
+VT	0.5	0.5	-0.5	1	0	0	0	0
+VT	0.5	-0.5	-0.5	1	0	0	0	0
+VT	0.5	-0.5	0.5	1	0	0	0	0
+VT	0.5	0.5	0.5	0	0	1	0	0
+VT	0.5	-0.5	0.5	0	0	1	0	0
+VT	-0.5	-0.5	0.5	0	0	1	0	0
+VT	-0.5	-0.5	0.5	0	0	1	0	0
+VT	-0.5	0.5	0.5	0	0	1	0	0
+VT	0.5	0.5	0.5	0	0	1	0	0
+VT	0.5	-0.5	-0.5	0	-1	0	0	0
+VT	-0.5	-0.5	-0.5	0	-1	0	0	0
+VT	-0.5	-0.5	0.5	0	-1	0	0	0
+VT	-0.5	-0.5	0.5	0	-1	0	0	0
+VT	0.5	-0.5	0.5	0	-1	0	0	0
+VT	0.5	-0.5	-0.5	0	-1	0	0	0
+VT	-0.5	0.5	-0.5	0	1	0	0	0
+VT	0.5	0.5	-0.5	0	1	0	0	0
+VT	0.5	0.5	0.5	0	1	0	0	0
+VT	0.5	0.5	0.5	0	1	0	0	0
+VT	-0.5	0.5	0.5	0	1	0	0	0
+VT	-0.5	0.5	-0.5	0	1	0	0	0
 
 IDX10	0	1	2	3	4	5	6	7	8	9
 IDX10	10	11	12	13	14	15	16	17	18	19
@@ -52,29 +52,14 @@ IDX	33
 IDX	34
 IDX	35
 
-# 0 ROOT
-# 1 Object: Cube.017
 ANIM_begin
-# rotation keyframes
-ANIM_rotate_begin	0	0	-1	sim/cockpit2/engine/actuators/throttle_ratio[0]
+ANIM_rotate_begin	0.4990072	-0.60570914	-0.61976486	sim/cockpit2/engine/actuators/throttle_ratio[0]
 ANIM_rotate_key	0	0
-ANIM_rotate_key	0.33000001	30.50979932
-ANIM_rotate_key	1	67.97338692
+ANIM_rotate_key	0.33000001	40.99894132
+ANIM_rotate_key	1	81.99788265
 ANIM_rotate_end
-ANIM_rotate_begin	0	1	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
-ANIM_rotate_key	0	0
-ANIM_rotate_key	0.33000001	-18.75462712
-ANIM_rotate_key	1	-19.48725199
-ANIM_rotate_end
-ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
-ANIM_rotate_key	0	0
-ANIM_rotate_key	0.33000001	26.29338182
-ANIM_rotate_key	1	60.10601304
-ANIM_rotate_end
-# PRIMITIVE: Cube.017	weight: 0
-# MATERIAL: Material
 ATTR_shiny_rat	0.5
 TRIS	0 36
 ANIM_end
 
-# Build with Blender 2.77 (sub 0) (build b'22a2853') Exported with XPlane2Blender 3.3.13
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-dev.0+16.NO_BUILD_NUMBR
