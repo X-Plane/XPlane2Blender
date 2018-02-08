@@ -14,3 +14,5 @@ __pycache__
 *.orig
 
 *.zip
+
+.mypy_cache/*

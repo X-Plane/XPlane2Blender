@@ -16,6 +16,7 @@ from ..xplane_helpers import logger
 
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_constants import MANIP_DRAG_AXIS_DETENT
+from io_xplane2blender.xplane_types import xplane_manipulator
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -82,7 +83,7 @@ class XPlanePrimitive(XPlaneObject):
 
                         
     # Method: collectManipulatorAttributes
-    # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.
+    # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulatorSettings>.
     def collectManipulatorAttributes(self):
         pass
     
@@ -117,9 +118,8 @@ class XPlanePrimitive(XPlaneObject):
                     manipType = manip.type
 
                 if (manipType == MANIP_DRAG_AXIS_DETENT or\
-                    manipType == MANIP_DRAG_ROTATE) and\
-                    len(self.xplaneBone.children) > 0:
-                        logger.error("Drag Rotate manipulator must have no children")
+                    manipType == MANIP_DRAG_ROTATE):
+                    if not xplane_manipulator.autodetect_must_be_leaf_bone(self.xplaneBone):
                         return ''
 
             for attr in self.cockpitAttributes:

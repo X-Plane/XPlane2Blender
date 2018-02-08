@@ -45,7 +45,7 @@ class XPlaneTestCase(unittest.TestCase):
             logLevels.append('info')
             logLevels.append('success')
 
-        logger.clearTransports()
+        logger.clear()
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
 
     # Utility method to check if objects are contained in file

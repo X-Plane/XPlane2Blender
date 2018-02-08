@@ -62,15 +62,29 @@ def autodetect_keyframe_count_translation(translation_bone, count, exclude_clamp
             logger.error("Drag Rotate manipulator must have exactly two non-clamping keyframes for its location animation")
             return False
         else:
-            return True 
+            return True
+
 
 def autodetect_bone_rotated_around_n_axis(bone,num_axis_of_rotation):
-    rotation_keyframe_table = next(iter(bone.animations.values())).asAA().getRotationKeyframeTable()
-    if len(rotation_keyframe_table) != num_axis_of_rotation:
+    rotation_keyframe_table = next(iter(bone.animations.values())).getRotationKeyframeTable()
+    
+    if len(rotation_keyframe_table) == 3:
+        deg_per_axis = []
+        for axis,table in rotation_keyframe_table:
+            deg_per_axis.append(sum([keyframe.degrees for keyframe in table]))
+
+        real_num_axis_of_rotation = len((*filter(lambda total_rotations: round(total_rotations,8) != 0.0, deg_per_axis),))
+    else:
+        real_num_axis_of_rotation = len(rotation_keyframe_table)
+
+    # The sum of the degrees rotated along each axis over every keyframe sorted from lowest-to-highest
+    # should be 0,0,T. Having a second or all three rotating would mean that at least the second entry would be not 0
+    if real_num_axis_of_rotation != num_axis_of_rotation:
         logger.error("Drag Rotate manipulator can only rotate around one axis")
         return False
     else:
         return True
+
 
 def autodetect_parent_must_be_animated_for_rotation(bone): 
     assert bone.parent is not None
@@ -81,12 +95,13 @@ def autodetect_parent_must_be_animated_for_rotation(bone):
     else:
         return True
 
- 
+
  # X-Plane note: X-Plane implements Drag Rotate manipulator using a system akin to polar co-ordinates
  # If the rotation axis is on Z, the Detent can be draged on the X,Y axis, have this translated into an angle.
  # The distance from the origin corresponds to the distance dragged. If a detent is animated at all on the Z axis,
  # X-Plane won't drag along there at all and it'll have problems
  # We take the dot product between the rotation axis and detent axis to discover if there is any compontent along that axis 
+ #TODO: Change this name!!!!
 def translation_animation_at_origin_check(rotation_bone,child_bone):
     rotation_keyframe_table =\
         next(iter(rotation_bone.animations.values()))\
@@ -107,6 +122,26 @@ def translation_animation_at_origin_check(rotation_bone,child_bone):
     else:
         return True
 
+def drag_axis_w_detents_animations_orthogonal(drag_axis_bone, detent_bone):
+    drag_axis_translation_keyframe_table =\
+        next(iter(drag_axis_bone.animations.values()))\
+        .getTranslationKeyframeTable()
+
+    detent_axis_translation_keyframe_table =\
+        next(iter(detent_bone.animations.values()))\
+        .getTranslationKeyframeTable()
+    
+    # Assuming that these are only rotating on a single axis
+    drag_axis = drag_axis_translation_keyframe_table[-1].location - drag_axis_translation_keyframe_table[0].location
+    detent_axis = detent_axis_translation_keyframe_table[-1].location - detent_axis_translation_keyframe_table[0].location    
+
+    dot_product = drag_axis.dot(detent_axis)
+
+    if not -0.01 < dot_product < 0.01:
+        logger.error("Drag Axis W Detents manipulator's location animation must be orthoganal to rotation animation")
+        return False
+    else:
+        return True
 
 def get_lift_at_max(translation_bone):
     translation_values_cleaned = next(iter(translation_bone.animations.values()))\
@@ -136,7 +171,6 @@ def get_translation_bone(manipulator, manip_type):
 
 
 class XPlaneManipulator():
-    
     def __init__(self, xplanePrimative):
         self.manip = xplanePrimative.blenderObject.xplane.manip
         self.xplanePrimative = xplanePrimative
@@ -148,7 +182,6 @@ class XPlaneManipulator():
         else:
             return self.manip.type
 
-    
     def collect(self):
         attr = 'ATTR_manip_'
         value = True
@@ -206,7 +239,7 @@ class XPlaneManipulator():
                 Special rules for the Translation Bone:
                 - Must be a leaf bone
                 - Must have a parent with translation
-                - The animation must start or end at the origin of the bone
+                - The parent and translation animations are orthogonal
                 - The positions at each keyframe must not be the same, including both being 0 
                 '''
                 
@@ -222,13 +255,9 @@ class XPlaneManipulator():
                 translation_bone = get_translation_bone(self, MANIP_DRAG_AXIS_DETENT)
 
                 if not autodetect_must_be_driven_by_exactly_n_datarefs(parent_bone, 1):
-                    #logger.error("Parent has more than one animation")
                     return
                 
                 if not autodetect_must_be_driven_by_exactly_n_datarefs(translation_bone,1):
-                    return
-
-                if not autodetect_must_be_leaf_bone(translation_bone):
                     return
 
                 #bone.animations - <DataRef,List<KeyframeCollection>>
@@ -249,7 +278,7 @@ class XPlaneManipulator():
                 else:
                     lift_at_max = get_lift_at_max(translation_bone)
 
-                if not translation_animation_at_origin_check(drag_axis, translation_bone):
+                if not drag_axis_w_detents_animations_orthogonal(parent_bone, translation_bone):
                     return
     
                 v1_min = drag_axis_frames_cleaned[0].value
