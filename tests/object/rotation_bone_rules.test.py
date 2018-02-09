@@ -14,34 +14,38 @@ def filterLines(line):
              "ATTR_manip" in line[0])
 
 class TestRotationBoneRules(XPlaneTestCase):
-    def test_1_only_rotated_around_one_axis(self):
+    def test_1_no_animated_rotation_bone(self):
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 
-    def test_2_rot_keyframes_must_be_sorted(self):
+    def test_2_only_rotated_around_one_axis(self):
         out = self.exportLayer(1)
         self.assertLoggerErrors(1)
 
-    def test_3_must_be_driven_by_only_1_dataref(self):
+    def test_3_rot_keyframes_must_be_sorted(self):
         out = self.exportLayer(2)
         self.assertLoggerErrors(1)
 
-    def test_4_no_animimation_not_allowed(self):
+    def test_4_must_be_driven_by_only_1_dataref(self):
         out = self.exportLayer(3)
         self.assertLoggerErrors(1)
 
-    def test_5_counter_clockwise_also_allowed(self):
+    def test_5_parent_must_be_animated(self):
+        out = self.exportLayer(4)
+        self.assertLoggerErrors(1)
+
+    def test_6_counter_clockwise_also_allowed(self):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
-            4, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            5, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )
 
-    def test_6_known_good_rotation_bone(self):
+    def test_7_known_good_rotation_bone(self):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
-            5, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            6, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )

@@ -657,6 +657,40 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         default = 1.0
     )
 
+    def get_effective_type_id(self) -> int:
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= int(VERSION_1110):
+            return self.type_v1110
+        else:
+            return self.type
+
+    def get_effective_type_name(self) -> str:
+        '''
+        The name returned will the same as in the UI
+        '''
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= int(VERSION_1110):
+            prop_name = 'type_v1110'
+        else:
+            prop_name = 'type'
+
+        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties[prop_name].enum_items
+        return next(filter(lambda item: item.identifier == self.get_effective_type_id(), items)).name
+
+    def get_effective_type_desc(self) -> str:
+        '''
+        The description returned will the same as in the UI
+        '''
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= int(VERSION_1110):
+            prop_name = 'type_v1110'
+        else:
+            prop_name = 'type'
+
+        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties[prop_name].enum_items
+        return next(filter(lambda item: item.identifier == self.get_effective_type_id(), items)).description
+   
+
 # Class: XPlaneCockpitRegion
 # Defines settings for a cockpit region.
 #

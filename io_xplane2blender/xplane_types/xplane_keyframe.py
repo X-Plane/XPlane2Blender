@@ -87,10 +87,10 @@ class XPlaneKeyframe():
         bpy.context.scene.frame_set(frame = currentFrame)
 
     def __str__(self):
-        return "Value=%f Dataref=%s bone=%s rotation_mode=%s trans=(%f,%f,%f) rot=(%f,%f,%f)" % (
-            self.value, self.dataref, self.rotationMode,
-                self.translation[0],self.translation[1],self.translation[2],
-                self.rotation[0],self.rotation[1],self.rotation[2])
+        return "Value=%f Dataref=%s bone=%s rotation_mode=%s rot=(%f,%f,%f) location=(%f,%f,%f)" % (
+            self.value, self.dataref, self.bone, self.rotationMode,
+                self.rotation[0],self.rotation[1],self.rotation[2],
+                self.location[0],self.location[1],self.location[2])
 
     def asAA(self):
         keyframe = copy.deepcopy(self)
