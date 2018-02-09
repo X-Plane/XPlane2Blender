@@ -81,12 +81,6 @@ class XPlanePrimitive(XPlaneObject):
         if self.material:
             self.material.collect()
 
-                        
-    # Method: collectManipulatorAttributes
-    # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulatorSettings>.
-    def collectManipulatorAttributes(self):
-        pass
-    
     def write(self):
         debug = getDebug()
         indent = self.xplaneBone.getIndent()
@@ -119,7 +113,7 @@ class XPlanePrimitive(XPlaneObject):
 
                 if (manipType == MANIP_DRAG_AXIS_DETENT or\
                     manipType == MANIP_DRAG_ROTATE):
-                    if not xplane_manipulator.autodetect_must_be_leaf_bone(self.xplaneBone):
+                    if not xplane_manipulator.check_bone_is_leaf(self.xplaneBone):
                         return ''
 
             for attr in self.cockpitAttributes:
