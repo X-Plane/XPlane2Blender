@@ -191,7 +191,7 @@ def get_lift_at_max(translation_bone: XPlaneBone) -> float:
 
 
 def get_rotation_bone(manipulator: 'XPlaneManipulator') -> XPlaneBone:
-    if manipulator.type == MANIP_DRAG_ROTATE:
+    if manipulator.type == MANIP_DRAG_ROTATE or manipulator.type == MANIP_DRAG_ROTATE_DETENT:
         if manipulator.xplanePrimative.xplaneBone.isDataRefAnimatedForRotation():
             return manipulator.xplanePrimative.xplaneBone
         elif manipulator.xplanePrimative.xplaneBone.parent.isDataRefAnimatedForRotation():
@@ -203,9 +203,16 @@ def get_rotation_bone(manipulator: 'XPlaneManipulator') -> XPlaneBone:
 
 
 def get_translation_bone(manipulator: 'XPlaneManipulator') -> XPlaneBone:
+    '''
+    Gets the translation bone, even if the translation bone is invalid by itself or in this context.
+    Manipulator type must be MANIP_DRAG_AXIS_DETENT or MANIP_DRAG_ROTATE or MANIP_DRAG_ROTATE_DETENT.
+    It's parent rotation bone must be valid.
+    '''
     if manipulator.type == MANIP_DRAG_AXIS_DETENT:
         return manipulator.xplanePrimative.xplaneBone
-    if manipulator.type == MANIP_DRAG_ROTATE:
+    # By including MANIP_DRAG_ROTATE here we can get a smart warning about wrong manip types
+    # a smart warning about switched manip types later on.
+    if manipulator.type == MANIP_DRAG_ROTATE_DETENT or manipulator.type == MANIP_DRAG_ROTATE:
         if check_bone_parent_has_rotation_animation(manipulator.xplanePrimative.xplaneBone, ignore_error=True) and\
            not manipulator.xplanePrimative.xplaneBone.isDataRefAnimatedForRotation():
             # Accounts for translation_bones that have detents or not
@@ -336,7 +343,8 @@ class XPlaneManipulator():
                     drag_axis_dataref,
                     self.manip.tooltip
                 )
-            elif self.type == MANIP_DRAG_ROTATE:
+            elif self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
+                attr = "ATTR_manip_" + MANIP_DRAG_ROTATE
                 '''
                 Drag rotate manipulators must follow either one of two patterns
                 1. The manipulator is attached to a translating XPlaneBone which has a rotating parent bone
@@ -368,7 +376,8 @@ class XPlaneManipulator():
                 translation_bone = get_translation_bone(self)
                 lift_at_max = 0.0
 
-                if translation_bone:
+                if self.type == MANIP_DRAG_ROTATE_DETENT and translation_bone:
+                    #test here
                     if rotation_bone is not None and\
                        rotation_bone.isDataRefAnimatedForRotation() and\
                        len(translation_bone.animations) > 0:
@@ -393,13 +402,39 @@ class XPlaneManipulator():
                     else:
                         pass
 
-                elif rotation_bone:
+                elif self.type == MANIP_DRAG_ROTATE and rotation_bone and translation_bone is None: #translation bone may or may not be None
                     pass
                 else:
+                    '''
+                    Smart Warning Possibilities:
+
+                    Errors stemming from the rotation bone include so many possibilities it is hard to recommend a simple fix.
+                    As such a general "go online" warning is issued.
+
+                    rotation bone | translation_bone | self.type | result
+                    ---------|----------|--------------------------|-------
+                    None     | None     | MANIP_DRAG_ROTATE        | General warning
+                    None     | not None | MANIP_DRAG_ROTATE        | General warning
+                    None     | None     | MANIP_DRAG_ROTATE_DETENT | General warning
+                    None     | not None | MANIP_DRAG_ROTATE_DETENT | General warning
+                    not None | None     | MANIP_DRAG_ROTATE        | Proceed with export
+                    not None | not None | MANIP_DRAG_ROTATE        | "Try changing the manipulator type from drag_rotate to drag_rotate_detent"
+                    not None | None     | MANIP_DRAG_ROTATE_DETENT | "Try changing the manipulator type from drag_rotate_detent to drag_rotate"
+                    not None | not None | MANIP_DRAG_ROTATE_DETENT | Proceed with export
+                    '''
+                    manip_type_suggestion = ""
+                    if rotation_bone is not None:
+                        manip_type_suggestion = " Try changing the manipulator type from {} to {}"
+                        if translation_bone is not None and self.type == MANIP_DRAG_ROTATE:
+                            manip_type_suggestion = manip_type_suggestion.format("Drag Rotate","Drag Rotate With Detents")
+                        elif translation_bone is None and self.type == MANIP_DRAG_ROTATE_DETENT:
+                            manip_type_suggestion = manip_type_suggestion.format("Drag Rotate With Detents","Drag Rotate")
+
                     logger.error("{} is invalid: {} manipulators have specific parent-child relationships and animation requirements."
-                                 " See online manipulator documentation for examples".format(
-                                self.xplanePrimative.blenderObject.name,
-                                self.manip.get_effective_type_name()))
+                                 " See online manipulator documentation for examples.{}".format(
+                                      self.xplanePrimative.blenderObject.name,
+                                      self.manip.get_effective_type_name(),
+                                      manip_type_suggestion))
                     return
 
                 rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
@@ -592,8 +627,11 @@ class XPlaneManipulator():
                                                            ))
 
             # 3. All ATTR_axis_detent_range (DRAG_AXIS_DETENT or DRAG_ROTATE)
-            if (self.type == MANIP_DRAG_AXIS_DETENT or self.type == MANIP_DRAG_ROTATE) and ver_ge_1100:
-
+            if (self.type == MANIP_DRAG_AXIS_DETENT or self.type == MANIP_DRAG_ROTATE or MANIP_DRAG_ROTATE_DETENT) and ver_ge_1100:
+                if self.type == MANIP_DRAG_ROTATE and len(self.manip.axis_detent_ranges) > 0:
+                    logger.error("Drag Rotate cannot have axis detent ranges. Use Drag Rotate With Detents instead")
+                    return
+                
                 #List[AxisDetentRange] -> bool
                 def validate_axis_detent_ranges(axis_detent_ranges, translation_bone, v1_min, v1_max, lift_at_max):
                     '''
@@ -699,7 +737,7 @@ class XPlaneManipulator():
                         (axis_detent_range.start, axis_detent_range.end, axis_detent_range.height)))
 
             # 4. All ATTR_manip_keyframes (DRAG_ROTATE)
-            if self.type == MANIP_DRAG_ROTATE:
+            if self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
                 if len(rotation_keyframe_data_cleaned) > 2:
                     for rot_keyframe in rotation_keyframe_data_cleaned[1:-1]:
                         self.xplanePrimative.cockpitAttributes.add(

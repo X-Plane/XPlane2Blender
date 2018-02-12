@@ -819,7 +819,8 @@ def manipulator_layout(self, obj):
 
             #New style auto detect
             if manipType == MANIP_DRAG_AXIS_DETENT or\
-               manipType == MANIP_DRAG_ROTATE:
+               manipType == MANIP_DRAG_ROTATE or\
+               manipType == MANIP_DRAG_ROTATE_DETENT:
                 pass
             elif manipType != MANIP_DRAG_XY:
                 box.prop(obj.xplane.manip, 'dataref1')
@@ -887,7 +888,8 @@ def manipulator_layout(self, obj):
             box.prop(obj.xplane.manip, 'wheel_delta')
 
         if manipType == MANIP_DRAG_AXIS_DETENT or\
-           manipType == MANIP_DRAG_ROTATE:
+           manipType == MANIP_DRAG_ROTATE or\
+           manipType == MANIP_DRAG_ROTATE_DETENT:
             box.prop(obj.xplane.manip, 'autodetect_datarefs')
 
             if obj.xplane.manip.autodetect_datarefs is False:

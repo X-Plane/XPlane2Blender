@@ -105,14 +105,8 @@ class XPlanePrimitive(XPlaneObject):
         if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
             if self.blenderObject.xplane.manip.enabled:
                 manip = self.blenderObject.xplane.manip
-                xplane_version = int(bpy.context.scene.xplane.version)
-                if xplane_version >= int(VERSION_1110):
-                    manipType = manip.type_v1110
-                else:
-                    manipType = manip.type
-
-                if (manipType == MANIP_DRAG_AXIS_DETENT or\
-                    manipType == MANIP_DRAG_ROTATE):
+                if (manip.get_effective_type_id() == MANIP_DRAG_AXIS_DETENT or\
+                    manip.get_effective_type_id() == MANIP_DRAG_ROTATE):
                     if not xplane_manipulator.check_bone_is_leaf(self.xplaneBone):
                         return ''
 

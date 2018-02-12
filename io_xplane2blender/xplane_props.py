@@ -445,7 +445,8 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
             (MANIP_COMMAND_KNOB2,              "Command Knob 2",              "Command Knob 2 (requires at least v11.10)"),
             (MANIP_COMMAND_SWITCH_UP_DOWN2,    "Command Switch Up Down 2",    "Command Switch Up Down 2 (requires at least v11.10)"),
             (MANIP_COMMAND_SWITCH_LEFT_RIGHT2, "Command Switch Left Right 2", "Command Switch Left Right 2 (requires at least v11.10)"),
-            (MANIP_DRAG_ROTATE,                "Drag Rotate",                 "Drag Rotate (requires at least v11.10)")
+            (MANIP_DRAG_ROTATE,                "Drag Rotate",                 "Drag Rotate (requires at least v11.10)"),
+            (MANIP_DRAG_ROTATE_DETENT,         "Drag Rotate With Detents",    "Drag Rotate With Detents (requires at least v11.10")
         ]
     
     type_v1110 = bpy.props.EnumProperty(

@@ -93,6 +93,9 @@ MANIP_COMMAND_SWITCH_UP_DOWN    = "command_switch_up_down"
 #Note: this is not a new manip in the OBJ spec, we are reusing manip_drag_axis + using ATTR_axis_detented
 MANIP_DRAG_AXIS_DETENT           = "drag_axis_detent"
 MANIP_DRAG_ROTATE                = "drag_rotate"
+
+#This is also a fake manip. This simply allows detents to be used
+MANIP_DRAG_ROTATE_DETENT         = "drag_rotate_detent"
 MANIP_COMMAND_KNOB2              = "command_knob2"
 MANIP_COMMAND_SWITCH_LEFT_RIGHT2 = "command_switch_left_right2"
 MANIP_COMMAND_SWITCH_UP_DOWN2    = "command_switch_up_down2"
