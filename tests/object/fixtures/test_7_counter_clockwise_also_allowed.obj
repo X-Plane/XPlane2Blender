@@ -926,9 +926,9 @@ IDX	826
 IDX	827
 
 # 0 ROOT
-# 1 Object: 6_counter_clockwise_also_allowed
-# EMPTY: 6_counter_clockwise_also_allowed	weight: 0
-	# 2 Object: trim_wheel.005
+# 1 Object: 7_counter_clockwise_also_allowed
+# EMPTY: 7_counter_clockwise_also_allowed	weight: 0
+	# 2 Object: trim_wheel.006
 	ANIM_begin
 	# static translation
 	ANIM_trans	-1	0.55000001	-0.30000001	-1	0.55000001	-0.30000001
@@ -940,7 +940,7 @@ IDX	827
 	ANIM_rotate_key	1	-170.00002067
 	ANIM_rotate_key	999	-170.00002067
 	ANIM_rotate_end
-	# PRIMITIVE: trim_wheel.005	weight: 5
+	# PRIMITIVE: trim_wheel.006	weight: 5
 	# MATERIAL: Material.007
 	ATTR_shiny_rat	0.5
 	ATTR_manip_drag_rotate	hand	-1	0.55000001	-0.30000001	-1.00000179	0	0	9.99981444	170.00002067	0	0	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio_all	none	Trim Wheel
@@ -948,4 +948,4 @@ IDX	827
 	TRIS	0 828
 	ANIM_end
 
-# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-dev.0+16.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-dev.0+19.NO_BUILD_NUMBR

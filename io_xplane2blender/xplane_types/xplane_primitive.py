@@ -15,7 +15,8 @@ from ..xplane_constants import *
 from ..xplane_helpers import logger
 
 from io_xplane2blender import xplane_helpers
-from io_xplane2blender.xplane_constants import MANIP_DRAG_AXIS_DETENT
+from io_xplane2blender.xplane_constants import MANIP_DRAG_AXIS_DETENT,\
+    MANIP_DRAG_ROTATE_DETENT
 from io_xplane2blender.xplane_types import xplane_manipulator
 
 # Class: XPlanePrimitive
@@ -105,8 +106,9 @@ class XPlanePrimitive(XPlaneObject):
         if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
             if self.blenderObject.xplane.manip.enabled:
                 manip = self.blenderObject.xplane.manip
-                if (manip.get_effective_type_id() == MANIP_DRAG_AXIS_DETENT or\
-                    manip.get_effective_type_id() == MANIP_DRAG_ROTATE):
+                if  manip.get_effective_type_id() == MANIP_DRAG_AXIS_DETENT or\
+                    manip.get_effective_type_id() == MANIP_DRAG_ROTATE or\
+                    manip.get_effective_type_id() == MANIP_DRAG_ROTATE_DETENT:
                     if not xplane_manipulator.check_bone_is_leaf(self.xplaneBone):
                         return ''
 

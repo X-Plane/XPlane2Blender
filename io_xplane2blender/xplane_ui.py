@@ -897,7 +897,10 @@ def manipulator_layout(self, obj):
                 if manipType != MANIP_DRAG_AXIS_DETENT:
                     box.prop(obj.xplane.manip, 'dataref2')
                 box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
-            axis_detent_ranges_layout(self, box, obj.xplane.manip)
+            
+            if  manipType == MANIP_DRAG_AXIS_DETENT or\
+                manipType == MANIP_DRAG_ROTATE_DETENT:
+                axis_detent_ranges_layout(self, box, obj.xplane.manip)
 
 # Function: conditions_layout
 # Draws the UI layout for conditions.
