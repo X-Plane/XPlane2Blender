@@ -143,7 +143,7 @@ class XPlaneKeyframeCollection(MutableSequence):
     def getRotationKeyframeTable(self): # type: -> List[Tuple[Vector,List[TableEntry]]]
         '''
         Return the rotation portion of a keyframe collection in the form of
-        List[Tuple[axis, List[Tuple[value,deg]]]], where axis is Vector.
+        List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.
         '''
         axes, final_rotation_mode = self.getReferenceAxes()
 
@@ -177,14 +177,14 @@ class XPlaneKeyframeCollection(MutableSequence):
 
         return ret
 
-    def getRotationKeyframeTableNoClamps(self):
+    def getRotationKeyframeTableNoClamps(self): # -> List[Tuple[axis, List[Tuple['value','degrees']]]]:
         '''
         Return the rotation portion of a keyframe collection in the form of
-        List[Tuple[axis, List[Tuple[value,deg]]]], where axis is Vector.
+        List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.
         
         Does not contain any clamping keyframes.
         '''
-        return XPlaneKeyframeCollection.filter_clamping_keyframes(self.getRotationKeyframeTable(), "rotation")
+        return XPlaneKeyframeCollection.filter_clamping_keyframes(self.getRotationKeyframeTable(), "degrees")
 
     def getTranslationKeyframeTable(self):
         '''
@@ -215,8 +215,9 @@ class XPlaneKeyframeCollection(MutableSequence):
     def asQuaternion(self):
         return XPlaneKeyframeCollection([keyframe.asQuaternion() for keyframe in self])
 
+    
     @staticmethod
-    def filter_clamping_keyframes(keyframes,attr):
+    def filter_clamping_keyframes(keyframe_collection:'XPlaneKeyframeCollection',attr:str):
         '''
         Returns a new keyframe collection without clamping keyframes
         attr specifies which keyframe attribute will be used to filter,
@@ -224,9 +225,11 @@ class XPlaneKeyframeCollection(MutableSequence):
         '''
         assert attr in ("location","degrees")
 
-        cleaned_keyframes = keyframes[:]
         # Remove clamp values
-        # List[Tuple[float,float]],value_str -> None
+        # if attr == 'location':
+        #   List[TranslationKeyframe[keyframe.value, keyframe.location]]
+        # elif attr == 'degrees
+        #   List[RotationKeyframe['value','degrees']] from List[Tuple[axis, List[Tuple['value','degrees']]]]
         def remove_clamp_keyframes(keyframes,attr):
             itr = iter(keyframes)
             while len(keyframes) > 2:
@@ -240,9 +243,18 @@ class XPlaneKeyframeCollection(MutableSequence):
                     else:
                         break
 
-        remove_clamp_keyframes(cleaned_keyframes,attr)
-        cleaned_keyframes.reverse()
-        remove_clamp_keyframes(cleaned_keyframes,attr)
-        cleaned_keyframes.reverse()
+        cleaned_keyframe_collection = keyframe_collection[:]
+        if attr == 'location':
+            remove_clamp_keyframes(cleaned_keyframe_collection,attr)
+            cleaned_keyframe_collection.reverse()
+            remove_clamp_keyframes(cleaned_keyframe_collection,attr)
+            cleaned_keyframe_collection.reverse()
+            return cleaned_keyframe_collection
+        elif attr == 'degrees':
+            for axis,table in cleaned_keyframe_collection:
+                remove_clamp_keyframes(table, attr)
+                table.reverse()
+                remove_clamp_keyframes(table, attr)
+                table.reverse()
+            return cleaned_keyframe_collection
         
-        return cleaned_keyframes

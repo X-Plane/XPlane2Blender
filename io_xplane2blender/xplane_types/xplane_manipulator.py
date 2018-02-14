@@ -29,7 +29,7 @@ However, without this, the logic must be duplicated, making it, in my opinion, w
 In addition, in order to give better error messages, some less used aspects of the data model are used. For instance,
 using bone.datarefs instead of bone.animations for check_bone_has_n_datarefs
 '''
-def check_bone_has_n_datarefs(bone, num_datarefs, log_errors=True) -> bool:
+def check_bone_has_n_datarefs(bone:XPlaneBone, num_datarefs:int, anim_type:str, log_errors=True) -> bool:
     '''
     bone:XPlaneBone (not none) -> bool
     Checks animations dict, not datarefs dictionary because we're looking for the actual animation
@@ -41,13 +41,15 @@ def check_bone_has_n_datarefs(bone, num_datarefs, log_errors=True) -> bool:
         try:
             manip = get_manip_from_bone(bone)
             if log_errors:
-                logger.error("The location animation for the {} manipulator attached to {} must have exactly {} datarefs for its animation".format(
+                logger.error("The {} animation for the {} manipulator attached to {} must have exactly {} datarefs for its animation".format(
+                    anim_type,
                     manip.get_effective_type_name(),
                     bone.getBlenderName(),
                     num_datarefs))
         except:
             if log_errors:
-                logger.error("The location animation for {} must have exactly {} datarefs for its animation".format(
+                logger.error("The {} animation for {} must have exactly {} datarefs for its animation".format(
+                    anim_type,
                     bone.getBlenderName(),
                     num_datarefs))
 
@@ -69,9 +71,16 @@ def check_bone_has_parent(bone:XPlaneBone, log_errors=True) -> bool:
 
 def check_bone_is_animated_for_rotation(bone:XPlaneBone,log_errors:bool=True) -> bool:
     assert bone is not None
+
+    # Unfortunately this does not answer if we have one rotation keyframe, which, semantically
+    # we are checking for. This makes us never able to really get a good error message for
+    # "test_5_must_have_at_least_2_non_clamping_keyframes  See bug #333
+    #
+    # While it would nice to use the RotationKeyframeTable, we don't know if that can
+    # be generated yet, a call to getReferenceAxes could fail if forced
     if not bone.isDataRefAnimatedForRotation():
         if log_errors:
-            logger.error("{} manipulator attached to {} must have rotation keyframes".format(
+            logger.error("{} manipulator attached to {} must have at least 2 rotation keyframes that are not the same".format(
                 get_manip_from_bone(bone).get_effective_type_name(),
                 bone.getBlenderName()))
         return False
@@ -91,7 +100,7 @@ def check_bone_is_animated_for_translation(bone:XPlaneBone,log_errors:bool=True)
         return True
 
 
-def check_bone_is_animated_on_n_axes(bone:XPlaneBone,num_axis_of_rotation:int) -> bool:
+def check_bone_is_animated_on_n_axes(bone:XPlaneBone,num_axis_of_rotation:int, log_errors=True) -> bool:
     rotation_keyframe_table = next(iter(bone.animations.values())).getRotationKeyframeTable()
 
     if len(rotation_keyframe_table) == 3:
@@ -106,10 +115,11 @@ def check_bone_is_animated_on_n_axes(bone:XPlaneBone,num_axis_of_rotation:int) -
     # The sum of the degrees rotated along each axis over every keyframe sorted from lowest-to-highest
     # should be 0,0,T. Having a second or all three rotating would mean that at least the second entry would be not 0
     if real_num_axis_of_rotation != num_axis_of_rotation:
-        logger.error("{} manipulator attached to {} can only rotate around {} axis".format(
-            get_manip_from_bone(bone).get_effective_type_name(),
-            bone.getBlenderName(),
-            num_axis_of_rotation))
+        if log_errors:
+            logger.error("{} manipulator attached to {} can only rotate around {} axis".format(
+                get_manip_from_bone(bone).get_effective_type_name(),
+                bone.getBlenderName(),
+                num_axis_of_rotation))
         return False
     else:
         return True
@@ -225,6 +235,41 @@ def check_bones_rotation_translation_animations_are_orthogonal(rotation_bone:XPl
     else:
         return True
 
+def _check_keyframe_rotation_count(rotation_bone:XPlaneBone, count:int, exclude_clamping:bool, cmp_func, cmp_error_msg:str, log_errors:bool=True) -> bool:
+    keyframe_col = next(iter(rotation_bone.animations.values())).asAA()
+
+    if exclude_clamping:
+        res = cmp_func(len(keyframe_col.getRotationKeyframeTableNoClamps()[0]),count)
+    else:
+        res = cmp_func(len(keyframe_col.getRotationKeyframeTable()[0]),count)
+
+    if not res:
+        try:
+            manip = get_manip_from_bone(rotation_bone)
+            logger.error("{} manipulator attached to {} must have {} {} {}keyframes for its rotation animation".format(
+                get_manip_from_bone(rotation_bone).get_effective_type_name(),
+                rotation_bone.getBlenderName(),
+                cmp_error_msg,
+                count,
+                "non-clamping " if exclude_clamping else ""))
+        except:
+            logger.error("{} must have {} {} {}keyframes for its rotation animation".format(
+                rotation_bone.getBlenderName(),
+                cmp_error_msg,
+                count,
+                "non-clamping " if exclude_clamping else ""))
+
+        return False
+    else:
+        return True
+
+
+def check_keyframe_rotation_eq_count(rotation_bone:XPlaneBone, count:int, exclude_clamping:bool, log_errors:bool=True) -> bool:
+    return _check_keyframe_rotation_count(rotation_bone, count, exclude_clamping, lambda x,y: x==y, "exactly", log_errors)
+
+
+def check_keyframe_rotation_ge_count(rotation_bone:XPlaneBone, count:int, exclude_clamping:bool, log_errors:bool=True) -> bool:
+    return _check_keyframe_rotation_count(rotation_bone, count, exclude_clamping, lambda x,y: x>=y, "greater than or equal to", log_errors)
 
 def _check_keyframe_translation_count(translation_bone:XPlaneBone, count:int, exclude_clamping:bool, cmp_func, cmp_error_msg:str, log_errors:bool=True) -> bool:
     keyframe_col = next(iter(translation_bone.animations.values()))
@@ -236,19 +281,20 @@ def _check_keyframe_translation_count(translation_bone:XPlaneBone, count:int, ex
 
     if not res:
         try:
-            manip = get_manip_from_bone(translation_bone)
-            logger.error("{} manipulator attached to {} must have {} {} {}keyframes for its location animation".format(
-                get_manip_from_bone(translation_bone).get_effective_type_name(),
-                translation_bone.getBlenderName(),
-                cmp_error_msg,
-                count,
-                "non-clamping " if exclude_clamping else ""))
+            if log_errors:
+                logger.error("{} manipulator attached to {} must have {} {} {}keyframes for its location animation".format(
+                    get_manip_from_bone(translation_bone).get_effective_type_name(),
+                    translation_bone.getBlenderName(),
+                    cmp_error_msg,
+                    count,
+                    "non-clamping " if exclude_clamping else ""))
         except:
-            logger.error("{} must have {} {} {}keyframes for its location animation".format(
-                translation_bone.getBlenderName(),
-                cmp_error_msg,
-                count,
-                "non-clamping " if exclude_clamping else ""))
+            if log_errors:
+                logger.error("{} must have {} {} {}keyframes for its location animation".format(
+                    translation_bone.getBlenderName(),
+                    cmp_error_msg,
+                    count,
+                    "non-clamping " if exclude_clamping else ""))
 
         return False
     else:
@@ -261,6 +307,24 @@ def check_keyframe_translation_eq_count(translation_bone:XPlaneBone, count:int, 
 
 def check_keyframe_translation_ge_count(translation_bone:XPlaneBone, count:int, exclude_clamping:bool, log_errors:bool=True) -> bool:
     return _check_keyframe_translation_count(translation_bone, count, exclude_clamping, lambda x,y: x>=y, "greater than or equal to", log_errors)
+
+def check_keyframes_rotation_are_orderered(rotation_bone:XPlaneBone, log_errors:bool=True) -> bool:
+    rotation_keyframe_table =\
+        next(iter(rotation_bone.animations.values()))\
+        .asAA()\
+        .getRotationKeyframeTable()
+
+    rotation_axis = rotation_keyframe_table[0][0]
+    rotation_keyframe_data = rotation_keyframe_table[0][1]
+    if not (rotation_keyframe_data == sorted(rotation_keyframe_data) or\
+            rotation_keyframe_data == sorted(rotation_keyframe_data[::-1])):
+        if log_errors:
+            logger.error("Rotation dataref values for the {} manipulator attached to {} are not in ascending or descending order".format(
+                get_manip_from_bone(rotation_bone).get_effective_type_name(),
+                rotation_bone.getBlenderName()))
+        return False
+    else:
+        return True
 
 def check_manip_has_axis_detent_ranges(manipulator:'XPlaneManipulator', log_errors:bool=True) -> bool:
     assert manipulator.type == MANIP_DRAG_AXIS_DETENT or\
@@ -288,8 +352,13 @@ def get_rotation_bone(manipulator: 'XPlaneManipulator',log_errors:bool=True) -> 
     '''
     if manipulator.type == MANIP_DRAG_ROTATE:
         bone = manipulator.xplanePrimative.xplaneBone
+        # This is guaranteed to be true by isDataRefAnimatedForRotation\
+        # check_keyframe_rotation_ge_count(bone, 2, True, True), so it won't be checked
+        # before _on_n_axes
         if check_bone_is_animated_for_rotation(bone, log_errors) and\
-           check_bone_has_n_datarefs(bone, 1, log_errors):
+           check_bone_has_n_datarefs(bone, 1, "rotation", log_errors) and\
+           check_bone_is_animated_on_n_axes(bone,1,True)  and\
+           check_keyframes_rotation_are_orderered(bone, True):
             return bone
         else:
             return None
@@ -298,8 +367,10 @@ def get_rotation_bone(manipulator: 'XPlaneManipulator',log_errors:bool=True) -> 
         bone = manipulator.xplanePrimative.xplaneBone
         if check_bone_has_parent(bone,log_errors) and\
            check_bone_parent_is_animated_for_rotation(bone, log_errors) and\
-           check_bone_has_n_datarefs(bone.parent, 1, log_errors):
-            return manipulator.xplanePrimative.xplaneBone.parent
+           check_bone_has_n_datarefs(bone.parent, 1, "rotation", log_errors) and\
+           check_bone_is_animated_on_n_axes(bone.parent,1,True)  and\
+           check_keyframes_rotation_are_orderered(bone.parent, True):
+            return bone.parent
         else:
             return None
     
@@ -333,11 +404,11 @@ def get_translation_bone(manipulator: 'XPlaneManipulator',log_errors:bool=True) 
        manipulator.type == MANIP_DRAG_ROTATE_DETENT:
         # This awesome clean code relies on short circuting to stop checking for problems
         # when a less specific error is detected
-        if check_bone_has_n_datarefs(bone,1) and\
+        if check_bone_has_n_datarefs(bone,1,"location",log_errors) and\
            check_bone_is_animated_for_translation(bone, log_errors)  and\
            check_keyframe_translation_eq_count(bone,count=2, exclude_clamping=True) and\
            check_bone_is_not_animated_for_rotation(bone, log_errors) and\
-           check_manip_has_axis_detent_ranges(manipulator):
+           check_manip_has_axis_detent_ranges(manipulator,log_errors):
             return bone
         else:
             return None
@@ -428,9 +499,11 @@ class XPlaneManipulator():
 
                 translation_bone = get_translation_bone(self)
 
+                # probably not needed
                 if not check_bone_has_n_datarefs(parent_bone, 1):
                     return
 
+                #Not needed
                 if not check_bone_has_n_datarefs(translation_bone,1):
                     return
 
@@ -444,6 +517,7 @@ class XPlaneManipulator():
                 if not check_keyframe_translation_eq_count(parent_bone, count=2, exclude_clamping=True):
                     return
 
+                # def not needed
                 if not check_bone_has_n_datarefs(translation_bone,1):
                     return
                 elif not check_keyframe_translation_eq_count(translation_bone, count=2, exclude_clamping=True):
@@ -521,28 +595,6 @@ class XPlaneManipulator():
                                       self.manip.get_effective_type_name()))
                     return
 
-                rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
-
-                if not check_bone_is_animated_on_n_axes(rotation_bone,1):
-                    return
-                else:
-                    rotation_keyframe_table =\
-                        next(iter(rotation_bone.animations.values()))\
-                        .asAA()\
-                        .getRotationKeyframeTable()
-
-                    rotation_axis = rotation_keyframe_table[0][0]
-                    rotation_keyframe_data = rotation_keyframe_table[0][1]
-
-                if not (rotation_keyframe_data == sorted(rotation_keyframe_data) or\
-                        rotation_keyframe_data == sorted(rotation_keyframe_data[::-1])):
-                    logger.error("Rotation dataref values for the {} manipulator attached to {} are not in ascending or descending order".format(
-                        get_manip_from_bone(rotation_bone).get_effective_type_name(),
-                        rotation_bone.getBlenderName()))
-                    return
-
-                rotation_keyframe_data_cleaned = XPlaneKeyframeCollection.filter_clamping_keyframes(rotation_keyframe_data,"degrees")
-
                 if translation_bone is None:
                     v2_min = 0.0
                     v2_max = 0.0
@@ -559,15 +611,29 @@ class XPlaneManipulator():
                     else:
                         self.manip.dataref2 = "none"
 
+                rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
+
+                rotation_keyframe_table_cleaned =\
+                    next(iter(rotation_bone.animations.values()))\
+                    .asAA()\
+                    .getRotationKeyframeTableNoClamps()
+
+                rotation_axis = rotation_keyframe_table_cleaned[0][0]
+
                 rotation_origin_xp = xplane_helpers.vec_b_to_x(rotation_origin)
                 rotation_axis_xp   = xplane_helpers.vec_b_to_x(rotation_axis)
 
-                v1_min, angle1 = rotation_keyframe_data_cleaned[0]
-                v1_max, angle2 = rotation_keyframe_data_cleaned[-1]
+                v1_min, angle1 = rotation_keyframe_table_cleaned[0][1][0]
+                v1_max, angle2 = rotation_keyframe_table_cleaned[0][1][-1]
 
                 if round(angle1,5) == round(angle2,5):
-                    logger.error("0 degree rotation on {} not allowed".format(
-                        rotation_bone.getBlenderName()))
+                    # Because of the previous guarantees that
+                    # - Keyframes must be different
+                    # - Keyframes must be in ascending and decending order
+                    # this is impossible to reach, but is included as a guard against regression
+                    # logger.error("0 degree rotation on {} not allowed".format(
+                    #    rotation_bone.getBlenderName()))
+                    assert False, "How did we get here?"
                     return
 
                 if v1_min == v1_max:
@@ -812,8 +878,8 @@ class XPlaneManipulator():
 
             # 4. All ATTR_manip_keyframes (DRAG_ROTATE)
             if self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
-                if len(rotation_keyframe_data_cleaned) > 2:
-                    for rot_keyframe in rotation_keyframe_data_cleaned[1:-1]:
+                if len(rotation_keyframe_table_cleaned[0][1]) > 2:
+                    for rot_keyframe in rotation_keyframe_table_cleaned[0][1][1:-1]:
                         self.xplanePrimative.cockpitAttributes.add(
                             XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
