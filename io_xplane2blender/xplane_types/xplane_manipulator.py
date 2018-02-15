@@ -512,6 +512,7 @@ class XPlaneManipulator():
                 - * Must have a parent with translation
                 - * The positions at each keyframe must not be the same, including both being 0
                 - The parent and translation animations are orthogonal
+                - Must have axis detent ranges
 
                 * (guarenteed by get_tranlation_bone)
                 '''
