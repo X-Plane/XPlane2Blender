@@ -41,9 +41,9 @@ IDX	23
 IDX	20
 
 # 0 ROOT
-# 1 Object: 09_known_good_drag_axis_w_detents
-# EMPTY: 09_known_good_drag_axis_w_detents	weight: 0
-	# 2 Object: Empty_define_drag_axis
+# 1 Object: 10_known_good_drag_axis_w_detents
+# EMPTY: 10_known_good_drag_axis_w_detents	weight: 0
+	# 2 Object: Empty_define_drag_axis.009
 	ANIM_begin
 	# translation keyframes
 	ANIM_trans_begin	sim/cockpit2/controls/flap_ratio
@@ -52,7 +52,7 @@ IDX	20
 	ANIM_trans_key	1	2	0	0
 	ANIM_trans_key	999	2	0	0
 	ANIM_trans_end
-	# EMPTY: Empty_define_drag_axis	weight: 0
+	# EMPTY: Empty_define_drag_axis.009	weight: 0
 		# 3 Object: Cube_define_detent_axis
 		ANIM_begin
 		# translation keyframes
@@ -66,7 +66,7 @@ IDX	20
 		# MATERIAL: Material
 		ATTR_shiny_rat	0.5
 		ATTR_manip_drag_axis	hand	2	0	0	0	1	sim/cockpit2/controls/flap_ratio	Test Tooltip
-		ATTR_axis_detented	0	0	-0.80000001	0	5	sim/weapons/x[0]
+		ATTR_axis_detented	0	0	-0.80000001	0	5	
 		ATTR_axis_detent_range	0	0.5	0.40000001
 		ATTR_axis_detent_range	0.5	0.75	0.60000002
 		ATTR_axis_detent_range	0.75	0.75	0
@@ -75,4 +75,4 @@ IDX	20
 		ANIM_end
 	ANIM_end
 
-# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-dev.0+15.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-dev.0+20.NO_BUILD_NUMBR
