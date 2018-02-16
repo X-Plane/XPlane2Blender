@@ -1,6 +1,8 @@
 # File: xplane_ui.py
 # Creates the User Interface for all X-Plane settings.
 
+import collections
+
 import bpy
 from .xplane_ops import *
 from .xplane_props import *
@@ -800,107 +802,188 @@ def manipulator_layout(self, obj):
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= int(VERSION_1110):
             box.prop(obj.xplane.manip, 'type_v1110', text="Type")
-            manipType = obj.xplane.manip.type_v1110
         else:
             box.prop(obj.xplane.manip, 'type', text="Type")
-            manipType = obj.xplane.manip.type
+
+        manipType = obj.xplane.manip.get_effective_type_id()
 
         box.prop(obj.xplane.manip, 'cursor', text="Cursor")
         box.prop(obj.xplane.manip, 'tooltip', text="Tooltip")
 
-        if manipType not in (MANIP_COMMAND,
-                             MANIP_COMMAND_AXIS,
-                             MANIP_COMMAND_KNOB,
-                             MANIP_COMMAND_SWITCH_LEFT_RIGHT,
-                             MANIP_COMMAND_SWITCH_UP_DOWN,
-                             MANIP_COMMAND_KNOB2,
-                             MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
-                             MANIP_COMMAND_SWITCH_UP_DOWN2):
+        def output_dataref_search(box):
+            box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+        
+        MANIPULATORS_AXIS = { MANIP_DRAG_XY,
+                              MANIP_DRAG_AXIS,
+                              MANIP_COMMAND_AXIS,
+                              MANIP_DRAG_AXIS_PIX}
+
+        MANIPULATORS_AUTODETECT_OPT_IN = { MANIP_DRAG_AXIS }
+
+        MANIPULATORS_AUTODETECT_DATAREFS = { MANIP_DRAG_AXIS,
+                                             MANIP_DRAG_AXIS_DETENT,
+                                             MANIP_DRAG_ROTATE,
+                                             MANIP_DRAG_ROTATE_DETENT}
+
+        MANIPULATORS_COMMAND_CLASSIC = { MANIP_COMMAND,
+                                         MANIP_COMMAND_AXIS,
+                                         MANIP_COMMAND_KNOB,
+                                         MANIP_COMMAND_SWITCH_LEFT_RIGHT,
+                                         MANIP_COMMAND_SWITCH_UP_DOWN}
+
+        MANIPULATORS_COMMAND_1110 = { MANIP_COMMAND_KNOB2,
+                                      MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
+                                      MANIP_COMMAND_SWITCH_UP_DOWN2}
+
+        MANIPULATORS_COMMAND = MANIPULATORS_COMMAND_1110 | MANIPULATORS_COMMAND_CLASSIC
+
+        MANIPULATORS_DETENT = { MANIP_DRAG_AXIS_DETENT,
+                                MANIP_DRAG_ROTATE_DETENT}
+
+
+        # for special cases adjust or curry predicates
+        props =  collections.OrderedDict({
+                'dataref1': lambda manip_type: manip_type in MANIPULATORS_ALL - MANIPULATORS_COMMAND,
+                'dataref2': lambda manip_type: manip_type in {MANIP_DRAG_XY} | {MANIP_DRAG_ROTATE, MANIP_DRAG_ROTATE_DETENT},
+
+                'dx':       lambda manip_type: manip_type in MANIPULATORS_AXIS,
+                'dy':       lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_AXIS_PIX},
+                'dz':       lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX},
+
+                'step':     lambda manip_type: manip_type in {MANIP_DRAG_AXIS_PIX},
+                'exp' :     lambda manip_type: manip_type in {MANIP_DRAG_AXIS_PIX},
+
+                'v1_min':   lambda manip_type: manip_type in {MANIP_DRAG_XY,MANIP_DELTA,MANIP_WRAP},
+                'v1_max':   lambda manip_type: manip_type in {MANIP_DRAG_XY,MANIP_DELTA,MANIP_WRAP},
+                'v2_min':   lambda manip_type: manip_type in {MANIP_DRAG_XY},
+                'v2_max':   lambda manip_type: manip_type in {MANIP_DRAG_XY},
+
+                'v1':       lambda manip_type: manip_type in {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT},
+                'v2':       lambda manip_type: manip_type in {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT},
+
+                'command':  lambda manip_type: manip_type in MANIPULATORS_COMMAND_1110 | {MANIP_COMMAND},
+                'positive_command': lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC,
+                'negative_command': lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC,
+
+                'v_down':   lambda manip_type: manip_type in {MANIP_PUSH,MANIP_RADIO,MANIP_DELTA,MANIP_WRAP},
+                'v_up'  :   lambda manip_type: manip_type in {MANIP_PUSH},
+
+                'v_on'  :   lambda manip_type: manip_type in {MANIP_TOGGLE},
+                'v_off' :   lambda manip_type: manip_type in {MANIP_TOGGLE},
+                'v_hold':   lambda manip_type: manip_type in {MANIP_DELTA,MANIP_WRAP},
+
+                'click_step':  lambda manip_type: manip_type in {MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT},
+                'hold_step':   lambda manip_type: manip_type in {MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT},
+                'wheel_delta': lambda manip_type: manip_type in MOUSE_WHEEL_MANIPULATORS and xplane_version >= 1050,
+
+                'autodetect_datarefs': lambda manip_type: manip_type in {MANIP_DRAG_AXIS, MANIP_DRAG_ROTATE} | MANIPULATORS_DETENT
+                })
+
+        for prop,pred in props.items():
+            if pred(manipType):
+                box.prop(obj.xplane.manip, prop)
+        #has_dataref_1_and_2 = {MANIP_DRAG_XY} | MANIPULATORS_DETENT | {MANIP_DRAG_ROTATE}
+        #has_dataref_1_only = MANIPULATORS_ALL - MANIPULATORS_COMMAND - {MANIP_DRAG_XY}
+        #has_dataref_search = has_dataref_1_and_2 | has_dataref_1_only
+        
 
             #New style auto detect
-            if manipType == MANIP_DRAG_AXIS_DETENT or\
-               manipType == MANIP_DRAG_ROTATE or\
-               manipType == MANIP_DRAG_ROTATE_DETENT:
-                pass
-            elif manipType != MANIP_DRAG_XY:
-                box.prop(obj.xplane.manip, 'dataref1')
-                box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
-            else:
-                box.prop(obj.xplane.manip, 'dataref1')
-                box.prop(obj.xplane.manip, 'dataref2')
-                box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+            #if manipType == MANIP_DRAG_AXIS_DETENT or\
+               #manipType == MANIP_DRAG_ROTATE or\
+               #manipType == MANIP_DRAG_ROTATE_DETENT:
+                #pass
+            #if manipType != MANIP_DRAG_XY:
+            #    box.prop(obj.xplane.manip, 'dataref1')
+            #    box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+            #else:
+            #    box.prop(obj.xplane.manip, 'dataref1')
+            #    box.prop(obj.xplane.manip, 'dataref2')
+            #    box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
 
         # drag axis lenghts
-        if manipType in (MANIP_DRAG_XY, MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
-            box.prop(obj.xplane.manip, 'dx')
-            box.prop(obj.xplane.manip, 'dy')
+        #if manipType in (MANIP_DRAG_XY, MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
+        #    box.prop(obj.xplane.manip, 'dx')
+        #    box.prop(obj.xplane.manip, 'dy')
 
-            if manipType in(MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
-                box.prop(obj.xplane.manip, 'dz')
+        #    if manipType in(MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
+                #box.prop(obj.xplane.manip, 'dz')
 
-        elif manipType == MANIP_DRAG_AXIS_PIX:
-             box.prop(obj.xplane.manip, 'dx')
-             box.prop(obj.xplane.manip, 'step')
-             box.prop(obj.xplane.manip, 'exp')
+
+        #elif manipType == MANIP_DRAG_AXIS_PIX:
+             #box.prop(obj.xplane.manip, 'dx')
+             #box.prop(obj.xplane.manip, 'step')
+             #box.prop(obj.xplane.manip, 'exp')
 
         # values
-        if manipType == MANIP_DRAG_XY:
-            box.prop(obj.xplane.manip, 'v1_min')
-            box.prop(obj.xplane.manip, 'v1_max')
-            box.prop(obj.xplane.manip, 'v2_min')
-            box.prop(obj.xplane.manip, 'v2_max')
-        elif manipType in (MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
-            box.prop(obj.xplane.manip, 'v1')
-            box.prop(obj.xplane.manip, 'v2')
-        elif manipType == MANIP_COMMAND:
-            box.prop(obj.xplane.manip, MANIP_COMMAND)
-        elif manipType in (MANIP_COMMAND,
-                           MANIP_COMMAND_AXIS,
-                           MANIP_COMMAND_KNOB,
-                           MANIP_COMMAND_SWITCH_LEFT_RIGHT,
-                           MANIP_COMMAND_SWITCH_UP_DOWN):
-            box.prop(obj.xplane.manip, 'positive_command')
-            box.prop(obj.xplane.manip, 'negative_command')
-        elif manipType in (MANIP_COMMAND_KNOB2,
-                           MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
-                           MANIP_COMMAND_SWITCH_UP_DOWN2):
-            box.prop(obj.xplane.manip, 'command')
-        elif manipType == MANIP_PUSH:
-            box.prop(obj.xplane.manip, 'v_down')
-            box.prop(obj.xplane.manip, 'v_up')
-        elif manipType == MANIP_RADIO:
-            box.prop(obj.xplane.manip, 'v_down')
-        elif manipType == MANIP_TOGGLE:
-            box.prop(obj.xplane.manip, 'v_on')
-            box.prop(obj.xplane.manip, 'v_off')
-        elif manipType in (MANIP_DELTA, MANIP_WRAP):
-            box.prop(obj.xplane.manip, 'v_down')
-            box.prop(obj.xplane.manip, 'v_hold')
-            box.prop(obj.xplane.manip, 'v1_min')
-            box.prop(obj.xplane.manip, 'v1_max')
+        #if manipType == MANIP_DRAG_XY:
+        #    box.prop(obj.xplane.manip, 'v1_min')
+        #    box.prop(obj.xplane.manip, 'v1_max')
+        #    box.prop(obj.xplane.manip, 'v2_min')
+        #    box.prop(obj.xplane.manip, 'v2_max')
+        #elif manipType in 
 
-        if manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
-            box.prop(obj.xplane.manip, 'click_step')
-            box.prop(obj.xplane.manip, 'hold_step')
+            #box.prop(obj.xplane.manip, 'v1')
+            #box.prop(obj.xplane.manip, 'v2')
+        #elif manipType == MANIP_COMMAND:
+            #box.prop(obj.xplane.manip, MANIP_COMMAND)
+
+
+
+
+       # elif manipType in (MANIP_COMMAND,
+       #                    MANIP_COMMAND_AXIS,
+       #                    MANIP_COMMAND_KNOB,
+       #                    MANIP_COMMAND_SWITCH_LEFT_RIGHT,
+       #                    MANIP_COMMAND_SWITCH_UP_DOWN):
+       #    box.prop(obj.xplane.manip, 'positive_command')
+       #    box.prop(obj.xplane.manip, 'negative_command')
+        #has_command = MANIPULATORS_COMMAND_1110 | {MANIP_COMMAND}
+        
+        #elif manipType in (MANIP_COMMAND_KNOB2,
+        #                   MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
+        #                   MANIP_COMMAND_SWITCH_UP_DOWN2):
+        #    box.prop(obj.xplane.manip, 'command')
+
+
+
+
+
+        #elif manipType == MANIP_PUSH:
+            #box.prop(obj.xplane.manip, 'v_down')
+            #box.prop(obj.xplane.manip, 'v_up')
+        #elif manipType == MANIP_RADIO:
+            #box.prop(obj.xplane.manip, 'v_down')
+        #elif manipType == MANIP_TOGGLE:
+            #box.prop(obj.xplane.manip, 'v_on')
+            #box.prop(obj.xplane.manip, 'v_off')
+        #elif manipType in (MANIP_DELTA, MANIP_WRAP):
+            #box.prop(obj.xplane.manip, 'v_down')
+            #box.prop(obj.xplane.manip, 'v_hold')
+            #box.prop(obj.xplane.manip, 'v1_min')
+            #box.prop(obj.xplane.manip, 'v1_max')
+
+        #if manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
+            #box.prop(obj.xplane.manip, 'click_step')
+            #box.prop(obj.xplane.manip, 'hold_step')
 
         # v1050: mouse wheel support
-        if manipType in MOUSE_WHEEL_MANIPULATORS and xplane_version >= 1050:
-            box.prop(obj.xplane.manip, 'wheel_delta')
+        #if manipType in MOUSE_WHEEL_MANIPULATORS and xplane_version >= 1050:
+            #box.prop(obj.xplane.manip, 'wheel_delta')
 
-        if manipType == MANIP_DRAG_AXIS_DETENT or\
-           manipType == MANIP_DRAG_ROTATE or\
-           manipType == MANIP_DRAG_ROTATE_DETENT:
-            box.prop(obj.xplane.manip, 'autodetect_datarefs')
+        #if manipType == MANIP_DRAG_AXIS_DETENT or\
+        #   manipType == MANIP_DRAG_ROTATE or\
+        #   manipType == MANIP_DRAG_ROTATE_DETENT:
+           # box.prop(obj.xplane.manip, 'autodetect_datarefs')
 
-            if obj.xplane.manip.autodetect_datarefs is False:
-                box.prop(obj.xplane.manip, 'dataref1')
-                if manipType != MANIP_DRAG_AXIS_DETENT:
-                    box.prop(obj.xplane.manip, 'dataref2')
-                box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+           # if obj.xplane.manip.autodetect_datarefs is False:
+           #     box.prop(obj.xplane.manip, 'dataref1')
+               # if manipType != MANIP_DRAG_AXIS_DETENT:
+               #     box.prop(obj.xplane.manip, 'dataref2')
+              #  box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
             
-            if  manipType == MANIP_DRAG_AXIS_DETENT or\
-                manipType == MANIP_DRAG_ROTATE_DETENT:
-                axis_detent_ranges_layout(self, box, obj.xplane.manip)
+        if  manipType == MANIP_DRAG_AXIS_DETENT or\
+            manipType == MANIP_DRAG_ROTATE_DETENT:
+            axis_detent_ranges_layout(self, box, obj.xplane.manip)
 
 # Function: conditions_layout
 # Draws the UI layout for conditions.
