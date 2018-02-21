@@ -102,7 +102,7 @@ MANIP_COMMAND_KNOB2              = "command_knob2"
 MANIP_COMMAND_SWITCH_LEFT_RIGHT2 = "command_switch_left_right2"
 MANIP_COMMAND_SWITCH_UP_DOWN2    = "command_switch_up_down2"
 
-MOUSE_WHEEL_MANIPULATORS = (
+MANIPULATORS_MOUSE_WHEEL = (
     MANIP_DRAG_XY,
     MANIP_DRAG_AXIS,
     MANIP_PUSH,
@@ -113,41 +113,18 @@ MOUSE_WHEEL_MANIPULATORS = (
     MANIP_DRAG_AXIS_PIX
 )
 
-# Old manipulators we've decided to upgrade
-MANIP_AUTODETECT_OPT_IN = (
+MANIPULATORS_OPT_IN = (
     MANIP_DRAG_AXIS
 )
 
-MANIPULATORS_ALL = {
-    MANIP_DRAG_XY,
-    MANIP_DRAG_AXIS,
-    MANIP_COMMAND,
-    MANIP_COMMAND_AXIS,
-    MANIP_PUSH,
-    MANIP_RADIO,
-    MANIP_DELTA,
-    MANIP_WRAP,
-    MANIP_TOGGLE,
-    MANIP_NOOP,
+def _get_all_manipulators():
+    import inspect
 
-    #10.10 and greater manips
-    MANIP_DRAG_AXIS_PIX,
+    current_frame = inspect.currentframe()
+    return {global_name: current_frame.f_globals[global_name] for global_name in current_frame.f_globals\
+            if global_name.startswith("MANIP_") and "CURSOR" not in global_name}
 
-    #10.50 and greater manips
-    MANIP_AXIS_SWITCH_LEFT_RIGHT,
-    MANIP_AXIS_SWITCH_UP_DOWN,
-    MANIP_COMMAND_KNOB,
-    MANIP_COMMAND_SWITCH_LEFT_RIGHT,
-    MANIP_COMMAND_SWITCH_UP_DOWN,
-
-    #11.10 and greater manips
-    MANIP_DRAG_AXIS_DETENT,
-    MANIP_DRAG_ROTATE,
-    MANIP_DRAG_ROTATE_DETENT,
-    MANIP_COMMAND_KNOB2,
-    MANIP_COMMAND_SWITCH_LEFT_RIGHT2,
-    MANIP_COMMAND_SWITCH_UP_DOWN2
-}
+MANIPULATORS_ALL = {*_get_all_manipulators().values()}
 
 MANIP_CURSOR_FOUR_ARROWS = "four_arrows"
 MANIP_CURSOR_HAND = "hand"

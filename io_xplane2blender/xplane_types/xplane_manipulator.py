@@ -350,7 +350,7 @@ def get_drag_axis_bone(manipulator:'XPlaneManipulator', log_errors:bool=True) ->
     '''
     Gets the drag_axis_bone. manip.type must be MANIP_AXIS_DETENT
     '''
-    assert manipulator.type == MANIP_DRAG_AXIS_DETENT,\
+    assert manipulator.type == MANIP_DRAG_AXIS_DETENT or manipulator.type == MANIP_DRAG_AXIS,\
            "Unimplemented or wrong manipulator type {} used".format(manipulator.type)
     
     '''
@@ -473,7 +473,7 @@ class XPlaneManipulator():
                     self.manip.dataref2,
                     self.manip.tooltip
                 )
-            elif self.type == MANIP_DRAG_AXIS:
+            elif self.type == MANIP_DRAG_AXIS and not self.manip.autodetect_settings_opt_in:
                 value = (
                     self.manip.cursor,
                     self.manip.dx,
@@ -495,10 +495,16 @@ class XPlaneManipulator():
                     self.manip.dataref1,
                     self.manip.tooltip
                 )
-            elif self.type == MANIP_DRAG_AXIS_DETENT:
+            elif (self.type == MANIP_DRAG_AXIS and self.manip.autodetect_settings_opt_in) or\
+                self.type == MANIP_DRAG_AXIS_DETENT:
                 # Semantically speaking we don't have a new manipulator type. The magic is in ATTR_axis_detented
                 attr = "ATTR_manip_" + MANIP_DRAG_AXIS
                 '''
+                Drag Axis (Opt In)
+                
+                Common Rules
+                Parent Must be animated
+                
                 Drag Axis/Drag Axis With Detents
                 Empty/Bone -> Main drag axis animation and (optionally) v1_min/max for validating axis_detent_ranges
                 |_Child mesh -> Manipulator settings and (optionally) detent axis animation
@@ -519,10 +525,10 @@ class XPlaneManipulator():
                 drag_axis_bone = get_drag_axis_bone(self,log_errors=True)
                 detent_axis_bone = None
 
-                if drag_axis_bone:
+                if drag_axis_bone and self.type == MANIP_DRAG_AXIS_DETENT:
                     detent_axis_bone = get_translation_bone(self, log_errors=True)
 
-                if drag_axis_bone is None or detent_axis_bone is None:
+                if drag_axis_bone is None or (self.type == MANIP_DRAG_AXIS_DETENT and detent_axis_bone is None):
                     logger.error("{} is invalid: {} manipulators have specific parent-child relationships and animation requirements."
                                  " See online manipulator documentation for examples.".format(
                                       self.xplanePrimative.blenderObject.name,
@@ -536,13 +542,14 @@ class XPlaneManipulator():
                 drag_axis_xp = xplane_helpers.vec_b_to_x(drag_axis_b)
                 drag_axis_dataref_values = (drag_axis_frames_cleaned[0].value, drag_axis_frames_cleaned[1].value)
 
-                lift_at_max = get_lift_at_max(detent_axis_bone)
-                if round(lift_at_max,5) == 0.0:
-                    logger.error("{}'s detent animation has keyframes but no change between them".format(
-                        detent_axis_bone.getBlenderName()))
-                    return
-                if not check_bones_drag_detent_are_orthogonal(drag_axis_bone, detent_axis_bone):
-                    return
+                if detent_axis_bone:
+                    lift_at_max = get_lift_at_max(detent_axis_bone)
+                    if round(lift_at_max,5) == 0.0:
+                        logger.error("{}'s detent animation has keyframes but no change between them".format(
+                            detent_axis_bone.getBlenderName()))
+                        return
+                    if not check_bones_drag_detent_are_orthogonal(drag_axis_bone, detent_axis_bone):
+                        return
 
                 v1_min = drag_axis_frames_cleaned[0].value
                 v1_max = drag_axis_frames_cleaned[1].value
@@ -784,7 +791,7 @@ class XPlaneManipulator():
                                                            ))
 
             # 3. All ATTR_axis_detent_range (DRAG_AXIS_DETENT or DRAG_ROTATE)
-            if (self.type == MANIP_DRAG_AXIS_DETENT or MANIP_DRAG_ROTATE_DETENT) and ver_ge_1100:
+            if (self.type == MANIP_DRAG_AXIS_DETENT or self.type == MANIP_DRAG_ROTATE_DETENT) and ver_ge_1100:
                 
                 #List[AxisDetentRange] -> bool
                 def validate_axis_detent_ranges(axis_detent_ranges, translation_bone, v1_min, v1_max, lift_at_max):
@@ -902,5 +909,5 @@ class XPlaneManipulator():
                             XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
             # add mouse wheel delta
-            if self.type in MOUSE_WHEEL_MANIPULATORS and bpy.context.scene.xplane.version >= VERSION_1050 and self.manip.wheel_delta != 0:
+            if self.type in MANIPULATORS_MOUSE_WHEEL and bpy.context.scene.xplane.version >= VERSION_1050 and self.manip.wheel_delta != 0:
                 self.xplanePrimative.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', self.manip.wheel_delta))

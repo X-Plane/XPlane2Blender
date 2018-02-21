@@ -400,6 +400,13 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         default = True
         )
 
+    #This is meant for making old manipulator types smarter, not new manipulator types
+    autodetect_settings_opt_in = bpy.props.BoolProperty(
+        name = "Autodetect Settings",
+        description = "Use new algorithms to autodetect certain manipulator settings from animation data",
+        default = False
+    )
+
     axis_detent_ranges = bpy.props.CollectionProperty(
         name = "Axis Detent Range",
         description = "The ranges where a drag rotate manipulator can move freely, and what heights must be overcome to enter each range",
