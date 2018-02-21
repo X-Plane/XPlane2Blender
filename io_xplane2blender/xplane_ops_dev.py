@@ -73,9 +73,11 @@ class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
     clean_data_block_string = True
     
     def execute(self,context):
+        for layer in bpy.context.scene.xplane.layers:
+            layer.name = ""
+        
         objects = bpy.context.scene.objects
         xplane_layers = bpy.context.scene.xplane.layers
-        
         for object in sorted(objects.keys()):
             if objects[object].parent != None:
                 continue

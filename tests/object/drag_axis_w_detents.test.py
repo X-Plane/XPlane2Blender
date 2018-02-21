@@ -12,7 +12,8 @@ def filterLines(line):
     return isinstance(line[0],str) and\
             ("ANIM" in line[0] or\
              "ATTR_axis_detented" in line[0] or\
-             "ATTR_axis_detent_range" in line[0])
+             "ATTR_axis_detent_range" in line[0] or\
+             "ATTR_manip" in line[0])
 
 class TestDragAxisWDetents(XPlaneTestCase):
     def test_01_parent_driven_by_two_datarefs(self):

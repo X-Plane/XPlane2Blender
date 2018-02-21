@@ -350,7 +350,7 @@ def get_drag_axis_bone(manipulator:'XPlaneManipulator', log_errors:bool=True) ->
     '''
     Gets the drag_axis_bone. manip.type must be MANIP_AXIS_DETENT
     '''
-    assert manipulator.type == MANIP_DRAG_AXIS_DETENT or manipulator.type == MANIP_DRAG_AXIS,\
+    assert manipulator.type == MANIP_DRAG_AXIS or manipulator.type == MANIP_DRAG_AXIS_DETENT,\
            "Unimplemented or wrong manipulator type {} used".format(manipulator.type)
     
     '''
@@ -360,8 +360,10 @@ def get_drag_axis_bone(manipulator:'XPlaneManipulator', log_errors:bool=True) ->
         - have two non-clamping location keyframes
         - not be animated for rotation
     '''
-    
-    drag_axis_bone = manipulator.xplanePrimative.xplaneBone.parent
+    if manipulator.type == MANIP_DRAG_AXIS:
+        drag_axis_bone = manipulator.xplanePrimative.xplaneBone
+    elif manipulator.type == MANIP_DRAG_AXIS_DETENT:
+        drag_axis_bone = manipulator.xplanePrimative.xplaneBone.parent
 
     # This awesome clean code relies on short circuting to stop checking for problems
     # when a less specific error is detected
@@ -503,7 +505,8 @@ class XPlaneManipulator():
                 Drag Axis (Opt In)
                 
                 Common Rules
-                Parent Must be animated
+                - Parent must be driven by only 1 dataref
+                - Parent must have exactly 2 (non-clamping) keyframes
                 
                 Drag Axis/Drag Axis With Detents
                 Empty/Bone -> Main drag axis animation and (optionally) v1_min/max for validating axis_detent_ranges
