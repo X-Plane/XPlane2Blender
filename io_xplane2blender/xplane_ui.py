@@ -817,7 +817,11 @@ def manipulator_layout(self, obj):
                               MANIP_COMMAND_AXIS,
                               MANIP_DRAG_AXIS_PIX}
 
-        MANIPULATORS_AUTODETECT_OPT_IN = { MANIP_DRAG_AXIS }
+        # EXPLICIT as in "Needs explict opt in permision"
+        MANIPULATORS_AUTODETECT_EXPLICIT = { MANIP_DRAG_AXIS }
+        MANIPULATORS_AUTODETECT_IMPLICIT = { MANIP_DRAG_AXIS_DETENT,
+                                  MANIP_DRAG_ROTATE,
+                                  MANIP_DRAG_ROTATE_DETENT}
 
         MANIPULATORS_AUTODETECT_DATAREFS = { MANIP_DRAG_AXIS,
                                              MANIP_DRAG_AXIS_DETENT,
@@ -840,18 +844,47 @@ def manipulator_layout(self, obj):
                                 MANIP_DRAG_ROTATE_DETENT}
 
 
-        # for special cases adjust or curry predicates
-        def should_show_dataref(manip_type:str) -> bool:
-            if manip_type in MANIPULATORS_AUTODETECT_DATAREFS and\
-               obj.xplane.manip.autodetect_settings_opt_in and\
-               obj.xplane.manip.autodetect_datarefs:
+        '''
+        UI Spec for showing Autodetect and Dataref properties
+
+        # Dataref Text Boxes and Search Button (Window)
+        - Dataref textboxes only appear for relavent types
+        - When a dataref textbox is shown, the dataref search button
+          (or window) is shown
+        - The dataref search button appears after all dataref textboxs
+        - Dataref textboxes and search button appear regardless of Autodetect Settings Opt In (for classic types)
+
+        # Autodetect Datarefs checkbox
+        - The checkbox only appears for relevent manip types
+        - Dataref text boxes will only be hidden when checked
+        - Checkbox only appears when Autodetect Settings is true
+          (for Opt In types) or always for new types
+
+        # Autodetect Settings Opt In
+        - The checkbox only appears for relevent manip types
+        '''
+        def should_show_autodetect_dataref(manip_type:str) -> bool:
+            if manip_type in MANIPULATORS_AUTODETECT_DATAREFS:
+                if manip_type in MANIPULATORS_AUTODETECT_EXPLICIT:
+                    return obj.xplane.manip.autodetect_settings_opt_in
+                else:
+                    return True
+            else:
                 return False
+
+
+        def should_show_dataref(manip_type:str) -> bool:
+            if manip_type in MANIPULATORS_AUTODETECT_EXPLICIT and\
+               obj.xplane.manip.autodetect_settings_opt_in  and obj.xplane.manip.autodetect_datarefs:
+                return False
+            elif manip_type in MANIPULATORS_AUTODETECT_IMPLICIT and\
+                 obj.xplane.manip.autodetect_datarefs:
+               return False
 
             return True
 
         props =  collections.OrderedDict()
-        props['autodetect_datarefs'] = lambda manip_type: manip_type in MANIPULATORS_AUTODETECT_DATAREFS and\
-                obj.xplane.manip.autodetect_settings_opt_in
+        props['autodetect_datarefs'] = lambda manip_type: should_show_autodetect_dataref(manip_type)
         props['dataref1'] = lambda manip_type: manip_type in MANIPULATORS_ALL - MANIPULATORS_COMMAND and\
                 should_show_dataref(manip_type)
 
@@ -903,10 +936,10 @@ def manipulator_layout(self, obj):
 
             if pred(manipType):
                 box.prop(obj.xplane.manip, prop)
-                if prop == 'dataref1':
-                    if not obj.xplane.manip.autodetect_datarefs and props['dataref2'](manipType) is False:
+
+                if prop == 'dataref1' and not props['dataref2'](manipType):
                         box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
-                elif not obj.xplane.manip.autodetect_datarefs and prop == 'dataref2':
+                elif prop == 'dataref2':
                     box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
 
         if  manipType == MANIP_DRAG_AXIS_DETENT or\
