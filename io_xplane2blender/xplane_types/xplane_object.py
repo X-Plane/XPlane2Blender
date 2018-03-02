@@ -67,6 +67,8 @@ class XPlaneObject():
     def __init__(self, blenderObject):
         self.type = ''
         self.blenderObject = blenderObject
+
+        #This is assaigned and tied together in in XPlaneBone's constructor
         self.xplaneBone = None
         self.name = blenderObject.name
         self.datarefs = {}
@@ -96,6 +98,8 @@ class XPlaneObject():
         self.getWeight()
 
     def collect(self):
+        assert self.xplaneBone is not None, "xplaneBone must not be None!"
+
         # add custom attributes
         self.collectCustomAttributes()
 
@@ -145,6 +149,7 @@ class XPlaneObject():
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
 
+    #TODO: This needs to be renamed!!! This is just terrible. This doesn't actually get anything, it sets self.weight!
     # Method: getWeight
     #
     # Parameters:

@@ -169,7 +169,6 @@ def check_bone_parent_is_animated_for_rotation(bone:XPlaneBone, log_errors:bool=
         return False
     else:
         return True
-    
 
 
 def check_bone_parent_is_animated_for_translation(bone:XPlaneBone, log_errors:bool=True) -> bool:
@@ -376,34 +375,60 @@ def get_drag_axis_bone(manipulator:'XPlaneManipulator', log_errors:bool=True) ->
         return None
 
 
+def get_next_rotation_animated_source(bone,log_errors):
+    if bone is not None:
+        if check_bone_is_animated_for_rotation(bone, False): # It is okay if the bone isn't animated for roation here
+            return bone
+        else:
+            return get_next_rotation_animated_source(bone.parent,log_errors)
+    else:
+        return None
+
+
+def get_next_translation_animated_source(bone,log_errors):
+    if bone is not None:
+        if check_bone_is_animated_for_translation(bone, False): # It is okay if the bone isn't animated for roation here
+            return bone
+        else:
+            return get_next_translation_animated_source(bone.parent,log_errors)
+    else:
+        return None
+
+
 def get_rotation_bone(manipulator: 'XPlaneManipulator',log_errors:bool=True) -> XPlaneBone:
     '''
     Gets the rotation bone. The bone must be animated for rotation. manipulator.type must be
     MANIP_DRAG_ROTATE or MANIP_DRAG_ROTATE_DETENT
     '''
     if manipulator.type == MANIP_DRAG_ROTATE:
-        bone = manipulator.xplanePrimative.xplaneBone
         # This is guaranteed to be true by isDataRefAnimatedForRotation\
         # check_keyframe_rotation_ge_count(bone, 2, True, True), so it won't be checked
         # before _on_n_axes
-        if check_bone_is_animated_for_rotation(bone, log_errors) and\
-           check_bone_has_n_datarefs(bone, 1, "rotation", log_errors) and\
-           check_bone_is_animated_on_n_axes(bone,1,True)  and\
-           check_keyframes_rotation_are_orderered(bone, True):
-            return bone
+        bone = get_next_rotation_animated_source(manipulator.xplanePrimative.xplaneBone,log_errors)
+        if bone:
+           if check_bone_has_n_datarefs(bone, 1, "rotation", log_errors) and\
+              check_bone_is_animated_on_n_axes(bone,1,True)  and\
+              check_keyframes_rotation_are_orderered(bone, True):
+                return bone
         else:
+            logger.error("Could not find required rotation animated source")
             return None
         
     if manipulator.type == MANIP_DRAG_ROTATE_DETENT:
-        bone = manipulator.xplanePrimative.xplaneBone
-        if check_bone_has_parent(bone,log_errors) and\
-           check_bone_parent_is_animated_for_rotation(bone, log_errors) and\
-           check_bone_has_n_datarefs(bone.parent, 1, "rotation", log_errors) and\
-           check_bone_is_animated_on_n_axes(bone.parent,1,True)  and\
-           check_keyframes_rotation_are_orderered(bone.parent, True):
-            return bone.parent
+        translation_bone = get_next_translation_animated_source(manipulator.xplanePrimative.xplaneBone,log_errors)
+        if translation_bone:
+            parent_rotation_bone = get_next_rotation_animated_source(translation_bone.parent,log_errors)
+            if parent_rotation_bone:
+               if check_bone_has_n_datarefs(parent_rotation_bone, 1, "rotation", log_errors) and\
+                  check_bone_is_animated_on_n_axes(parent_rotation_bone, 1, True) and\
+                  check_keyframes_rotation_are_orderered(parent_rotation_bone, True):
+                    return parent_rotation_bone
+            else:
+                logger.error("Could not find required rotation animated source")
         else:
-            return None
+            logger.error("Could not find required translation animated source")
+
+        return None
     
     assert False, "Unimplemented or wrong manipulator type {} used".format(manipulator.type)
 
@@ -554,16 +579,18 @@ class XPlaneManipulator():
                     if not check_bones_drag_detent_are_orthogonal(drag_axis_bone, detent_axis_bone):
                         return
 
-                v1_min = drag_axis_frames_cleaned[0].value
-                v1_max = drag_axis_frames_cleaned[1].value
+                # For use when validating axis detent ranges
+                v1_min = drag_axis_dataref_values[0]
+                v1_max = drag_axis_dataref_values[1]
+
 
                 value = (
                     self.manip.cursor,
                     drag_axis_xp.x,
                     drag_axis_xp.y,
                     drag_axis_xp.z,
-                    drag_axis_dataref_values[0],
-                    drag_axis_dataref_values[1],
+                    v1_min,
+                    v1_max,
                     drag_axis_dataref,
                     self.manip.tooltip
                 )

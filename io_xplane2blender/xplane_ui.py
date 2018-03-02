@@ -848,20 +848,20 @@ def manipulator_layout(self, obj):
         UI Spec for showing Autodetect and Dataref properties
 
         # Dataref Text Boxes and Search Button (Window)
-        - Dataref textboxes only appear for relavent types
-        - When a dataref textbox is shown, the dataref search button
+        - Dataref text boxes only appear for relevant types
+        - When a dataref text box is shown, the dataref search button
           (or window) is shown
         - The dataref search button appears after all dataref textboxs
-        - Dataref textboxes and search button appear regardless of Autodetect Settings Opt In (for classic types)
+        - Dataref text boxes and search button appear regardless of Autodetect Settings Opt In (for classic types)
 
         # Autodetect Datarefs checkbox
-        - The checkbox only appears for relevent manip types
+        - The checkbox only appears for relevant manip types
         - Dataref text boxes will only be hidden when checked
         - Checkbox only appears when Autodetect Settings is true
           (for Opt In types) or always for new types
 
         # Autodetect Settings Opt In
-        - The checkbox only appears for relevent manip types
+        - The checkbox only appears for relevant manip types
         '''
         def should_show_autodetect_dataref(manip_type:str) -> bool:
             if manip_type in MANIPULATORS_AUTODETECT_DATAREFS:
@@ -888,7 +888,8 @@ def manipulator_layout(self, obj):
         props['dataref1'] = lambda manip_type: manip_type in MANIPULATORS_ALL - MANIPULATORS_COMMAND and\
                 should_show_dataref(manip_type)
 
-        props['dataref2'] = lambda manip_type: manip_type in {MANIP_DRAG_XY} | {MANIP_DRAG_ROTATE, MANIP_DRAG_ROTATE_DETENT} and\
+        props['dataref2'] = lambda manip_type: manip_type in {MANIP_DRAG_XY} |\
+                {MANIP_DRAG_AXIS_DETENT, MANIP_DRAG_ROTATE, MANIP_DRAG_ROTATE_DETENT} and\
                 should_show_dataref(manip_type)
 
         props['dx'] = lambda manip_type: manip_type in MANIPULATORS_AXIS
