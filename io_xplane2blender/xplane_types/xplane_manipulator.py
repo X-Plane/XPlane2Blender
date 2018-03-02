@@ -583,6 +583,8 @@ class XPlaneManipulator():
                 v1_min = drag_axis_dataref_values[0]
                 v1_max = drag_axis_dataref_values[1]
 
+                if self.manip.autodetect_datarefs:
+                    self.manip.dataref1 = drag_axis_dataref
 
                 value = (
                     self.manip.cursor,
@@ -807,6 +809,9 @@ class XPlaneManipulator():
                     detent_axis_dataref = self.manip.dataref2
                 else:
                     detent_axis_dataref = next(iter(detent_axis_bone.animations))
+                
+                    #A nice little bit of useability for if someone disables autodetect datarefs
+                    self.manip.dataref2 = detent_axis_dataref
 
                 detent_axis_frames_cleaned = next(iter(detent_axis_bone.animations.values())).getTranslationKeyframeTableNoClamps()
                 detent_axis_b = detent_axis_frames_cleaned[1].location - detent_axis_frames_cleaned[0].location
