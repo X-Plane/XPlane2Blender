@@ -40,10 +40,10 @@ class XPlaneBone():
             self.level = self.parent.level + 1
 
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
-        self.animations = {}
+        self.animations = {} # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
 
         # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
-        self.datarefs = {}
+        self.datarefs = {} # type: Dict[bpy.types.StringProperty,XPlaneDataref]
 
     def sortChildren(self):
         def getWeight(xplaneBone):

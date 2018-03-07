@@ -204,6 +204,11 @@ class XPlaneFile():
 
     # collects all child bones for a given parent bone given a list of blender objects
     def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True, noRealBones = False):
+        '''
+        The collectBonesFromBlender(Bones|Objects) walk through Blender's parent-child hierarchy and translate it to our XPlaneBone tree
+        - Each XPlaneObject has an XPlaneBone
+        - Not all XPlaneBones have an XPlaneObject (ROOT bone and bones connected to unconvertable BlenderObjects)
+        '''
         parentBlenderObject = parentBone.blenderObject
         parentBlenderBone = parentBone.blenderBone
 
