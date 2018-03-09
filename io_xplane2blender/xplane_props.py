@@ -700,6 +700,15 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties[prop_name].enum_items
         return next(filter(lambda item: item.identifier == self.get_effective_type_id(), items)).name
    
+    def set_effective_type_id(self,type_id:str):
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= int(VERSION_1110):
+            prop_name = 'type_v1110'
+        else:
+            prop_name = 'type'
+        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties[prop_name].enum_items
+        assert type_id in [item.identifier for item in items]
+        setattr(self,prop_name,type_id)
 
 # Class: XPlaneCockpitRegion
 # Defines settings for a cockpit region.
