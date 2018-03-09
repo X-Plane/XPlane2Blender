@@ -3,10 +3,10 @@ Created on Jan 30, 2018
 
 @author: Ted
 '''
+
 import collections
 import typing
 from typing import Callable,List,Tuple,Optional
-
 import bpy
 from mathutils import Vector
 from io_xplane2blender import xplane_helpers
@@ -425,8 +425,6 @@ def get_information_sources(manipulator:'XPlaneManipulator',
             logger.error("{} cannot have Show/Hide animation".format(current_bone.name))
             return None
         elif not white_list[idx][0](current_bone,False):
-            ordinal_numbers = ("First, Second, Third")
-
             logger.error("{} animation source for {} manipulator must be animated for {}".format(
                 ("First","Second","Third")[idx],
                 manipulator.type,
@@ -588,6 +586,7 @@ class XPlaneManipulator():
                 elif self.type == MANIP_DRAG_AXIS_DETENT:
                     white_list = ((check_bone_is_animated_for_translation,"translation and translation only"),
                                   (check_bone_is_animated_for_translation,"translation and translation only"))
+
                 info_sources = get_information_sources(self,white_list)
                 if info_sources:
                     if self.type == MANIP_DRAG_AXIS:
@@ -680,6 +679,10 @@ class XPlaneManipulator():
                 info_sources = get_information_sources(self,white_list,log_errors=True)
 
                 if info_sources is None:
+                    logger.error("{} manipulator on {} is invalid. See online documentation for examples".format(
+                        self.type,
+                        self.xplanePrimative.xplaneBone))
+
                     return
 
                 if self.type == MANIP_DRAG_ROTATE:

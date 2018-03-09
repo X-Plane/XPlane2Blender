@@ -409,6 +409,8 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     bl_idname = 'object.add_xplane_dataref_keyframe'
     bl_description = 'Add/Update an X-Plane Dataref keyframe'
 
+    # index here refers to the index of the datarefs collection,
+    # NOT the keyframe index
     index = bpy.props.IntProperty()
 
     def execute(self, context):
@@ -431,6 +433,8 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     bl_idname = 'object.remove_xplane_dataref_keyframe'
     bl_description = 'Remove the X-Plane Dataref keyframe'
 
+    # index here refers to the index of the datarefs collection,
+    # NOT the keyframe index
     index = bpy.props.IntProperty()
 
     def execute(self, context):
@@ -533,6 +537,8 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     bl_idname = 'bone.add_xplane_dataref_keyframe'
     bl_description = 'Add/Update an X-Plane Dataref keyframe'
 
+    # index here refers to the index of the datarefs collection,
+    # NOT the keyframe index
     index = bpy.props.IntProperty()
 
     # bpy.data.objects["Armature"].data.keyframe_insert(data_path='bones["Bone"].my_prop_group.nested', group="Nested Property")
@@ -557,6 +563,8 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     bl_idname = 'bone.remove_xplane_dataref_keyframe'
     bl_description = 'Remove the X-Plane Dataref keyframe'
 
+    # index here refers to the index of the datarefs collection,
+    # NOT the keyframe index
     index = bpy.props.IntProperty()
 
     def execute(self, context):
