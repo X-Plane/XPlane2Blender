@@ -494,9 +494,9 @@ def check_detent_bone(detent_bone:Tuple[XPlaneBone], manipulator:'XPlaneManipula
        check_keyframe_translation_eq_count(detent_bone,count=2, exclude_clamping=True) and\
        check_bone_is_not_animated_for_rotation(detent_bone, log_errors) and\
        check_manip_has_axis_detent_ranges(manipulator,log_errors):
-        return bone
+        return True
     else:
-        return None
+        return False
 
 # This is a pseudo-XPlaneObject that only has a collect method
 # It's refrenced xplanePrimative provides the rest of the XPlaneObject
@@ -596,7 +596,7 @@ class XPlaneManipulator():
                         detent_axis_bone = info_sources[0]
                         drag_axis_bone = info_sources[1]
 
-                if not check_drag_axis_bone(self,log_errors=True):
+                if not check_drag_axis_bone(drag_axis_bone,log_errors=True):
                     return
 
                 #TODO: This won't appear anymore thanks to get_information_sources
