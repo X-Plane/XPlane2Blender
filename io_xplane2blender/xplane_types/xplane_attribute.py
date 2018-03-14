@@ -1,4 +1,4 @@
-from ..xplane_helpers import floatToStr
+from io_xplane2blender.xplane_helpers import floatToStr
 
 # Class: XPlaneAttribute
 # An Attribute

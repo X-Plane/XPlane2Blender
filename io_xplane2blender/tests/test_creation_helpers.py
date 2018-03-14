@@ -78,7 +78,9 @@ class KeyframeInfo():
     def __init__(self,
             idx:int,
             dataref_path:str,
-            dataref_value:float,
+            dataref_value:Optional[float]=None,
+            dataref_show_hide_value_1:Optional[float]=None,
+            dataref_show_hide_value_2:Optional[float]=None,
             dataref_anim_type:str=xplane_constants.ANIM_TYPE_TRANSFORM, #Must be xplane_constants.ANIM_TYPE_*
             location:Optional[Vector]=None,
             rotation_mode:str="XYZ",
@@ -86,6 +88,8 @@ class KeyframeInfo():
         self.idx           = idx
         self.dataref_path  = dataref_path
         self.dataref_value = dataref_value
+        self.dataref_show_hide_value_1 = dataref_show_hide_value_1
+        self.dataref_show_hide_value_2 = dataref_show_hide_value_2
         self.dataref_anim_type = dataref_anim_type
         self.location      = location
         self.rotation_mode = rotation_mode
@@ -317,8 +321,23 @@ def set_animation_data(blender_object:bpy.types.Object,keyframe_infos:List[Keyfr
     keyframe_infos must be all the same dataref and all the same animation type
     This was a deliberate choice to help catch errors in bad data
     '''
+
+    # Ensure each call to set_animation_data has the same dataref_path and anim_type
+    # for each KeyframeInfo
     assert len({kf_info.dataref_path for kf_info in keyframe_infos}) == 1
     assert len({kf_info.dataref_anim_type for kf_info in keyframe_infos}) == 1
+
+    if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_SHOW or\
+       keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_HIDE:
+       value = keyframe_infos[0].dataref_value
+       value_1 = keyframe_infos[0].dataref_show_hide_value_1
+       value_2 = keyframe_infos[0].dataref_show_hide_value_2
+       assert value is None and value_1 is not None and value_2 is not None
+    if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_TRANSFORM:
+       value = keyframe_infos[0].dataref_value
+       value_1 = keyframe_infos[0].dataref_show_hide_value_1
+       value_2 = keyframe_infos[0].dataref_show_hide_value_2
+       assert value is not None and value_1 is None and value_2 is None
 
     dataref_index = 0
     # If this dataref has never been added before, add it. Otherwise,
@@ -336,10 +355,10 @@ def set_animation_data(blender_object:bpy.types.Object,keyframe_infos:List[Keyfr
 
     for kf_info in keyframe_infos:
         bpy.context.scene.frame_current = kf_info.idx
-        dataref_prop.value = kf_info.dataref_value
 
         if not kf_info.location and not kf_info.rotation:
             continue
+        dataref_prop.value = kf_info.dataref_value
         if kf_info.location:
             blender_object.location = kf_info.location
             blender_object.keyframe_insert(data_path="location",group="Location")

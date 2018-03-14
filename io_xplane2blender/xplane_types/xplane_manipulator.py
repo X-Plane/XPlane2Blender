@@ -104,9 +104,11 @@ def check_bone_is_animated_for_show_hide_relaxed(bone:XPlaneBone,log_errors=True
     '''
     Checks if a bone has a show or hide dataref at all, even if it is not valid
     '''
-    #Note the use of bone.blenderObject.xplane.datarefs!!!
-    return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW or dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
-
+    try:
+        # Note the use of bone.blenderObject.xplane.datarefs!!!
+        return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW or dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
+    except:
+        return False
 
 def check_bone_is_animated_for_translation(bone:XPlaneBone,log_errors:bool=True) -> bool:
     assert bone is not None
@@ -410,7 +412,7 @@ def get_information_sources(manipulator:'XPlaneManipulator',
     Starting at the manipulator's bone, walk up the tree of parents, ignoring bones that are completely unanimated,
     and testing animated bones that they're in the right sequence with the right types.
 
-    "animated" here is relaxed, any animations or any datarefs will count. This allows further more strict checks
+    "animated" here is relaxed, any animations or any datarefs (including show/hide) will count. This allows further more strict checks
     to produce better error messages.
 
     Bones are checked against white_list and black_list predicates. For each bone, the white_list function and black_list must return True and False.
@@ -421,10 +423,11 @@ def get_information_sources(manipulator:'XPlaneManipulator',
     '''
     def find_next_animated_bone(bone:XPlaneBone):
         while bone is not None:
-            if len(bone.animations.values()) > 0 or len(bone.datarefs) > 0:
+            if len(bone.animations.values()) > 0 or\
+               (bone.blenderObject and len(bone.blenderObject.xplane.datarefs) > 0):
                 break
-            else:
-                bone = bone.parent
+
+            bone = bone.parent
 
         return bone
     

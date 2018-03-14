@@ -16,7 +16,7 @@ from .xplane_commands import XPlaneCommands
 from ..xplane_helpers import floatToStr, logger
 from .xplane_material_utils import getReferenceMaterials
 from io_xplane2blender import xplane_helpers
-
+from io_xplane2blender import xplane_props
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
 #
@@ -83,6 +83,7 @@ def createFileFromBlenderRootObject(blenderObject):
     if xplaneLayer:
         xplaneFile = XPlaneFile(getFileNameFromBlenderObject(blenderObject, xplaneLayer), xplaneLayer)
 
+        #TODO: This will never be None, so why have the check?
         if xplaneFile:
             xplaneFile.exportMode = bpy.context.scene.xplane.exportMode
             xplaneFile.collectFromBlenderRootObject(blenderObject)
@@ -104,7 +105,7 @@ def createFilesFromBlenderRootObjects(scene):
 # Class: XPlaneFile
 # X-Plane OBJ file
 class XPlaneFile():
-    def __init__(self, filename, options):
+    def __init__(self, filename:str, options:xplane_props.XPlaneLayer):
         self.filename = filename
 
         self.options = options
@@ -203,7 +204,11 @@ class XPlaneFile():
         return tempBlenderObjects
 
     # collects all child bones for a given parent bone given a list of blender objects
-    def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True, noRealBones = False):
+    def collectBonesFromBlenderObjects(self,parentBone, blenderObjects,
+                                       needsFilter:bool = True, # Set to true for when it is unsure if blenderObjects only contains
+                                                                # things with parentBone as it's parent. Needs to filter collection of blenderObjects to just
+                                                                # find the one whose parent is the root, root bone of an Armature, or parentBone 
+                                       noRealBones:bool = False): #noRealBones is used for 
         '''
         The collectBonesFromBlender(Bones|Objects) walk through Blender's parent-child hierarchy and translate it to our XPlaneBone tree
         - Each XPlaneObject has an XPlaneBone
@@ -220,11 +225,13 @@ class XPlaneFile():
             elif parentBlenderBone:
                 return blenderObject.parent_type == 'BONE' and blenderObject.parent_bone == parentBlenderBone
             elif blenderObject.parent_type == 'OBJECT':
+                # Find objects whose parent is the root
                 return blenderObject.parent == None
             elif blenderObject.parent_type == 'BONE':
+                # Find bones whose parent is the
+                # Armature Block (and don't have a parent bone)
                 return blenderObject.parent_bone == ""
 
-        # filter out all objects with given parent
         if needsFilter:
             blenderObjects = list(filter(objectFilter, blenderObjects))
 

@@ -1,8 +1,8 @@
 import bpy
-from ..xplane_config import getDebug
-from ..xplane_helpers import *
-from ..xplane_constants import *
-from .xplane_attributes import XPlaneAttributes
+from io_xplane2blender.xplane_config import getDebug
+from io_xplane2blender.xplane_helpers import *
+from io_xplane2blender.xplane_constants import *
+from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 
 # Class: XPlaneObject
@@ -64,7 +64,7 @@ class XPlaneObject():
     #
     # Parameters:
     #   blenderObject - A Blender object
-    def __init__(self, blenderObject):
+    def __init__(self, blenderObject:bpy.types.Object):
         self.type = ''
         self.blenderObject = blenderObject
 
@@ -157,7 +157,7 @@ class XPlaneObject():
     #
     # Returns:
     #   int - The weight of this object.
-    def getWeight(self, defaultWeight = 0):
+    def getWeight(self, defaultWeight:int = 0):
         weight = defaultWeight
 
         if hasattr(self.blenderObject.xplane, 'override_weight') and self.blenderObject.xplane.override_weight:

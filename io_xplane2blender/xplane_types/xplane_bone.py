@@ -1,12 +1,13 @@
-# import bpy
-# import math
-import mathutils
 import math
-from ..xplane_config import getDebug
-from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
-from .xplane_keyframe import XPlaneKeyframe
-from .xplane_keyframe_collection import XPlaneKeyframeCollection
-from collections import OrderedDict
+from typing import Optional
+
+import bpy
+import mathutils
+from io_xplane2blender.xplane_config import getDebug
+from io_xplane2blender.xplane_helpers import floatToStr, FLOAT_PRECISION, logger
+from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
+from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
+#from xplane_object import XPlaneObject
 
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
@@ -15,14 +16,17 @@ class XPlaneBone():
     Property: animations
     Dictionary<DataRefPath,List<XPlaneKeyframeCollection>>
     '''
-
     # Constructor: __init__
     #
     # Parameters:
     #   blenderObject - Blender Object
     #   xplaneObject - <XPlaneObject>
     #   parent - (optional) parent <XPlaneAnimBone>
-    def __init__(self, blenderObject=None, xplaneObject=None, parent=None, xplaneFile=None):
+    def __init__(self,
+                 blenderObject:Optional[bpy.types.Object]=None,
+                 xplaneObject:Optional['XPlaneObject']=None,
+                 parent:Optional['XPlaneBone']=None,
+                 xplaneFile:Optional['XPlaneFile']=None):
         self.xplaneObject = xplaneObject
         self.blenderObject = blenderObject
         self.blenderBone = None
