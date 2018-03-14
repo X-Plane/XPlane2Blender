@@ -5,6 +5,7 @@ from typing import *
 
 import bpy
 
+from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
 from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
 from mathutils import Vector, Euler, Quaternion
@@ -13,17 +14,12 @@ test_creation_tools
 
 These allow the quick automated setup of test cases
 
-- enable_ Enable a setting
-- disable_ Disable a setting or feature
+- get_ get's a Blender datablock or piece of data or None
+- set_ set's some data, possibly creating data as needed.
+- create_ creates and returns exist Blender data, or returns existing data with the same name
+- delete_ deletes all of a certain type from the scene
 
-- get_ get's a Blender datablock or piece of data
-- set_
-- create_ creates a Blender datablock
-- delete_ and delete_all
-
-API decisions:
-    - Does get_ also have the power to create? No!
-
+This also is a wrapper around Blender's more confusing aspects of it's API and datamodel.
 https://blender.stackexchange.com/questions/6101/poll-failed-context-incorrect-example-bpy-ops-view3d-background-image-add
 '''
 
@@ -83,7 +79,7 @@ class KeyframeInfo():
             idx:int,
             dataref_path:str,
             dataref_value:float,
-            dataref_anim_type:str="transform",
+            dataref_anim_type:str=xplane_constants.ANIM_TYPE_TRANSFORM, #Must be xplane_constants.ANIM_TYPE_*
             location:Optional[Vector]=None,
             rotation_mode:str="XYZ",
             rotation:Optional[Tuple[Union[bpy.types.bpy_prop_array,Euler,Quaternion]]]=None):
@@ -95,10 +91,11 @@ class KeyframeInfo():
         self.rotation_mode = rotation_mode
         self.rotation = rotation
 
-        if {*self.rotation_mode} == {'X','Y','Z'}:
-            assert len(self.rotation) == 3
-        else:
-            assert len(self.rotation) == 4
+        if self.rotation:
+            if {*self.rotation_mode} == {'X','Y','Z'}:
+                assert len(self.rotation) == 3
+            else:
+                assert len(self.rotation) == 4
 
 class ParentInfo():
     def __init__(self,
@@ -172,6 +169,7 @@ def create_datablock_mesh(info:DatablockInfo,
             layers=info.layers)
         
     ob = bpy.context.object
+    ob.name = info.name if info.name is not None else ob.name
     if info.parent_info:
         set_parent(ob,info.parent_info)
     set_material(ob,material_name)
@@ -311,16 +309,20 @@ def delete_everything():
     delete_all_other_scenes()
 
 
-def set_animation_data(blender_object:bpy.types.Object,
-        keyframe_infos:List[KeyframeInfo])->None:
+def set_animation_data(blender_object:bpy.types.Object,keyframe_infos:List[KeyframeInfo])->None:
     '''
     - blender_object - A Blender lamp, mesh, armature, or bone to attach keyframes to
     - keyframe_infos - A list of keyframe info which will be used to apply keyframes
+
+    keyframe_infos must be all the same dataref and all the same animation type
+    This was a deliberate choice to help catch errors in bad data
     '''
     assert len({kf_info.dataref_path for kf_info in keyframe_infos}) == 1
     assert len({kf_info.dataref_anim_type for kf_info in keyframe_infos}) == 1
 
     dataref_index = 0
+    # If this dataref has never been added before, add it. Otherwise,
+    # find the index in the xplane.datarefs collection
     if not keyframe_infos[0].dataref_path in [dref.path for dref in blender_object.xplane.datarefs]:
         dataref_prop = blender_object.xplane.datarefs.add()
         dataref_prop.path = keyframe_infos[0].dataref_path
@@ -355,11 +357,9 @@ def set_animation_data(blender_object:bpy.types.Object,
             blender_object.keyframe_insert(data_path=data_path,group="Rotation")
         if blender_object.type == 'BONE':
             #TODO: Must ensure bone is set to         bpy.ops.object.mode_set(mode='POSE')
-
             bpy.ops.bone.add_xplane_dataref_keyframe(index=dataref_index)
         else:
             bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
-        #area.type = old_type
 
 
 def set_layer_visibility(layers:Iterable[int],visible:bool):
@@ -424,6 +424,7 @@ def create_initial_test_setup():
     bpy.ops.wm.read_homefile()
     delete_everything()
     bpy.context.scene.layers = [False] * 20
+    bpy.ops.scene.add_xplane_layers()
     create_material_default() 
 
     # Create text file

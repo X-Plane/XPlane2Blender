@@ -43,6 +43,8 @@ class XPlaneBone():
         self.animations = {} # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
 
         # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
+        # IMPORTANT NOTE: Show/Hide Datarefs and datarefs without 2 keyframes will not be included and
+        # must be accessed via blenderObject.xplane.datarefs!
         self.datarefs = {} # type: Dict[bpy.types.StringProperty,XPlaneDataref]
 
     def sortChildren(self):
@@ -73,7 +75,7 @@ class XPlaneBone():
         return False
 
     # Method: isAnimatedForRotation
-    # Checks if a dataref's keyframes actually contain meaningful translations, and we should therefore write keyframes out
+    # Checks if a dataref's keyframes actually contain meaningful rotation, and we should therefore write keyframes out
     def isDataRefAnimatedForRotation(self):
         if hasattr(self, 'animations') and len(self.animations) > 0:
            #Check to see if there is at least some difference in the keyframe locations 

@@ -16,3 +16,4 @@ __pycache__
 *.zip
 
 .mypy_cache/*
+builds/*
