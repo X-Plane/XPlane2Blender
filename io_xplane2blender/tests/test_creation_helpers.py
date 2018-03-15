@@ -101,6 +101,62 @@ class KeyframeInfo():
             else:
                 assert len(self.rotation) == 4
 
+# Common presets for animations
+R_2_FRAMES_45_Y_AXIS = (
+        KeyframeInfo(
+            idx=1,
+            dataref_path="sim/cockpit2/engine/actuators/throttle_ratio_all",
+            dataref_value=0.0,
+            rotation=(0,0,0)),
+        KeyframeInfo(
+            idx=2,
+            dataref_path="sim/cockpit2/engine/actuators/throttle_ratio_all",
+            dataref_value=1.0,
+            rotation=(0,45,0)))
+
+T_2_FRAMES_1_X = (
+        KeyframeInfo(
+            idx=1,
+            dataref_path="sim/graphics/animation/sin_wave_2",
+            dataref_value=0.0,
+            location=(0,0,0)),
+        KeyframeInfo(
+            idx=2,
+            dataref_path="sim/graphics/animation/sin_wave_2",
+            dataref_value=1.0,
+            location=(1,0,0)))
+
+SHOW_ANIM_S = (
+        KeyframeInfo(
+            idx=1,
+            dataref_path="show_hide_dataref",
+            dataref_show_hide_value_1=0.0,
+            dataref_show_hide_value_2=100.0,
+            dataref_anim_type=xplane_constants.ANIM_TYPE_SHOW),
+        )
+
+SHOW_ANIM_H = (
+        KeyframeInfo(
+            idx=1,
+            dataref_path="show_hide_dataref",
+            dataref_show_hide_value_1=100.0,
+            dataref_show_hide_value_2=200.0,
+            dataref_anim_type=xplane_constants.ANIM_TYPE_SHOW),
+        )
+
+SHOW_ANIM_FAKE_T = (
+        KeyframeInfo(
+            idx=1,
+            dataref_path="none",
+            dataref_value=0.0,
+            location=(0,0,0)),
+        KeyframeInfo(
+            idx=2,
+            dataref_path="none",
+            dataref_value=1.0,
+            location=(0,0,0)),
+        )
+  
 class ParentInfo():
     def __init__(self,
             parent:Optional[bpy.types.Object]=None,
