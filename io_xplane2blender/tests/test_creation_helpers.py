@@ -1,6 +1,7 @@
 import math
 import os.path
 import typing
+from collections import namedtuple
 from typing import *
 
 import bpy
@@ -46,6 +47,12 @@ https://blender.stackexchange.com/questions/6101/poll-failed-context-incorrect-e
 _ARMATURE = "ARMATURE"
 _BONE     = "BONE"
 _OBJECT   = "OBJECT"
+
+class AxisDetentRangeInfo():
+    def __init__(self,start:float,end:float,height:float):
+        self.start = start
+        self.end = end
+        self.height = height
 
 class DatablockInfo():
     def __init__(self,
@@ -395,14 +402,15 @@ def set_animation_data(blender_object:bpy.types.Object,keyframe_infos:List[Keyfr
        value_2 = keyframe_infos[0].dataref_show_hide_value_2
        assert value is not None and value_1 is None and value_2 is None
 
-    dataref_index = 0
     # If this dataref has never been added before, add it. Otherwise,
     # find the index in the xplane.datarefs collection
     if not keyframe_infos[0].dataref_path in [dref.path for dref in blender_object.xplane.datarefs]:
         dataref_prop = blender_object.xplane.datarefs.add()
         dataref_prop.path = keyframe_infos[0].dataref_path
         dataref_prop.anim_type = keyframe_infos[0].dataref_anim_type
+        dataref_index = len(blender_object.xplane.datarefs)-1
     else:
+        dataref_index = 0
         for dref in blender_object.xplane.datarefs:
             if dref.path == keyframe_infos[0].dataref_path:
                 dataref_prop = dref
@@ -430,6 +438,8 @@ def set_animation_data(blender_object:bpy.types.Object,keyframe_infos:List[Keyfr
                 data_path = 'rotation_euler'
                 blender_object.rotation_euler = [math.radians(r) for r in kf_info.rotation[:]]
             blender_object.keyframe_insert(data_path=data_path,group="Rotation")
+
+        bpy.context.scene.objects.active = blender_object
         if blender_object.type == 'BONE':
             #TODO: Must ensure bone is set to         bpy.ops.object.mode_set(mode='POSE')
             bpy.ops.bone.add_xplane_dataref_keyframe(index=dataref_index)
@@ -453,19 +463,33 @@ def set_manipulator_settings(object_datablock:bpy.types.Object,
     using the object's name
     '''
     assert object_datablock.type == "MESH"
+    if manip_props is None:
+        manip_props = {}
 
     object_datablock.xplane.manip.set_effective_type_id(manip_type)
     object_datablock.xplane.manip.enabled = manip_enabled
     if manip_enabled is False:
         return
 
-    if manip_props is None:
-        manip_props = {'cursor':'hand','tooltip':'{} type manipulator on {}'.format(
-            manip_type,
-            object_datablock.name)}
+    if 'cursor' not in manip_props:
+        manip_props['cursor'] = 'hand'
+    if 'tooltip' not in manip_props:
+        manip_props['tooltip'] = '{} type manipulator on {}'.format(
+                manip_type,
+                object_datablock.name)
 
-    for prop,value in manip_props.items():
-        setattr(object_datablock.xplane.manip,prop,value)
+    for prop_name,value in manip_props.items():
+        attr = getattr(object_datablock.xplane.manip,prop_name,None)
+        assert attr is not None, "{} is not a real manip property!".format(prop_name)
+
+        if prop_name == "axis_detent_ranges":
+            for item in value:
+                new_axis_detent_range = attr.add()
+                new_axis_detent_range.start = item.start
+                new_axis_detent_range.end   = item.end
+                new_axis_detent_range.height = item.height
+        else:
+            setattr(object_datablock.xplane.manip,prop_name,value)
 
 def set_material(blender_object:bpy.types.Object,
                  material_name:str="Material",
