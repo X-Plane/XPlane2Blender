@@ -54,6 +54,17 @@ class AxisDetentRangeInfo():
         self.end = end
         self.height = height
 
+class BoneInfo():
+    def __init__(self, name:str, head:Vector, tail:Vector, parent:str):
+        assert len(head) == 3 and len(tail) == 3
+        self.name = name
+        self.head = head
+        self.tail = tail
+        def round_vec(vec):
+            return Vector([round(comp,5) for comp in vec])
+        assert (round_vec(self.tail) - round_vec(self.head)) != Vector((0,0,0))
+        self.parent = parent
+
 class DatablockInfo():
     def __init__(self,
             datablock_type:str,
@@ -179,24 +190,89 @@ class ParentInfo():
         self.parent_type = parent_type
         self.parent_bone = parent_bone
 
+def create_bone(armature:bpy.types.Object,bone_info:BoneInfo)->str:
+    '''
+    Since, in Blender, Bones have a number of representations, here we pass back the final name of the new bone
+    which can be used with data.edit_bones,data.bones,and pose.bones. The final name may not be the name inside
+    new_bone.name
+    '''
+    assert armature.type =="ARMATURE"
+    bpy.context.scene.objects.active = armature
+    bpy.ops.object.mode_set(mode="EDIT", toggle=False)
+    edit_bones = armature.data.edit_bones
+    new_bone = edit_bones.new(bone_info.name)
+    new_bone.head = bone_info.head
+    new_bone.tail = bone_info.tail
+    if len(armature.data.bones) > 0:
+        assert bone_info.parent in edit_bones
+        print("bone_info.parent = {}".format(bone_info.parent))
+        new_bone.parent = edit_bones[bone_info.parent]
+    else:
+        new_bone.parent = None
 
-def create_datablock_armature(info:DatablockInfo)->bpy.types.Object:
+    # Keeping old references around crashing Blender
+    final_name = new_bone.name
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    return final_name
+
+
+def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List[BoneInfo],int]]=None,bone_direction:Optional[Vector]=None)->bpy.types.Object:
+    '''
+    Creates an armature datablock with (optional) extra bones.
+    Extra bones can come in the form of a list of BoneInfos you want created and parented or
+    a number of bones and a unit vector in the direction you want them grown in
+    When using extra_bones, the intial armature bone's data is replaced by the first bone
+    
+    1. extra_bones=None and bone_direction=None 
+        Armature (uses defaults armature) of bpy.)
+        |_Bone
+    2. Using extra_bones:List[BoneInfo]
+        Armature
+        |_extra_bones[0]
+            |_extra_bones[1]
+                |_extra_bones[2]
+                    |_... (parent data given in each bone and can be different than shown)
+    3. Using extra_bones:int and bone_direction
+        Armature                                                               [Armature]
+        |_new_bone_0                                                          / extra_bones = 3
+            |_new_bone_1                                                     /  bone_direction = (-1,-1, 0)
+                |_new_bone_2                                                /
+                    |_new_bone_... (where each bone is in a straight line) v
+    '''
     assert info.datablock_type == "ARMATURE"
-    #TODO: Needs to check if armature already exists
     bpy.ops.object.armature_add(
         enter_editmode=False,
         location=info.location,
         rotation=info.rotation,
         layers=info.layers)
-    ob = bpy.context.object
-    bpy.ops.object.mode_set(mode='POSE')
+    arm = bpy.context.object
+    arm.name = info.name if info.name is not None else arm.name
+    arm.rotation_mode = info.rotation_mode
+    arm.scale = info.scale
 
-    ob = bpy.context.object
-    ob.name = info.name if info.name is not None else ob.name
-    ob.rotation_mode = info.rotation_mode
-    ob.scale = info.scale
-    
-    return ob
+    parent_name = ""
+    if extra_bones:
+        bpy.ops.object.mode_set(mode="EDIT", toggle=False)
+        arm.data.edit_bones.remove(arm.data.edit_bones[0])
+        bpy.ops.object.mode_set(mode="OBJECT", toggle=False)
+
+    if extra_bones and bone_direction:
+        assert isinstance(extra_bones,int) and\
+               isinstance(bone_direction,Vector) and\
+               bone_direction != Vector()
+
+        head = Vector((0,0,0))
+        for extra_bone_counter in range(extra_bones):
+            tail = head + bone_direction
+            parent_name = create_bone(arm,BoneInfo("bone_{}".format(extra_bone_counter),head,tail,parent_name))
+            head += bone_direction
+
+    if extra_bones and not bone_direction:
+        assert isinstance(extra_bones,list) and\
+               isinstance(extra_bones[0],BoneInfo)
+
+    return arm
 
 def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
     assert info.datablock_type == "EMPTY"
