@@ -271,6 +271,8 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
     if extra_bones and not bone_direction:
         assert isinstance(extra_bones,list) and\
                isinstance(extra_bones[0],BoneInfo)
+        for extra_bone in extra_bones:
+            create_bone(arm,extra_bone)
 
     return arm
 
