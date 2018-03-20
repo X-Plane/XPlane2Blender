@@ -95,10 +95,16 @@ def check_bone_is_animated_for_rotation_relaxed(bone:XPlaneBone,log_errors:bool=
     Checks if a bone has any rotation Blender keyframes, even if they're not valid or don't have datarefs to go with
     '''
     try:
-        return len([*filter(lambda fcurve: "rotation" in fcurve.data_path, bone.xplaneObject.blenderObject.animation_data.action.fcurves)]) > 0
+        if bone.blenderObject:
+            return len([*filter(lambda fcurve: "rotation" in fcurve.data_path, bone.blenderObject.animation_data.action.fcurves)]) > 0
+        else:
+            armature_object = find_armature_datablock(bone)
+            if armature_object:
+                return len(*[filter(lambda data_path: '"[' + bone.getBlenderName() + '"].location' in data_path,[fcurve.data_path for fcurve in armature_object.animation_data.action.fcurves])])
+        return False
     except:
         return False
-            
+
 
 def check_bone_is_animated_for_show_hide_relaxed(bone:XPlaneBone,log_errors=True)->bool:
     '''
@@ -133,11 +139,16 @@ def check_bone_is_animated_for_translation_relaxed(bone:XPlaneBone,log_errors=Tr
     Checks if a bone has any translation Blender keyframes, even if they're not valid or don't have datarefs to go with
     '''
     try:
-        #Confusingly, in XPlane2Blender we use the mathmatical "translation", but Blender uses the word "location"
-        return len([*filter(lambda fcurve: "location" in fcurve.data_path, bone.xplaneObject.blenderObject.animation_data.action.fcurves)]) > 0
+        if bone.blenderObject:
+            #Confusingly, in XPlane2Blender we use the mathmatical "translation", but Blender uses the word "location"
+            return len([*filter(lambda fcurve: "location" in fcurve.data_path, bone.blenderObject.animation_data.action.fcurves)]) > 0
+        else:
+            armature_object = find_armature_datablock(bone)
+            if armature_object:
+                return len(*[filter(lambda data_path: '"[' + bone.getBlenderName() + '"].location' in data_path,[fcurve.data_path for fcurve in armature_object.animation_data.action.fcurves])])
+        return False
     except:
         return False
-
 
 def check_bone_is_animated_on_n_axes(bone:XPlaneBone,num_axis_of_rotation:int, log_errors=True) -> bool:
     rotation_keyframe_table = next(iter(bone.animations.values())).getRotationKeyframeTable()
@@ -377,6 +388,17 @@ def check_manip_has_axis_detent_ranges(manipulator:'XPlaneManipulator', log_erro
     else:
         return True
 
+
+def find_armature_datablock(bone:XPlaneBone)->Optional[bpy.types.Object]:
+    if bone is not None:
+        if bone.blenderObject.type == "ARMATURE":
+            return bone
+        else:
+            return find_armature_datablock(bone.parent)
+    else:
+        return None
+
+
 def get_lift_at_max(translation_bone: XPlaneBone) -> float:
     translation_values_cleaned = next(iter(translation_bone.animations.values()))\
         .getTranslationKeyframeTableNoClamps()
@@ -422,16 +444,21 @@ def get_information_sources(manipulator:'XPlaneManipulator',
     Returns a list of collected bones or None if there was an error
     '''
     def find_next_animated_bone(bone:XPlaneBone):
+        #Note the use of blenderObject.xplane.datarefs, as opposed to bone.datarefs!
         while bone is not None:
-            if len(bone.animations.values()) > 0 or\
-               (bone.blenderObject and len(bone.blenderObject.xplane.datarefs) > 0):
-                break
+            if bone.blenderBone is None:
+                if len(bone.animations.values()) > 0 or\
+                   (bone.blenderObject and len(bone.blenderObject.xplane.datarefs) > 0):
+                    break
+            else:
+                if len(bone.animations.values()) > 0 or\
+                   len(bone.blenderBone.xplane.datarefs) > 0:
+                    break
 
             bone = bone.parent
 
         return bone
-    
-    
+
     idx = 0
     collected_bones = []
     current_bone = manipulator.xplanePrimative.xplaneBone
@@ -508,7 +535,6 @@ def check_spec_rotation_bone(bone:XPlaneBone, log_errors:bool=True) -> bool:
         return True
 
     return False
-
 
 
 def check_spec_detent_bone(detent_bone:Tuple[XPlaneBone], manipulator:'XPlaneManipulator', log_errors:bool=True) -> bool:

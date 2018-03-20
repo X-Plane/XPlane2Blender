@@ -591,7 +591,7 @@ def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
     blender_object.parent_type = parent_info.parent_type
 
     if parent_info.parent_type == _BONE:
-        assert parent_info.parent.type is _ARMATURE and\
+        assert parent_info.parent.type == _ARMATURE and\
                parent_info.parent.data.bones.get(parent_info.parent_bone) is not None
 
         blender_object.parent_bone = parent_info.parent_bone
