@@ -26,9 +26,9 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         create_initial_test_setup()
 
         A = create_datablock_armature(DatablockInfo("ARMATURE"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,"BONE",A.data.bones[0].name)))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A)))
 
-        set_animation_data(A.pose.bones[0],R_2_FRAMES_45_Y_AXIS,A)
+        set_animation_data(A,R_2_FRAMES_45_Y_AXIS,A)
         set_animation_data(B,T_2_FRAMES_1_X)
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
  
@@ -36,21 +36,19 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         out = self.exportLayer(0)
         self.assertLoggerErrors(0)
 
-runTestCases([TestBoneConfigurationsDragRotateDetent]) 
-'''
     #Case 2: Leaf not Animated
     def test_drag_rotate_detent_case_02(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
-        B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",parent_info=ParentInfo(A)))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(B)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(B,parent_type="ARMATURE")))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,T_2_FRAMES_1_X)
         set_manipulator_settings(C,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
 
-        #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
+        bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(0)
 
@@ -58,10 +56,10 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_03(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
-        B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n",parent_info=ParentInfo(A)))
-        C = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n",parent_info=ParentInfo(B)))
-        D = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(C)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        C = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",parent_info=ParentInfo(B,parent_type="ARMATURE")))
+        D = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",        parent_info=ParentInfo(C,parent_type="ARMATURE")))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(D,T_2_FRAMES_1_X)
@@ -75,10 +73,10 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_04(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n"))
-        B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",parent_info=ParentInfo(A)))
-        C = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",parent_info=ParentInfo(B)))
-        D = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(C)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        C = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE")))
+        D = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(C,parent_type="ARMATURE")))
 
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(C,T_2_FRAMES_1_X)
@@ -88,13 +86,13 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
         out = self.exportLayer(0)
         self.assertLoggerErrors(0)
 
-        # Case 5: Requiremets met, don't care about above it
+    # Case 5: Requiremets met, don't care about above it
     def test_drag_rotate_detent_case_05(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
-        B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",parent_info=ParentInfo(A)))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE")))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
@@ -108,9 +106,9 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_06(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
-        B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_sh",parent_info=ParentInfo(A)))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_sh",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE")))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,SHOW_ANIM_S)
@@ -126,8 +124,8 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_07(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE")))
 
         set_animation_data(A,T_2_FRAMES_1_X)
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
@@ -136,13 +134,13 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(2)
-    
+
     # Case 8: Missing T, version 1
     def test_drag_rotate_detent_case_08(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE")))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
 
@@ -155,8 +153,8 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_09(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE")))
 
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
 
@@ -182,8 +180,8 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_11(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE")))
 
         set_animation_data(A,T_2_FRAMES_1_X)
 
@@ -196,8 +194,8 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_12(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
 
         set_animation_data(B,T_2_FRAMES_1_X)
 
@@ -233,8 +231,8 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_15(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_s"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_s"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE")))
 
         set_animation_data(A,SHOW_ANIM_S)
         set_animation_data(A,SHOW_ANIM_H)
@@ -248,8 +246,8 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_case_16(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_rt",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_rt",parent_info=ParentInfo(A,parent_type="ARMATURE")))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
@@ -264,8 +262,8 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_case_17(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_rt"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_rt"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(A,T_2_FRAMES_1_X)
@@ -280,8 +278,8 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_18(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
-        B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
         C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B)))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -297,9 +295,9 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
     def test_drag_rotate_detent_case_19(self):
         create_initial_test_setup()
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
-        B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",parent_info=ParentInfo(A)))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(B)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(B,parent_type="ARMATURE")))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,T_2_FRAMES_1_X)
@@ -310,4 +308,5 @@ runTestCases([TestBoneConfigurationsDragRotateDetent])
         out = self.exportLayer(0)
         self.assertLoggerErrors(2)
 
-'''
+runTestCases([TestBoneConfigurationsDragRotateDetent]) 
+

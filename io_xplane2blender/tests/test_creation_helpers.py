@@ -251,6 +251,9 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
     arm.rotation_mode = info.rotation_mode
     arm.scale = info.scale
 
+    if info.parent_info:
+        set_parent(arm,info.parent_info)
+
     parent_name = ""
     if extra_bones:
         bpy.ops.object.mode_set(mode="EDIT", toggle=False)
