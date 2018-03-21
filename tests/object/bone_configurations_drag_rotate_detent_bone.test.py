@@ -3,8 +3,7 @@ This unit test tests all the different configurations that a Drag Rotate With De
 could find itself in (both valid and invalid.) These tests are the same across
 bone_configurations_drag_rotate_detent_*, the only difference is their parent and animation style.
 
-This version use Armatures and Bones and Meshs, and animates the meshs and bones only
-(not the Armature datablocks)
+This version use Armatures and Bones and Meshs, and animates the meshs and Armature datablocks only
 '''
 import inspect
 import os

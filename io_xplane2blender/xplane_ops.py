@@ -543,7 +543,9 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
 
     # bpy.data.objects["Armature"].data.keyframe_insert(data_path='bones["Bone"].my_prop_group.nested', group="Nested Property")
     def execute(self, context):
-        bone = context.bone
+        bone = context.active_bone # context.bone is not always available, for instance, during test_creation_helpers
+                                   # Other uses will be replaced as needed. context.object doesn't appear to be affected
+                                   # See also: https://blender.stackexchange.com/q/31759
         armature = context.object
         path = getDatarefValuePath(self.index, bone)
 

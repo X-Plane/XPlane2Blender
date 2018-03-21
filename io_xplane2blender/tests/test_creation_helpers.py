@@ -454,13 +454,18 @@ def delete_everything():
     delete_all_other_scenes()
 
 
-def set_animation_data(blender_object:bpy.types.Object,keyframe_infos:List[KeyframeInfo])->None:
+def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.types.PoseBone],
+        keyframe_infos:List[KeyframeInfo],
+        parent_armature:[bpy.types.Armature]=None)->None:
     '''
-    - blender_object - A Blender lamp, mesh, armature, or bone to attach keyframes to
+    - blender_struct - A Blender lamp, mesh, armature, or bone to attach keyframes to. For a bone, pass it
+    in (excluding EditBones) and the function will take care of choosing between Bone and EditBone as needed
     - keyframe_infos - A list of keyframe info which will be used to apply keyframes
+    - parent_armature - If the blender_struct is a Bone but not a PoseBone, the parent armature of it is required
+    (because Bones do not keep track of who their parent armature is for some reason -Ted, 3/21/2018)
 
-    keyframe_infos must be all the same dataref and all the same animation type
-    This was a deliberate choice to help catch errors in bad data
+    keyframe_infos must be all the same dataref and all the same animation type. This was a deliberate choice
+    to help catch errors in bad data
     '''
 
     # Ensure each call to set_animation_data has the same dataref_path and anim_type
@@ -480,16 +485,31 @@ def set_animation_data(blender_object:bpy.types.Object,keyframe_infos:List[Keyfr
        value_2 = keyframe_infos[0].dataref_show_hide_value_2
        assert value is not None and value_1 is None and value_2 is None
 
+    struct_is_bone = False
+    if isinstance(blender_struct, bpy.types.Bone) or isinstance(blender_struct, bpy.types.PoseBone):
+        assert parent_armature is not None
+        try:
+            blender_bone = parent_armature.data.bones[blender_struct.name]
+            blender_pose_bone = parent_armature.pose.bones[blender_struct.name]
+            blender_struct = blender_pose_bone
+            struct_is_bone = True
+        except:
+            assert False, "{} is not a pose bone in parent_armature {}".format(blender_struct.name, parent_armature.name)
+
+    if struct_is_bone:
+        datarefs = blender_bone.xplane.datarefs
+    else:
+        datarefs = blender_struct.xplane.datarefs
     # If this dataref has never been added before, add it. Otherwise,
     # find the index in the xplane.datarefs collection
-    if not keyframe_infos[0].dataref_path in [dref.path for dref in blender_object.xplane.datarefs]:
-        dataref_prop = blender_object.xplane.datarefs.add()
+    if not keyframe_infos[0].dataref_path in [dref.path for dref in datarefs]:
+        dataref_prop = datarefs.add()
         dataref_prop.path = keyframe_infos[0].dataref_path
         dataref_prop.anim_type = keyframe_infos[0].dataref_anim_type
-        dataref_index = len(blender_object.xplane.datarefs)-1
+        dataref_index = len(datarefs)-1
     else:
         dataref_index = 0
-        for dref in blender_object.xplane.datarefs:
+        for dref in datarefs:
             if dref.path == keyframe_infos[0].dataref_path:
                 dataref_prop = dref
                 break
@@ -502,28 +522,28 @@ def set_animation_data(blender_object:bpy.types.Object,keyframe_infos:List[Keyfr
             continue
         dataref_prop.value = kf_info.dataref_value
         if kf_info.location:
-            blender_object.location = kf_info.location
-            blender_object.keyframe_insert(data_path="location",group="Location")
+            blender_struct.location = kf_info.location
+            blender_struct.keyframe_insert(data_path="location",group=blender_struct.location if struct_is_bone else "Location")
         if kf_info.rotation:
-            blender_object.rotation_mode = kf_info.rotation_mode
+            blender_struct.rotation_mode = kf_info.rotation_mode
             data_path ='rotation_{}'.format(kf_info.rotation_mode.lower())
 
             if kf_info.rotation_mode == "AXIS_ANGLE":
-                blender_object.rotation_axis_angle = kf_info.rotation[:]
+                blender_struct.rotation_axis_angle = kf_info.rotation[:]
             elif kf_info.rotation_mode == "QUATERNION":
-                blender_object.rotation_quaternion = kf_info.rotation[:]
+                blender_struct.rotation_quaternion = kf_info.rotation[:]
             else:
                 data_path = 'rotation_euler'
-                blender_object.rotation_euler = [math.radians(r) for r in kf_info.rotation[:]]
-            blender_object.keyframe_insert(data_path=data_path,group="Rotation")
+                blender_struct.rotation_euler = [math.radians(r) for r in kf_info.rotation[:]]
+            blender_struct.keyframe_insert(data_path=data_path,group=blender_bone.name if struct_is_bone else "Rotation")
 
-        bpy.context.scene.objects.active = blender_object
-        if blender_object.type == 'BONE':
-            #TODO: Must ensure bone is set to         bpy.ops.object.mode_set(mode='POSE')
+        if struct_is_bone:
+            bpy.context.scene.objects.active = parent_armature
+            bpy.context.scene.objects.active.data.bones.active = blender_bone
             bpy.ops.bone.add_xplane_dataref_keyframe(index=dataref_index)
         else:
+            bpy.context.scene.objects.active = blender_struct
             bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
-
 
 def set_layer_visibility(layers:Iterable[int],visible:bool):
     assert len([idx for idx in layers if 0 <= idx >= 20]) == 0
