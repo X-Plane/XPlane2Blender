@@ -100,7 +100,7 @@ def check_bone_is_animated_for_rotation_relaxed(bone:XPlaneBone,log_errors:bool=
         else:
             armature_object = find_armature_datablock(bone)
             if armature_object:
-                return len(*[filter(lambda data_path: '"[' + bone.getBlenderName() + '"].location' in data_path,[fcurve.data_path for fcurve in armature_object.animation_data.action.fcurves])])
+                return len(*[filter(lambda data_path: '"[' + bone.getBlenderName() + '"].location' in data_path,[fcurve.data_path for fcurve in armature_object.animation_data.action.fcurves])]) > 0
         return False
     except:
         return False
@@ -111,10 +111,14 @@ def check_bone_is_animated_for_show_hide_relaxed(bone:XPlaneBone,log_errors=True
     Checks if a bone has a show or hide dataref at all, even if it is not valid
     '''
     try:
-        # Note the use of bone.blenderObject.xplane.datarefs!!!
-        return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW or dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
+        if bone.blenderBone:
+            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderBone.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW or dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
+        else:
+            # Note the use of bone.blenderObject.xplane.datarefs!!!
+            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW or dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
     except:
         return False
+
 
 def check_bone_is_animated_for_translation(bone:XPlaneBone,log_errors:bool=True) -> bool:
     assert bone is not None
@@ -145,7 +149,7 @@ def check_bone_is_animated_for_translation_relaxed(bone:XPlaneBone,log_errors=Tr
         else:
             armature_object = find_armature_datablock(bone)
             if armature_object:
-                return len(*[filter(lambda data_path: '"[' + bone.getBlenderName() + '"].location' in data_path,[fcurve.data_path for fcurve in armature_object.animation_data.action.fcurves])])
+                return len(*[filter(lambda data_path: '"[' + bone.getBlenderName() + '"].location' in data_path,[fcurve.data_path for fcurve in armature_object.animation_data.action.fcurves])]) > 0
         return False
     except:
         return False

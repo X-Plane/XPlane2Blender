@@ -10,6 +10,7 @@ from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
 from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
 from mathutils import Vector, Euler, Quaternion
+from builds.io_xplane2blender.xplane_constants import ANIM_TYPE_SHOW,ANIM_TYPE_HIDE
 '''
 test_creation_tools
 
@@ -97,8 +98,8 @@ class KeyframeInfo():
             idx:int,
             dataref_path:str,
             dataref_value:Optional[float]=None,
-            dataref_show_hide_value_1:Optional[float]=None,
-            dataref_show_hide_value_2:Optional[float]=None,
+            dataref_show_hide_v1:Optional[float]=None,
+            dataref_show_hide_v2:Optional[float]=None,
             dataref_anim_type:str=xplane_constants.ANIM_TYPE_TRANSFORM, #Must be xplane_constants.ANIM_TYPE_*
             location:Optional[Vector]=None,
             rotation_mode:str="XYZ",
@@ -106,8 +107,8 @@ class KeyframeInfo():
         self.idx           = idx
         self.dataref_path  = dataref_path
         self.dataref_value = dataref_value
-        self.dataref_show_hide_value_1 = dataref_show_hide_value_1
-        self.dataref_show_hide_value_2 = dataref_show_hide_value_2
+        self.dataref_show_hide_v1 = dataref_show_hide_v1
+        self.dataref_show_hide_v2 = dataref_show_hide_v2
         self.dataref_anim_type = dataref_anim_type
         self.location      = location
         self.rotation_mode = rotation_mode
@@ -147,19 +148,19 @@ T_2_FRAMES_1_X = (
 SHOW_ANIM_S = (
         KeyframeInfo(
             idx=1,
-            dataref_path="show_hide_dataref",
-            dataref_show_hide_value_1=0.0,
-            dataref_show_hide_value_2=100.0,
+            dataref_path="show_hide_dataref_show",
+            dataref_show_hide_v1=0.0,
+            dataref_show_hide_v2=100.0,
             dataref_anim_type=xplane_constants.ANIM_TYPE_SHOW),
         )
 
 SHOW_ANIM_H = (
         KeyframeInfo(
             idx=1,
-            dataref_path="show_hide_dataref",
-            dataref_show_hide_value_1=100.0,
-            dataref_show_hide_value_2=200.0,
-            dataref_anim_type=xplane_constants.ANIM_TYPE_SHOW),
+            dataref_path="show_hide_dataref_hide",
+            dataref_show_hide_v1=100.0,
+            dataref_show_hide_v2=200.0,
+            dataref_anim_type=xplane_constants.ANIM_TYPE_HIDE),
         )
 
 SHOW_ANIM_FAKE_T = (
@@ -479,13 +480,13 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
     if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_SHOW or\
        keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_HIDE:
        value = keyframe_infos[0].dataref_value
-       value_1 = keyframe_infos[0].dataref_show_hide_value_1
-       value_2 = keyframe_infos[0].dataref_show_hide_value_2
+       value_1 = keyframe_infos[0].dataref_show_hide_v1
+       value_2 = keyframe_infos[0].dataref_show_hide_v2
        assert value is None and value_1 is not None and value_2 is not None
     if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_TRANSFORM:
        value = keyframe_infos[0].dataref_value
-       value_1 = keyframe_infos[0].dataref_show_hide_value_1
-       value_2 = keyframe_infos[0].dataref_show_hide_value_2
+       value_1 = keyframe_infos[0].dataref_show_hide_v1
+       value_2 = keyframe_infos[0].dataref_show_hide_v2
        assert value is not None and value_1 is None and value_2 is None
 
     struct_is_bone = False
@@ -521,12 +522,18 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
     for kf_info in keyframe_infos:
         bpy.context.scene.frame_current = kf_info.idx
 
+        if kf_info.dataref_anim_type == ANIM_TYPE_SHOW or kf_info.dataref_anim_type == ANIM_TYPE_HIDE:
+            dataref_prop.show_hide_v1 = kf_info.dataref_show_hide_v1
+            dataref_prop.show_hide_v2 = kf_info.dataref_show_hide_v2
+        else:
+            dataref_prop.value = kf_info.dataref_value
+
         if not kf_info.location and not kf_info.rotation:
             continue
-        dataref_prop.value = kf_info.dataref_value
+
         if kf_info.location:
             blender_struct.location = kf_info.location
-            blender_struct.keyframe_insert(data_path="location",group=blender_struct.location if struct_is_bone else "Location")
+            blender_struct.keyframe_insert(data_path="location",group=blender_struct.name if struct_is_bone else "Location")
         if kf_info.rotation:
             blender_struct.rotation_mode = kf_info.rotation_mode
             data_path ='rotation_{}'.format(kf_info.rotation_mode.lower())
