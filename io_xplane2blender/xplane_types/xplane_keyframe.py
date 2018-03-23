@@ -44,7 +44,7 @@ class XPlaneKeyframe():
     #   keyframe - A Blender keyframe
     #   int index - The index of this keyframe in the <object> keyframe list.
     #   string dataref - Path of the dataref this keyframe refers to.
-    #   XPlaneObject xplaneObject - A <XPlaneObject>.
+    #   XPlaneBone xplaneBone - An <XPlaneBone>
     def __init__(self, keyframe, index, dataref, xplaneBone):
         currentFrame = bpy.context.scene.frame_current
         self.dataref = dataref
