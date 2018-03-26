@@ -235,7 +235,7 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         self.assertLoggerErrors(2)
 
     # Case 16: Rotating Detent Bone
-    def test_drag_rotate_case_16(self):
+    def test_drag_rotate_detent_case_16(self):
         create_initial_test_setup()
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
@@ -251,7 +251,7 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         self.assertLoggerErrors(2)
 
     # Case 17: Translating Rotate Bone
-    def test_drag_rotate_case_17(self):
+    def test_drag_rotate_detent_case_17(self):
         create_initial_test_setup()
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_rt"))

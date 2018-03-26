@@ -145,6 +145,18 @@ T_2_FRAMES_1_X = (
             dataref_value=1.0,
             location=(1,0,0)))
 
+T_2_FRAMES_1_Y = (
+        KeyframeInfo(
+            idx=1,
+            dataref_path="sim/graphics/animation/sin_wave_2",
+            dataref_value=0.0,
+            location=(0,0,0)),
+        KeyframeInfo(
+            idx=2,
+            dataref_path="sim/graphics/animation/sin_wave_2",
+            dataref_value=1.0,
+            location=(0,1,0)))
+
 SHOW_ANIM_S = (
         KeyframeInfo(
             idx=1,

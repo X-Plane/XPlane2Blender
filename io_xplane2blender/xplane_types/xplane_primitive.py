@@ -110,7 +110,7 @@ class XPlanePrimitive(XPlaneObject):
                     manip.get_effective_type_id() == MANIP_DRAG_AXIS_DETENT or\
                     manip.get_effective_type_id() == MANIP_DRAG_ROTATE or\
                     manip.get_effective_type_id() == MANIP_DRAG_ROTATE_DETENT:
-                    if not xplane_manipulator.check_bone_is_leaf(self.xplaneBone):
+                    if not xplane_manipulator.check_bone_is_leaf(self.xplaneBone,True,self.manipulator):
                         return ''
 
             for attr in self.cockpitAttributes:
