@@ -630,13 +630,17 @@ class XPlaneManipulator():
                 info_sources = get_information_sources(self,white_list,black_list)
                 if info_sources:
                     if self.type == MANIP_DRAG_AXIS:
+                        assert len(info_sources) == 1 and info_sources[0]
                         drag_axis_bone = info_sources[0]
                         detent_axis_bone = None
                     elif self.type == MANIP_DRAG_AXIS_DETENT:
+                        assert len(info_sources) == 2 and info_sources[0] and info_sources[1]
                         detent_axis_bone = info_sources[0]
                         drag_axis_bone = info_sources[1]
 
-                if not check_spec_drag_axis_bone(drag_axis_bone,log_errors=True):
+                    if not check_spec_drag_axis_bone(drag_axis_bone,log_errors=True):
+                        return
+                else:
                     return
 
                 #TODO: This won't appear anymore thanks to get_information_sources
