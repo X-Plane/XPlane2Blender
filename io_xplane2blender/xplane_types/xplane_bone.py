@@ -204,13 +204,26 @@ class XPlaneBone():
                         keyframesSorted = sorted(keyframes, key = lambda keyframe: keyframe.index)
                         self.animations[dataref] = XPlaneKeyframeCollection(keyframesSorted)
 
-    def getName(self):
+    def getName(self,ignore_indent_level:bool=False)->str:
+        '''
+        Gets the (optionally) indent level, Blender Type, and name.
+        Useful for debugging and error message
+        '''
         if self.blenderBone:
-            return '%d Bone: %s' % (self.level, self.blenderBone.name)
+            if ignore_indent_level:
+                return 'Bone: %s' % (self.name)
+            else:
+                return '%d Bone: %s' % (self.level, self.blenderBone.name)
         elif self.blenderObject:
-            return '%d Object: %s' % (self.level, self.blenderObject.name)
+            if ignore_indent_level:
+                return '%s: %s' % (self.blenderObject.type.title(), self.blenderObject.name)
+            else:
+                return '%d %s: %s' % (self.level, self.blenderObject.type.title(), self.blenderObject.name)
         elif self.parent == None:
-            return '%d ROOT' % self.level
+            if ignore_indent_level:
+                return 'ROOT'
+            else:
+                return '%d ROOT' % self.level
 
         return 'UNKNOWN'
 

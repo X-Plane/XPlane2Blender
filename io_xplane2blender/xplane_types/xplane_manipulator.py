@@ -98,16 +98,29 @@ def check_bone_is_animated_for_rotation(bone:XPlaneBone,log_errors:bool=True,man
         return True
 
 
-def check_bone_is_animated_for_show_hide(bone:XPlaneBone,log_errors:bool=True)->bool:
+def check_bone_is_animated_for_hide(bone:XPlaneBone,log_errors:bool=True)->bool:
+    '''
+    Checks if a bone has a hide dataref at all, even if it is not valid
+    '''
+    try:
+        if bone.blenderBone:
+            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderBone.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
+        else:
+            # Note the use of bone.blenderObject.xplane.datarefs!!!
+            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
+    except:
+        return False
+
+def check_bone_is_animated_for_show(bone:XPlaneBone,log_errors:bool=True)->bool:
     '''
     Checks if a bone has a show or hide dataref at all, even if it is not valid
     '''
     try:
         if bone.blenderBone:
-            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderBone.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW or dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
+            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderBone.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW]) > 0
         else:
             # Note the use of bone.blenderObject.xplane.datarefs!!!
-            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW or dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
+            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW]) > 0
     except:
         return False
 
@@ -443,9 +456,11 @@ def get_information_sources(manipulator:'XPlaneManipulator',
     Starting at the manipulator's bone, walk up the tree of parents, ignoring bones that are completely unanimated,
     and testing animated bones that they're in the right sequence with the right types.
 
-    Bones are checked against white_list and black_list predicates. For each bone, the white_list function and black_list must return True and False.
-    
-    These functions must match the signature of def check_something(bone:XPlaneBone,log_errors:bool)->bool, all logger errors will always be surpressed
+    Bones are checked against white_list and black_list predicates. For each bone, the white_list function and black_list must return True and False.  These functions must match the signature of
+        def check_something(bone:XPlaneBone,log_errors:bool,manipulator:'XPlaneManipulator')->bool
+    All logger errors will always be surpressed
+
+    The 2nd part of the tuple is the type of animation it is testing. Currently this is just "location" or "rotation"
 
     Returns a list of collected bones or None if there was an error
     '''
@@ -465,57 +480,137 @@ def get_information_sources(manipulator:'XPlaneManipulator',
 
         return bone
 
+    def log_error(manipulator:'XPlaneManipulator',
+            white_list:Tuple[Tuple[\
+                Callable[[XPlaneBone, Optional[bool], Optional['XPlaneManipulator']], bool],str]],
+            black_list:Tuple[Tuple[\
+                Callable[[XPlaneBone, Optional[bool], Optional['XPlaneManipulator']], bool],str]],
+            collected_bones:List[XPlaneBone],
+            last_index:int, # Since we allow gaps in the parent-child chain, idx != last_bone
+            last_bone_examined:XPlaneBone,
+            last_show_result:bool, last_hide_result:bool,
+            last_white_result:bool, last_black_result:bool):
+
+        # Something, anything, has to be wrong in some way or this shouldn't have been called!
+        assert len(collected_bones) != len(white_list) or\
+                last_show_result or last_hide_result or\
+                last_black_list_result or last_show_hide_result
+
+        error_header = "Requirements for {manip_type} manipulator on Mesh '{manipulator_name}' are not met".format(
+            manip_type=manipulator.manip.get_effective_type_name(),
+            manipulator_name=manipulator.xplanePrimative.xplaneBone.getName(ignore_indent_level=True))
+
+        type_requirements =\
+'''
+Manipulator Type Requirements:
+-----------------------------
+'''
+        type_requirements +="\n'{manip_type}' must have a {anim_type_white} animation or be a child of a {anim_type_white} animation".format(
+                    manip_type=manipulator.manip.get_effective_type_name(),
+                    anim_type_white=white_list[0][1].title())
+
+        for i in range(len(white_list)):
+            if i > 1:
+                type_requirements += ", which must be a child of a {anim_type_white} animation".format(
+                    manipulator_name=manipulator.xplanePrimative.blenderObject.getName(),
+                    anim_type_white=white_list[i][1].title())
+
+        animations_found =\
+'''
+Matching Animations Found:
+-------------------------
+'''
+        for i,bone_and_type in enumerate(zip(collected_bones, [white_list_entry[1] for white_list_entry in white_list])):
+            animations_found += "\n- {anim_type_white} animation found on {bone_name}".format(
+                anim_type_white=bone_and_type[1],
+                bone_name=bone_and_type[0].getName(ignore_indent_level=True))
+
+        problems_found =\
+'''
+Problems Found:
+--------------
+Stopped searching because:
+'''
+        problems_found_strs = []
+        if black_list_result:
+            problems_found += "\n- {anim_type_black} animation was found on {name}".format(
+                anim_type_black=black_list[idx][1].title(),
+                name=last_bone_examined.getName(ignore_indent_level=True))
+
+        if last_show_result:
+            problems_found += "\n- Show animation was found on {name}".format(
+                name=last_bone_examined.getName(ignore_indent_level=True))
+
+        if last_hide_result:
+            problems_found += "\n- Hide animation was found on {name}".format(
+                name=last_bone_examined.getName(ignore_indent_level=True))
+
+        if last_bone_examined is None:
+            problems_found += "\n- {anim_count_str} found before exporter ran out of bones to inspect".format(
+                anim_count_str=("{} animation" + "" if len(collected_bones) == 1 else "s").format(len(collected_bones)))
+
+        solutions_found =\
+'''
+Possible Solutions:
+------------------
+'''
+        if black_list_result:
+            solutions_found += "\n- Remove {anim_type_black} animation from {name}".format(
+                anim_type_black=black_list[idx][1].title(),
+                name=last_bone_examined.getName(ignore_indent_level=True))
+        if last_show_result:
+            solutions_found += "\n- Remove Show animation from {name}".format(
+                name=last_bone_examined.getName(ignore_indent_level=True))
+        if last_hide_result:
+            solutions_found += "\n- Remove Hide animation from {name}".format(
+                name=last_bone_examined.getName(ignore_indent_level=True))
+        if last_bone_examined is None:
+            solutions_found += "\n- You may have missing animations, not enough objects or bones, or have incorrectly set up your parent-child relationships"
+
+        solutions_found += "\n- Check the Manipulator Type Requirements above and online documentation for more details"
+
+        logger.error(error_header+'\n'.join([type_requirements,animations_found,problems_found,solutions_found]))
+
     idx = 0
     collected_bones = []
     current_bone = manipulator.xplanePrimative.xplaneBone
     
     while current_bone is not None and idx < len(white_list):
         current_bone = find_next_animated_bone(current_bone)
+        found_error = False
+        show_result = False; hide_result = False
+        white_list_result = False; black_list_result = False
         if current_bone is None:
-            logger.error("Found {} animations between {} and the root. {} manipulators require {} animation sources for autodetection purposes".format(
-                len(collected_bones),
-                manipulator.xplanePrimative.xplaneBone.getBlenderName(),
-                manipulator.type,
-                len(white_list)))
-            return None
-        elif check_bone_is_animated_for_show_hide(current_bone):
-            logger.error("{} cannot have Show/Hide animation".format(current_bone.getBlenderName()))
-            return None
+            found_error = True
+            break
         else:
+            show_result = check_bone_is_animated_for_show(current_bone)
+            hide_result = check_bone_is_animated_for_hide(current_bone)
+            if show_result or hide_result:
+                found_error = True
+                break
+
             white_list_result = white_list[idx][0](current_bone,False)
             black_list_result = black_list[idx][0](current_bone,False)
-            error_msg = "{} animation source for {} manipulator must "
-            if not white_list_result and black_list_result:
-                logger.error((error_msg + "{} and {}").format(
-                    ("First","Second","Third")[idx],
-                    manipulator.type,
-                    white_list[idx][1],
-                    black_list[idx][1]))
-                return None
-            elif not white_list_result or black_list_result:
-                if not white_list_result:
-                    error_msg_content = white_list[idx][1]
-                elif black_list_result:
-                    error_msg_content = black_list[idx][1]
-
-                logger.error((error_msg + "{}").format(
-                    ("First","Second","Third")[idx],
-                    manipulator.type,
-                    error_msg_content))
-                return None
+            if not white_list_result or black_list_result:
+                found_error = True
+                break
             else:
                 collected_bones.append(current_bone)
                 current_bone = current_bone.parent
                 idx += 1
-    else:
-        if len(collected_bones) != len(white_list):
-            logger.error("Found {} animation source for autodetection but {} manipulators need {}".format(
-                len(collected_bones),
-                manipulator.manip.get_effective_type_name(),
-                len(white_list)))
-            return None
 
-        return collected_bones
+        if found_error and log_errors:
+            break
+
+    if (found_error or len(collected_bones) != len(white_list))and log_errors:
+        log_error(manipulator,white_list,black_list,collected_bones,
+                last_index=idx, last_bone_examined=current_bone,
+                last_show_result=show_result, last_hide_result=hide_result,
+                last_white_result=white_list, last_black_result=black_list)
+        return None
+
+    return collected_bones
     
 
 def check_spec_rotation_bone(bone:XPlaneBone, log_errors:bool=True,manipulator=None) -> bool:
@@ -657,13 +752,13 @@ class XPlaneManipulator():
                 * (guarenteed by get_tranlation_bone)
                 '''
                 if self.type == MANIP_DRAG_AXIS:
-                    white_list = ((check_bone_is_animated_for_translation,"be animated for translation and translation only"),)
-                    black_list = ((check_bone_is_animated_for_rotation,"be animated for not animated for rotation"),)
+                    white_list = ((check_bone_is_animated_for_translation,"location"),)
+                    black_list = ((check_bone_is_animated_for_rotation,"rotation"),)
                 elif self.type == MANIP_DRAG_AXIS_DETENT:
-                    white_list = ((check_bone_is_animated_for_translation,"be animated for translation and translation only"),
-                                  (check_bone_is_animated_for_translation,"be animated for translation and translation only"))
-                    black_list = ((check_bone_is_animated_for_rotation, "not be animated for rotation"),
-                                  (check_bone_is_animated_for_rotation, "not be animated for rotation"))
+                    white_list = ((check_bone_is_animated_for_translation,"location"),
+                                  (check_bone_is_animated_for_translation,"location"))
+                    black_list = ((check_bone_is_animated_for_rotation, "rotation"),
+                                  (check_bone_is_animated_for_rotation, "rotation"))
 
                 info_sources = get_information_sources(self,white_list,black_list)
                 if info_sources:
@@ -683,10 +778,10 @@ class XPlaneManipulator():
 
                 #TODO: This won't appear anymore thanks to get_information_sources
                 if drag_axis_bone is None or (self.type == MANIP_DRAG_AXIS_DETENT and detent_axis_bone is None):
-                    logger.error("{} is invalid: {} manipulators have specific parent-child relationships and animation requirements."
-                                 " See online manipulator documentation for examples.".format(
-                                      self.xplanePrimative.blenderObject.name,
-                                      self.manip.get_effective_type_name()))
+                    #logger.error("{} is invalid: {} manipulators have specific parent-child relationships and animation requirements."
+                                 #" See online manipulator documentation for examples.".format(
+                                      #self.xplanePrimative.blenderObject.name,
+                                      #self.manip.get_effective_type_name()))
                     return
 
                 #bone.animations - <DataRef,List<KeyframeCollection>>
@@ -756,20 +851,20 @@ class XPlaneManipulator():
                  ** (checked in check_detent_bone)
                 '''
                 if self.type == MANIP_DRAG_ROTATE:
-                    white_list = ((check_bone_is_animated_for_rotation,"be animated for rotation and rotation only"),)
-                    black_list = ((check_bone_is_animated_for_translation,"not be animated for translation"),)
+                    white_list = ((check_bone_is_animated_for_rotation,   "rotation"),)
+                    black_list = ((check_bone_is_animated_for_translation,"location"),)
                 elif self.type == MANIP_DRAG_ROTATE_DETENT:
-                    white_list = ((check_bone_is_animated_for_translation,"be animated for translation and translation only"),
-                                  (check_bone_is_animated_for_rotation,"be animated for rotation and rotation only"))
-                    black_list = ((check_bone_is_animated_for_rotation,"not be animated for rotation"),
-                                  (check_bone_is_animated_for_translation,"not be animated for translation"))
+                    white_list = ((check_bone_is_animated_for_translation,"location"),
+                                  (check_bone_is_animated_for_rotation,   "rotation"))
+                    black_list = ((check_bone_is_animated_for_rotation,   "rotation"),
+                                  (check_bone_is_animated_for_translation,"location"))
 
                 info_sources = get_information_sources(self,white_list,black_list,log_errors=True)
 
                 if info_sources is None:
-                    logger.error("{} manipulator on {} is invalid. See online documentation for examples".format(
-                        self.type,
-                        self.xplanePrimative.xplaneBone))
+                    #logger.error("{} manipulator on {} is invalid. See online documentation for examples".format(
+                        #self.type,
+                        #self.xplanePrimative.xplaneBone))
                     return
 
                 if self.type == MANIP_DRAG_ROTATE:
@@ -803,10 +898,10 @@ class XPlaneManipulator():
                    (self.type == MANIP_DRAG_ROTATE_DETENT and not translation_bone):
 
                     #TODO: This won't appear anymore thanks to get_information_sources
-                    logger.error("{} is invalid: {} manipulators have specific parent-child relationships and animation requirements."
-                                 " See online manipulator documentation for examples.".format(
-                                      self.xplanePrimative.blenderObject.name,
-                                      self.manip.get_effective_type_name()))
+                    #logger.error("{} is invalid: {} manipulators have specific parent-child relationships and animation requirements."
+                                 #" See online manipulator documentation for examples.".format(
+                                      #self.xplanePrimative.blenderObject.name,
+                                      #self.manip.get_effective_type_name()))
                     return
 
                 if translation_bone is None:
