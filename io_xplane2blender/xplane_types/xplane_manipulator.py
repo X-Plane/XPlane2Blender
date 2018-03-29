@@ -494,7 +494,7 @@ def get_information_sources(manipulator:'XPlaneManipulator',
         # Something, anything, has to be wrong in some way or this shouldn't have been called!
         assert len(collected_bones) != len(white_list) or\
                 last_show_result or last_hide_result or\
-                last_black_list_result or last_show_hide_result
+                last_white_result or last_black_result
 
         error_header = "Requirements for {manip_type} manipulator on Mesh '{manipulator_name}' are not met".format(
             manip_type=manipulator.manip.get_effective_type_name(),
@@ -505,14 +505,13 @@ def get_information_sources(manipulator:'XPlaneManipulator',
 Manipulator Type Requirements:
 -----------------------------
 '''
-        type_requirements +="\n'{manip_type}' must have a {anim_type_white} animation or be a child of a {anim_type_white} animation".format(
+        type_requirements += "'{manip_type}' manipulators must have a {anim_type_white} animation or be a child of a {anim_type_white} animation".format(
                     manip_type=manipulator.manip.get_effective_type_name(),
                     anim_type_white=white_list[0][1].title())
 
         for i in range(len(white_list)):
-            if i > 1:
+            if i > 0:
                 type_requirements += ", which must be a child of a {anim_type_white} animation".format(
-                    manipulator_name=manipulator.xplanePrimative.blenderObject.getName(),
                     anim_type_white=white_list[i][1].title())
 
         animations_found =\
@@ -520,54 +519,64 @@ Manipulator Type Requirements:
 Matching Animations Found:
 -------------------------
 '''
+        animations_found_strs = []
         for i,bone_and_type in enumerate(zip(collected_bones, [white_list_entry[1] for white_list_entry in white_list])):
-            animations_found += "\n- {anim_type_white} animation found on {bone_name}".format(
-                anim_type_white=bone_and_type[1],
-                bone_name=bone_and_type[0].getName(ignore_indent_level=True))
+            animations_found_strs.append("- {anim_type_white} animation found on {bone_name}".format(
+                anim_type_white=bone_and_type[1].title(),
+                bone_name=bone_and_type[0].getName(ignore_indent_level=True)))
+
+        if animations_found_strs:
+            animations_found += '\n'.join(animations_found_strs)
+        else:
+            animations_found += "None"
 
         problems_found =\
 '''
 Problems Found:
 --------------
-Stopped searching because:
+Stopped searching because
 '''
         problems_found_strs = []
         if black_list_result:
-            problems_found += "\n- {anim_type_black} animation was found on {name}".format(
+            problems_found_strs.append("- {anim_type_black} animation was found on {name}".format(
                 anim_type_black=black_list[idx][1].title(),
-                name=last_bone_examined.getName(ignore_indent_level=True))
+                name=last_bone_examined.getName(ignore_indent_level=True)))
 
         if last_show_result:
-            problems_found += "\n- Show animation was found on {name}".format(
-                name=last_bone_examined.getName(ignore_indent_level=True))
+            problems_found_strs.append("- Show animation was found on {name}".format(
+                name=last_bone_examined.getName(ignore_indent_level=True)))
 
         if last_hide_result:
-            problems_found += "\n- Hide animation was found on {name}".format(
-                name=last_bone_examined.getName(ignore_indent_level=True))
+            problems_found_strs.append("- Hide animation was found on {name}".format(
+                name=last_bone_examined.getName(ignore_indent_level=True)))
 
         if last_bone_examined is None:
-            problems_found += "\n- {anim_count_str} found before exporter ran out of bones to inspect".format(
-                anim_count_str=("{} animation" + "" if len(collected_bones) == 1 else "s").format(len(collected_bones)))
+            problems_found_strs.append("- {anim_count_str} found before exporter ran out of bones to inspect".format(
+                anim_count_str=("{} animation" + ("" if len(collected_bones) == 1 else "s")).format(len(collected_bones))))
+
+        problems_found += '\n' + '\n'.join(problems_found_strs)
 
         solutions_found =\
 '''
 Possible Solutions:
 ------------------
 '''
+        solutions_found_strs = []
         if black_list_result:
-            solutions_found += "\n- Remove {anim_type_black} animation from {name}".format(
+            solutions_found_strs.append("- Remove {anim_type_black} animation from {name}".format(
                 anim_type_black=black_list[idx][1].title(),
-                name=last_bone_examined.getName(ignore_indent_level=True))
+                name=last_bone_examined.getName(ignore_indent_level=True)))
         if last_show_result:
-            solutions_found += "\n- Remove Show animation from {name}".format(
-                name=last_bone_examined.getName(ignore_indent_level=True))
+            solutions_found_strs.append("- Remove Show animation from {name}".format(
+                name=last_bone_examined.getName(ignore_indent_level=True)))
         if last_hide_result:
-            solutions_found += "\n- Remove Hide animation from {name}".format(
-                name=last_bone_examined.getName(ignore_indent_level=True))
+            solutions_found_strs.append("- Remove Hide animation from {name}".format(
+                name=last_bone_examined.getName(ignore_indent_level=True)))
         if last_bone_examined is None:
-            solutions_found += "\n- You may have missing animations, not enough objects or bones, or have incorrectly set up your parent-child relationships"
+            solutions_found_strs.append("- You may have missing animations, not enough objects or bones, or have incorrectly set up your parent-child relationships")
 
-        solutions_found += "\n- Check the Manipulator Type Requirements above and online documentation for more details"
+        solutions_found_strs.append("- Check the Manipulator Type Requirements above and online documentation for more details")
+        solutions_found += '\n'.join(solutions_found_strs)
 
         logger.error(error_header+'\n'.join([type_requirements,animations_found,problems_found,solutions_found]))
 
