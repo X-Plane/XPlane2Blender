@@ -537,6 +537,11 @@ Problems Found:
 Stopped searching because
 '''
         problems_found_strs = []
+        if not white_list_result and last_bone_examined is not None:
+            problems_found_strs.append("- {anim_type_white} animation was not found on {name}".format(
+                anim_type_white=white_list[idx][1].title(),
+                name=last_bone_examined.getName(ignore_indent_level=True)))
+
         if black_list_result:
             problems_found_strs.append("- {anim_type_black} animation was found on {name}".format(
                 anim_type_black=black_list[idx][1].title(),
@@ -554,7 +559,7 @@ Stopped searching because
             problems_found_strs.append("- {anim_count_str} found before exporter ran out of bones to inspect".format(
                 anim_count_str=("{} animation" + ("" if len(collected_bones) == 1 else "s")).format(len(collected_bones))))
 
-        problems_found += '\n' + '\n'.join(problems_found_strs)
+        problems_found += '\n'.join(problems_found_strs)
 
         solutions_found =\
 '''
@@ -562,6 +567,11 @@ Possible Solutions:
 ------------------
 '''
         solutions_found_strs = []
+        if not white_list_result and last_bone_examined is not None:
+            solutions_found_strs.append("- Add {anim_type_white} animation to {name}".format(
+                anim_type_white=white_list[idx][1].title(),
+                name=last_bone_examined.getName(ignore_indent_level=True)))
+
         if black_list_result:
             solutions_found_strs.append("- Remove {anim_type_black} animation from {name}".format(
                 anim_type_black=black_list[idx][1].title(),
@@ -595,13 +605,12 @@ Possible Solutions:
         else:
             show_result = check_bone_is_animated_for_show(current_bone)
             hide_result = check_bone_is_animated_for_hide(current_bone)
-            if show_result or hide_result:
-                found_error = True
-                break
 
             white_list_result = white_list[idx][0](current_bone,False)
             black_list_result = black_list[idx][0](current_bone,False)
-            if not white_list_result or black_list_result:
+
+            if show_result or hide_result or\
+               not white_list_result or black_list_result:
                 found_error = True
                 break
             else:
@@ -612,11 +621,11 @@ Possible Solutions:
         if found_error and log_errors:
             break
 
-    if (found_error or len(collected_bones) != len(white_list))and log_errors:
+    if (found_error or len(collected_bones) != len(white_list)) and log_errors:
         log_error(manipulator,white_list,black_list,collected_bones,
                 last_index=idx, last_bone_examined=current_bone,
                 last_show_result=show_result, last_hide_result=hide_result,
-                last_white_result=white_list, last_black_result=black_list)
+                last_white_result=white_list_result, last_black_result=black_list_result)
         return None
 
     return collected_bones
@@ -948,10 +957,10 @@ class XPlaneManipulator():
                     # Because of the previous guarantees that
                     # - Keyframes must be different
                     # - Keyframes must be in ascending and decending order
+                    # - angle1 = 0, angle2 = 360 is legal! X-Plane does in fact interpolate between them!
                     # this is impossible to reach, but is included as a guard against regression
                     # logger.error("0 degree rotation on {} not allowed".format(
                     #    rotation_bone.getBlenderName()))
-                    #TODO: Still true?
                     assert False, "How did we get here?"
                     return
 

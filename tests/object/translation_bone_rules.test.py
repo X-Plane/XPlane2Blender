@@ -22,15 +22,15 @@ class TestTranslationBoneRules(XPlaneTestCase):
 
     def test_02_bone_must_have_parent_w_rotation(self):
         out = self.exportLayer(1)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     def test_03_must_only_be_driven_by_only_1_dataref(self):
         out = self.exportLayer(2)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
         
     def test_04_must_have_exactly_2_keyframes(self):
         out = self.exportLayer(3)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     def test_05_must_not_animate_along_rotation_axis(self):
         out = self.exportLayer(4)
@@ -46,11 +46,11 @@ class TestTranslationBoneRules(XPlaneTestCase):
 
     def test_08_must_not_be_animated_for_rotation(self):
         out = self.exportLayer(7)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     def test_09_must_have_axis_detent_ranges(self):
         out = self.exportLayer(8)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     def test_10_known_good_translation_bone(self):
         filename = inspect.stack()[0][3]
