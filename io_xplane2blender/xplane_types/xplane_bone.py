@@ -211,7 +211,7 @@ class XPlaneBone():
         '''
         if self.blenderBone:
             if ignore_indent_level:
-                return 'Bone: %s' % (self.name)
+                return 'Bone: %s' % (self.blenderBone.name)
             else:
                 return '%d Bone: %s' % (self.level, self.blenderBone.name)
         elif self.blenderObject:

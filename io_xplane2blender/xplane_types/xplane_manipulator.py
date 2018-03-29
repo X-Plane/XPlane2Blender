@@ -496,7 +496,7 @@ def get_information_sources(manipulator:'XPlaneManipulator',
                 last_show_result or last_hide_result or\
                 last_white_result or last_black_result
 
-        error_header = "Requirements for {manip_type} manipulator on Mesh '{manipulator_name}' are not met".format(
+        error_header = "Requirements for {manip_type} manipulator on '{manipulator_name}' are not met".format(
             manip_type=manipulator.manip.get_effective_type_name(),
             manipulator_name=manipulator.xplanePrimative.xplaneBone.getName(ignore_indent_level=True))
 

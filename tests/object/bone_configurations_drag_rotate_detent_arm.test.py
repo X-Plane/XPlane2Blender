@@ -124,7 +124,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(C,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 7: Wrong order
     def test_drag_rotate_detent_arm_case_07(self):
@@ -140,7 +140,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 8: Missing T, version 1
     def test_drag_rotate_detent_arm_case_08(self):
@@ -155,7 +155,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 9: Missing T, version 2
     def test_drag_rotate_detent_arm_case_09(self):
@@ -170,7 +170,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 10: Missing T, version 3
     def test_drag_rotate_detent_arm_case_10(self):
@@ -184,7 +184,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(A,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 11: Missing R, version 1
     def test_drag_rotate_detent_arm_case_11(self):
@@ -199,7 +199,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 12: Missing R, version 2
     def test_drag_rotate_detent_arm_case_12(self):
@@ -214,7 +214,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 13: Missing R, version 3
     def test_drag_rotate_detent_arm_case_13(self):
@@ -228,7 +228,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(A,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 14: Missing RT, version 1
     def test_drag_rotate_detent_arm_case_14(self):
@@ -239,7 +239,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(A,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 15: Missing RT, version 2
     def test_drag_rotate_detent_arm_case_15(self):
@@ -255,7 +255,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 16: Rotating Detent Bone
     def test_drag_rotate_detent_arm_case_16(self):
@@ -272,7 +272,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
  
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 17: Translating Rotate Bone
     def test_drag_rotate_detent_arm_case_17(self):
@@ -289,7 +289,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
  
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 18: T-T-R
     def test_drag_rotate_detent_arm_case_18(self):
@@ -307,7 +307,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
 
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     # Case 19: R-T-R
     def test_drag_rotate_detent_arm_case_19(self):
@@ -325,7 +325,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
 
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
 runTestCases([TestBoneConfigurationsDragRotateDetentArm]) 
 
