@@ -16,25 +16,25 @@ def filterLines(line):
 class TestRotationBoneRules(XPlaneTestCase):
     def test_1_no_animated_rotation_bone(self):
         out = self.exportLayer(0)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
     def test_2_only_rotated_around_one_axis(self):
         out = self.exportLayer(1)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
     def test_3_rot_keyframes_must_be_sorted(self):
         out = self.exportLayer(2)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     def test_4_must_be_driven_by_only_1_dataref(self):
         out = self.exportLayer(3)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     def test_5_must_have_at_least_2_non_clamping_keyframes(self):
         out = self.exportLayer(4)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     def test_6_0_degree_rotation_not_allowed(self):
         out = self.exportLayer(5)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
     def test_7_counter_clockwise_also_allowed(self):
         filename = inspect.stack()[0][3]

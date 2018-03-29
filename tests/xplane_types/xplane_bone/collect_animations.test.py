@@ -14,10 +14,10 @@ class TestAnimations(XPlaneTestCase):
         self.assertXplaneFileHasBoneTree(
             xplaneFile, [
             '0 ROOT',
-                '1 Object: Armature',
+                '1 Armature: Armature',
                     '2 Bone: Bone',
-                        '3 Object: Cube.001',
-                '1 Object: Cube',
+                        '3 Mesh: Cube.001',
+                '1 Mesh: Cube',
         ])
 
         armature = xplaneFile.rootBone.children[0]
