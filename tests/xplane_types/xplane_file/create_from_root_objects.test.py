@@ -2,7 +2,7 @@ import bpy
 import os
 import sys
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_types import xplane_file, XPlanePrimitive
+from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender import xplane_config
 
 __dirname__ = os.path.dirname(__file__)
@@ -38,10 +38,10 @@ class TestCreateFromRootObjects(XPlaneTestCase):
 
         self.assertXplaneFileHasBoneTree(
             xplaneFile, [
-            '0 Object: root_1',
-                '1 Object: root_1_child_1',
-                    '2 Object: root_1_child_1_child',
-                '1 Object: root_1_child_2'
+            '0 Mesh: root_1',
+                '1 Mesh: root_1_child_1',
+                    '2 Mesh: root_1_child_1_child',
+                '1 Mesh: root_1_child_2'
         ])
 
         self.assertFileOutputEqualsFixture(
@@ -70,7 +70,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
 
         self.assertXplaneFileHasBoneTree(
             xplaneFile2, [
-            '0 Object: root_2'
+            '0 Mesh: root_2'
         ])
 
         self.assertFileOutputEqualsFixture(

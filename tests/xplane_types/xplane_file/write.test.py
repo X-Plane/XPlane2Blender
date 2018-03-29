@@ -2,7 +2,7 @@ import bpy
 import os
 import sys
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_types import xplane_file, XPlanePrimitive
+from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender import xplane_config
 
 __dirname__ = os.path.dirname(__file__)

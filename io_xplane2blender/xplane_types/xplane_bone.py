@@ -207,7 +207,10 @@ class XPlaneBone():
     def getName(self,ignore_indent_level:bool=False)->str:
         '''
         Gets the (optionally) indent level, Blender Type, and name.
-        Useful for debugging and error message
+        Useful for debugging and error message.
+        
+        Note: Unit tests, like the ones in xplane_file,
+        test against the output of this method!
         '''
         if self.blenderBone:
             if ignore_indent_level:

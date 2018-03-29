@@ -2,7 +2,7 @@ import bpy
 import os
 import sys
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_types import xplane_file, XPlanePrimitive
+from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender import xplane_config
 
 class TestCreateFromLayers(XPlaneTestCase):
@@ -37,10 +37,10 @@ class TestCreateFromLayers(XPlaneTestCase):
         self.assertXplaneFileHasBoneTree(
             xplaneFile, [
             '0 ROOT',
-                '1 Object: Cube',
-                    '2 Object: Cube.001',
-                        '3 Object: Cube.002',
-                            '4 Object: Cube.003'
+                '1 Mesh: Cube',
+                    '2 Mesh: Cube.001',
+                        '3 Mesh: Cube.002',
+                            '4 Mesh: Cube.003'
         ])
 
         xplaneFile2 = xplane_file.createFileFromBlenderLayerIndex(1)
@@ -57,8 +57,8 @@ class TestCreateFromLayers(XPlaneTestCase):
         self.assertXplaneFileHasBoneTree(
             xplaneFile2, [
             '0 ROOT',
-                '1 Object: Cube.005',
-                '1 Object: Cube.004'
+                '1 Mesh: Cube.005',
+                '1 Mesh: Cube.004'
         ])
 
         xplaneFile3 = xplane_file.createFileFromBlenderLayerIndex(2)
@@ -77,13 +77,13 @@ class TestCreateFromLayers(XPlaneTestCase):
         self.assertXplaneFileHasBoneTree(
             xplaneFile3, [
             '0 ROOT',
-                '1 Object: Cube_arm_root',
-                    '2 Object: Armature',
+                '1 Mesh: Cube_arm_root',
+                    '2 Armature: Armature',
                         '3 Bone: Bone',
-                            '4 Object: Cube_Bone',
-                                '5 Object: Cube_Bone.child',
+                            '4 Mesh: Cube_Bone',
+                                '5 Mesh: Cube_Bone.child',
                             '4 Bone: Bone.001',
-                                '5 Object: Cube_Bone.001'
+                                '5 Mesh: Cube_Bone.001'
         ])
 
 runTestCases([TestCreateFromLayers])
