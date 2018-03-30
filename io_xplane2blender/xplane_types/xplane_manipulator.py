@@ -835,7 +835,7 @@ class XPlaneManipulator():
                     drag_axis_xp.z,
                     v1_min,
                     v1_max,
-                    drag_axis_dataref,
+                    self.manip.dataref1,
                     self.manip.tooltip
                 )
             elif self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
@@ -1079,12 +1079,11 @@ class XPlaneManipulator():
             # 2. ATTR_axis_detented (DRAG_AXIS_DETENT)
             if (self.type == MANIP_DRAG_AXIS_DETENT) and ver_ge_1100:
                 if self.manip.autodetect_datarefs:
-                    detent_axis_dataref = self.manip.dataref2
-                else:
                     detent_axis_dataref = next(iter(detent_axis_bone.animations))
-                
                     #A nice little bit of useability for if someone disables autodetect datarefs
                     self.manip.dataref2 = detent_axis_dataref
+                else:
+                    detent_axis_dataref = self.manip.dataref2
 
                 detent_axis_frames_cleaned = next(iter(detent_axis_bone.animations.values())).getTranslationKeyframeTableNoClamps()
                 detent_axis_b = detent_axis_frames_cleaned[1].location - detent_axis_frames_cleaned[0].location

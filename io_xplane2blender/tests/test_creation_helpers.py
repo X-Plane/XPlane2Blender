@@ -10,7 +10,7 @@ from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
 from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
 from mathutils import Vector, Euler, Quaternion
-from builds.io_xplane2blender.xplane_constants import ANIM_TYPE_SHOW,ANIM_TYPE_HIDE
+from io_xplane2blender.xplane_constants import ANIM_TYPE_SHOW,ANIM_TYPE_HIDE
 '''
 test_creation_tools
 

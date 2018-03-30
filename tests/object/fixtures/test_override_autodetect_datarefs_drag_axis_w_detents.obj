@@ -41,8 +41,8 @@ IDX	23
 IDX	20
 
 # 0 ROOT
-# 1 Empty: 10_known_good_drag_axis_w_detents
-# EMPTY: 10_known_good_drag_axis_w_detents	weight: 0
+# 1 Empty: override_autodetect_datarefs_drag_axis_w_detents
+# EMPTY: override_autodetect_datarefs_drag_axis_w_detents	weight: 0
 	# 2 Empty: Empty_define_drag_axis.009
 	ANIM_begin
 	# translation keyframes
@@ -55,6 +55,8 @@ IDX	20
 	# EMPTY: Empty_define_drag_axis.009	weight: 0
 		# 3 Mesh: Cube_define_detent_axis
 		ANIM_begin
+		# static translation
+		ANIM_trans	-2	0	0	-2	0	0
 		# translation keyframes
 		ANIM_trans_begin	sim/weapons/x[0]
 		ANIM_trans_key	-999	0	0	0
@@ -62,11 +64,11 @@ IDX	20
 		ANIM_trans_key	5	0	0	-0.80000001
 		ANIM_trans_key	999	0	0	-0.80000001
 		ANIM_trans_end
-		# PRIMITIVE: Cube_define_detent_axis	weight: 0
-		# MATERIAL: Material
+		# PRIMITIVE: Cube_define_detent_axis	weight: 1
+		# MATERIAL: Material.004
 		ATTR_shiny_rat	0.5
-		ATTR_manip_drag_axis	hand	2	0	0	0	1	sim/cockpit2/controls/flap_ratio	Test Tooltip
-		ATTR_axis_detented	0	0	-0.80000001	0	5	sim/weapons/x[0]
+		ATTR_manip_drag_axis	hand	2	0	0	0	1	override_activated_1	Test Tooltip
+		ATTR_axis_detented	0	0	-0.80000001	0	5	override_activated_2
 		ATTR_axis_detent_range	0	0.5	0.40000001
 		ATTR_axis_detent_range	0.5	0.75	0.60000002
 		ATTR_axis_detent_range	0.75	0.75	0
