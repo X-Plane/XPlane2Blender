@@ -425,19 +425,19 @@ def get_texture(name:str)->Optional[bpy.types.ImageTexture]:
 def delete_all_images():
     for image in bpy.data.images:
         image.user_clear()
-        bpy.data.images.remove(image,True)
+        bpy.data.images.remove(image)#,True)
 
 
 def delete_all_materials():
     for material in bpy.data.materials:
         material.user_clear()
-        bpy.data.materials.remove(material,True)
+        bpy.data.materials.remove(material)#,True)
 
 
 def delete_all_objects():
     for obj in bpy.data.objects:
         obj.user_clear()
-        bpy.data.objects.remove(obj,True)
+        bpy.data.objects.remove(obj)#,True)
 
 
 def delete_all_other_scenes():
@@ -446,19 +446,19 @@ def delete_all_other_scenes():
     '''
     for scene in bpy.data.scenes[1:]:
         scene.user_clear()
-        bpy.data.scenes.remove(scene,True)
+        bpy.data.scenes.remove(scene)#,True)
 
 
 def delete_all_text_files():
     for text in bpy.data.texts:
         text.user_clear()
-        bpy.data.texts.remove(text, do_unlink=True)
+        bpy.data.texts.remove(text)#, do_unlink=True)
     
 
 def delete_all_textures():
     for texture in bpy.data.textures:
         texture.user_clear()
-        bpy.data.textures.remove(texture,True)
+        bpy.data.textures.remove(texture)#,True)
 
 
 def delete_everything():
