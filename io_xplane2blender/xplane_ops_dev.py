@@ -14,6 +14,43 @@ class SCENE_OT_dev_create_lights_txt_summary(bpy.types.Operator):
     bl_description = "Create a text block listing all known lights and attributes about them"
     
     def execute(self,context):
+        # Why have I temporarily stuck this here? Because it is 3 in the morning and I am sick of trying to find the "Nice perfect place" Blender wants me to have to test integrating this stuff in.
+        # The filter function uses our the python data model and the blender property, kept in line, then filters.
+        # (TODO is this needed? Can we just stick everything in dataref_search_list and be done with it? Filtering doesn't mutate the list, right....?
+        # So, we must simulate creating the python data model and feeding it to our list.
+        # Apparently and who knows why(!!!) you can't do it in __init__.py after the call to register.
+        # Maybe I missed something or maybe ghosts infected my CPU at the wrong moment, but I could not get sanity to return in that instance.
+        # This is convienent. This is temporary. Moving on.
+        strs =[
+"sim/flightmodel2/misc/bouncer_x|float[14]|n|meters|lateral offset in meters from default for this bouncer",
+"sim/flightmodel2/misc/bouncer_y|float[14]|n|meters|vertical offset in meters from default for this bouncer",
+"sim/flightmodel2/misc/bouncer_z|float[14]|n|meters|longitudinal offset in meters from default for this bouncer",
+"sim/flightmodel2/misc/bouncer_vx|float[14]|n|meters|lateral offset in meters from default for this bouncer",
+"sim/flightmodel2/misc/bouncer_vy|float[14]|n|meters|vertical offset in meters from default for this bouncer",
+"sim/flightmodel2/misc/bouncer_vz|float[14]|n|meters|longitudinal offset in meters from default for this bouncer",
+"sim/flightmodel2/wing/aileron1_deg|float[32]|y|degrees|Deflection of the aileron from set #1 on this wing. Degrees, positive is trailing-edge down.",
+"sim/flightmodel2/wing/aileron2_deg|float[32]|y|degrees|Deflection of the aileron from set #2 on this wing. Degrees, positive is trailing-edge down.",
+"sim/flightmodel2/wing/spoiler1_deg|float[32]|y|degrees|Deflection of the roll-spoilerfrom set #1 on this wing. Degrees, positive is trailing-edge down.",
+"sim/flightmodel2/wing/spoiler2_deg|float[32]|y|degrees|Deflection of the roll-spoilerfrom set #1 on this wing. Degrees, positive is trailing-edge down.",
+"sim/flightmodel2/wing/yawbrake_deg|float[32]|y|degrees|Deflection of the yaw-brake on this wing. A yaw-brake is a set of spoilers on the top and bottom of the wing thst split open symmetrically to drag that wing aft and yaw the plane. They are used on the B-2, for example.",
+"sim/flightmodel2/wing/elevator1_deg|float[32]|y|degrees|Deflection of the elevator from set #1 on this wing. Degrees, positive is trailing-edge down.",
+"sim/flightmodel2/wing/elevator2_deg|float[32]|y|degrees|Deflection of the elevator from set #2 on this wing. Degrees, positive is trailing-edge down.",
+"sim/flightmodel2/wing/rudder1_deg|float[32]|y|degrees|Deflection of the rudder from set #1 on this wing. Degrees, positive is trailig-edge right.",
+"sim/flightmodel2/wing/rudder2_deg|float[32]|y|degrees|Deflection of the rudder from set #2 on this wing. Degrees, positive is trailig-edge right.",
+"sim/flightmodel2/wing/flap1_deg|float[32]|y|degrees|Deflection of the flap from set #1 on this wing. Degrees, positive is trailing-edge down.",
+"sim/flightmodel2/wing/flap2_deg|float[32]|y|degrees|Deflection of the flap from set #2 on this wing. Degrees, positive is trailing-edge down.",
+"sim/flightmodel2/wing/speedbrake1_deg|float[32]|y|degrees|Deflection of the speedbrakes from set #1 on this wing.",
+"sim/flightmodel2/wing/speedbrake2_deg|float[32]|y|degrees|Deflection of the speedbrakes from set #2 on this wing.",
+"sim/flightmodel2/wing/airfoil_sweep_increase_deg|float[32]|y|degrees|The sweep increase BEYOND DEFAULT of this wing... this would only have a non-zero value for planes like the F-14 which can sweep their wings.",
+"sim/flightmodel2/wing/airfoil_dihedral_increase_deg|float[32]|y|degrees|The dihedral increase BEYOND DEFAULT of this wing... this would only have a non-zero value for planes like the Navy F-4 which can fold up the outer wing panels."]
+        for dref in strs:
+            bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list.add()
+            print(dref[0])
+            bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list[-1].dataref = dref
+
+        print("final len")
+        print(len(bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list))
+        return {'FINISHED'}
         xplane_lights_txt_parser.parse_lights_file()
         # Use an internal text file called "Manipulator Type Differeces
         filename = "lights.txt Summary"

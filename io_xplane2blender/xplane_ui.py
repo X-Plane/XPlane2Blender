@@ -101,6 +101,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             objType = obj.type
             if objType == "LAMP":
                 objType = "OBJECT"
+            dataref_search_window_layout(self,self.layout)
             lod_layout(self, obj)
             weight_layout(self, obj)
             custom_layout(self, obj, objType)
@@ -134,14 +135,15 @@ class BONE_PT_xplane(bpy.types.Panel):
         weight_layout(self, bone)
         animation_layout(self, bone, True)
 
+#TODO remove
 # Class: OBJECT_MT_xplane_datarefs
 # Adds the X-Plane datarefs search menu. This is not implemented yet.
-class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
-    '''XPlane Datarefs Search Menu'''
-    bl_label = "XPlane Datarefs"
-
-    def draw(self, context):
-        self.search_menu(xplane_datarefs, "text.open")
+#class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
+    #'''XPlane Datarefs Search Menu'''
+    #bl_label = "XPlane Datarefs"
+#
+    #def draw(self, context):
+        #self.search_menu(xplane_datarefs, "text.open")
 
 # Function: scene_layout
 # Draws the UI layout for scene tabs. Uses <layer_layout>.
@@ -480,6 +482,12 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
             subrow = subbox.row()
             subrow.prop(attr, "reset")
 
+def dataref_search_window_layout(self, layout):
+    layout = self.layout
+    scene = bpy.context.scene
+    row = layout.row()
+    row.template_list("UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_index")
+
 def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'scene'):
     layout.separator()
     row = layout.row()
@@ -612,6 +620,7 @@ def material_layout(self, obj):
         row.prop(obj.xplane, "lightLevel_dataref")
         row = box.row()
         row.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+        dataref_search_window_layout(self,row)
 
     ll_box_column.row()
     if not canPreviewEmit(obj):

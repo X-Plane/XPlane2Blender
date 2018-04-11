@@ -7,6 +7,8 @@ from io_xplane2blender import xplane_constants
 from io_xplane2blender import xplane_config
 from .xplane_constants import *
 
+#from io_xplane2blender import xplane_ui_dataref_search
+from typing import List
 from io_xplane2blender import xplane_helpers
 
 '''
@@ -40,6 +42,8 @@ is a great way to RUIN EVERYTHING. Re-arranging the items list requires great ca
 
 - Main documentation: https://docs.blender.org/api/current/bpy.props.html?highlight=bpy%20props%20prop#module-bpy.props
 
+- Make sure to increment the CURRENT_DATA_MODEL_VERSION number in xplane_config
+
 - The attr member does not appear to be necessary or have an effect on the program. Future props should not use it. Otherwise, I'd like to
 see them culled over time
 
@@ -47,6 +51,8 @@ see them culled over time
  
 - Name is in the form of "Title Case Always", description is "Sentence case, no period". Don't be lazy and just copy and paste the constant name for all three columns.
 A good deal of time was spent making the UI look pretty for 3.4.0 so please don't undo that overtime
+
+- Please organize new properties by alphabetical order instead of how they'll appear in the UI
 
 - If you've actually read this far, congratulations! You get a cookie!
 
@@ -248,7 +254,7 @@ class XPlaneExportPathDirective(bpy.types.PropertyGroup):
         name = "Export Path",
         description="The export path that should be copied into a library.txt",
     )
-
+ 
 # Class: XPlaneDataref
 # A X-Plane Dataref
 #
@@ -334,8 +340,8 @@ class XPlaneCondition(bpy.types.PropertyGroup):
     )
 
 # Class: XPlaneDatarefSearch
-# Not used right now. Might be used to search for dataref paths.
-#class XPlaneDatarefSearch(bpy.types.PropertyGroup):
+#
+#class XPlaneDatarefSearchBox(bpy.types.PropertyGroup):
 #    path = bpy.props.StringProperty(attr = "path",
 #                                    name = "Dataref path",
 #                                    description = "XPlane Dataref path",
@@ -726,7 +732,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Export Directives for Layer",
         description = "A collection of export paths intended for an OBJ's EXPORT directives",
         type = XPlaneExportPathDirective
-	)
+    )
 
     debug = bpy.props.BoolProperty(
         attr = "debug",
@@ -995,6 +1001,134 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "Automaticly determines textures based on materials",
         default = True
     )
+##############################################################################################
+
+# Why add these properties heree instead of in xplane_props.py or xplane_ui.py?
+# The props used for stringing the UI together are not really part of the data model. No one's work will depend on the state of the search pane,
+# so we put them here so they are more free to change.
+# The unit felt complete enough to dedicate to it's own file. The dataref parsing logic may one day be abstraacted to its own utility script
+class CachedFilterFlag(bpy.types.PropertyGroup):
+    cached_flt_flag = bpy.props.IntProperty()
+
+strs =\
+'''sim/flightmodel2/misc/bouncer_x	float[14]	n	meters	lateral offset in meters from default for this bouncer
+sim/flightmodel2/misc/bouncer_y	float[14]	n	meters	vertical offset in meters from default for this bouncer
+sim/flightmodel2/misc/bouncer_z	float[14]	n	meters	longitudinal offset in meters from default for this bouncer
+sim/flightmodel2/misc/bouncer_vx	float[14]	n	meters	lateral offset in meters from default for this bouncer
+sim/flightmodel2/misc/bouncer_vy	float[14]	n	meters	vertical offset in meters from default for this bouncer
+sim/flightmodel2/misc/bouncer_vz	float[14]	n	meters	longitudinal offset in meters from default for this bouncer
+sim/flightmodel2/wing/aileron1_deg	float[32]	y	degrees	Deflection of the aileron from set #1 on this wing. Degrees, positive is trailing-edge down.
+sim/flightmodel2/wing/aileron2_deg	float[32]	y	degrees	Deflection of the aileron from set #2 on this wing. Degrees, positive is trailing-edge down.
+sim/flightmodel2/wing/spoiler1_deg	float[32]	y	degrees	Deflection of the roll-spoilerfrom set #1 on this wing. Degrees, positive is trailing-edge down.
+sim/flightmodel2/wing/spoiler2_deg	float[32]	y	degrees	Deflection of the roll-spoilerfrom set #1 on this wing. Degrees, positive is trailing-edge down.
+sim/flightmodel2/wing/yawbrake_deg	float[32]	y	degrees	Deflection of the yaw-brake on this wing. A yaw-brake is a set of spoilers on the top and bottom of the wing thst split open symmetrically to drag that wing aft and yaw the plane. They are used on the B-2, for example.
+sim/flightmodel2/wing/elevator1_deg	float[32]	y	degrees	Deflection of the elevator from set #1 on this wing. Degrees, positive is trailing-edge down.
+sim/flightmodel2/wing/elevator2_deg	float[32]	y	degrees	Deflection of the elevator from set #2 on this wing. Degrees, positive is trailing-edge down.
+sim/flightmodel2/wing/rudder1_deg	float[32]	y	degrees	Deflection of the rudder from set #1 on this wing. Degrees, positive is trailig-edge right.
+sim/flightmodel2/wing/rudder2_deg	float[32]	y	degrees	Deflection of the rudder from set #2 on this wing. Degrees, positive is trailig-edge right.
+sim/flightmodel2/wing/flap1_deg	float[32]	y	degrees	Deflection of the flap from set #1 on this wing. Degrees, positive is trailing-edge down.
+sim/flightmodel2/wing/flap2_deg	float[32]	y	degrees	Deflection of the flap from set #2 on this wing. Degrees, positive is trailing-edge down.
+sim/flightmodel2/wing/speedbrake1_deg	float[32]	y	degrees	Deflection of the speedbrakes from set #1 on this wing.
+sim/flightmodel2/wing/speedbrake2_deg	float[32]	y	degrees	Deflection of the speedbrakes from set #2 on this wing.
+sim/flightmodel2/wing/airfoil_sweep_increase_deg	float[32]	y	degrees	The sweep increase BEYOND DEFAULT of this wing... this would only have a non-zero value for planes like the F-14 which can sweep their wings.
+sim/flightmodel2/wing/airfoil_dihedral_increase_deg	float[32]	y	degrees	The dihedral increase BEYOND DEFAULT of this wing... this would only have a non-zero value for planes like the Navy F-4 which can fold up the outer wing panels.
+'''.replace('\t','|').split('\n')
+map(lambda s: s+'|' if not '|' in s else s,strs)
+class UL_DatarefSearchList(bpy.types.UIList):
+    cached_flt_flags = bpy.props.CollectionProperty(type=CachedFilterFlag, description="The previously filter results. Used for optimizing the UI List only!")
+    cached_filter_name = bpy.props.StringProperty(name="Cached Filter Name",description="The previously filtered name. Used for optimizing the UI List only!")
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+        #    layout.operator("my_list.choose_dataref",text="",icon="HAND")
+            layout.label(item.dataref, icon = "NONE")
+
+        elif self.layout_type in {'GRID'}:
+            pass
+            
+    def draw_filter(self, context, layout):
+       row = layout.row()
+       subrow = row.row(align=True)
+       subrow.prop(self, "filter_name", text="")
+       #icon = 'ZOOM_OUT' if self.use_filter_name_reverse else 'ZOOM_IN'
+       #subrow.prop(self, "use_filter_name_reverse", text="", icon=icon) #TODO this is not useful?
+
+    
+    # Called once to filter/reorder items.
+    def filter_items(self, context, data, propname):
+        flt_flags = []
+        flt_neworder = []
+        
+        filter_name = self.filter_name
+        print(filter_name)
+        #if False:#filter_name == self.cached_filter_name or filter_name == "":
+            #return [flag.cached_flt_flag for flag in self.cached_flt_flags], flt_neworder
+        #else:
+            #self.cached_filter_name = filter_name
+            #self.cached_flt_flags.clear()
+        
+        #Search info:
+        # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
+        # A dataref must match at least one search in all searches, and must partially match each search term        
+        search_info = set(map(frozenset,[{*search.split(' ')} for search in filter_name.split('|')]))
+        print(search_info)
+
+        def check_dref(dref:str,search_info:List[str])->bool:
+            for search in search_info:
+                for search_term in search:
+                    if not search_term in dref: #TODO: Does not only the dataref column
+                        return False
+                else:
+                    print(dref)
+                    return True
+            return False
+
+        print(len(strs))
+        print(len(bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list))
+        for dref in bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list:
+            if check_dref(dref.dataref,search_info):
+                flt_flags.append(self.bitflag_filter_item)
+            else:
+                flt_flags.append(0 << 0)
+
+        for flag in flt_flags:
+            self.cached_flt_flags.add()
+            self.cached_flt_flags[-1].cached_filter_flag = flag
+        self.cached_filter_name = filter_name
+        return flt_flags, flt_neworder
+
+
+class LIST_OT_ChooseDataref(bpy.types.Operator):
+    """Overwrites the current dataref with the chosen"""
+    bl_idname = "xplane.choose_dataref"
+    bl_label = "Choose dataref and close search window"
+
+    #@classmethod
+    #def poll(self,context):
+        #test cached_filter_name?
+
+    #TODO: Assaign list index during draw_item part so we can skip
+    # double clicking? See custom properties for how
+    # or layer disclose arrows
+    #paired_index = bpy.props.IntProperty(name="Choose Dataref Index", description="The index of the XPlane Dataref Search List this operator is place in")
+    def execute(self,context):
+        context.active_object.xplane.datarefs[0].path = context.scene.my_list[context.scene.list_index].name
+        return {'FINISHED'}
+
+class DatarefListItem(bpy.types.PropertyGroup):
+    dataref = bpy.props.StringProperty(
+            name="Dataref List Item",
+            description="A dataref path in the dataref search window. Comes from resources\Datarefs.txt"
+    )
+class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
+    current_dataref_property = bpy.props.IntProperty(
+            name="Current Dataref Property",
+            description="The thing that opened the button up one"
+    )
+
+    dataref_search_list = bpy.props.CollectionProperty(type=DatarefListItem)
+    dataref_search_list_index = bpy.props.IntProperty()
+
+#################################################################################################################################################
 
 # Class: XPlaneSceneSettings
 # Settings for Blender scenes.
@@ -1002,6 +1136,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 # Properties:
 #   layers - Collection of <XPlaneLayers>. Export settings for the Blender layers.
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
+    #TODO: Should this be named search_window_state_dataref since we're going to be making a command version too?
+    dataref_search_window_state = bpy.props.PointerProperty(
+            name = "Dataref Search Window State",
+            description = "An internally important property that keeps track of the state of the dataref search window",
+            type = XPlaneDatarefSearchWindow
+            )
     debug = bpy.props.BoolProperty(
         attr = "debug",
         name = "Print Debug Info To Output, OBJ",
@@ -1023,6 +1163,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
         default = False) # Set this to true during development to avoid re-checking it
     
+    #TODO: These should be in their own namespace
     dev_enable_breakpoints = bpy.props.BoolProperty(
         attr = "dev_enable_breakpoints",
         name = "Enable Breakpoints",
@@ -1554,6 +1695,12 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 # Registers all properties.
 def addXPlaneRNA():
     # basic classes
+    bpy.utils.register_class(CachedFilterFlag)
+    bpy.utils.register_class(DatarefListItem)
+    bpy.utils.register_class(LIST_OT_ChooseDataref)
+    bpy.utils.register_class(UL_DatarefSearchList)
+    bpy.utils.register_class(XPlaneDatarefSearchWindow)
+
     bpy.utils.register_class(XPlane2BlenderVersion)
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
@@ -1603,9 +1750,16 @@ def addXPlaneRNA():
         description = "X-Plane Lamp Settings"
     )
 
+
 # Function: removeXPlaneRNA
 # Unregisters all properties.
 def removeXPlaneRNA():
+    bpy.utils.unregister_class(CachedFilterFlag)
+    bpy.utils.unregister_class(DatarefListItem)
+    bpy.utils.unregister_class(LIST_OT_ChooseDataref)
+    bpy.utils.unregister_class(UL_DatarefSearchList)
+    bpy.utils.unregister_class(XPlaneDatarefSearchWindow)
+
     # complex classes, depending on basic classes
     bpy.utils.unregister_class(XPlaneObjectSettings)
     bpy.utils.unregister_class(XPlaneBoneSettings)

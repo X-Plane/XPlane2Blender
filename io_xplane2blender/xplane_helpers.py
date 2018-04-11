@@ -470,11 +470,13 @@ class XPlaneDebugger():
         self.log = False
 #        sys.excepthook = self.excepthook
 
+# TODO: delete this as per issue #74
 # Class: XPlaneProfiler
 # Stores profiling information of processes.
 class XPlaneProfiler():
     # Property: times
     # dict of stored times used internally.
+    #TODO this is a class property and is likely unused
     times = {}
 
     # Constructor: __init__
