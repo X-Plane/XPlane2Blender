@@ -1062,16 +1062,15 @@ class UL_DatarefSearchList(bpy.types.UIList):
                 for search_term in search:
                     try:
                         if not search_term in dref[:dref.index('|')]:
-                            return False
+                            break
                     except:
                         # TODO: We can parse out all the actual datarefs and just
                         # show whatever content we want for the text of the button!
                         #
                         # Though, that may be more complicated than this try/except
                         if not search_term in dref:
-                            return False
+                            break
                 else:
-        #            print(dref)
                     return True
             return False
 
