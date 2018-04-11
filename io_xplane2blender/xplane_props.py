@@ -1010,49 +1010,22 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 class CachedFilterFlag(bpy.types.PropertyGroup):
     cached_flt_flag = bpy.props.IntProperty()
 
-strs =\
-'''sim/flightmodel2/misc/bouncer_x	float[14]	n	meters	lateral offset in meters from default for this bouncer
-sim/flightmodel2/misc/bouncer_y	float[14]	n	meters	vertical offset in meters from default for this bouncer
-sim/flightmodel2/misc/bouncer_z	float[14]	n	meters	longitudinal offset in meters from default for this bouncer
-sim/flightmodel2/misc/bouncer_vx	float[14]	n	meters	lateral offset in meters from default for this bouncer
-sim/flightmodel2/misc/bouncer_vy	float[14]	n	meters	vertical offset in meters from default for this bouncer
-sim/flightmodel2/misc/bouncer_vz	float[14]	n	meters	longitudinal offset in meters from default for this bouncer
-sim/flightmodel2/wing/aileron1_deg	float[32]	y	degrees	Deflection of the aileron from set #1 on this wing. Degrees, positive is trailing-edge down.
-sim/flightmodel2/wing/aileron2_deg	float[32]	y	degrees	Deflection of the aileron from set #2 on this wing. Degrees, positive is trailing-edge down.
-sim/flightmodel2/wing/spoiler1_deg	float[32]	y	degrees	Deflection of the roll-spoilerfrom set #1 on this wing. Degrees, positive is trailing-edge down.
-sim/flightmodel2/wing/spoiler2_deg	float[32]	y	degrees	Deflection of the roll-spoilerfrom set #1 on this wing. Degrees, positive is trailing-edge down.
-sim/flightmodel2/wing/yawbrake_deg	float[32]	y	degrees	Deflection of the yaw-brake on this wing. A yaw-brake is a set of spoilers on the top and bottom of the wing thst split open symmetrically to drag that wing aft and yaw the plane. They are used on the B-2, for example.
-sim/flightmodel2/wing/elevator1_deg	float[32]	y	degrees	Deflection of the elevator from set #1 on this wing. Degrees, positive is trailing-edge down.
-sim/flightmodel2/wing/elevator2_deg	float[32]	y	degrees	Deflection of the elevator from set #2 on this wing. Degrees, positive is trailing-edge down.
-sim/flightmodel2/wing/rudder1_deg	float[32]	y	degrees	Deflection of the rudder from set #1 on this wing. Degrees, positive is trailig-edge right.
-sim/flightmodel2/wing/rudder2_deg	float[32]	y	degrees	Deflection of the rudder from set #2 on this wing. Degrees, positive is trailig-edge right.
-sim/flightmodel2/wing/flap1_deg	float[32]	y	degrees	Deflection of the flap from set #1 on this wing. Degrees, positive is trailing-edge down.
-sim/flightmodel2/wing/flap2_deg	float[32]	y	degrees	Deflection of the flap from set #2 on this wing. Degrees, positive is trailing-edge down.
-sim/flightmodel2/wing/speedbrake1_deg	float[32]	y	degrees	Deflection of the speedbrakes from set #1 on this wing.
-sim/flightmodel2/wing/speedbrake2_deg	float[32]	y	degrees	Deflection of the speedbrakes from set #2 on this wing.
-sim/flightmodel2/wing/airfoil_sweep_increase_deg	float[32]	y	degrees	The sweep increase BEYOND DEFAULT of this wing... this would only have a non-zero value for planes like the F-14 which can sweep their wings.
-sim/flightmodel2/wing/airfoil_dihedral_increase_deg	float[32]	y	degrees	The dihedral increase BEYOND DEFAULT of this wing... this would only have a non-zero value for planes like the Navy F-4 which can fold up the outer wing panels.
-'''.replace('\t','|').split('\n')
-map(lambda s: s+'|' if not '|' in s else s,strs)
 class UL_DatarefSearchList(bpy.types.UIList):
     cached_flt_flags = bpy.props.CollectionProperty(type=CachedFilterFlag, description="The previously filter results. Used for optimizing the UI List only!")
     cached_filter_name = bpy.props.StringProperty(name="Cached Filter Name",description="The previously filtered name. Used for optimizing the UI List only!")
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-        #    layout.operator("my_list.choose_dataref",text="",icon="HAND")
+            layout.operator("scene.xplane_dateref_search_choose_dataref" ,text="",icon="HAND")
             layout.label(item.dataref, icon = "NONE")
 
         elif self.layout_type in {'GRID'}:
             pass
-            
+
     def draw_filter(self, context, layout):
        row = layout.row()
        subrow = row.row(align=True)
        subrow.prop(self, "filter_name", text="")
-       #icon = 'ZOOM_OUT' if self.use_filter_name_reverse else 'ZOOM_IN'
-       #subrow.prop(self, "use_filter_name_reverse", text="", icon=icon) #TODO this is not useful?
 
-    
     # Called once to filter/reorder items.
     def filter_items(self, context, data, propname):
         flt_flags = []
@@ -1060,9 +1033,12 @@ class UL_DatarefSearchList(bpy.types.UIList):
         
         filter_name = self.filter_name
         print(filter_name)
-        #if False:#filter_name == self.cached_filter_name or filter_name == "":
+        #TODO: This is very unstable, either because of some edge case or because it is hard to sync properly
+        #if filter_name == self.cached_filter_name or filter_name == "":
+            #print("optimized!")
             #return [flag.cached_flt_flag for flag in self.cached_flt_flags], flt_neworder
         #else:
+            #print("unoptimized")
             #self.cached_filter_name = filter_name
             #self.cached_flt_flags.clear()
         
@@ -1078,28 +1054,26 @@ class UL_DatarefSearchList(bpy.types.UIList):
                     if not search_term in dref: #TODO: Does not only the dataref column
                         return False
                 else:
-                    print(dref)
+        #            print(dref)
                     return True
             return False
 
-        print(len(strs))
-        print(len(bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list))
         for dref in bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list:
             if check_dref(dref.dataref,search_info):
                 flt_flags.append(self.bitflag_filter_item)
             else:
                 flt_flags.append(0 << 0)
 
-        for flag in flt_flags:
-            self.cached_flt_flags.add()
-            self.cached_flt_flags[-1].cached_filter_flag = flag
-        self.cached_filter_name = filter_name
+        #for flag in flt_flags:
+            #self.cached_flt_flags.add()
+            #self.cached_flt_flags[-1].cached_filter_flag = flag
+        #self.cached_filter_name = filter_name
         return flt_flags, flt_neworder
 
 
 class LIST_OT_ChooseDataref(bpy.types.Operator):
     """Overwrites the current dataref with the chosen"""
-    bl_idname = "xplane.choose_dataref"
+    bl_idname = "scene.xplane_dateref_search_choose_dataref"
     bl_label = "Choose dataref and close search window"
 
     #@classmethod
@@ -1107,11 +1081,18 @@ class LIST_OT_ChooseDataref(bpy.types.Operator):
         #test cached_filter_name?
 
     #TODO: Assaign list index during draw_item part so we can skip
+    #TODO: Need consistent naming key. datarefs_prop when talking about the prop. datarefs_search when talking about the search function, etc
     # double clicking? See custom properties for how
     # or layer disclose arrows
     #paired_index = bpy.props.IntProperty(name="Choose Dataref Index", description="The index of the XPlane Dataref Search List this operator is place in")
     def execute(self,context):
-        context.active_object.xplane.datarefs[0].path = context.scene.my_list[context.scene.list_index].name
+        xplane = context.scene.xplane
+        datarefs_prop_idx = xplane.dataref_search_window_state.current_dataref_prop_idx
+        datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
+        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
+        print("datarefs_prop_idx: {}, datarefs_search_list: {}, datarefs_search_list_idx: {}".format(datarefs_prop_idx,datarefs_search_list,datarefs_search_list_idx))
+        assert datarefs_prop_idx != -1, "should not be able to click button when search window is supposed to be closed"
+        context.active_object.xplane.datarefs[datarefs_prop_idx].path = datarefs_search_list[datarefs_search_list_idx].dataref
         return {'FINISHED'}
 
 class DatarefListItem(bpy.types.PropertyGroup):
@@ -1120,13 +1101,13 @@ class DatarefListItem(bpy.types.PropertyGroup):
             description="A dataref path in the dataref search window. Comes from resources\Datarefs.txt"
     )
 class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
-    current_dataref_property = bpy.props.IntProperty(
-            name="Current Dataref Property",
-            description="The thing that opened the button up one"
+    current_dataref_prop_idx = bpy.props.IntProperty(
+            name="Current Dataref Property Index",
+            description="The index of the last 'Open/Closed' button pressed in datarefs collection property. -1 if SearchWindow is now closed"
     )
 
     dataref_search_list = bpy.props.CollectionProperty(type=DatarefListItem)
-    dataref_search_list_index = bpy.props.IntProperty()
+    dataref_search_list_idx = bpy.props.IntProperty()
 
 #################################################################################################################################################
 

@@ -14,3 +14,7 @@ __pycache__
 *.orig
 
 *.zip
+
+.mypy_cache/*
+builds/*
+.vs/*
