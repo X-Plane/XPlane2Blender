@@ -1105,6 +1105,9 @@ class LIST_OT_ChooseDataref(bpy.types.Operator):
         print("datarefs_prop_idx: {}, datarefs_search_list: {}, paired_datarefs_search_list_idx: {}".format(datarefs_prop_idx,datarefs_search_list,self.paired_datarefs_search_list_idx))
         assert datarefs_prop_idx != -1, "should not be able to click button when search window is supposed to be closed"
         context.active_object.xplane.datarefs[datarefs_prop_idx].path = datarefs_search_list[self.paired_datarefs_search_list_idx].dataref
+
+        #Close the search box when you're done selecting. Comment out for testing purposes
+        xplane.dataref_search_window_state.current_dataref_prop_idx = -1 
         return {'FINISHED'}
 
 class DatarefListItem(bpy.types.PropertyGroup):
