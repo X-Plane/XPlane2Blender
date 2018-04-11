@@ -722,18 +722,29 @@ def animation_layout(self, obj, bone = False):
     for i, attr in enumerate(obj.xplane.datarefs):
         subbox = box.box()
         subrow = subbox.row()
-        # TODO: search is causing memory leak!
-#        if len(bpy.data.scenes[0].xplane_datarefs)>0:
-#            subrow.prop_search(attr, "path", bpy.data.scenes[0], "xplane_datarefs", text = "", icon = "VIEWZOOM")
-#        else:
-#            subrow.prop(attr, "path")
         subrow.prop(attr, "path")
         if bone:
             subrow.operator("bone.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
         else:
             subrow.operator("object.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
         subrow = subbox.row()
-        subrow.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+        #TODO: Weird one.
+        # Method one
+        # - create a method, pass subrow, and have it recreate the steps perfectly
+        # - UI_List winds up next to the button, no way to make it go to another row
+        #dataref_search_window_layout(self,subrow , i)
+        #
+        # Method two
+        # - Do the following, things look good
+        #
+        # There is something I'm missing about passing and creating new layout.row() whatever objects I'm forgetting
+        subrow.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM").paired_dataref_prop_idx = i
+
+        scene = bpy.context.scene
+        if scene.xplane.dataref_search_window_state.current_dataref_prop_idx == i or False:
+            subrow = subbox.row()
+            subrow.template_list("UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
+
         subrow = subbox.row()
         subrow.prop(attr, "anim_type")
         subrow = subbox.row()
@@ -967,29 +978,22 @@ class XPlaneDatarefSearch(bpy.types.Operator):
     bl_description = 'Search for X-Plane dataref. (LR does not own or provide support for SimInnovations. Use at own risk.)'
     bl_idname = 'xplane.dataref_search'
 
-    #datarefs = parseDatarefs()
-
+    paired_dataref_prop_idx = bpy.props.IntProperty()
     def execute(self, context):
-        import webbrowser
-        webbrowser.open('https://www.siminnovations.com/xplane/dataref/index.php')
-        return {'FINISHED'}
+        prop_idx = context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx
 
-#    def invoke(self, context, event):
-#        wm = context.window_manager
-#        return wm.invoke_popup(operator = self)
-#
-#    def draw(self, context):
-#        layout = self.layout
-#        row = layout.row()
-#        row.label('Search Datarefs')
-#        layout.separator()
-#        box = layout.box()
-#        datarefs = parseDatarefs()
-#        for dataref in datarefs:
-#            #subrow = box.row()
-#            subrow.label(dataref)
-#
-##        return {'FINISHED'}
+        #win_state_current_dataref_prop_idx = context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx
+        #print("win_state_current_dataref_prop_idx: " + str(win_state_current_dataref_prop_idx))
+        #print("paired_dataref_prop: " + str(self.paired_dataref_prop_idx))
+        
+        #Toggle ourselves
+        if prop_idx == self.paired_dataref_prop_idx:
+            context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx = -1
+        else:
+            context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx = self.paired_dataref_prop_idx
+        #print(context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx)
+
+        return {'FINISHED'}
 
 # Function: addXPlaneUI
 # Registers all UI Panels.
