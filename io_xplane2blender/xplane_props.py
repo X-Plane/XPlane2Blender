@@ -1015,8 +1015,17 @@ class UL_DatarefSearchList(bpy.types.UIList):
     cached_filter_name = bpy.props.StringProperty(name="Cached Filter Name",description="The previously filtered name. Used for optimizing the UI List only!")
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.operator("scene.xplane_dateref_search_choose_dataref" ,text="",icon="HAND")
-            layout.label(item.dataref, icon = "NONE")
+            # TODO: 
+            # Two options: Button next to label or Button for the whole thing
+            # Pro for button for the whole thing
+            # - Huge easy click area
+            # Con
+            # - Ugly highlighting of active index underneath button
+            # - Left justified leaves uneven gap on right side. Ugly!
+            layout.alignment = "LEFT"
+            layout.operator("scene.xplane_dateref_search_choose_dataref" ,text=item.dataref,icon="HAND")\
+                .paired_datarefs_search_list_idx = index
+            #layout.label(item.dataref, icon = "NONE")
 
         elif self.layout_type in {'GRID'}:
             pass
@@ -1080,19 +1089,16 @@ class LIST_OT_ChooseDataref(bpy.types.Operator):
     #def poll(self,context):
         #test cached_filter_name?
 
-    #TODO: Assaign list index during draw_item part so we can skip
     #TODO: Need consistent naming key. datarefs_prop when talking about the prop. datarefs_search when talking about the search function, etc
-    # double clicking? See custom properties for how
-    # or layer disclose arrows
-    #paired_index = bpy.props.IntProperty(name="Choose Dataref Index", description="The index of the XPlane Dataref Search List this operator is place in")
+    paired_datarefs_search_list_idx = bpy.props.IntProperty(name="Choose Dataref Index", description="The index of the XPlane Dataref Search List this operator is place in")
     def execute(self,context):
         xplane = context.scene.xplane
         datarefs_prop_idx = xplane.dataref_search_window_state.current_dataref_prop_idx
         datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
-        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
-        print("datarefs_prop_idx: {}, datarefs_search_list: {}, datarefs_search_list_idx: {}".format(datarefs_prop_idx,datarefs_search_list,datarefs_search_list_idx))
+        datarefs_search_list_idx = self.paired_datarefs_search_list_idx#xplane.dataref_search_window_state.dataref_search_list_idx
+        print("datarefs_prop_idx: {}, datarefs_search_list: {}, paired_datarefs_search_list_idx: {}".format(datarefs_prop_idx,datarefs_search_list,self.paired_datarefs_search_list_idx))
         assert datarefs_prop_idx != -1, "should not be able to click button when search window is supposed to be closed"
-        context.active_object.xplane.datarefs[datarefs_prop_idx].path = datarefs_search_list[datarefs_search_list_idx].dataref
+        context.active_object.xplane.datarefs[datarefs_prop_idx].path = datarefs_search_list[self.paired_datarefs_search_list_idx].dataref
         return {'FINISHED'}
 
 class DatarefListItem(bpy.types.PropertyGroup):
