@@ -723,27 +723,27 @@ def animation_layout(self, obj, bone = False):
         subbox = box.box()
         subrow = subbox.row()
         subrow.prop(attr, "path")
+
+		# Next to path: magnifying glass icon for dataref search - icon toggles based on
+		# disclosure, so compute that up front.
+        scene = bpy.context.scene
+        expanded = scene.xplane.dataref_search_window_state.current_dataref_prop_idx == i or False
+        if expanded:
+            our_icon = "ZOOM_OUT"
+        else:
+            our_icon = "ZOOM_IN"
+        subrow.operator('xplane.dataref_search', text = "", emboss = False, icon = our_icon).paired_dataref_prop_idx = i
+
+		# Next: "X" box to nuke the dataref - further to the right to keep from separating search from its field.
         if bone:
             subrow.operator("bone.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
         else:
             subrow.operator("object.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
-        subrow = subbox.row()
-        #TODO: Weird one.
-        # Method one
-        # - create a method, pass subrow, and have it recreate the steps perfectly
-        # - UI_List winds up next to the button, no way to make it go to another row
-        #dataref_search_window_layout(self,subrow , i)
-        #
-        # Method two
-        # - Do the following, things look good
-        #
-        # There is something I'm missing about passing and creating new layout.row() whatever objects I'm forgetting
-        subrow.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM").paired_dataref_prop_idx = i
 
-        scene = bpy.context.scene
-        if scene.xplane.dataref_search_window_state.current_dataref_prop_idx == i or False:
+		# Finally, in the next row, if we are expanded, build the entire search list.
+        if expanded:
             subrow = subbox.row()
-            subrow.template_list("UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
+            our_list = subrow.template_list("UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
 
         subrow = subbox.row()
         subrow.prop(attr, "anim_type")

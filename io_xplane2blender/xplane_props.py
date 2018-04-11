@@ -1011,9 +1011,15 @@ class CachedFilterFlag(bpy.types.PropertyGroup):
     cached_flt_flag = bpy.props.IntProperty()
 
 class UL_DatarefSearchList(bpy.types.UIList):
+
     cached_flt_flags = bpy.props.CollectionProperty(type=CachedFilterFlag, description="The previously filter results. Used for optimizing the UI List only!")
     cached_filter_name = bpy.props.StringProperty(name="Cached Filter Name",description="The previously filtered name. Used for optimizing the UI List only!")
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
+
+        # Ben says: this is a total hack.  By just BASHING the filter, we open it always, rather than making the user open it.
+        # Sadly there's no sane way to open the filter programmatically because Blender - the UI never gets access to the UIList
+        # derivative, and we don't know its constructor syntax to override it.
+        self.use_filter_show=True
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             # TODO: 
             # Two options: Button next to label or Button for the whole thing
@@ -1023,9 +1029,13 @@ class UL_DatarefSearchList(bpy.types.UIList):
             # - Ugly highlighting of active index underneath button
             # - Left justified leaves uneven gap on right side. Ugly!
             layout.alignment = "LEFT"
-            layout.operator("scene.xplane_dateref_search_choose_dataref" ,text=item.dataref,icon="HAND")\
-                .paired_datarefs_search_list_idx = index
-            #layout.label(item.dataref, icon = "NONE")
+            
+            #This is the code that makes operator-based buttons
+            #layout.operator("scene.xplane_dateref_search_choose_dataref" ,text=item.dataref,icon="HAND")\
+            #    .paired_datarefs_search_list_idx = index
+            
+            # This code makes labels - hiliting the label acts like a click via trickery
+            layout.label(item.dataref, icon = "NONE")
 
         elif self.layout_type in {'GRID'}:
             pass
@@ -1054,14 +1064,22 @@ class UL_DatarefSearchList(bpy.types.UIList):
         #Search info:
         # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
         # A dataref must match at least one search in all searches, and must partially match each search term        
-        search_info = set(map(frozenset,[{*search.split(' ')} for search in filter_name.split('|')]))
+        search_info = set(map(frozenset,[{*search.split(' ')} for search in filter_name.upper().split('|')]))
         print(search_info)
 
         def check_dref(dref:str,search_info:List[str])->bool:
+            #Ben says: If we are going to have | delimited datarefs, this
+            #is best. But since we have only the dataref name for the demo,
+            #split doesn't throw an exception if the | is missing.
+            #
+            #In production code, datarefs should be fully pre-split into
+            #tuples ahead of time, so we can just use what we want.
+            #upper_dref = dref[:dref.index('|')].upper()
+            upper_dref = dref.split('|')[0].upper()
             for search in search_info:
                 for search_term in search:
                     try:
-                        if not search_term in dref[:dref.index('|')]:
+                        if not search_term in upper_dref:
                             break
                     except:
                         # TODO: We can parse out all the actual datarefs and just
@@ -1117,12 +1135,25 @@ class DatarefListItem(bpy.types.PropertyGroup):
     )
 class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
     current_dataref_prop_idx = bpy.props.IntProperty(
+            default=-1,
             name="Current Dataref Property Index",
             description="The index of the last 'Open/Closed' button pressed in datarefs collection property. -1 if SearchWindow is now closed"
     )
 
+    # This method is called when the template_list uilist writes to the current selected index as the user selects.
+    # We dig out our stashed search info,write the dataref, and clear the current search, zapping out the UI.  This
+    # code is basically a rip-off of the apply-dataref operator.
+    def pick_dataref_fugly(self,context):
+        xplane = context.scene.xplane
+        datarefs_prop_idx = xplane.dataref_search_window_state.current_dataref_prop_idx
+        datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
+        print("datarefs_prop_idx: {}, datarefs_search_list: {}, paired_datarefs_search_list_idx: {}".format(datarefs_prop_idx,datarefs_search_list,self.dataref_search_list_idx))
+        assert datarefs_prop_idx != -1, "should not be able to click button when search window is supposed to be closed"
+        context.active_object.xplane.datarefs[datarefs_prop_idx].path = datarefs_search_list[self.dataref_search_list_idx].dataref
+        xplane.dataref_search_window_state.current_dataref_prop_idx = -1
+
     dataref_search_list = bpy.props.CollectionProperty(type=DatarefListItem)
-    dataref_search_list_idx = bpy.props.IntProperty()
+    dataref_search_list_idx = bpy.props.IntProperty(update=pick_dataref_fugly)
 
 #################################################################################################################################################
 
