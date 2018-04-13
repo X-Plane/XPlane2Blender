@@ -363,13 +363,12 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 #                                    description = "XPlane Dataref path",
 #                                    default = "")
 
-# Class: XPlaneManipulator
+# Class: XPlaneManipulatorSettings
 # A X-Plane manipulator settings
 #
 # Properties:
 #   bool enabled - True if object is a manipulator
 #   enum type - Manipulator types as defined in OBJ specs.
-#   enum type_v1110 - Manipulator types including new v11.1x VR types
 #   string tooltip - Manipulator Tooltip
 #   enum cursor - Manipulator cursors as defined in OBJ specs.
 
@@ -665,50 +664,21 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         default = 1.0
     )
 
-    def get_effective_type_id(self) -> int:
-        xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= int(VERSION_1110):
-            return self.type_v1110
-        else:
-            return self.type
-
-
     def get_effective_type_desc(self) -> str:
         '''
         The description returned will the same as in the UI
         '''
-        xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= int(VERSION_1110):
-            prop_name = 'type_v1110'
-        else:
-            prop_name = 'type'
-
-        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties[prop_name].enum_items
-        return next(filter(lambda item: item.identifier == self.get_effective_type_id(), items)).description
+        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties['type'].enum_items
+        return next(filter(lambda item: item.identifier == self.type, items)).description
 
 
     def get_effective_type_name(self) -> str:
         '''
         The name returned will the same as in the UI
         '''
-        xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= int(VERSION_1110):
-            prop_name = 'type_v1110'
-        else:
-            prop_name = 'type'
-
-        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties[prop_name].enum_items
-        return next(filter(lambda item: item.identifier == self.get_effective_type_id(), items)).name
+        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties['type'].enum_items
+        return next(filter(lambda item: item.identifier == self.type, items)).name
    
-    def set_effective_type_id(self,type_id:str):
-        xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= int(VERSION_1110):
-            prop_name = 'type_v1110'
-        else:
-            prop_name = 'type'
-        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties[prop_name].enum_items
-        assert type_id in [item.identifier for item in items]
-        setattr(self,prop_name,type_id)
 
 # Class: XPlaneCockpitRegion
 # Defines settings for a cockpit region.

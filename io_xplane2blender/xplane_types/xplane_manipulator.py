@@ -693,7 +693,7 @@ class XPlaneManipulator():
         assert xplanePrimative is not None
 
         self.manip = xplanePrimative.blenderObject.xplane.manip
-        self.type = self.manip.get_effective_type_id()
+        self.type = self.manip.type
         self.xplanePrimative = xplanePrimative
 
     def collect(self)->None:

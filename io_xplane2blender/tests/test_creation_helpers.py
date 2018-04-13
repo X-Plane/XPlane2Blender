@@ -586,7 +586,7 @@ def set_manipulator_settings(object_datablock:bpy.types.Object,
     if manip_props is None:
         manip_props = {}
 
-    object_datablock.xplane.manip.set_effective_type_id(manip_type)
+    object_datablock.xplane.manip.type = manip_type
     object_datablock.xplane.manip.enabled = manip_enabled
     if manip_enabled is False:
         return

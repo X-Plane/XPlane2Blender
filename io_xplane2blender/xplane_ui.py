@@ -779,7 +779,7 @@ def axis_detent_ranges_layout(self, layout, manip):
         row = box.row() 
         row.prop(attr,"start")
         row.prop(attr,"end")
-        if manip.type_v1110 == MANIP_DRAG_AXIS_DETENT:
+        if manip.type == MANIP_DRAG_AXIS_DETENT:
             row.prop(attr,"height", text="Length")
         else:
             row.prop(attr,"height")
@@ -801,12 +801,9 @@ def manipulator_layout(self, obj):
         box = layout.box()
 
         xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= int(VERSION_1110):
-            box.prop(obj.xplane.manip, 'type_v1110', text="Type")
-        else:
-            box.prop(obj.xplane.manip, 'type', text="Type")
+        box.prop(obj.xplane.manip, 'type', text="Type")
 
-        manipType = obj.xplane.manip.get_effective_type_id()
+        manipType = obj.xplane.manip.type
 
         box.prop(obj.xplane.manip, 'cursor', text="Cursor")
         box.prop(obj.xplane.manip, 'tooltip', text="Tooltip")
@@ -899,7 +896,7 @@ def manipulator_layout(self, obj):
                 if dataref_number == 2:
                     return "Detent Axis Dataref"
 
-            return ""
+            return None
 
         # Each value contains two predicates: 1st, to decide to use it or not, 2nd, what title to use
         props =  collections.OrderedDict() # type: Dict[str,Tuple[Callable[[str],bool],Optional[Callable[[str],bool]]]]
@@ -910,35 +907,35 @@ def manipulator_layout(self, obj):
             lambda manip_type: manip_type in {MANIP_DRAG_XY} | {MANIP_DRAG_AXIS_DETENT, MANIP_DRAG_ROTATE_DETENT} and should_show_dataref(manip_type),\
             lambda manip_type: get_dataref_title(manip_type,2)
 
-        props['dx'] = lambda manip_type: manip_type in MANIPULATORS_AXIS, None
-        props['dy'] = lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_AXIS_PIX}, None
-        props['dz'] = lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX}, None
+        props['dx'] = (lambda manip_type: manip_type in MANIPULATORS_AXIS, None)
+        props['dy'] = (lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_AXIS_PIX}, None)
+        props['dz'] = (lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX}, None)
 
-        props['step'] = lambda manip_type: manip_type in {MANIP_DRAG_AXIS_PIX}, None
-        props['exp' ] = lambda manip_type: manip_type in {MANIP_DRAG_AXIS_PIX}, None
+        props['step'] = (lambda manip_type: manip_type in {MANIP_DRAG_AXIS_PIX}, None)
+        props['exp' ] = (lambda manip_type: manip_type in {MANIP_DRAG_AXIS_PIX}, None)
 
-        props['v1_min'] = lambda manip_type: manip_type in {MANIP_DRAG_XY,MANIP_DELTA,MANIP_WRAP}, None
-        props['v1_max'] = lambda manip_type: manip_type in {MANIP_DRAG_XY,MANIP_DELTA,MANIP_WRAP}, None
-        props['v2_min'] = lambda manip_type: manip_type in {MANIP_DRAG_XY}, None
-        props['v2_max'] = lambda manip_type: manip_type in {MANIP_DRAG_XY}, None
+        props['v1_min'] = (lambda manip_type: manip_type in {MANIP_DRAG_XY,MANIP_DELTA,MANIP_WRAP}, None)
+        props['v1_max'] = (lambda manip_type: manip_type in {MANIP_DRAG_XY,MANIP_DELTA,MANIP_WRAP}, None)
+        props['v2_min'] = (lambda manip_type: manip_type in {MANIP_DRAG_XY}, None)
+        props['v2_max'] = (lambda manip_type: manip_type in {MANIP_DRAG_XY}, None)
 
-        props['v1'] = lambda manip_type: manip_type in {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None
-        props['v2'] = lambda manip_type: manip_type in {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None
+        props['v1'] = (lambda manip_type: manip_type in {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None)
+        props['v2'] = (lambda manip_type: manip_type in {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None)
 
         props['command'] = (lambda manip_type: manip_type in MANIPULATORS_COMMAND_1110 | {MANIP_COMMAND}, None)
-        props['positive_command'] = lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC, None
-        props['negative_command'] = lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC, None
+        props['positive_command'] = (lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC, None)
+        props['negative_command'] = (lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC, None)
 
-        props['v_down'] = lambda manip_type: manip_type in {MANIP_PUSH,MANIP_RADIO,MANIP_DELTA,MANIP_WRAP}, None
-        props['v_up'  ] = lambda manip_type: manip_type in {MANIP_PUSH}, None
+        props['v_down'] = (lambda manip_type: manip_type in {MANIP_PUSH,MANIP_RADIO,MANIP_DELTA,MANIP_WRAP}, None)
+        props['v_up'  ] = (lambda manip_type: manip_type in {MANIP_PUSH}, None)
 
-        props['v_on']   = lambda manip_type: manip_type in {MANIP_TOGGLE}, None
-        props['v_off']  = lambda manip_type: manip_type in {MANIP_TOGGLE}, None
-        props['v_hold'] = lambda manip_type: manip_type in {MANIP_DELTA,MANIP_WRAP}, None
+        props['v_on']   = (lambda manip_type: manip_type in {MANIP_TOGGLE}, None)
+        props['v_off']  = (lambda manip_type: manip_type in {MANIP_TOGGLE}, None)
+        props['v_hold'] = (lambda manip_type: manip_type in {MANIP_DELTA,MANIP_WRAP}, None)
 
-        props['click_step']  = lambda manip_type: manip_type in {MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None
-        props['hold_step']   = lambda manip_type: manip_type in {MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None
-        props['wheel_delta'] = lambda manip_type: manip_type in MANIPULATORS_MOUSE_WHEEL and xplane_version >= 1050, None
+        props['click_step']  = (lambda manip_type: manip_type in {MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None)
+        props['hold_step']   = (lambda manip_type: manip_type in {MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None)
+        props['wheel_delta'] = (lambda manip_type: manip_type in MANIPULATORS_MOUSE_WHEEL and xplane_version >= 1050, None)
 
         if manipType in MANIPULATORS_OPT_IN: 
             box.prop(obj.xplane.manip, 'autodetect_settings_opt_in')
@@ -947,16 +944,20 @@ def manipulator_layout(self, obj):
             if manipType in MANIPULATORS_OPT_IN and obj.xplane.manip.autodetect_settings_opt_in:
                 disabled = lambda manip_type: False
                 if manipType == MANIP_DRAG_AXIS:
-                    props['dx'] = disabled
-                    props['dy'] = disabled
-                    props['dz'] = disabled
-                    props['v1'] = disabled
-                    props['v2'] = disabled
+                    props['dx'] = (disabled, None)
+                    props['dy'] = (disabled, None)
+                    props['dz'] = (disabled, None)
+                    props['v1'] = (disabled, None)
+                    props['v2'] = (disabled, None)
 
             if predicates[0](manipType):
                 if predicates[1]:
                     text = predicates[1](manipType)
-                    box.prop(obj.xplane.manip, prop, text=text)
+                    if text:
+                        box.prop(obj.xplane.manip, prop, text=text)
+                    else:
+                        box.prop(obj.xplane.manip, prop)
+
                 else:
                     box.prop(obj.xplane.manip, prop)
 
