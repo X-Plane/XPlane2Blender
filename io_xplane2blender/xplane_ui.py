@@ -861,7 +861,7 @@ def manipulator_layout(self, obj):
         - The checkbox only appears for relevant manip types
         '''
         def should_show_autodetect_dataref(manip_type:str) -> bool:
-            if manip_type in MANIPULATORS_AUTODETECT_DATAREFS:
+            if manip_type in MANIPULATORS_AUTODETECT_DATAREFS and xplane_version >= 1110:
                 if manip_type in MANIPULATORS_AUTODETECT_EXPLICIT:
                     return obj.xplane.manip.autodetect_settings_opt_in
                 else:
@@ -937,7 +937,7 @@ def manipulator_layout(self, obj):
         props['hold_step']   = (lambda manip_type: manip_type in {MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None)
         props['wheel_delta'] = (lambda manip_type: manip_type in MANIPULATORS_MOUSE_WHEEL and xplane_version >= 1050, None)
 
-        if manipType in MANIPULATORS_OPT_IN: 
+        if manipType in MANIPULATORS_OPT_IN and xplane_version >= 1110: 
             box.prop(obj.xplane.manip, 'autodetect_settings_opt_in')
 
         for prop,predicates in props.items():
