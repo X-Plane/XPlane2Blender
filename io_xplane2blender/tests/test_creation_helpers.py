@@ -11,6 +11,7 @@ from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
 from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
 from mathutils import Vector, Euler, Quaternion
 from io_xplane2blender.xplane_constants import ANIM_TYPE_SHOW,ANIM_TYPE_HIDE
+import io_xplane2blender
 '''
 test_creation_tools
 
@@ -425,19 +426,19 @@ def get_texture(name:str)->Optional[bpy.types.ImageTexture]:
 def delete_all_images():
     for image in bpy.data.images:
         image.user_clear()
-        bpy.data.images.remove(image)#,True)
+        bpy.data.images.remove(image,do_unlink=True)
 
 
 def delete_all_materials():
     for material in bpy.data.materials:
         material.user_clear()
-        bpy.data.materials.remove(material)#,True)
+        bpy.data.materials.remove(material,do_unlink=True)
 
 
 def delete_all_objects():
     for obj in bpy.data.objects:
         obj.user_clear()
-        bpy.data.objects.remove(obj)#,True)
+        bpy.data.objects.remove(obj,do_unlink=True)
 
 
 def delete_all_other_scenes():
@@ -446,19 +447,19 @@ def delete_all_other_scenes():
     '''
     for scene in bpy.data.scenes[1:]:
         scene.user_clear()
-        bpy.data.scenes.remove(scene)#,True)
+        bpy.data.scenes.remove(scene,do_unlink=True)
 
 
 def delete_all_text_files():
     for text in bpy.data.texts:
         text.user_clear()
-        bpy.data.texts.remove(text)#, do_unlink=True)
+        bpy.data.texts.remove(text, do_unlink=True)
     
 
 def delete_all_textures():
     for texture in bpy.data.textures:
         texture.user_clear()
-        bpy.data.textures.remove(texture)#,True)
+        bpy.data.textures.remove(texture,do_unlink=True)
 
 
 def delete_everything():
@@ -567,11 +568,12 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
             bpy.context.scene.objects.active = blender_struct
             bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
 
-def set_layer_visibility(layers:Iterable[int],visible:bool):
-    assert len([idx for idx in layers if 0 <= idx >= 20]) == 0
-
-    for idx in layers:
-        bpy.context.scene.layers[idx] = visible
+#def set_layer_visibility(layer_visibility_settings:Iterable[Tuple[int,bool]]):
+    #assert len(layer_visibility_settings) == 0
+    #assert any([setting[1] for setting in layer_visibility_settings])
+#
+    #for idx in layers:
+        #bpy.context.scene.layers[idx] = visible
 
 def set_manipulator_settings(object_datablock:bpy.types.Object,
         manip_type:str,
@@ -638,11 +640,22 @@ def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
 
         blender_object.parent_bone = parent_info.parent_bone
 
+def set_xplane_layer(layer:Union[int,io_xplane2blender.xplane_props.XPlaneLayer],layer_props:Dict[str,Any]):
+    assert isinstance(layer,int) or isinstance(layer, io_xplane2blender.xplane_props.XPlaneLayer)
+    
+    if isinstance(layer,int):
+       layer = bpy.context.scene.xplane.layers[layer]
+
+    for prop,value in layer_props.items():
+        setattr(layer,prop,value)
 
 def create_initial_test_setup():
     bpy.ops.wm.read_homefile()
     delete_everything()
-    bpy.context.scene.layers = [False] * 20
+    bpy.context.scene.layers[0] = True
+    for i in range(1,20):
+        bpy.context.scene.layers[i] = False
+        
     bpy.ops.scene.add_xplane_layers()
     create_material_default() 
 

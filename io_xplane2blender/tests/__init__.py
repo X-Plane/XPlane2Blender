@@ -6,12 +6,12 @@ import unittest
 
 import bpy
 
-from ..xplane_config import setDebug, getDebug
 import io_xplane2blender
+from io_xplane2blender.xplane_config import setDebug, getDebug
 from io_xplane2blender import xplane_config
 from io_xplane2blender import xplane_helpers
-from ..xplane_helpers import logger, XPlaneLogger
-from ..xplane_types import xplane_file, XPlanePrimitive
+from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
+from io_xplane2blender.xplane_types import xplane_file, xplane_primitive
 from .animation_file_mappings import mappings
 
 
@@ -52,7 +52,7 @@ class XPlaneTestCase(unittest.TestCase):
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
         for name in objectNames:
             self.assertIsNotNone(xplaneFile.objects[name])
-            self.assertTrue(isinstance(xplaneFile.objects[name], XPlanePrimitive))
+            self.assertTrue(isinstance(xplaneFile.objects[name],xplane_primitive.XPlanePrimitive))
             self.assertEquals(xplaneFile.objects[name].blenderObject, bpy.data.objects[name])
 
     def assertXplaneFileHasBoneTree(self, xplaneFile, tree):

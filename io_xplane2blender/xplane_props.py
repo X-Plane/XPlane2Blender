@@ -419,7 +419,9 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         default = False
     )
 
-    __type_items = [
+
+    def get_manip_types_for_this_version(self,context):
+        type_items = [
             (MANIP_DRAG_XY,      "Drag XY",      "Drag XY"),
             (MANIP_DRAG_AXIS,    "Drag Axis",    "Drag Axis"),
             (MANIP_COMMAND,      "Command",      "Command"),
@@ -438,28 +440,27 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
             (MANIP_AXIS_SWITCH_LEFT_RIGHT,    "Axis Switch Left Right (v10.50)",    "Axis Switch Left Right (requires at least v10.50)")
             ]
 
-    type = bpy.props.EnumProperty(
-        attr = "type",
-        name = "Manipulator Type",
-        description = "The type of the manipulator",
-        default = MANIP_DRAG_XY,
-        items = __type_items
-    )
-    
-    __type_v1110_items = [
+        type_v1110_items = [
             (MANIP_DRAG_AXIS_DETENT,           "Drag Axis With Detents",      "Drag Axis With Detents (requires at least v11.10)"),
             (MANIP_COMMAND_KNOB2,              "Command Knob 2",              "Command Knob 2 (requires at least v11.10)"),
             (MANIP_COMMAND_SWITCH_UP_DOWN2,    "Command Switch Up Down 2",    "Command Switch Up Down 2 (requires at least v11.10)"),
             (MANIP_COMMAND_SWITCH_LEFT_RIGHT2, "Command Switch Left Right 2", "Command Switch Left Right 2 (requires at least v11.10)"),
             (MANIP_DRAG_ROTATE,                "Drag Rotate",                 "Drag Rotate (requires at least v11.10)"),
-            (MANIP_DRAG_ROTATE_DETENT,         "Drag Rotate With Detents",    "Drag Rotate With Detents (requires at least v11.10")
+            (MANIP_DRAG_ROTATE_DETENT,         "Drag Rotate With Detents",    "Drag Rotate With Detents (requires at least v11.10)")
         ]
-    
-    type_v1110 = bpy.props.EnumProperty(
+
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= int(VERSION_1110):
+            return type_items + type_v1110_items
+        else:
+            return type_items
+
+    type = bpy.props.EnumProperty(
+        attr = "type",
         name = "Manipulator Type",
         description = "The type of the manipulator",
-        default = MANIP_COMMAND_KNOB2,
-        items = __type_items + __type_v1110_items
+        items = get_manip_types_for_this_version
+        
     )
 
     tooltip = bpy.props.StringProperty(
@@ -669,15 +670,15 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         The description returned will the same as in the UI
         '''
         items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties['type'].enum_items
-        return next(filter(lambda item: item.identifier == self.type, items)).description
+        return next(filter(lambda item: item[0] == self.type, items))[2]#.description
 
 
     def get_effective_type_name(self) -> str:
         '''
         The name returned will the same as in the UI
         '''
-        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties['type'].enum_items
-        return next(filter(lambda item: item.identifier == self.type, items)).name
+        items = self.get_manip_types_for_this_version(None)
+        return next(filter(lambda item: item[0] == self.type, items))[1]#.name
    
 
 # Class: XPlaneCockpitRegion

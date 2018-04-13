@@ -24,6 +24,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_01(self):
         #print("def test_drag_rotate_detent_bone_case_01(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -40,6 +41,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_02(self):
         #print("def test_drag_rotate_detent_bone_case_02(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
         B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -57,6 +59,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_03(self):
         #print("def test_drag_rotate_detent_bone_case_03(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
         B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -75,6 +78,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_04(self):
         #print("def test_drag_rotate_detent_bone_case_04(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
         B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -93,6 +97,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_05(self):
         #print("def test_drag_rotate_detent_bone_case_05(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
         B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -110,6 +115,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_06(self):
         #print("def test_drag_rotate_detent_bone_case_06(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
         B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_sh",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -129,6 +135,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_07(self):
         #print("def test_drag_rotate_detent_bone_case_07(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -145,6 +152,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_08(self):
         #print("def test_drag_rotate_detent_bone_case_08(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -160,6 +168,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_09(self):
         #print("def test_drag_rotate_detent_bone_case_09(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -175,6 +184,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_10(self):
         #print("def test_drag_rotate_detent_bone_case_10(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_r"))
         
@@ -189,6 +199,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_11(self):
         #print("def test_drag_rotate_detent_bone_case_11(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -204,6 +215,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_12(self):
         #print("def test_drag_rotate_detent_bone_case_12(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -219,6 +231,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_13(self):
         #print("def test_drag_rotate_detent_bone_case_13(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_t"))
         
@@ -233,6 +246,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_14(self):
         #print("def test_drag_rotate_detent_bone_case_14(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_n"))
         set_manipulator_settings(A,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
@@ -244,6 +258,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_15(self):
         #print("def test_drag_rotate_detent_bone_case_15(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_s"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -260,6 +275,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_16(self):
         #print("def test_drag_rotate_detent_bone_case_16(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_rt",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -277,6 +293,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_17(self):
         #print("def test_drag_rotate_detent_bone_case_17(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_rt"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -294,6 +311,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_18(self):
         #print("def test_drag_rotate_detent_bone_case_18(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
         B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
@@ -312,6 +330,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
     def test_drag_rotate_detent_bone_case_19(self):
         #print("def test_drag_rotate_detent_bone_case_19(self):")
         create_initial_test_setup()
+        set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
         B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="BONE",parent_bone=A.data.bones[0].name)))
