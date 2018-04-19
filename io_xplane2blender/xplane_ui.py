@@ -135,16 +135,6 @@ class BONE_PT_xplane(bpy.types.Panel):
         weight_layout(self, bone)
         animation_layout(self, bone, True)
 
-#TODO remove
-# Class: OBJECT_MT_xplane_datarefs
-# Adds the X-Plane datarefs search menu. This is not implemented yet.
-#class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
-    #'''XPlane Datarefs Search Menu'''
-    #bl_label = "XPlane Datarefs"
-#
-    #def draw(self, context):
-        #self.search_menu(xplane_datarefs, "text.open")
-
 # Function: scene_layout
 # Draws the UI layout for scene tabs. Uses <layer_layout>.
 #
@@ -911,29 +901,6 @@ def weight_layout(self, obj):
     if obj.xplane.override_weight:
         row.prop(obj.xplane, 'weight')
 
-# Function: parseDatarefs
-# Parses the DataRefs.txt file which is located within the io_xplane2blender addon directory and stores results in a list.
-# This list should later be used to help search for datarefs with an autocomplete field.
-#def parseDatarefs():
-#    import os
-#    search_data = []
-#    filePath = os.path.join(xplane_constants.ADDON_RESOURCES_FOLDER,'DataRefs.txt')
-#    if os.path.exists(filePath):
-#        try:
-#            file = open(filePath, 'r')
-#            i = 0
-#            for line in file:
-#                if i>1:
-#                    parts = line.split('\t')
-#                    if (len(parts)>1 and parts[1] in ('float', 'int')):
-#                        search_data.append(parts[0])
-#                i+ = 1
-#        except IOError:
-#            print(IOError)
-#        finally:
-#            file.close()
-#    return search_data
-
 class XPlaneMessage(bpy.types.Operator):
     bl_idname = 'xplane.msg'
     bl_label = 'XPlane2Blender message'
@@ -982,16 +949,12 @@ class XPlaneDatarefSearch(bpy.types.Operator):
     def execute(self, context):
         prop_idx = context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx
 
-        #win_state_current_dataref_prop_idx = context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx
-        #print("win_state_current_dataref_prop_idx: " + str(win_state_current_dataref_prop_idx))
-        #print("paired_dataref_prop: " + str(self.paired_dataref_prop_idx))
         
         #Toggle ourselves
         if prop_idx == self.paired_dataref_prop_idx:
             context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx = -1
         else:
             context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx = self.paired_dataref_prop_idx
-        #print(context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx)
 
         return {'FINISHED'}
 
