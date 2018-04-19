@@ -57,6 +57,8 @@ def resolveBlenderPath(path):
     else:
         return path
  
+def get_plugin_resources_folder()->str:
+    return os.path.join(os.path.dirname(__file__),"resources")
 
 # This is a convience struct to help prevent people from having to repeateld copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!

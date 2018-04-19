@@ -30,7 +30,7 @@ BEWARE! This file contains, basically, the whole definition for the XPlane2Blend
 until it is deprecated and/or updated (more dragons!) Whatever you remove will create backwards compatibility issues!
 
 For wanting to change xplane_props.py, YOU MUST NOW READ THE HEADER OF xplane_updater.py OR YOU'LL RECIEVE AN ANCIENT CURSE:
-    
+ 
     "Due to an undocumented bad decision during the development of B, all your time and date functions will begin
     randomly choosing different default timezones arguments and changing your OS's timezone at the same time!"
     The curse will only end after 03:14:08 UTC on 19 January 2038 because of another bad decision from the early 1970's"
@@ -1011,9 +1011,10 @@ class CachedFilterFlag(bpy.types.PropertyGroup):
     cached_flt_flag = bpy.props.IntProperty()
 
 class UL_DatarefSearchList(bpy.types.UIList):
+    import io_xplane2blender.xplane_utils.xplane_datarefs_txt_parser
 
-    cached_flt_flags = bpy.props.CollectionProperty(type=CachedFilterFlag, description="The previously filter results. Used for optimizing the UI List only!")
-    cached_filter_name = bpy.props.StringProperty(name="Cached Filter Name",description="The previously filtered name. Used for optimizing the UI List only!")
+    #cached_flt_flags = bpy.props.CollectionProperty(type=CachedFilterFlag, description="The previously filter results. Used for optimizing the UI List only!")
+    #cached_filter_name = bpy.props.StringProperty(name="Cached Filter Name",description="The previously filtered name. Used for optimizing the UI List only!")
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
 
         # Ben says: this is a total hack.  By just BASHING the filter, we open it always, rather than making the user open it.
@@ -1028,14 +1029,19 @@ class UL_DatarefSearchList(bpy.types.UIList):
             # Con
             # - Ugly highlighting of active index underneath button
             # - Left justified leaves uneven gap on right side. Ugly!
-            layout.alignment = "LEFT"
-            
-            #This is the code that makes operator-based buttons
-            #layout.operator("scene.xplane_dateref_search_choose_dataref" ,text=item.dataref,icon="HAND")\
-            #    .paired_datarefs_search_list_idx = index
             
             # This code makes labels - hiliting the label acts like a click via trickery
-            layout.label(item.dataref, icon = "NONE")
+            layout.alignment = "EXPAND"
+            row = layout.row(align=True)
+            row.alignment = "LEFT"
+            row.label(item.dataref_path, icon="NONE")
+            row.label("|")
+            row.label(item.dataref_type, icon="NONE")
+            row.label("|")
+            row.label(item.dataref_is_writable, icon="NONE")
+            row.label("|")
+            row.label(item.dataref_units, icon="NONE")
+            return
 
         elif self.layout_type in {'GRID'}:
             pass
@@ -1064,36 +1070,22 @@ class UL_DatarefSearchList(bpy.types.UIList):
         #Search info:
         # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
         # A dataref must match at least one search in all searches, and must partially match each search term        
+        #TODO: This is unavailable on Blender 2.76(?)
         search_info = set(map(frozenset,[{*search.split(' ')} for search in filter_name.upper().split('|')]))
-        print(search_info)
+        #print(search_info)
 
-        def check_dref(dref:str,search_info:List[str])->bool:
-            #Ben says: If we are going to have | delimited datarefs, this
-            #is best. But since we have only the dataref name for the demo,
-            #split doesn't throw an exception if the | is missing.
-            #
-            #In production code, datarefs should be fully pre-split into
-            #tuples ahead of time, so we can just use what we want.
-            #upper_dref = dref[:dref.index('|')].upper()
-            upper_dref = dref.split('|')[0].upper()
+        def check_dref(dataref_path:str, search_info:List[str])->bool:
+            upper_dref = dataref_path.upper()
             for search in search_info:
                 for search_term in search:
-                    try:
-                        if not search_term in upper_dref:
-                            break
-                    except:
-                        # TODO: We can parse out all the actual datarefs and just
-                        # show whatever content we want for the text of the button!
-                        #
-                        # Though, that may be more complicated than this try/except
-                        if not search_term in dref:
-                            break
+                    if not search_term in upper_dref:
+                        break
                 else:
                     return True
             return False
 
         for dref in bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list:
-            if check_dref(dref.dataref,search_info):
+            if check_dref(dref.dataref_path,search_info):
                 flt_flags.append(self.bitflag_filter_item)
             else:
                 flt_flags.append(0 << 0)
@@ -1104,15 +1096,6 @@ class UL_DatarefSearchList(bpy.types.UIList):
         #self.cached_filter_name = filter_name
         return flt_flags, flt_neworder
 
-
-class LIST_OT_ChooseDataref(bpy.types.Operator):
-    """Overwrites the current dataref with the chosen"""
-    bl_idname = "scene.xplane_dateref_search_choose_dataref"
-    bl_label = "Choose dataref and close search window"
-
-    #@classmethod
-    #def poll(self,context):
-        #test cached_filter_name?
 
     #TODO: Need consistent naming key. datarefs_prop when talking about the prop. datarefs_search when talking about the search function, etc
     paired_datarefs_search_list_idx = bpy.props.IntProperty(name="Choose Dataref Index", description="The index of the XPlane Dataref Search List this operator is place in")
@@ -1129,10 +1112,35 @@ class LIST_OT_ChooseDataref(bpy.types.Operator):
         return {'FINISHED'}
 
 class DatarefListItem(bpy.types.PropertyGroup):
-    dataref = bpy.props.StringProperty(
-            name="Dataref List Item",
-            description="A dataref path in the dataref search window. Comes from resources\Datarefs.txt"
+    '''
+    This is essentially a copy of xplane_datarefs_txt_parser.DatarefInfoStruct's members
+    '''
+    dataref_path = bpy.props.StringProperty(
+        name="Dataref Path Data For Search List",
+        description="A dataref path in the dataref search window. Comes from a Datarefs definitions file"
     )
+
+    dataref_type = bpy.props.StringProperty(
+        name="Dataref Type Data For Search List",
+        description="Indicates the type, shown in a column in the datarefs search window. Comes from a Datarefs definitions file"
+    )
+
+    dataref_is_writable = bpy.props.StringProperty(
+        name="Dataref 'Is Writable' Data For Search List",
+        description = "A "
+    )
+
+    dataref_units = bpy.props.StringProperty(
+        name="",
+        description=""
+    )
+
+    dataref_description = bpy.props.StringProperty(
+        name="",
+        description=""
+    )
+
+
 class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
     current_dataref_prop_idx = bpy.props.IntProperty(
             default=-1,
@@ -1724,7 +1732,6 @@ def addXPlaneRNA():
     # basic classes
     bpy.utils.register_class(CachedFilterFlag)
     bpy.utils.register_class(DatarefListItem)
-    bpy.utils.register_class(LIST_OT_ChooseDataref)
     bpy.utils.register_class(UL_DatarefSearchList)
     bpy.utils.register_class(XPlaneDatarefSearchWindow)
 
@@ -1783,7 +1790,6 @@ def addXPlaneRNA():
 def removeXPlaneRNA():
     bpy.utils.unregister_class(CachedFilterFlag)
     bpy.utils.unregister_class(DatarefListItem)
-    bpy.utils.unregister_class(LIST_OT_ChooseDataref)
     bpy.utils.unregister_class(UL_DatarefSearchList)
     bpy.utils.unregister_class(XPlaneDatarefSearchWindow)
 
