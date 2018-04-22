@@ -101,7 +101,6 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             objType = obj.type
             if objType == "LAMP":
                 objType = "OBJECT"
-            dataref_search_window_layout(self,self.layout)
             lod_layout(self, obj)
             weight_layout(self, obj)
             custom_layout(self, obj, objType)
@@ -472,8 +471,7 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
             subrow = subbox.row()
             subrow.prop(attr, "reset")
 
-def dataref_search_window_layout(self, layout):
-    layout = self.layout
+def dataref_search_window_layout(layout):
     scene = bpy.context.scene
     row = layout.row()
     row.template_list("UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
@@ -541,8 +539,18 @@ def lamp_layout(self, obj):
         row.prop(obj.xplane, "uv", text = "")
         row = layout.row()
         row.prop(obj.xplane, "dataref", text = "Dataref")
-        row = layout.row()
-        row.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+        scene = bpy.context.scene
+        expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == "bpy.context.active_object.data.xplane.dataref"
+        if expanded:
+            our_icon = "ZOOM_OUT"
+        else:
+            our_icon = "ZOOM_IN"
+        dataref_search_toggle_op = row.operator('xplane.dataref_search_toggle', text = "", emboss = False, icon = our_icon)
+        dataref_search_toggle_op.paired_dataref_prop = "bpy.context.active_object.data.xplane.dataref"
+
+        # Finally, in the next row, if we are expanded, build the entire search list.
+        if expanded:
+            dataref_search_window_layout(layout)
 
 # Function: material_layout
 # Draws the UI layout for materials.
@@ -609,7 +617,7 @@ def material_layout(self, obj):
         row = box.row()
         row.prop(obj.xplane, "lightLevel_dataref")
         row = box.row()
-        row.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+        row.operator('xplane.dataref_search_toggle', emboss = True, icon = "VIEWZOOM")
         dataref_search_window_layout(self,row)
 
     ll_box_column.row()
@@ -706,34 +714,37 @@ def animation_layout(self, obj, bone = False):
     row.label("Datarefs")
     if bone:
         row.operator("bone.add_xplane_dataref", text = "Add Dataref")
+        current_dataref_prop_template = "bpy.context.active_bone.xplane.datarefs[{index}].path"
     else:
         row.operator("object.add_xplane_dataref", text = "Add Dataref")
+        current_dataref_prop_template = "bpy.context.active_object.xplane.datarefs[{index}].path"
+
     box = layout.box()
     for i, attr in enumerate(obj.xplane.datarefs):
         subbox = box.box()
         subrow = subbox.row()
         subrow.prop(attr, "path")
 
-		# Next to path: magnifying glass icon for dataref search - icon toggles based on
-		# disclosure, so compute that up front.
+        # Next to path: magnifying glass icon for dataref search - icon toggles based on
+        # disclosure, so compute that up front.
         scene = bpy.context.scene
-        expanded = scene.xplane.dataref_search_window_state.current_dataref_prop_idx == i or False
+        expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == current_dataref_prop_template.format(index=i)
         if expanded:
             our_icon = "ZOOM_OUT"
         else:
             our_icon = "ZOOM_IN"
-        subrow.operator('xplane.dataref_search', text = "", emboss = False, icon = our_icon).paired_dataref_prop_idx = i
+        dataref_search_toggle_op = subrow.operator('xplane.dataref_search_toggle', text = "", emboss = False, icon = our_icon)
+        dataref_search_toggle_op.paired_dataref_prop = current_dataref_prop_template.format(index=i)
 
-		# Next: "X" box to nuke the dataref - further to the right to keep from separating search from its field.
+        # Next: "X" box to nuke the dataref - further to the right to keep from separating search from its field.
         if bone:
             subrow.operator("bone.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
         else:
             subrow.operator("object.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
 
-		# Finally, in the next row, if we are expanded, build the entire search list.
+        # Finally, in the next row, if we are expanded, build the entire search list.
         if expanded:
-            subrow = subbox.row()
-            our_list = subrow.template_list("UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
+            dataref_search_window_layout(subbox)
 
         subrow = subbox.row()
         subrow.prop(attr, "anim_type")
@@ -796,11 +807,11 @@ def manipulator_layout(self, obj):
         if manipType not in (MANIP_COMMAND, MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
             if manipType != MANIP_DRAG_XY:
                 box.prop(obj.xplane.manip, 'dataref1')
-                box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+                box.operator('xplane.dataref_search_toggle', emboss = True, icon = "VIEWZOOM")
             else:
                 box.prop(obj.xplane.manip, 'dataref1')
                 box.prop(obj.xplane.manip, 'dataref2')
-                box.operator('xplane.dataref_search', emboss = True, icon = "VIEWZOOM")
+                box.operator('xplane.dataref_search_toggle', emboss = True, icon = "VIEWZOOM")
 
         # drag axis lenghts
         if manipType in (MANIP_DRAG_XY, MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
@@ -940,32 +951,32 @@ class XPlaneError(bpy.types.Operator):
         row.label(text = self.msg_type+': '+self.msg_text)
 
 
-class XPlaneDatarefSearch(bpy.types.Operator):
-    bl_label = 'Search for Dataref'
-    bl_description = 'Search for X-Plane dataref. (LR does not own or provide support for SimInnovations. Use at own risk.)'
-    bl_idname = 'xplane.dataref_search'
+class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
+    '''
+    This operator very simply passes it's associated dataref to the search window, which then opens it in the UI. 
+    '''
+    bl_label = 'Open/Close Dataref Search Window'
+    bl_description = 'Open/Close Dataref Search Window'
+    bl_idname = 'xplane.dataref_search_toggle'
 
-    paired_dataref_prop_idx = bpy.props.IntProperty()
+    # Each operator is placed next to a dataref string property,
+    # 
+    paired_dataref_prop = bpy.props.StringProperty()
     def execute(self, context):
-        prop_idx = context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx
+        dataref_search_window_state = context.scene.xplane.dataref_search_window_state
+        prop = dataref_search_window_state.dataref_prop_dest
 
-        
         #Toggle ourselves
-        if prop_idx == self.paired_dataref_prop_idx:
-            context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx = -1
+        if prop == self.paired_dataref_prop:
+            dataref_search_window_state.dataref_prop_dest = "" 
         else:
-            context.scene.xplane.dataref_search_window_state.current_dataref_prop_idx = self.paired_dataref_prop_idx
+            dataref_search_window_state.dataref_prop_dest = self.paired_dataref_prop
 
         return {'FINISHED'}
 
 # Function: addXPlaneUI
 # Registers all UI Panels.
 def addXPlaneUI():
-#    datarefs = parseDatarefs()
-#
-#    for dataref in datarefs:
-#        prop = bpy.data.scenes[0].xplane_datarefs.add()
-#        prop.name = dataref
     bpy.utils.register_class(BONE_PT_xplane)
     bpy.utils.register_class(LAMP_PT_xplane)
     bpy.utils.register_class(MATERIAL_PT_xplane)
@@ -973,7 +984,7 @@ def addXPlaneUI():
     bpy.utils.register_class(SCENE_PT_xplane)
     bpy.utils.register_class(XPlaneMessage)
     bpy.utils.register_class(XPlaneError)
-    bpy.utils.register_class(XPlaneDatarefSearch)
+    bpy.utils.register_class(XPLANE_OT_DatarefSearchToggle)
 
 # Function: removeXPlaneUI
 # Unregisters all UI Panels.
@@ -985,4 +996,4 @@ def removeXPlaneUI():
     bpy.utils.unregister_class(SCENE_PT_xplane)
     bpy.utils.unregister_class(XPlaneMessage)
     bpy.utils.unregister_class(XPlaneError)
-    bpy.utils.unregister_class(XPlaneDatarefSearch)
+    bpy.utils.unregister_class(XPLANE_OT_DatarefSearchToggle)

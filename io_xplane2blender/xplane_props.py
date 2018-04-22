@@ -339,14 +339,6 @@ class XPlaneCondition(bpy.types.PropertyGroup):
         default = True
     )
 
-# Class: XPlaneDatarefSearch
-#
-#class XPlaneDatarefSearchBox(bpy.types.PropertyGroup):
-#    path = bpy.props.StringProperty(attr = "path",
-#                                    name = "Dataref path",
-#                                    description = "XPlane Dataref path",
-#                                    default = "")
-
 # Class: XPlaneManipulator
 # A X-Plane manipulator settings
 #
@@ -1007,9 +999,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 # The props used for stringing the UI together are not really part of the data model. No one's work will depend on the state of the search pane,
 # so we put them here so they are more free to change.
 # The unit felt complete enough to dedicate to it's own file. The dataref parsing logic may one day be abstraacted to its own utility script
-class CachedFilterFlag(bpy.types.PropertyGroup):
-    cached_flt_flag = bpy.props.IntProperty()
-
 class UL_DatarefSearchList(bpy.types.UIList):
     import io_xplane2blender.xplane_utils.xplane_datarefs_txt_parser
 
@@ -1077,22 +1066,6 @@ class UL_DatarefSearchList(bpy.types.UIList):
         return flt_flags, flt_neworder
 
 
-    #TODO: Need consistent naming key. datarefs_prop when talking about the prop. datarefs_search when talking about the search function, etc
-    paired_datarefs_search_list_idx = bpy.props.IntProperty(name="Choose Dataref Index", description="The index of the XPlane Dataref Search List this operator is place in")
-    def execute(self,context):
-        xplane = context.scene.xplane
-        datarefs_prop_idx = xplane.dataref_search_window_state.current_dataref_prop_idx
-        datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
-        print("datarefs_prop_idx: {}, datarefs_search_list: {}, paired_datarefs_search_list_idx: {}".format(datarefs_prop_idx,datarefs_search_list,self.paired_datarefs_search_list_idx))
-        assert datarefs_prop_idx != -1, "should not be able to click button when search window is supposed to be closed"
-        #TODO: Since ARMATURE,LAMP,OBJECT,BONE all have an xplane.datarefs prop, we can keep this simple.
-        # We just need to tell when a person is focusing on a Bone or Armature
-        context.active_object.xplane.datarefs[datarefs_prop_idx].path = datarefs_search_list[self.paired_datarefs_search_list_idx].dataref_path
-
-        #Close the search box when you're done selecting. Comment out for testing purposes
-        xplane.dataref_search_window_state.current_dataref_prop_idx = -1 
-        return {'FINISHED'}
-
 class DatarefListItem(bpy.types.PropertyGroup):
     '''
     This is essentially a copy of xplane_datarefs_txt_parser.DatarefInfoStruct's members
@@ -1124,10 +1097,14 @@ class DatarefListItem(bpy.types.PropertyGroup):
 
 
 class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
-    current_dataref_prop_idx = bpy.props.IntProperty(
-            default=-1,
-            name="Current Dataref Property Index",
-            description="The index of the last 'Open/Closed' button pressed in datarefs collection property. -1 if SearchWindow is now closed"
+    # This is only set through a DatarefSeachToggle's action.
+    # It should be the full path to the dataref property to change,
+    # as if it were being put into the Python console.
+    # For instance: "bpy.context.active_object.xplane.datarefs[0].path"
+    dataref_prop_dest = bpy.props.StringProperty(
+            default="",
+            name="Current Dataref Property To Change",
+            description="The destination dataref property, starting with 'bpy.context...'"
     )
 
     def onclick_dataref(self,context):
@@ -1135,17 +1112,40 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
         This method is called when the template_list uilist writes to the current selected index as the user selects.
         We dig out our stashed search info, write the dataref, and clear the current search, zapping out the UI.
         '''
+
         xplane = context.scene.xplane
-        datarefs_prop_idx = xplane.dataref_search_window_state.current_dataref_prop_idx
+        datarefs_prop_dest = xplane.dataref_search_window_state.dataref_prop_dest
         datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
-        print("datarefs_prop_idx: {}, datarefs_search_list: {}, paired_datarefs_search_list_idx: {}".format(datarefs_prop_idx,datarefs_search_list,self.dataref_search_list_idx))
-        assert datarefs_prop_idx != -1, "should not be able to click button when search window is supposed to be closed"
-        context.active_object.xplane.datarefs[datarefs_prop_idx].path = datarefs_search_list[self.dataref_search_list_idx].dataref_path
-        xplane.dataref_search_window_state.current_dataref_prop_idx = -1
+        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
+        path = datarefs_search_list[self.dataref_search_list_idx].dataref_path
+        assert datarefs_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
+        def getattr_recursive(obj,names):
+            '''This automatically expands [] operators'''
+            if len(names) == 1:
+                if '[' in names[0]:
+                    name = names[0]
+                    collection_name = name[:name.find('[')]
+                    index = name[name.find('[')+1:-1]
+                    return getattr(obj,collection_name)[int(index)]
+                else:
+                    return getattr(obj,names[0])
+            else:
+                if '[' in names[0]:
+                    name = names[0]
+                    collection_name = name[:name.find('[')]
+                    index = name[name.find('[')+1:-1]
+                    obj = getattr(obj,names[0])[int(index)]
+                else:
+                    obj = getattr(obj,names[0])
+                return getattr_recursive(obj,names[1:])
+
+        components = datarefs_prop_dest.split('.')
+        assert components[0] == "bpy"
+        setattr(getattr_recursive(bpy, components[1:-1]), components[-1], path)
+        xplane.dataref_search_window_state.dataref_prop_dest = "" 
 
     dataref_search_list = bpy.props.CollectionProperty(type=DatarefListItem)
     dataref_search_list_idx = bpy.props.IntProperty(update=onclick_dataref)
-
 #################################################################################################################################################
 
 # Class: XPlaneSceneSettings
@@ -1713,7 +1713,6 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 # Registers all properties.
 def addXPlaneRNA():
     # basic classes
-    bpy.utils.register_class(CachedFilterFlag)
     bpy.utils.register_class(DatarefListItem)
     bpy.utils.register_class(UL_DatarefSearchList)
     bpy.utils.register_class(XPlaneDatarefSearchWindow)
@@ -1771,7 +1770,6 @@ def addXPlaneRNA():
 # Function: removeXPlaneRNA
 # Unregisters all properties.
 def removeXPlaneRNA():
-    bpy.utils.unregister_class(CachedFilterFlag)
     bpy.utils.unregister_class(DatarefListItem)
     bpy.utils.unregister_class(UL_DatarefSearchList)
     bpy.utils.unregister_class(XPlaneDatarefSearchWindow)
