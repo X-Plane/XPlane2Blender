@@ -936,6 +936,72 @@ def weight_layout(self, obj):
     if obj.xplane.override_weight:
         row.prop(obj.xplane, 'weight')
 
+class UL_DatarefSearchList(bpy.types.UIList):
+    import io_xplane2blender.xplane_utils.xplane_datarefs_txt_parser
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
+
+        # Ben says: this is a total hack.  By just BASHING the filter, we open it always, rather than making the user open it.
+        # Sadly there's no sane way to open the filter programmatically because Blender - the UI never gets access to the UIList
+        # derivative, and we don't know its constructor syntax to override it.
+        self.use_filter_show=True
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            # This code makes labels - highlighting the label acts like a click via trickery
+            layout.alignment = "EXPAND"
+            row = layout.row(align=True)
+            row.alignment = "LEFT"
+            row.label(item.dataref_path, icon="NONE")
+            row.label("|")
+            row.label(item.dataref_type, icon="NONE")
+            row.label("|")
+            row.label(item.dataref_is_writable, icon="NONE")
+            row.label("|")
+            row.label(item.dataref_units, icon="NONE")
+            return
+
+        elif self.layout_type in {'GRID'}:
+            pass
+
+    def draw_filter(self, context, layout):
+       row = layout.row()
+       subrow = row.row(align=True)
+       subrow.prop(self, "filter_name", text="")
+
+    # Called once to filter/reorder items.
+    def filter_items(self, context, data, propname):
+        flt_flags = []
+        flt_neworder = []
+        
+        filter_name = self.filter_name
+        if filter_name == "":
+            return flt_flags,flt_neworder
+        
+        #Search info:
+        # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
+        # A dataref must match at least one search in all searches, and must partially match each search term        
+        search_info = []
+        for search in filter_name.upper().split('|'):
+            search_info.append(frozenset(search.split(' ')))
+        search_info = set(search_info)
+
+        def check_dref(dataref_path:str, search_info:List[str])->bool:
+            upper_dref = dataref_path.upper()
+            for search in search_info:
+                for search_term in search:
+                    if not search_term in upper_dref:
+                        break
+                else:
+                    return True
+            return False
+
+        for dref in bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list:
+            if check_dref(dref.dataref_path, search_info):
+                flt_flags.append(self.bitflag_filter_item)
+            else:
+                flt_flags.append(0 << 0)
+
+        return flt_flags, flt_neworder
+
 class XPlaneMessage(bpy.types.Operator):
     bl_idname = 'xplane.msg'
     bl_label = 'XPlane2Blender message'
@@ -975,29 +1041,6 @@ class XPlaneError(bpy.types.Operator):
         row.label(text = self.msg_type+': '+self.msg_text)
 
 
-class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
-    '''
-    This operator very simply passes it's associated dataref to the search window, which then opens it in the UI. 
-    '''
-    bl_label = 'Open/Close Dataref Search Window'
-    bl_description = 'Open/Close Dataref Search Window'
-    bl_idname = 'xplane.dataref_search_toggle'
-
-    # Each operator is placed next to a dataref string property,
-    # 
-    paired_dataref_prop = bpy.props.StringProperty()
-    def execute(self, context):
-        dataref_search_window_state = context.scene.xplane.dataref_search_window_state
-        prop = dataref_search_window_state.dataref_prop_dest
-
-        #Toggle ourselves
-        if prop == self.paired_dataref_prop:
-            dataref_search_window_state.dataref_prop_dest = "" 
-        else:
-            dataref_search_window_state.dataref_prop_dest = self.paired_dataref_prop
-
-        return {'FINISHED'}
-
 # Function: addXPlaneUI
 # Registers all UI Panels.
 def addXPlaneUI():
@@ -1006,9 +1049,10 @@ def addXPlaneUI():
     bpy.utils.register_class(MATERIAL_PT_xplane)
     bpy.utils.register_class(OBJECT_PT_xplane)
     bpy.utils.register_class(SCENE_PT_xplane)
-    bpy.utils.register_class(XPlaneMessage)
+
+    bpy.utils.register_class(UL_DatarefSearchList)
     bpy.utils.register_class(XPlaneError)
-    bpy.utils.register_class(XPLANE_OT_DatarefSearchToggle)
+    bpy.utils.register_class(XPlaneMessage)
 
 # Function: removeXPlaneUI
 # Unregisters all UI Panels.
@@ -1018,6 +1062,8 @@ def removeXPlaneUI():
     bpy.utils.unregister_class(MATERIAL_PT_xplane)
     bpy.utils.unregister_class(OBJECT_PT_xplane)
     bpy.utils.unregister_class(SCENE_PT_xplane)
-    bpy.utils.unregister_class(XPlaneMessage)
+
+    bpy.utils.unregister_class(UL_DatarefSearchList)
     bpy.utils.unregister_class(XPlaneError)
-    bpy.utils.unregister_class(XPLANE_OT_DatarefSearchToggle)
+    bpy.utils.unregister_class(XPlaneMessage)
+
