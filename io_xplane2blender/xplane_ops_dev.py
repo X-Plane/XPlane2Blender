@@ -17,25 +17,6 @@ class SCENE_OT_dev_create_lights_txt_summary(bpy.types.Operator):
     bl_description = "Create a text block listing all known lights and attributes about them"
     
     def execute(self,context):
-        # Why have I temporarily stuck this here? Because it is 3 in the morning and I am sick of trying to find the "Nice perfect place" Blender wants me to have to test integrating this stuff in.
-        # The filter function uses our the python data model and the blender property, kept in line, then filters.
-        # (TODO is this needed? Can we just stick everything in dataref_search_list and be done with it? Filtering doesn't mutate the list, right....?
-        # So, we must simulate creating the python data model and feeding it to our list.
-        # Apparently and who knows why(!!!) you can't do it in __init__.py after the call to register.
-        # Maybe I missed something or maybe ghosts infected my CPU at the wrong moment, but I could not get sanity to return in that instance.
-        # This is convienent. This is temporary. Moving on.
-        file_content = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(os.path.join(xplane_helpers.get_plugin_resources_folder(),"DataRefs.txt"))
-
-        for dref_info in file_content:
-            bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list.add()
-            print(dref_info)
-            bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list[-1].dataref_path = dref_info.path
-            bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list[-1].dataref_type = dref_info.type
-            bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list[-1].dataref_is_writable = dref_info.is_writable
-            bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list[-1].dataref_units = dref_info.units
-            bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list[-1].dataref_description = dref_info.description
-
-        return {'FINISHED'}
         xplane_lights_txt_parser.parse_lights_file()
         # Use an internal text file called "Manipulator Type Differeces
         filename = "lights.txt Summary"

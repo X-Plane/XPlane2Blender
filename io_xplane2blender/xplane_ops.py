@@ -626,6 +626,19 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
     paired_dataref_prop = bpy.props.StringProperty()
     def execute(self, context):
         dataref_search_window_state = context.scene.xplane.dataref_search_window_state
+        #Load on first use
+        if len(dataref_search_window_state.dataref_search_list) == 0:
+            file_content = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(os.path.join(xplane_helpers.get_plugin_resources_folder(),"DataRefs.txt"))
+            dataref_search_list = bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list
+
+            for dref_info in file_content:
+                dataref_search_list.add()
+                dataref_search_list[-1].dataref_path = dref_info.path
+                dataref_search_list[-1].dataref_type = dref_info.type
+                dataref_search_list[-1].dataref_is_writable = dref_info.is_writable
+                dataref_search_list[-1].dataref_units = dref_info.units
+                dataref_search_list[-1].dataref_description = dref_info.description
+
         prop = dataref_search_window_state.dataref_prop_dest
 
         #Toggle ourselves
