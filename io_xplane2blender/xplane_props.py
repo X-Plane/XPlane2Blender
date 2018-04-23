@@ -1134,7 +1134,7 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
                     name = names[0]
                     collection_name = name[:name.find('[')]
                     index = name[name.find('[')+1:-1]
-                    obj = getattr(obj,names[0])[int(index)]
+                    obj = getattr(obj,collection_name)[int(index)]
                 else:
                     obj = getattr(obj,names[0])
                 return getattr_recursive(obj,names[1:])

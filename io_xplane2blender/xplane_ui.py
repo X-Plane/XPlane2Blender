@@ -616,9 +616,19 @@ def material_layout(self, obj):
         row.prop(obj.xplane, "lightLevel_v2")
         row = box.row()
         row.prop(obj.xplane, "lightLevel_dataref")
-        row = box.row()
-        row.operator('xplane.dataref_search_toggle', emboss = True, icon = "VIEWZOOM")
-        dataref_search_window_layout(self,row)
+
+        scene = bpy.context.scene
+        expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
+        if expanded:
+            our_icon = "ZOOM_OUT"
+        else:
+            our_icon = "ZOOM_IN"
+        dataref_search_toggle_op = row.operator('xplane.dataref_search_toggle', text = "", emboss = False, icon = our_icon)
+        dataref_search_toggle_op.paired_dataref_prop = "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
+
+        # Finally, in the next row, if we are expanded, build the entire search list.
+        if expanded:
+            dataref_search_window_layout(box)
 
     ll_box_column.row()
     if not canPreviewEmit(obj):
@@ -804,14 +814,28 @@ def manipulator_layout(self, obj):
         box.prop(obj.xplane.manip, 'tooltip', text="Tooltip")
 
         manipType = obj.xplane.manip.type
+
+        def show_dataref_search_window_pairing(box, dataref_prop_name:str):
+            row = box.row()
+            row.prop(obj.xplane.manip, dataref_prop_name)
+            scene = bpy.context.scene
+            expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == "bpy.context.active_object.xplane.manip." + dataref_prop_name
+            if expanded:
+                our_icon = "ZOOM_OUT"
+            else:
+                our_icon = "ZOOM_IN"
+            dataref_search_toggle_op = row.operator('xplane.dataref_search_toggle', text = "", emboss = False, icon = our_icon)
+            dataref_search_toggle_op.paired_dataref_prop = "bpy.context.active_object.xplane.manip." + dataref_prop_name
+            # Finally, in the next row, if we are expanded, build the entire search list.
+            if expanded:
+                dataref_search_window_layout(box)
+
         if manipType not in (MANIP_COMMAND, MANIP_COMMAND_AXIS, MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
             if manipType != MANIP_DRAG_XY:
-                box.prop(obj.xplane.manip, 'dataref1')
-                box.operator('xplane.dataref_search_toggle', emboss = True, icon = "VIEWZOOM")
+                show_dataref_search_window_pairing(box,"dataref1")
             else:
-                box.prop(obj.xplane.manip, 'dataref1')
-                box.prop(obj.xplane.manip, 'dataref2')
-                box.operator('xplane.dataref_search_toggle', emboss = True, icon = "VIEWZOOM")
+                show_dataref_search_window_pairing(box,"dataref1")
+                show_dataref_search_window_pairing(box,"dataref2")
 
         # drag axis lenghts
         if manipType in (MANIP_DRAG_XY, MANIP_DRAG_AXIS, MANIP_COMMAND_AXIS):
