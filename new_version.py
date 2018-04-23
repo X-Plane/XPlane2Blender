@@ -1,4 +1,3 @@
-raise Exception
 import argparse
 import os
 import sys
@@ -7,6 +6,16 @@ import subprocess
 
 from io_xplane2blender.xplane_helpers import VerStruct
 
+parser = argparse.ArgumentParser(description='Change the version number information of XPlane2Blender')
+parser.parse_args()
+
+--source_folder
+--version_major
+--version_minor
+--etc,etc
+raise Exception
+
+'''
 def execCmd(args):
     out = subprocess.check_output(args, stderr = subprocess.STDOUT)
 
@@ -28,8 +37,6 @@ f = open(filepath, 'r')
 initFile = f.read()
 f.close()
 
-parser = argparse.ArgumentParser(description='Change the version number information of XPlane2Blender')
-parser.add_argument(
 
 import collections
 
@@ -77,3 +84,4 @@ f.close()
 print(execCmd(['git', 'add', 'io_xplane2blender/__init__.py']))
 print(execCmd(['git', 'commit', '-m', 'v%s' % version]))
 print(execCmd(['git', 'tag', 'v%s' % version]))
+'''
