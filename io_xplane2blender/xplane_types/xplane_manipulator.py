@@ -1046,7 +1046,7 @@ class XPlaneManipulator():
                     self.manip.dataref1,
                     self.manip.tooltip
                 )
-            elif self.type in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
+            elif self.type in (MANIP_AXIS_KNOB, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
                 value = (
                     self.manip.cursor,
                     self.manip.v1,
