@@ -628,7 +628,13 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
         dataref_search_window_state = context.scene.xplane.dataref_search_window_state
         #Load on first use
         if len(dataref_search_window_state.dataref_search_list) == 0:
-            file_content = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(os.path.join(xplane_helpers.get_plugin_resources_folder(),"DataRefs.txt"))
+            get_datarefs_txt_result = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(os.path.join(xplane_helpers.get_plugin_resources_folder(),"DataRefs.txt"))
+            if isinstance(get_datarefs_txt_result,str):
+                bpy.ops.xplane.error('INVOKE_DEFAULT',msg_text=get_datarefs_txt_result)
+                return {'CANCELLED'}
+            else:
+                file_content = get_datarefs_txt_result
+
             dataref_search_list = bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list
 
             for dref_info in file_content:

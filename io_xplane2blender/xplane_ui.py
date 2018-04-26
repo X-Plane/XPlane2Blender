@@ -1023,23 +1023,23 @@ class XPlaneMessage(bpy.types.Operator):
 
 class XPlaneError(bpy.types.Operator):
     bl_idname = 'xplane.error'
-    bl_label = 'XPlane2Blender error'
+    bl_label = 'XPlane2Blender Error'
     msg_type = bpy.props.StringProperty(default = 'ERROR')
     msg_text = bpy.props.StringProperty(default = '')
+    report_text = bpy.props.StringProperty(default = '')
 
     def execute(self, context):
-        # self.report({self.msg_type}, self.msg_text)
+        self.report({self.msg_type}, self.report_text)
         return {'FINISHED'}
 
     def invoke(self, context, event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self)
+        return wm.invoke_props_dialog(self,width=400)
 
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        row.label(text = self.msg_type+': '+self.msg_text)
-
+        row.label(text=self.msg_text,icon="ERROR")
 
 # Function: addXPlaneUI
 # Registers all UI Panels.
