@@ -1,5 +1,6 @@
 # File: xplane_ops.py
 # Defines Operators
+import pathlib
 
 import bpy
 from .xplane_config import *
@@ -628,9 +629,11 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
         dataref_search_window_state = context.scene.xplane.dataref_search_window_state
         #Load on first use
         if len(dataref_search_window_state.dataref_search_list) == 0:
-            get_datarefs_txt_result = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(os.path.join(xplane_helpers.get_plugin_resources_folder(),"DataRefs.txt"))
+            filepath=pathlib.Path(xplane_helpers.get_plugin_resources_folder(),"DataRefs.txt")
+            get_datarefs_txt_result = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(filepath.as_posix())
             if isinstance(get_datarefs_txt_result,str):
-                bpy.ops.xplane.error('INVOKE_DEFAULT',msg_text=get_datarefs_txt_result)
+                short_filepath = "..."+os.path.sep.join(filepath.parts[-3:])
+                bpy.ops.xplane.error('INVOKE_DEFAULT',msg_text=short_filepath + " could not be parsed", report_text=get_datarefs_txt_result)
                 return {'CANCELLED'}
             else:
                 file_content = get_datarefs_txt_result
