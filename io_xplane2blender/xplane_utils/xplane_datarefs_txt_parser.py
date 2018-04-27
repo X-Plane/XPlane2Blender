@@ -83,7 +83,6 @@ def parse_datarefs_txt(filepath: str)->Union[List[DatarefInfoStruct],str]:
         with open(filepath) as dref_file:
             file_contents = []
             for i,line in enumerate(dref_file):
-                print(line)
                 if i == 0:
                     if re.match("^[0-9] [0-9]+",line):
                         continue
