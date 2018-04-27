@@ -25,7 +25,7 @@ type: The word int, float, double, or btye optionally followed by [#] making it 
       For instance int[24] is ``an array of 24 ints``
 writable: A single y or n
 units: Zero or more non-whitespace characters
-description: Zero or more non-whitespace characters
+description: Zero or more characters
 """
 class DatarefInfoStruct():
     def __init__(self,path:str,type:str,is_writable:str,units:Optional[str],description:Optional[str]):
@@ -53,11 +53,11 @@ class DatarefInfoStruct():
             return "Path must be one or more non-whitespace character"
 
         if re.match(r"^(int|float|double|byte)", self.type) is None:
-            return "Type '{}' is must be an int, float, double, or byte".format(self.type)
+            return "Type '{}' must be an int, float, double, or byte".format(self.type)
         if '[' in self.type:
             match = re.match(r"^(int|float|double|byte)(\[.*\])", self.type)
             if match is None:
-                return "Array type '{}' must formatted as 'datatype[index]', where datatype is a valid type and index is one or more digits".format(self.type)
+                return "Array type '{}' must be formatted as 'datatype[index]', where datatype is a valid type and index is one or more digits".format(self.type)
             else:
                 match = re.match(r"\[\d+\]",match.groups()[1])
                 if match is None:
@@ -84,16 +84,22 @@ def parse_datarefs_txt(filepath: str)->Union[List[DatarefInfoStruct],str]:
             file_contents = []
             for i,line in enumerate(dref_file):
                 if i == 0:
-                    if re.match("^[0-9] [0-9]+",line):
+                    match = re.match("^([0-9]) [0-9]+(\s+|$)",line)
+                    if match:
+                        if match.group(1) != '2':
+                            return "File version number '{}' is not 2".format(match.group(1))
                         continue
                     else:
-                        return shorten_path(filepath) + " does not have a valid file format line: {}".format(line)
+                        return "File format line is invalid: '{}'".format(line)
 
                 if i == 1:
                     if line == "\n":
                         continue
                     else:
-                        return shorten_path(filepath) + " does not have a blank line for its second line"
+                        return "Does not have a blank line for its second line"
+
+                if re.match("^\s+",line):
+                    return "Line {} cannot start with whitespace".format(i)
 
                 segments = [segment.strip() for segment in line.strip().split(sep=None,maxsplit=4)]
                 info_struct_params = [""] * 5
@@ -105,7 +111,7 @@ def parse_datarefs_txt(filepath: str)->Union[List[DatarefInfoStruct],str]:
                     return "Line {}, '{}' is invalid: {}".format(i+1,line.strip().replace('\t','    '),dataref_info_struct.is_invalid())
 
             if len(file_contents) == 0:
-                return shorten_path(filepath) + " has no datarefs in it"
+                return "File has no datarefs in it"
 
             _datarefs_txt_content[filepath] = file_contents
             return _datarefs_txt_content[filepath]
