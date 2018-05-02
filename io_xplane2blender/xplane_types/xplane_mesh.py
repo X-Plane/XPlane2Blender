@@ -1,4 +1,6 @@
 import array
+import time
+
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
@@ -338,11 +340,25 @@ class XPlaneMesh():
     # Returns:
     #   string - The OBJ vertex table.
     def writeVertices(self):
+        o = ''
+        print("Begin XPlaneMesh.writeVertices")
+        start = time.perf_counter()
         debug = getDebug()
 
-        arr = array.array('f')
-        arr.extend([round(component,8) for vertice in self.vertices for component in vertice])
-        return arr
+        arr = array.array('f', [round(component,8) for vertice in self.vertices for component in vertice])
+
+        if debug:
+            s = "VT\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t# %d\n"
+        else:
+            s = "VT\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n"
+
+        if debug:
+            o += ''.join([s % (*arr[i:i+8],int(i/8)) for i in range(0,len(arr),8)])
+        else:
+            o += ''.join([s % (*arr[i:i+8],) for i in range(0,len(arr),8)])
+
+        print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
+        return o
 
     # Method: writeIndices
     # Returns the OBJ indices table by itering <indices>.
@@ -376,32 +392,12 @@ class XPlaneMesh():
 
     def write(self):
         o = ''
-        import time
-        print("Begin xplane_mesh.write")
-        start = time.perf_counter()
-        
-        debug = getDebug()
-        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
-        #import pydevd;pydevd.settrace()
-        
+        debug = False
+
         verticesOut = self.writeVertices()
-        s = "VT\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}"
-
-
-        if debug:
-            s += "\t# {}"
-        s += '\n'
-        
-        if debug:
-            formattedStrs =[s.format(verticesOut[i:i+8]) for i in range(0,len(verticesOut),8)]
-            o += ''.join([fstr + "\t# %d" % i for i,fstr in enumerate(formattedStrs)])
-        else:
-            o += ''.join([s.format(*verticesOut[i:i+8]) for i in range(0,len(verticesOut),8)])
-
+        o += verticesOut
         if len(verticesOut):
             o += '\n'
-
         o += self.writeIndices()
 
-        print("End xplane_mesh.write %f" % (time.perf_counter()-start))
         return o
