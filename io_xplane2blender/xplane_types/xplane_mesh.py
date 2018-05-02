@@ -1,3 +1,4 @@
+import array
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
@@ -338,23 +339,10 @@ class XPlaneMesh():
     #   string - The OBJ vertex table.
     def writeVertices(self):
         debug = getDebug()
-        o = ''
-        index = 0
 
-        for v in self.vertices:
-            # dump the vertex data
-            o += "VT"
-
-            for i in v:
-                o += "\t%s" % floatToStr(i)
-
-            if debug:
-                o += '\t# %d' % index
-
-            o += "\n"
-            index += 1
-
-        return o
+        arr = array.array('f')
+        arr.extend([round(component,8) for vertice in self.vertices for component in vertice])
+        return arr
 
     # Method: writeIndices
     # Returns the OBJ indices table by itering <indices>.
@@ -388,13 +376,32 @@ class XPlaneMesh():
 
     def write(self):
         o = ''
-
+        import time
+        print("Begin xplane_mesh.write")
+        start = time.perf_counter()
+        
+        debug = getDebug()
+        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
+        #import pydevd;pydevd.settrace()
+        
         verticesOut = self.writeVertices()
-        o += verticesOut
+        s = "VT\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}"
+
+
+        if debug:
+            s += "\t# {}"
+        s += '\n'
+        
+        if debug:
+            formattedStrs =[s.format(verticesOut[i:i+8]) for i in range(0,len(verticesOut),8)]
+            o += ''.join([fstr + "\t# %d" % i for i,fstr in enumerate(formattedStrs)])
+        else:
+            o += ''.join([s.format(*verticesOut[i:i+8]) for i in range(0,len(verticesOut),8)])
 
         if len(verticesOut):
             o += '\n'
 
         o += self.writeIndices()
 
+        print("End xplane_mesh.write %f" % (time.perf_counter()-start))
         return o

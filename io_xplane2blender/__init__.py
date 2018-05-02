@@ -64,6 +64,11 @@ def menu_func(self, context):
 # Function: register
 # Registers the addon with all its classes and the menu function.
 def register():
+    import sys
+    sys.path.append('C:\\Program Files\\Brainwy\\PyVmMonitor 1.1.2\\public_api')
+    import pyvmmonitor
+    pyvmmonitor.connect()
+    pyvmmonitor.profile_backends.start_profiling('yappi')
     xplane_props.addXPlaneRNA()
     xplane_ops.addXPlaneOps()
     xplane_ui.addXPlaneUI()
