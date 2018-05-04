@@ -25,7 +25,7 @@ class XPlaneMesh():
     # Constructor: __init__
     def __init__(self):
         self.vertices = []
-        self.indices = []
+        self.indices = array.array('i')
         self.faces = []
         self.globalindex = 0
         self.debug = []
