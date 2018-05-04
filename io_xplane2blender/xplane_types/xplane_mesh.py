@@ -345,17 +345,17 @@ class XPlaneMesh():
         start = time.perf_counter()
         debug = getDebug()
 
-        arr = array.array('f', [round(component,8) for vertice in self.vertices for component in vertice])
+        vt_array = array.array('f', [round(component,8) for vertice in self.vertices for component in vertice])
 
         if debug:
-            s = "VT\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t# %d\n"
+            vt_fmt = "VT\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t# %d\n"
         else:
-            s = "VT\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n"
+            vt_fmt = "VT\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n"
 
         if debug:
-            o += ''.join([s % (*arr[i:i+8],int(i/8)) for i in range(0,len(arr),8)])
+            o += ''.join([vt_fmt % (*vt_array[i:i+8],int(i/8)) for i in range(0,len(vt_array),8)])
         else:
-            o += ''.join([s % (*arr[i:i+8],) for i in range(0,len(arr),8)])
+            o += ''.join([vt_fmt % (*vt_array[i:i+8],) for i in range(0,len(vt_array),8)])
 
         print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
         return o
@@ -367,27 +367,18 @@ class XPlaneMesh():
     #   string - The OBJ indices table.
     def writeIndices(self):
         o=''
-        group = []
+        print("Begin XPlaneMesh.writeIndices")
+        start = time.perf_counter()
 
-        for i in self.indices:
-            # append index to group if we havent collected 10 yet
-            if len(group) < 10:
-                group.append(i)
-            else:
-                # dump 10 indices at once
-                o += 'IDX10'
+        s_idx10 = "IDX10\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n"
+        s_idx   = "IDX\t%d\n"
+        partition_point = len(self.indices) - (len(self.indices) % 10)
 
-                for ii in group:
-                    o += "\t%d" % ii
+        if len(self.indices) >= 10:
+            o += ''.join([s_idx10 % (*self.indices[i:i+10],) for i in range(0,partition_point-1,10)])
 
-                o += "\n"
-                group = []
-                group.append(i)
-
-        # dump overhanging indices
-        for i in group:
-            o += "IDX\t%d\n" % i
-
+        o += ''.join([s_idx % (self.indices[i]) for i in range(partition_point,len(self.indices))])
+        print("End XPlaneMesh.writeIndices: " + str(time.perf_counter()-start))
         return o
 
     def write(self):
