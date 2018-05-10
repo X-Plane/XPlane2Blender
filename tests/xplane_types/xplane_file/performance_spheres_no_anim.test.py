@@ -17,7 +17,7 @@ class TestPerformanceSpheresNoAnim(XPlaneTestCase):
         end = time.perf_counter() - start
 
         filename = inspect.stack()[0][3]
-        print("Export time of {}: %{}".format(filename,end))
+        print("Export time of {}: {}".format(filename,end))
         MAX_TOTAL_CUMULATIVE_EXPORT_TIME = 63.0
         self.assertTrue((time.perf_counter()-start) < MAX_TOTAL_CUMULATIVE_EXPORT_TIME)
 
