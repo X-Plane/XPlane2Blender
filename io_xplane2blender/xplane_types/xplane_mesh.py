@@ -379,8 +379,8 @@ class XPlaneMesh():
         # WARNING! This is a hot path! So don't change it without profiling! #
         ######################################################################
         o=''
-        print("Begin XPlaneMesh.writeIndices")
-        start = time.perf_counter()
+        #print("Begin XPlaneMesh.writeIndices")
+        #start = time.perf_counter()
 
         s_idx10 = "IDX10\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n"
         s_idx   = "IDX\t%d\n"
@@ -390,7 +390,7 @@ class XPlaneMesh():
             o += ''.join([s_idx10 % (*self.indices[i:i+10],) for i in range(0,partition_point-1,10)])
 
         o += ''.join([s_idx % (self.indices[i]) for i in range(partition_point,len(self.indices))])
-        print("End XPlaneMesh.writeIndices: " + str(time.perf_counter()-start))
+        #print("End XPlaneMesh.writeIndices: " + str(time.perf_counter()-start))
         return o
 
     def write(self):

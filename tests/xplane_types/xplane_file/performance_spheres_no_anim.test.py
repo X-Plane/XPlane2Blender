@@ -18,6 +18,25 @@ class TestPerformanceSpheresNoAnim(XPlaneTestCase):
 
         filename = inspect.stack()[0][3]
         print("Export time of {}: {}".format(filename,end))
+        
+        # 63.0 was the high water mark on my laptop
+        # Using Blender 2.79, external Python 3.5.3 environment,
+        # I used PyVmMonitor that started and connceted in the addon's
+        # __init__ function, right at the beginning
+        #
+        # Total Cumulative Export Time
+        # Minimum: 52.5 seconds total
+        # Mean: ?
+        # Maximum: 63.0 seconds total, this is probably an outlier
+        #
+        # CPU - Intel Core i7 6700HQ @ 2.60GHz
+        # GPU - 3071 MB NVIDIA GeForce GTX 970M
+        # RAM - 16GB
+        # OS - 64 bit Win10 (bleh), with standard development tools and browser running
+        # no other large system hogs running at the time
+        #
+        # Travis CI seems to be able to export this in 42.0 to 44.00 seconds
+        # - Ted, 5/10/2018  
         MAX_TOTAL_CUMULATIVE_EXPORT_TIME = 63.0
         self.assertTrue((time.perf_counter()-start) < MAX_TOTAL_CUMULATIVE_EXPORT_TIME)
 
