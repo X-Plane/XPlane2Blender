@@ -352,7 +352,7 @@ class XPlaneMesh():
         vt_array = array.array('f', [round(component,8) for vertice in self.vertices for component in vertice])
         #Loop through every line, format it's 8 components, use rstrip, if statement for 10.00000000->10.0
         #52-60 seconds
-        for line in range(0,len(vt_array),8):
+        for i,line in enumerate(range(0,len(vt_array),8),1):
             o += b"VT"
             for component in  vt_array[line:line+8]:
                 sb = bytes("\t%.8f" % component,"utf-8").rstrip(b'0')
@@ -362,7 +362,7 @@ class XPlaneMesh():
                     o += sb
 
             if debug:
-                o += bytes("\t# %d\n" % line,"utf-8")
+                o += bytes("\t# %d\n" % i,"utf-8")
             else:
                 o += b"\n"
 
