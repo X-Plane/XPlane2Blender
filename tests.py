@@ -1,4 +1,4 @@
-import argparser
+import argparse
 import glob
 import os
 import re
@@ -17,83 +17,56 @@ LOGGER HAD X UNEXPECTED ERRORS
 The string is never indented. The formating of X is not specified, as long as it parses to an int
 """
 ERROR_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
-
-#One day if we need to have a strictness rating we can have it stop on warnings as well as errors
+# One day if we need to have a strictness rating we can have it stop on warnings as well as errors
 #WARNING_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED WARNING"
-if os.path.exists('./tests/tmp'):
-    # empty temp directory
-    shutil.rmtree('./tests/tmp',ignore_errors=True)
 
-# create temp dir if not exists
-os.makedirs('./tests/tmp')
+def clean_tmp_folder():
+    # TODO: This cannot run when the tmp folder is open
+    # in a file browser or is in use. This is annoying.
+    if os.path.exists('./tests/tmp'):
+        # empty temp directory
+        shutil.rmtree('./tests/tmp',ignore_errors=True)
 
-def getFlag(names):
-    for name in names:
-        if name in sys.argv:
-            return True
-    return False
+    # create temp dir if not exists
+    os.makedirs('./tests/tmp')
 
-def getOption(names, default):
-    index = -1
-
-    for name in names:
-            
-        try:
-            index = sys.argv.index(name)
-        except:
-            pass
-
-        if index > 0 and len(sys.argv) > index + 1:
-            return sys.argv[index + 1]
-
-    return default
-
-fileFilter = getOption(['-f','--filter'], None)
-exclude = getOption(['--exclude'], None)
-blenderExecutable = getOption(['--blender'], 'blender')
-debug = getFlag(['--debug'])
-keep_going = getFlag(['-c','--continue'])
-print_fails = getFlag(['-p','--print-fails'])
-be_quiet = getFlag(['-q', '--quiet']) or print_fails
-showHelp = getFlag(['--help'])
-no_factory_startup = getFlag(['-n', '--no-factory-startup'])
-
-def parse_arguments():
-    parser = argparser.ArgumentParser()
-    parser.add_argument("--debug",         
-            help="Enable debugging", 
-            action="store_true")
+def _make_argparse():
+    parser = argparse.ArgumentParser(description="Runs the XPlane2Blender test suite")
     parser.add_argument("-f", "--filter",   
             help="Filter test files with a regular expression", 
-            type=str, 
-            action="store_true")#[regex]
+            type=str)#[regex]
     parser.add_argument("--exclude",        
             help="Exclude test files with a regular expression", 
-            type=str, 
-            action="store_true")#[regex]
-    parser.add_argument("--debug",          
-            help="Enable debugging", 
-            action="store_true")#[regex]
+            type=str)#[regex]
     parser.add_argument("-c", "--continue", 
-            help="Keep running after test failure", 
-            action="store_true")
+            help="Keep running after a test failure", 
+            default=False,
+            action="store_true",
+            dest="keep_going")
     parser.add_argument("-q", "--quiet",    
-            help="Reduce output from tests", 
+            default=False,
+            help="Only output if tests pass or fail",
             action="store_true")
     parser.add_argument("-p", "--print-fails",        
-            help="Sets --quiet, but also prints the output of failed tests", 
+            default=False,
+            help="Like --quiet, but also prints the output of failed tests", 
+            action="store_true")
+    parser.add_argument("--debug",         
+            help="Enable Blender debugging", #Hopefully it could one day also enable pydev
             action="store_true")
     parser.add_argument("-n", "--no-factory-startup", 
             help="Run Blender with current prefs rather than factory prefs", 
             action="store_true")
-    parser.add_argument("--blender [path]", 
+    parser.add_argument("--blender",
+            default="blender",#Use the blender in the system path
+            type=str,
             help="Provide alternative path to blender executable")
-    args = parser.parse_args()
-    return args
+    return parser
 
 def main(argv=None):
+    clean_tmp_folder()
     if argv is None:
-        argv = parse_arguments()
+        argv = _make_argparse().parse_args(sys.argv[1:])
     exit_code = 0
 
     def printTestBeginning(text):
@@ -104,15 +77,13 @@ def main(argv=None):
         print(('=' *75)+"}}}*/")     
 
     def inFilter(filepath):
-        passes = False
+        passes = True
 
-        if fileFilter != None:
-            passes = (re.search(fileFilter, filepath))
-        else:
-            passes = True
+        if argv.filter != None:
+            passes &= bool(re.search(argv.filter, filepath))
 
-        if exclude != None:
-            passes = not (re.search(exclude, filepath))
+        if argv.exclude != None:
+            passes &= not (re.search(argv.exclude, filepath))
 
         return passes
 
@@ -124,25 +95,25 @@ def main(argv=None):
                 if inFilter(pyFile):
                     blendFile = pyFile.replace('.py', '.blend')
 
-                    if not be_quiet:
+                    if not (argv.quiet or argv.print_fails):
                         printTestBeginning("Running file " + pyFile)
 
-                    args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
+                    args = [argv.blender, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
-                    if no_factory_startup:
+                    if argv.no_factory_startup:
                         args.remove('--factory-startup')
 
                     if os.path.exists(blendFile):
                         args.append(blendFile)
                     else:
-                        if not be_quiet:
+                        if not (argv.quiet or argv.print_fails):
                             print("WARNING: Blender file " + blendFile + " does not exist")
                             printTestEnd()
 
                     args.append('--python')
                     args.append(pyFile)
 
-                    if debug:
+                    if argv.debug:
                         args.append('--debug')
 
                         # print the command used to execute the script
@@ -160,7 +131,7 @@ def main(argv=None):
                     else:
                         num_errors = (int(logger_matches.group(1)))
      
-                    if not be_quiet: 
+                    if not (argv.quiet or argv.print_fails): 
                         print(out)
                     
                     #Normalize line endings because Windows is dumb 
@@ -168,27 +139,29 @@ def main(argv=None):
                     out_lines = out.split('\n')
                     
                     #First line of output is unittest's sequece of dots, E's and F's
+                    #TODO: Except when it isn't like when a SyntaxError occurs and
+                    #the test appears to pass!
                     if 'E' in out_lines[0] or 'F' in out_lines[0] or num_errors != 0:
                         exit_code = 1
-                        if print_fails:
+                        if argv.print_fails:
                             printTestBeginning("Running file %s - FAILED" % (pyFile))
                             print(out)
                         else:
                             print('%s FAILED' % pyFile)
                         
-                        if print_fails:
+                        if argv.print_fails:
                             printTestEnd()
 
-                        if not keep_going:
+                        if not argv.keep_going:
                             return exit_code
-                    elif be_quiet:
+                    elif (argv.quiet or argv.print_fails):
                         print('%s passed' % pyFile)
                     
                     #THIS IS THE LAST THING TO PRINT BEFORE A TEST ENDS
                     #Its a little easier to see the boundaries between test suites,
                     #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
                     #Blender, and more in there sometimes
-                    if not be_quiet:
+                    if not argv.quiet:
                         printTestEnd()
     return exit_code 
 
