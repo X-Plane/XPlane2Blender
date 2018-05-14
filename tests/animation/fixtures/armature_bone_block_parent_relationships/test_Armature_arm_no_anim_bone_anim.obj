@@ -11,7 +11,7 @@ POINT_COUNTS	0	0	0	0
 		# 3 Object: arm_no_anim_bone_anim_parent_bone_lamp_anim
 		ANIM_begin
 		# static translation
-		ANIM_trans	0	5	5	0	5	5
+		ANIM_trans	-1	5	5	-1	5	5
 		# static rotation
 		ANIM_rotate	0	0	-1	-90.00020741	-90.00020741
 		ANIM_rotate	1	0	0	90.00020741	90.00020741
@@ -31,4 +31,4 @@ POINT_COUNTS	0	0	0	0
 		# LAMP: arm_no_anim_bone_anim_parent_bone_lamp_no_anim	weight: 10000
 		LIGHT_PARAM	airplane_landing_sp -1 5 5 1 1 1    0.00    800      0.9
 
-# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-beta.6+2.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.4.0-rc.1+3.NO_BUILD_NUMBR
