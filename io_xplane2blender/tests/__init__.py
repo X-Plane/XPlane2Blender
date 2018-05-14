@@ -114,7 +114,11 @@ class XPlaneTestCase(unittest.TestCase):
 
         return list(map(parseLine, filter(filterLine, map(str.strip, data.strip().split('\n')))))
 
-    def assertFilesEqual(self, a, b, filterCallback = None, floatTolerance = None):
+    def assertFilesEqual(self, a:str, b:str, filterCallback = None, floatTolerance = None):
+        '''
+        a and b should be the contents of files a and b as returned
+        from open(file).read()
+        '''
         def isnumber(d):
             return isinstance(d, float) or isinstance(d, int)
 
