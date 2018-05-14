@@ -1,4 +1,4 @@
-import argparse
+import optparse
 import glob
 import os
 import re
@@ -31,33 +31,33 @@ def clean_tmp_folder():
     os.makedirs('./tests/tmp')
 
 def _make_argparse():
-    parser = argparse.ArgumentParser(description="Runs the XPlane2Blender test suite")
-    parser.add_argument("-f", "--filter",   
+    parser = optparse.OptionParser(description="Runs the XPlane2Blender test suite")
+    parser.add_option("-f", "--filter",   
             help="Filter test files with a regular expression", 
             type=str)#[regex]
-    parser.add_argument("--exclude",        
+    parser.add_option("--exclude",        
             help="Exclude test files with a regular expression", 
             type=str)#[regex]
-    parser.add_argument("-c", "--continue", 
+    parser.add_option("-c", "--continue", 
             help="Keep running after a test failure", 
             default=False,
             action="store_true",
             dest="keep_going")
-    parser.add_argument("-q", "--quiet",    
+    parser.add_option("-q", "--quiet",    
             default=False,
             help="Only output if tests pass or fail",
             action="store_true")
-    parser.add_argument("-p", "--print-fails",        
+    parser.add_option("-p", "--print-fails",        
             default=False,
             help="Like --quiet, but also prints the output of failed tests", 
             action="store_true")
-    parser.add_argument("--debug",         
+    parser.add_option("--debug",         
             help="Enable Blender debugging", #Hopefully it could one day also enable pydev
             action="store_true")
-    parser.add_argument("-n", "--no-factory-startup", 
+    parser.add_option("-n", "--no-factory-startup", 
             help="Run Blender with current prefs rather than factory prefs", 
             action="store_true")
-    parser.add_argument("--blender",
+    parser.add_option("--blender",
             default="blender",#Use the blender in the system path
             type=str,
             help="Provide alternative path to blender executable")
@@ -66,7 +66,7 @@ def _make_argparse():
 def main(argv=None):
     clean_tmp_folder()
     if argv is None:
-        argv = _make_argparse().parse_args(sys.argv[1:])
+        argv, remaining_argv = _make_argparse().parse_args(sys.argv[1:])
     exit_code = 0
 
     def printTestBeginning(text):
