@@ -28,7 +28,7 @@ def _make_parser()->argparse.ArgumentParser:
             type=int,
             help="Sets the data model number to a number of your choice (which is not recommended!)"\
                  " Overrides auto-increment from use of version flags")
-    build_metadata_group.add_argument("--build_number",
+    build_metadata_group.add_argument("--build-number",
             type=int,
             help="Sets the build number to a number of your choice, instead of the current time in UTC."\
                  " Overrides auto-increment from use of version flags")
