@@ -6,6 +6,17 @@ from io_xplane2blender import xplane_constants
 
 # Variable: debug
 # Set to True for debugging output using <debugger>. Default is True, as we are still dealing with a development release.
+# ##############################################################################
+# # NOTICE!!!!                                                                 #
+# ##############################################################################
+# If you need debug output in a test you must enable call setDebug in your
+# test. Otherwise WAYYYYY too much debug output gets put in the test.
+# During a test, it is set to False unless the --debug flag is used.
+#
+# TODO: Having "Debug" in the .blend file then not produce debug output in the
+# test has caused me to re-debug and discover this anti pattern at least twice
+# now. This is stupid. Remove this stupid variable from the addon
+# 
 # TODO: This is a duplicate for bpy.context.scene.xplane.debug, no matter what you set here it won't matter. In addition,
 # at most of it's call sites, it is an unused variable. This really aught to be cleaned one day 
 debug = False
@@ -22,12 +33,12 @@ CURRENT_ADDON_VERSION = bl_info["version"]
 # Constant: CURRENT_BUILD_TYPE
 #
 # The current build type, must be a member of XPlane2BlenderVersion.BUILD_TYPE 
-CURRENT_BUILD_TYPE = xplane_constants.BUILD_TYPE_RC
+CURRENT_BUILD_TYPE = xplane_constants.BUILD_TYPE_DEV
 
 # Constant: CURRENT_BUILD_TYPE_VERSION
 #
 # The current build type version, must be > 0
-CURRENT_BUILD_TYPE_VERSION = 1
+CURRENT_BUILD_TYPE_VERSION = 0
 
 # Constant: CURRENT_DATA_MODEL_VERSION
 #
