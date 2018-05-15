@@ -59,6 +59,16 @@ class XPlaneKeyframe():
         self.location[0] = round(self.location[0],KEYFRAME_PRECISION)
         self.location[1] = round(self.location[1],KEYFRAME_PRECISION)
         self.location[2] = round(self.location[2],KEYFRAME_PRECISION)
+		
+        # Child bones with a parent and connection need to ignore the translation field -
+        # Blender disables it in the UI and ignores it but does NOT clear out old data,
+        # so we have to!
+        if self.xplaneBone.blenderBone:
+            if self.xplaneBone.blenderBone.use_connect and self.xplaneBone.blenderBone.parent:
+                self.location[0] = 0
+                self.location[1] = 0
+                self.location[2] = 0
+		
         self.rotation = None
         self.rotationMode = blenderObject.rotation_mode
 
