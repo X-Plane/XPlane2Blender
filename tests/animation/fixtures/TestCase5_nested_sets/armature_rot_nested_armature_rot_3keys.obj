@@ -72,7 +72,7 @@ IDX	35
 	ANIM_rotate_begin	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio[0]
 	ANIM_rotate_key	0	0
 	ANIM_rotate_key	0.5	0
-	ANIM_rotate_key	1	-19.99999259
+	ANIM_rotate_key	1	-19.99999088
 	ANIM_rotate_end
 		# 3 Object: Armature.003
 		# ARMATURE: Armature.003	weight: 0
@@ -104,4 +104,4 @@ IDX	35
 			ANIM_end
 	ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.4.0-rc.1+3.NO_BUILD_NUMBR

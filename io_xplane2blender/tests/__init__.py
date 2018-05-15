@@ -47,6 +47,10 @@ class XPlaneTestCase(unittest.TestCase):
         logger.clearTransports()
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
 
+    def assertMatricesEqual(self,mA,mB,tolerance=FLOAT_TOLERANCE):
+        for row_a,row_b in zip(mA,mB):
+            self.assertFloatVectorsEqual(row_a, row_b, tolerance)
+
     # Utility method to check if objects are contained in file
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
         for name in objectNames:
