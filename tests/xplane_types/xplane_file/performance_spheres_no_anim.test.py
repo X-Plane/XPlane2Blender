@@ -50,15 +50,15 @@ class TestPerformanceSpheresNoAnim(XPlaneTestCase):
         #print(out[0:1150]+'|\n')
         s = out[find_nth(out,"VT",1):find_nth(out,"\n",7)]
         #print(s)
-        #print("VT	0.16221175	0.55557019	-0.81549317	0.08653186	0.46962854	-0.87861329	0	0	# 1")
+        #print("VT	0.16221175	0.55557019	-0.81549317	0.08653186	0.46962854	-0.87861329	0	0	# 0")
 
         # This is all we need to confirm we're removing trailing 0s and making ints when possible
         self.assertTrue(s == \
-                "VT\t0.16221175\t0.55557019\t-0.81549317\t0.08653186\t0.46962854\t-0.87861329\t0\t0\t# 1")
+                "VT\t0.16221175\t0.55557019\t-0.81549317\t0.08653186\t0.46962854\t-0.87861329\t0\t0\t# 0")
         s = (out[find_nth(out,"VT",7):find_nth(out,"\n",14-1)])
         #print(s)
-        #print("VT	0.10838643	-0.83146966	-0.54489505	0.04637594	-0.88097215	-0.4708899	0	0	# 7")
+        #print("VT	0.10838643	-0.83146966	-0.54489505	0.04637594	-0.88097215	-0.4708899	0	0	# 6")
         self.assertTrue(s == \
-                "VT\t0.10838643\t-0.83146966\t-0.54489505\t0.04637594\t-0.88097215\t-0.4708899\t0\t0\t# 7")
+                "VT\t0.10838643\t-0.83146966\t-0.54489505\t0.04637594\t-0.88097215\t-0.4708899\t0\t0\t# 6")
 
 runTestCases([TestPerformanceSpheresNoAnim])
