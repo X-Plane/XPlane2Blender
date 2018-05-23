@@ -1,3 +1,7 @@
+import array
+import time
+import re
+
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
@@ -22,7 +26,7 @@ class XPlaneMesh():
     # Constructor: __init__
     def __init__(self):
         self.vertices = []
-        self.indices = []
+        self.indices = array.array('i')
         self.faces = []
         self.globalindex = 0
         self.debug = []
@@ -337,24 +341,33 @@ class XPlaneMesh():
     # Returns:
     #   string - The OBJ vertex table.
     def writeVertices(self):
+        ######################################################################
+        # WARNING! This is a hot path! So don't change it without profiling! #
+        ######################################################################
+        o = bytearray()
+        #print("Begin XPlaneMesh.writeVertices")
+        #start = time.perf_counter()
         debug = getDebug()
-        o = ''
-        index = 0
 
-        for v in self.vertices:
-            # dump the vertex data
-            o += "VT"
-
-            for i in v:
-                o += "\t%s" % floatToStr(i)
+        vt_array = array.array('f', [round(component,8) for vertice in self.vertices for component in vertice])
+        #Loop through every line, format it's 8 components, use rstrip, if statement for 10.00000000->10.0
+        #52-60 seconds
+        for i,line in enumerate(range(0,len(vt_array),8)):
+            o += b"VT"
+            for component in  vt_array[line:line+8]:
+                sb = bytes("\t%.8f" % component,"utf-8").rstrip(b'0')
+                if sb[-1] == 46:#'.':
+                    o += sb[:-1]
+                else:
+                    o += sb
 
             if debug:
-                o += '\t# %d' % index
+                o += bytes("\t# %d\n" % i,"utf-8")
+            else:
+                o += b"\n"
 
-            o += "\n"
-            index += 1
-
-        return o
+        #print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
+        return o.decode("utf-8")
 
     # Method: writeIndices
     # Returns the OBJ indices table by itering <indices>.
@@ -362,39 +375,32 @@ class XPlaneMesh():
     # Returns:
     #   string - The OBJ indices table.
     def writeIndices(self):
+        ######################################################################
+        # WARNING! This is a hot path! So don't change it without profiling! #
+        ######################################################################
         o=''
-        group = []
+        #print("Begin XPlaneMesh.writeIndices")
+        #start = time.perf_counter()
 
-        for i in self.indices:
-            # append index to group if we havent collected 10 yet
-            if len(group) < 10:
-                group.append(i)
-            else:
-                # dump 10 indices at once
-                o += 'IDX10'
+        s_idx10 = "IDX10\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n"
+        s_idx   = "IDX\t%d\n"
+        partition_point = len(self.indices) - (len(self.indices) % 10)
 
-                for ii in group:
-                    o += "\t%d" % ii
+        if len(self.indices) >= 10:
+            o += ''.join([s_idx10 % (*self.indices[i:i+10],) for i in range(0,partition_point-1,10)])
 
-                o += "\n"
-                group = []
-                group.append(i)
-
-        # dump overhanging indices
-        for i in group:
-            o += "IDX\t%d\n" % i
-
+        o += ''.join([s_idx % (self.indices[i]) for i in range(partition_point,len(self.indices))])
+        #print("End XPlaneMesh.writeIndices: " + str(time.perf_counter()-start))
         return o
 
     def write(self):
         o = ''
+        debug = False
 
         verticesOut = self.writeVertices()
         o += verticesOut
-
         if len(verticesOut):
             o += '\n'
-
         o += self.writeIndices()
 
         return o

@@ -64,6 +64,16 @@ class XPlaneKeyframe():
 
         self.location = mathutils.Vector([round(comp,KEYFRAME_PRECISION) for comp in copy.copy(blenderObject.location)])
         assert isinstance(self.location,mathutils.Vector)
+		
+        # Child bones with a parent and connection need to ignore the translation field -
+        # Blender disables it in the UI and ignores it but does NOT clear out old data,
+        # so we have to!
+        if self.xplaneBone.blenderBone:
+            if self.xplaneBone.blenderBone.use_connect and self.xplaneBone.blenderBone.parent:
+                self.location[0] = 0
+                self.location[1] = 0
+                self.location[2] = 0
+		
         self.rotationMode = blenderObject.rotation_mode
 
         # TODO: rotationMode should reside in keyframes collection as it is the same for each keyframe

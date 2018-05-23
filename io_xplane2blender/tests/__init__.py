@@ -48,6 +48,10 @@ class XPlaneTestCase(unittest.TestCase):
         logger.clear()
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
 
+    def assertMatricesEqual(self,mA,mB,tolerance=FLOAT_TOLERANCE):
+        for row_a,row_b in zip(mA,mB):
+            self.assertFloatVectorsEqual(row_a, row_b, tolerance)
+
     # Utility method to check if objects are contained in file
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
         for name in objectNames:
@@ -115,7 +119,11 @@ class XPlaneTestCase(unittest.TestCase):
 
         return list(map(parseLine, filter(filterLine, map(str.strip, data.strip().split('\n')))))
 
-    def assertFilesEqual(self, a, b, filterCallback = None, floatTolerance = None):
+    def assertFilesEqual(self, a:str, b:str, filterCallback = None, floatTolerance = None):
+        '''
+        a and b should be the contents of files a and b as returned
+        from open(file).read()
+        '''
         def isnumber(d):
             return isinstance(d, float) or isinstance(d, int)
 

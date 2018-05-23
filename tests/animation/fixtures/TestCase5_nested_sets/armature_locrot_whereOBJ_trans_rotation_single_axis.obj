@@ -75,9 +75,9 @@ ANIM_rotate_end
 	ANIM_trans_key	1	1	0	-2
 	ANIM_trans_end
 	# rotation keyframes
-	ANIM_rotate_begin	0.52725053	-0.63993257	-0.55901104	sim/cockpit2/engine/actuators/throttle_ratio[1]
+	ANIM_rotate_begin	0.52725059	-0.63993263	-0.55901104	sim/cockpit2/engine/actuators/throttle_ratio[1]
 	ANIM_rotate_key	0	0
-	ANIM_rotate_key	1	93.09822412
+	ANIM_rotate_key	1	93.09821729
 	ANIM_rotate_end
 		# 3 Object: Cube.007
 		# PRIMITIVE: Cube.007	weight: 0
@@ -87,4 +87,4 @@ ANIM_rotate_end
 	ANIM_end
 ANIM_end
 
-# Build with Blender 2.76 (sub 0) (build b'f337fea') Exported with XPlane2Blender 3.3.13
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.4.0-rc.1+3.NO_BUILD_NUMBR
