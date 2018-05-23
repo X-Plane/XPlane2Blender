@@ -17,8 +17,8 @@ People wishing to develop the plugin should the tutorial on Plugin Development i
 3. Using the file picker, find the .zip file and click "Install From File...". This will automatically unzip to the addons folder
 4. Ensure the checkbox next to the words "Import-Export: Export: X-Plane (.obj)" is checked
 5. Restart Blender even if you see the UI change and begin using XPlane2Blender!
-How to use:
------------
+
+## Documentation Sources
 - [XPlane2Blender Manual](https://der-on.gitbooks.io/xplane2blender-docs/content/)
 - [Dan Klaue's "Using Blender With PlaneMaker" Playlist](https://www.youtube.com/playlist?list=PLDB0F4B925CF9169C)
 - [X-Plane Scenery File Formats](http://developer.x-plane.com/docs/specs/)
@@ -26,9 +26,9 @@ How to use:
 - [X-Plane Scenery Developer Blog/Knowledge Base](http://developer.x-plane.com/)
 - [X-Plane Modeling Tutorials](http://developer.x-plane.com/docs/modeling/)
 
-
 ## Contact Us
 The best way to contact us is through [a bug report](https://github.com/der-On/XPlane2Blender/issues). Otherwise, e-mail ted at x-plane dot com, especially if you're worried about the security of your payware models while debugging them.
+
 ## Test Suite
 **The average user does not need the test suite.** Before releasing a build to the public we test the code many many many times! This is only useful for developers and power user who make changes to the source code.
 
