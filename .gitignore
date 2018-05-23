@@ -14,3 +14,8 @@ __pycache__
 *.orig
 
 *.zip
+
+.mypy_cache/*
+.idea/*
+.vs/*
+builds/*
