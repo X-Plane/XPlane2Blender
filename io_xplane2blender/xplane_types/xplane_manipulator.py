@@ -1210,6 +1210,7 @@ class XPlaneManipulator():
 
             # 4. All ATTR_manip_keyframes (DRAG_ROTATE)
             if self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
+                print(rotation_keyframe_table_cleaned)
                 if len(rotation_keyframe_table_cleaned[0][1]) > 2:
                     for rot_keyframe in rotation_keyframe_table_cleaned[0][1][1:-1]:
                         self.xplanePrimative.cockpitAttributes.add(

@@ -74,12 +74,20 @@ class XPlaneKeyframeCollection(MutableSequence):
                 refAxis    = None
                 refAxisInv = None
 
+                #For help with testing
+                use_rounding = True
+                use_0 = False # Toggles the negate only rotation[0] * -1
+
                 for keyframe in keyframes:
                     rotation = keyframe.rotation
 
                     def round_vector(vec,ndigits=5):
                         v = Vector([round(comp,ndigits) for comp in vec])
-                        return v
+                        if use_rounding:
+                            return v
+                        else:
+                            #Pass back without altering
+                            return vec
 
                     axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
 
@@ -98,7 +106,12 @@ class XPlaneKeyframeCollection(MutableSequence):
                     elif round_vector(refAxis) == round_vector(axis):
                         continue
                     elif round_vector(refAxisInv) == round_vector(axis):
-                        keyframe.rotation = rotation * -1
+                        if not use_0:
+                            keyframe.rotation = rotation * -1
+                        else:
+                            # Negate the rotation so that when we take the rotation with
+                            # the OTHER rotation’s axis, two wrongs make a right
+                            keyframe.rotation = (rotation[0]*-1, rotation[1], rotation[2], rotation[3])
                     else:
                         return _makeReferenceAxes(keyframes.asEuler())
 
