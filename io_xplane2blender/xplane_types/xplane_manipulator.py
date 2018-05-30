@@ -947,7 +947,6 @@ class XPlaneManipulator():
                     .getRotationKeyframeTableNoClamps()
 
                 rotation_axis = rotation_keyframe_table_cleaned[0][0]
-                print("ROTAXIS"+str(rotation_axis))
 
                 rotation_origin_xp = xplane_helpers.vec_b_to_x(rotation_origin)
                 rotation_axis_xp   = xplane_helpers.vec_b_to_x(rotation_axis)
@@ -1212,19 +1211,11 @@ class XPlaneManipulator():
 
             # 4. All ATTR_manip_keyframes (DRAG_ROTATE)
             if self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
-                #print("Rot_Table:")
-                #for row in (rotation_keyframe_table_cleaned):
-                    #print('\t{}'.format(row[0]))
-                    #for rr in row[1]:
-                        #print('\t{}'.format(rr))
-
                 if len(rotation_keyframe_table_cleaned[0][1]) > 2:
                     for rot_keyframe in rotation_keyframe_table_cleaned[0][1][1:-1]:
-                        #print("ATTR_manip_keyframe {} {}".format(rot_keyframe.value,rot_keyframe.degrees))
                         self.xplanePrimative.cockpitAttributes.add(   
                             XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
             # add mouse wheel delta
             if self.type in MANIPULATORS_MOUSE_WHEEL and bpy.context.scene.xplane.version >= VERSION_1050 and self.manip.wheel_delta != 0:
                 self.xplanePrimative.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', self.manip.wheel_delta))
-

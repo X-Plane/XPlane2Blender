@@ -43,11 +43,9 @@ class XPlaneKeyframeCollection(MutableSequence):
         # converting Quaternions->AA->Euler as needed
         def _makeReferenceAxes(keyframes):
             axes = []
-            #print(keyframes.getRotationMode())
             if keyframes.getRotationMode() == 'QUATERNION':
                 keyframes.toAA()
 
-            should_print = True
             if keyframes.getRotationMode() == 'AXIS_ANGLE':
                 refAxis    = None
                 refAxisInv = None
@@ -60,7 +58,6 @@ class XPlaneKeyframeCollection(MutableSequence):
                         return v
 
                     axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
-                    #axis = round_vector(rotation[1:4]) #TODO needed?
 
                     '''
                     This section covers the following cases
@@ -70,29 +67,20 @@ class XPlaneKeyframeCollection(MutableSequence):
                     - If at least two axis are different, we convert to Euler angles
                     '''
                     if rotation[0] == 0:
-                        #print('a')
                         continue
                     elif refAxis == None:
-                        #print('b')
                         refAxis = axis
                         refAxisInv = refAxis * -1
                     elif round_vector(refAxis) == round_vector(axis):
-                        #print('c')
                         continue
                     elif round_vector(refAxisInv) == round_vector(axis):
-                        #print('d')
-                        if should_print:
-                            #print("Negating")
-                            keyframe.rotation = rotation * -1
+                        keyframe.rotation = rotation * -1
                     else:
-                        #print('e')
-                        if should_print:
-                            print("Decomposing to Euler")
                         return _makeReferenceAxes(keyframes.toEuler())
 
+                #If our AA's W component was 0 the whole time, we need a default
                 if refAxis == None:
                     refAxis = mathutils.Vector((0, 0, 1))
-                #print("Out Ref Axis: {}".format(refAxis))
                 axes.append(refAxis)
             else:
                 try:
@@ -109,62 +97,7 @@ class XPlaneKeyframeCollection(MutableSequence):
             assert len([axis for axis in axes if not isinstance(axis,mathutils.Vector)]) == 0
             return axes, keyframes.getRotationMode()
 
-        rotation_mode = self.getRotationMode()
-
-        should_print = False
-        '''
-        #degrees = math.degrees
-        def degrees(n):
-            #shortcut to toggle degree vs rad through terrible lazyness
-            return n
-
-        self_before = copy.deepcopy(self._list)
-        
-        
-        if rotation_mode == 'QUATERNION':
-            keyframes = self.asQuaternion()
-            if should_print:
-                print("Q:keyframes before: \n{}".format([k.rotation for k in keyframes]))
-        elif rotation_mode == 'AXIS_ANGLE':
-            keyframes = self.asAA()
-            if should_print:
-                print("A:keyframes before: \n{}".format([k.rotation for k in keyframes]))
-        elif {'X','Y','Z'}  == set(rotation_mode):
-            keyframes = self.asEuler()
-            if should_print:
-                print("E:keyframes before:")
-                for s in [k.rotation for k in keyframes]:
-                    print('\t\t'+str([degrees(r) for r in [s.x,s.y,s.z]]))
-        else:
-            assert False, "%s is not a known rotation mode" % rotation_mode
-        '''
-
-        self._refAxisOut, final_rotation_mode  = _makeReferenceAxes(self)
-        #print(final_rotation_mode)
-        rotation_mode = self.getRotationMode()
-        #print(rotation_mode)
-
-        '''
-        if self_before != self._list:
-            if should_print:
-                print("self_before != self_after")
-                print("self before: {}".format([k.rotation for k in self_before]))
-                print("self after: {}".format([k.rotation for k in self._list]))
-        '''
-
-        if rotation_mode == 'QUATERNION':
-            if should_print:
-                print("Q:keyframes after:  {}".format([k.rotation for k in self._list]))
-        elif rotation_mode == 'AXIS_ANGLE':
-            if should_print:
-                print("A:keyframes after:  {}".format([k.rotation for k in self._list]))
-        elif {'X','Y','Z'}  == set(rotation_mode):
-            if should_print:
-                print("E:keyframes after:")
-                for s in [k.rotation for k in self._list]:
-                    print('\t\t'+str([math.degrees(r) for r in [s.x,s.y,s.z]]))
-        if should_print:
-            print("-----------------------------------------")
+        self._referenceAxes, final_rotation_mode  = _makeReferenceAxes(self)
 
     def __repr__(self):
         return "<{0} {1}>".format(self.__class__.__name__, self._list)
@@ -197,10 +130,8 @@ class XPlaneKeyframeCollection(MutableSequence):
         '''
         rotation_mode:str->List[Vector], str (final rotation mode)
         '''
-        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_6.3.2.201803171248\pysrc')
-        #import pydevd;pydevd.settrace()
 
-        return (self._refAxisOut, self.getRotationMode())
+        return (self._referenceAxes, self.getRotationMode())
 
     def getDataref(self):
         return self._list[0].dataref
