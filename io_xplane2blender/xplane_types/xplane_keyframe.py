@@ -87,8 +87,10 @@ class XPlaneKeyframe():
         bpy.context.scene.frame_set(frame = currentFrame)
 
     def __str__(self):
-        return "Value=%f Dataref=%s bone=%s rotation_mode=%s rot=(%f,%f,%f) location=(%f,%f,%f)" % (
-            self.value, self.dataref, self.bone, self.rotationMode,
+        #return "Value=%f Dataref=%s bone=%s rotation_mode=%s rot=(%f,%f,%f) location=(%f,%f,%f)" % (
+        #    self.value, self.dataref, TODO: Solve deepcopy problem, self.rotationMode,
+        return "Value=%f Dataref=%s rotation_mode=%s rot=(%f,%f,%f) location=(%f,%f,%f)" % (
+                self.value, self.dataref, self.rotationMode,
                 self.rotation[0],self.rotation[1],self.rotation[2],
                 self.location[0],self.location[1],self.location[2])
 
