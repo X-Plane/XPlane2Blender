@@ -521,7 +521,7 @@ def mesh_layout(self, obj):
 #
 # Parameters:
 #   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
+#   obj - Blender data object, the lamp itself
 def lamp_layout(self, obj):
     layout = self.layout
     row = layout.row()
@@ -530,13 +530,13 @@ def lamp_layout(self, obj):
     # TODO: deprecate named lights in v3.4
     if obj.xplane.type in ("named", "param"):
         row = layout.row()
-        row.prop(obj.xplane, "name", text = "Name")
+        row.prop(obj.xplane, "name")
         if obj.xplane.type == "param":
             row = layout.row()
             row.prop(obj.xplane, "params", text = "Parameters")
     elif obj.xplane.type == "custom":
         row = layout.row()
-        row.prop(obj.xplane, "size", text = "Size")
+        row.prop(obj.xplane, "size")
         row = layout.row()
         row.label("Texture Coordinates:")
         row = layout.row()
@@ -551,10 +551,15 @@ def lamp_layout(self, obj):
             our_icon = "ZOOM_IN"
         dataref_search_toggle_op = row.operator('xplane.dataref_search_toggle', text = "", emboss = False, icon = our_icon)
         dataref_search_toggle_op.paired_dataref_prop = "bpy.context.active_object.data.xplane.dataref"
-
         # Finally, in the next row, if we are expanded, build the entire search list.
         if expanded:
             dataref_search_window_layout(layout)
+
+        row = layout.row()
+        row.prop(obj.xplane, "enable_rgb_override")
+        if obj.xplane.enable_rgb_override:
+            row = layout.row()
+            row.prop(obj.xplane, "rgb_override_values")
 
 # Function: material_layout
 # Draws the UI layout for materials.
