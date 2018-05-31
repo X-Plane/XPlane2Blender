@@ -77,10 +77,10 @@ class TestAnimations(XPlaneTestCase):
 
         # check for correct location and rotation
         self.assertEquals(boneKeyframes[0].location, mathutils.Vector((0, 0, 0)))
-        self.assertEquals(boneKeyframes[0].rotation, mathutils.Vector((0, 1, 0, 0)))
+        self.assertEquals(boneKeyframes[0].rotation, (0,mathutils.Vector((1, 0, 0))))
         self.assertEquals(boneKeyframes[0].rotationMode, 'AXIS_ANGLE')
         self.assertEquals(boneKeyframes[1].location, mathutils.Vector((0, 0, 0)))
-        self.assertEquals(boneKeyframes[1].rotation, mathutils.Vector((1.5707961320877075, -1.0, 0.0, 0.0)))
+        self.assertEquals(boneKeyframes[1].rotation, (1.5707961320877075,mathutils.Vector((-1.0, 0.0, 0.0))))
         self.assertEquals(boneKeyframes[1].rotationMode, 'AXIS_ANGLE')
 
 runTestCases([TestAnimations])

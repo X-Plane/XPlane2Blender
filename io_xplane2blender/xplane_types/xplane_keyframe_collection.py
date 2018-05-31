@@ -51,13 +51,12 @@ class XPlaneKeyframeCollection(MutableSequence):
                 refAxisInv = None
 
                 for keyframe in keyframes:
-                    rotation = keyframe.rotation
+                    angle = keyframe.rotation[0]
+                    axis = keyframe.rotation[1]
 
                     def round_vector(vec,ndigits=5):
                         v = Vector([round(comp,ndigits) for comp in vec])
                         return v
-
-                    axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
 
                     '''
                     This section covers the following cases
@@ -66,7 +65,7 @@ class XPlaneKeyframeCollection(MutableSequence):
                     - Correct axis that are the same as the previous reference axes, just inverted
                     - If at least two axis are different, we convert to Euler angles
                     '''
-                    if rotation[0] == 0:
+                    if angle == 0:
                         continue
                     elif refAxis == None:
                         refAxis = axis
@@ -74,7 +73,7 @@ class XPlaneKeyframeCollection(MutableSequence):
                     elif round_vector(refAxis) == round_vector(axis):
                         continue
                     elif round_vector(refAxisInv) == round_vector(axis):
-                        keyframe.rotation = rotation * -1
+                        keyframe.rotation = (angle*-1, axis * -1)
                     else:
                         return _makeReferenceAxes(keyframes.toEuler())
 
