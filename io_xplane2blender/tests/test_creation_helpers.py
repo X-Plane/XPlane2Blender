@@ -91,7 +91,7 @@ class DatablockInfo():
             if set(self.rotation_mode) == {'X','Y','Z'}:
                 self.rotation = Vector()
             elif self.rotation_mode == "AXIS_ANGLE":
-                self.rotation = [0,0,0,0]
+                self.rotation = (0.0,Vector((0,0,0,0)))
         self.scale = scale
 
 class KeyframeInfo():
@@ -104,7 +104,7 @@ class KeyframeInfo():
             dataref_anim_type:str=xplane_constants.ANIM_TYPE_TRANSFORM, #Must be xplane_constants.ANIM_TYPE_*
             location:Optional[Vector]=None,
             rotation_mode:str="XYZ",
-            rotation:Optional[Tuple[Union[bpy.types.bpy_prop_array,Euler,Quaternion]]]=None):
+            rotation:Optional[Union[Tuple[float,Vector],Euler,Quaternion]]=None):
         self.idx           = idx
         self.dataref_path  = dataref_path
         self.dataref_value = dataref_value
@@ -116,10 +116,14 @@ class KeyframeInfo():
         self.rotation = rotation
 
         if self.rotation:
-            if {*self.rotation_mode} == {'X','Y','Z'}:
+            if self.rotation_mode == "AXIS_ANGLE":
+                assert len(self.rotation[1]) == 3
+            elif self.rotation_mode == "QUATERNION":
+                assert len(self.rotation) == 4
+            elif {*self.rotation_mode} == {'X','Y','Z'}:
                 assert len(self.rotation) == 3
             else:
-                assert len(self.rotation) == 4
+                assert False, "Unsupported rotation mode: " + self.rotation_mode
 
 # Common presets for animations
 R_2_FRAMES_45_Y_AXIS = (
@@ -552,7 +556,7 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
             data_path ='rotation_{}'.format(kf_info.rotation_mode.lower())
 
             if kf_info.rotation_mode == "AXIS_ANGLE":
-                blender_struct.rotation_axis_angle = kf_info.rotation[:]
+                blender_struct.rotation_axis_angle = (kf_info.rotation[0],*kf_info.rotation[1])
             elif kf_info.rotation_mode == "QUATERNION":
                 blender_struct.rotation_quaternion = kf_info.rotation[:]
             else:

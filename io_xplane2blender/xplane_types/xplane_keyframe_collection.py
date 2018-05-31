@@ -2,10 +2,13 @@ from collections import Iterable, namedtuple
 from collections.abc import MutableSequence
 import copy
 import math
+from typing import List 
 
 import bpy
 import mathutils
 from mathutils import Vector
+
+from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
 
 # Class: XPlaneKeyframeCollection
 #
@@ -21,14 +24,79 @@ class XPlaneKeyframeCollection(MutableSequence):
         'XYZ': (2, 1, 0)
     }
 
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   data - A list of <XPlaneKeyframe>s at least 2 entries big
-    def __init__(self, data):
+    def __init__(self, data:List[XPlaneKeyframe]):
+        '''
+        data - A list of XPlaneKeyframes, all with the same dataref and
+        rotationMode, at least 2 entries big.
+
+        XPlaneKeyframeCollection may mutate some of the keyframe data to maintain a reference
+        axis of animation.
+        '''
+
         super().__init__()
         assert data is not None and len(data) >= 2
-        self._list = list(data)
+        assert len({kf.dataref for kf in data}) == 1
+        assert len({kf.rotationMode for kf in data}) == 1
+        self._list = copy.deepcopy(data)
+
+        # _makeReferenceAxes uses a "cute but regrettable" recursive strategy for
+        # converting Quaternions->AA->Euler as needed
+        def _makeReferenceAxes(keyframes):
+            axes = []
+            if keyframes.getRotationMode() == 'QUATERNION':
+                keyframes.toAA()
+
+            if keyframes.getRotationMode() == 'AXIS_ANGLE':
+                refAxis    = None
+                refAxisInv = None
+
+                for keyframe in keyframes:
+                    angle = keyframe.rotation[0]
+                    axis = keyframe.rotation[1]
+
+                    def round_vector(vec,ndigits=5):
+                        v = Vector([round(comp,ndigits) for comp in vec])
+                        return v
+
+                    '''
+                    This section covers the following cases
+                    - keyframe has 0 degrees of rotation, so no axis should be produced
+                    - refAxis and axis are the same. If this happens for all keyframes, 1 reference axis will be returned! Yay! 
+                    - Correct axis that are the same as the previous reference axes, just inverted
+                    - If at least two axis are different, we convert to Euler angles
+                    '''
+                    if round(angle,5) == 0:
+                        continue
+                    elif refAxis == None:
+                        refAxis = axis
+                        refAxisInv = refAxis * -1
+                    elif round_vector(refAxis) == round_vector(axis):
+                        continue
+                    elif round_vector(refAxisInv) == round_vector(axis):
+                        keyframe.rotation = (angle*-1, axis * -1)
+                    else:
+                        return _makeReferenceAxes(keyframes.toEuler())
+
+                #If our AA's W component was 0 the whole time, we need a default
+                if refAxis == None:
+                    refAxis = mathutils.Vector((0, 0, 1))
+                axes.append(refAxis)
+            else:
+                try:
+                    eulerAxesOrdering = self.EULER_AXIS_ORDERING[keyframes.getRotationMode()]
+                    eulerAxes = [mathutils.Vector((1.0,0.0,0.0)),\
+                                 mathutils.Vector((0.0,1.0,0.0)),\
+                                 mathutils.Vector((0.0,0.0,1.0))]
+                    for axis in eulerAxesOrdering:
+                        axes.append(eulerAxes[axis]) 
+                except:
+                    raise Exception("Rotation mode %s doesn't exist in eulerAxisMap" % (keyframes.getRotationMode()))
+
+            assert len(axes) == 1 or len(axes) == 3
+            assert len([axis for axis in axes if not isinstance(axis,mathutils.Vector)]) == 0
+            return axes, keyframes.getRotationMode()
+
+        self._referenceAxes, final_rotation_mode  = _makeReferenceAxes(self)
 
     def __repr__(self):
         return "<{0} {1}>".format(self.__class__.__name__, self._list)
@@ -57,82 +125,12 @@ class XPlaneKeyframeCollection(MutableSequence):
     def append(self, val):
         self.insert(len(self._list), val)
 
-    def getReferenceAxes(self,rotation_mode=None):
+    def getReferenceAxes(self):
         '''
         rotation_mode:str->List[Vector], str (final rotation mode)
         '''
-        
-        # _makeReferenceAxes uses a "cute but regrettable" recursive strategy for
-        # converting Quaternions->AA->Euler as needed
-        def _makeReferenceAxes(keyframes):
-            axes = []
-            rotationMode = keyframes.getRotationMode()
-            if rotationMode == 'QUATERNION':
-                return _makeReferenceAxes(keyframes.asAA())
 
-            if rotationMode == 'AXIS_ANGLE':
-                refAxis    = None
-                refAxisInv = None
-
-                for keyframe in keyframes:
-                    rotation = keyframe.rotation
-
-                    def round_vector(vec,ndigits=5):
-                        v = Vector([round(comp,ndigits) for comp in vec])
-                        return v
-
-                    axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
-
-                    '''
-                    This section covers the following cases
-                    - keyframe has 0 degrees of rotation, so no axis should be produced
-                    - refAxis and axis are the same. If this happens for all keyframes, 1 reference axis will be returned! Yay! 
-                    - Correct axis that are the same as the previous reference axes, just inverted
-                    - If at least two axis are different, we convert to Euler angles
-                    '''
-                    if rotation[0] == 0:
-                        continue
-                    elif refAxis == None:
-                        refAxis = axis
-                        refAxisInv = refAxis * -1
-                    elif round_vector(refAxis) == round_vector(axis):
-                        continue
-                    elif round_vector(refAxisInv) == round_vector(axis):
-                        keyframe.rotation = rotation * -1
-                    else:
-                        return _makeReferenceAxes(keyframes.asEuler())
-
-                axes.append(refAxis)
-            else:
-
-                try:
-                    eulerAxesOrdering = self.EULER_AXIS_ORDERING[rotationMode]
-                    eulerAxes = [mathutils.Vector((1.0,0.0,0.0)),\
-                                 mathutils.Vector((0.0,1.0,0.0)),\
-                                 mathutils.Vector((0.0,0.0,1.0))]
-                    for axis in eulerAxesOrdering:
-                        axes.append(eulerAxes[axis]) 
-                except:
-                    raise Exception("Rotation mode %s doesn't exist in eulerAxisMap" % (rotationMode))
-
-            assert len(axes) == 1 or len(axes) == 3
-            assert len([axis for axis in axes if not isinstance(axis,mathutils.Vector)]) == 0
-            return axes, keyframes.getRotationMode()
-
-        if rotation_mode is None:
-            rotation_mode = self.getRotationMode()
-        
-        if rotation_mode == 'QUATERNION':
-            keyframes = self.asQuaternion()
-        elif rotation_mode == 'AXIS_ANGLE':
-            keyframes = self.asAA()
-        elif {'X','Y','Z'}  == set(rotation_mode):
-            keyframes = self.asEuler()
-        else:
-            raise Exception("% is not a known rotation mode" % rotation_mode)
-
-        return  _makeReferenceAxes(keyframes)
-
+        return (self._referenceAxes, self.getRotationMode())
 
     def getDataref(self):
         return self._list[0].dataref
@@ -177,7 +175,7 @@ class XPlaneKeyframeCollection(MutableSequence):
 
         return ret
 
-    def getRotationKeyframeTableNoClamps(self): # -> List[Tuple[axis, List[Tuple['value','degrees']]]]:
+    def getRotationKeyframeTableNoClamps(self): # List[Tuple[axis, List[Tuple['value','degrees']]]]
         '''
         Return the rotation portion of a keyframe collection in the form of
         List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.
@@ -206,16 +204,27 @@ class XPlaneKeyframeCollection(MutableSequence):
         pre_scale = self[0].xplaneBone.getPreAnimationMatrix().decompose()[2]
         return [(value, location * pre_scale) for value, location in self.getTranslationKeyframeTable()]
 
-    def asAA(self):
+    def asAA(self)->'XPlaneKeyframeCollection':
         return XPlaneKeyframeCollection([keyframe.asAA() for keyframe in self])
         
-    def asEuler(self):
+    def asEuler(self)->'XPlaneKeyframeCollection':
         return XPlaneKeyframeCollection([keyframe.asEuler() for keyframe in self])
             
-    def asQuaternion(self):
+    def asQuaternion(self)->'XPlaneKeyframeCollection':
         return XPlaneKeyframeCollection([keyframe.asQuaternion() for keyframe in self])
 
-    
+    def toAA(self)->'XPlaneKeyframeCollection':
+        self._list = [keyframe.asAA() for keyframe in self]
+        return self
+        
+    def toEuler(self)->'XPlaneKeyframeCollection':
+        self._list = [keyframe.asEuler() for keyframe in self]
+        return self
+            
+    def toQuaternion(self)->'XPlaneKeyframeCollection':
+        self._list = [keyframe.asQuaternion() for keyframe in self]
+        return self
+
     @staticmethod
     def filter_clamping_keyframes(keyframe_collection:'XPlaneKeyframeCollection',attr:str):
         '''

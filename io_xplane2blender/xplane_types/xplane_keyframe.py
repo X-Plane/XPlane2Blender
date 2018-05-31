@@ -1,4 +1,6 @@
 import copy
+from typing import Tuple
+
 import bpy
 import mathutils
 
@@ -68,8 +70,8 @@ class XPlaneKeyframe():
         # Child bones with a parent and connection need to ignore the translation field -
         # Blender disables it in the UI and ignores it but does NOT clear out old data,
         # so we have to!
-        if self.xplaneBone.blenderBone:
-            if self.xplaneBone.blenderBone.use_connect and self.xplaneBone.blenderBone.parent:
+        if xplaneBone.blenderBone:
+            if xplaneBone.blenderBone.use_connect and xplaneBone.blenderBone.parent:
                 self.location[0] = 0
                 self.location[1] = 0
                 self.location[2] = 0
@@ -83,9 +85,12 @@ class XPlaneKeyframe():
 
         elif self.rotationMode == 'AXIS_ANGLE':
             rot = blenderObject.rotation_axis_angle
-            self.rotation = (round(rot[0],KEYFRAME_PRECISION), rot[1], rot[2], rot[3])
-            assert isinstance(self.rotation, tuple)
-            for comp in self.rotation:
+            # Why tuple(angle, axis) when the thing is called axis_angle? Different Blender functions call for arbitrary
+            # arrangements of this, so my priority was whatever is easiest to convert, not what I like.
+            self.rotation = (round(rot[0],KEYFRAME_PRECISION), mathutils.Vector(rot[1:])) # type: Tuple[float,mathutils.Vector]
+            assert isinstance(self.rotation,tuple)
+            assert len(self.rotation) == 2
+            for comp in self.rotation[1]:
                 assert isinstance(comp, float)
         else:
             angles = [round(comp,KEYFRAME_PRECISION) for comp in blenderObject.rotation_euler.copy()]
@@ -97,10 +102,11 @@ class XPlaneKeyframe():
         bpy.context.scene.frame_set(frame = currentFrame)
 
     def __str__(self):
-        return "Value=%f Dataref=%s bone=%s rotation_mode=%s rot=(%f,%f,%f) location=(%f,%f,%f)" % (
-            self.value, self.dataref, self.bone, self.rotationMode,
-                self.rotation[0],self.rotation[1],self.rotation[2],
-                self.location[0],self.location[1],self.location[2])
+    	# TODO: We aren't printing out the bone, or saving it, because we haven't solved the deepcopy
+    	# of xplaneBone. Currently, that just poses an issue for debugging (and if all you need is the name
+    	# of the bone to track it down, you can certainly store the name!)
+        return "Value={} Dataref={} Rotation Mode={} Rotation=({}) Location=({})".format(
+            self.value, self.dataref, self.rotationMode, self.rotation, self.location)
 
     def asAA(self):
         keyframe = copy.deepcopy(self)
@@ -109,7 +115,7 @@ class XPlaneKeyframe():
             pass
         elif self.rotationMode == "QUATERNION":
             axisAngle = keyframe.rotation.normalized().to_axis_angle()
-            keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
+            keyframe.rotation = (axisAngle[1], axisAngle[0])
         else:
             rotation = keyframe.rotation
             euler_axis = mathutils.Euler((rotation.x,rotation.y,rotation.z),rotation.order)
@@ -119,20 +125,24 @@ class XPlaneKeyframe():
             new_rotation = euler_axis.to_quaternion().to_axis_angle()
             new_rotation_axis  = new_rotation[0]
             new_rotation_angle = new_rotation[1]
-            keyframe.rotation = (new_rotation_angle, new_rotation_axis[0], new_rotation_axis[1], new_rotation_axis[2])
+            keyframe.rotation = (new_rotation_angle, new_rotation_axis)
 
         keyframe.rotationMode = "AXIS_ANGLE"
+        assert isinstance(keyframe.rotation,tuple)
+        assert isinstance(keyframe.rotation[0],float)
+        assert isinstance(keyframe.rotation[1],mathutils.Vector)
+        assert len(keyframe.rotation[1]) == 3
         return keyframe
         
     def asEuler(self):
         keyframe = copy.deepcopy(self)
         if self.rotationMode == "AXIS_ANGLE":
-            rotation = keyframe.rotation
-            axis = mathutils.Vector((rotation[1:4]))
+            angle = keyframe.rotation[0]
+            axis = keyframe.rotation[1]
             # Why the heck XZY?  Jonathan's 2.49 exporter decomposes Eulers using XYZ (because that is the ONLY
             # decomposition available in 2.49), but it does so in X-Plane space.  So this is an axis renaming
             # (since we alway work in Blender space) so that it comes out the same in X-Plane.
-            keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XZY')
+            keyframe.rotation = mathutils.Quaternion(axis, angle).to_euler('XZY')
             keyframe.rotationMode = keyframe.rotation.order
             return keyframe
         elif self.rotationMode == "QUATERNION":
@@ -145,7 +155,9 @@ class XPlaneKeyframe():
     def asQuaternion(self):
         keyframe = copy.deepcopy(self)
         if self.rotationMode == "AXIS_ANGLE":
-            keyframe.rotation = mathutils.Quaternion(*keyframe.rotation[0:4])
+            angle = keyframe.rotation[0]
+            axis = keyframe.rotation[1]
+            keyframe.rotation = mathutils.Quaternion(axis, angle)
             keyframe.rotationMode = "QUATERNION"
             return keyframe
         elif self.rotationMode == "QUATERNION":

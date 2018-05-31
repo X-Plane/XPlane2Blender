@@ -877,6 +877,7 @@ class XPlaneManipulator():
                     black_list = ((check_bone_is_animated_for_rotation,   "rotation"),
                                   (check_bone_is_animated_for_translation,"location"))
 
+                
                 info_sources = get_information_sources(self,white_list,black_list,log_errors=True)
 
                 if info_sources is None:
@@ -1212,11 +1213,9 @@ class XPlaneManipulator():
             if self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
                 if len(rotation_keyframe_table_cleaned[0][1]) > 2:
                     for rot_keyframe in rotation_keyframe_table_cleaned[0][1][1:-1]:
-                        self.xplanePrimative.cockpitAttributes.add(
-                            
+                        self.xplanePrimative.cockpitAttributes.add(   
                             XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
             # add mouse wheel delta
             if self.type in MANIPULATORS_MOUSE_WHEEL and bpy.context.scene.xplane.version >= VERSION_1050 and self.manip.wheel_delta != 0:
                 self.xplanePrimative.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', self.manip.wheel_delta))
-

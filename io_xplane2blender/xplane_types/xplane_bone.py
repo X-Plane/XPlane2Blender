@@ -686,11 +686,6 @@ class XPlaneBone():
         elif len(axes) == 1:
             refAxis = axes[0]
 
-        if refAxis == None:
-            #TODO: Pretty sure this is impossible to reach
-            assert False
-            refAxis = mathutils.Vector((0, 0, 1))
-
         o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
             indent,
             floatToStr(refAxis[0]),
