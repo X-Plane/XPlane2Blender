@@ -12,6 +12,8 @@ from io_xplane2blender import xplane_config
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
 from io_xplane2blender.xplane_types import xplane_file, xplane_primitive
+from ..xplane_types import xplane_file
+from ..xplane_types.xplane_primitive import XPlanePrimitive
 from .animation_file_mappings import mappings
 
 
@@ -37,6 +39,7 @@ class XPlaneTestCase(unittest.TestCase):
         if useLogger:
             self.useLogger()
 
+        #logger.warn("---------------")
     def useLogger(self):
         debug = getDebug()
         logLevels = ['error', 'warning']

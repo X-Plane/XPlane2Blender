@@ -1,5 +1,6 @@
 # File: xplane_ops.py
 # Defines Operators
+import pathlib
 
 import bpy
 from .xplane_config import *
@@ -644,6 +645,51 @@ class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
         bpy.ops.export.xplane_obj(filepath=self.initial_dir, export_is_relative=True)
         return {'FINISHED'}
 
+
+class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
+    '''
+    This operator very simply passes it's associated dataref to the search window, which then opens it in the UI. 
+    '''
+    bl_label = 'Open/Close Dataref Search Window'
+    bl_description = 'Open/Close Dataref Search Window'
+    bl_idname = 'xplane.dataref_search_toggle'
+
+    # Each operator is placed next to a dataref string property,
+    # 
+    paired_dataref_prop = bpy.props.StringProperty()
+    def execute(self, context):
+        dataref_search_window_state = context.scene.xplane.dataref_search_window_state
+        #Load on first use
+        if len(dataref_search_window_state.dataref_search_list) == 0:
+            filepath=pathlib.Path(xplane_helpers.get_plugin_resources_folder(),"DataRefs.txt")
+            get_datarefs_txt_result = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(filepath.as_posix())
+            if isinstance(get_datarefs_txt_result,str):
+                short_filepath = "..."+os.path.sep.join(filepath.parts[-3:])
+                bpy.ops.xplane.error('INVOKE_DEFAULT',msg_text=short_filepath + " could not be parsed", report_text=get_datarefs_txt_result)
+                return {'CANCELLED'}
+            else:
+                file_content = get_datarefs_txt_result
+
+            dataref_search_list = bpy.context.scene.xplane.dataref_search_window_state.dataref_search_list
+
+            for dref_info in file_content:
+                dataref_search_list.add()
+                dataref_search_list[-1].dataref_path = dref_info.path
+                dataref_search_list[-1].dataref_type = dref_info.type
+                dataref_search_list[-1].dataref_is_writable = dref_info.is_writable
+                dataref_search_list[-1].dataref_units = dref_info.units
+                dataref_search_list[-1].dataref_description = dref_info.description
+
+        prop = dataref_search_window_state.dataref_prop_dest
+
+        #Toggle ourselves
+        if prop == self.paired_dataref_prop:
+            dataref_search_window_state.dataref_prop_dest = "" 
+        else:
+            dataref_search_window_state.dataref_prop_dest = self.paired_dataref_prop
+
+        return {'FINISHED'}
+
 # Function: addXPlaneOps
 # Registers all Operators.
 def addXPlaneOps():
@@ -688,6 +734,7 @@ def addXPlaneOps():
     bpy.utils.register_class(SCENE_OT_dev_rerun_updater)
     bpy.utils.register_class(SCENE_OT_dev_create_lights_txt_summary)
 
+    bpy.utils.register_class(XPLANE_OT_DatarefSearchToggle)
 # Function: removeXPlaneOps
 # Unregisters all Operators.
 def removeXPlaneOps():
@@ -726,8 +773,8 @@ def removeXPlaneOps():
 
     bpy.utils.unregister_class(SCENE_OT_export_to_relative_dir)
 
-    #See xplane_ops_dev.py
-    #bpy.utils.unregister_class(SCENE_OT_dev_export_to_current_dir)
     bpy.utils.unregister_class(SCENE_OT_dev_layer_names_from_objects)
     bpy.utils.unregister_class(SCENE_OT_dev_rerun_updater)
     bpy.utils.unregister_class(SCENE_OT_dev_create_lights_txt_summary)
+
+    bpy.utils.unregister_class(XPLANE_OT_DatarefSearchToggle)

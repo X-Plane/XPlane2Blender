@@ -1,11 +1,15 @@
 # File: xplane_ops_dev.py
 # Defines Operators specifically for plugin development
 
-import bpy
+import os
 import re
+
+import bpy
 import io_xplane2blender
 from io_xplane2blender import xplane_constants, xplane_helpers
+from io_xplane2blender.xplane_utils import xplane_datarefs_txt_parser
 from io_xplane2blender.xplane_types import xplane_lights_txt_parser
+from collections import OrderedDict
 
 class SCENE_OT_dev_create_lights_txt_summary(bpy.types.Operator):
     bl_label = "Create lights.txt Summary"

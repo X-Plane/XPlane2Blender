@@ -58,6 +58,8 @@ def resolveBlenderPath(path):
     else:
         return path
  
+def get_plugin_resources_folder()->str:
+    return os.path.join(os.path.dirname(__file__),"resources")
 
 def vec_b_to_x(v):
     return mathutils.Vector((v.x, v.z, -v.y))
@@ -480,11 +482,13 @@ class XPlaneDebugger():
         self.log = False
 #        sys.excepthook = self.excepthook
 
+# TODO: delete this as per issue #74
 # Class: XPlaneProfiler
 # Stores profiling information of processes.
 class XPlaneProfiler():
     # Property: times
     # dict of stored times used internally.
+    #TODO this is a class property and is likely unused
     times = {}
 
     # Constructor: __init__
