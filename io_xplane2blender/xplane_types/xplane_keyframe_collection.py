@@ -65,7 +65,7 @@ class XPlaneKeyframeCollection(MutableSequence):
                     - Correct axis that are the same as the previous reference axes, just inverted
                     - If at least two axis are different, we convert to Euler angles
                     '''
-                    if angle == 0:
+                    if round(angle,5) == 0:
                         continue
                     elif refAxis == None:
                         refAxis = axis
@@ -175,7 +175,7 @@ class XPlaneKeyframeCollection(MutableSequence):
 
         return ret
 
-    def getRotationKeyframeTableNoClamps(self): # -> List[Tuple[axis, List[Tuple['value','degrees']]]]:
+    def getRotationKeyframeTableNoClamps(self): # List[Tuple[axis, List[Tuple['value','degrees']]]]
         '''
         Return the rotation portion of a keyframe collection in the form of
         List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.

@@ -16,5 +16,9 @@ __pycache__
 *.zip
 
 .mypy_cache/*
-builds/*
+.idea/*
 .vs/*
+builds/*
+
+*.pyproj
+*.sln

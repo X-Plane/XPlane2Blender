@@ -66,6 +66,16 @@ class XPlaneKeyframe():
 
         self.location = mathutils.Vector([round(comp,KEYFRAME_PRECISION) for comp in copy.copy(blenderObject.location)])
         assert isinstance(self.location,mathutils.Vector)
+		
+        # Child bones with a parent and connection need to ignore the translation field -
+        # Blender disables it in the UI and ignores it but does NOT clear out old data,
+        # so we have to!
+        if xplaneBone.blenderBone:
+            if xplaneBone.blenderBone.use_connect and xplaneBone.blenderBone.parent:
+                self.location[0] = 0
+                self.location[1] = 0
+                self.location[2] = 0
+		
         self.rotationMode = blenderObject.rotation_mode
 
         # TODO: rotationMode should reside in keyframes collection as it is the same for each keyframe
@@ -76,7 +86,7 @@ class XPlaneKeyframe():
         elif self.rotationMode == 'AXIS_ANGLE':
             rot = blenderObject.rotation_axis_angle
             # Why tuple(angle, axis) when the thing is called axis_angle? Different Blender functions call for arbitrary
-            # arrangements of this, so my priority was whatever is easiet to convert, not what I like.
+            # arrangements of this, so my priority was whatever is easiest to convert, not what I like.
             self.rotation = (round(rot[0],KEYFRAME_PRECISION), mathutils.Vector(rot[1:])) # type: Tuple[float,mathutils.Vector]
             assert isinstance(self.rotation,tuple)
             assert len(self.rotation) == 2
@@ -92,6 +102,9 @@ class XPlaneKeyframe():
         bpy.context.scene.frame_set(frame = currentFrame)
 
     def __str__(self):
+    	# TODO: We aren't printing out the bone, or saving it, because we haven't solved the deepcopy
+    	# of xplaneBone. Currently, that just poses an issue for debugging (and if all you need is the name
+    	# of the bone to track it down, you can certainly store the name!)
         return "Value={} Dataref={} Rotation Mode={} Rotation=({}) Location=({})".format(
             self.value, self.dataref, self.rotationMode, self.rotation, self.location)
 

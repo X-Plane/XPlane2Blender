@@ -341,27 +341,33 @@ class XPlaneBone():
             return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy() * static_translation
 
         elif self.blenderObject:
-            # animated objects have parents world matrix * inverse of parents matrix
-            # matrix_parent_inverse is a static arbitrary transform applied at parenting time to keep
-            # objects from "jumping".  Without this, Blender would have to edit key frame tables on parenting.
-
-            # Workaround blender bug where old parent_inverse_matrices are kept after unparenting - only look
-			# at parent inverse if Blender wold have.
-            parent_final = mathutils.Matrix.Identity(4)
-            matrix_parent_inverse = mathutils.Matrix.Identity(4)
-            static_translation = mathutils.Matrix.Identity(4)
-			
-			# If we have a parent, get the parnet pose and parent inverse.
-            if self.blenderObject.parent != None:
-                parent_final = self.parent.getBlenderWorldMatrix()
-                matrix_parent_inverse = self.blenderObject.matrix_parent_inverse
-
-			# If we have a data block translation that is NOT key framed in a useful way, use it here!  This
-			# "bakes" static translations into our pre-animation pose, so we don't have to emit code for them.
+            
+            # Animated objects are affected by "a bunch of stuff" that Blender does - it's hard to predict what it all is.
+            # But data block animation is the LAST thing that happens.  So we can basically take our post-animation pose,
+            # back out the known animation, and that's our pre-animation pose.
+            
+            # (In previous versions we used to start with the parent and work forward, but this required simulating the
+            # parent-child transformation, which involves a bunch of specal logic fo bones.
+            # This is more reliable.
+            
+            # This is our final post-data block animation pose. (Technically it's MORE than post-animation if we have a dynamic
+            # translation and static rotation, for example.)
+            my_final = self.getBlenderWorldMatrix()
+            
+            # This is all of the transformations (rot,loc,scale) that our data block might do.
+            my_block = self.blenderObject.matrix_basis
+            
+            # If we are NOT animated for translation and we are here we MUST be animated for rotation.  In this case, we want
+            # to treat ONLY the rotation part as "dynamic" - so nuke the translation components.
             if not self.isDataRefAnimatedForTranslation():
-                static_translation = mathutils.Matrix.Translation(self.blenderObject.matrix_basis.to_translation())
-
-            return parent_final * matrix_parent_inverse *static_translation
+                my_block = my_block.to_3x3().to_4x4()
+            
+            # This is the "undo" of the dynamic part of our block transform
+            before_my_block = my_block.inverted_safe()
+            
+            # Final result is our post-animation pose with the dynamic animatons subtracted out.  This will nuke either
+            # rotation or rotatio + location.
+            return my_final * before_my_block            
 
 	#
 	# THE POST-ANIMATION MATRIX (POSE)
