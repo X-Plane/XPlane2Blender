@@ -40,7 +40,7 @@ class TestDragAxisWDetents(XPlaneTestCase):
         out  = self.exportLayer(5)
         self.assertLoggerErrors(1)
 
-    def test_07_translation_bone_does_not_start_or_end_at_origin(self):
+    def test_07_translation_bone_not_orthogonal(self):
         out  = self.exportLayer(6)
         self.assertLoggerErrors(1)
 
