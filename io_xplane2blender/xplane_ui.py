@@ -882,7 +882,8 @@ def manipulator_layout(self, obj):
 
         MANIPULATORS_COMMAND_CLASSIC = { MANIP_COMMAND,
                                          MANIP_COMMAND_AXIS,
-        
+                                         MANIP_COMMAND_KNOB,
+                                         MANIP_COMMAND_SWITCH_LEFT_RIGHT,
                                          MANIP_COMMAND_SWITCH_UP_DOWN}
 
         MANIPULATORS_COMMAND_1110 = { MANIP_COMMAND_KNOB2,
