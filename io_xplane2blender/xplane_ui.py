@@ -964,7 +964,7 @@ def manipulator_layout(self, obj):
 
         props['dx'] = (lambda manip_type: manip_type in MANIPULATORS_AXIS, None)
         props['dy'] = (lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_AXIS_PIX}, None)
-        props['dz'] = (lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX}, None)
+        props['dz'] = (lambda manip_type: manip_type in MANIPULATORS_AXIS - {MANIP_DRAG_XY, MANIP_DRAG_AXIS_PIX}, None)
 
         props['step'] = (lambda manip_type: manip_type in {MANIP_DRAG_AXIS_PIX}, None)
         props['exp' ] = (lambda manip_type: manip_type in {MANIP_DRAG_AXIS_PIX}, None)
@@ -978,8 +978,8 @@ def manipulator_layout(self, obj):
         props['v2'] = (lambda manip_type: manip_type in {MANIP_DRAG_AXIS, MANIP_DRAG_AXIS_PIX, MANIP_AXIS_KNOB, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None)
 
         props['command'] = (lambda manip_type: manip_type in MANIPULATORS_COMMAND_1110 | {MANIP_COMMAND}, None)
-        props['positive_command'] = (lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC, None)
-        props['negative_command'] = (lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC, None)
+        props['positive_command'] = (lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC - {MANIP_COMMAND}, None)
+        props['negative_command'] = (lambda manip_type: manip_type in MANIPULATORS_COMMAND_CLASSIC - {MANIP_COMMAND}, None)
 
         props['v_down'] = (lambda manip_type: manip_type in {MANIP_PUSH,MANIP_RADIO,MANIP_DELTA,MANIP_WRAP}, None)
         props['v_up'  ] = (lambda manip_type: manip_type in {MANIP_PUSH}, None)
