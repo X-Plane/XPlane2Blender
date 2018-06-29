@@ -1,30 +1,32 @@
 # File: xplane_export.py
 # Defines Classes used to create OBJ files out of XPlane data types defined in <xplane_types.py>.
 
-import os.path
-import bpy
-import mathutils
 import os
+import os.path
 import sys
+
+import bpy
+import io_xplane2blender
+import mathutils
+from bpy_extras.io_utils import ExportHelper, ImportHelper
+
+from .xplane_config import getDebug, getLog, initConfig
 from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
-from .xplane_config import getDebug, getLog, initConfig
-from bpy_extras.io_utils import ImportHelper, ExportHelper
-import io_xplane2blender
 
-class ExportLogDialog(bpy.types.Menu):
-    bl_idname = "SCENE_MT_xplane_export_log"
-    bl_label = "XPlane2Blender Export Log"
-
-    def draw(self, context):
-        row = self.layout.row()
-        row.label('Export produced errors or warnings.')
-        row = self.layout.row()
-        row.label('Please take a look into the internal text file XPlane2Blender.log')
 
 def showLogDialog():
     if not ('-b' in sys.argv or '--background' in sys.argv):
-        bpy.ops.wm.call_menu(name = "SCENE_MT_xplane_export_log")
+        wm = bpy.data.window_managers[0]
+        all_areas = [area for window in wm.windows for area in window.screen.areas]
+        if any([area.spaces[0].text == bpy.data.texts['xplane2blender.log'] for area in all_areas if area.type == 'TEXT_EDITOR']):
+            pass
+        else:
+            bpy.ops.screen.userpref_show('INVOKE_DEFAULT')
+            popup_window = bpy.context.window_manager.windows[-1]
+            window_area = popup_window.screen.areas[0]
+            window_area.type = 'TEXT_EDITOR'
+            window_area.spaces[0].text = bpy.data.texts['xplane2blender.log']
 
 # Class: ExportXPlane
 # Main Export class. Brings all parts together and creates the OBJ files.
@@ -132,13 +134,9 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.scene.frame_set(frame = currentFrame)
         bpy.context.scene.update()
 
-        #TODO: enable when log dialog box is working 
-        #if logger.hasErrors() or logger.hasWarnings():
-            #showLogDialog()
-
         if not logger.hasErrors():
             logger.success("Export finished without errors")
-
+        
         self._endLogging()
         return {'FINISHED'}
 
