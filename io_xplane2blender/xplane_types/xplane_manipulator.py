@@ -152,7 +152,7 @@ def check_bone_is_animated_on_n_axes(bone:XPlaneBone,num_axis_of_rotation:int, l
     if len(rotation_keyframe_table) == 3:
         deg_per_axis = []
         for axis,table in rotation_keyframe_table:
-            deg_per_axis.append(sum([keyframe.degrees for keyframe in table]))
+            deg_per_axis.append(sum([abs(keyframe.degrees) for keyframe in table]))
 
         real_num_axis_of_rotation = len((*filter(lambda total_rotations: round(total_rotations,8) != 0.0, deg_per_axis),))
     else:

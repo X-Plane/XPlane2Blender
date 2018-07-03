@@ -44,10 +44,19 @@ class TestRotationBoneRules(XPlaneTestCase):
             filterLines
         )
 
-    def test_8_known_good_rotation_bone(self):
+    # See github issue #360
+    def test_8_neg_15_15_degree_animation_allowed(self):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
             7, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
+
+    def test_9_known_good_rotation_bone(self):
+        filename = inspect.stack()[0][3]
+        self.assertLayerExportEqualsFixture(
+            8, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )
