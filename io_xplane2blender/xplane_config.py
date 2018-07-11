@@ -28,28 +28,28 @@ debug = False
 log = False
 
 # We make a copy here so as not to cause a circular dependency in xplane_props and other places
-CURRENT_ADDON_VERSION = bl_info["version"]
+CURRENT_ADDON_VERSION = bl_info["version"] # type: int
 
 # Constant: CURRENT_BUILD_TYPE
 #
 # The current build type, must be a member of XPlane2BlenderVersion.BUILD_TYPE 
-CURRENT_BUILD_TYPE = xplane_constants.BUILD_TYPE_RC
+CURRENT_BUILD_TYPE = xplane_constants.BUILD_TYPE_RC # type: str
 
 # Constant: CURRENT_BUILD_TYPE_VERSION
 #
 # The current build type version, must be > 0
-CURRENT_BUILD_TYPE_VERSION = 2
+CURRENT_BUILD_TYPE_VERSION = 2 # type: int
 
 # Constant: CURRENT_DATA_MODEL_VERSION
 #
 # The current data model version, incrementing every time xplane_constants, xplane_props, or xplane_updater
 # changes. Builds earlier than 3.4.0-beta.5 have and a version of 0 
-CURRENT_DATA_MODEL_VERSION = 3
+CURRENT_DATA_MODEL_VERSION = 4 # type: int
 
 # Constant: CURRENT_BUILD_NUMBER
 #
 # The build number, hardcoded by the build script when there is one, other wise it is left "" for "NONE"
-CURRENT_BUILD_NUMBER = xplane_constants.BUILD_NUMBER_NONE
+CURRENT_BUILD_NUMBER = xplane_constants.BUILD_NUMBER_NONE # type: str
 
 def initConfig():
     global debug

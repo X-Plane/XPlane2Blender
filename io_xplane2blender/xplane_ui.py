@@ -93,6 +93,8 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 
         if obj.type in ("MESH", "EMPTY", "ARMATURE", "LAMP"):
             object_layer_layout(self, obj)
+            if obj.type == "EMPTY":
+                empty_layout(self, obj)
 
             animation_layout(self, obj)
             if obj.type == "MESH":
@@ -134,14 +136,23 @@ class BONE_PT_xplane(bpy.types.Panel):
         weight_layout(self, bone)
         animation_layout(self, bone, True)
 
-# Class: OBJECT_MT_xplane_datarefs
-# Adds the X-Plane datarefs search menu. This is not implemented yet.
-class OBJECT_MT_xplane_datarefs(bpy.types.Menu):
-    '''XPlane Datarefs Search Menu'''
-    bl_label = "XPlane Datarefs"
+def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
+    assert empty_obj.type == 'EMPTY'
 
-    def draw(self, context):
-        self.search_menu(xplane_datarefs, "text.open")
+    emp = empty_obj.xplane.empty
+
+    layout = self.layout
+    layout.row().prop(empty_obj.xplane.empty,'special_type')
+
+    if emp.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
+       emp.special_type == EMPTY_USAGE_EMITTER_SOUND:
+           box = layout.box()
+           box.label("Emitter Settings")
+           box.row().prop(emp.emitter_props,"name")
+           box.row().prop(emp.emitter_props,"phi")
+           box.row().prop(emp.emitter_props,"theta")
+           box.row().prop(emp.emitter_props,"psi")
+           box.row().prop(emp.emitter_props,"index")
 
 # Function: scene_layout
 # Draws the UI layout for scene tabs. Uses <layer_layout>.
@@ -441,6 +452,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     #layout.separator()
     advanced_box = layout.box()
     advanced_box.label("Advanced Options")
+    advanced_box.prop(layerObj, "particle_system_file", text="Particle System File")
     advanced_box.prop(layerObj, "slungLoadWeight")
 
     advanced_box.prop(layerObj, "export")

@@ -1,27 +1,29 @@
-import bpy
 import os
-import re
 import platform
+import re
 from collections import OrderedDict
-from ..xplane_helpers import floatToStr, logger, resolveBlenderPath
+
+import bpy
+from io_xplane2blender.xplane_constants import (EXPORT_TYPE_AIRCRAFT,
+                                                EXPORT_TYPE_SCENERY)
+
 from ..xplane_constants import *
-from .xplane_attributes import XPlaneAttributes
+from ..xplane_helpers import floatToStr, logger, resolveBlenderPath
+from ..xplane_image_composer import (combineSpecularAndNormal,
+                                     getImageByFilepath, normalWithoutAlpha,
+                                     specularToGrayscale)
 from .xplane_attribute import XPlaneAttribute
-from ..xplane_image_composer import getImageByFilepath, specularToGrayscale, normalWithoutAlpha, combineSpecularAndNormal
-from io_xplane2blender.xplane_constants import EXPORT_TYPE_AIRCRAFT,\
-    EXPORT_TYPE_SCENERY
+from .xplane_attributes import XPlaneAttributes
+
+from typing import List
 
 # Class: XPlaneHeader
 # Create an OBJ header.
 class XPlaneHeader():
-    # Property: version
-    # OBJ format version
-
-    # Property: mode
-    # The OBJ xplaneFile mode. ("default" or "cockpit"). This is currently not in use, I think.
-
-    # Property: attributes
-    # OrderedDict - Key value pairs of all Header attributes
+    '''
+    Stores and writes OBJ info related to the OBJ8 header, such as POINT_COUNTS and TEXTURE.
+    Also the starting point for is responsible for autodetecting and compositing textures.
+    '''
 
     # Constructor: __init__
     #
@@ -71,41 +73,55 @@ class XPlaneHeader():
         self.custom_attributes     = XPlaneAttributes()
         
         # object attributes
-        self.general_attributes.add(XPlaneAttribute("ATTR_layer_group", None))
-        self.general_attributes.add(XPlaneAttribute("COCKPIT_REGION", None))
-        self.general_attributes.add(XPlaneAttribute("DEBUG", None))
-        self.general_attributes.add(XPlaneAttribute("GLOBAL_cockpit_lit", None))
-        self.general_attributes.add(XPlaneAttribute("GLOBAL_tint", None))
-        self.general_attributes.add(XPlaneAttribute("POINT_COUNTS", None))
-        self.general_attributes.add(XPlaneAttribute("REQUIRE_WET", None))
-        self.general_attributes.add(XPlaneAttribute("REQUIRE_DRY", None))
-        self.general_attributes.add(XPlaneAttribute("SLOPE_LIMIT", None))
-        self.general_attributes.add(XPlaneAttribute("slung_load_weight", None))
-        self.general_attributes.add(XPlaneAttribute("TILTED", None))
+        general_attrs = [
+                "PARTICLE_SYSTEM",
+                "ATTR_layer_group",
+                "COCKPIT_REGION",
+                "DEBUG",
+                "GLOBAL_cockpit_lit",
+                "GLOBAL_tint",
+                "POINT_COUNTS",
+                "REQUIRE_WET",
+                "REQUIRE_DRY",
+                "SLOPE_LIMIT",
+                "slung_load_weight",
+                "TILTED"]
 
+        for general_attr in general_attrs:
+            self.general_attributes.add(XPlaneAttribute(general_attr, None))
+        
         # shader attributes
-        self.non_draped_attributes.add(XPlaneAttribute("TEXTURE", None))
-        self.non_draped_attributes.add(XPlaneAttribute("TEXTURE_LIT", None))
-        self.non_draped_attributes.add(XPlaneAttribute("TEXTURE_NORMAL", None))
-        self.non_draped_attributes.add(XPlaneAttribute("NORMAL_METALNESS", None))#NORMAL_METALNESS for textures
-        self.non_draped_attributes.add(XPlaneAttribute("GLOBAL_no_blend", None))
-        self.non_draped_attributes.add(XPlaneAttribute("GLOBAL_no_shadow", None))
-        self.non_draped_attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
-        self.non_draped_attributes.add(XPlaneAttribute("GLOBAL_specular", None))
-        self.non_draped_attributes.add(XPlaneAttribute("BLEND_GLASS", None))
+        shader_attrs = [
+                "TEXTURE",
+                "TEXTURE_LIT",
+                "TEXTURE_NORMAL",
+                "NORMAL_METALNESS", #NORMAL_METALNESS for textures  
+                "GLOBAL_no_blend",
+                "GLOBAL_no_shadow",
+                "GLOBAL_shadow_blend",
+                "GLOBAL_specular",
+                "BLEND_GLASS"]
+
+        for shader_attr in shader_attrs:
+            self.non_draped_attributes.add(XPlaneAttribute(shader_attr, None))
         
         # draped shader attributes
-        self.draped_attributes.add(XPlaneAttribute("TEXTURE_DRAPED", None))
-        self.draped_attributes.add(XPlaneAttribute("TEXTURE_DRAPED_NORMAL", None))
-        self.draped_attributes.add(XPlaneAttribute("NORMAL_METALNESS", None))#NORMAL_METALNESS for draped textures
-        self.draped_attributes.add(XPlaneAttribute("BUMP_LEVEL", None))
-        self.draped_attributes.add(XPlaneAttribute("NO_BLEND", None))
-        self.draped_attributes.add(XPlaneAttribute("SPECULAR", None))
+        draped_attrs = [
+                "TEXTURE_DRAPED",
+                "TEXTURE_DRAPED_NORMAL",
+                "NORMAL_METALNESS", #NORMAL_METALNESS for draped textures
+                "BUMP_LEVEL",
+                "NO_BLEND",
+                "SPECULAR",
+                # draped general attributes
+                "ATTR_layer_group_draped",
+                "ATTR_LOD_draped"]
 
-        # draped general attributes
-        self.draped_attributes.add(XPlaneAttribute("ATTR_layer_group_draped", None))
-        self.draped_attributes.add(XPlaneAttribute("ATTR_LOD_draped", None))
+        for draped_attr in draped_attrs:
+            self.draped_attributes.add(XPlaneAttribute(draped_attr, None))
 
+    # TODO: Shouldn't this just be inside XPlaneHeader.write if it is only called once and only here?
+    # If not should it be called collect?
     def init(self):
         isAircraft = self.xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT
         isCockpit  = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
@@ -214,6 +230,23 @@ class XPlaneHeader():
                         cockpit_region.top + (2 ** cockpit_region.height)
                     ))
 
+
+        if xplane_version >= 1130:
+            if self.xplaneFile.options.particle_system_file:
+                pss = self.xplaneFile.options.particle_system_file
+                objs = self.xplaneFile.objects
+
+                if not list(filter(lambda obj: obj[1].type == "EMPTY" and\
+                        obj[1].blenderObject.xplane.empty.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
+                        obj[1].blenderObject.xplane.empty.special_type == EMPTY_USAGE_EMITTER_SOUND,\
+                        objs.items())):
+                    logger.warn("Particle System File {} is given, but no emitter objects are used".format(pss))
+
+                if not pss.endswith('.pss'):
+                    logger.error("Particle System File {} must be a .pss file".format(pss))
+
+                self.general_attributes["PARTICLE_SYSTEM"].setValue(pss)
+
         # get point counts
         tris = len(self.xplaneFile.mesh.vertices)
         lines = 0
@@ -295,6 +328,7 @@ class XPlaneHeader():
         # add custom attributes
         for attr in self.xplaneFile.options.customAttributes:
             self.custom_attributes.add(XPlaneAttribute(attr.name, attr.value))
+
 
     def _compositeNormalTextureNeedsRecompile(self, compositePath, sourcePaths):
         compositePath = resolveBlenderPath(compositePath)
@@ -554,3 +588,4 @@ class XPlaneHeader():
             o += 'EXPORT %s %s\n' % (export_path_directive[0],export_path_directive[1])
 
         return o
+

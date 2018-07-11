@@ -45,16 +45,43 @@ see them culled over time
 
 - This file contains 99% of the properties. xplane2blender is set in xplane_updater.py and now we're stuck with it there
  
+- Properties use snake_case
+
 - Name is in the form of "Title Case Always", description is "Sentence case, no period". Don't be lazy and just copy and paste the constant name for all three columns.
 A good deal of time was spent making the UI look pretty for 3.4.0 so please don't undo that overtime
 
+- Properties and classes must be in alphabetical order, starting from the top, including if they're exceptionally related.
+Classes may be out of order if needed to be declared out of order. Try to make everything as alphabetically ordered as possible
+
+Take the existing class XPlaneExampleClass with properties
+currently listed as:
+
+- b_ex
+- a_ex
+- d_ex
+- e_ex
+- f_ex
+
+A new property called g_ex would go after b_ex, not f_ex!
+This is true even if it seemed like a natural fit to be paired with something else.
+
+<rant>
+Why? Because attempting to keep properties together as
+a set of "common uses" or "as ordered as in the UI" gets messy quick
+making it more confusing later as things are in a pseudo-arbitrary layout.
+
+In this way at least the top of every class will be organized,
+order slowly coming into fruition by way of
+undebatable alphabetical listing.
+</rant>
+
 - If you've actually read this far, congratulations! You get a cookie!
 
-- For defaults, use the constants, not redundantly copying their values 
+- For defaults, use the constants, not redundantly copying their values
 
 - Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
 
-- If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
+- Tip: If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
 '''
 
 # Class: XPlane2Blender 
@@ -248,6 +275,52 @@ class XPlaneExportPathDirective(bpy.types.PropertyGroup):
         name = "Export Path",
         description="The export path that should be copied into a library.txt",
     )
+
+class XPlaneEmitter(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(
+        name = "Emitter Name",
+        description = "The name of the emitter, coming from the .pss file"
+    )
+
+    phi = bpy.props.FloatProperty(
+        name="Phi",
+        description="Phi of emitter"
+    )
+
+    psi = bpy.props.FloatProperty(
+        name="Psi",
+        description="Psi of emitter"
+    )
+
+    theta = bpy.props.FloatProperty(
+        name="Theta",
+        description="Theta of emitter"
+    )
+
+    index = bpy.props.IntProperty(
+        name = "Emitter Index",
+        description = "Index of emitter array (re-work desc)",
+        default = 0
+    )
+
+
+class XPlaneEmpty(bpy.types.PropertyGroup):
+    emitter_props = bpy.props.PointerProperty(
+        name="Emitter Settings",
+        description="Settings for emitter, if special Type is an Emitter",
+        type=XPlaneEmitter
+    )
+
+    special_type = bpy.props.EnumProperty(
+        name="Empty Special Type",
+        description="Type XPlane2Blender item this is",
+        items= [
+            (EMPTY_USAGE_NONE,             "None", "Empty has regular meaning"),
+            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "Empty represents a particle emitter"),
+            (EMPTY_USAGE_EMITTER_SOUND,    "Sound Emitter", "Empty represents a sound emitter")
+        ]
+    )
+
 
 # Class: XPlaneDataref
 # A X-Plane Dataref
@@ -726,7 +799,13 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Export Directives for Layer",
         description = "A collection of export paths intended for an OBJ's EXPORT directives",
         type = XPlaneExportPathDirective
-	)
+    )
+
+    particle_system_file = bpy.props.StringProperty(
+        name = "Particle System Definition File",
+        description = "Relative file path to a .pss that defines particles",
+        subtype = "FILE_PATH"
+    )
 
     debug = bpy.props.BoolProperty(
         attr = "debug",
@@ -1023,6 +1102,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
         default = False) # Set this to true during development to avoid re-checking it
     
+    #######################################
     dev_enable_breakpoints = bpy.props.BoolProperty(
         attr = "dev_enable_breakpoints",
         name = "Enable Breakpoints",
@@ -1063,14 +1143,15 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
-        default = VERSION_1100,
+        default = VERSION_1130,
         items = [
             (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
             (VERSION_1010, "10.1x", "10.1x"),
             (VERSION_1040, "10.4x", "10.4x"),
             (VERSION_1050, "10.5x", "10.5x"),
-            (VERSION_1100, "11.0x", "11.0x")
+            (VERSION_1100, "11.0x", "11.0x"),
+            (VERSION_1130, "11.3x", "11.3x")
         ]
     )
 
@@ -1099,7 +1180,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         type=XPlane2BlenderVersion)
 
 # Class: XPlaneObjectSettings
-# Settings for Blender objects.
 #
 # Properties:
 #   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
@@ -1112,13 +1192,10 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 #   float lightLevel_v2 - Light Level Value 2
 #   string lightLevel_dataref - Light Level Dataref
 class XPlaneObjectSettings(bpy.types.PropertyGroup):
-    datarefs = bpy.props.CollectionProperty(
-        attr = "datarefs",
-        name = "X-Plane Datarefs",
-        description = "X-Plane Datarefs",
-        type = XPlaneDataref
-    )
-
+    '''
+    Settings for Blender objects. On Blender Objects these are accessed via a 
+    pointer property called xplane. Ex: bpy.data.objects[0].xplane.datarefs
+    '''
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
         name = "Custom X-Plane Attributes",
@@ -1131,6 +1208,19 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         name = "Custom X-Plane Animation Attributes",
         description = "User defined attributes for animation of the Object",
         type = XPlaneCustomAttribute
+    )
+
+    datarefs = bpy.props.CollectionProperty(
+        attr = "datarefs",
+        name = "X-Plane Datarefs",
+        description = "X-Plane Datarefs",
+        type = XPlaneDataref
+    )
+
+    empty = bpy.props.PointerProperty(
+        name = "Special Empty Properties",
+        description = "Empty Only Properties",
+        type = XPlaneEmpty
     )
 
     manip = bpy.props.PointerProperty(
@@ -1557,6 +1647,8 @@ def addXPlaneRNA():
     bpy.utils.register_class(XPlane2BlenderVersion)
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
+    bpy.utils.register_class(XPlaneEmitter)
+    bpy.utils.register_class(XPlaneEmpty)
     bpy.utils.register_class(XPlaneCondition)
     #bpy.utils.register_class(XPlaneDatarefSearch)
     bpy.utils.register_class(XPlaneExportPathDirective)
@@ -1605,6 +1697,7 @@ def addXPlaneRNA():
 
 # Function: removeXPlaneRNA
 # Unregisters all properties.
+# TODO: Not sure if it is necissary to unregister in reverse order
 def removeXPlaneRNA():
     # complex classes, depending on basic classes
     bpy.utils.unregister_class(XPlaneObjectSettings)
@@ -1618,7 +1711,8 @@ def removeXPlaneRNA():
     bpy.utils.unregister_class(XPlane2BlenderVersion)
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
-    #bpy.utils.unregister_class(XPlaneDatarefSearch)
+    bpy.utils.unregister_class(XPlaneEmitter)
+    bpy.utils.unregister_class(XPlaneEmpty)
     bpy.utils.unregister_class(XPlaneExportPathDirective)
     bpy.utils.unregister_class(XPlaneManipulator)
     bpy.utils.unregister_class(XPlaneCockpitRegion)
