@@ -30,16 +30,15 @@ class XPlaneHeader():
     # Parameters:
     #   XPlaneFile xplaneFile - A <XPlaneFile>.
     #   int obj_version - OBJ format version.
-    def __init__(self, xplaneFile, obj_version):
+    def __init__(self, xplaneFile:'XPlaneFile', obj_version:int):
         self.obj_version = obj_version
-        self.mode = "default"
         self.xplaneFile = xplaneFile
 
         # A list of tuples in the form of (lib path, physical path)
         # for example, if the path in the box is 'lib/g10/cars/car.obj'
         # and the file is getting exported to '/code/x-plane/Custom Scenery/Kansas City/cars/honda.obj'
         # you would have ('lib/g10/cars/car.obj','cars/honda.obj')
-        self.export_path_dirs = []
+        self.export_path_dirs = [] # type: List[str,str]
 
         for export_path_directive in self.xplaneFile.options.export_path_directives:
             export_path_directive.export_path = export_path_directive.export_path.lstrip()

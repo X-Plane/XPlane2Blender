@@ -534,7 +534,7 @@ def mesh_layout(self, obj):
 # Parameters:
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
-def lamp_layout(self, obj):
+def lamp_layout(self:bpy.types.UILayout, obj):
     layout = self.layout
     row = layout.row()
     row.prop(obj.xplane, "type", text = "Type")

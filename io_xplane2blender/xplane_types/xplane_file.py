@@ -1,21 +1,26 @@
 # File: xplane_file.py
 # Defines X-Plane file data type.
 
+import collections
+
 import bpy
 import mathutils
-import collections
+
+from typing import Union
+from io_xplane2blender import xplane_helpers
+
+from ..xplane_helpers import floatToStr, logger
 from .xplane_bone import XPlaneBone
+from .xplane_commands import XPlaneCommands
+from .xplane_header import XPlaneHeader
 from .xplane_light import XPlaneLight
-#TODO: Delete all traces of XPlaneLine from .xplane_line import XPlaneLine
+from .xplane_lights import XPlaneLights
+from .xplane_material_utils import getReferenceMaterials
+from .xplane_mesh import XPlaneMesh
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
-from .xplane_lights import XPlaneLights
-from .xplane_mesh import XPlaneMesh
-from .xplane_header import XPlaneHeader
-from .xplane_commands import XPlaneCommands
-from ..xplane_helpers import floatToStr, logger
-from .xplane_material_utils import getReferenceMaterials
-from io_xplane2blender import xplane_helpers
+
+#TODO: Delete all traces of XPlaneLine from .xplane_line import XPlaneLine
 
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
@@ -124,7 +129,7 @@ class XPlaneFile():
         self._resolvedBlenderGroupInstances = []
 
         # dict of xplane objects within the file
-        self.objects = collections.OrderedDict()
+        self.objects = collections.OrderedDict() # type: collections.OrderedDict
 
         self.exportMode = 'layers'
 
@@ -342,7 +347,7 @@ class XPlaneFile():
     # Returns:
     #   <XPlaneObject> or None if object type is not supported
     def convertBlenderObject(self, blenderObject):
-        xplaneObject = None
+        xplaneObject = None # type: Union[XPlanePrimitive,XPlaneLight,XPlaneObject]
 
         # mesh: let's create a prim out of it
         if blenderObject.type == "MESH":

@@ -406,14 +406,6 @@ class XPlaneCondition(bpy.types.PropertyGroup):
         default = True
     )
 
-# Class: XPlaneDatarefSearch
-# Not used right now. Might be used to search for dataref paths.
-#class XPlaneDatarefSearch(bpy.types.PropertyGroup):
-#    path = bpy.props.StringProperty(attr = "path",
-#                                    name = "Dataref path",
-#                                    description = "XPlane Dataref path",
-#                                    default = "")
-
 # Class: XPlaneManipulator
 # A X-Plane manipulator settings
 #
@@ -1650,7 +1642,6 @@ def addXPlaneRNA():
     bpy.utils.register_class(XPlaneEmitter)
     bpy.utils.register_class(XPlaneEmpty)
     bpy.utils.register_class(XPlaneCondition)
-    #bpy.utils.register_class(XPlaneDatarefSearch)
     bpy.utils.register_class(XPlaneExportPathDirective)
     bpy.utils.register_class(XPlaneManipulator)
     bpy.utils.register_class(XPlaneCockpitRegion)

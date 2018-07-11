@@ -65,11 +65,11 @@ class XPlaneObject():
     # Parameters:
     #   blenderObject - A Blender object
     def __init__(self, blenderObject):
-        self.type = ''
+        self.type = '' # type: Optional[str]
         self.blenderObject = blenderObject
         self.xplaneBone = None
-        self.name = blenderObject.name
-        self.datarefs = {}
+        self.name = blenderObject.name # type: str
+        self.datarefs = {} # type: Dict[str,str]
         self.bakeMatrix = None
         self.id = int(blenderObject.as_pointer())
         self.attributes = XPlaneAttributes()

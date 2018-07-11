@@ -1,14 +1,16 @@
 import collections
-from collections import OrderedDict
 import copy
 import functools
 import math
 import os
-from numbers import Number
-from mathutils import Vector
-from io_xplane2blender import xplane_helpers
+from collections import OrderedDict
+
+from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
-from io_xplane2blender import xplane_constants
+from mathutils import Vector
+from numbers import Number
+from typing import List
+
 
 '''
 API Rules:
@@ -222,7 +224,7 @@ def get_overload(light_name):
 # light_type_str<str> - A supported light types, such as "BILLBOARD_HW" or "LIGHT_PARAM_DEF
 # light_name<str>     - The name of the light, found in lights.txt
 # light_data<list>    - The data of the light after the name.
-def _add_light(light_type_str,light_name,light_data):
+def _add_light(light_type_str:str,light_name:str,light_data:List[str]):
     if light_name not in _parsed_lights:
         _parsed_lights[light_name] = ParsedLightOverload(light_name)
 

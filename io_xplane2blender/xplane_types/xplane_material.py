@@ -287,7 +287,7 @@ class XPlaneMaterial():
     #
     # Returns:
     #   bool, list - True if Material is valid, else False + a list of errors
-    def isValid(self, exportType):
+    def isValid(self, exportType:str)->bool:
         return validate(self, exportType)
 
     # Method: getEffectiveNormalMetalness
@@ -296,7 +296,7 @@ class XPlaneMaterial():
     # Returns:
     # bool - True or false if the version of X-Plane chosen supports NORMAL_METALNESS and what its value is,
     # False if the current XPLane version doesn't support it
-    def getEffectiveNormalMetalness(self):
+    def getEffectiveNormalMetalness(self)->bool:
         if int(bpy.context.scene.xplane.version) >= 1100:
             return self.options.normal_metalness
         else:
@@ -308,7 +308,7 @@ class XPlaneMaterial():
     # Returns:
     # bool - True or false if the version of X-Plane chosen supports BLEND_GLASS and what its value is,
     # False if the current XPLane version doesn't support it
-    def getEffectiveBlendGlass(self):
+    def getEffectiveBlendGlass(self)->bool:
         xplane_version  = int(bpy.context.scene.xplane.version)
         blend_prop_enum = self.options.blend_v1100
         

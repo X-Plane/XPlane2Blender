@@ -1,5 +1,6 @@
 import math
 import re
+
 from .xplane_object import XPlaneObject
 from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
 from ..xplane_constants import *
@@ -11,6 +12,8 @@ from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_types.xplane_lights_txt_parser import *
 from io_xplane2blender.xplane_types import xplane_lights_txt_parser
 from copy import deepcopy
+from typing import List, Optional
+
 
 # Class: XPlaneLight
 # A Light
@@ -126,7 +129,7 @@ class XPlaneLight(XPlaneObject):
             
 
             params_actual = [p.strip() for p in params_actual[0:len(params_formal)]]
-            user_values   = [None]*len(params_actual)
+            user_values   = [None]*len(params_actual) # type: List[Optional[float]]
             for i,param in enumerate(params_actual):
                 def isfloat(number_str):
                     try:

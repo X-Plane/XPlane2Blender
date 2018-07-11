@@ -1,9 +1,12 @@
 import bpy
+from typing import Any
+
 from ..xplane_config import getDebug
 from ..xplane_constants import *
-from .xplane_object import XPlaneObject
-from .xplane_material import XPlaneMaterial
 from .xplane_attribute import XPlaneAttribute
+from .xplane_material import XPlaneMaterial
+from .xplane_object import XPlaneObject
+
 
 # Class: XPlanePrimitive
 # A Mesh object.
@@ -68,8 +71,8 @@ class XPlanePrimitive(XPlaneObject):
     # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.
     def collectManipulatorAttributes(self):
         attr = 'ATTR_manip_'
-        value = True
 
+        value = None # type: Tuple[Any]
         if self.blenderObject.xplane.manip.enabled:
             manip = self.blenderObject.xplane.manip
             xplane_version = int(bpy.context.scene.xplane.version)
