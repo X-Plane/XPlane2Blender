@@ -421,7 +421,7 @@ class XPlaneHeader():
         for xplaneObject in xplaneObjects:
             # skip non-mesh objects and objects without a xplane bone
             # also skip invalid materials
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and \
+            if xplaneObject.type == 'MESH' and \
                xplaneObject.xplaneBone and \
                xplaneObject.material.options:
                 mat = xplaneObject.material
@@ -456,7 +456,7 @@ class XPlaneHeader():
         # now go through all textures again and list any objects with different textures
         for xplaneObject in xplaneObjects:
             # skip non-mesh objects and objects without a xplane bone
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and xplaneObject.xplaneBone:
+            if xplaneObject.type == 'MESH' and xplaneObject.xplaneBone:
                 mat = xplaneObject.material
 
                 if mat.options.draped:

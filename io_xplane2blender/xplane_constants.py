@@ -174,8 +174,3 @@ LIGHT_TRAFFIC = "traffic"
 LIGHT_NAMED = "named"
 LIGHT_CUSTOM = "custom"
 LIGHT_PARAM = "param"
-
-#TODO: What is the point of these? Why duplicate this data from blenderObject?
-XPLANE_OBJECT_TYPE_PRIMITIVE = 'PRIMITIVE'
-XPLANE_OBJECT_TYPE_LIGHT = 'LIGHT'
-XPLANE_OBJECT_TYPE_LINE = 'LINE'

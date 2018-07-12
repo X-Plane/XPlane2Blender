@@ -8,6 +8,7 @@ import mathutils
 
 from typing import Union
 from io_xplane2blender import xplane_helpers
+from io_xplane2blender.xplane_types import xplane_empty
 
 from ..xplane_helpers import floatToStr, logger
 from .xplane_bone import XPlaneBone
@@ -363,7 +364,7 @@ class XPlaneFile():
             xplaneObject = XPlaneObject(blenderObject)
         elif blenderObject.type == "EMPTY":
             logger.info("\t %s: adding to list" % blenderObject.name)
-            xplaneObject = XPlaneObject(blenderObject)
+            xplaneObject = xplane_empty.XPlaneEmpty(blenderObject)
             
         return xplaneObject
 
@@ -394,7 +395,7 @@ class XPlaneFile():
         objects = self.getObjectsList()
 
         for xplaneObject in objects:
-            if xplaneObject.type == 'PRIMITIVE' and xplaneObject.material.options:
+            if xplaneObject.type == 'MESH' and xplaneObject.material.options:
                 errors = xplaneObject.material.isValid(self.options.export_type)
 
                 if errors and len(errors):
@@ -411,7 +412,7 @@ class XPlaneFile():
         objects = self.getObjectsList()
 
         for xplaneObject in objects:
-            if xplaneObject.type == 'PRIMITIVE' and xplaneObject.material and xplaneObject.material.options:
+            if xplaneObject.type == 'MESH' and xplaneObject.material and xplaneObject.material.options:
                 materials.append(xplaneObject.material)
 
         return materials

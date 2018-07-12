@@ -50,7 +50,7 @@ class XPlaneMesh():
 
         for xplaneObject in xplaneObjects:
             # skip non-mesh objects and objects that do not have a xplane bone
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and xplaneObject.xplaneBone:
+            if xplaneObject.type == 'MESH' and xplaneObject.xplaneBone:
                 xplaneObject.indices[0] = len(self.indices)
                 first_vertice_of_this_xplaneObject = len(self.vertices)
 

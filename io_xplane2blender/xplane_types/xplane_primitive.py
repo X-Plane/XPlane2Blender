@@ -35,8 +35,9 @@ class XPlanePrimitive(XPlaneObject):
     # Parameters:
     #   blenderObject - A Blender object
     def __init__(self, blenderObject):
+        assert blenderObject.type == 'MESH'
         super(XPlanePrimitive, self).__init__(blenderObject)
-        self.type = XPLANE_OBJECT_TYPE_PRIMITIVE
+        self.type = 'MESH'
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
         self.faces = None
