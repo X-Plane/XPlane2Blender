@@ -1,0 +1,3 @@
+2 1100 Comment: Path in is invalid, line starts with whitepspace. This is not tested with DatarefInfoStruct's is_invalid
+
+	int y

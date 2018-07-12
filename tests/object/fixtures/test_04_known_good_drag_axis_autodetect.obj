@@ -1,0 +1,62 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	24	0	0	36
+
+VT	-1	1	-1	-1	0	0	0	0	# 0
+VT	-1	1	1	-1	0	0	0	0	# 1
+VT	-1	-1	1	-1	0	0	0	0	# 2
+VT	-1	-1	-1	-1	0	0	0	0	# 3
+VT	1	1	-1	0	0	-1	0	0	# 4
+VT	-1	1	-1	0	0	-1	0	0	# 5
+VT	-1	-1	-1	0	0	-1	0	0	# 6
+VT	1	-1	-1	0	0	-1	0	0	# 7
+VT	1	1	1	1	0	0	0	0	# 8
+VT	1	1	-1	1	0	0	0	0	# 9
+VT	1	-1	-1	1	0	0	0	0	# 10
+VT	1	-1	1	1	0	0	0	0	# 11
+VT	1	-1	1	0	0	1	0	0	# 12
+VT	-1	-1	1	0	0	1	0	0	# 13
+VT	-1	1	1	0	0	1	0	0	# 14
+VT	1	1	1	0	0	1	0	0	# 15
+VT	-1	-1	-1	0	-1	0	0	0	# 16
+VT	-1	-1	1	0	-1	0	0	0	# 17
+VT	1	-1	1	0	-1	0	0	0	# 18
+VT	1	-1	-1	0	-1	0	0	0	# 19
+VT	-1	1	1	0	1	0	0	0	# 20
+VT	-1	1	-1	0	1	0	0	0	# 21
+VT	1	1	-1	0	1	0	0	0	# 22
+VT	1	1	1	0	1	0	0	0	# 23
+
+IDX10	0	1	2	2	3	0	4	5	6	6
+IDX10	7	4	8	9	10	10	11	8	12	13
+IDX10	14	14	15	12	16	17	18	18	19	16
+IDX	20
+IDX	21
+IDX	22
+IDX	22
+IDX	23
+IDX	20
+
+# 0 ROOT
+# 1 Object: 04_known_good_drag_axis_autodetect
+# EMPTY: 04_known_good_drag_axis_autodetect	weight: 0
+	# 2 Object: Cube_define_drag_axis
+	ANIM_begin
+	# translation keyframes
+	ANIM_trans_begin	sim/weapons/x[0]
+	ANIM_trans_key	-999	0	0	0
+	ANIM_trans_key	0	0	0	0
+	ANIM_trans_key	5	0	0	-0.80000001
+	ANIM_trans_key	999	0	0	-0.80000001
+	ANIM_trans_end
+	# PRIMITIVE: Cube_define_drag_axis	weight: 0
+	# MATERIAL: Material
+	ATTR_shiny_rat	0.5
+	ATTR_manip_drag_axis	hand	0	0	-0.80000001	0	5	sim/weapons/x[0]	Test Tooltip
+	TRIS	0 36
+	ANIM_end
+
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-dev.0+22.NO_BUILD_NUMBR

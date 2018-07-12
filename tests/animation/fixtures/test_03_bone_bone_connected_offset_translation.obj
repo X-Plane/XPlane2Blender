@@ -1207,26 +1207,18 @@ IDX10	1042	1043	1043	1044	1041	1045	1046	1047	1047	1048
 IDX10	1045	1049	1050	1051	1051	1052	1049	1053	1054	1055
 
 # 0 ROOT
-# 1 Object: 03_bone_bone_connected_offset_translation
+# 1 Armature: 03_bone_bone_connected_offset_translation
 # ARMATURE: 03_bone_bone_connected_offset_translation	weight: 0
 	# 2 Bone: Bone
 	ANIM_begin
 	# static rotation
 	ANIM_rotate	1	0	0	90.00020741	90.00020741
 	# rotation keyframes
-	ANIM_rotate_begin	0	0	-1	sim/cockpit2/controls/yoke_roll_ratio
-	ANIM_rotate_key	-1	-0.00000444
-	ANIM_rotate_key	1	-0.00000444
-	ANIM_rotate_end
-	ANIM_rotate_begin	0	1	0	sim/cockpit2/controls/yoke_roll_ratio
+	ANIM_rotate_begin	0	1.00000167	0.00000013	sim/cockpit2/controls/yoke_roll_ratio
 	ANIM_rotate_key	-1	29.99995302
 	ANIM_rotate_key	1	-29.99995302
 	ANIM_rotate_end
-	ANIM_rotate_begin	1	0	0	sim/cockpit2/controls/yoke_roll_ratio
-	ANIM_rotate_key	-1	0.00000119
-	ANIM_rotate_key	1	-0.00000325
-	ANIM_rotate_end
-		# 3 Object: 03_Sphere.007
+		# 3 Mesh: 03_Sphere.007
 		# PRIMITIVE: 03_Sphere.007	weight: 0
 		# MATERIAL: Material
 		ATTR_shiny_rat	0.5
@@ -1240,11 +1232,11 @@ IDX10	1045	1049	1050	1051	1051	1052	1049	1053	1054	1055
 		ANIM_rotate_key	-1	29.99995302
 		ANIM_rotate_key	1	-29.99995302
 		ANIM_rotate_end
-			# 4 Object: 03_Sphere.008
+			# 4 Mesh: 03_Sphere.008
 			# PRIMITIVE: 03_Sphere.008	weight: 0
 			# MATERIAL: Material
 			TRIS	720 720
 		ANIM_end
 	ANIM_end
 
-# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.4.0-dev.0+3.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.4.0-dev.0+27.NO_BUILD_NUMBR

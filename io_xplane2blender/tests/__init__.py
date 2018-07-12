@@ -1,16 +1,19 @@
 import os
+
 import shutil
 import sys
 import unittest
 
 import bpy
 
-from ..xplane_config import setDebug, getDebug
 import io_xplane2blender
+from io_xplane2blender.xplane_config import setDebug, getDebug
 from io_xplane2blender import xplane_config
 from io_xplane2blender import xplane_helpers
-from ..xplane_helpers import logger, XPlaneLogger
-from ..xplane_types import xplane_file, XPlanePrimitive
+from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
+from io_xplane2blender.xplane_types import xplane_file, xplane_primitive
+from ..xplane_types import xplane_file
+from ..xplane_types.xplane_primitive import XPlanePrimitive
 from .animation_file_mappings import mappings
 
 
@@ -36,6 +39,7 @@ class XPlaneTestCase(unittest.TestCase):
         if useLogger:
             self.useLogger()
 
+        #logger.warn("---------------")
     def useLogger(self):
         debug = getDebug()
         logLevels = ['error', 'warning']
@@ -44,7 +48,7 @@ class XPlaneTestCase(unittest.TestCase):
             logLevels.append('info')
             logLevels.append('success')
 
-        logger.clearTransports()
+        logger.clear()
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
 
     def assertMatricesEqual(self,mA,mB,tolerance=FLOAT_TOLERANCE):
@@ -55,7 +59,7 @@ class XPlaneTestCase(unittest.TestCase):
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
         for name in objectNames:
             self.assertIsNotNone(xplaneFile.objects[name])
-            self.assertTrue(isinstance(xplaneFile.objects[name], XPlanePrimitive))
+            self.assertTrue(isinstance(xplaneFile.objects[name],xplane_primitive.XPlanePrimitive))
             self.assertEquals(xplaneFile.objects[name].blenderObject, bpy.data.objects[name])
 
     def assertXplaneFileHasBoneTree(self, xplaneFile, tree):
@@ -167,8 +171,16 @@ class XPlaneTestCase(unittest.TestCase):
                 if isinstance(segmentB, str):
                     segmentB = toFloat(segmentB, segmentB)
 
+                def isdegree(segment,line):
+                    if isnumber(segment):
+                        return not isnumber(line) and ("rotate" in line or "manip_keyframe" in line) and isnumber(segment)
+                    else:
+                        return False
+
                 # assure same values (floats must be compared with tolerance)
                 if isnumber(segmentA) and isnumber(segmentB):
+                    segmentA = abs(segmentA) if isdegree(segmentA,lineA[0]) else segmentA
+                    segmentB = abs(segmentB) if isdegree(segmentB,lineB[0]) else segmentB
                     self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
                 else:
                     self.assertEquals(segmentA, segmentB)

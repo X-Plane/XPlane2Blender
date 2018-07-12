@@ -2,6 +2,7 @@
 # Defines Helpers
 
 import bpy
+import mathutils
 
 import datetime
 from datetime import timezone
@@ -57,7 +58,14 @@ def resolveBlenderPath(path):
     else:
         return path
  
+def get_plugin_resources_folder()->str:
+    return os.path.join(os.path.dirname(__file__),"resources")
 
+def vec_b_to_x(v):
+    return mathutils.Vector((v.x, v.z, -v.y))
+
+def vec_x_to_b(v):
+    return mathutils.Vector((v.x, -v.z, v.y))
 # This is a convience struct to help prevent people from having to repeateld copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():
@@ -288,6 +296,10 @@ class XPlaneLogger():
             'types': messageTypes
         })
 
+    def clear(self):
+        self.clearTransports()
+        self.clearMessages()
+
     def clearTransports(self):
         del self.transports[:]
 
@@ -470,11 +482,13 @@ class XPlaneDebugger():
         self.log = False
 #        sys.excepthook = self.excepthook
 
+# TODO: delete this as per issue #74
 # Class: XPlaneProfiler
 # Stores profiling information of processes.
 class XPlaneProfiler():
     # Property: times
     # dict of stored times used internally.
+    #TODO this is a class property and is likely unused
     times = {}
 
     # Constructor: __init__

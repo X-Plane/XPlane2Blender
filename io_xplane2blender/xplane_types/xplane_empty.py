@@ -1,8 +1,8 @@
 import bpy
-
 from io_xplane2blender import xplane_config
-from io_xplane2blender.xplane_types import XPlaneObject
 from io_xplane2blender.xplane_constants import *
+from io_xplane2blender.xplane_types import XPlaneObject
+
 
 class XPlaneEmpty(XPlaneObject):
     def __init__(self,blenderObject):
@@ -38,4 +38,3 @@ class XPlaneEmpty(XPlaneObject):
             o +='\n'
 
         return o
-

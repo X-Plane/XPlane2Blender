@@ -1,27 +1,45 @@
-# import bpy
-# import math
-import mathutils
 import math
-from .xplane_keyframe import XPlaneKeyframe
-from ..xplane_config import getDebug
-from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
+from typing import Optional
+
+import bpy
+import mathutils
+from io_xplane2blender.xplane_config import getDebug
+from io_xplane2blender.xplane_helpers import floatToStr, FLOAT_PRECISION, logger
+from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
+from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
+#from xplane_object import XPlaneObject
 
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
 class XPlaneBone():
-
+    '''
+    Property: animations
+    Dictionary<DataRefPath,List<XPlaneKeyframeCollection>>
+    '''
     # Constructor: __init__
     #
     # Parameters:
-    #   blenderObject - Blender Object
-    #   xplaneObject - <XPlaneObject>
-    #   parent - (optional) parent <XPlaneAnimBone>
-    def __init__(self, blenderObject = None, xplaneObject = None, parent = None):
+    #   blenderObject - Blender Object associated with this Bone
+    #                     
+    #   xplaneObject - <XPlaneObject>, will be none when XPlaneBone is None
+    #   parent - Optional(optional) parent <XPlaneAnimBone>
+    def __init__(self,
+                 blenderObject:Optional[bpy.types.Object]=None,
+                 xplaneObject:Optional['XPlaneObject']=None,
+                 parent:Optional['XPlaneBone']=None,
+                 xplaneFile:Optional['XPlaneFile']=None):
+        '''
+        self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy
+        - It will be None for the root bone (in layers mode)
+        
+        self.blenderBone is the Blender Bone associated with this XPlaneBone (if the origin during traversal was a bpy.types.Bone)
+        Thus, you can tell if something was a Bone by if blenderBone is not None
+        '''
         self.xplaneObject = xplaneObject
         self.blenderObject = blenderObject
         self.blenderBone = None
         self.parent = parent
-        self.xplaneFile = None
+        self.xplaneFile = xplaneFile
         self.children = []
 
         if self.xplaneObject:
@@ -33,11 +51,13 @@ class XPlaneBone():
         if self.parent:
             self.level = self.parent.level + 1
 
-        # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframes>.
-        self.animations = {}
+        # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
+        self.animations = {} # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
 
         # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
-        self.datarefs = {}
+        # IMPORTANT NOTE: Show/Hide Datarefs and datarefs without 2 keyframes will not be included and
+        # must be accessed via blenderObject.xplane.datarefs!
+        self.datarefs = {} # type: Dict[bpy.types.StringProperty,XPlaneDataref]
 
     def sortChildren(self):
         def getWeight(xplaneBone):
@@ -67,7 +87,7 @@ class XPlaneBone():
         return False
 
     # Method: isAnimatedForRotation
-    # Checks if a dataref's keyframes actually contain meaningful translations, and we should therefore write keyframes out
+    # Checks if a dataref's keyframes actually contain meaningful rotation, and we should therefore write keyframes out
     def isDataRefAnimatedForRotation(self):
         if hasattr(self, 'animations') and len(self.animations) > 0:
            #Check to see if there is at least some difference in the keyframe locations 
@@ -91,7 +111,6 @@ class XPlaneBone():
     #   bool - True if bone is animated, False if not.
     def isAnimated(self):
         return self.isDataRefAnimatedForTranslation() or self.isDataRefAnimatedForRotation()
-#       return (hasattr(self, 'animations') and len(self.animations) > 0)
 
     # Method: collectAnimations
     # Stores all animations in <animations>.
@@ -126,11 +145,11 @@ class XPlaneBone():
             #check for dataref animation by getting fcurves with the dataref group
             for fcurve in animationData.action.fcurves:
                 logger.info("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
-				
-				# Ben says: I'm not sure if this is the right way to do this -- when we iterate the fcurve data for this
-				# armature, EVERY bone is included in a big pile.  So we parse the data_path and if it's clearly (1) for a bone and
-				# (2) NOT for us, we skip it.  Without this, the key frames from differing bones get cross-contaminated in a multi-
-				# bone case.
+
+                # Ben says: I'm not sure if this is the right way to do this -- when we iterate the fcurve data for this
+                # armature, EVERY bone is included in a big pile.  So we parse the data_path and if it's clearly (1) for a bone and
+                # (2) NOT for us, we skip it.  Without this, the key frames from differing bones get cross-contaminated in a multi-
+                # bone case.
                 if fcurve.data_path.startswith("bones[\"") and bone != None:
                     path_we_want = "bones[\"%s\"]" % bone.name
                     if not fcurve.data_path.startswith(path_we_want):
@@ -168,7 +187,6 @@ class XPlaneBone():
 
                     if len(fcurve.keyframe_points) > 1:
                         # time to add dataref to animations
-                        self.animations[dataref] = []
 
                         if bone:
                             self.datarefs[dataref] = bone.xplane.datarefs[index]
@@ -178,23 +196,37 @@ class XPlaneBone():
                         # store keyframes temporary, so we can resort them
                         keyframes = []
 
-                        for keyframe in fcurve.keyframe_points:
+                        for i,keyframe in enumerate(fcurve.keyframe_points):
                             logger.info("\t\t adding keyframe: %6.3f" % keyframe.co[0])
-                            keyframes.append(keyframe)
+                            keyframes.append(XPlaneKeyframe(keyframe,i,dataref,self))
 
                         # sort keyframes by frame number
-                        keyframesSorted = sorted(keyframes, key = lambda keyframe: keyframe.co[0])
+                        keyframesSorted = sorted(keyframes, key = lambda keyframe: keyframe.index)
+                        self.animations[dataref] = XPlaneKeyframeCollection(keyframesSorted)
 
-                        for i in range(0, len(keyframesSorted)):
-                            self.animations[dataref].append(XPlaneKeyframe(keyframesSorted[i], i, dataref, self))
-
-    def getName(self):
+    def getName(self,ignore_indent_level:bool=False)->str:
+        '''
+        Gets the (optionally) indent level, Blender Type, and name.
+        Useful for debugging and error message.
+        
+        Note: Unit tests, like the ones in xplane_file,
+        test against the output of this method!
+        '''
         if self.blenderBone:
-            return '%d Bone: %s' % (self.level, self.blenderBone.name)
+            if ignore_indent_level:
+                return 'Bone: %s' % (self.blenderBone.name)
+            else:
+                return '%d Bone: %s' % (self.level, self.blenderBone.name)
         elif self.blenderObject:
-            return '%d Object: %s' % (self.level, self.blenderObject.name)
+            if ignore_indent_level:
+                return '%s: %s' % (self.blenderObject.type.title(), self.blenderObject.name)
+            else:
+                return '%d %s: %s' % (self.level, self.blenderObject.type.title(), self.blenderObject.name)
         elif self.parent == None:
-            return '%d ROOT' % self.level
+            if ignore_indent_level:
+                return 'ROOT'
+            else:
+                return '%d ROOT' % self.level
 
         return 'UNKNOWN'
 
@@ -446,17 +478,6 @@ class XPlaneBone():
     def __str__(self):
         return self.toString()
 
-    def _axisAngleRotationKeyframesToEuler(self, keyframes):
-        for keyframe in keyframes:
-            rotation = keyframe.rotation
-            axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
-			# Why the heck XZY?  Jonathan's 2.49 exporter decomposes Eulers using XYZ (because that is the ONLY
-			# decomposition available in 2.49), but it does so in X-Plane space.  So this is an axis renaming
-			# (since we alway work in Blender space) so that it comes out the same in X-Plane.
-            keyframe.rotationMode = 'XZY'
-            keyframe.rotation = mathutils.Quaternion(axis, rotation[0]).to_euler('XZY')
-
-        return keyframes
 
     def writeAnimationPrefix(self):
         debug = getDebug()
@@ -507,7 +528,6 @@ class XPlaneBone():
         if isAnimated:# and postMatrix is not preMatrix:
             # write out static translations of bake
             bakeMatrix = self.getBakeMatrixForMyAnimations()
-    
             o += self._writeStaticTranslation(bakeMatrix)
             o += self._writeStaticRotation(bakeMatrix)
 
@@ -610,7 +630,6 @@ class XPlaneBone():
                     indent,
                     self.datarefs[dataref].loop
                 )
-								
         return o
 
     def _writeTranslationKeyframes(self, dataref):
@@ -652,42 +671,20 @@ class XPlaneBone():
 
         return o
 
-    def _writeAxisAngleRotationKeyframes(self, dataref):
+    def _writeAxisAngleRotationKeyframes(self, dataref, keyframes):
         o = ''
         indent = self.getIndent()
-        keyframes = self.animations[dataref]
         totalRot = 0
 
-        # our reference axis
-        refAxis = None
-        refAxisInv = None
+        # our reference axis (or axes)
+        axes, final_rotation_mode = keyframes.getReferenceAxes()
 
-        # find reference axis
-        for keyframe in keyframes:
-            rotation = keyframe.rotation
-            axis = mathutils.Vector((rotation[1], rotation[2], rotation[3]))
-
-            if rotation[0] == 0:
-                continue
-            elif refAxis == None:
-                refAxis = axis
-                refAxisInv = refAxis * -1
-            elif refAxis.x == axis.x and \
-                 refAxis.y == axis.y and \
-                 refAxis.z == axis.z:
-                continue
-            elif refAxisInv.x == axis.x and \
-                 refAxisInv.y == axis.y and \
-                 refAxisInv.z == axis.z:
-                keyframe.rotation = rotation * -1
-            else:
-                # decompose to eulers and return euler rotation instead
-                self._axisAngleRotationKeyframesToEuler(keyframes)
-                o = self._writeEulerRotationKeyframes(dataref)
-                return o
-
-        if refAxis == None:
-            refAxis = mathutils.Vector((0, 0, 1))
+        if len(axes) == 3:
+            # decompose to eulers and return euler rotation instead
+            o = self._writeEulerRotationKeyframes(dataref,keyframes.asEuler())
+            return o
+        elif len(axes) == 1:
+            refAxis = axes[0]
 
         o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
             indent,
@@ -716,49 +713,32 @@ class XPlaneBone():
 
         return o
 
-    def _writeQuaternionRotationKeyframes(self, dataref):
-        keyframes = self.animations[dataref]
+    def _writeQuaternionRotationKeyframes(self, dataref, keyframes):
+        # Writing axis angle will automatically convert quaternions to AA and write it
+        return self._writeAxisAngleRotationKeyframes(dataref, keyframes.asAA())
 
-        # convert rotations to axis angle
-        for keyframe in keyframes:
-            axisAngle = keyframe.rotation.normalized().to_axis_angle()
-            keyframe.rotation = mathutils.Vector((axisAngle[1], axisAngle[0][0], axisAngle[0][1], axisAngle[0][2]))
-
-        # now simply write axis angle
-        return self._writeAxisAngleRotationKeyframes(dataref)
-
-    def _writeEulerRotationKeyframes(self, dataref):
+    def _writeEulerRotationKeyframes(self, dataref, keyframes):
         debug = getDebug()
-        keyframes = self.animations[dataref]
         o = ''
         indent = self.getIndent()
-        rotationMode = keyframes[0].rotationMode
-        eulerAxisMap = {
-            'ZYX': (0, 1, 2),
-            'ZXY': (1, 0, 2),
-            'YZX': (0, 2, 1),
-            'YXZ': (2, 0, 1),
-            'XZY': (1, 2, 0),
-            'XYZ': (2, 1, 0)
-        }
-        eulerAxes = [(1.0,.0,0.0), (0.0,1.0,0.0), (0.0,0.0,1.0)]
-        axes = eulerAxisMap[rotationMode]
+        axes, final_rotation_mode = keyframes.getReferenceAxes()
         totalRot = 0
 
-        for axis in axes:
+        for axis,order in zip(axes,XPlaneKeyframeCollection.EULER_AXIS_ORDERING[final_rotation_mode]):
             ao = ''
             totalAxisRot = 0
 
             ao += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
                 indent,
-                floatToStr(eulerAxes[axis][0]),
-                floatToStr(eulerAxes[axis][2]),
-                floatToStr(-eulerAxes[axis][1]),
+                floatToStr(axis[0]),
+                floatToStr(axis[2]),
+                floatToStr(-axis[1]),
                 dataref
             )
 
+
             for keyframe in keyframes:
-                deg = math.degrees(keyframe.rotation[axis])
+                deg = math.degrees(keyframe.rotation[order])
                 totalRot += abs(deg)
                 totalAxisRot += abs(deg)
 
@@ -797,11 +777,11 @@ class XPlaneBone():
         rotationMode = keyframes[0].rotationMode
 
         if rotationMode == 'AXIS_ANGLE':
-            o += self._writeAxisAngleRotationKeyframes(dataref)
+            o += self._writeAxisAngleRotationKeyframes(dataref,keyframes)
         elif rotationMode == 'QUATERNION':
-            o += self._writeQuaternionRotationKeyframes(dataref)
+            o += self._writeQuaternionRotationKeyframes(dataref,keyframes)
         else:
-            o += self._writeEulerRotationKeyframes(dataref)
+            o += self._writeEulerRotationKeyframes(dataref,keyframes)
 
         return o
 

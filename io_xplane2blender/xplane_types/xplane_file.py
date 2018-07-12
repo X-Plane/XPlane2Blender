@@ -18,11 +18,11 @@ from .xplane_light import XPlaneLight
 from .xplane_lights import XPlaneLights
 from .xplane_material_utils import getReferenceMaterials
 from .xplane_mesh import XPlaneMesh
+from io_xplane2blender import xplane_props
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 
 #TODO: Delete all traces of XPlaneLine from .xplane_line import XPlaneLine
-
 # Function: getActiveLayers
 # Returns indices of all active Blender layers.
 #
@@ -89,6 +89,7 @@ def createFileFromBlenderRootObject(blenderObject):
     if xplaneLayer:
         xplaneFile = XPlaneFile(getFileNameFromBlenderObject(blenderObject, xplaneLayer), xplaneLayer)
 
+        #TODO: This will never be None, so why have the check?
         if xplaneFile:
             xplaneFile.exportMode = bpy.context.scene.xplane.exportMode
             xplaneFile.collectFromBlenderRootObject(blenderObject)
@@ -110,7 +111,7 @@ def createFilesFromBlenderRootObjects(scene):
 # Class: XPlaneFile
 # X-Plane OBJ file
 class XPlaneFile():
-    def __init__(self, filename, options):
+    def __init__(self, filename:str, options:xplane_props.XPlaneLayer):
         self.filename = filename
 
         self.options = options
@@ -159,8 +160,7 @@ class XPlaneFile():
                         blenderObjects.append(blenderObject)
 
         self.collectBlenderObjects(blenderObjects)
-        self.rootBone = XPlaneBone()
-        self.rootBone.xplaneFile = self
+        self.rootBone = XPlaneBone(None,None,None,self)
         self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
         # restore frame before export
@@ -210,7 +210,16 @@ class XPlaneFile():
         return tempBlenderObjects
 
     # collects all child bones for a given parent bone given a list of blender objects
-    def collectBonesFromBlenderObjects(self, parentBone, blenderObjects, needsFilter = True, noRealBones = False):
+    def collectBonesFromBlenderObjects(self,parentBone, blenderObjects,
+                                       needsFilter:bool = True, # Set to true for when it is unsure if blenderObjects only contains
+                                                                # things with parentBone as it's parent. Needs to filter collection of blenderObjects to just
+                                                                # find the one whose parent is the root, root bone of an Armature, or parentBone 
+                                       noRealBones:bool = False): #noRealBones is used for 
+        '''
+        The collectBonesFromBlender(Bones|Objects) walk through Blender's parent-child hierarchy and translate it to our XPlaneBone tree
+        - Each XPlaneObject has an XPlaneBone
+        - Not all XPlaneBones have an XPlaneObject (ROOT bone and bones connected to unconvertable BlenderObjects)
+        '''
         parentBlenderObject = parentBone.blenderObject
         parentBlenderBone = parentBone.blenderBone
 
@@ -222,11 +231,13 @@ class XPlaneFile():
             elif parentBlenderBone:
                 return blenderObject.parent_type == 'BONE' and blenderObject.parent_bone == parentBlenderBone
             elif blenderObject.parent_type == 'OBJECT':
+                # Find objects whose parent is the root
                 return blenderObject.parent == None
             elif blenderObject.parent_type == 'BONE':
+                # Find bones whose parent is the
+                # Armature Block (and don't have a parent bone)
                 return blenderObject.parent_bone == ""
 
-        # filter out all objects with given parent
         if needsFilter:
             blenderObjects = list(filter(objectFilter, blenderObjects))
 
@@ -235,15 +246,13 @@ class XPlaneFile():
             if blenderObject.name in self.objects:
                 xplaneObject = self.objects[blenderObject.name]
 
-            bone = XPlaneBone(blenderObject, xplaneObject, parentBone)
-            bone.xplaneFile = self
+            bone = XPlaneBone(blenderObject, xplaneObject, parentBone, self)
             parentBone.children.append(bone)
+            bone.collectAnimations()
 
             # xplaneObject is now complete and can collect all data
             if xplaneObject:
                 xplaneObject.collect()
-
-            bone.collectAnimations()
 
             # expand group objects to temporary objects
             if blenderObject.dupli_type == 'GROUP' and blenderObject.name not in self._resolvedBlenderGroupInstances:
@@ -281,8 +290,7 @@ class XPlaneFile():
             blenderBones = filter(boneFilter, blenderBones)
 
         for blenderBone in blenderBones:
-            bone = XPlaneBone(blenderArmature, None, parentBone)
-            bone.xplaneFile = self
+            bone = XPlaneBone(blenderArmature, None, parentBone,self)
             bone.blenderBone = blenderBone
             parentBone.children.append(bone)
 
@@ -331,8 +339,7 @@ class XPlaneFile():
 
         # setup root bone and root xplane object
         rootXPlaneObject = self.objects[blenderRootObject.name]
-        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject)
-        self.rootBone.xplaneFile = self
+        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject,None,self)
 
         # need to collect data
         rootXPlaneObject.collect()

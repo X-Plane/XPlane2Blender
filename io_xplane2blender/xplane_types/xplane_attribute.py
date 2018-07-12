@@ -1,4 +1,4 @@
-from ..xplane_helpers import floatToStr
+from io_xplane2blender.xplane_helpers import floatToStr
 from typing import Any,List,Optional,Sequence,Tuple,Union
 
 # TODO: This API is either redundent or self.value should be private.
@@ -6,6 +6,7 @@ from typing import Any,List,Optional,Sequence,Tuple,Union
 # Class: XPlaneAttribute
 # An Attribute
 class XPlaneAttribute():
+    #TODO: These class variables should be removed. See  #301
     # Constructor: __init__
     #
     # Parameters:

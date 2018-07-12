@@ -6,6 +6,9 @@ from bpy.app.handlers import persistent
 
 import io_xplane2blender
 from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
+from io_xplane2blender.xplane_constants import LOGGER_LEVEL_ERROR,\
+    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS
+from io_xplane2blender.xplane_helpers import XPlaneLogger
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
@@ -43,28 +46,30 @@ Put this in your mind:
 You may now proceed to the rest of the file.
 '''
 
-def __updateLocRot(obj):
+def __updateLocRot(obj,logger):
 
     #In int
     #Out string enum
+    #Recreate the pre_34 animation types enum
+    ANIM_TYPE_TRANSLATE = "translate"
+    ANIM_TYPE_ROTATE = "rotate"
+
+    conversion_table = [
+            #pre_34_anim_types  : post_34_anim_types
+            (xplane_constants.ANIM_TYPE_TRANSFORM, xplane_constants.ANIM_TYPE_TRANSFORM),
+            (                 ANIM_TYPE_TRANSLATE, xplane_constants.ANIM_TYPE_TRANSFORM),
+            (                 ANIM_TYPE_ROTATE,    xplane_constants.ANIM_TYPE_TRANSFORM),
+            (xplane_constants.ANIM_TYPE_SHOW,      xplane_constants.ANIM_TYPE_SHOW),
+            (xplane_constants.ANIM_TYPE_HIDE,      xplane_constants.ANIM_TYPE_HIDE)
+        ]
+
     def convert_old_to_new(old_anim_type):
-        #Recreate the pre_34 animation types enum
-        ANIM_TYPE_TRANSLATE = "translate"
-        ANIM_TYPE_ROTATE = "rotate"
-
-        conversion_table = [
-                #pre_34_anim_types  : post_34_anim_types
-                (xplane_constants.ANIM_TYPE_TRANSFORM, xplane_constants.ANIM_TYPE_TRANSFORM),
-                (                 ANIM_TYPE_TRANSLATE, xplane_constants.ANIM_TYPE_TRANSFORM),
-                (                 ANIM_TYPE_ROTATE,    xplane_constants.ANIM_TYPE_TRANSFORM),
-                (xplane_constants.ANIM_TYPE_SHOW,      xplane_constants.ANIM_TYPE_SHOW),
-                (xplane_constants.ANIM_TYPE_HIDE,      xplane_constants.ANIM_TYPE_HIDE)
-            ]
-
         if old_anim_type >= 0 and old_anim_type < len(conversion_table):
             return conversion_table[old_anim_type][1]
         else:
-            raise Exception("%s was not found in conversion table" % old_anim_type)
+            msg = "%s was not found in conversion table" % old_anim_type
+            logger.error(msg)
+            raise Exception(msg)
 
     for d in obj.xplane.datarefs:
         old_anim_type = d.get('anim_type')
@@ -72,8 +77,14 @@ def __updateLocRot(obj):
             old_anim_type = 0 # If anim_type was never set in the first place, it's value is the default, aka 0 for the old anim_type
 
         new_anim_type = convert_old_to_new(old_anim_type)
-        print("Updating %s's animation dataref (%s)'s animation type from %s to %s" % (obj.name,d.path,old_anim_type,new_anim_type))
         d.anim_type = new_anim_type 
+        logger.info("Updated %s's animation dataref (%s)'s animation type from %s to %s" %
+              (obj.name,\
+               d.path,\
+               conversion_table[old_anim_type][0].capitalize(),
+               new_anim_type.capitalize()
+               )
+              )
 
 # Function: update
 # Updates parts of the data model to ensure forward
@@ -84,33 +95,38 @@ def __updateLocRot(obj):
 #
 # Parameters:
 #     fromVersion - The old version of the blender file
-def update(last_version):
+def update(last_version,logger):
     if last_version < xplane_helpers.VerStruct.parse_version('3.3.0'):
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
+            logger.info('Set "Composite Textures" to False')
 
             if scene.xplane and scene.xplane.layers and len(scene.xplane.layers) > 0:
                 for layer in scene.xplane.layers:
                     # set autodetectTextures to False
                     layer.autodetectTextures = False
+                    logger.info('Turned layer "%s"\'s Autodetect Textures property to off' % layer.name)
 
                     # set export mode to cockpit, if cockpit was previously enabled
                     # TODO: Have users actually exported scenery objects before?
                     # Do we need to care about non-aircraft export types?
+                    prev_export_type = layer.export_type
                     if layer.cockpit:
                         layer.export_type = 'cockpit'
                     else:
                         layer.export_type = 'aircraft'
 
+                    logger.info('Changed layer "%s"\'s Export Type from "%s" to "%s"' % (layer.name, prev_export_type, layer.export_type))
+
     if last_version < xplane_helpers.VerStruct.parse_version('3.4.0'):
         for arm in bpy.data.armatures:
             for bone in arm.bones:
                 #Thanks to Python's duck typing and Blender's PointerProperties, this works
-                __updateLocRot(bone)
+                __updateLocRot(bone,logger)
 
         for obj in bpy.data.objects:
-            __updateLocRot(obj)
+            __updateLocRot(obj,logger)
 
 @persistent
 def load_handler(dummy):
@@ -123,6 +139,10 @@ def load_handler(dummy):
     scene = bpy.context.scene
     current_version = xplane_helpers.VerStruct.current()
     ver_history = scene.xplane.xplane2blender_ver_history
+    logger = xplane_helpers.logger
+    logger.clear()
+    logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Updater Log'), xplane_constants.LOGGER_LEVELS_ALL)
+    logger.addTransport(XPlaneLogger.ConsoleTransport())
 
     # Test if we're coming from a legacy build
     # Caveats:
@@ -141,20 +161,27 @@ def load_handler(dummy):
             # Edge case: If someone creates a modern file and saves it with a legacy version
             # (no protection against real breaking edits, however)
             if len(ver_history) > 0:
-                print("Legacy build number, %s, found %d entries in version history. Not updating, still adding new version numbers" % (str(legacy_version),len(ver_history)))
+                logger.info("Legacy build number, %s, found %d entries in version history. Not updating, still adding new version numbers" % (str(legacy_version),len(ver_history)))
                 legacy_build_number_w_history = True
                 # Since we changed the data of this file, we still need to save the version,
                 # even if no updating gets done
                 xplane_helpers.VerStruct.add_to_version_history(legacy_version)
+                logger.info("Added %s to version history" % str(legacy_version))
+
                 xplane_helpers.VerStruct.add_to_version_history(current_version)
+                logger.info("Added %s to version history" % str(current_version))
             else:
                 xplane_helpers.VerStruct.add_to_version_history(legacy_version)
+                logger.info("Added %s to version history" % str(legacy_version))
 
             scene['xplane2blender_version'] = xplane_constants.DEPRECATED_XP2B_VER
         else:
-            raise Exception("pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."\
-                            " Re-open file in a previous version and/or fix manually in Scene->Custom Properties" % (legacy_version_str))
-            return
+            invalid_version_error_msg = "pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."\
+                            " " "Re-open file in a previous version and/or fix manually in Scene->Custom Properties" % legacy_version_str
+
+            logger.error(invalid_version_error_msg)
+            logger.error("Update not performed")
+            raise Exception(invalid_version_error_msg)
 
     #We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we save that on first save or it'll already be deprecated!
 
@@ -165,17 +192,18 @@ def load_handler(dummy):
     # If the version is out of date
     #     L:Run update
     if last_version.make_struct() < current_version and legacy_build_number_w_history is False:
-        print("This file was created with an older XPlane2Blender version (%s) less than or equal to (%s) "
+        logger.info("This file was created with an older XPlane2Blender version (%s) less than or equal to (%s) "
               "and will now be updated" % (str(last_version),str(current_version)))
-        update(last_version.make_struct())
+        update(last_version.make_struct(),logger)
 
-        print('Your file was successfully updated to XPlane2Blender %s' % str(current_version))
+        logger.success('Your file was successfully updated to XPlane2Blender %s' % str(current_version))
     elif last_version.make_struct() > current_version:
-        print('This file was last edited by a more advanced version, %s, than the current version %s.'\
+        logger.warn('This file was last edited by a more advanced version, %s, than the current version %s.'\
         ' Changes may be lost or corrupt your work!' % (last_version,current_version))
 
     # Add the current version to the history, no matter what. Just in case it means something
     xplane_helpers.VerStruct.add_to_version_history(current_version)
+    logger.info("Added %s to version history" % str(current_version))
 
 bpy.app.handlers.load_post.append(load_handler)
 

@@ -132,11 +132,14 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.scene.frame_set(frame = currentFrame)
         bpy.context.scene.update()
 
+        #TODO: enable when log dialog box is working 
+        #if logger.hasErrors() or logger.hasWarnings():
+            #showLogDialog()
+
+        if not logger.hasErrors():
+            logger.success("Export finished without errors")
+
         self._endLogging()
-
-        if logger.hasErrors() or logger.hasWarnings():
-            showLogDialog()
-
         return {'FINISHED'}
 
     def _startLogging(self):
@@ -211,6 +214,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
                 objFile = open(fullpath, "w")
                 logger.info("Writing %s" % fullpath)
                 objFile.write(out)
+                logger.success("Wrote %s" % fullpath)
             except Exception as e:
                 logger.error(e)
             finally:

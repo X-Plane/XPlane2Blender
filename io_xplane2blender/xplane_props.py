@@ -3,11 +3,11 @@
 
 import bpy
 import io_xplane2blender
-from io_xplane2blender import xplane_constants
-from io_xplane2blender import xplane_config
-from .xplane_constants import *
+from io_xplane2blender import xplane_config, xplane_constants, xplane_helpers
+from io_xplane2blender.xplane_constants import VERSION_1100
+from typing import List
 
-from io_xplane2blender import xplane_helpers
+from .xplane_constants import *
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #
@@ -28,7 +28,7 @@ BEWARE! This file contains, basically, the whole definition for the XPlane2Blend
 until it is deprecated and/or updated (more dragons!) Whatever you remove will create backwards compatibility issues!
 
 For wanting to change xplane_props.py, YOU MUST NOW READ THE HEADER OF xplane_updater.py OR YOU'LL RECIEVE AN ANCIENT CURSE:
-    
+ 
     "Due to an undocumented bad decision during the development of B, all your time and date functions will begin
     randomly choosing different default timezones arguments and changing your OS's timezone at the same time!"
     The curse will only end after 03:14:08 UTC on 19 January 2038 because of another bad decision from the early 1970's"
@@ -39,6 +39,8 @@ Actual Practical Notes
 is a great way to RUIN EVERYTHING. Re-arranging the items list requires great care and is backwards-compatibility breaking
 
 - Main documentation: https://docs.blender.org/api/current/bpy.props.html?highlight=bpy%20props%20prop#module-bpy.props
+
+- Make sure to increment the CURRENT_DATA_MODEL_VERSION number in xplane_config
 
 - The attr member does not appear to be necessary or have an effect on the program. Future props should not use it. Otherwise, I'd like to
 see them culled over time
@@ -234,6 +236,23 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     def short_str(self):
         return str(self)[:str(self).index('+')]
 
+class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
+    start = bpy.props.FloatProperty(
+            name = "Start",
+            description = "Start value (from Dataref 1) of the detent region",
+            default=0.0)
+    end = bpy.props.FloatProperty(
+            name = "End",
+            description = "End value (from Dataref 1) of the detent region",
+            default=0.0)
+    height = bpy.props.FloatProperty(
+            name = "Height",
+            description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
+            default=0.0)
+    
+    def __str__(self):
+       return "({0},{1},{2})".format(self.start,self.end,self.height) 
+
 # Class: XPlaneCustomAttribute
 # A custom attribute.
 #
@@ -270,12 +289,95 @@ class XPlaneCustomAttribute(bpy.types.PropertyGroup):
         min = 0
     )
 
+
+class ListItemDataref(bpy.types.PropertyGroup):
+    '''
+    This is essentially a copy of xplane_datarefs_txt_parser.DatarefInfoStruct's members
+    '''
+    dataref_path = bpy.props.StringProperty(
+        name="Dataref Path Data For Search List",
+        description="A dataref path in the dataref search window. Comes from a Datarefs definitions file"
+    )
+
+    dataref_type = bpy.props.StringProperty(
+        name="Dataref Type Data For Search List",
+        description="Indicates the type, shown in a column in the datarefs search window. Comes from a Datarefs definitions file"
+    )
+
+    dataref_is_writable = bpy.props.StringProperty(
+        name="Dataref 'Is Writable' Data For Search List",
+        description = "A "
+    )
+
+    dataref_units = bpy.props.StringProperty(
+        name="",
+        description=""
+    )
+
+    dataref_description = bpy.props.StringProperty(
+        name="",
+        description=""
+    )
+
+
+class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
+    # This is only set through a DatarefSeachToggle's action.
+    # It should be the full path to the dataref property to change,
+    # as if it were being put into the Python console.
+    # For instance: "bpy.context.active_object.xplane.datarefs[0].path"
+    dataref_prop_dest = bpy.props.StringProperty(
+            default="",
+            name="Current Dataref Property To Change",
+            description="The destination dataref property, starting with 'bpy.context...'"
+    )
+
+    def onclick_dataref(self,context):
+        '''
+        This method is called when the template_list uilist writes to the current selected index as the user selects.
+        We dig out our stashed search info, write the dataref, and clear the current search, zapping out the UI.
+        '''
+
+        xplane = context.scene.xplane
+        datarefs_prop_dest = xplane.dataref_search_window_state.dataref_prop_dest
+        datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
+        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
+        path = datarefs_search_list[datarefs_search_list_idx].dataref_path
+        assert datarefs_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
+        def getattr_recursive(obj,names):
+            '''This automatically expands [] operators'''
+            if len(names) == 1:
+                if '[' in names[0]:
+                    name = names[0]
+                    collection_name = name[:name.find('[')]
+                    index = name[name.find('[')+1:-1]
+                    return getattr(obj,collection_name)[int(index)]
+                else:
+                    return getattr(obj,names[0])
+            else:
+                if '[' in names[0]:
+                    name = names[0]
+                    collection_name = name[:name.find('[')]
+                    index = name[name.find('[')+1:-1]
+                    obj = getattr(obj,collection_name)[int(index)]
+                else:
+                    obj = getattr(obj,names[0])
+                return getattr_recursive(obj,names[1:])
+
+        components = datarefs_prop_dest.split('.')
+        assert components[0] == "bpy"
+        setattr(getattr_recursive(bpy, components[1:-1]), components[-1], path)
+        xplane.dataref_search_window_state.dataref_prop_dest = "" 
+
+    dataref_search_list = bpy.props.CollectionProperty(type=ListItemDataref)
+    dataref_search_list_idx = bpy.props.IntProperty(update=onclick_dataref)
+
+
 class XPlaneExportPathDirective(bpy.types.PropertyGroup):
     export_path = bpy.props.StringProperty(
         name = "Export Path",
         description="The export path that should be copied into a library.txt",
     )
-
+ 
 class XPlaneEmitter(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(
         name = "Emitter Name",
@@ -406,7 +508,7 @@ class XPlaneCondition(bpy.types.PropertyGroup):
         default = True
     )
 
-# Class: XPlaneManipulator
+# Class: XPlaneManipulatorSettings
 # A X-Plane manipulator settings
 #
 # Properties:
@@ -414,9 +516,11 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 #   enum type - Manipulator types as defined in OBJ specs.
 #   string tooltip - Manipulator Tooltip
 #   enum cursor - Manipulator cursors as defined in OBJ specs.
-#   int dx - X-Drag axis length
-#   int dy - Y-Drag axis length
-#   int dz - Z-Drag axis length
+
+#   float dx - X-Drag axis length
+#   float dy - Y-Drag axis length
+#   float dz - Z-Drag axis length
+#
 #   float v1 - Value 1
 #   float v2 - Value 2
 #   float v1_min - Value 1 min.
@@ -433,20 +537,36 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 #   string negative_command - Negative command
 #   string dataref1 - Dataref 1
 #   string dataref2 - Dataref 2
-class XPlaneManipulator(bpy.types.PropertyGroup):
-    enabled = bpy.props.BoolProperty(
-        attr = "enabled",
-        name = "Manipulator",
-        description = "If checked this object will be treated as a manipulator",
+class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
+    autodetect_datarefs = bpy.props.BoolProperty(
+        name = "Autodetect Datarefs",
+        description = "If checked, dataref(s) for this manipulator will be taken from its mesh's animations",
+        default = True
+        )
+
+    #This is meant for making old manipulator types smarter, not new manipulator types
+    autodetect_settings_opt_in = bpy.props.BoolProperty(
+        name = "Autodetect Settings",
+        description = "Use new algorithms to autodetect certain manipulator settings from animation data",
         default = False
     )
 
-    type = bpy.props.EnumProperty(
-        attr = "type",
-        name = "Manipulator Type",
-        description = "The type of the manipulator",
-        default = MANIP_DRAG_XY,
-        items = [
+    axis_detent_ranges = bpy.props.CollectionProperty(
+        name = "Axis Detent Range",
+        description = "The ranges where a drag rotate manipulator can move freely, and what heights must be overcome to enter each range",
+        type=XPlaneAxisDetentRange
+    )
+
+    enabled = bpy.props.BoolProperty(
+        attr = "enabled",
+        name = "Manipulator",
+        description = "If checked, this object will be treated as a manipulator",
+        default = False
+    )
+
+
+    def get_manip_types_for_this_version(self,context):
+        type_items = [
             (MANIP_DRAG_XY,      "Drag XY",      "Drag XY"),
             (MANIP_DRAG_AXIS,    "Drag Axis",    "Drag Axis"),
             (MANIP_COMMAND,      "Command",      "Command"),
@@ -462,8 +582,31 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
             (MANIP_COMMAND_SWITCH_UP_DOWN,    "Command Switch Up Down (v10.50)",    "Command Switch Up Down (requires at least v10.50)"),
             (MANIP_COMMAND_SWITCH_LEFT_RIGHT, "Command Switch Left Right (v10.50)", "Command Switch Left Right (requires at least v10.50)"),
             (MANIP_AXIS_SWITCH_UP_DOWN,       "Axis Switch Up Down (v10.50)",       "Axis Switch Up Down (requires at least v10.50)"),
-            (MANIP_AXIS_SWITCH_LEFT_RIGHT,    "Axis Switch Left Right (v10.50)",    "Axis Switch Left Right (requires at least v10.50)")
+            (MANIP_AXIS_SWITCH_LEFT_RIGHT,    "Axis Switch Left Right (v10.50)",    "Axis Switch Left Right (requires at least v10.50)"),
+            (MANIP_AXIS_KNOB, "Axis Knob (v10.50)", "Axis Knob (requires at least v10.50)")
         ]
+
+        type_v1110_items = [
+            (MANIP_DRAG_AXIS_DETENT,           "Drag Axis With Detents",      "Drag Axis With Detents (requires at least v11.10)"),
+            (MANIP_COMMAND_KNOB2,              "Command Knob 2",              "Command Knob 2 (requires at least v11.10)"),
+            (MANIP_COMMAND_SWITCH_UP_DOWN2,    "Command Switch Up Down 2",    "Command Switch Up Down 2 (requires at least v11.10)"),
+            (MANIP_COMMAND_SWITCH_LEFT_RIGHT2, "Command Switch Left Right 2", "Command Switch Left Right 2 (requires at least v11.10)"),
+            (MANIP_DRAG_ROTATE,                "Drag Rotate",                 "Drag Rotate (requires at least v11.10)"),
+            (MANIP_DRAG_ROTATE_DETENT,         "Drag Rotate With Detents",    "Drag Rotate With Detents (requires at least v11.10)")
+        ]
+
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= int(VERSION_1110):
+            return type_items + type_v1110_items
+        else:
+            return type_items
+
+    type = bpy.props.EnumProperty(
+        attr = "type",
+        name = "Manipulator Type",
+        description = "The type of the manipulator",
+        items = get_manip_types_for_this_version
+        
     )
 
     tooltip = bpy.props.StringProperty(
@@ -667,6 +810,22 @@ class XPlaneManipulator(bpy.types.PropertyGroup):
         description = "Power of an exponential curve that controls the speed at which the dataref changes. Higher numbers cause a more “non-linear” response, where small drags are very precise and large drags are very fast",
         default = 1.0
     )
+
+    def get_effective_type_desc(self) -> str:
+        '''
+        The description returned will the same as in the UI
+        '''
+        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties['type'].enum_items
+        return next(filter(lambda item: item[0] == self.type, items))[2]#.description
+
+
+    def get_effective_type_name(self) -> str:
+        '''
+        The name returned will the same as in the UI
+        '''
+        items = self.get_manip_types_for_this_version(None)
+        return next(filter(lambda item: item[0] == self.type, items))[1]#.name
+   
 
 # Class: XPlaneCockpitRegion
 # Defines settings for a cockpit region.
@@ -1067,12 +1226,19 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = True
     )
 
+
 # Class: XPlaneSceneSettings
 # Settings for Blender scenes.
 #
 # Properties:
 #   layers - Collection of <XPlaneLayers>. Export settings for the Blender layers.
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
+    #TODO: Should this be named search_window_state_dataref since we're going to be making a command version too?
+    dataref_search_window_state = bpy.props.PointerProperty(
+            name = "Dataref Search Window State",
+            description = "An internally important property that keeps track of the state of the dataref search window",
+            type = XPlaneDatarefSearchWindow
+            )
     debug = bpy.props.BoolProperty(
         attr = "debug",
         name = "Print Debug Info To Output, OBJ",
@@ -1095,6 +1261,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = False) # Set this to true during development to avoid re-checking it
     
     #######################################
+    #TODO: Should these be in their own namespace?
     dev_enable_breakpoints = bpy.props.BoolProperty(
         attr = "dev_enable_breakpoints",
         name = "Enable Breakpoints",
@@ -1143,6 +1310,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             (VERSION_1040, "10.4x", "10.4x"),
             (VERSION_1050, "10.5x", "10.5x"),
             (VERSION_1100, "11.0x", "11.0x"),
+            (VERSION_1110, "11.1x", "11.1x"),
             (VERSION_1130, "11.3x", "11.3x")
         ]
     )
@@ -1219,7 +1387,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         attr = "manip",
         name = "Manipulator",
         description = "X-Plane Manipulator Settings",
-        type = XPlaneManipulator
+        type = XPlaneManipulatorSettings
     )
 
     lod = bpy.props.BoolVectorProperty(
@@ -1560,6 +1728,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 # Settings for Blender lamps.
 #
 # Properties:
+#   bool enable_rgb_manual_override - Overrides the use of Blender's color picker
+#   float vector rgb_override_values - The values to be use if override is enabled
 #   enum type - Light type as defined in OBJ specs.
 #   string name - Light name, if "type" is 'named'.
 #   string params - Light params, if "type" is 'param'.
@@ -1567,7 +1737,22 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 #   string dataref - Dataref driving the light, if "type" is 'custom'.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneLampSettings(bpy.types.PropertyGroup):
-    # TODO: deprecate named, flashing, pulising, strobe, traffic lights in v3.4
+    # TODO: deprecate named{?}, flashing, pulising, strobe, traffic lights in v3.4
+    enable_rgb_override = bpy.props.BoolProperty(
+        name = "Enable RGB Picker Override",
+        description = "Used instead of the Blender color picker to input any RGB values. Useful for certain datarefs",
+        default = False
+        )
+    
+    rgb_override_values = bpy.props.FloatVectorProperty(
+        name = "RGB Override Values",
+        description = "The values that will be used instead of the RGB picker",
+        default = (0.0,0.0,0.0),
+        subtype = "NONE",
+        unit    = "NONE",
+        size = 3
+        )
+
     type = bpy.props.EnumProperty(
         attr = "type",
         name = "Type",
@@ -1637,13 +1822,16 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
 def addXPlaneRNA():
     # basic classes
     bpy.utils.register_class(XPlane2BlenderVersion)
+    bpy.utils.register_class(XPlaneAxisDetentRange)
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
     bpy.utils.register_class(XPlaneEmitter)
     bpy.utils.register_class(XPlaneEmpty)
     bpy.utils.register_class(XPlaneCondition)
+    bpy.utils.register_class(ListItemDataref)
+    bpy.utils.register_class(XPlaneDatarefSearchWindow)
     bpy.utils.register_class(XPlaneExportPathDirective)
-    bpy.utils.register_class(XPlaneManipulator)
+    bpy.utils.register_class(XPlaneManipulatorSettings)
     bpy.utils.register_class(XPlaneCockpitRegion)
     bpy.utils.register_class(XPlaneLOD)
 
@@ -1686,6 +1874,7 @@ def addXPlaneRNA():
         description = "X-Plane Lamp Settings"
     )
 
+
 # Function: removeXPlaneRNA
 # Unregisters all properties.
 # TODO: Not sure if it is necissary to unregister in reverse order
@@ -1700,11 +1889,14 @@ def removeXPlaneRNA():
 
     # basic classes
     bpy.utils.unregister_class(XPlane2BlenderVersion)
+    bpy.utils.unregister_class(XPlaneAxisDetentRange)
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
     bpy.utils.unregister_class(XPlaneEmitter)
     bpy.utils.unregister_class(XPlaneEmpty)
     bpy.utils.unregister_class(XPlaneExportPathDirective)
-    bpy.utils.unregister_class(XPlaneManipulator)
+    bpy.utils.unregister_class(ListItemDataref)
+    bpy.utils.unregister_class(XPlaneDatarefSearchWindow)
+    bpy.utils.unregister_class(XPlaneManipulatorSettings)
     bpy.utils.unregister_class(XPlaneCockpitRegion)
     bpy.utils.unregister_class(XPlaneLOD)

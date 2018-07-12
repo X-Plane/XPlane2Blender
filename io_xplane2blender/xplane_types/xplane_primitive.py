@@ -1,9 +1,20 @@
+import collections
+import math
+import sys
+
 import bpy
+from io_xplane2blender import xplane_helpers
+from io_xplane2blender.xplane_constants import (MANIP_DRAG_AXIS_DETENT,
+                                                MANIP_DRAG_ROTATE_DETENT)
+from io_xplane2blender.xplane_types import xplane_manipulator
+from mathutils import Vector
 from typing import Any
 
 from ..xplane_config import getDebug
 from ..xplane_constants import *
+from ..xplane_helpers import logger
 from .xplane_attribute import XPlaneAttribute
+from .xplane_manipulator import XPlaneManipulator
 from .xplane_material import XPlaneMaterial
 from .xplane_object import XPlaneObject
 
@@ -40,7 +51,11 @@ class XPlanePrimitive(XPlaneObject):
         self.type = 'MESH'
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
-        self.faces = None
+        self.manipulator = XPlaneManipulator(self)
+
+        #TODO: If it is currently unused, then maybe we shouldn't have it!
+        # To qoute: "You aren't going to need it!
+        self.faces = None 
 
         self.getWeight()
 
@@ -60,7 +75,7 @@ class XPlanePrimitive(XPlaneObject):
         super(XPlanePrimitive, self).collect()
 
         # add manipulator attributes
-        self.collectManipulatorAttributes()
+        self.manipulator.collect()
 
         # need reordering again as manipulator attributes may have been added
         self.cockpitAttributes.order()
@@ -216,6 +231,15 @@ class XPlanePrimitive(XPlaneObject):
 
         # if the file is a cockpit file write all cockpit attributes
         if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
+            if self.blenderObject.xplane.manip.enabled:
+                manip = self.blenderObject.xplane.manip
+                if  manip.type == MANIP_DRAG_AXIS or\
+                    manip.type == MANIP_DRAG_AXIS_DETENT or\
+                    manip.type == MANIP_DRAG_ROTATE or\
+                    manip.type == MANIP_DRAG_ROTATE_DETENT:
+                    if not xplane_manipulator.check_bone_is_leaf(self.xplaneBone,True,self.manipulator):
+                        return ''
+
             for attr in self.cockpitAttributes:
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self)
 

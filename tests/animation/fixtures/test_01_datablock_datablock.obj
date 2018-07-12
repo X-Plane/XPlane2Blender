@@ -1207,7 +1207,7 @@ IDX10	1042	1043	1043	1044	1041	1045	1046	1047	1047	1048
 IDX10	1045	1049	1050	1051	1051	1052	1049	1053	1054	1055
 
 # 0 ROOT
-# 1 Object: 01_datablock_datablock
+# 1 Mesh: 01_datablock_datablock
 ANIM_begin
 # rotation keyframes
 ANIM_rotate_begin	0	0	-1	sim/cockpit2/controls/yoke_roll_ratio
@@ -1218,7 +1218,7 @@ ANIM_rotate_end
 # MATERIAL: Material
 ATTR_shiny_rat	0.5
 TRIS	720 720
-	# 2 Object: 01_Sphere.002
+	# 2 Mesh: 01_Sphere.002
 	ANIM_begin
 	# static translation
 	ANIM_trans	0	2	0	0	2	0
@@ -1233,4 +1233,4 @@ TRIS	720 720
 	ANIM_end
 ANIM_end
 
-# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.4.0-dev.0+3.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.4.0-dev.0+27.NO_BUILD_NUMBR

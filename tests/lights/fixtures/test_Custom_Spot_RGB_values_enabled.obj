@@ -1,0 +1,12 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+# 1 Object: Custom_Spot_RGB_values_enabled
+# LAMP: Custom_Spot_RGB_values_enabled	weight: 10000
+LIGHT_CUSTOM	1 2 0 -4 1 500 1 1 0 0 1 1 
+
+# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-rc.1+4.NO_BUILD_NUMBR

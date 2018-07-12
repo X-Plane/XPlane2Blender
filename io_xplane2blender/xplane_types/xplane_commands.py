@@ -96,6 +96,7 @@ class XPlaneCommands():
 
         # these attributes/commands are not persistant and must always be rewritten
         self.inpersistant = {
+            'ATTR_axis_detent_range',
             'ATTR_manip_wheel'
         }
 
@@ -208,39 +209,40 @@ class XPlaneCommands():
     #   string or None if the command must not be written.
     def writeAttribute(self, attr, xplaneObject):
         o = ''
-        value = attr.getValue()
-        name = attr.name
-        indent = xplaneObject.xplaneBone.getIndent()
+        for i in range(len(attr.value)):
+            value = attr.getValue(i)
+            name = attr.name
+            indent = xplaneObject.xplaneBone.getIndent()
 
-        if value != None and self.canWriteAttribute(name, value):
-            if isinstance(value, bool):
-                if value:
-                    o += indent + '%s\n' % name
+            if value != None and self.canWriteAttribute(name, value):
+                if isinstance(value, bool):
+                    if value:
+                        o += indent + '%s\n' % name
 
+                        # store this in the written attributes
+                        self.written[name] = value
+
+                        # If there is a resetter for this attribute, we need to
+                        # nuke it from the written list - we are replacing it.
+                        counterparts = self.getAttributeCounterparts(name)
+                        
+                        for counterpart in counterparts:
+                            if counterpart in self.written:
+                                del self.written[counterpart]
+
+                else:
                     # store this in the written attributes
                     self.written[name] = value
+                    value = attr.getValueAsString(i)
+                    value = self.parseAttributeValue(value, xplaneObject.blenderObject)
+                    o += indent + '%s\t%s\n' % (name, value)
 
-                    # If there is a resetter for this attribute, we need to
-                    # nuke it from the written list - we are replacing it.
+                    # check if this thing has a reseter and remove counterpart if any
                     counterparts = self.getAttributeCounterparts(name)
-					
+
                     for counterpart in counterparts:
                         if counterpart in self.written:
                             del self.written[counterpart]
-
-            else:
-                # store this in the written attributes
-                self.written[name] = value
-                value = attr.getValueAsString()
-                value = self.parseAttributeValue(value, xplaneObject.blenderObject)
-                o += indent + '%s\t%s\n' % (name, value)
-
-                # check if this thing has a reseter and remove counterpart if any
-                counterparts = self.getAttributeCounterparts(name)
-
-                for counterpart in counterparts:
-                    if counterpart in self.written:
-                        del self.written[counterpart]
         return o
 
     # Method: parseAttributeValue
