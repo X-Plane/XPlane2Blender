@@ -17,9 +17,6 @@ class XPlaneHeader():
     # Property: version
     # OBJ format version
 
-    # Property: mode
-    # The OBJ xplaneFile mode. ("default" or "cockpit"). This is currently not in use, I think.
-
     # Property: attributes
     # OrderedDict - Key value pairs of all Header attributes
 
@@ -30,7 +27,6 @@ class XPlaneHeader():
     #   int obj_version - OBJ format version.
     def __init__(self, xplaneFile, obj_version):
         self.obj_version = obj_version
-        self.mode = "default"
         self.xplaneFile = xplaneFile
 
         # A list of tuples in the form of (lib path, physical path)

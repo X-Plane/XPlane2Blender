@@ -14,7 +14,7 @@ from .xplane_mesh import XPlaneMesh
 from .xplane_header import XPlaneHeader
 from .xplane_commands import XPlaneCommands
 from ..xplane_helpers import floatToStr, logger
-from .xplane_material_utils import getReferenceMaterials
+from io_xplane2blender.xplane_types import xplane_material_utils
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender import xplane_props
 # Function: getActiveLayers
@@ -458,7 +458,7 @@ class XPlaneFile():
             return ''
 
         # detect reference materials
-        self.referenceMaterials = getReferenceMaterials(
+        self.referenceMaterials = xplane_material_utils.getReferenceMaterials(
             self.getMaterials(),
             self.options.export_type
         )
