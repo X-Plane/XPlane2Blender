@@ -5,6 +5,7 @@ import collections
 from typing import Optional 
 
 import bpy
+from bpy.types import Object, UILayout
 from .xplane_ops import *
 from .xplane_props import *
 from .xplane_config import *
@@ -47,7 +48,7 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
         version = int(context.scene.xplane.version)
 
         if(obj.type == "MESH"):
-            material_layout(self, obj.active_material)
+            material_layout(self.layout, obj.active_material)
             self.layout.separator()
             cockpit_layout(self, obj.active_material)
             custom_layout(self, obj.active_material, "MATERIAL")
@@ -565,66 +566,65 @@ def lamp_layout(self, obj):
 # Draws the UI layout for materials.
 #
 # Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def material_layout(self, obj):
+#   UILayout layout - Instance of current UILayout.
+#   Material active_material - The active_material of a mesh
+def material_layout(layout:UILayout,
+                    active_material:bpy.types.Material):
     # TODO: hide stuff for draped materials
-    isDraped = obj.xplane.draped
+    isDraped = active_material.xplane.draped
     version = int(bpy.context.scene.xplane.version)
-    layout = self.layout
-
     draw_box = layout.box()
     draw_box.label("Draw Settings")
     draw_box_column = draw_box.column()
-    draw_box_column.prop(obj.xplane, "draw")
+    draw_box_column.prop(active_material.xplane, "draw")
 
-    if (obj.xplane.draw):
-        draw_box_column.prop(obj.xplane, "draped")
+    if (active_material.xplane.draw):
+        draw_box_column.prop(active_material.xplane, "draped")
 
-        if version >= 1100:
-            draw_box_column.prop(obj.xplane, "normal_metalness")
+        if version >= 1100 and not active_material.xplane.panel:
+            draw_box_column.prop(active_material.xplane, "normal_metalness")
 
         # v1000 blend / v9000 blend
         if version >= 1100:
-            draw_box_column.prop(obj.xplane, "blend_v1100")
+            draw_box_column.prop(active_material.xplane, "blend_v1100")
         elif version >= 1000:
-            draw_box_column.prop(obj.xplane, "blend_v1000")
+            draw_box_column.prop(active_material.xplane, "blend_v1000")
         else:
-            draw_box_column.prop(obj.xplane, "blend")
+            draw_box_column.prop(active_material.xplane, "blend")
         
         if version >= 1100:
-            blend_prop_enum = obj.xplane.blend_v1100
+            blend_prop_enum = active_material.xplane.blend_v1100
         elif version >= 1000:
-            blend_prop_enum = obj.xplane.blend_v1000
+            blend_prop_enum = active_material.xplane.blend_v1000
         else:
             blend_prop_enum = None
             
-        if obj.xplane.blend == True and version < 1000:
-            draw_box_column.prop(obj.xplane, "blendRatio")
+        if active_material.xplane.blend == True and version < 1000:
+            draw_box_column.prop(active_material.xplane, "blendRatio")
         elif blend_prop_enum == BLEND_OFF and version >= 1000:
-            draw_box_column.prop(obj.xplane, "blendRatio")
+            draw_box_column.prop(active_material.xplane, "blendRatio")
 
     surface_behavior_box = layout.box()
     surface_behavior_box.label("Surface Behavior")
     surface_behavior_box_column = surface_behavior_box.column()
-    surface_behavior_box_column.prop(obj.xplane, "surfaceType")
+    surface_behavior_box_column.prop(active_material.xplane, "surfaceType")
 
-    if obj.xplane.surfaceType != 'none':
-        surface_behavior_box_column.prop(obj.xplane, "deck")
+    if active_material.xplane.surfaceType != 'none':
+        surface_behavior_box_column.prop(active_material.xplane, "deck")
 
-    surface_behavior_box_column.prop(obj.xplane, "solid_camera")
+    surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
     ll_box = layout.box()
     ll_box.label("Light Levels")
     ll_box_column = ll_box.column() 
-    ll_box_column.prop(obj.xplane, "lightLevel")
+    ll_box_column.prop(active_material.xplane, "lightLevel")
 
-    if obj.xplane.lightLevel:
+    if active_material.xplane.lightLevel:
         box = ll_box_column.box()
-        box.prop(obj.xplane, "lightLevel_v1")
+        box.prop(active_material.xplane, "lightLevel_v1")
         row = box.row()
-        row.prop(obj.xplane, "lightLevel_v2")
+        row.prop(active_material.xplane, "lightLevel_v2")
         row = box.row()
-        row.prop(obj.xplane, "lightLevel_dataref")
+        row.prop(active_material.xplane, "lightLevel_dataref")
 
         scene = bpy.context.scene
         expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
@@ -640,23 +640,23 @@ def material_layout(self, obj):
             dataref_search_window_layout(box)
 
     ll_box_column.row()
-    if not canPreviewEmit(obj):
+    if not canPreviewEmit(active_material):
         ll_box_column.label("To enable the Day-Night Preview feature, add an albedo texture (uses Diffuse->Color) and a night texture (uses Shading->Emit)", icon = "INFO")
     else:
-        ll_box_column.prop(obj.xplane, "litFactor", slider = True)
+        ll_box_column.prop(active_material.xplane, "litFactor", slider = True)
 
 
     # instancing effects
     instanced_box = layout.box()
     instanced_box.label("Instancing Effects")
     instanced_box_column = instanced_box.column()
-    instanced_box_column.prop(obj.xplane, 'tint')
+    instanced_box_column.prop(active_material.xplane, 'tint')
 
-    if obj.xplane.tint:
-        instanced_box_column.prop(obj.xplane, 'tint_albedo')
-        instanced_box_column.prop(obj.xplane, 'tint_emissive')
+    if active_material.xplane.tint:
+        instanced_box_column.prop(active_material.xplane, 'tint_albedo')
+        instanced_box_column.prop(active_material.xplane, 'tint_emissive')
 
-    layout.row().prop(obj.xplane, "poly_os")
+    layout.row().prop(active_material.xplane, "poly_os")
 
 
 def canPreviewEmit(mat):
@@ -793,15 +793,15 @@ def animation_layout(self, obj, bone = False):
 # Parameters:
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
-def cockpit_layout(self, obj):
+def cockpit_layout(self, active_material:bpy.types.Material):
     layout = self.layout
     cockpit_box = layout.box()
     cockpit_box.label("Cockpit Panel")
     cockpit_box_column = cockpit_box.column()
-    cockpit_box_column.prop(obj.xplane, 'panel')
+    cockpit_box_column.prop(active_material.xplane, 'panel')
 
-    if obj.xplane.panel:
-        cockpit_box_column.prop(obj.xplane, 'cockpit_region')
+    if active_material.xplane.panel:
+        cockpit_box_column.prop(active_material.xplane, 'cockpit_region')
 
 def axis_detent_ranges_layout(self, layout, manip):
     layout.separator()
