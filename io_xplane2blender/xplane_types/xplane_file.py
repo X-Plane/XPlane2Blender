@@ -397,11 +397,13 @@ class XPlaneFile():
 
         for xplaneObject in objects:
             if xplaneObject.type == 'PRIMITIVE' and xplaneObject.material.options:
-                errors = xplaneObject.material.isValid(self.options.export_type)
+                errors,warnings = xplaneObject.material.isValid(self.options.export_type)
 
-                if errors and len(errors):
-                    for error in errors:
-                        logger.error('Material "%s" in object "%s" %s' % (xplaneObject.material.name, xplaneObject.blenderObject.name, error))
+                for error in errors:
+                    logger.error('Material "%s" in object "%s" %s' % (xplaneObject.material.name, xplaneObject.blenderObject.name, error))
+
+                for warning in warnings:
+                    logger.warn('Material "%s" in object "%s" %s' % (xplaneObject.material.name, xplaneObject.blenderObject.name, warning))
 
         if logger.hasErrors():
             return False
@@ -427,11 +429,13 @@ class XPlaneFile():
                     # only compare draped materials agains draped
                     # and non-draped agains non-draped
                     if refMaterial.options.draped == material.options.draped:
-                        errors = material.isCompatibleTo(refMaterial, self.options.export_type,self.options.autodetectTextures)
+                        errors,warnings = material.isCompatibleTo(refMaterial, self.options.export_type,self.options.autodetectTextures)
+                        xplaneObject = material.xplaneObject
+                        for error in errors:
+                            logger.error('Material "%s" in object "%s" %s' % (material.name, xplaneObject.blenderObject.name, error))
 
-                        if errors and len(errors):
-                            for error in errors:
-                                logger.error('Material "%s" in object "%s" %s' % (material.name, material.xplaneObject.blenderObject.name, error))
+                        for warning in warnings:
+                            logger.warn('Material "%s" in object "%s" %s' % (material.name, xplaneObject.blenderObject.name, warning))
 
         if logger.hasErrors():
             return False
