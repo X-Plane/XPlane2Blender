@@ -155,7 +155,7 @@ class XPlaneHeader():
                         self.non_draped_attributes['NORMAL_METALNESS']\
                                 .setValue(mat.getEffectiveNormalMetalness())
                 elif not has_texture_normal and mat.getEffectiveNormalMetalness():
-                    logger.warn("hhhMaterial '%s' has Normal Metalness, but no Normal Texture" % mat.name)
+                    logger.warn("Material '%s' has Normal Metalness, but no Normal Texture" % mat.name)
         
         if xplane_version >= 1100:
             if self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]:
