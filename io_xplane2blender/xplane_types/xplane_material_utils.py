@@ -5,7 +5,8 @@ from io_xplane2blender.xplane_types.xplane_material import XPlaneMaterial
 from ..xplane_constants import *
 
 def _validateNormalMetalness(refMat:XPlaneMaterial, mat:XPlaneMaterial)->Optional[str]:
-    if mat.texture == refMat.texture:
+    if (mat.texture == refMat.texture and\
+        (refMat.options.panel is False and mat.options.panel is False)): # Panel disables metalness
         if mat.getEffectiveNormalMetalness() != refMat.getEffectiveNormalMetalness():
             return 'NORMAL_METALNESS must be set for all materials with the same albedo texture'
 
