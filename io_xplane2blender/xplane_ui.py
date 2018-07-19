@@ -99,7 +99,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 
         if obj.type in ("MESH", "EMPTY", "ARMATURE", "LAMP"):
             object_layer_layout(self, obj)
-            if obj.type == "EMPTY":
+            if obj.type == "EMPTY" and version >= 1130:
                 empty_layout(self, obj)
 
             animation_layout(self, obj)
@@ -459,7 +459,8 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     #layout.separator()
     advanced_box = layout.box()
     advanced_box.label("Advanced Options")
-    advanced_box.prop(layerObj, "particle_system_file", text="Particle System File")
+    if version >= 1130:
+        advanced_box.prop(layerObj, "particle_system_file", text="Particle System File")
     advanced_box.prop(layerObj, "slungLoadWeight")
 
     advanced_box.prop(layerObj, "export")
