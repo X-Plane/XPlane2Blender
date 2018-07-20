@@ -145,19 +145,16 @@ class BONE_PT_xplane(bpy.types.Panel):
 def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
     assert empty_obj.type == 'EMPTY'
 
-    emp = empty_obj.xplane.empty
+    emp = empty_obj.xplane.special_empty_props
 
     layout = self.layout
-    layout.row().prop(empty_obj.xplane.empty,'special_type')
+    layout.row().prop(empty_obj.xplane.special_empty_props,'special_type')
 
     if emp.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
        emp.special_type == EMPTY_USAGE_EMITTER_SOUND:
            box = layout.box()
            box.label("Emitter Settings")
            box.row().prop(emp.emitter_props,"name")
-           box.row().prop(emp.emitter_props,"phi")
-           box.row().prop(emp.emitter_props,"theta")
-           box.row().prop(emp.emitter_props,"psi")
            box.row().prop(emp.emitter_props,"index")
 
 

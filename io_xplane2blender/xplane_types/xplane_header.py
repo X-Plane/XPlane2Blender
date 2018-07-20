@@ -236,8 +236,8 @@ class XPlaneHeader():
                 objs = self.xplaneFile.objects
 
                 if not list(filter(lambda obj: obj[1].type == "EMPTY" and\
-                        obj[1].blenderObject.xplane.empty.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
-                        obj[1].blenderObject.xplane.empty.special_type == EMPTY_USAGE_EMITTER_SOUND,\
+                        obj[1].blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
+                        obj[1].blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_SOUND,\
                         objs.items())):
                     logger.warn("Particle System File {} is given, but no emitter objects are used".format(pss))
 

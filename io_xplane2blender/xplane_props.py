@@ -384,21 +384,6 @@ class XPlaneEmitter(bpy.types.PropertyGroup):
         description = "The name of the emitter, coming from the .pss file"
     )
 
-    phi = bpy.props.FloatProperty(
-        name="Phi",
-        description="Phi of emitter"
-    )
-
-    psi = bpy.props.FloatProperty(
-        name="Psi",
-        description="Psi of emitter"
-    )
-
-    theta = bpy.props.FloatProperty(
-        name="Theta",
-        description="Theta of emitter"
-    )
-
     index = bpy.props.IntProperty(
         name = "Emitter Index",
         description = "Index of emitter array (re-work desc)",
@@ -1377,7 +1362,11 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         type = XPlaneDataref
     )
 
-    empty = bpy.props.PointerProperty(
+    # Since "Empty" is not a Blender type, only a "type" of Object, we have
+    # to put this on here, even if it might not be relavent
+    # to the current object.
+    # Always check for type == "EMPTY" before using!
+    special_empty_props = bpy.props.PointerProperty(
         name = "Special Empty Properties",
         description = "Empty Only Properties",
         type = XPlaneEmpty
