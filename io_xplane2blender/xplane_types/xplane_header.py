@@ -530,27 +530,30 @@ class XPlaneHeader():
 
         o += 'OBJ\n\n'
 
-        for attribute_dict in [self.general_attributes,self.non_draped_attributes,self.draped_attributes,self.custom_attributes]:
-            # attributes
-            for name in attribute_dict:
-                attr   = attribute_dict[name]
-                values = attr.getValues()
-
-                if values[0] != None:
-                    if len(values) > 1:
-                        for vi in range(0, len(values)):
-                            o += '%s\t%s\n' % (attr.name, attr.getValueAsString(vi))
-
-                    else:
-                        #This is a double fix. Boolean values with True get written (sans the word true), False does not,
-                        #and strings that start with True or False don't get treated as as booleans 
-                        is_bool = len(values) == 1 and isinstance(values[0],bool)
-                        if is_bool and values[0] == True:
-                            o += '%s\n' % (attr.name)
-                        elif not is_bool: #True case already taken care of, don't care about False case - implicitly skipped
-                            o += '%s\t%s\n' % (attr.name, attr.getValueAsString())
-
         for export_path_directive in self.export_path_dirs:
             o += 'EXPORT %s %s\n' % (export_path_directive[0],export_path_directive[1])
+
+        header_attrs = OrderedDict()
+        for attr_dict in [self.general_attributes,self.non_draped_attributes,self.draped_attributes,self.custom_attributes]:
+            header_attrs.update(attr_dict)
+        header_attrs.move_to_end('POINT_COUNTS')
+
+        # attributes
+        for attr_name,attr in header_attrs.items():
+            values = attr.value
+            if values[0] != None:
+                if len(values) > 1:
+                    for vi in range(0, len(values)):
+                        o += '%s\t%s\n' % (attr.name, attr.getValueAsString(vi))
+
+                else:
+                    #This is a double fix. Boolean values with True get written (sans the word true), False does not,
+                    #and strings that start with True or False don't get treated as as booleans 
+                    is_bool = len(values) == 1 and isinstance(values[0],bool)
+                    if is_bool and values[0] == True:
+                        o += '%s\n' % (attr.name)
+                    elif not is_bool: #True case already taken care of, don't care about False case - implicitly skipped
+                        o += '%s\t%s\n' % (attr.name, attr.getValueAsString())
+
 
         return o
