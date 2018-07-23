@@ -45,7 +45,6 @@ class XPlaneEmpty(XPlaneObject):
 
             if special_empty_props.emitter_props.index > 0:
                 o += ' {}'.format(special_empty_props.emitter_props.index)
-            print(o)
 
             o +='\n'
 
