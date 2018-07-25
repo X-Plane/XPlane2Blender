@@ -7,8 +7,9 @@ from bpy.app.handlers import persistent
 import io_xplane2blender
 from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
 from io_xplane2blender.xplane_constants import LOGGER_LEVEL_ERROR,\
-    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS
+    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS, BLEND_GLASS
 from io_xplane2blender.xplane_helpers import XPlaneLogger
+
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
@@ -95,7 +96,7 @@ def __updateLocRot(obj,logger):
 #
 # Parameters:
 #     fromVersion - The old version of the blender file
-def update(last_version,logger):
+def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLogger):
     if last_version < xplane_helpers.VerStruct.parse_version('3.3.0'):
         for scene in bpy.data.scenes:
             # set compositeTextures to False
@@ -127,6 +128,27 @@ def update(last_version,logger):
 
         for obj in bpy.data.objects:
             __updateLocRot(obj,logger)
+
+    if last_version < xplane_helpers.VerStruct.parse_version('3.5.0-beta.2+40.20180725010500'):
+        for mat in bpy.data.materials:
+            v10 = mat.xplane.get('blend_v1000')
+            v11 = mat.xplane.get('blend_v1100')
+
+            if v11 == 3: #Aka, where BLEND_GLASS was in the enum
+                mat.xplane.blend_glass = True
+
+            try:
+                # mat.xplane.blend_v1100,
+                # mat.xplane.get('blend_v1100'),
+                # and
+                # mat.xplane['blend_v1100']
+                #
+                # May evaulate to different values and Exceptions 
+                # xplane.get doesn't let us assume this will work
+                del mat.xplane['blend_v1100']
+            except Exception as e:
+                pass
+
 
 @persistent
 def load_handler(dummy):

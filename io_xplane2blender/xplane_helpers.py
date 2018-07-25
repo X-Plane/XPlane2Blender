@@ -1,6 +1,7 @@
 # File: xplane_helpers.py
 # Defines Helpers
 
+from typing import Optional 
 import bpy
 import mathutils
 
@@ -224,7 +225,7 @@ class VerStruct():
     # Old version numbers: '3.2.0', '3.2', or '3.3.13'
     # New, moder format: '3.4.0-beta.5+1.20170906154330'
     @staticmethod    
-    def parse_version(version_str):
+    def parse_version(version_str:str)->Optional['VerStruct']:
         version_struct = VerStruct()
         #We're dealing with modern
         if version_str.find('-') != -1:

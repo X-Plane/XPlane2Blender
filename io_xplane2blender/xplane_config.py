@@ -45,7 +45,7 @@ CURRENT_BUILD_TYPE_VERSION = 0
 #
 # The current data model version, incrementing every time xplane_constants, xplane_props, or xplane_updater
 # changes. Builds earlier than 3.4.0-beta.5 have and a version of 0 
-CURRENT_DATA_MODEL_VERSION = 31
+CURRENT_DATA_MODEL_VERSION = 32
 
 # Constant: CURRENT_BUILD_NUMBER
 #
