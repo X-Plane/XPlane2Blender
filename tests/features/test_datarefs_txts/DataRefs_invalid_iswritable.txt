@@ -1,0 +1,3 @@
+2 1100 Comment: Tests when is writable is not y or n
+
+sim/type/test int w

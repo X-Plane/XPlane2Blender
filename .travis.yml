@@ -7,7 +7,7 @@ addons:
       - blender
 sudo: false
 install:
-  - BLENDER_VERSION="2.77"
+  - BLENDER_VERSION="2.78"
   - BLENDER_VERSION_SUFFIX=""
   - BLENDER_ARCHIVE="blender-${BLENDER_VERSION}${BLENDER_VERSION_SUFFIX}-linux-glibc211-x86_64"
   - mkdir tmp && cd tmp

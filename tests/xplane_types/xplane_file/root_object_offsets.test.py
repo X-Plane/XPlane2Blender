@@ -2,21 +2,18 @@ import bpy
 import os
 import sys
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_types import xplane_file, XPlanePrimitive
+from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender import xplane_config
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestCreateFromRootObjects(XPlaneTestCase):
-    def setUp(self):
-        super(TestCreateFromRootObjects, self).setUp()
-
-    def test_create_files_from_root_objects(self):
+class TestRootObjectOffsets(XPlaneTestCase):
+    def test_root_object_offsets(self):
     
         per_obj_tests = [
-            ['cube_a', 'root_object_offsets.test_a', 1, ['cube_a'], ['0 Object: cube_a'] ],
-            ['b', 'root_object_offsets.test_b', 2, ['cube_b'], ['0 Object: b','1 Object: cube_b'] ],
-            ['c', 'root_object_offsets.test_c', 2, ['cube_c'], ['0 Object: c','1 Object: cube_c'] ]
+            ['cube_a', 'root_object_offsets.test_a', 1, ['cube_a'], ['0 Mesh: cube_a'] ],
+            ['b', 'root_object_offsets.test_b', 2, ['cube_b'], ['0 Empty: b','1 Mesh: cube_b'] ],
+            ['c', 'root_object_offsets.test_c', 2, ['cube_c'], ['0 Empty: c','1 Mesh: cube_c'] ]
         ]
     
         for one_obj_test in per_obj_tests:
@@ -52,4 +49,4 @@ class TestCreateFromRootObjects(XPlaneTestCase):
                 os.path.join(__dirname__, 'fixtures',  file_stem+'.obj')
             )
 
-runTestCases([TestCreateFromRootObjects])
+runTestCases([TestRootObjectOffsets])

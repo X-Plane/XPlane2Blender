@@ -1,8 +1,8 @@
 import bpy
-from ..xplane_config import getDebug
-from ..xplane_helpers import *
-from ..xplane_constants import *
-from .xplane_attributes import XPlaneAttributes
+from io_xplane2blender.xplane_config import getDebug
+from io_xplane2blender.xplane_helpers import *
+from io_xplane2blender.xplane_constants import *
+from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 
 # Class: XPlaneObject
@@ -64,14 +64,18 @@ class XPlaneObject():
     #
     # Parameters:
     #   blenderObject - A Blender object
-    def __init__(self, blenderObject):
+    def __init__(self, blenderObject:bpy.types.Object):
         self.type = ''
         self.blenderObject = blenderObject
+
+        #This is assaigned and tied together in in XPlaneBone's constructor
         self.xplaneBone = None
         self.name = blenderObject.name
         self.datarefs = {}
         self.bakeMatrix = None
-        self.id = int(blenderObject.as_pointer())
+        
+        self.id = int(blenderObject.as_pointer()) #TODO: Delete unused attribute
+
         self.attributes = XPlaneAttributes()
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
@@ -94,6 +98,8 @@ class XPlaneObject():
         self.getWeight()
 
     def collect(self):
+        assert self.xplaneBone is not None, "xplaneBone must not be None!"
+
         # add custom attributes
         self.collectCustomAttributes()
 
@@ -143,6 +149,7 @@ class XPlaneObject():
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
 
+    #TODO: This needs to be renamed!!! This is just terrible. This doesn't actually get anything, it sets self.weight!
     # Method: getWeight
     #
     # Parameters:
@@ -150,7 +157,7 @@ class XPlaneObject():
     #
     # Returns:
     #   int - The weight of this object.
-    def getWeight(self, defaultWeight = 0):
+    def getWeight(self, defaultWeight:int = 0):
         weight = defaultWeight
 
         if hasattr(self.blenderObject.xplane, 'override_weight') and self.blenderObject.xplane.override_weight:

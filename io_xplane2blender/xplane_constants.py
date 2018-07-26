@@ -68,28 +68,42 @@ CONDITION_GLOBAL_LIGHTING = 'GLOBAL_LIGHTING'
 CONDITION_GLOBAL_SHADOWS = 'GLOBAL_SHADOWS'
 CONDITION_VERSION10 = 'VERSION10'
 
-MANIP_DRAG_XY = "drag_xy"
+MANIP_DRAG_XY   = "drag_xy"
 MANIP_DRAG_AXIS = "drag_axis"
-MANIP_COMMAND = "command"
+MANIP_COMMAND   = "command"
 MANIP_COMMAND_AXIS = "command_axis"
-MANIP_PUSH = "push"
-MANIP_RADIO = "radio"
-MANIP_DELTA = "delta"
-MANIP_WRAP = "wrap"
+MANIP_PUSH   = "push"
+MANIP_RADIO  = "radio"
+MANIP_DELTA  = "delta"
+MANIP_WRAP   = "wrap"
 MANIP_TOGGLE = "toggle"
-MANIP_NOOP = "noop"
+MANIP_NOOP   = "noop"
 
 #10.10 and greater manips
 MANIP_DRAG_AXIS_PIX             = "drag_axis_pix"
 
 #10.50 and greater manips
+MANIP_AXIS_KNOB                 = "axis_knob"
 MANIP_AXIS_SWITCH_LEFT_RIGHT    = "axis_switch_left_right"
 MANIP_AXIS_SWITCH_UP_DOWN       = "axis_switch_up_down"
 MANIP_COMMAND_KNOB              = "command_knob"
 MANIP_COMMAND_SWITCH_LEFT_RIGHT = "command_switch_left_right"
 MANIP_COMMAND_SWITCH_UP_DOWN    = "command_switch_up_down"
 
-MOUSE_WHEEL_MANIPULATORS = (
+#11.10 and greater manips
+# Note: these are not new manips in the OBJ spec, we are reusing manip_drag_axis + using ATTR_axis_detented
+# What makes them special is their data is automatically detected as much as possible 
+MANIP_DRAG_AXIS_DETENT           = "drag_axis_detent"
+
+MANIP_DRAG_ROTATE                = "drag_rotate"
+
+#This is also a fake manip. This simply allows detents to be used
+MANIP_DRAG_ROTATE_DETENT         = "drag_rotate_detent"
+MANIP_COMMAND_KNOB2              = "command_knob2"
+MANIP_COMMAND_SWITCH_LEFT_RIGHT2 = "command_switch_left_right2"
+MANIP_COMMAND_SWITCH_UP_DOWN2    = "command_switch_up_down2"
+
+MANIPULATORS_MOUSE_WHEEL = (
     MANIP_DRAG_XY,
     MANIP_DRAG_AXIS,
     MANIP_PUSH,
@@ -99,6 +113,19 @@ MOUSE_WHEEL_MANIPULATORS = (
     MANIP_TOGGLE,
     MANIP_DRAG_AXIS_PIX
 )
+
+MANIPULATORS_OPT_IN = (
+    MANIP_DRAG_AXIS
+)
+
+def _get_all_manipulators():
+    import inspect
+
+    current_frame = inspect.currentframe()
+    return {global_name: current_frame.f_globals[global_name] for global_name in current_frame.f_globals\
+            if global_name.startswith("MANIP_") and "CURSOR" not in global_name}
+
+MANIPULATORS_ALL = {*_get_all_manipulators().values()}
 
 MANIP_CURSOR_FOUR_ARROWS = "four_arrows"
 MANIP_CURSOR_HAND = "hand"
@@ -143,6 +170,7 @@ VERSION_1010 = "1010"
 VERSION_1040 = "1040"
 VERSION_1050 = "1050"
 VERSION_1100 = "1100"
+VERSION_1110 = "1110"
 
 SURFACE_TYPE_NONE = "none"
 SURFACE_TYPE_WATER = "water"
@@ -169,6 +197,18 @@ LIGHT_TRAFFIC = "traffic"
 LIGHT_NAMED = "named"
 LIGHT_CUSTOM = "custom"
 LIGHT_PARAM = "param"
+
+LOGGER_LEVEL_ERROR   = "error"
+LOGGER_LEVEL_INFO    = "info"
+LOGGER_LEVEL_SUCCESS = "success"
+LOGGER_LEVEL_WARN    = "warn"
+
+LOGGER_LEVELS_ALL = (
+    LOGGER_LEVEL_ERROR,
+    LOGGER_LEVEL_INFO,
+    LOGGER_LEVEL_SUCCESS,
+    LOGGER_LEVEL_WARN
+)
 
 #TODO: What is the point of these? Why duplicate this data from blenderObject?
 XPLANE_OBJECT_TYPE_PRIMITIVE = 'PRIMITIVE'

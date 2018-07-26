@@ -14,10 +14,10 @@ class TestAnimations(XPlaneTestCase):
         self.assertXplaneFileHasBoneTree(
             xplaneFile, [
             '0 ROOT',
-                '1 Object: Armature',
+                '1 Armature: Armature',
                     '2 Bone: Bone',
-                        '3 Object: Cube.001',
-                '1 Object: Cube',
+                        '3 Mesh: Cube.001',
+                '1 Mesh: Cube',
         ])
 
         armature = xplaneFile.rootBone.children[0]
@@ -77,10 +77,13 @@ class TestAnimations(XPlaneTestCase):
 
         # check for correct location and rotation
         self.assertEquals(boneKeyframes[0].location, mathutils.Vector((0, 0, 0)))
-        self.assertEquals(boneKeyframes[0].rotation, mathutils.Quaternion((1, 0, 0, 0)))
-        self.assertEquals(boneKeyframes[0].rotationMode, 'QUATERNION')
+        self.assertFloatsEqual(boneKeyframes[0].rotation[0], 0.0)
+        self.assertFloatVectorsEqual(boneKeyframes[0].rotation[1], mathutils.Vector((1, 0, 0)))
+        self.assertEquals(boneKeyframes[0].rotationMode, 'AXIS_ANGLE')
+
         self.assertEquals(boneKeyframes[1].location, mathutils.Vector((0, 0, 0)))
-        self.assertEquals(boneKeyframes[1].rotation, mathutils.Quaternion((1, 0, 0), math.radians(-90)))
-        self.assertEquals(boneKeyframes[1].rotationMode, 'QUATERNION')
+        self.assertFloatsEqual(boneKeyframes[1].rotation[0], 1.5707961320877075)
+        self.assertFloatVectorsEqual(boneKeyframes[1].rotation[1], mathutils.Vector((-1.0, 0.0, 0.0)))
+        self.assertEquals(boneKeyframes[1].rotationMode, 'AXIS_ANGLE')
 
 runTestCases([TestAnimations])

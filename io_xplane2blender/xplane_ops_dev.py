@@ -1,10 +1,13 @@
 # File: xplane_ops_dev.py
 # Defines Operators specifically for plugin development
 
-import bpy
+import os
 import re
+
+import bpy
 import io_xplane2blender
-from io_xplane2blender import xplane_helpers
+from io_xplane2blender import xplane_constants, xplane_helpers
+from io_xplane2blender.xplane_utils import xplane_datarefs_txt_parser
 from io_xplane2blender.xplane_types import xplane_lights_txt_parser
 from collections import OrderedDict
 
@@ -74,9 +77,11 @@ class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
     clean_data_block_string = True
     
     def execute(self,context):
+        for layer in bpy.context.scene.xplane.layers:
+            layer.name = ""
+        
         objects = bpy.context.scene.objects
         xplane_layers = bpy.context.scene.xplane.layers
-        
         for object in sorted(objects.keys()):
             if objects[object].parent != None:
                 continue
@@ -104,5 +109,11 @@ class SCENE_OT_dev_rerun_updater(bpy.types.Operator):
     bl_description = "Re-runs the updater. This does not undo an update that happened on load!"
    
     def execute(self,context):
-        io_xplane2blender.xplane_updater.update(xplane_helpers.VerStruct.parse_version(bpy.context.scene.xplane.dev_fake_xplane2blender_version))
+        logger = xplane_helpers.logger
+        logger.clear()
+        logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Updater Log'))
+        logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
+
+        fake_version_str = bpy.context.scene.xplane.dev_fake_xplane2blender_version
+        io_xplane2blender.xplane_updater.update(xplane_helpers.VerStruct.parse_version(fake_version_str),logger)
         return { 'FINISHED' }

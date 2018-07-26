@@ -1,8 +1,9 @@
-from ..xplane_helpers import floatToStr
+from io_xplane2blender.xplane_helpers import floatToStr
 
 # Class: XPlaneAttribute
 # An Attribute
 class XPlaneAttribute():
+    #TODO: These class variables should be removed. See  #301
     name = ''
     value = None
     weight = 0
