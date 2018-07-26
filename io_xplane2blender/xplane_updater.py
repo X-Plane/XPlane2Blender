@@ -129,7 +129,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
         for obj in bpy.data.objects:
             __updateLocRot(obj,logger)
 
-    if last_version < xplane_helpers.VerStruct.parse_version('3.5.0-beta.2+40.20180725010500'):
+    if last_version < xplane_helpers.VerStruct.parse_version('3.5.0-beta.2+32.20180725010500'):
         for mat in bpy.data.materials:
             v10 = mat.xplane.get('blend_v1000')
             v11 = mat.xplane.get('blend_v1100')
@@ -137,17 +137,24 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
             if v11 == 3: #Aka, where BLEND_GLASS was in the enum
                 mat.xplane.blend_glass = True
 
-            try:
-                # mat.xplane.blend_v1100,
-                # mat.xplane.get('blend_v1100'),
-                # and
-                # mat.xplane['blend_v1100']
-                #
-                # May evaulate to different values and Exceptions 
-                # xplane.get doesn't let us assume this will work
+                # This bit of code reachs around Blender's magic EnumProperty
+                # stuff and get at the RNA behind it, all to find the name.
+                # If the default for blend_v1000 ever changes, we'll be covered.
+                blend_v1000 = bpy.types.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
+                enum_items = blend_v1000.enum_items
+                
+                if v10 is None:
+                    v10_mode = enum_items[enum_items.find(blend_v1000.default)].name
+                else:
+                    v10_mode = enum_items[v10].name
+                logger.info(
+                        "Set material \"{name}\"'s Blend Glass property to true and its Blend Mode to {v10_mode}"
+                        .format(name=mat.name, v10_mode=v10_mode))
+
+            if v11 is not None:
+                # It appears when get returns None, del throws an error,
+                # which is not how normal python works
                 del mat.xplane['blend_v1100']
-            except Exception as e:
-                pass
 
 
 @persistent
