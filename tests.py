@@ -57,6 +57,15 @@ def _make_argparse():
     parser.add_argument("-n", "--no-factory-startup", 
             help="Run Blender with current prefs rather than factory prefs", 
             action="store_true")
+    '''
+    python's use of folder-as-module-name makes this much harder.
+    Possible solutions would be messing with sys.modules, or copying and renaming and etc the src
+    folder
+    parser.add_argument("--addon",
+            default="io_xplane2blender",
+            type=str,
+            help="Provide alternative path to addon to test (such as io_xplane2blender_build)")
+    '''
     parser.add_argument("--blender",
             default="blender",#Use the blender in the system path
             type=str,
