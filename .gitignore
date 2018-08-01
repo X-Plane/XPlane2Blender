@@ -22,3 +22,5 @@ builds/*
 
 *.pyproj
 *.sln
+
+io_xplane2blender_build/*
