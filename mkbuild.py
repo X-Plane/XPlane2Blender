@@ -10,22 +10,42 @@ from typing import List, Optional, Tuple
 
 from collections import namedtuple
 
-#from io_xplane2blender.xplane_constants import *
+def _build_number_sanity_check(string:str):
+    '''Performs the basic sanity check for build number that is is in YYYYMMDDHHMMSS'''
+    if len(string) == 14 and string.isdigit():
+        try:
+            dt = datetime.datetime(year=string[0:3],
+                    month=string[4:5],
+                    day=string[6:7],
+                    hour=string[8:9],
+                    minute=string[10:11],
+                    second=string[12:13])
+        except:
+            raise argparse.ArgumentTypeError(string + " is not convertable to a datetime")
+        else:
+            return string
+    else:
+        raise argparse.ArgumentTypeError(string + " is not a number in the form of YYYYMMDDHHMMSS")
+
+def _raise(ex):
+    raise ex
+
+def _number_check_ge(n):
+    return lambda string: string if string.isdigit() and int(string) >= n else _raise(argparse.ArgumentTypeError(string + " must be >=%d"%n))
 
 def _make_parser()->argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='Creates a clean zip build with any arbitrary build info.'\
-            ' It can also change xplane_config.py, create git tags, and incorporate the test suite.\n'\
-            'To run the test you\'ll need to have "another addon" called io_xplane2blender_build available to Blender.')
+            ' It can also change xplane_config.py, create git tags, and incorporate the test suite.\n')
 
     version_group = parser.add_argument_group("Addon Version")
     version_group.add_argument("--major",
-            type=int,
+            type=_number_check_ge(3),
             help="Override the Blender major version (very unused!)")
     version_group.add_argument("--minor",
-            type=int,
+            type=_number_check_ge(0),
             help="Override the Blender minor version")
     version_group.add_argument("--revision",
-            type=int,
+            type=_number_check_ge(0),
             help="Override the Blender revision version")
 
     build_metadata_group = parser.add_argument_group("Build Metadata")
@@ -34,13 +54,16 @@ def _make_parser()->argparse.ArgumentParser:
             choices=["dev","alpha","beta","rc"],
             help="Override CURRENT_BUILD_TYPE")
     build_metadata_group.add_argument("--build-type-version",
-            type=int,
+            type=lambda string: string if string.isdigit() and int(string) >= 0 else _raise(argparse.ArgumentTypeError(string + " must be 0 for 'dev' build type, else >0")),
+            metavar="0 for 'dev' build type, else >0",
             help="Override CURRENT_BUILD_TYPE_VERSION")
     build_metadata_group.add_argument("--data-model-version",
-            type=int,
+            type=_number_check_ge(0),
+            metavar="Always >=0",
             help="Override CURRENT_DATA_MODEL_VERSION with an arbitrary number (dangerous, only increment!)")
     build_metadata_group.add_argument("--build-number",
-            type=int,
+            type=_build_number_sanity_check,
+            metavar="YYYYMMDDHHMMSS in UTC",
             help="Overrides use of current time in UTC")
 
     parser.add_argument("--make-overrides-permanent",
