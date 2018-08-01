@@ -137,11 +137,9 @@ def _change_version_info(new_version:VerData)->Optional[VerData]:
                     ov_av = old_version.addon_version
                     nv_av = new_version.addon_version
 
-                    line = re.sub(r"(\d+), (\d+), (\d+)","{}, {}, {}".format(
-                        nv_av[0] if nv_av[0] else ov_av[0],
-                        nv_av[1] if nv_av[1] else ov_av[1],
-                        nv_av[2] if nv_av[2] else ov_av[2]),line)
-                    
+                    line = re.sub(r"(\d+), (\d+), (\d+)", "{}, {}, {}".format(
+                        *[nv_av[n] if nv_av[n] else ov_av[n] for n in range(3)]),line)
+
                 out_init_file_contents.append(line)
 
         with open(init_file,'w',newline='\n') as out_init_file:
@@ -174,11 +172,9 @@ def _change_version_info(new_version:VerData)->Optional[VerData]:
                 if re.match("^CURRENT_BUILD_NUMBER ",line):
                     search_str = 'xplane_constants.BUILD_NUMBER_NONE|"\d{14}"'
                     old_version.build_number = re.search(search_str,line).group(0)
-                    if not "BUILD_NUMBER_NONE" in new_version.build_number:
-                        new_version.build_number = '"'+new_version.build_number+'"'
-
                     line = re.sub(search_str,
-                            '{}'.format(new_version.build_number),
+                            ('{}' if "BUILD_NUMBER_NONE" in new_version.build_number else '"{}"')
+                                .format(new_version.build_number),
                             line)
 
                 out_config_file_contents.append(line)
@@ -242,6 +238,23 @@ def _delete_unwanted_contents(keep_files:str)->None:
             raise e
 
 
+def _make_and_place_zip(new_version:VerData,builds_folder:str):
+    zip_name = 'io_xplane2blender_{major}_{minor}_{revision}-'\
+                '{build_type}-{build_type_version}-'\
+                '{data_model_version}_{build_number}'\
+                    .format(major          = new_version.addon_version[0],
+                        minor              = new_version.addon_version[1],
+                        revision           = new_version.addon_version[2],
+                        build_type         = new_version.build_type,
+                        build_type_version = new_version.build_type_version,
+                        data_model_version = new_version.data_model_version,
+                        build_number       = new_version.build_number)
+    try:
+        print(shutil.make_archive(zip_name, "zip", 'io_xplane2blender_build'))
+    except:
+        raise
+
+
 def main(argv=None):
     exit_code = 0
     if argv is None:
@@ -279,13 +292,28 @@ def main(argv=None):
         argv.keep_files = 'only-tracked'
 
     # 2. Parse __init__.py and xplane_config.py for version info, swap old for new
-    old_version = _change_version_info(VerData(
-        addon_version=list(map(lambda v: str(v) if v else None, [argv.major,argv.minor,argv.revision])),
-        build_type=argv.build_type,
-        build_type_version=argv.build_type_version,
-        build_number=build_number))
+
+    # Create the VerData from argv,
+    # replace the file contents as needed,
+    # extract the old version data and fill in new_version's gaps with it
+    new_version = VerData(addon_version=list(map(lambda v: str(v) if v else None, [argv.major,argv.minor,argv.revision])),
+                          build_type=argv.build_type,
+                          build_type_version=argv.build_type_version,
+                          build_number=build_number)
+    old_version = _change_version_info(new_version)
+
+
     if not old_version:
         return 1
+
+    ov = old_version
+    nv = new_version
+    for attr in dir(ov):
+        if attr == "addon_version":
+            for i in range(3):
+                nv.addon_version[i] = nv.addon_version[i] if nv.addon_version[i] else ov.addon_version[i]
+        elif not attr.startswith('__'):
+            setattr(nv,attr, getattr(nv,attr) if getattr(nv,attr) else getattr(ov,attr))
 
     #Always make sure no matter what, we replace old values for __init__.py and xplane_config
     try:
@@ -318,6 +346,8 @@ def main(argv=None):
             return 1
 
         # 6. Zip up folder, rename it, move to ./builds folder
+        if not argv.no_zip:
+            _make_and_place_zip(new_version,argv.build_folder)
     finally:
         # 7. (if desired, which is almost always), replace old values for __init__.py and xplane_config.
         if not argv.make_overrides_permanent:
