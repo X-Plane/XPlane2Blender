@@ -48,7 +48,7 @@ def _make_parser()->argparse.ArgumentParser:
             type=_number_check_ge(0),
             help="Override the Blender revision version")
 
-    build_metadata_group = parser.add_argument_group("Build Metadata")
+    build_metadata_group = parser.add_argument_group("Addon Version Build Metadata")
     build_metadata_group.add_argument("--build-type",
             type=str,
             choices=["dev","alpha","beta","rc"],
@@ -66,36 +66,35 @@ def _make_parser()->argparse.ArgumentParser:
             metavar="YYYYMMDDHHMMSS in UTC",
             help="Overrides use of current time in UTC")
 
-    parser.add_argument("--make-overrides-permanent",
-            help="Changes source files to match inputs")
+    build_process_group = parser.add_argument_group("Build Script Options")
+    build_process_group.add_argument("--dest-folder",
+            type=str,
+            default="./builds",
+            help="Destination for the zip file. Folders will be created if it does not exist, files will be overwritten")
 
-    parser.add_argument("--clean",
+    build_process_group.add_argument("--clean",
             action="store_true",
             help="Cleans files and folders created during the build process")
 
-    test_args_group = parser.add_argument_group(
-            "Options related to running the test suite before saving the build."\
-            " The build number string is always tested. When conflicted, more tests are chosen over less")
-    test_args_group.add_argument("--test-level",
-            type=str,
-            default = "all",
-            choices = ["none","fast","all"],
-            help="What parts of the test suite to run. --filter in --test-args will overwrite this")
-
-    test_args_group.add_argument("--keep-files",
+    build_process_group.add_argument("--keep-files",
             type=str,
             default = "not-ignored",
             choices = ["only-tracked","not-ignored"],
             help="Select only tracked files (enforced for build-type='rc') or any not-ignored file")
 
-    test_args_group.add_argument("--no-zip",
+    build_process_group.add_argument("--make-overrides-permanent",
+            help="Changes source files to match inputs")
+
+    build_process_group.add_argument("--no-zip",
             action="store_true",
             help="Does not write zip, do not clean build folder. Useful for changing version numbers easily")
 
-    parser.add_argument("--build_folder",
+    test_args_group = parser.add_argument_group("Options related to running the test suite before saving the build.")
+    test_args_group.add_argument("--test-level",
             type=str,
-            default="./builds",
-            help="Destination for the zip file. Folders will be created if it does not exist, files will be overwritten")
+            default = "all",
+            choices = ["none","all"],
+            help="What parts of the test suite to run")
 
     return parser
 
@@ -238,7 +237,7 @@ def _delete_unwanted_contents(keep_files:str)->None:
             raise e
 
 
-def _make_and_place_zip(new_version:VerData,builds_folder:str):
+def _make_and_place_zip(new_version:VerData, tmp_build_folder:str, dest_folder:str):
     zip_name = 'io_xplane2blender_{major}_{minor}_{revision}-'\
                 '{build_type}-{build_type_version}-'\
                 '{data_model_version}_{build_number}'\
@@ -249,10 +248,31 @@ def _make_and_place_zip(new_version:VerData,builds_folder:str):
                         build_type_version = new_version.build_type_version,
                         data_model_version = new_version.data_model_version,
                         build_number       = new_version.build_number)
+    tmp_zip_base_dir = os.path.join(dest_folder,"io_xplane2blender")
     try:
-        print(shutil.make_archive(zip_name, "zip", 'io_xplane2blender_build'))
+        shutil.rmtree(path=tmp_zip_base_dir)
     except:
+        pass
+    try:
+        shutil.copytree(src=tmp_build_folder, dst=tmp_zip_base_dir)
+    except KeyboardInterrupt:
+        shutil.rmtree(path=tmp_zip_base_dir)
         raise
+    except OSError as e:
+        shutil.rmtree(path=tmp_zip_base_dir)
+        raise e
+    else:
+        try:
+            print("{base_name},{format},{root_dir},{base_dir}".format(
+                                base_name=zip_name, format="zip", root_dir=dest_folder, base_dir=tmp_zip_base_dir))
+            shutil.make_archive(base_name=zip_name, format="zip", root_dir=dest_folder, base_dir="io_xplane2blender")
+        except:
+            raise
+        else:
+            shutil.move(src=os.path.join(os.getcwd(),zip_name+".zip"),dst=dest_folder)
+    finally:
+        shutil.rmtree(path=tmp_zip_base_dir)
+        pass
 
 
 def main(argv=None):
@@ -262,19 +282,19 @@ def main(argv=None):
         argv,test_args = _make_parser().parse_known_args()
 
     # This script requires the git directory and the tests directory
-    os.chdir(os.path.dirname(__file__))
     if os.path.split(os.getcwd())[1] != 'XPlane2Blender':
         print(os.path.split(__file__)[1] +\
             " must be run in the XPlane2Blender folder! Current directory is {}"\
             .format(os.getcwd()))
+        return 1
 
     src_folder = os.path.join(os.getcwd(),"io_xplane2blender")
-    build_folder = src_folder + "_build"
+    tmp_build_folder = src_folder + "_build"
 
     # 1. Delete the old build folder, if present
     try:
-        if os.path.isdir(build_folder):
-            shutil.rmtree(build_folder)
+        if os.path.isdir(tmp_build_folder):
+            shutil.rmtree(tmp_build_folder)
     except shutil.Error as e:
         print(e)
         return 1
@@ -282,12 +302,7 @@ def main(argv=None):
     if argv.clean:
         return 1
 
-    #TODO: Make this happen inside of argparser
     build_number = str(argv.build_number) if argv.build_number else VerData.make_new_build_number()
-    if len(build_number) != 14:
-        print("--build_number {} is not 14 characters long".format(build_number))
-        return 0
-
     if argv.build_type == 'rc':
         argv.keep_files = 'only-tracked'
 
@@ -330,7 +345,7 @@ def main(argv=None):
 
         # 4. Copy the source to create a new build folder
         try:
-            shutil.copytree(src_folder,build_folder)
+            shutil.copytree(src_folder,tmp_build_folder)
         except shutil.Error as e:
             print(e)
             return 1
@@ -347,17 +362,16 @@ def main(argv=None):
 
         # 6. Zip up folder, rename it, move to ./builds folder
         if not argv.no_zip:
-            _make_and_place_zip(new_version,argv.build_folder)
+            _make_and_place_zip(new_version, tmp_build_folder, os.path.realpath(argv.dest_folder))
     finally:
         # 7. (if desired, which is almost always), replace old values for __init__.py and xplane_config.
         if not argv.make_overrides_permanent:
-            print(old_version)
             _change_version_info(old_version)
 
     #8. Clean the builds folder
     try:
         if not argv.no_zip:
-            shutil.rmtree(build_folder)
+            shutil.rmtree(tmp_build_folder)
     except shutil.Error as e:
         print(e)
         return 1
