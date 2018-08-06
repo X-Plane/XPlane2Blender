@@ -585,16 +585,14 @@ def material_layout(layout:UILayout,
             draw_box_column.prop(active_material.xplane, "normal_metalness")
 
         # v1000 blend / v9000 blend
-        if version >= 1100:
-            draw_box_column.prop(active_material.xplane, "blend_v1100")
-        elif version >= 1000:
+        if version >= 1000:
             draw_box_column.prop(active_material.xplane, "blend_v1000")
         else:
             draw_box_column.prop(active_material.xplane, "blend")
         
         if version >= 1100:
-            blend_prop_enum = active_material.xplane.blend_v1100
-        elif version >= 1000:
+            draw_box_column.prop(active_material.xplane, "blend_glass")
+        if version >= 1000:
             blend_prop_enum = active_material.xplane.blend_v1000
         else:
             blend_prop_enum = None

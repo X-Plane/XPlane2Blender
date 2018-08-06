@@ -316,10 +316,9 @@ class XPlaneMaterial():
     # False if the current XPLane version doesn't support it
     def getEffectiveBlendGlass(self):
         xplane_version  = int(bpy.context.scene.xplane.version)
-        blend_prop_enum = self.options.blend_v1100
         
         if xplane_version >= 1100:
-            return blend_prop_enum == BLEND_GLASS
+            return self.options.blend_glass
         else:
             return False
 

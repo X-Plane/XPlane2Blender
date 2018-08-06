@@ -384,7 +384,7 @@ def check_keyframes_rotation_are_orderered(rotation_bone:XPlaneBone, log_errors:
     rotation_axis = rotation_keyframe_table[0][0]
     rotation_keyframe_data = rotation_keyframe_table[0][1]
     if not (rotation_keyframe_data == sorted(rotation_keyframe_data) or\
-            rotation_keyframe_data == sorted(rotation_keyframe_data[::-1])):
+            rotation_keyframe_data == sorted(rotation_keyframe_data, reverse=True)):
         if log_errors:
             logger.error("Rotation dataref values for the {} manipulator attached to {} are not in ascending or descending order".format(
                 manipulator.manip.get_effective_type_name(),
