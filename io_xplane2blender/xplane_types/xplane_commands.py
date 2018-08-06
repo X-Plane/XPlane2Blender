@@ -67,14 +67,6 @@ from ..xplane_helpers import firstMatchInList, floatToStr, logger
 # Class: XPlaneCommands
 # Creates the OBJ commands table.
 class XPlaneCommands():
-    # Property: reseters
-    # dict - Stores attribtues that reset other attributes.
-    reseters = {}
-
-    # Property: written
-    # dict - Stores all already written attributes and theire values.
-    written = {}
-
     # Constructor: __init__
     #
     # Parameters:
@@ -273,7 +265,7 @@ class XPlaneCommands():
     #
     # Returns:
     #   bool - True if the attribute must be written, else false.
-    def canWriteAttribute(self, attr, value):
+    def canWriteAttribute(self, attr:str, value)->bool:
         if attr not in self.written or attr in self.inpersistant:
             return True
         elif self.written[attr] == value:
@@ -281,7 +273,7 @@ class XPlaneCommands():
         else:
             return True
 
-    def addReseter(self, attr, reseter):
+    def addReseter(self, attr:str, reseter:str):
         self.reseters[attr] = reseter
 
     # Method: attributeIsReseter
