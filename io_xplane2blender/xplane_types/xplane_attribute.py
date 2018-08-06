@@ -1,3 +1,4 @@
+from typing import List, Optional, Union
 from io_xplane2blender.xplane_helpers import floatToStr
 
 # Class: XPlaneAttribute
