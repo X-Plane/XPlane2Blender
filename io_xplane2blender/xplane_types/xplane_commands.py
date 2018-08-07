@@ -1,11 +1,14 @@
-import bpy
 import re
 
-from .xplane_attributes import XPlaneAttributes
+import bpy
+
+from io_xplane2blender.xplane_types import xplane_attribute
+from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
+
 from ..xplane_config import getDebug
 from ..xplane_constants import *
 from io_xplane2blender import xplane_helpers
-from ..xplane_helpers import firstMatchInList, floatToStr, logger
+from ..xplane_helpers import floatToStr, logger
 
 
 # Setters, resetters, and counterparts:
@@ -102,6 +105,7 @@ class XPlaneCommands():
             'ATTR_draw_enable': True,
             'ATTR_no_draped': True
         }
+
 
     # Method: write
     # Returns the OBJ commands table.
@@ -334,13 +338,14 @@ class XPlaneCommands():
         debug = getDebug()
         o = ''
         indent = xplaneObject.xplaneBone.getIndent()
-
+        
         # create a temporary attributes dict
         attributes = XPlaneAttributes()
         # add custom attributes
         for attr in xplaneObject.attributes:
             if xplaneObject.attributes[attr].getValue():
                 attributes.add(xplaneObject.attributes[attr])
+
         # add material attributes if any
         if hasattr(xplaneObject, 'material'):
             for attr in xplaneObject.material.attributes:
@@ -351,11 +356,54 @@ class XPlaneCommands():
             if xplaneObject.cockpitAttributes[attr].getValue():
                 attributes.add(xplaneObject.cockpitAttributes[attr])
 
-        # This is the attributes that the next object will have.
-        attributeNames = sorted(list(attributes.keys()))
-        # This is the attributes we have already stated that MIGHT need to be reset.
-        writtenNames = sorted(list(self.written.keys()))
+        WHITE_LIST = {
+                'ATTR_light_level',
+                'ATTR_light_level_reset',
+                'ATTR_cockpit',
+                'ATTR_cockpit_region',
+                'ATTR_no_cockpit',
+                'ATTR_draw_disable',
+                'ATTR_draw_enable',
+                'ATTR_poly_os',
+                'ATTR_poly_os 0',
+                'ATTR_hard',
+                'ATTR_hard_deck',
+                'ATTR_no_hard',
+                'ATTR_no_blend',
+                'ATTR_shadow_blend',
+                'ATTR_blend',
+                'ATTR_draped',
+                'ATTR_no_draped',
+                'ATTR_solid_camera',
+                'ATTR_no_solid_camera'
+                }
+        
+        #  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        # <What's up with WHITE_LIST? IT'S A STUPID HACK!>
+        #  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        # To ensure known OBJ directives only get reset as needed,
+        # we artificially add every known OBJ directive (except
+        # manips) to the attributes.
+        #
+        # This way the resetter thinks it doesn't have to reset
+        # because the next object "has" it already.
+        for attr in WHITE_LIST:
+            attributes.add(xplane_attribute.XPlaneAttribute(attr))
 
+        # This is the attributes that the next object will have.
+        #
+        # Comment about the comment: Remember "next object",
+        # can mean self if that is what you passed in. Don't confuse
+        # the comment's sense of tense with how this is currently used in
+        # the exporter. Just remember who xplaneObject is and you'll be fine.
+        #
+        # Comment about the comment about the comment:
+        # The resetter system is so confusing its
+        # good comments also need good comments. Ugh.
+        attributeNames = sorted(attributes.keys())
+
+        # This is the attributes we have already stated that MIGHT need to be reset.
+        writtenNames = sorted(self.written.keys())
         for setterPattern in sorted(self.reseters.keys()):
             resetingAttr = self.reseters[setterPattern]
             pattern = re.compile(setterPattern)
@@ -363,7 +411,9 @@ class XPlaneCommands():
             matchingWritten = [x for x in writtenNames if pattern.fullmatch(x)]
             matchingAttribute = [x for x in attributeNames if pattern.fullmatch(x)]
 
-            if len(matchingAttribute) > 1:
+            # Now that the added white list trick is in place,
+            # we'll nearly always have 2 matching attributes
+            if len(matchingAttribute) > 2:
                 print("WARNING: multiple incoming attributes matched %s" % setterPattern)
                 print(matchingAttribute)
 
@@ -371,8 +421,8 @@ class XPlaneCommands():
                 print("WARNING: multiple written attributes matched %s" % setterPattern)
                 print(matchingWritten)
 
+            
             if matchingWritten and not matchingAttribute:
-
                 # only reset attributes that wont be written with this object again
                 #logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
                 # write reseter and add it to written
@@ -380,6 +430,7 @@ class XPlaneCommands():
                 self.written[resetingAttr] = True
 
                 for orphan in matchingWritten:
+                    #print("orphan: "+orphan)
                     # we've reset an attribute so remove it from written as it will need rewrite with next object
                     del self.written[orphan]
         return o
