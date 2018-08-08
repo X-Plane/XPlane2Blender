@@ -252,9 +252,6 @@ class XPlaneMaterial():
         commands =  xplaneFile.commands
 
         for attr in self.attributes:
-            # do not write own reseters just now
-            # FIXME: why have we been doing this at all?
-            #if commands.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
             o += commands.writeAttribute(self.attributes[attr], self.xplaneObject)
 
         # if the file is a cockpit file write all cockpit attributes
@@ -262,9 +259,6 @@ class XPlaneMaterial():
             (bpy.context.scene.xplane.version >= VERSION_1040 and \
             xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT):
             for attr in self.cockpitAttributes:
-                # do not write own reseters just now
-                # FIXME: why have we been doing this at all?
-                # if self.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self.xplaneObject)
 
         return o
@@ -321,4 +315,3 @@ class XPlaneMaterial():
             return self.options.blend_glass
         else:
             return False
-

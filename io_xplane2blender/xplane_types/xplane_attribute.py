@@ -1,22 +1,18 @@
+from typing import Any, List, Optional, Union
 from io_xplane2blender.xplane_helpers import floatToStr
 
 # Class: XPlaneAttribute
 # An Attribute
 class XPlaneAttribute():
-    #TODO: These class variables should be removed. See  #301
-    name = ''
-    value = None
-    weight = 0
 
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   string name - Name of the attribute
-    #   mixed value - (default = None) Either a string or boolean
-    #   int weight - (default = 0) The attribute weight. Bigger weight will write the attribute later in the OBJ file.
-    def __init__(self, name, value = None, weight = 0):
+    def __init__(self, name:str, value:Optional[Union[bool,float,int,str]] = None, weight:int = 0):
+        '''
+        XPlaneAttributes are the data class for what will eventually be written as commands in the
+        OBJ. Names usually start with "ATTR_"
+        weight indicates where the attribute should be in the OBJ File
+        '''
         self.name = name
-        self.value = [value]
+        self.value = [value] # type: List[Optional[Union[bool,float,int,str]]
         self.weight = weight
 
     # Method: addValue
@@ -55,7 +51,7 @@ class XPlaneAttribute():
     #
     # Returns:
     #   mixed - The value
-    def getValue(self, i = 0):
+    def getValue(self, i:int = 0)->Optional[Union[bool,float,int,str]]:
         return self.value[i]
 
     # Method: getValueAsString
@@ -98,14 +94,14 @@ class XPlaneAttribute():
     #
     # Returns:
     #   list - All values of the attribute.
-    def getValues(self):
+    def getValues(self)->List[Optional[Union[bool,float,int,str]]]:
         return self.value
 
     # Method: getValuesAsString
     #
     # Returns:
     #   str - All values of the attribute as a single string.
-    def getValuesAsString(self):
+    def getValuesAsString(self)->str:
         o = ''
         for i in range(0, len(self.value)):
             o += self.getValueAsString(i)
