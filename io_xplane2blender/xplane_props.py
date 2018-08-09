@@ -1452,33 +1452,24 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio",
         default = False
     )
+    blend_glass = bpy.props.BoolProperty(
+        name = "Blend Glass",
+        description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering",
+        default = False
+    )
 
-    __blend_v1000_items = [
+    # v1000
+    blend_v1000 = bpy.props.EnumProperty(
+        name = "Blend",
+        description = "Controls texture alpha/blending",
+        default = BLEND_ON,
+        items = [
             (BLEND_OFF, 'Alpha Cutoff', 'Textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio'),
             (BLEND_ON, 'Alpha Blend', 'Textures alpha channel will blended'),
             (BLEND_SHADOW, 'Shadow', 'In shadow mode, shadows are not blended but primary drawing is')
         ]
-
-    # v1000
-    blend_v1000 = bpy.props.EnumProperty(
-        attr = "blend_v1000",
-        name = "Blend",
-        description = "Controls texture alpha/blending",
-        default = BLEND_ON,
-        items = __blend_v1000_items
     )
 
-    __blend_v1100_items = [(BLEND_GLASS, 'Blend Glass', 'The alpha channel of the albedo (day texture) will be used to create translucent rendering')]
-    
-    # v1100
-    blend_v1100 = bpy.props.EnumProperty(
-        attr = "blend_v1100",
-        name = "Blend",
-        description = "Controls texture alpha/blending",
-        default = BLEND_ON,
-        items = __blend_v1000_items + __blend_v1100_items
-    )
-    
     blendRatio = bpy.props.FloatProperty(
         attr = "blendRatio",
         name = "Alpha Cutoff Ratio",

@@ -7,8 +7,9 @@ from bpy.app.handlers import persistent
 import io_xplane2blender
 from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
 from io_xplane2blender.xplane_constants import LOGGER_LEVEL_ERROR,\
-    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS
+    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS, BLEND_GLASS
 from io_xplane2blender.xplane_helpers import XPlaneLogger
+
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
@@ -95,7 +96,7 @@ def __updateLocRot(obj,logger):
 #
 # Parameters:
 #     fromVersion - The old version of the blender file
-def update(last_version,logger):
+def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLogger):
     if last_version < xplane_helpers.VerStruct.parse_version('3.3.0'):
         for scene in bpy.data.scenes:
             # set compositeTextures to False
@@ -127,6 +128,34 @@ def update(last_version,logger):
 
         for obj in bpy.data.objects:
             __updateLocRot(obj,logger)
+
+    if last_version < xplane_helpers.VerStruct.parse_version('3.5.0-beta.2+32.20180725010500'):
+        for mat in bpy.data.materials:
+            v10 = mat.xplane.get('blend_v1000')
+            v11 = mat.xplane.get('blend_v1100')
+
+            if v11 == 3: #Aka, where BLEND_GLASS was in the enum
+                mat.xplane.blend_glass = True
+
+                # This bit of code reachs around Blender's magic EnumProperty
+                # stuff and get at the RNA behind it, all to find the name.
+                # If the default for blend_v1000 ever changes, we'll be covered.
+                blend_v1000 = bpy.types.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
+                enum_items = blend_v1000.enum_items
+                
+                if v10 is None:
+                    v10_mode = enum_items[enum_items.find(blend_v1000.default)].name
+                else:
+                    v10_mode = enum_items[v10].name
+                logger.info(
+                        "Set material \"{name}\"'s Blend Glass property to true and its Blend Mode to {v10_mode}"
+                        .format(name=mat.name, v10_mode=v10_mode))
+
+            if v11 is not None:
+                # It appears when get returns None, del throws an error,
+                # which is not how normal python works
+                del mat.xplane['blend_v1100']
+
 
 @persistent
 def load_handler(dummy):
