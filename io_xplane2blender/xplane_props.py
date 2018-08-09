@@ -205,15 +205,6 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
                                    self.data_model_version,
                                    self.build_number)
         
-    # Method: as_file_name
-    #
-    # Gets the version in its filename version (all .'s replaced with ,'s)
-    def as_file_name(self):
-        return str(self).replace('.','_')
-
-    def short_str(self):
-        return str(self)[:str(self).index('+')]
-
 class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
     start = bpy.props.FloatProperty(
             name = "Start",

@@ -185,7 +185,6 @@ def _change_version_info(new_version:VerData)->Optional[VerData]:
         print(e)
         return None
     else:
-        print(old_version.addon_version)
         return old_version
 
 
@@ -238,9 +237,9 @@ def _delete_unwanted_contents(keep_files:str)->None:
 
 
 def _make_and_place_zip(new_version:VerData, tmp_build_folder:str, dest_folder:str):
-    zip_name = 'io_xplane2blender_{major}_{minor}_{revision}-'\
-                '{build_type}-{build_type_version}-'\
-                '{data_model_version}_{build_number}'\
+    zip_name = ('io_xplane2blender_{major}_{minor}_{revision}-'\
+                '{build_type}_{build_type_version}-'\
+                '{data_model_version}_{build_number}')\
                     .format(major          = new_version.addon_version[0],
                         minor              = new_version.addon_version[1],
                         revision           = new_version.addon_version[2],
@@ -263,8 +262,6 @@ def _make_and_place_zip(new_version:VerData, tmp_build_folder:str, dest_folder:s
         raise e
     else:
         try:
-            print("{base_name},{format},{root_dir},{base_dir}".format(
-                                base_name=zip_name, format="zip", root_dir=dest_folder, base_dir=tmp_zip_base_dir))
             shutil.make_archive(base_name=zip_name, format="zip", root_dir=dest_folder, base_dir="io_xplane2blender")
         except:
             raise
