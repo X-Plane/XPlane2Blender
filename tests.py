@@ -1,9 +1,10 @@
-import os
+import argparse
 import glob
+import os
+import re
+import shutil
 import subprocess
 import sys
-import shutil
-import re
 
     
 """
@@ -16,152 +17,162 @@ LOGGER HAD X UNEXPECTED ERRORS
 The string is never indented. The formating of X is not specified, as long as it parses to an int
 """
 ERROR_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
-
-#One day if we need to have a strictness rating we can have it stop on warnings as well as errors
+# One day if we need to have a strictness rating we can have it stop on warnings as well as errors
 #WARNING_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED WARNING"
-if os.path.exists('./tests/tmp'):
-    # empty temp directory
-    shutil.rmtree('./tests/tmp',ignore_errors=True)
 
-# create temp dir if not exists
-os.makedirs('./tests/tmp')
+def clean_tmp_folder():
+    # TODO: This cannot run when the tmp folder is open
+    # in a file browser or is in use. This is annoying.
+    if os.path.exists('./tests/tmp'):
+        # empty temp directory
+        shutil.rmtree('./tests/tmp',ignore_errors=True)
 
-def getFlag(names):
-    for name in names:
-        if name in sys.argv:
-            return True
-    return False
+    # create temp dir if not exists
+    os.makedirs('./tests/tmp')
 
-def getOption(names, default):
-    index = -1
+def _make_argparse():
+    parser = argparse.ArgumentParser(description="Runs the XPlane2Blender test suite")
+    parser.add_argument("-f", "--filter",   
+            help="Filter test files with a regular expression", 
+            type=str)#[regex]
+    parser.add_argument("--exclude",        
+            help="Exclude test files with a regular expression", 
+            type=str)#[regex]
+    parser.add_argument("-c", "--continue", 
+            help="Keep running after a test failure", 
+            default=False,
+            action="store_true",
+            dest="keep_going")
+    parser.add_argument("-q", "--quiet",    
+            default=False,
+            help="Only output if tests pass or fail",
+            action="store_true")
+    parser.add_argument("-p", "--print-fails",        
+            default=False,
+            help="Like --quiet, but also prints the output of failed tests", 
+            action="store_true")
+    parser.add_argument("--debug",         
+            help="Enable Blender debugging", #Hopefully it could one day also enable pydev
+            action="store_true")
+    parser.add_argument("-n", "--no-factory-startup", 
+            help="Run Blender with current prefs rather than factory prefs", 
+            action="store_true")
+    '''
+    python's use of folder-as-module-name makes this much harder.
+    Possible solutions would be messing with sys.modules, or copying and renaming and etc the src
+    folder
+    parser.add_argument("--addon",
+            default="io_xplane2blender",
+            type=str,
+            help="Provide alternative path to addon to test (such as io_xplane2blender_build)")
+    '''
+    parser.add_argument("--blender",
+            default="blender",#Use the blender in the system path
+            type=str,
+            help="Provide alternative path to blender executable")
+    return parser
 
-    for name in names:
-            
-        try:
-            index = sys.argv.index(name)
-        except:
-            pass
+def main(argv=None):
+    clean_tmp_folder()
+    if argv is None:
+        argv = _make_argparse().parse_args(sys.argv[1:])
+    exit_code = 0
 
-        if index > 0 and len(sys.argv) > index + 1:
-            return sys.argv[index + 1]
+    def printTestBeginning(text):
+        '''Print the /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests'''
+        print(("/*=== " + text + " ").ljust(75,'=')+'{{{')
 
-    return default
+    def printTestEnd():
+        print(('=' *75)+"}}}*/")     
 
-fileFilter = getOption(['-f','--filter'], None)
-exclude = getOption(['--exclude'], None)
-blenderExecutable = getOption(['--blender'], 'blender')
-debug = getFlag(['--debug'])
-keep_going = getFlag(['-c','--continue'])
-print_fails = getFlag(['-p','--print-fails'])
-be_quiet = getFlag(['-q', '--quiet']) or print_fails
-showHelp = getFlag(['--help'])
-no_factory_startup = getFlag(['-n', '--no-factory-startup'])
-if showHelp:
-    print(
-        'Usage: python tests.py [options]\n\n' +
-        'Options:\n\n' +
-        '  -f, --filter [regex]\tfilter test files with a regular expression\n' +
-        '  --exclude [regex]\texclude test files with a regular expression\n' +
-        '  --debug\t\tenable debugging\n' +
-        '  -c, --continue\tKeep running after test failure\n' +
-        '  -q, --quiet\tReduce output from tests\n' +
-        '  -p, --print-fails\tSets --quiet, but also prints the output of failed tests\n'
-        '  -n, --no-factory-startup\tRun Blender with current prefs rather than factory prefs\n'
-        '  --blender [path]\tProvide alternative path to blender executable\n' +
-        '  --help\t\tdisplay this help\n\n'
-    )
-    sys.exit(0)
-
-def inFilter(filepath):
-    passes = False
-
-    if fileFilter != None:
-        passes = (re.search(fileFilter, filepath))
-    else:
+    def inFilter(filepath):
         passes = True
 
-    if exclude != None:
-        passes = not (re.search(exclude, filepath))
+        if argv.filter != None:
+            passes &= bool(re.search(argv.filter, filepath))
 
-    return passes
+        if argv.exclude != None:
+            passes &= not (re.search(argv.exclude, filepath))
 
-def printTestBeginning(text):
-    '''Print the /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests'''
-    print(("/*=== " + text + " ").ljust(75,'=')+'{{{')
+        return passes
 
-def printTestEnd():
-    print(('=' *75)+"}}}*/")     
+    for root, dirs, files in os.walk('./tests'):
+        for pyFile in files:
+            pyFile = os.path.join(root, pyFile)
+            if pyFile.endswith('.test.py'):
+                # skip files not within filter
+                if inFilter(pyFile):
+                    blendFile = pyFile.replace('.py', '.blend')
 
-for root, dirs, files in os.walk('./tests'):
-    for pyFile in files:
-        pyFile = os.path.join(root, pyFile)
-        if pyFile.endswith('.test.py'):
-            # skip files not within filter
-            if inFilter(pyFile):
-                blendFile = pyFile.replace('.py', '.blend')
+                    if not (argv.quiet or argv.print_fails):
+                        printTestBeginning("Running file " + pyFile)
 
-                if not be_quiet:
-                    printTestBeginning("Running file " + pyFile)
+                    args = [argv.blender, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
-                args = [blenderExecutable, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
+                    if argv.no_factory_startup:
+                        args.remove('--factory-startup')
 
-                if no_factory_startup:
-                    args.remove('--factory-startup')
-
-                if os.path.exists(blendFile):
-                    args.append(blendFile)
-                else:
-                    if not be_quiet:
-                        print("WARNING: Blender file " + blendFile + " does not exist")
-                        printTestEnd()
-
-                args.append('--python')
-                args.append(pyFile)
-
-                if debug:
-                    args.append('--debug')
-
-                    # print the command used to execute the script
-                    # to be able to easily re-run it manually to get better error output
-                    print(' '.join(args))
-
-                out = subprocess.check_output(args, stderr = subprocess.STDOUT)
-
-                if sys.version_info >= (3, 0):
-                    out = out.decode('utf-8')
-                    
-                logger_matches = re.search(ERROR_LOGGER_REGEX, out)
-                if logger_matches == None:
-                    num_errors = 0
-                else:
-                    num_errors = (int(logger_matches.group(1)))
- 
-                if not be_quiet: 
-                    print(out)
-                
-                #Normalize line endings because Windows is dumb 
-                out = out.replace('\r\n','\n')
-                out_lines = out.split('\n')
-                
-                #First line of output is unittest's sequece of dots, E's and F's
-                if 'E' in out_lines[0] or 'F' in out_lines[0] or num_errors != 0:
-                    if print_fails:
-                        printTestBeginning("Running file %s - FAILED" % (pyFile))
-                        print(out)
+                    if os.path.exists(blendFile):
+                        args.append(blendFile)
                     else:
-                        print('%s FAILED' % pyFile)
-                    
-                    if print_fails:
-                        printTestEnd()
+                        if not (argv.quiet or argv.print_fails):
+                            print("WARNING: Blender file " + blendFile + " does not exist")
+                            printTestEnd()
 
-                    if not keep_going:
-                        sys.exit(1)
-                elif be_quiet:
-                    print('%s passed' % pyFile)
-                
-                #THIS IS THE LAST THING TO PRINT BEFORE A TEST ENDS
-                #Its a little easier to see the boundaries between test suites,
-                #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
-                #Blender, and more in there sometimes
-                if not be_quiet:
-                    printTestEnd()
+                    args.append('--python')
+                    args.append(pyFile)
+
+                    if argv.debug:
+                        args.append('--debug')
+
+                        # print the command used to execute the script
+                        # to be able to easily re-run it manually to get better error output
+                        print(' '.join(args))
+
+                    out = subprocess.check_output(args, stderr = subprocess.STDOUT)
+
+                    if sys.version_info >= (3, 0):
+                        out = out.decode('utf-8')
+                        
+                    logger_matches = re.search(ERROR_LOGGER_REGEX, out)
+                    if logger_matches == None:
+                        num_errors = 0
+                    else:
+                        num_errors = (int(logger_matches.group(1)))
+     
+                    if not (argv.quiet or argv.print_fails): 
+                        print(out)
+                    
+                    #Normalize line endings because Windows is dumb 
+                    out = out.replace('\r\n','\n')
+                    out_lines = out.split('\n')
+                    
+                    #First line of output is unittest's sequece of dots, E's and F's
+                    #TODO: Except when it isn't like when a SyntaxError occurs and
+                    #the test appears to pass!
+                    if 'E' in out_lines[0] or 'F' in out_lines[0] or num_errors != 0:
+                        exit_code = 1
+                        if argv.print_fails:
+                            printTestBeginning("Running file %s - FAILED" % (pyFile))
+                            print(out)
+                        else:
+                            print('%s FAILED' % pyFile)
+                        
+                        if argv.print_fails:
+                            printTestEnd()
+
+                        if not argv.keep_going:
+                            return exit_code
+                    elif (argv.quiet or argv.print_fails):
+                        print('%s passed' % pyFile)
+                    
+                    #THIS IS THE LAST THING TO PRINT BEFORE A TEST ENDS
+                    #Its a little easier to see the boundaries between test suites,
+                    #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
+                    #Blender, and more in there sometimes
+                    if not argv.quiet:
+                        printTestEnd()
+    return exit_code 
+
+if __name__ == "__main__":
+    sys.exit(main())

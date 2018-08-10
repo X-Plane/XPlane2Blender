@@ -105,10 +105,10 @@ IDX	77
 
 ATTR_cockpit
 TRIS	36 36
-ATTR_no_cockpit
 ATTR_shiny_rat	0.5
 ATTR_hard	concrete
+ATTR_no_cockpit
 TRIS	0 36
 TRIS	72 6
 
-# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+30.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+35.NO_BUILD_NUMBR

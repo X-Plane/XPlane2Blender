@@ -139,14 +139,14 @@ IDX	107
 ATTR_cockpit
 ATTR_manip_toggle	hand	0	0	sim/cockpit2/switches/landing_lights_switch	sim/cockpit2/switches/landing_lights_switch
 TRIS	36 36
-ATTR_no_cockpit
 ATTR_manip_none
 ATTR_draw_disable
 ATTR_solid_camera
+ATTR_no_cockpit
 TRIS	72 36
+ATTR_shiny_rat	0.5
 ATTR_draw_enable
 ATTR_no_solid_camera
-ATTR_shiny_rat	0.5
 TRIS	0 36
 
-# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+30.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+35.NO_BUILD_NUMBR

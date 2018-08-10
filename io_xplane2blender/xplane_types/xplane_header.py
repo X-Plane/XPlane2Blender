@@ -156,9 +156,16 @@ class XPlaneHeader():
 
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= 1100:
-            if self.xplaneFile.referenceMaterials[0] and self.attributes['TEXTURE_NORMAL'].getValue(0) is not None:
-                mat = self.xplaneFile.referenceMaterials[0]
+            mat = self.xplaneFile.referenceMaterials[0]
+            if mat:
                 self.attributes['NORMAL_METALNESS'].setValue(mat.getEffectiveNormalMetalness())
+                has_texture_normal = self.attributes['TEXTURE_NORMAL'].getValue(0) is not None
+                if has_texture_normal:
+                    if mat.options.panel is False:
+                        self.attributes['NORMAL_METALNESS']\
+                                .setValue(mat.getEffectiveNormalMetalness())
+                elif not has_texture_normal and mat.getEffectiveNormalMetalness():
+                    logger.warn("Material '%s' has Normal Metalness, but no Normal Texture" % mat.name)
         
         if xplane_version >= 1100:
             if self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]:
@@ -178,8 +185,13 @@ class XPlaneHeader():
             
             if self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[1]
-                if xplane_version >= 1100 and self.attributes['TEXTURE_DRAPED_NORMAL'].getValue(0) is not None:
-                    self.attributes['NORMAL_METALNESS_draped_hack'].setValue(mat.getEffectiveNormalMetalness())
+                if xplane_version >= 1100:
+                    has_texture_draped_nml = self.attributes['TEXTURE_DRAPED_NORMAL'].getValue(0) is not None
+                    if has_texture_draped_nml:
+                        if mat.options.panel is False:
+                            self.attributes['NORMAL_METALNESS_draped_hack'].setValue(mat.getEffectiveNormalMetalness())
+                    elif not has_texture_draped_nml and mat.getEffectiveNormalMetalness():
+                        logger.warn("Material '%s' has Normal Metalness, but no Draped Normal Texture" % mat.name)
 
                 # draped bump level
                 if mat.options.bump_level != 1.0:

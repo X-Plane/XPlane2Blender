@@ -49,7 +49,7 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
     def test_make_new_build_number(self):
         ver_s = VerStruct.current()
         ver_s.build_number = VerStruct.make_new_build_number()
-        self.assertTrue(ver_s.is_valid(), "VerStruct.get_build_number_datetime does not generate vaild build numbers")
+        self.assertTrue(ver_s.is_valid(), "VerStruct.make_new_build_number does not generate vaild build numbers")
         
     def test_parse_version(self):
         incorrect_versions_legacy = [
