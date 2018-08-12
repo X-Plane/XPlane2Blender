@@ -5,28 +5,17 @@ from ..xplane_constants import *
 # Creates OBJ lights.
 # TODO: deprecate in v3.4
 class XPlaneLights():
-    items = []
-
-    # Property: lines
-    # list - All lines.
-    lines = []
-
-    # Property: indices
-    # list - All light indices.
-    indices = []
-
-    # Property: globalindex
-    # int - Current global light index.
-    globalindex = 0
-
     # Constructor: __init__
     #
     # Parameters:
     #   dict file - A file dict coming from <XPlaneData>
     def __init__(self):
         self.items = []
+        # list - All lines.
         self.lines = []
+        # list - All light indices.
         self.indices = []
+        # int - Current global light index.
         self.globalindex = 0
 
     def append(self, light):

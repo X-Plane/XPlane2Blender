@@ -11,23 +11,14 @@ from .xplane_face import XPlaneFace
 # Class: XPlaneMesh
 # Creates the OBJ meshes.
 class XPlaneMesh():
-    # Property: vertices
-    # list - contains all mesh vertices
-    vertices = []
-
-    # Property: indices
-    # list - contains all face indices
-    indices = []
-
-    # Property: globalindex
-    # int - Stores the current global vertex index.
-    globalindex = 0
-
     # Constructor: __init__
     def __init__(self):
+        # list - contains all mesh vertices
         self.vertices = []
+        # array - contains all face indices
         self.indices = array.array('i')
         self.faces = []
+        # int - Stores the current global vertex index.
         self.globalindex = 0
         self.debug = []
 
