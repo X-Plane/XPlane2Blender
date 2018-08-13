@@ -395,7 +395,7 @@ class XPlaneFile():
         objects = self.getObjectsList()
 
         for xplaneObject in objects:
-            if xplaneObject.type == 'PRIMITIVE' and xplaneObject.material.options:
+            if xplaneObject.type == 'MESH' and xplaneObject.material.options:
                 errors,warnings = xplaneObject.material.isValid(self.options.export_type)
 
                 for error in errors:
@@ -414,7 +414,7 @@ class XPlaneFile():
         objects = self.getObjectsList()
 
         for xplaneObject in objects:
-            if xplaneObject.type == 'PRIMITIVE' and xplaneObject.material and xplaneObject.material.options:
+            if xplaneObject.type == 'MESH' and xplaneObject.material and xplaneObject.material.options:
                 materials.append(xplaneObject.material)
 
         return materials
