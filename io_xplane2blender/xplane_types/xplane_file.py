@@ -6,7 +6,6 @@ import mathutils
 import collections
 from .xplane_bone import XPlaneBone
 from .xplane_light import XPlaneLight
-#TODO: Delete all traces of XPlaneLine from .xplane_line import XPlaneLine
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 from .xplane_lights import XPlaneLights

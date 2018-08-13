@@ -47,7 +47,7 @@ class XPlanePrimitive(XPlaneObject):
     #   blenderObject - A Blender object
     def __init__(self, blenderObject):
         super(XPlanePrimitive, self).__init__(blenderObject)
-        self.type = XPLANE_OBJECT_TYPE_PRIMITIVE
+        self.type = 'MESH'
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
         self.manipulator = XPlaneManipulator(self)

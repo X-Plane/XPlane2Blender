@@ -74,8 +74,6 @@ class XPlaneObject():
         self.datarefs = {}
         self.bakeMatrix = None
         
-        self.id = int(blenderObject.as_pointer()) #TODO: Delete unused attribute
-
         self.attributes = XPlaneAttributes()
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
