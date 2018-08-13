@@ -33,8 +33,9 @@ class XPlaneTestCase(unittest.TestCase):
     expected_logger_warnings = 0
     
     def setUp(self, useLogger = True):
-        if '--debug' in sys.argv:
-            setDebug(True)
+        dd_index = sys.argv.index('--')
+        blender_args, xplane_args = sys.argv[:dd_index],sys.argv[dd_index+1:]
+        setDebug('--force-xplane-debug' in xplane_args)
 
         if useLogger:
             self.useLogger()

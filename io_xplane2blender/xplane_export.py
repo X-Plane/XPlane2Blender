@@ -8,7 +8,7 @@ import os
 import sys
 from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
-from .xplane_config import getDebug, getLog, initConfig
+from .xplane_config import getDebug
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 import io_xplane2blender
 
@@ -53,8 +53,6 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
     # Parameters:
     #   context - Blender context object.
     def execute(self, context):
-        initConfig()
-        log = getLog()
         # prepare logging
         self._startLogging()
         
@@ -143,7 +141,6 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
     def _startLogging(self):
-        log = getLog()
         debug = getDebug()
         logLevels = ['error', 'warning']
 
@@ -162,9 +159,10 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
 
         # log out to a file if logging is enabled
-        if log:
+        if debug and bpy.context.scene.xplane.log:
             if bpy.context.blend_data.filepath != '':
                 filepath = os.path.dirname(bpy.context.blend_data.filepath)
+                #Something this? self.logfile = os.path.join(dir,name+'_'+time.strftime("%y-%m-%d-%H-%M-%S")+'_xplane2blender.log')
                 self.logFile = open(os.path.join(filepath, 'xplane2blender.log'), 'w')
                 logger.addTransport(XPlaneLogger.FileTransport(self.logFile), logLevels)
             else:

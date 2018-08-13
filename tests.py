@@ -32,44 +32,45 @@ def clean_tmp_folder():
 
 def _make_argparse():
     parser = argparse.ArgumentParser(description="Runs the XPlane2Blender test suite")
-    parser.add_argument("-f", "--filter",   
-            help="Filter test files with a regular expression", 
+    test_selection = parser.add_argument_group("Test Selection And Control")
+    test_selection.add_argument("-f", "--filter",
+            help="Filter test files with a regular expression",
             type=str)#[regex]
-    parser.add_argument("--exclude",        
-            help="Exclude test files with a regular expression", 
+    test_selection.add_argument("--exclude",
+            help="Exclude test files with a regular expression",
             type=str)#[regex]
-    parser.add_argument("-c", "--continue", 
+    test_selection.add_argument("-c", "--continue", 
             help="Keep running after a test failure", 
             default=False,
             action="store_true",
             dest="keep_going")
-    parser.add_argument("-q", "--quiet",    
+
+    output_control = parser.add_argument_group("Output Control")
+    output_control.add_argument("-q", "--quiet",
             default=False,
             help="Only output if tests pass or fail",
             action="store_true")
-    parser.add_argument("-p", "--print-fails",        
+    output_control.add_argument("-p", "--print-fails",
             default=False,
             help="Like --quiet, but also prints the output of failed tests", 
             action="store_true")
-    parser.add_argument("--debug",         
-            help="Enable Blender debugging", #Hopefully it could one day also enable pydev
-            action="store_true")
-    parser.add_argument("-n", "--no-factory-startup", 
-            help="Run Blender with current prefs rather than factory prefs", 
-            action="store_true")
-    '''
-    python's use of folder-as-module-name makes this much harder.
-    Possible solutions would be messing with sys.modules, or copying and renaming and etc the src
-    folder
-    parser.add_argument("--addon",
-            default="io_xplane2blender",
-            type=str,
-            help="Provide alternative path to addon to test (such as io_xplane2blender_build)")
-    '''
-    parser.add_argument("--blender",
-            default="blender",#Use the blender in the system path
+    # Hopefully it could one day also enable pydev, and we can move this to a --verbose argument
+    output_control.add_argument("--force-xplane-debug",
+            default=False,
+            help="Shows verbose(!) debug info and turns on Scene's Debug if not set in Blend file",
+            action='store_true')
+
+    blender_options = parser.add_argument_group("Blender Options")
+    blender_options.add_argument("--blender",
+            default="blender",# Use the blender in the system path
             type=str,
             help="Provide alternative path to blender executable")
+    blender_options .add_argument("--force-blender-debug",
+            help="Turn on Blender's --debug flag", 
+            action="store_true")
+    blender_options.add_argument("-n", "--no-factory-startup",
+            help="Run Blender with current prefs rather than factory prefs",
+            action="store_true")
     return parser
 
 def main(argv=None):
@@ -107,29 +108,35 @@ def main(argv=None):
                     if not (argv.quiet or argv.print_fails):
                         printTestBeginning("Running file " + pyFile)
 
-                    args = [argv.blender, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
+                    blender_args = [argv.blender, '--addons', 'io_xplane2blender', '--factory-startup', '-noaudio', '-b']
 
                     if argv.no_factory_startup:
-                        args.remove('--factory-startup')
+                        blender_args.remove('--factory-startup')
 
                     if os.path.exists(blendFile):
-                        args.append(blendFile)
+                        blender_args.append(blendFile)
                     else:
                         if not (argv.quiet or argv.print_fails):
                             print("WARNING: Blender file " + blendFile + " does not exist")
                             printTestEnd()
 
-                    args.append('--python')
-                    args.append(pyFile)
+                    blender_args.extend(['--python', pyFile])
 
-                    if argv.debug:
-                        args.append('--debug')
+                    if argv.force_blender_debug:
+                        blender_args.append('--debug')
 
+                    # Small Hack!
+                    # Blender stops parsing after '--', so we can append the test runner
+                    # args and bridge the gap without anything fancy!
+                    blender_args.extend(['--']+sys.argv[1:])
+
+                    if not argv.quiet and\
+                            (argv.force_blender_debug or argv.force_xplane_debug):
                         # print the command used to execute the script
                         # to be able to easily re-run it manually to get better error output
-                        print(' '.join(args))
+                        print(' '.join(blender_args))
 
-                    out = subprocess.check_output(args, stderr = subprocess.STDOUT)
+                    out = subprocess.check_output(blender_args, stderr = subprocess.STDOUT)
 
                     if sys.version_info >= (3, 0):
                         out = out.decode('utf-8')
