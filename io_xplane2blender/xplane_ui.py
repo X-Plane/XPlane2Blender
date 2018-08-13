@@ -570,8 +570,6 @@ def lamp_layout(self, obj):
 #   Material active_material - The active_material of a mesh
 def material_layout(layout:UILayout,
                     active_material:bpy.types.Material):
-    # TODO: hide stuff for draped materials
-    isDraped = active_material.xplane.draped
     version = int(bpy.context.scene.xplane.version)
     draw_box = layout.box()
     draw_box.label("Draw Settings")
