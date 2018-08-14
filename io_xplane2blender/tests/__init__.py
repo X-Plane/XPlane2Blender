@@ -18,20 +18,13 @@ from .animation_file_mappings import mappings
 
 
 #TODO: Make this import from XPlane2Blender/tests.py instead of just keeping it in sync manually
-ERROR_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED ERRORS"
-WARNING_LOGGER_REGEX = "LOGGER HAD ([+-]?\d+) UNEXPECTED WARNINGS"
+TEST_RESULTS_REGEX = "RESULT: After {num_tests} tests got {errors} errors, {fails} failures, and {skip} skipped"
 
 FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
 
 class XPlaneTestCase(unittest.TestCase):
-    
-    #If you are expecting errors as as part of your test, every part of your test must expect errors.
-    #Split facets that must pass and facets that must fail into separate tests
-    expected_logger_errors = 0
-    expected_logger_warnings = 0
-    
     def setUp(self, useLogger = True):
         dd_index = sys.argv.index('--')
         blender_args, xplane_args = sys.argv[:dd_index],sys.argv[dd_index+1:]
@@ -323,23 +316,14 @@ def runTestCases(testCases):
     #Until a better solution for knowing if the logger's error count should be used to quit the testing,
     #we are currently saying only 1 is allow per suite at a time (which is likely how it should be anyways)
     assert len(testCases) == 1, "Currently, only one test case per suite is supported at a time"
-    expected_logger_errors = 0
-    expected_logger_warnings = 0
-    for testCase in testCases:    
-        suite = unittest.defaultTestLoader.loadTestsFromTestCase(testCase)
-        expected_logger_errors += testCase.expected_logger_errors
-        expected_logger_warnings += testCase.expected_logger_warnings
-    
-    unittest.TextTestRunner().run(suite)
-    
-    #WARNING! There is a chance for false positives with this - if the total number of errors is correct,
-    #but their distribution throughout the asserts are not. Therefore it is recommended to only create one
-    #self.assertEquals(len(logger.findErrors()), num_errors) at the end of the test
-    unexpected_errors   = len(logger.findErrors())   - expected_logger_errors
-    unexpected_warnings = len(logger.findWarnings()) - expected_logger_warnings
-    
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(testCases[0])
+    test_result = unittest.TextTestRunner().run(suite)
+
     #See XPlane2Blender/tests.py for documentation. The strings must be kept in sync!
-    return_string = ERROR_LOGGER_REGEX.replace("([+-]?\d+)", str(unexpected_errors))
+    return_string = "RESULT: After {testsRun} tests got {errors} errors, {failures} failures, and {skipped} skipped"\
+        .format(testsRun=test_result.testsRun,
+                errors=len(test_result.errors),
+                failures=len(test_result.failures),
+                skipped=len(test_result.skipped))
     print(return_string)
-    #For if we ever create a --verbose flag
-    #print(WARNING_LOGGER_REGEX.replace("([+-]?\d+)", str(unexpected_warnings)))
+

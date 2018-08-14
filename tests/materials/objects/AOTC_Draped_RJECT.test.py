@@ -9,11 +9,10 @@ from io_xplane2blender.xplane_types import xplane_file
 __dirname__ = os.path.dirname(__file__)
 
 class TestAOTC_Draped_RJECT(XPlaneTestCase):
-    expected_logger_errors = 1
     def test_export(self):
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
         out = xplaneFile.write()
 
-        self.assertEquals(len(logger.findErrors()), self.expected_logger_errors)
+        self.assertLoggerErrors(1)
 
 runTestCases([TestAOTC_Draped_RJECT])
