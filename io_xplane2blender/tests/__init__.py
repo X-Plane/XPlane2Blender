@@ -211,7 +211,7 @@ class XPlaneTestCase(unittest.TestCase):
     #    self.assertEqual(len(logger.findWarnings()), expected_logger_warnings)
     #    logger.clearMessages()
     def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
-        if not '--quiet' in sys.argv:
+        if not ('-q' in sys.argv or '--quiet' in sys.argv):
             print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
         out = self.exportLayer(layer, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)

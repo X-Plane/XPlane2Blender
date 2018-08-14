@@ -16,7 +16,10 @@ def clean_tmp_folder():
         shutil.rmtree('./tests/tmp',ignore_errors=True)
 
     # create temp dir if not exists
-    os.makedirs('./tests/tmp')
+    try:
+        os.makedirs('./tests/tmp',exist_ok=True)
+    except:
+        pass
 
 def _make_argparse():
     parser = argparse.ArgumentParser(description="Runs the XPlane2Blender test suite")
