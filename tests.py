@@ -30,8 +30,8 @@ def _make_argparse():
     test_selection.add_argument("--exclude",
             help="Exclude test files with a regular expression",
             type=str)#[regex]
-    test_selection.add_argument("-c", "--continue", 
-            help="Keep running after a test failure", 
+    test_selection.add_argument("-c", "--continue",
+            help="Keep running after a test failure",
             default=False,
             action="store_true",
             dest="keep_going")
@@ -43,7 +43,7 @@ def _make_argparse():
             action="store_true")
     output_control.add_argument("-p", "--print-fails",
             default=False,
-            help="Like --quiet, but also prints the output of failed tests", 
+            help="Like --quiet, but also prints the output of failed tests",
             action="store_true")
     # Hopefully it could one day also enable pydev, and we can move this to a --verbose argument
     output_control.add_argument("--force-xplane-debug",
@@ -57,7 +57,7 @@ def _make_argparse():
             type=str,
             help="Provide alternative path to blender executable")
     blender_options .add_argument("--force-blender-debug",
-            help="Turn on Blender's --debug flag", 
+            help="Turn on Blender's --debug flag",
             action="store_true")
     blender_options.add_argument("-n", "--no-factory-startup",
             help="Run Blender with current prefs rather than factory prefs",
@@ -89,11 +89,18 @@ def main(argv=None)->int:
         argv = _make_argparse().parse_args(sys.argv[1:])
 
     def printTestBeginning(text):
-        '''Print the /* and {{{ and ending pairs are so that text editors can recognize places to automatically fold up the tests'''
-        print(("/*=== " + text + " ").ljust(75,'=')+'{{{')
+        '''
+        Print the C-Style and Vim comment block start tokens
+        so that text editors can recognize places to automatically fold up the tests
+        '''
+        print(("/*=== " + text + " ").ljust(75, '=')+'{{{')
 
     def printTestEnd():
-        print(('=' *75)+"}}}*/")     
+        '''
+        Print the C-Style and Vim comment block end tokens
+        so that text editors can recognize places to automatically fold up the tests
+        '''
+        print(('=' *75)+"}}}*/")
 
     def inFilter(filepath):
         passes = True
@@ -112,9 +119,11 @@ def main(argv=None)->int:
         else:
             exit_code = 0
 
-        for pyFile in filter(lambda file: file.endswith('.test.py') and
-                            inFilter(os.path.join(root, file)),
-                             files):
+        filtered_files = list(filter(lambda file: file.endswith('.test.py') and
+                                     inFilter(os.path.join(root, file)),
+                                     files))
+
+        for pyFile in filtered_files:
             pyFile = os.path.join(root, pyFile)
             blendFile = pyFile.replace('.py', '.blend')
 
@@ -151,12 +160,12 @@ def main(argv=None)->int:
             blender_args.extend(['--']+sys.argv[1:])
 
             if (not argv.quiet and
-                (argv.force_blender_debug or argv.force_xplane_debug)):
+                    (argv.force_blender_debug or argv.force_xplane_debug)):
                 # print the command used to execute the script
                 # to be able to easily re-run it manually to get better error output
                 print(' '.join(blender_args))
 
-            #Run Blender, normalize output line endings because Windows is dumb 
+            #Run Blender, normalize output line endings because Windows is dumb
             out = subprocess.check_output(blender_args, stderr = subprocess.STDOUT, universal_newlines=True) # type: str
             if not (argv.quiet or argv.print_fails):
                 print(out)
@@ -170,7 +179,8 @@ def main(argv=None)->int:
                 # I'm sure this won't ever come back to bite us!
                 # If we're ever using assertRaises,
                 # hopefully we'll figure out something better! -Ted, 8/14/18
-                assert results is not None or "Traceback" in out, "Test runner must print correct results string at end or have suffered an unrecoverable error"
+                assert results is not None or "Traceback" in out, \
+                        "Test runner must print correct results string at end or have suffered an unrecoverable error"
                 total_errors += 1
                 errors = 1
             else:
@@ -193,12 +203,12 @@ def main(argv=None)->int:
                         print(out)
                     else:
                         print('%s FAILED' % pyFile)
-                    
+
                     if argv.print_fails:
                         printTestEnd()
                 elif (argv.quiet or argv.print_fails):
                     print('%s passed' % pyFile)
-                
+
                 #THIS IS THE LAST THING TO PRINT BEFORE A TEST ENDS
                 #Its a little easier to see the boundaries between test suites,
                 #given that there is a mess of print statements from Python, unittest, the XPlane2Blender logger,
@@ -209,7 +219,7 @@ def main(argv=None)->int:
     # Final Result String Benifits
     # - --continue concisely tells how many tests failed
     # - Just enough more info for --quiet
-    # - No matter what uselles noise Blender and unittset spit out the 
+    # - No matter what uselles noise Blender and unittset spit out the
     # end of the log has the final answer
     print((
         "FINAL RESULTS: {total_testsCompleted} {test_str} completed,"
@@ -225,7 +235,7 @@ def main(argv=None)->int:
             total_seconds  = time.perf_counter() - timer_start
         )
     )
-    return exit_code 
+    return exit_code
 
 if __name__ == "__main__":
     sys.exit(main())
