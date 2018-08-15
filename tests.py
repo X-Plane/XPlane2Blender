@@ -27,6 +27,9 @@ def _make_argparse():
     test_selection.add_argument("-f", "--filter",
             help="Filter test files with a regular expression",
             type=str)#[regex]
+    test_selection.add_argument("-s","--start-at",
+            help="Start in list of files to test at frist matching a regular expression",
+            type=str)#[regex]
     test_selection.add_argument("--exclude",
             help="Exclude test files with a regular expression",
             type=str)#[regex]
@@ -102,14 +105,29 @@ def main(argv=None)->int:
         '''
         print(('=' *75)+"}}}*/")
 
-    def inFilter(filepath):
+    def inFilter(filepath:str)->bool:
+        '''
+        Tests if filepath matches --filter and/or --exclude,
+        always returns False if --start-at hasn't been satisfied yet
+        '''
+        if argv.start_at is None:
+            pass
+        elif getattr(inFilter, "should_start_taking", None) is None:
+            inFilter.should_start_taking = False # type: bool
+
+        if inFilter.should_start_taking is False:
+            inFilter.should_start_taking = bool(argv.start_at and re.search(argv.start_at, filepath))
+            if inFilter.should_start_taking is False:
+                # We still haven't found it!
+                return False
+
         passes = True
 
-        if argv.filter != None:
+        if argv.filter is not None:
             passes &= bool(re.search(argv.filter, filepath))
 
-        if argv.exclude != None:
-            passes &= not (re.search(argv.exclude, filepath))
+        if argv.exclude is not None:
+            passes &= not re.search(argv.exclude, filepath)
 
         return passes
 
