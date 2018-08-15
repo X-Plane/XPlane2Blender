@@ -1,0 +1,3 @@
+my/good/line
+my/other/good/line and next is an empty line
+

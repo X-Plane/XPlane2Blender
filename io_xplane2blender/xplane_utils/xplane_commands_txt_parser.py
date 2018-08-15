@@ -21,10 +21,12 @@ file ::= {<command> [<whitespace> <description>] \n}
 
 command: Same as the dataref: one or more non-whitespace characters,
 usually in the form of sim/subcatagory/etc
+
+A description is optional, but must be seperated by whitespace
 whitepace: At least one space, enough space characters to
-align all the descriptions (currently column 52) if there is a description
+align all the descriptions (currently column 52)
 description ::= A short description of the command's purpose
-using any characters, followed by a new line. It is right aligned
+using any characters, followed immediatly by a new line. It is right aligned.
 """
 
 class CommandInfoStruct():
@@ -41,14 +43,31 @@ _commands_txt_content = {} # type: Dict[str,List[CommandInfoStruct]]
 def parse_commands_txt(filepath:str)->Union[List[CommandInfoStruct],str]:
     try:
         with open(filepath) as commands_file:
-            file_contents = [] # type: List[Any]
-            for i,line in enumerate(commands_file):
-                match = re.match("^(\S+)\s+([\S ]*)")
+            file_contents = [] # type: List[CommandInfoStruct]
+            last_error = ""
+            for i,line in enumerate(commands_file,start=1):
+                if line == '\n' or line.startswith((' ','\t')):
+                    last_error = "Line {} cannot start with whitespace or be empty".format(i)
+                    break
+                elif line[-2].endswith((' ','\t')):
+                    last_error = "Line {} cannot end with whitespace".format(i)
+                    break
+
+                match = re.match(r"^(\S+)\s+([\S ]*)", line)
                 if match:
                     file_contents.append(CommandInfoStruct(match.group(1), match.group(2)))
+                else:
+                    last_error = "Text {} on line {} is not a valid command".format(i,line)
+                    break
 
-            _commands_txt_content[filepath] = file_contents
-            return _commands_txt_content[filepath]
+            if not file_contents and not last_error:
+                last_error = "File has no commands in it"
+
+            if last_error:
+                return last_error
+            else:
+                _commands_txt_content[filepath] = file_contents
+                return _commands_txt_content[filepath]
 
     except Exception as e:
         return e.args[1]

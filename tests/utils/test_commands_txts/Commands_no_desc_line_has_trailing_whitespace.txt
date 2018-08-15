@@ -1,0 +1,1 @@
+my/command/has/trailing/whitespace/with/no/description              
