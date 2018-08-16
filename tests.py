@@ -113,7 +113,7 @@ def main(argv=None)->int:
         if argv.start_at is None:
             inFilter.should_start_taking = True # type: bool
         elif getattr(inFilter, "should_start_taking", None) is None:
-            inFilter.should_start_taking = False # type: bool
+            inFilter.should_start_taking = False
 
         if inFilter.should_start_taking is False:
             inFilter.should_start_taking = bool(argv.start_at and re.search(argv.start_at, filepath))
