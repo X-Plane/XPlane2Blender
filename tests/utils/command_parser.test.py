@@ -17,7 +17,13 @@ class TestCommandsTxtParser(XPlaneTestCase):
         filepath = os.path.join(__dirname__, "test_commands_txts",  inspect.stack()[0][3].replace("test_", "") + ".txt")
         result = xplane_commands_txt_parser.parse_commands_txt(filepath)
         #print(result)
-        self.assertTrue("Line 3 cannot start with whitespace or be empty" in result)
+        self.assertEqual(len(result),2) 
+
+    def test_Commands_empty_file(self):
+        filepath = os.path.join(__dirname__, "test_commands_txts",  inspect.stack()[0][3].replace("test_", "") + ".txt")
+        result = xplane_commands_txt_parser.parse_commands_txt(filepath)
+        #print(result)
+        self.assertTrue("has no commands in it" in result)
 
     def test_Commands_line_starts_with_whitespace(self):
         filepath = os.path.join(__dirname__, "test_commands_txts",  inspect.stack()[0][3].replace("test_", "") + ".txt")
@@ -34,14 +40,15 @@ class TestCommandsTxtParser(XPlaneTestCase):
     def test_Commands_desc_line_has_trailing_whitespace(self):
         filepath = os.path.join(__dirname__, "test_commands_txts",  inspect.stack()[0][3].replace("test_", "") + ".txt")
         result = xplane_commands_txt_parser.parse_commands_txt(filepath)
+        #print(result)
         self.assertTrue("cannot end with whitespace" in result)
-
 
     def test_Commands_no_description_passes(self):
         #Tests if ``sim/mycommand`` without whitespace and description,
         #because the one in resources has a description for all of them
         filepath = os.path.join(__dirname__, "test_commands_txts", inspect.stack()[0][3].replace("test_", "") + ".txt")
         result = xplane_commands_txt_parser.parse_commands_txt(filepath)
+        #print(result)
         #3 because it could be easy to it work once on accident
         self.assertEqual(len(result),3) 
 
@@ -57,6 +64,7 @@ class TestCommandsTxtParser(XPlaneTestCase):
         
         result = xplane_commands_txt_parser.parse_commands_txt(
             os.path.join(__dirname__, "..", "..", "io_xplane2blender", "resources", "Commands.txt"))
+        #print(result)
         self.assertIsInstance(result, list)
         # Anytime we update Commands.txt we'll update this number.
         # A little annoying? Sure, but we'll get it exactly right

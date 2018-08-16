@@ -27,6 +27,9 @@ whitepace: At least one space, enough space characters to
 align all the descriptions (currently column 52)
 description ::= A short description of the command's purpose
 using any characters, followed immediatly by a new line. It is right aligned.
+
+Blank or whitespace only lines are ignored. In this program completely
+empty files are not allowed.
 """
 
 class CommandInfoStruct():
@@ -46,7 +49,9 @@ def parse_commands_txt(filepath:str)->Union[List[CommandInfoStruct],str]:
             file_contents = [] # type: List[CommandInfoStruct]
             last_error = ""
             for i,line in enumerate(commands_file,start=1):
-                if line == '\n' or line.startswith((' ','\t')):
+                if line == '\n':
+                    continue
+                elif line.startswith((' ','\t')):
                     last_error = "Line {} cannot start with whitespace or be empty".format(i)
                     break
                 elif line[-2].endswith((' ','\t')):
