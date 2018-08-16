@@ -476,6 +476,11 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
             subrow = subbox.row()
             subrow.prop(attr, "reset")
 
+def command_search_window_layout(layout):
+    scene = bpy.context.scene
+    row = layout.row()
+    row.template_list("UL_CommandSearchList", "", scene.xplane.command_search_window_state, "command_search_list", scene.xplane.command_search_window_state, "command_search_list_idx")
+
 def dataref_search_window_layout(layout):
     scene = bpy.context.scene
     row = layout.row()
@@ -841,6 +846,25 @@ def manipulator_layout(self, obj):
         box.prop(obj.xplane.manip, 'cursor', text="Cursor")
         box.prop(obj.xplane.manip, 'tooltip', text="Tooltip")
 
+        def show_command_search_window_pairing(box, command_prop_name:str, prop_text:Optional[str]=None)->None:
+            row = box.row()
+            if prop_text:
+                row.prop(obj.xplane.manip, command_prop_name, prop_text)
+            else:
+                row.prop(obj.xplane.manip, command_prop_name)
+
+            scene = bpy.context.scene
+            expanded = scene.xplane.command_search_window_state.command_prop_dest == "bpy.context.active_object.xplane.manip." + command_prop_name
+            if expanded:
+                our_icon = "ZOOM_OUT"
+            else:
+                our_icon = "ZOOM_IN"
+            command_search_toggle_op = row.operator('xplane.command_search_toggle', text = "", emboss = False, icon = our_icon)
+            command_search_toggle_op.paired_command_prop = "bpy.context.active_object.xplane.manip." + command_prop_name
+            # Finally, in the next row, if we are expanded, build the entire search list.
+            if expanded:
+                command_search_window_layout(box)
+
         def show_dataref_search_window_pairing(box, dataref_prop_name:str, prop_text:Optional[str]=None)->None:
             row = box.row()
             if prop_text:
@@ -1005,13 +1029,14 @@ def manipulator_layout(self, obj):
                 if predicates[1]:
                     text = predicates[1](manipType)
                     if prop == "dataref1" or prop == "dataref2":
-                        show_dataref_search_window_pairing(box,prop,text)
+                        show_dataref_search_window_pairing(box, prop, text)
                     else:
                         if text:
                             box.prop(obj.xplane.manip, prop, text=text)
                         else:
                             box.prop(obj.xplane.manip, prop)
-
+                if prop in {"command", "positive_command", "negative_command"}:
+                    show_command_search_window_pairing(box, prop)
                 else:
                     box.prop(obj.xplane.manip, prop)
 
@@ -1068,6 +1093,68 @@ def weight_layout(self, obj):
     row.prop(obj.xplane, 'override_weight')
     if obj.xplane.override_weight:
         row.prop(obj.xplane, 'weight')
+
+class UL_CommandSearchList(bpy.types.UIList):
+    import io_xplane2blender.xplane_utils.xplane_commands_txt_parser
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
+
+        # Ben says: this is a total hack.  By just BASHING the filter, we open it always, rather than making the user open it.
+        # Sadly there's no sane way to open the filter programmatically because Blender - the UI never gets access to the UIList
+        # derivative, and we don't know its constructor syntax to override it.
+        self.use_filter_show=True
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            # This code makes labels - highlighting the label acts like a click via trickery
+            layout.alignment = "EXPAND"
+            row = layout.row(align=True)
+            row.alignment = "LEFT"
+            row.label(item.command, icon="NONE")
+            row.label("|")
+            row.label(item.command_description, icon="NONE")
+            return
+
+        elif self.layout_type in {'GRID'}:
+            pass
+
+    def draw_filter(self, context, layout):
+       row = layout.row()
+       subrow = row.row(align=True)
+       subrow.prop(self, "filter_name", text="")
+
+    # Called once to filter/reorder items.
+    def filter_items(self, context, data, propname):
+        flt_flags = []
+        flt_neworder = []
+        
+        filter_name = self.filter_name
+        if filter_name == "":
+            return flt_flags,flt_neworder
+        
+        #Search info:
+        # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
+        # A dataref must match at least one search in all searches, and must partially match each search term        
+        search_info = []
+        for search in filter_name.upper().split('|'):
+            search_info.append(frozenset(search.split(' ')))
+        search_info = set(search_info)
+
+        def check_command(command_path:str, search_info:List[str])->bool:
+            upper_command = command_path.upper()
+            for search in search_info:
+                for search_term in search:
+                    if not search_term in upper_command:
+                        break
+                else:
+                    return True
+            return False
+
+        for command_info in bpy.context.scene.xplane.command_search_window_state.command_search_list:
+            if check_command(command_info.command, search_info):
+                flt_flags.append(self.bitflag_filter_item)
+            else:
+                flt_flags.append(0 << 0)
+
+        return flt_flags, flt_neworder
 
 class UL_DatarefSearchList(bpy.types.UIList):
     import io_xplane2blender.xplane_utils.xplane_datarefs_txt_parser
@@ -1183,6 +1270,7 @@ def addXPlaneUI():
     bpy.utils.register_class(OBJECT_PT_xplane)
     bpy.utils.register_class(SCENE_PT_xplane)
 
+    bpy.utils.register_class(UL_CommandSearchList)
     bpy.utils.register_class(UL_DatarefSearchList)
     bpy.utils.register_class(XPlaneError)
     bpy.utils.register_class(XPlaneMessage)
@@ -1196,6 +1284,7 @@ def removeXPlaneUI():
     bpy.utils.unregister_class(OBJECT_PT_xplane)
     bpy.utils.unregister_class(SCENE_PT_xplane)
 
+    bpy.utils.unregister_class(UL_CommandSearchList)
     bpy.utils.unregister_class(UL_DatarefSearchList)
     bpy.utils.unregister_class(XPlaneError)
     bpy.utils.unregister_class(XPlaneMessage)

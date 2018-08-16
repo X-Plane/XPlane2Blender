@@ -259,6 +259,20 @@ class XPlaneCustomAttribute(bpy.types.PropertyGroup):
     )
 
 
+class ListItemCommand(bpy.types.PropertyGroup):
+    '''
+    This is essentially a copy of xplane_commands_txt_parser.CommandInfoStruct's members
+    '''
+    command = bpy.props.StringProperty(
+        name="Command For Search List",
+        description="A command path in the command search window. Comes from a Datarefs definitions file"
+    )
+
+    command_description = bpy.props.StringProperty(
+        name="Command Description For Search List",
+        description="Indicates the type, shown in a column in the commands search window. Comes from a Datarefs definitions file"
+    )
+
 class ListItemDataref(bpy.types.PropertyGroup):
     '''
     This is essentially a copy of xplane_datarefs_txt_parser.DatarefInfoStruct's members
@@ -289,29 +303,29 @@ class ListItemDataref(bpy.types.PropertyGroup):
     )
 
 
-class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
-    # This is only set through a DatarefSeachToggle's action.
-    # It should be the full path to the dataref property to change,
+class XPlaneCommandSearchWindow(bpy.types.PropertyGroup):
+    # This is only set through a CommandSeachToggle's action.
+    # It should be the full path to the command property to change,
     # as if it were being put into the Python console.
-    # For instance: "bpy.context.active_object.xplane.datarefs[0].path"
-    dataref_prop_dest = bpy.props.StringProperty(
+    # For instance: "bpy.context.active_object.xplane.commands[0].path"
+    command_prop_dest = bpy.props.StringProperty(
             default="",
-            name="Current Dataref Property To Change",
-            description="The destination dataref property, starting with 'bpy.context...'"
+            name="Current Command Property To Change",
+            description="The destination command property, starting with 'bpy.context...'"
     )
 
-    def onclick_dataref(self,context):
+    def onclick_command(self,context):
         '''
         This method is called when the template_list uilist writes to the current selected index as the user selects.
-        We dig out our stashed search info, write the dataref, and clear the current search, zapping out the UI.
+        We dig out our stashed search info, write the command, and clear the current search, zapping out the UI.
         '''
 
         xplane = context.scene.xplane
-        datarefs_prop_dest = xplane.dataref_search_window_state.dataref_prop_dest
-        datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
-        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
-        path = datarefs_search_list[datarefs_search_list_idx].dataref_path
-        assert datarefs_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
+        command_prop_dest = xplane.command_search_window_state.command_prop_dest
+        commands_search_list = xplane.command_search_window_state.command_search_list
+        commands_search_list_idx = xplane.command_search_window_state.command_search_list_idx
+        command = commands_search_list[commands_search_list_idx].command
+        assert command_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
         def getattr_recursive(obj,names):
             '''This automatically expands [] operators'''
             if len(names) == 1:
@@ -332,7 +346,59 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
                     obj = getattr(obj,names[0])
                 return getattr_recursive(obj,names[1:])
 
-        components = datarefs_prop_dest.split('.')
+        components = command_prop_dest.split('.')
+        assert components[0] == "bpy"
+        setattr(getattr_recursive(bpy, components[1:-1]), components[-1], command)
+        xplane.dataref_search_window_state.command_prop_dest = "" 
+
+    command_search_list = bpy.props.CollectionProperty(type=ListItemCommand)
+    command_search_list_idx = bpy.props.IntProperty(update=onclick_command)
+
+
+class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
+    # This is only set through a DatarefSeachToggle's action.
+    # It should be the full path to the dataref property to change,
+    # as if it were being put into the Python console.
+    # For instance: "bpy.context.active_object.xplane.datarefs[0].path"
+    dataref_prop_dest = bpy.props.StringProperty(
+            default="",
+            name="Current Dataref Property To Change",
+            description="The destination dataref property, starting with 'bpy.context...'"
+    )
+
+    def onclick_dataref(self,context):
+        '''
+        This method is called when the template_list uilist writes to the current selected index as the user selects.
+        We dig out our stashed search info, write the dataref, and clear the current search, zapping out the UI.
+        '''
+
+        xplane = context.scene.xplane
+        dataref_prop_dest = xplane.dataref_search_window_state.dataref_prop_dest
+        datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
+        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
+        path = datarefs_search_list[datarefs_search_list_idx].dataref_path
+        assert dataref_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
+        def getattr_recursive(obj,names):
+            '''This automatically expands [] operators'''
+            if len(names) == 1:
+                if '[' in names[0]:
+                    name = names[0]
+                    collection_name = name[:name.find('[')]
+                    index = name[name.find('[')+1:-1]
+                    return getattr(obj,collection_name)[int(index)]
+                else:
+                    return getattr(obj,names[0])
+            else:
+                if '[' in names[0]:
+                    name = names[0]
+                    collection_name = name[:name.find('[')]
+                    index = name[name.find('[')+1:-1]
+                    obj = getattr(obj,collection_name)[int(index)]
+                else:
+                    obj = getattr(obj,names[0])
+                return getattr_recursive(obj,names[1:])
+
+        components = dataref_prop_dest.split('.')
         assert components[0] == "bpy"
         setattr(getattr_recursive(bpy, components[1:-1]), components[-1], path)
         xplane.dataref_search_window_state.dataref_prop_dest = "" 
@@ -1150,7 +1216,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 # Properties:
 #   layers - Collection of <XPlaneLayers>. Export settings for the Blender layers.
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
-    #TODO: Should this be named search_window_state_dataref since we're going to be making a command version too?
+    command_search_window_state = bpy.props.PointerProperty(
+            name = "Command Search Window State",
+            description = "An internally important property that keeps track of the state of the command search window",
+            type = XPlaneCommandSearchWindow
+            )
+
     dataref_search_window_state = bpy.props.PointerProperty(
             name = "Dataref Search Window State",
             description = "An internally important property that keeps track of the state of the dataref search window",
@@ -1723,6 +1794,8 @@ def addXPlaneRNA():
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
     bpy.utils.register_class(XPlaneCondition)
+    bpy.utils.register_class(ListItemCommand)
+    bpy.utils.register_class(XPlaneCommandSearchWindow)
     bpy.utils.register_class(ListItemDataref)
     bpy.utils.register_class(XPlaneDatarefSearchWindow)
     bpy.utils.register_class(XPlaneExportPathDirective)
@@ -1786,6 +1859,8 @@ def removeXPlaneRNA():
     bpy.utils.unregister_class(XPlaneAxisDetentRange)
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
+    bpy.utils.unregister_class(ListItemCommand)
+    bpy.utils.unregister_class(XPlaneCommandSearchWindow)
     bpy.utils.unregister_class(ListItemDataref)
     bpy.utils.unregister_class(XPlaneDatarefSearchWindow)
     bpy.utils.unregister_class(XPlaneExportPathDirective)
