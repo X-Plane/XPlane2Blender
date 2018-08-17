@@ -1,11 +1,12 @@
 import bpy
+import io_xplane2blender
+from typing import List,Tuple
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
 #from .xplane_file import getXPlaneVersion
-from .xplane_material_utils import validate, compare
 
 # Class: XPlaneMaterial
 # A Material
@@ -38,6 +39,7 @@ class XPlaneMaterial():
         self.xplaneObject = xplaneObject
         self.blenderObject = self.xplaneObject.blenderObject
         self.blenderMaterial = None
+        # The options from mat.xplane
         self.options = None
         self.texture = None
         self.textureLit = None
@@ -83,7 +85,7 @@ class XPlaneMaterial():
             mat = self.blenderObject.data.materials[0]
             self.name = mat.name
             self.blenderMaterial = mat
-            self.options = mat.xplane #xplane_prop.XPlaneMaterialSettings
+            self.options = mat.xplane # type: xplane_props.XPlaneMaterialSettings
 
             if mat.xplane.draw:
                 self.attributes['ATTR_draw_enable'].setValue(True)
@@ -250,9 +252,6 @@ class XPlaneMaterial():
         commands =  xplaneFile.commands
 
         for attr in self.attributes:
-            # do not write own reseters just now
-            # FIXME: why have we been doing this at all?
-            #if commands.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
             o += commands.writeAttribute(self.attributes[attr], self.xplaneObject)
 
         # if the file is a cockpit file write all cockpit attributes
@@ -260,9 +259,6 @@ class XPlaneMaterial():
             (bpy.context.scene.xplane.version >= VERSION_1040 and \
             xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT):
             for attr in self.cockpitAttributes:
-                # do not write own reseters just now
-                # FIXME: why have we been doing this at all?
-                # if self.attributeIsReseter(attr, self.xplaneObject.reseters) == False:
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self.xplaneObject)
 
         return o
@@ -275,20 +271,24 @@ class XPlaneMaterial():
     # exportType <string> - one of "aircraft", "cockpit", "scenery", "instanced_scenery"
     #
     # Returns:
-    #   bool, list - True if Material is compatible to reference Material, else False + a list of errors/conflicts
-    def isCompatibleTo(self, refMat, exportType,autodetectTextures):
-        return compare(refMat, self, exportType,autodetectTextures)
+    #   list,list - A list of errors and a list of warnings
+    def isCompatibleTo(self, refMat, exportType,autodetectTextures)->Tuple[List[str],List[str]]:
+        import io_xplane2blender
+        return io_xplane2blender.xplane_types.xplane_material_utils.compare(refMat, self, exportType,autodetectTextures)
 
-    # Method: isValid
-    # Checks if material is valid based on an export type.
-    #
-    # Parameters:
-    # exportType <string> - one of "aircraft", "cockpit", "scenery", "instanced_scenery"
-    #
-    # Returns:
-    #   bool, list - True if Material is valid, else False + a list of errors
-    def isValid(self, exportType:str)->bool:
-        return validate(self, exportType)
+    def isValid(self, exportType:str)->Tuple[List[str],List[str]]:
+        '''
+        # Method: isValid
+        # Checks if material is valid based on an export type.
+        #
+        # Parameters:
+        # exportType <string> - one of "aircraft", "cockpit", "scenery", "instanced_scenery"
+        #
+        # Returns:
+        #   Tuple[List[str],Liststr]] A tuple of a list of errors and a list of warnings
+        #   bool, list - True if Material is valid, else False + a list of errors
+        '''
+        return io_xplane2blender.xplane_types.xplane_material_utils.validate(self, exportType)
 
     # Method: getEffectiveNormalMetalness
     # Predicate that returns the effective value of NORMAL_METALNESS, taking into account the current xplane version
@@ -310,9 +310,8 @@ class XPlaneMaterial():
     # False if the current XPLane version doesn't support it
     def getEffectiveBlendGlass(self)->bool:
         xplane_version  = int(bpy.context.scene.xplane.version)
-        blend_prop_enum = self.options.blend_v1100
         
         if xplane_version >= 1100:
-            return blend_prop_enum == BLEND_GLASS
+            return self.options.blend_glass
         else:
             return False

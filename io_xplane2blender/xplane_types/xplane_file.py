@@ -16,7 +16,7 @@ from .xplane_commands import XPlaneCommands
 from .xplane_header import XPlaneHeader
 from .xplane_light import XPlaneLight
 from .xplane_lights import XPlaneLights
-from .xplane_material_utils import getReferenceMaterials
+from io_xplane2blender.xplane_types import xplane_material_utils
 from .xplane_mesh import XPlaneMesh
 from io_xplane2blender import xplane_props
 from .xplane_object import XPlaneObject
@@ -403,11 +403,13 @@ class XPlaneFile():
 
         for xplaneObject in objects:
             if xplaneObject.type == 'MESH' and xplaneObject.material.options:
-                errors = xplaneObject.material.isValid(self.options.export_type)
+                errors,warnings = xplaneObject.material.isValid(self.options.export_type)
 
-                if errors and len(errors):
-                    for error in errors:
-                        logger.error('Material "%s" in object "%s" %s' % (xplaneObject.material.name, xplaneObject.blenderObject.name, error))
+                for error in errors:
+                    logger.error('Material "%s" in object "%s" %s' % (xplaneObject.material.name, xplaneObject.blenderObject.name, error))
+
+                for warning in warnings:
+                    logger.warn('Material "%s" in object "%s" %s' % (xplaneObject.material.name, xplaneObject.blenderObject.name, warning))
 
         if logger.hasErrors():
             return False
@@ -433,11 +435,13 @@ class XPlaneFile():
                     # only compare draped materials agains draped
                     # and non-draped agains non-draped
                     if refMaterial.options.draped == material.options.draped:
-                        errors = material.isCompatibleTo(refMaterial, self.options.export_type,self.options.autodetectTextures)
+                        errors,warnings = material.isCompatibleTo(refMaterial, self.options.export_type,self.options.autodetectTextures)
+                        xplaneObject = material.xplaneObject
+                        for error in errors:
+                            logger.error('Material "%s" in object "%s" %s' % (material.name, xplaneObject.blenderObject.name, error))
 
-                        if errors and len(errors):
-                            for error in errors:
-                                logger.error('Material "%s" in object "%s" %s' % (material.name, material.xplaneObject.blenderObject.name, error))
+                        for warning in warnings:
+                            logger.warn('Material "%s" in object "%s" %s' % (material.name, xplaneObject.blenderObject.name, warning))
 
         if logger.hasErrors():
             return False
@@ -464,7 +468,7 @@ class XPlaneFile():
             return ''
 
         # detect reference materials
-        self.referenceMaterials = getReferenceMaterials(
+        self.referenceMaterials = xplane_material_utils.getReferenceMaterials(
             self.getMaterials(),
             self.options.export_type
         )

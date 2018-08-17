@@ -2,9 +2,11 @@
 # Creates the User Interface for all X-Plane settings.
 
 import collections
+from typing import Optional 
 
 import bpy
 from io_xplane2blender import xplane_constants
+from bpy.types import Object, UILayout
 from io_xplane2blender.xplane_constants import MANIPULATORS_OPT_IN
 from typing import Optional
 
@@ -49,7 +51,7 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
         version = int(context.scene.xplane.version)
 
         if(obj.type == "MESH"):
-            material_layout(self, obj.active_material)
+            material_layout(self.layout, obj.active_material)
             self.layout.separator()
             cockpit_layout(self, obj.active_material)
             custom_layout(self, obj.active_material, "MATERIAL")
@@ -497,6 +499,11 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
             subrow = subbox.row()
             subrow.prop(attr, "reset")
 
+def command_search_window_layout(layout):
+    scene = bpy.context.scene
+    row = layout.row()
+    row.template_list("UL_CommandSearchList", "", scene.xplane.command_search_window_state, "command_search_list", scene.xplane.command_search_window_state, "command_search_list_idx")
+
 def dataref_search_window_layout(layout):
     scene = bpy.context.scene
     row = layout.row()
@@ -587,66 +594,61 @@ def lamp_layout(self:bpy.types.UILayout, obj):
 # Draws the UI layout for materials.
 #
 # Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def material_layout(self, obj):
-    # TODO: hide stuff for draped materials
-    isDraped = obj.xplane.draped
+#   UILayout layout - Instance of current UILayout.
+#   Material active_material - The active_material of a mesh
+def material_layout(layout:UILayout,
+                    active_material:bpy.types.Material):
     version = int(bpy.context.scene.xplane.version)
-    layout = self.layout
-
     draw_box = layout.box()
     draw_box.label("Draw Settings")
     draw_box_column = draw_box.column()
-    draw_box_column.prop(obj.xplane, "draw")
+    draw_box_column.prop(active_material.xplane, "draw")
 
-    if (obj.xplane.draw):
-        draw_box_column.prop(obj.xplane, "draped")
+    if (active_material.xplane.draw):
+        draw_box_column.prop(active_material.xplane, "draped")
 
-        if version >= 1100:
-            draw_box_column.prop(obj.xplane, "normal_metalness")
+        if version >= 1100 and not active_material.xplane.panel:
+            draw_box_column.prop(active_material.xplane, "normal_metalness")
 
         # v1000 blend / v9000 blend
-        if version >= 1100:
-            draw_box_column.prop(obj.xplane, "blend_v1100")
-        elif version >= 1000:
-            draw_box_column.prop(obj.xplane, "blend_v1000")
+        if version >= 1000:
+            draw_box_column.prop(active_material.xplane, "blend_v1000")
         else:
-            draw_box_column.prop(obj.xplane, "blend")
+            draw_box_column.prop(active_material.xplane, "blend")
         
         if version >= 1100:
-            blend_prop_enum = obj.xplane.blend_v1100
-        elif version >= 1000:
-            blend_prop_enum = obj.xplane.blend_v1000
+            draw_box_column.prop(active_material.xplane, "blend_glass")
+        if version >= 1000:
+            blend_prop_enum = active_material.xplane.blend_v1000
         else:
             blend_prop_enum = None
             
-        if obj.xplane.blend == True and version < 1000:
-            draw_box_column.prop(obj.xplane, "blendRatio")
+        if active_material.xplane.blend == True and version < 1000:
+            draw_box_column.prop(active_material.xplane, "blendRatio")
         elif blend_prop_enum == BLEND_OFF and version >= 1000:
-            draw_box_column.prop(obj.xplane, "blendRatio")
+            draw_box_column.prop(active_material.xplane, "blendRatio")
 
     surface_behavior_box = layout.box()
     surface_behavior_box.label("Surface Behavior")
     surface_behavior_box_column = surface_behavior_box.column()
-    surface_behavior_box_column.prop(obj.xplane, "surfaceType")
+    surface_behavior_box_column.prop(active_material.xplane, "surfaceType")
 
-    if obj.xplane.surfaceType != 'none':
-        surface_behavior_box_column.prop(obj.xplane, "deck")
+    if active_material.xplane.surfaceType != 'none':
+        surface_behavior_box_column.prop(active_material.xplane, "deck")
 
-    surface_behavior_box_column.prop(obj.xplane, "solid_camera")
+    surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
     ll_box = layout.box()
     ll_box.label("Light Levels")
     ll_box_column = ll_box.column() 
-    ll_box_column.prop(obj.xplane, "lightLevel")
+    ll_box_column.prop(active_material.xplane, "lightLevel")
 
-    if obj.xplane.lightLevel:
+    if active_material.xplane.lightLevel:
         box = ll_box_column.box()
-        box.prop(obj.xplane, "lightLevel_v1")
+        box.prop(active_material.xplane, "lightLevel_v1")
         row = box.row()
-        row.prop(obj.xplane, "lightLevel_v2")
+        row.prop(active_material.xplane, "lightLevel_v2")
         row = box.row()
-        row.prop(obj.xplane, "lightLevel_dataref")
+        row.prop(active_material.xplane, "lightLevel_dataref")
 
         scene = bpy.context.scene
         expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
@@ -662,23 +664,23 @@ def material_layout(self, obj):
             dataref_search_window_layout(box)
 
     ll_box_column.row()
-    if not canPreviewEmit(obj):
+    if not canPreviewEmit(active_material):
         ll_box_column.label("To enable the Day-Night Preview feature, add an albedo texture (uses Diffuse->Color) and a night texture (uses Shading->Emit)", icon = "INFO")
     else:
-        ll_box_column.prop(obj.xplane, "litFactor", slider = True)
+        ll_box_column.prop(active_material.xplane, "litFactor", slider = True)
 
 
     # instancing effects
     instanced_box = layout.box()
     instanced_box.label("Instancing Effects")
     instanced_box_column = instanced_box.column()
-    instanced_box_column.prop(obj.xplane, 'tint')
+    instanced_box_column.prop(active_material.xplane, 'tint')
 
-    if obj.xplane.tint:
-        instanced_box_column.prop(obj.xplane, 'tint_albedo')
-        instanced_box_column.prop(obj.xplane, 'tint_emissive')
+    if active_material.xplane.tint:
+        instanced_box_column.prop(active_material.xplane, 'tint_albedo')
+        instanced_box_column.prop(active_material.xplane, 'tint_emissive')
 
-    layout.row().prop(obj.xplane, "poly_os")
+    layout.row().prop(active_material.xplane, "poly_os")
 
 
 def canPreviewEmit(mat):
@@ -815,15 +817,15 @@ def animation_layout(self, obj, bone = False):
 # Parameters:
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
-def cockpit_layout(self, obj):
+def cockpit_layout(self, active_material:bpy.types.Material):
     layout = self.layout
     cockpit_box = layout.box()
     cockpit_box.label("Cockpit Panel")
     cockpit_box_column = cockpit_box.column()
-    cockpit_box_column.prop(obj.xplane, 'panel')
+    cockpit_box_column.prop(active_material.xplane, 'panel')
 
-    if obj.xplane.panel:
-        cockpit_box_column.prop(obj.xplane, 'cockpit_region')
+    if active_material.xplane.panel:
+        cockpit_box_column.prop(active_material.xplane, 'cockpit_region')
 
 def axis_detent_ranges_layout(self, layout, manip):
     layout.separator()
@@ -866,6 +868,25 @@ def manipulator_layout(self, obj):
 
         box.prop(obj.xplane.manip, 'cursor', text="Cursor")
         box.prop(obj.xplane.manip, 'tooltip', text="Tooltip")
+
+        def show_command_search_window_pairing(box, command_prop_name:str, prop_text:Optional[str]=None)->None:
+            row = box.row()
+            if prop_text:
+                row.prop(obj.xplane.manip, command_prop_name, prop_text)
+            else:
+                row.prop(obj.xplane.manip, command_prop_name)
+
+            scene = bpy.context.scene
+            expanded = scene.xplane.command_search_window_state.command_prop_dest == "bpy.context.active_object.xplane.manip." + command_prop_name
+            if expanded:
+                our_icon = "ZOOM_OUT"
+            else:
+                our_icon = "ZOOM_IN"
+            command_search_toggle_op = row.operator('xplane.command_search_toggle', text = "", emboss = False, icon = our_icon)
+            command_search_toggle_op.paired_command_prop = "bpy.context.active_object.xplane.manip." + command_prop_name
+            # Finally, in the next row, if we are expanded, build the entire search list.
+            if expanded:
+                command_search_window_layout(box)
 
         def show_dataref_search_window_pairing(box, dataref_prop_name:str, prop_text:Optional[str]=None)->None:
             row = box.row()
@@ -1031,15 +1052,17 @@ def manipulator_layout(self, obj):
                 if predicates[1]:
                     text = predicates[1](manipType)
                     if prop == "dataref1" or prop == "dataref2":
-                        show_dataref_search_window_pairing(box,prop,text)
+                        show_dataref_search_window_pairing(box, prop, text)
                     else:
                         if text:
                             box.prop(obj.xplane.manip, prop, text=text)
                         else:
                             box.prop(obj.xplane.manip, prop)
-
                 else:
-                    box.prop(obj.xplane.manip, prop)
+                    if prop in {"command", "positive_command", "negative_command"}:
+                        show_command_search_window_pairing(box, prop)
+                    else:
+                        box.prop(obj.xplane.manip, prop)
 
         if  manipType == MANIP_DRAG_AXIS_DETENT or\
             manipType == MANIP_DRAG_ROTATE_DETENT:
@@ -1094,6 +1117,68 @@ def weight_layout(self, obj):
     row.prop(obj.xplane, 'override_weight')
     if obj.xplane.override_weight:
         row.prop(obj.xplane, 'weight')
+
+class UL_CommandSearchList(bpy.types.UIList):
+    import io_xplane2blender.xplane_utils.xplane_commands_txt_parser
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
+
+        # Ben says: this is a total hack.  By just BASHING the filter, we open it always, rather than making the user open it.
+        # Sadly there's no sane way to open the filter programmatically because Blender - the UI never gets access to the UIList
+        # derivative, and we don't know its constructor syntax to override it.
+        self.use_filter_show=True
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            # This code makes labels - highlighting the label acts like a click via trickery
+            layout.alignment = "EXPAND"
+            row = layout.row(align=True)
+            row.alignment = "LEFT"
+            row.label(item.command, icon="NONE")
+            row.label("|")
+            row.label(item.command_description, icon="NONE")
+            return
+
+        elif self.layout_type in {'GRID'}:
+            pass
+
+    def draw_filter(self, context, layout):
+       row = layout.row()
+       subrow = row.row(align=True)
+       subrow.prop(self, "filter_name", text="")
+
+    # Called once to filter/reorder items.
+    def filter_items(self, context, data, propname):
+        flt_flags = []
+        flt_neworder = []
+        
+        filter_name = self.filter_name
+        if filter_name == "":
+            return flt_flags,flt_neworder
+        
+        #Search info:
+        # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
+        # A command must match at least one search in all searches, and must partially match each search term        
+        search_info = []
+        for search in filter_name.upper().split('|'):
+            search_info.append(frozenset(search.split(' ')))
+        search_info = set(search_info)
+
+        def check_command(command_path:str, search_info:List[str])->bool:
+            upper_command = command_path.upper()
+            for search in search_info:
+                for search_term in search:
+                    if not search_term in upper_command:
+                        break
+                else:
+                    return True
+            return False
+
+        for command_info in bpy.context.scene.xplane.command_search_window_state.command_search_list:
+            if check_command(command_info.command, search_info):
+                flt_flags.append(self.bitflag_filter_item)
+            else:
+                flt_flags.append(0 << 0)
+
+        return flt_flags, flt_neworder
 
 class UL_DatarefSearchList(bpy.types.UIList):
     import io_xplane2blender.xplane_utils.xplane_datarefs_txt_parser
@@ -1209,6 +1294,7 @@ def addXPlaneUI():
     bpy.utils.register_class(OBJECT_PT_xplane)
     bpy.utils.register_class(SCENE_PT_xplane)
 
+    bpy.utils.register_class(UL_CommandSearchList)
     bpy.utils.register_class(UL_DatarefSearchList)
     bpy.utils.register_class(XPlaneError)
     bpy.utils.register_class(XPlaneMessage)
@@ -1222,6 +1308,8 @@ def removeXPlaneUI():
     bpy.utils.unregister_class(OBJECT_PT_xplane)
     bpy.utils.unregister_class(SCENE_PT_xplane)
 
+    bpy.utils.unregister_class(UL_CommandSearchList)
     bpy.utils.unregister_class(UL_DatarefSearchList)
     bpy.utils.unregister_class(XPlaneError)
     bpy.utils.unregister_class(XPlaneMessage)
+

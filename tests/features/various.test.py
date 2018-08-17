@@ -66,6 +66,7 @@ class TestMaterials(XPlaneTestCase):
             filterLines
         )
 
+
     def test_group_instances_export(self):
         def filterLines(line):
             return isinstance(line[0], str) and \
@@ -105,9 +106,15 @@ class TestMaterials(XPlaneTestCase):
 
     def test_custom_header_props_export(self):
         filename = 'test_custom_header_props'
+        def filterLines(line):
+            return isinstance(line[0], str) and \
+                    (line[0].find('custom_prop') == 0 or \
+                    line[0].find('custom_prop2') == 0)
+
         self.assertLayerExportEqualsFixture(
             8, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
-            filename
+            filename,
+            filterLines
         )
 
     def test_custom_anim_prop_export(self):

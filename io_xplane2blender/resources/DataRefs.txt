@@ -1,4 +1,4 @@
-2 1110 Fri Nov 17 19:33:45 2017
+2 1120 Wed Apr 11 03:25:52 2018
 
 sim/aircraft/autopilot/vvi_step_ft	float	y	Feet	Step increment for autopilot VVI
 sim/aircraft/autopilot/alt_step_ft	float	y	Feet	Step increment for autopilot altitude
@@ -629,6 +629,7 @@ sim/cockpit/gyros/gyr_force	float[6]	y	???	was dim 4 until 920 enums are ahrs1,a
 sim/cockpit/gyros/gyr_spin	float[6]	y	???	was dim 4 until 920 enums are ahrs1,ahrs2,elec1,elec2,vac1,vac2
 sim/cockpit/gyros/gyr_free_slaved	int[6]	y	boolean	free or slaved to magnetometer, the enums are ahrs1,ahrs2,elec1,elec2,vac1,vac2
 sim/cockpit/gyros/gyr_flag	int[6]	n	boolean	DG/HSI instrument for this gyro must show flag because gyro is not spinning, or magnetometer failure, or adjustment in progress
+sim/cockpit/gyros/gyr_cage_ratio	float[6]	y	ratio	attitude indicator for this gyro is caged. 0 for fully free, 1 for fully caged.
 sim/cockpit/misc/outer_marker_lit	int	n	???	Is the outer marker beacon lit right now
 sim/cockpit/misc/middle_marker_lit	int	n	???	Is the middle marker beacon lit right now
 sim/cockpit/misc/inner_marker_lit	int	n	???	Is the inner marker beacon lit right now
@@ -651,12 +652,13 @@ sim/cockpit/pressure/bleed_air_mode	int	y	enum	0=off,1=L,2=B,3=R,4=APU
 sim/cockpit/pressure/cabin_altitude_set_m_msl	float	y	???	The desired cabin altitude (BEFORE 730 this was incorrectly int type)
 sim/cockpit/pressure/cabin_vvi_set_m_msec	float	y	???	The desired cabin altitude rate change (BEFORE 730 this was incorrectly int type)
 sim/cockpit/pressure/cabin_pressure_differential_psi	float	y	psi	????
-sim/cockpit/pressure/cabin_altitude_actual_m_msl	float	n	???	The real cabin altitude (BEFORE 730 this was incorrectly int type)
-sim/cockpit/pressure/cabin_vvi_actual_m_msec	float	n	???	The real cabin altitude rate change (BEFORE 730 this was incorrectly int type)
+sim/cockpit/pressure/cabin_altitude_actual_m_msl	float	y	???	The real cabin altitude (BEFORE 730 this was incorrectly int type). Writeable with override_pressurization
+sim/cockpit/pressure/cabin_vvi_actual_m_msec	float	y	???	The real cabin altitude rate change (BEFORE 730 this was incorrectly int type). Writeable with override_pressurization
 sim/cockpit/pressure/pressure_test_timeout	float	y	???	Timeout for some kind of pressure test/
 sim/cockpit/pressure/max_allowable_altitude	float	y	???	Max altitude the plane can keep pressure at?
 sim/cockpit/pressure/dump_all	int	y	bool	Pressure dump switch
 sim/cockpit/pressure/dump_to_alt	int	y	bool	Pressure dump to altitude switch
+sim/cockpit/pressure/outflow_valve	float	y	ratio	Pressurization outflow valve ratio. 0 for fully closed, 1 for fully open. Writeable with override_pressurization
 sim/cockpit/radios/nav1_freq_hz	int	y	10Hz	The current frequency of the nav1 radio.
 sim/cockpit/radios/nav2_freq_hz	int	y	10Hz	The current frequency of the nav2 radio.
 sim/cockpit/radios/com1_freq_hz	int	y	10Hz	The current frequency of the copm1 radio.
@@ -742,7 +744,11 @@ sim/cockpit/radios/gps2_course_degtm2	float	y	degm	The localizer course for GPS 
 sim/cockpit/radios/nav1_slope_degt	float	y	deg	The glide slope slope for nav1.  Writable with override_navneedles starting in 940.
 sim/cockpit/radios/nav2_slope_degt	float	y	deg	The glide slope slope for nav2.  Writable with override_navneedles starting in 940.
 sim/cockpit/radios/gps_slope_degt	float	y	deg	The glide slope slope for the GPS 1.  Writable with override_gps.
-sim/cockpit/radios/gps2_slope_degt	float	y	deg	The glide slope slope for the GPS 1.  Writable with override_gps.
+sim/cockpit/radios/gps2_slope_degt	float	y	deg	The glide slope slope for the GPS 2.  Writable with override_gps.
+sim/cockpit/radios/gps_gp_mtr_per_dot	float	y	meter	Baro-VNAV vertical path sensitivity in meters per dot of deflection.  Writable with override_gps.
+sim/cockpit/radios/gps2_gp_mtr_per_dot	float	y	meter	Baro-VNAV vertical path sensitivity in meters per dot of deflection.  Writable with override_gps.
+sim/cockpit/radios/gps_hdef_nm_per_dot	float	y	nautical_miles	GPS CDI sensitivity in nautical miles per dot of deflection.  Writable with override_gps.
+sim/cockpit/radios/gps2_hdef_nm_per_dot	float	y	nautical_miles	GPS CDI sensitivity in nautical miles per dot of deflection.  Writable with override_gps.
 sim/cockpit/radios/transponder_code	int	y	code	Our transponder code.
 sim/cockpit/radios/transponder_id	int	n	bool	Whether we are squawking ident right now.
 sim/cockpit/radios/transponder_light	int	n	???	Whether the transponder is lit
@@ -792,6 +798,8 @@ sim/cockpit/switches/anti_ice_prop_heat_per_engine	int[8]	y	bool	Turns on prop h
 sim/cockpit/switches/anti_ice_window_heat	int	y	bool	Turns on anti-icing fr the windshield
 sim/cockpit/switches/pitot_heat_on	int	y	bool	Is the pitot heat on
 sim/cockpit/switches/pitot_heat_on2	int	y	bool	Is the backup pitot heat on
+sim/cockpit/switches/static_heat_on	int	y	bool	Is the static port heat on
+sim/cockpit/switches/static_heat_on2	int	y	bool	Is the backup static port heat on
 sim/cockpit/switches/anti_ice_AOA_heat	int	y	bool	Turns on anti-icing for alpha vane heater, pilot side
 sim/cockpit/switches/anti_ice_AOA_heat2	int	y	bool	Turns on anti-icing for alpha vane heater, copilot side
 sim/cockpit/switches/anti_ice_surf_heat	int	y	bool	Turns on surface heat on the wings
@@ -1420,6 +1428,8 @@ sim/flightmodel/failures/frm_ice2	float	y	ratio	Ratio of icing on wings/airframe
 sim/flightmodel/failures/pitot_ice	float	y	ratio	Ratio of icing on pitot tube
 sim/flightmodel/failures/pitot_ice2	float	y	ratio	Ratio of icing on pitot tube2
 sim/flightmodel/failures/prop_ice	float	y	ratio	Ratio of icing on the prop - first prop
+sim/flightmodel/failures/stat_ice	float	y	ratio	Ratio of icing on the static port - pilot side
+sim/flightmodel/failures/stat_ice2	float	y	ratio	Ratio of icing on the static port - copilot side
 sim/flightmodel/failures/inlet_ice	float	y	ratio	Ratio of icing on the air inlets - first engine
 sim/flightmodel/failures/prop_ice_per_engine	float[8]	y	ratio	Ratio of icing on the prop - array access to all props.
 sim/flightmodel/failures/inlet_ice_per_engine	float[8]	y	ratio	Ratio of icing on the air inlets - array access to all engines.
@@ -1717,6 +1727,7 @@ sim/graphics/misc/outside_light_level_b	float	n	ratio	The blue level for the wor
 sim/graphics/misc/light_attenuation	float	n	ratio	Amount that artificial light is dimmed due to the sun's magnitude
 sim/graphics/misc/use_proportional_fonts	int	y	boolean	Set this to 1 to enable proportional fonts when available.
 sim/graphics/misc/kill_map_fms_line	int	y	boolean	If set to true, the map instruments won't draw the red FMS course line. SET THIS BACK TO 0 WHEN YOUR PLANE UNLOADS!
+sim/graphics/misc/kill_g1000_ah	int	y	boolean	If set to true, the G1000 PFD instrument won't draw the attitude indicator background. SET THIS BACK TO 0 WHEN YOUR PLANE UNLOADS!
 sim/graphics/misc/red_flashlight_on	int	y	boolean	Is the red flashlight on now.  Note that the flashlight is inop when HDR is off.
 sim/graphics/misc/white_flashlight_on	int	y	boolean	Is the white flashlight on now.  Note that the flashlight is inop when HDR is off.
 sim/graphics/misc/default_scroll_pos	float	n	pixels	Default position for a scrolling plane panel
@@ -1743,6 +1754,7 @@ sim/graphics/view/panel_render_type	int	n	enum	How to draw the panel?  0=2-d pan
 sim/graphics/view/panel_render_new_blending	int	n	boolean	True if modern correct RGBA blending is being used to draw panels; false if the legacy alpha-max equation is being used.
 sim/graphics/view/world_render_type	int	n	enum	What kind of 3-d rendering pass are we on? 0=normal,1=reflections in water
 sim/graphics/view/plane_render_type	int	n	enum	What kind of rendering is being done during the xplm_Phase_Airplanes callback.  solid = 1, blended/alpha = 2 (0 = N/A, outside draw callback)
+sim/graphics/view/draw_call_type	int	n	enum	Stereo status of the draw callback. 0 = not in draw callback, 1 = mono, 2 = direct stereo (only use XPLMDrawObjects), 3 = left eye, 4 = right eye
 sim/graphics/view/view_is_external	int	n	boolean	Is the view in the cockpit or outside?  Affects sound!
 sim/graphics/view/view_x	float	n	OGLcoords	The location of the camera, X coordinate (OpenGL)
 sim/graphics/view/view_y	float	n	OGLcoords	The location of the camera, Y coordinate (OpenGL)
@@ -1843,8 +1855,8 @@ sim/joystick/joystick_axis_values	float[500]	n	ratio	The deflection of this joys
 sim/joystick/joystick_axis_minimum	float[500]	y	ratio	Min raw value ever seen [Was 15 before 850][Was 24 before 860][was 32 before 900]
 sim/joystick/joystick_axis_maximum	float[500]	y	ratio	Max raw value ever seen [Was 15 before 850][Was 24 before 860][was 32 before 900]
 sim/joystick/joystick_button_values	int[3200]	n	boolean	Is this button pressed? [Was 64 before 850][was 160 before 900]
-sim/joystick/joy_mapped_axis_avail	int[49]	n	boolean	True if there is joystick hardware of some kind providing this axis right now.
-sim/joystick/joy_mapped_axis_value	float[49]	n	float	Fully processed ratio for each axis - either -1 to 1 or 0 to 1.
+sim/joystick/joy_mapped_axis_avail	int[53]	n	boolean	True if there is joystick hardware of some kind providing this axis right now.
+sim/joystick/joy_mapped_axis_value	float[53]	n	float	Fully processed ratio for each axis - either -1 to 1 or 0 to 1.
 sim/joystick/eq_ped_nobrk	int	y	boolean	Hardware settings: Pedal nobrk (writable since 930 to auto-set user preferences)
 sim/joystick/eq_ped_wibrk	int	y	boolean	Hardware settings: Pedal wlbrk (writable since 930 to auto-set user preferences)
 sim/joystick/eq_pfc_pedals	int	y	boolean	Equipment settings: PFC pedal (writable since 930 to auto-set user preferences)
@@ -3053,6 +3065,7 @@ sim/operation/sound/has_sound	int	n	boolean	Does this machine have sound hardwar
 sim/operation/sound/has_speech_synth	int	n	boolean	Does this machine have speech synth capabilities?
 sim/operation/sound/sound_on	int	y	boolean	Is sound on (set by user)
 sim/operation/sound/speech_on	int	y	boolean	Is speech synth on (set by user)
+sim/operation/sound/master_volume_ratio	float	y	0-1	Master Volume
 sim/operation/sound/exterior_volume_ratio	float	y	0-1	Volume level for engine sound effects, ratio from 0 (silent) to 1 (max loudness)
 sim/operation/sound/interior_volume_ratio	float	y	0-1	Volume level for engine sound effects, ratio from 0 (silent) to 1 (max loudness)
 sim/operation/sound/copilot_volume_ratio	float	y	0-1	Volume level for engine sound effects, ratio from 0 (silent) to 1 (max loudness)
@@ -3263,6 +3276,8 @@ sim/world/winch/winch_max_bhp	float	y	bhp	This is the maximum horsepower the win
 sim/aircraft2/engine/low_idle_ratio	float	y	multiplier	This is the idle ratio for the engines at low idle.  1.0 provides default behavior; this can be any number greater than zero.
 sim/aircraft2/engine/high_idle_ratio	float	y	multiplier	This is the idle ratio for the engines at high idle. 1.0 provides default behavior; this can be any number greater than zero.
 sim/aircraft2/engine/max_power_limited_watts	float	y	watts	This is the maximum power output of the engine at sea level.  Note that if the engine has a waste gate this is the same as max power at critical altitude.
+sim/aircraft2/engine/flap_extension_time_sec	float	y	second	Time for flaps to go from full retraction to full extension
+sim/aircraft2/engine/flap_retraction_time_sec	float	y	second	Time for flaps to go from full extension to full retraction
 sim/cockpit2/annunciators/master_caution	int	n	boolean	This goes off any time there is a major problem with the bird: like it is on fire or something    // array of annunciators... kept as array for UDP IO
 sim/cockpit2/annunciators/master_warning	int	n	boolean	This goes off whenever there is some more moderate problem with the bird... maybe lo fuel pressure ot qty
 sim/cockpit2/annunciators/master_accept	int	n	boolean	Hit this button to CLEAR the master caution and warning: it says that you hear the buzzer and to shut it up already
@@ -3349,8 +3364,8 @@ sim/cockpit2/autopilot/glideslope_armed	int	n	boolean	Glideslope is armed, 0 or 
 sim/cockpit2/autopilot/backcourse_on	int	n	boolean	Back course is armed, 0 or 1.
 sim/cockpit2/autopilot/airspeed_dial_kts_mach	float	y	knots/mach	Airspeed hold value, knots or Mach depending on km_is_mach.
 sim/cockpit2/autopilot/airspeed_dial_kts	float	y	Knots	Airspeed hold bug, always in knots, even if the AP is in mach-hold mode.
-sim/cockpit2/autopilot/heading_dial_deg_mag_pilot	float	y	degrees_magnetic	Heading hold commanded, in degrees magnetic.
-sim/cockpit2/autopilot/heading_dial_deg_mag_copilot	float	y	degrees_magnetic	Heading hold commanded, in degrees magnetic.
+sim/cockpit2/autopilot/heading_dial_deg_mag_pilot	float	y	degrees_magnetic	Heading select commanded, in degrees magnetic.
+sim/cockpit2/autopilot/heading_dial_deg_mag_copilot	float	y	degrees_magnetic	Heading select commanded, in degrees magnetic.
 sim/cockpit2/autopilot/vvi_dial_fpm	float	y	feet/minute	VVI commanded in FPM.
 sim/cockpit2/autopilot/altitude_dial_ft	float	y	feet	VVI commanded in FPM.
 sim/cockpit2/autopilot/altitude_hold_ft	float	n	feet	Altitude hold commanded in feet indicated.
@@ -3361,7 +3376,8 @@ sim/cockpit2/autopilot/flight_director_pitch_deg	float	n	degrees	Flight director
 sim/cockpit2/autopilot/flight_director_roll_deg	float	n	degrees	Flight director roll deflection in degrees, pos right.
 sim/cockpit2/autopilot/TOGA_pitch_deg	float	y	degrees	Nose-up pitch to hold when TOGA operations are in effect.  Set this back when your aircraft unloads!
 sim/cockpit2/autopilot/roll_status	int	n	enum	Autopilot Roll-Hold Status. 0=off,1=armed,2=captured
-sim/cockpit2/autopilot/heading_status	int	n	enum	Autopilot Heading Status. 0=off,1=armed,2=captured
+sim/cockpit2/autopilot/heading_status	int	n	enum	Autopilot Heading Select Status. 0=off,1=armed,2=captured
+sim/cockpit2/autopilot/heading_hold_status	int	n	enum	Autopilot Heading Hold Status. 0=off,1=armed,2=captured
 sim/cockpit2/autopilot/nav_status	int	n	enum	Autopilot Nav Status. 0=off,1=armed,2=captured
 sim/cockpit2/autopilot/gpss_status	int	n	enum	Autopilot GPSS Status. 0=off, 2=active
 sim/cockpit2/autopilot/backcourse_status	int	n	enum	Autopilot Back-course Status. 0=off,1=armed,2=captured
@@ -3482,7 +3498,7 @@ sim/cockpit2/engine/actuators/cowl_flap_ratio	float[8]	y	ratio	Cowl-flap handle 
 sim/cockpit2/engine/actuators/primer_ratio	float[8]	y	ratio	Primer handle position, 0.0 (none) to 1.0 (on).
 sim/cockpit2/engine/actuators/afterburner_enabled	int[8]	y	boolean	Afterburner enabled, on or off.
 sim/cockpit2/engine/actuators/igniter_on	int[8]	y	boolean	Igniter, on or off.
-sim/cockpit2/engine/actuators/auto_ignite_on	int[8]	y	boolean	De-ice switch, 0 or 1.  De-ice - auto-ignition. This switch turns on a continuous ignition source in the engine to automatically relight it if there is a flameout.
+sim/cockpit2/engine/actuators/auto_ignite_on	int[8]	y	boolean	Auto-igniter switch, 0 or 1. Auto-ignition. This switch turns on a continuous ignition source in the engine to automatically relight it if there is a flameout.
 sim/cockpit2/engine/actuators/ignition_on	int[8]	y	enum	0 = off, 1 = left, 2 = right, 3 = both
 sim/cockpit2/engine/actuators/ignition_key	int[8]	y	enum	0 = off, 1 = left, 2 = right, 3 = both, 4 = starting
 sim/cockpit2/engine/actuators/starter_hit	int[8]	n	boolean	True while the starter motor is engaged
@@ -3530,6 +3546,8 @@ sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot	float	y	inches_hg	Ba
 sim/cockpit2/gauges/actuators/barometer_setting_in_hg_copilot	float	y	inches_hg	Barometric pressure setting, inches HG.  Copilot side.
 sim/cockpit2/gauges/actuators/radio_altimeter_bug_ft_pilot	float	y	feet	Radio altitude bug entered into the radio altimeter. Pilot side.
 sim/cockpit2/gauges/actuators/radio_altimeter_bug_ft_copilot	float	y	feet	Radio altitude bug entered into the radio altimeter. Copilot side.
+sim/cockpit2/gauges/actuators/baro_altimeter_bug_ft_pilot	float	y	feet	Baro altitude bug. Pilot side
+sim/cockpit2/gauges/actuators/baro_altimeter_bug_ft_copilot	float	y	feet	Baro altitude bug. Copilot side
 sim/cockpit2/gauges/actuators/artificial_horizon_adjust_deg_pilot	float	y	degrees	Artificial horizon pitch-reference adjustment. Pilot side.
 sim/cockpit2/gauges/actuators/artificial_horizon_adjust_deg_copilot	float	y	degrees	Artificial horizon pitch-reference adjustment. Copilot side.
 sim/cockpit2/gauges/actuators/airspeed_bug_deg	float	y	degrees	ASI bug location on the dial, in degrees, 0 straight up, positive clockwise.
@@ -3544,6 +3562,10 @@ sim/cockpit2/gauges/indicators/altitude_ft_copilot	float	n	feet	Indicated height
 sim/cockpit2/gauges/indicators/vvi_fpm_pilot	float	n	feet/minute	Indicated vertical speed in feet per minute, pilot system.
 sim/cockpit2/gauges/indicators/vvi_fpm_copilot	float	n	feet/minute	Indicated vertical speed in feet per minute, copilot system.
 sim/cockpit2/gauges/indicators/turn_rate_roll_deg_pilot	float	n	degrees	Indicated rate-of-turn, in degrees deflection, for newer roll-augmented turn-indicators.  Pilot side.
+sim/cockpit2/gauges/indicators/true_airspeed_kts_pilot	float	n	knots	True airspeed in knots, for pilot pitot/static, calculated by ADC, requires pitot, static, oat sensor and ADC all to work correctly to give correct value
+sim/cockpit2/gauges/indicators/true_airspeed_kts_copilot	float	n	knots	True airspeed in knots, for copilot pitot/static, calculated by ADC, requires pitot, static, oat sensor and ADC all to work correctly to give correct value
+sim/cockpit2/gauges/indicators/mach_pilot	float	n	mach	number		 airspeed in mach number, for pilot pitot/static, calculated by ADC, requires pitot, static, oat sensor and ADC all to work correctly to give correct value
+sim/cockpit2/gauges/indicators/mach_copilot	float	n	mach	number		 airspeed in mach number, for copilot pitot/static, calculated by ADC, requires pitot, static, oat sensor and ADC all to work correctly to give correct value
 sim/cockpit2/gauges/indicators/turn_rate_roll_deg_copilot	float	n	degrees	Indicated rate-of-turn, in degrees deflection, for newer roll-augmented turn-indicators.  Copilot side.
 sim/cockpit2/gauges/indicators/turn_rate_heading_deg_pilot	float	n	degrees	Indicated rate-of-turn, in degrees deflection, for old-style turn-indicators.  Pilot side.
 sim/cockpit2/gauges/indicators/turn_rate_heading_deg_copilot	float	n	degrees	Indicated rate-of-turn, in degrees deflection, for old-style turn-indicators.  Copilot side.
@@ -3596,9 +3618,11 @@ sim/cockpit2/ice/ice_pitot_heat_on_pilot	int	y	boolean	De-ice switch, 0 or 1.  D
 sim/cockpit2/ice/ice_pitot_heat_on_copilot	int	y	boolean	De-ice switch, 0 or 1.  Pitot tube heat, co-pilot. This switch turns on de-icing heat in the co-pilot side pitot tube. If it freezes up your airspeed indicator and altimeter stop working. Airspeed and altitude related autopilot functions are also affected.
 sim/cockpit2/ice/ice_AOA_heat_on	int	y	boolean	De-ice switch, 0 or 1.  AOA sensor heat. This switch turns on de-icing heat for the AOA sensor. If it freezes up your AOA indicator stops working. AOA sensor failure will also affect the aircraft's artificial stability system if it has one.  Pilot.
 sim/cockpit2/ice/ice_AOA_heat_on_copilot	int	y	boolean	De-ice switch, 0 or 1.  AOA sensor heat. This switch turns on de-icing heat for the AOA sensor. If it freezes up your AOA indicator stops working. AOA sensor failure will also affect the aircraft's artificial stability system if it has one.  Copilot.
-sim/cockpit2/ice/ice_surfce_heat_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - bleed air. This switch directs warm air from the engines into the wing leading edges to keep them free of ice. (All wings)
-sim/cockpit2/ice/ice_surfce_heat_left_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - bleed air. This switch directs warm air from the engines into the wing leading edges to keep them free of ice. (Left wing)
-sim/cockpit2/ice/ice_surfce_heat_right_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - bleed air. This switch directs warm air from the engines into the wing leading edges to keep them free of ice. (Right wing)
+sim/cockpit2/ice/ice_static_heat_on_pilot	int	y	boolean	De-ice switch, 0 or 1.  Static port heat. This switch turns on de-icing heat for the static sensor. If it freezes up your altimeter, vvi and airspeed indicator stop working. Pilot.
+sim/cockpit2/ice/ice_static_heat_on_copilot	int	y	boolean	De-ice switch, 0 or 1.  Static port heat. This switch turns on de-icing heat for the static sensor. If it freezes up your altimeter, vvi and airspeed indicator stop working. Copilot.
+sim/cockpit2/ice/ice_surfce_heat_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - electric heat. This switch engages electrically heated leading edges. (All wings)
+sim/cockpit2/ice/ice_surfce_heat_left_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - electric heat. This switch engages electrically heated leading edges. (Left wing)
+sim/cockpit2/ice/ice_surfce_heat_right_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - electric heat. This switch engages electrically heated leading edges. (Right wing)
 sim/cockpit2/ice/ice_surface_boot_on	int	y	boolean	De-ice switch, 0 or 1.  De-ice - pneumatic. This switch inflates flexible bladders on the wing leading edges to pop off accumulated ice.
 sim/cockpit2/ice/anti_ice_engine_air	float[8]	y	ratio	De-Ice ratio.  (Description needed)
 sim/cockpit2/ice/anti_ice_engine_air_b	float[8]	y	ratio	De-Ice ratio.  (Description needed)
@@ -4112,3 +4136,12 @@ sim/flightmodel2/wing/flap2_deg	float[32]	y	degrees	Deflection of the flap from 
 sim/flightmodel2/wing/speedbrake1_deg	float[32]	y	degrees	Deflection of the speedbrakes from set #1 on this wing.
 sim/flightmodel2/wing/speedbrake2_deg	float[32]	y	degrees	Deflection of the speedbrakes from set #2 on this wing.
 sim/flightmodel2/wing/wing_tip_deflection_deg	float[32]	n	degrees	Degrees of deflection of a line from the wing root (extended to the plane centerline) to the tip.
+sim/graphics/VR/button_axis_x	float[5]	n	Ratio	For OBJs used to draw VR controllers: the X deflection (or axis deflection) of each axis on the controller.
+sim/graphics/VR/button_axis_y	float[5]	n	Ratio	For OBJs used to draw VR controllers: for 2-d thumb sticks or dpads, this is the second axis.
+sim/graphics/VR/button_down	int[64]	n	Boolean	For OBJs used to draw VR controllers: button status of each button on the controller.
+sim/graphics/VR/backlight_level	float	n	Ratio	For OBJs used to draw VR controllers: Level of back lighting on the controller.
+sim/graphics/VR/seeker_light_level	float	n	Ratio	For OBJs used to draw VR controllers: Level of lighting on the tip of the controller.
+sim/graphics/VR/touch_spot_light_level	float	n	Ratio	For OBJs used to draw VR controllers: Level of lighting on the D-Pad/joystick part of the controller.
+sim/graphics/VR/enabled	int	n	Boolean	True if VR is enabled, false if it is disabled
+sim/graphics/VR/using_3d_mouse	int	n	Boolean	True if the 3-d VR mouse is in use
+sim/graphics/VR/teleport_on_ground	int	n	Boolean	True if the user is teleporting outside the aircraft.  In this case the pilot's head position is not reliable - use the regular camera location

@@ -1,3 +1,4 @@
+from typing import Any, List, Optional, Union
 from io_xplane2blender.xplane_helpers import floatToStr
 from typing import Any,List,Optional,Sequence,Tuple,Union
 
@@ -6,16 +7,14 @@ from typing import Any,List,Optional,Sequence,Tuple,Union
 # Class: XPlaneAttribute
 # An Attribute
 class XPlaneAttribute():
-    #TODO: These class variables should be removed. See  #301
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   string name - Name of the attribute
-    #   mixed value - Value of attribute
-    #   int weight - (default = 0) The attribute weight. Bigger weight will write the attribute later in the OBJ file.
     def __init__(self, name:str, value:Optional[Union[bool,float,int,str]] = None, weight:int = 0):
+        '''
+        XPlaneAttributes are the data class for what will eventually be written as commands in the
+        OBJ. Names usually start with "ATTR_"
+        weight indicates where the attribute should be in the OBJ File
+        '''
         self.name = name
-        self.value = [value] # type: List[Union[bool,float,int,str]]
+        self.value = [value] # type: List[Optional[Union[bool,float,int,str]]
         self.weight = weight
 
     # Method: addValue
@@ -54,7 +53,7 @@ class XPlaneAttribute():
     #
     # Returns:
     #   mixed - The value
-    def getValue(self, i:int = 0)->Union[bool,float,int,None,str]:
+    def getValue(self, i:int = 0)->Optional[Union[bool,float,int,str]]:
         return self.value[i]
 
     # Method: getValueAsString
@@ -97,7 +96,7 @@ class XPlaneAttribute():
     #
     # Returns:
     #   list - All values of the attribute.
-    def getValues(self)->List[Any]:
+    def getValues(self)->List[Optional[Union[bool,float,int,str]]]:
         return self.value
 
     # Method: getValuesAsString

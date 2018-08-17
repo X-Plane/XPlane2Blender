@@ -9,13 +9,12 @@ from io_xplane2blender.xplane_types import xplane_file
 __dirname__ = os.path.dirname(__file__)
 
 class TestSSO_IllegalUsePanelTex(XPlaneTestCase):
-    expected_logger_errors = 1
     def test_export(self):
         filename = 'test_SSO_IllegalUsePanelTex'
 
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
         out = xplaneFile.write()
 
-        self.assertEquals(len(logger.findErrors()), self.expected_logger_errors)
+        self.assertLoggerErrors(1)
 
 runTestCases([TestSSO_IllegalUsePanelTex])

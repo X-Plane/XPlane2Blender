@@ -1,0 +1,3 @@
+2 1100 Comment: Tests when type is not int, float, double, or byte 
+
+sim/type/test not_a_real_type y

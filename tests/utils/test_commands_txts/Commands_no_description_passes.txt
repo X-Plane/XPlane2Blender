@@ -1,0 +1,3 @@
+sim/none/none
+sim/operation/quit
+sim/operation/screenshot

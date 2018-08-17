@@ -3,9 +3,11 @@
 import pathlib
 
 import bpy
-from .xplane_config import *
-from .xplane_constants import MAX_COCKPIT_REGIONS, MAX_LODS
-from .xplane_ops_dev import *
+from io_xplane2blender.xplane_config import *
+from io_xplane2blender.xplane_constants import MAX_COCKPIT_REGIONS, MAX_LODS
+from io_xplane2blender.xplane_ops_dev import *
+from io_xplane2blender.xplane_utils import xplane_commands_txt_parser, \
+                                           xplane_datarefs_txt_parser
 
 # Function: findFCurveByPath
 # Helper function to find an FCurve by an data-path.
@@ -646,6 +648,47 @@ class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
+    '''
+    This operator very simply passes it's associated command to the search window, which then opens it in the UI. 
+    '''
+    bl_label = 'Open/Close Command Search Window'
+    bl_description = 'Open/Close Command Search Window'
+    bl_idname = 'xplane.command_search_toggle'
+
+    # Each operator is placed next to a command string property,
+    # 
+    paired_command_prop = bpy.props.StringProperty()
+    def execute(self, context):
+        command_search_window_state = context.scene.xplane.command_search_window_state
+        #Load on first use
+        if len(command_search_window_state.command_search_list) == 0:
+            filepath=pathlib.Path(xplane_helpers.get_plugin_resources_folder(),"Commands.txt")
+            get_commands_txt_result = xplane_commands_txt_parser.get_commands_txt_file_content(filepath.as_posix())
+            if isinstance(get_commands_txt_result,str):
+                short_filepath = "..."+os.path.sep.join(filepath.parts[-3:])
+                bpy.ops.xplane.error('INVOKE_DEFAULT',msg_text=short_filepath + " could not be parsed", report_text=get_commands_txt_result)
+                return {'CANCELLED'}
+            else:
+                file_content = get_commands_txt_result
+
+            command_search_list = bpy.context.scene.xplane.command_search_window_state.command_search_list
+
+            for command_info in file_content:
+                command_search_list.add()
+                command_search_list[-1].command = command_info.command
+                command_search_list[-1].command_description = command_info.description
+
+        prop = command_search_window_state.command_prop_dest
+
+        #Toggle ourselves
+        if prop == self.paired_command_prop:
+            command_search_window_state.command_prop_dest = "" 
+        else:
+            command_search_window_state.command_prop_dest = self.paired_command_prop
+
+        return {'FINISHED'}
+
 class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
     '''
     This operator very simply passes it's associated dataref to the search window, which then opens it in the UI. 
@@ -734,6 +777,7 @@ def addXPlaneOps():
     bpy.utils.register_class(SCENE_OT_dev_rerun_updater)
     bpy.utils.register_class(SCENE_OT_dev_create_lights_txt_summary)
 
+    bpy.utils.register_class(XPLANE_OT_CommandSearchToggle)
     bpy.utils.register_class(XPLANE_OT_DatarefSearchToggle)
 # Function: removeXPlaneOps
 # Unregisters all Operators.
@@ -777,4 +821,5 @@ def removeXPlaneOps():
     bpy.utils.unregister_class(SCENE_OT_dev_rerun_updater)
     bpy.utils.unregister_class(SCENE_OT_dev_create_lights_txt_summary)
 
+    bpy.utils.unregister_class(XPLANE_OT_CommandSearchToggle)
     bpy.utils.unregister_class(XPLANE_OT_DatarefSearchToggle)
