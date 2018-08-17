@@ -153,13 +153,13 @@ class XPlaneHeader():
 
         # standard textures
         if self.xplaneFile.options.texture != '':
-            self.attributes['TEXTURE'].setValue(self.getTexturePath(self.xplaneFile.options.texture, exportdir, blenddir))
+            self.attributes['TEXTURE'].setValue(self.getPathRelativeToOBJ(self.xplaneFile.options.texture, exportdir, blenddir))
 
         if self.xplaneFile.options.texture_lit != '':
-            self.attributes['TEXTURE_LIT'].setValue(self.getTexturePath(self.xplaneFile.options.texture_lit, exportdir, blenddir))
+            self.attributes['TEXTURE_LIT'].setValue(self.getPathRelativeToOBJ(self.xplaneFile.options.texture_lit, exportdir, blenddir))
 
         if self.xplaneFile.options.texture_normal != '':
-            self.attributes['TEXTURE_NORMAL'].setValue(self.getTexturePath(self.xplaneFile.options.texture_normal, exportdir, blenddir))
+            self.attributes['TEXTURE_NORMAL'].setValue(self.getPathRelativeToOBJ(self.xplaneFile.options.texture_normal, exportdir, blenddir))
 
 
         xplane_version = int(bpy.context.scene.xplane.version)
@@ -183,13 +183,13 @@ class XPlaneHeader():
         if canHaveDraped:
             # draped textures
             if self.xplaneFile.options.texture_draped != '':
-                self.attributes['TEXTURE_DRAPED'].setValue(self.getTexturePath(self.xplaneFile.options.texture_draped, exportdir, blenddir))
+                self.attributes['TEXTURE_DRAPED'].setValue(self.getPathRelativeToOBJ(self.xplaneFile.options.texture_draped, exportdir, blenddir))
 
             if self.xplaneFile.options.texture_draped_normal != '':
                 #Special "1.0" required by X-Plane
                 #"That's the scaling factor for the normal map available ONLY for the draped info. Without that , it can't find the texture.
                 #That makes a non-fatal error in x-plane. Without the normal map, the metalness directive is ignored" -Ben Supnik, 07/06/17 8:35pm
-                self.attributes['TEXTURE_DRAPED_NORMAL'].setValue("1.0 " + self.getTexturePath(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
+                self.attributes['TEXTURE_DRAPED_NORMAL'].setValue("1.0 " + self.getPathRelativeToOBJ(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
             
             if self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[1]
@@ -242,7 +242,23 @@ class XPlaneHeader():
 
         if xplane_version >= 1130:
             if self.xplaneFile.options.particle_system_file:
-                pss = self.xplaneFile.options.particle_system_file
+                blenddir = os.path.dirname(bpy.context.blend_data.filepath)
+
+                # normalize the exporpath
+                if os.path.isabs(self.xplaneFile.filename):
+                    exportdir = os.path.dirname(os.path.normpath(self.xplaneFile.filename))
+                else:
+                    exportdir = os.path.dirname(
+                        os.path.abspath(
+                            os.path.normpath(
+                                os.path.join(blenddir, self.xplaneFile.filename)
+                                )))
+                pss = self.getPathRelativeToOBJ(
+                    self.xplaneFile.options.particle_system_file,
+                    exportdir,
+                    blenddir
+                )
+
                 objs = self.xplaneFile.objects
 
                 if not list(filter(lambda obj: obj[1].type == "EMPTY" and\
@@ -254,7 +270,7 @@ class XPlaneHeader():
                 if not pss.endswith('.pss'):
                     logger.error("Particle System File {} must be a .pss file".format(pss))
 
-                self.general_attributes["PARTICLE_SYSTEM"].setValue(pss)
+                self.attributes["PARTICLE_SYSTEM"].setValue(pss)
 
         # get point counts
         tris = len(self.xplaneFile.mesh.vertices)
@@ -507,30 +523,30 @@ class XPlaneHeader():
         self.xplaneFile.options.texture_draped_normal = textureDrapedNormal or ''
 
 
-    # Method: getTexturePath
-    # Returns the texture path relative to the exported OBJ
+    # Method: getPathRelativeToOBJ
+    # Returns the resource path relative to the exported OBJ
     #
     # Parameters:
-    #   string texpath - the relative or absolute texture path as chosen by the user
+    #   string respath - the relative or absolute resource path (such as a texture or .pss file) as chosen by the user
     #   string exportdir - the absolute export directory
     #   string blenddir - the absolute path to the directory the blend is in
     #
     # Returns:
-    #   string - the texture path relative to the exported OBJ
-    def getTexturePath(self, texpath, exportdir, blenddir):
+    #   string - the resource path relative to the exported OBJ
+    def getPathRelativeToOBJ(self, respath:str, exportdir:str, blenddir:str)->str:
         # blender stores relative paths on UNIX with leading double slash
-        if texpath[0:2] == '//':
-            texpath = texpath[2:]
+        if respath[0:2] == '//':
+            respath = respath[2:]
 
-        if os.path.isabs(texpath):
-            texpath = os.path.abspath(os.path.normpath(texpath))
+        if os.path.isabs(respath):
+            respath = os.path.abspath(os.path.normpath(respath))
         else:
-            texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir, texpath)))
+            respath = os.path.abspath(os.path.normpath(os.path.join(blenddir, respath)))
 
-        texpath = os.path.relpath(texpath, exportdir)
+        respath = os.path.relpath(respath, exportdir)
 
         #Replace any \ separators if you're on Windows. For other platforms this does nothing
-        return texpath.replace("\\","/")
+        return respath.replace("\\","/")
 
     # Method: _getCanonicalTexturePath
     # Returns normalized (canonical) path to texture

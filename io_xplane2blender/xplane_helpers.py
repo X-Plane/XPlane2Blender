@@ -28,15 +28,6 @@ def floatToStr(n):
 
     return s
 
-def firstMatchInList(pattern, items):
-    for i in range(0, len(items)):
-        item = items[i]
-
-        if pattern.fullmatch(item):
-            return item
-
-    return False
-
 def getColorAndLitTextureSlots(mat):
     texture = None
     textureLit = None
@@ -50,8 +41,7 @@ def getColorAndLitTextureSlots(mat):
 
     return texture, textureLit
 
-#TODO: Pretty sure Blender has an API for this in bpy.path
-def resolveBlenderPath(path):
+def resolveBlenderPath(path:str)->str:
     blenddir = os.path.dirname(bpy.context.blend_data.filepath)
 
     if path[0:2] == '//':
