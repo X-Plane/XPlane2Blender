@@ -1035,10 +1035,11 @@ def manipulator_layout(self, obj):
                             box.prop(obj.xplane.manip, prop, text=text)
                         else:
                             box.prop(obj.xplane.manip, prop)
-                if prop in {"command", "positive_command", "negative_command"}:
-                    show_command_search_window_pairing(box, prop)
                 else:
-                    box.prop(obj.xplane.manip, prop)
+                    if prop in {"command", "positive_command", "negative_command"}:
+                        show_command_search_window_pairing(box, prop)
+                    else:
+                        box.prop(obj.xplane.manip, prop)
 
         if  manipType == MANIP_DRAG_AXIS_DETENT or\
             manipType == MANIP_DRAG_ROTATE_DETENT:
