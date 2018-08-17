@@ -1132,7 +1132,7 @@ class UL_CommandSearchList(bpy.types.UIList):
         
         #Search info:
         # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
-        # A dataref must match at least one search in all searches, and must partially match each search term        
+        # A command must match at least one search in all searches, and must partially match each search term        
         search_info = []
         for search in filter_name.upper().split('|'):
             search_info.append(frozenset(search.split(' ')))

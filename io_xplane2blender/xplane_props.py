@@ -265,12 +265,12 @@ class ListItemCommand(bpy.types.PropertyGroup):
     '''
     command = bpy.props.StringProperty(
         name="Command For Search List",
-        description="A command path in the command search window. Comes from a Datarefs definitions file"
+        description="A command path in the command search window. Comes from a Commands definitions file"
     )
 
     command_description = bpy.props.StringProperty(
         name="Command Description For Search List",
-        description="Indicates the type, shown in a column in the commands search window. Comes from a Datarefs definitions file"
+        description="Indicates the type, shown in a column in the commands search window. Comes from a Commands definitions file"
     )
 
 class ListItemDataref(bpy.types.PropertyGroup):
@@ -349,7 +349,7 @@ class XPlaneCommandSearchWindow(bpy.types.PropertyGroup):
         components = command_prop_dest.split('.')
         assert components[0] == "bpy"
         setattr(getattr_recursive(bpy, components[1:-1]), components[-1], command)
-        xplane.dataref_search_window_state.command_prop_dest = "" 
+        xplane.command_search_window_state.command_prop_dest = "" 
 
     command_search_list = bpy.props.CollectionProperty(type=ListItemCommand)
     command_search_list_idx = bpy.props.IntProperty(update=onclick_command)
