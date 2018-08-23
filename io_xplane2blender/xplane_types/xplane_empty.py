@@ -27,6 +27,11 @@ class XPlaneEmpty(XPlaneObject):
         if (int(bpy.context.scene.xplane.version) >= 1130 and
                 (special_empty_props.special_type == EMPTY_USAGE_EMITTER_PARTICLE or
                  special_empty_props.special_type == EMPTY_USAGE_EMITTER_SOUND)):
+            if not self.xplaneBone.xplaneFile.options.particle_system_file.endswith(".pss"):
+                logger.error("Particle emitter {} is used, despite no .pss file being set"
+                        .format(self.blenderObject.name))
+                return ''
+
             bake_matrix = self.xplaneBone.getBakeMatrixForAttached()
             em_location = xplane_helpers.vec_b_to_x(bake_matrix.to_translation())
             #yaw,pitch,roll
