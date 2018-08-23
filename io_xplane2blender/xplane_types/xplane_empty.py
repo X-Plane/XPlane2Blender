@@ -2,20 +2,22 @@ import math
 
 import bpy
 import mathutils
-from io_xplane2blender import xplane_config
-from io_xplane2blender import xplane_helpers
+from io_xplane2blender import xplane_config, xplane_helpers
+from io_xplane2blender.xplane_config import getDebug
 from io_xplane2blender.xplane_constants import *
+from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_types import XPlaneObject
 
 
 class XPlaneEmpty(XPlaneObject):
-    def __init__(self,blenderObject):
+    def __init__(self, blenderObject):
         assert blenderObject.type == 'EMPTY'
         super().__init__(blenderObject)
         self.type = 'EMPTY'
 
     def collect(self):
-        pass
+        super().collect()
+        return
 
     def write(self):
         debug = getDebug()
