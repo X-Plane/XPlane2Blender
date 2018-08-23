@@ -435,6 +435,7 @@ class XPlaneExportPathDirective(bpy.types.PropertyGroup):
         description="The export path that should be copied into a library.txt",
     )
  
+
 class XPlaneEmitter(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(
         name = "Emitter Name",
@@ -443,8 +444,14 @@ class XPlaneEmitter(bpy.types.PropertyGroup):
 
     index = bpy.props.IntProperty(
         name = "Emitter Index",
-        description = "Index of emitter array (re-work desc)",
-        default = 0
+        description = "The index in the emitter's array",
+        min = 0
+    )
+
+    index_enabled = bpy.props.BoolProperty(
+        name = "Emitter Index Enabled",
+        description = "Enables the emitter array index",
+        default=False
     )
 
 

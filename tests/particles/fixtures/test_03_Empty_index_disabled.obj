@@ -1,0 +1,16 @@
+I
+800
+OBJ
+
+PARTICLE_SYSTEM	fake.pss
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+# 1 Empty: 03_Empty_index_disabled_99
+# EMPTY: 03_Empty_index_disabled_99	weight: 0
+EMITTER fake_disabled 0 0 0 0 0 0
+# 1 Empty: 03_Empty_index_disabled_0
+# EMPTY: 03_Empty_index_disabled_0	weight: 0
+EMITTER fake_disabled 0 0 0 0 0 0
+
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+32.NO_BUILD_NUMBR

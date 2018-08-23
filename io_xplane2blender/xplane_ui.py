@@ -154,11 +154,15 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
 
     if emp.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
        emp.special_type == EMPTY_USAGE_EMITTER_SOUND:
-           box = layout.box()
-           box.label("Emitter Settings")
-           box.row().prop(emp.emitter_props,"name")
-           box.row().prop(emp.emitter_props,"index")
-
+        box = layout.box()
+        box.label("Emitter Settings")
+        row = box.row()
+        row.prop(emp.emitter_props,"name",text="Name")
+        # Adapted from properties_texture.py, factor_but
+        sub = row.row()
+        sub.prop(emp.emitter_props, "index_enabled", text="")
+        sub.active = getattr(emp.emitter_props, "index_enabled")
+        sub.prop(emp.emitter_props, "index", text="Index")
 
 # Function: scene_layout
 # Draws the UI layout for scene tabs. Uses <layer_layout>.
