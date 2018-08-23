@@ -1,0 +1,3 @@
+2 1100 Comment: Tests when array type is not int[#]
+
+sim/type/test int[24 y

@@ -3,6 +3,7 @@ from io_xplane2blender.xplane_config import getDebug
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_constants import *
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
+
 from .xplane_attribute import XPlaneAttribute
 
 # Class: XPlaneObject
@@ -65,17 +66,15 @@ class XPlaneObject():
     # Parameters:
     #   blenderObject - A Blender object
     def __init__(self, blenderObject:bpy.types.Object):
-        self.type = ''
+        self.type = '' # type: Optional[str]
         self.blenderObject = blenderObject
 
         #This is assaigned and tied together in in XPlaneBone's constructor
         self.xplaneBone = None
-        self.name = blenderObject.name
-        self.datarefs = {}
+        self.name = blenderObject.name # type: str
+        self.datarefs = {} # type: Dict[str,str]
         self.bakeMatrix = None
         
-        self.id = int(blenderObject.as_pointer()) #TODO: Delete unused attribute
-
         self.attributes = XPlaneAttributes()
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()

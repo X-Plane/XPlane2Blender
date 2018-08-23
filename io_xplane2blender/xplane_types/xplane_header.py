@@ -1,31 +1,36 @@
-import bpy
 import os
-import re
 import platform
+import re
 from collections import OrderedDict
-from ..xplane_helpers import floatToStr, logger, resolveBlenderPath
+
+import bpy
+from io_xplane2blender.xplane_constants import (EXPORT_TYPE_AIRCRAFT,
+                                                EXPORT_TYPE_SCENERY)
+
 from ..xplane_constants import *
-from .xplane_attributes import XPlaneAttributes
+from ..xplane_helpers import floatToStr, logger, resolveBlenderPath
+from ..xplane_image_composer import (combineSpecularAndNormal,
+                                     getImageByFilepath, normalWithoutAlpha,
+                                     specularToGrayscale)
 from .xplane_attribute import XPlaneAttribute
-from ..xplane_image_composer import getImageByFilepath, specularToGrayscale, normalWithoutAlpha, combineSpecularAndNormal
-from io_xplane2blender.xplane_constants import EXPORT_TYPE_AIRCRAFT,\
-    EXPORT_TYPE_SCENERY
+from .xplane_attributes import XPlaneAttributes
+
+from typing import List
 
 # Class: XPlaneHeader
 # Create an OBJ header.
 class XPlaneHeader():
-    # Property: version
-    # OBJ format version
-
-    # Property: attributes
-    # OrderedDict - Key value pairs of all Header attributes
+    '''
+    Stores and writes OBJ info related to the OBJ8 header, such as POINT_COUNTS and TEXTURE.
+    Also the starting point for is responsible for autodetecting and compositing textures.
+    '''
 
     # Constructor: __init__
     #
     # Parameters:
     #   XPlaneFile xplaneFile - A <XPlaneFile>.
     #   int obj_version - OBJ format version.
-    def __init__(self, xplaneFile, obj_version):
+    def __init__(self, xplaneFile:'XPlaneFile', obj_version:int):
         self.obj_version = obj_version
         self.xplaneFile = xplaneFile
 
@@ -33,7 +38,7 @@ class XPlaneHeader():
         # for example, if the path in the box is 'lib/g10/cars/car.obj'
         # and the file is getting exported to '/code/x-plane/Custom Scenery/Kansas City/cars/honda.obj'
         # you would have ('lib/g10/cars/car.obj','cars/honda.obj')
-        self.export_path_dirs = []
+        self.export_path_dirs = [] # type: List[str,str]
 
         for export_path_directive in self.xplaneFile.options.export_path_directives:
             export_path_directive.export_path = export_path_directive.export_path.lstrip()
@@ -64,6 +69,7 @@ class XPlaneHeader():
         self.attributes = XPlaneAttributes()
         
         # object attributes
+        self.attributes.add(XPlaneAttribute("PARTICLE_SYSTEM", None))
         self.attributes.add(XPlaneAttribute("ATTR_layer_group", None))
         self.attributes.add(XPlaneAttribute("COCKPIT_REGION", None))
         self.attributes.add(XPlaneAttribute("DEBUG", None))
@@ -111,6 +117,8 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("POINT_COUNTS", None))
 
 
+    # TODO: Shouldn't this just be inside XPlaneHeader.write if it is only called once and only here?
+    # If not should it be called collect?
     def init(self):
         isAircraft = self.xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT
         isCockpit  = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
@@ -145,13 +153,13 @@ class XPlaneHeader():
 
         # standard textures
         if self.xplaneFile.options.texture != '':
-            self.attributes['TEXTURE'].setValue(self.getTexturePath(self.xplaneFile.options.texture, exportdir, blenddir))
+            self.attributes['TEXTURE'].setValue(self.getPathRelativeToOBJ(self.xplaneFile.options.texture, exportdir, blenddir))
 
         if self.xplaneFile.options.texture_lit != '':
-            self.attributes['TEXTURE_LIT'].setValue(self.getTexturePath(self.xplaneFile.options.texture_lit, exportdir, blenddir))
+            self.attributes['TEXTURE_LIT'].setValue(self.getPathRelativeToOBJ(self.xplaneFile.options.texture_lit, exportdir, blenddir))
 
         if self.xplaneFile.options.texture_normal != '':
-            self.attributes['TEXTURE_NORMAL'].setValue(self.getTexturePath(self.xplaneFile.options.texture_normal, exportdir, blenddir))
+            self.attributes['TEXTURE_NORMAL'].setValue(self.getPathRelativeToOBJ(self.xplaneFile.options.texture_normal, exportdir, blenddir))
 
 
         xplane_version = int(bpy.context.scene.xplane.version)
@@ -175,13 +183,13 @@ class XPlaneHeader():
         if canHaveDraped:
             # draped textures
             if self.xplaneFile.options.texture_draped != '':
-                self.attributes['TEXTURE_DRAPED'].setValue(self.getTexturePath(self.xplaneFile.options.texture_draped, exportdir, blenddir))
+                self.attributes['TEXTURE_DRAPED'].setValue(self.getPathRelativeToOBJ(self.xplaneFile.options.texture_draped, exportdir, blenddir))
 
             if self.xplaneFile.options.texture_draped_normal != '':
                 #Special "1.0" required by X-Plane
                 #"That's the scaling factor for the normal map available ONLY for the draped info. Without that , it can't find the texture.
                 #That makes a non-fatal error in x-plane. Without the normal map, the metalness directive is ignored" -Ben Supnik, 07/06/17 8:35pm
-                self.attributes['TEXTURE_DRAPED_NORMAL'].setValue("1.0 " + self.getTexturePath(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
+                self.attributes['TEXTURE_DRAPED_NORMAL'].setValue("1.0 " + self.getPathRelativeToOBJ(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
             
             if self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[1]
@@ -230,6 +238,39 @@ class XPlaneHeader():
                         cockpit_region.left + (2 ** cockpit_region.width),
                         cockpit_region.top + (2 ** cockpit_region.height)
                     ))
+
+
+        if xplane_version >= 1130:
+            if self.xplaneFile.options.particle_system_file:
+                blenddir = os.path.dirname(bpy.context.blend_data.filepath)
+
+                # normalize the exporpath
+                if os.path.isabs(self.xplaneFile.filename):
+                    exportdir = os.path.dirname(os.path.normpath(self.xplaneFile.filename))
+                else:
+                    exportdir = os.path.dirname(
+                        os.path.abspath(
+                            os.path.normpath(
+                                os.path.join(blenddir, self.xplaneFile.filename)
+                                )))
+                pss = self.getPathRelativeToOBJ(
+                    self.xplaneFile.options.particle_system_file,
+                    exportdir,
+                    blenddir
+                )
+
+                objs = self.xplaneFile.objects
+
+                if not list(filter(lambda obj: obj[1].type == "EMPTY" and\
+                        obj[1].blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
+                        obj[1].blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_SOUND,\
+                        objs.items())):
+                    logger.warn("Particle System File {} is given, but no emitter objects are used".format(pss))
+
+                if not pss.endswith('.pss'):
+                    logger.error("Particle System File {} must be a .pss file".format(pss))
+
+                self.attributes["PARTICLE_SYSTEM"].setValue(pss)
 
         # get point counts
         tris = len(self.xplaneFile.mesh.vertices)
@@ -315,6 +356,7 @@ class XPlaneHeader():
 
         for attr in self.xplaneFile.options.customAttributes:
             self.attributes.add(XPlaneAttribute(attr.name, attr.value))
+
 
     def _compositeNormalTextureNeedsRecompile(self, compositePath, sourcePaths):
         compositePath = resolveBlenderPath(compositePath)
@@ -408,7 +450,7 @@ class XPlaneHeader():
         for xplaneObject in xplaneObjects:
             # skip non-mesh objects and objects without a xplane bone
             # also skip invalid materials
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and \
+            if xplaneObject.type == 'MESH' and \
                xplaneObject.xplaneBone and \
                xplaneObject.material.options:
                 mat = xplaneObject.material
@@ -443,7 +485,7 @@ class XPlaneHeader():
         # now go through all textures again and list any objects with different textures
         for xplaneObject in xplaneObjects:
             # skip non-mesh objects and objects without a xplane bone
-            if xplaneObject.type == XPLANE_OBJECT_TYPE_PRIMITIVE and xplaneObject.xplaneBone:
+            if xplaneObject.type == 'MESH' and xplaneObject.xplaneBone:
                 mat = xplaneObject.material
 
                 if mat.options.draped:
@@ -481,30 +523,30 @@ class XPlaneHeader():
         self.xplaneFile.options.texture_draped_normal = textureDrapedNormal or ''
 
 
-    # Method: getTexturePath
-    # Returns the texture path relative to the exported OBJ
+    # Method: getPathRelativeToOBJ
+    # Returns the resource path relative to the exported OBJ
     #
     # Parameters:
-    #   string texpath - the relative or absolute texture path as chosen by the user
+    #   string respath - the relative or absolute resource path (such as a texture or .pss file) as chosen by the user
     #   string exportdir - the absolute export directory
     #   string blenddir - the absolute path to the directory the blend is in
     #
     # Returns:
-    #   string - the texture path relative to the exported OBJ
-    def getTexturePath(self, texpath, exportdir, blenddir):
+    #   string - the resource path relative to the exported OBJ
+    def getPathRelativeToOBJ(self, respath:str, exportdir:str, blenddir:str)->str:
         # blender stores relative paths on UNIX with leading double slash
-        if texpath[0:2] == '//':
-            texpath = texpath[2:]
+        if respath[0:2] == '//':
+            respath = respath[2:]
 
-        if os.path.isabs(texpath):
-            texpath = os.path.abspath(os.path.normpath(texpath))
+        if os.path.isabs(respath):
+            respath = os.path.abspath(os.path.normpath(respath))
         else:
-            texpath = os.path.abspath(os.path.normpath(os.path.join(blenddir, texpath)))
+            respath = os.path.abspath(os.path.normpath(os.path.join(blenddir, respath)))
 
-        texpath = os.path.relpath(texpath, exportdir)
+        respath = os.path.relpath(respath, exportdir)
 
         #Replace any \ separators if you're on Windows. For other platforms this does nothing
-        return texpath.replace("\\","/")
+        return respath.replace("\\","/")
 
     # Method: _getCanonicalTexturePath
     # Returns normalized (canonical) path to texture
@@ -575,3 +617,4 @@ class XPlaneHeader():
 
 
         return o
+

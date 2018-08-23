@@ -1,0 +1,5 @@
+
+my/good/line/after a blank line
+
+my/other/good/line/after/a blank line and next is also an empty line
+

@@ -1,5 +1,8 @@
 from typing import Any, List, Optional, Union
 from io_xplane2blender.xplane_helpers import floatToStr
+from typing import Any,List,Optional,Sequence,Tuple,Union
+
+# TODO: This API is either redundent or self.value should be private.
 
 # Class: XPlaneAttribute
 # An Attribute
@@ -19,7 +22,7 @@ class XPlaneAttribute():
     #
     # Parameters:
     #   mixed value - Either a string or boolean
-    def addValue(self, value):
+    def addValue(self, value)->None:
         if value not in self.value:
             self.value.append(value)
 
@@ -39,7 +42,7 @@ class XPlaneAttribute():
     # Parameters:
     #   mixed value - Either a string or boolean
     #   int i - (default = 0) The index of the value.
-    def setValue(self, value, i = 0):
+    def setValue(self, value:Union[bool,float,int,str], i:int = 0):
         self.value[i] =  value
 
     # Method: getValue
@@ -61,7 +64,7 @@ class XPlaneAttribute():
     #
     # Returns:
     #   string - The value as string
-    def getValueAsString(self, i = 0):
+    def getValueAsString(self, i:int = 0)->str:
         value = self.getValue(i)
 
         if value == None:

@@ -1,3 +1,0 @@
-2 1100 Comment: No blank for the second line
-sim/test1	int	y 
-sim/test2	float	y 

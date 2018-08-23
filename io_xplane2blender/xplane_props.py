@@ -3,14 +3,11 @@
 
 import bpy
 import io_xplane2blender
-from io_xplane2blender import xplane_constants
-from io_xplane2blender import xplane_config
-from .xplane_constants import *
-
-#from io_xplane2blender import xplane_ui_dataref_search
-from typing import List
-from io_xplane2blender import xplane_helpers
+from io_xplane2blender import xplane_config, xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_constants import VERSION_1100
+from typing import List
+
+from .xplane_constants import *
 
 '''
  #####     ##   ##  ##   ####  ####  ####  #
@@ -50,18 +47,43 @@ see them culled over time
 
 - This file contains 99% of the properties. xplane2blender is set in xplane_updater.py and now we're stuck with it there
  
+- Properties use snake_case
+
 - Name is in the form of "Title Case Always", description is "Sentence case, no period". Don't be lazy and just copy and paste the constant name for all three columns.
 A good deal of time was spent making the UI look pretty for 3.4.0 so please don't undo that overtime
 
-- Please organize new properties by alphabetical order instead of how they'll appear in the UI
+- Properties and classes must be in alphabetical order, starting from the top, including if they're exceptionally related.
+Classes may be out of order if needed to be declared out of order. Try to make everything as alphabetically ordered as possible
+
+Take the existing class XPlaneExampleClass with properties
+currently listed as:
+
+- b_ex
+- a_ex
+- d_ex
+- e_ex
+- f_ex
+
+A new property called g_ex would go after b_ex, not f_ex!
+This is true even if it seemed like a natural fit to be paired with something else.
+
+<rant>
+Why? Because attempting to keep properties together as
+a set of "common uses" or "as ordered as in the UI" gets messy quick
+making it more confusing later as things are in a pseudo-arbitrary layout.
+
+In this way at least the top of every class will be organized,
+order slowly coming into fruition by way of
+undebatable alphabetical listing.
+</rant>
 
 - If you've actually read this far, congratulations! You get a cookie!
 
-- For defaults, use the constants, not redundantly copying their values 
+- For defaults, use the constants, not redundantly copying their values
 
 - Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
 
-- If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
+- Tip: If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
 '''
 
 # Class: XPlane2Blender 
@@ -259,6 +281,20 @@ class XPlaneCustomAttribute(bpy.types.PropertyGroup):
     )
 
 
+class ListItemCommand(bpy.types.PropertyGroup):
+    '''
+    This is essentially a copy of xplane_commands_txt_parser.CommandInfoStruct's members
+    '''
+    command = bpy.props.StringProperty(
+        name="Command For Search List",
+        description="A command path in the command search window. Comes from a Commands definitions file"
+    )
+
+    command_description = bpy.props.StringProperty(
+        name="Command Description For Search List",
+        description="Indicates the type, shown in a column in the commands search window. Comes from a Commands definitions file"
+    )
+
 class ListItemDataref(bpy.types.PropertyGroup):
     '''
     This is essentially a copy of xplane_datarefs_txt_parser.DatarefInfoStruct's members
@@ -289,29 +325,29 @@ class ListItemDataref(bpy.types.PropertyGroup):
     )
 
 
-class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
-    # This is only set through a DatarefSeachToggle's action.
-    # It should be the full path to the dataref property to change,
+class XPlaneCommandSearchWindow(bpy.types.PropertyGroup):
+    # This is only set through a CommandSeachToggle's action.
+    # It should be the full path to the command property to change,
     # as if it were being put into the Python console.
-    # For instance: "bpy.context.active_object.xplane.datarefs[0].path"
-    dataref_prop_dest = bpy.props.StringProperty(
+    # For instance: "bpy.context.active_object.xplane.commands[0].path"
+    command_prop_dest = bpy.props.StringProperty(
             default="",
-            name="Current Dataref Property To Change",
-            description="The destination dataref property, starting with 'bpy.context...'"
+            name="Current Command Property To Change",
+            description="The destination command property, starting with 'bpy.context...'"
     )
 
-    def onclick_dataref(self,context):
+    def onclick_command(self,context):
         '''
         This method is called when the template_list uilist writes to the current selected index as the user selects.
-        We dig out our stashed search info, write the dataref, and clear the current search, zapping out the UI.
+        We dig out our stashed search info, write the command, and clear the current search, zapping out the UI.
         '''
 
         xplane = context.scene.xplane
-        datarefs_prop_dest = xplane.dataref_search_window_state.dataref_prop_dest
-        datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
-        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
-        path = datarefs_search_list[datarefs_search_list_idx].dataref_path
-        assert datarefs_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
+        command_prop_dest = xplane.command_search_window_state.command_prop_dest
+        commands_search_list = xplane.command_search_window_state.command_search_list
+        commands_search_list_idx = xplane.command_search_window_state.command_search_list_idx
+        command = commands_search_list[commands_search_list_idx].command
+        assert command_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
         def getattr_recursive(obj,names):
             '''This automatically expands [] operators'''
             if len(names) == 1:
@@ -332,7 +368,59 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
                     obj = getattr(obj,names[0])
                 return getattr_recursive(obj,names[1:])
 
-        components = datarefs_prop_dest.split('.')
+        components = command_prop_dest.split('.')
+        assert components[0] == "bpy"
+        setattr(getattr_recursive(bpy, components[1:-1]), components[-1], command)
+        xplane.command_search_window_state.command_prop_dest = "" 
+
+    command_search_list = bpy.props.CollectionProperty(type=ListItemCommand)
+    command_search_list_idx = bpy.props.IntProperty(update=onclick_command)
+
+
+class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
+    # This is only set through a DatarefSeachToggle's action.
+    # It should be the full path to the dataref property to change,
+    # as if it were being put into the Python console.
+    # For instance: "bpy.context.active_object.xplane.datarefs[0].path"
+    dataref_prop_dest = bpy.props.StringProperty(
+            default="",
+            name="Current Dataref Property To Change",
+            description="The destination dataref property, starting with 'bpy.context...'"
+    )
+
+    def onclick_dataref(self,context):
+        '''
+        This method is called when the template_list uilist writes to the current selected index as the user selects.
+        We dig out our stashed search info, write the dataref, and clear the current search, zapping out the UI.
+        '''
+
+        xplane = context.scene.xplane
+        dataref_prop_dest = xplane.dataref_search_window_state.dataref_prop_dest
+        datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
+        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
+        path = datarefs_search_list[datarefs_search_list_idx].dataref_path
+        assert dataref_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
+        def getattr_recursive(obj,names):
+            '''This automatically expands [] operators'''
+            if len(names) == 1:
+                if '[' in names[0]:
+                    name = names[0]
+                    collection_name = name[:name.find('[')]
+                    index = name[name.find('[')+1:-1]
+                    return getattr(obj,collection_name)[int(index)]
+                else:
+                    return getattr(obj,names[0])
+            else:
+                if '[' in names[0]:
+                    name = names[0]
+                    collection_name = name[:name.find('[')]
+                    index = name[name.find('[')+1:-1]
+                    obj = getattr(obj,collection_name)[int(index)]
+                else:
+                    obj = getattr(obj,names[0])
+                return getattr_recursive(obj,names[1:])
+
+        components = dataref_prop_dest.split('.')
         assert components[0] == "bpy"
         setattr(getattr_recursive(bpy, components[1:-1]), components[-1], path)
         xplane.dataref_search_window_state.dataref_prop_dest = "" 
@@ -347,6 +435,37 @@ class XPlaneExportPathDirective(bpy.types.PropertyGroup):
         description="The export path that should be copied into a library.txt",
     )
  
+class XPlaneEmitter(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(
+        name = "Emitter Name",
+        description = "The name of the emitter, coming from the .pss file"
+    )
+
+    index = bpy.props.IntProperty(
+        name = "Emitter Index",
+        description = "Index of emitter array (re-work desc)",
+        default = 0
+    )
+
+
+class XPlaneEmpty(bpy.types.PropertyGroup):
+    emitter_props = bpy.props.PointerProperty(
+        name="Emitter Settings",
+        description="Settings for emitter, if special Type is an Emitter",
+        type=XPlaneEmitter
+    )
+
+    special_type = bpy.props.EnumProperty(
+        name="Empty Special Type",
+        description="Type XPlane2Blender item this is",
+        items= [
+            (EMPTY_USAGE_NONE,             "None", "Empty has regular meaning"),
+            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "Empty represents a particle emitter"),
+            (EMPTY_USAGE_EMITTER_SOUND,    "Sound Emitter", "Empty represents a sound emitter")
+        ]
+    )
+
+
 # Class: XPlaneDataref
 # A X-Plane Dataref
 #
@@ -875,6 +994,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         type = XPlaneExportPathDirective
     )
 
+    particle_system_file = bpy.props.StringProperty(
+        name = "Particle System Definition File",
+        description = "Relative file path to a .pss that defines particles",
+        subtype = "FILE_PATH"
+    )
+
     debug = bpy.props.BoolProperty(
         attr = "debug",
         name = "Debug",
@@ -1150,7 +1275,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 # Properties:
 #   layers - Collection of <XPlaneLayers>. Export settings for the Blender layers.
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
-    #TODO: Should this be named search_window_state_dataref since we're going to be making a command version too?
+    command_search_window_state = bpy.props.PointerProperty(
+            name = "Command Search Window State",
+            description = "An internally important property that keeps track of the state of the command search window",
+            type = XPlaneCommandSearchWindow
+            )
+
     dataref_search_window_state = bpy.props.PointerProperty(
             name = "Dataref Search Window State",
             description = "An internally important property that keeps track of the state of the dataref search window",
@@ -1177,7 +1307,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
         default = False) # Set this to true during development to avoid re-checking it
     
-    #TODO: These should be in their own namespace
+    #######################################
+    #TODO: Should these be in their own namespace?
     dev_enable_breakpoints = bpy.props.BoolProperty(
         attr = "dev_enable_breakpoints",
         name = "Enable Breakpoints",
@@ -1218,7 +1349,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
     version = bpy.props.EnumProperty(
         attr = "version",
         name = "X-Plane Version",
-        default = VERSION_1110,
+        default = VERSION_1130,
         items = [
             (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
@@ -1226,7 +1357,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             (VERSION_1040, "10.4x", "10.4x"),
             (VERSION_1050, "10.5x", "10.5x"),
             (VERSION_1100, "11.0x", "11.0x"),
-            (VERSION_1110, "11.1x", "11.1x")
+            (VERSION_1110, "11.1x", "11.1x"),
+            (VERSION_1130, "11.3x", "11.3x")
         ]
     )
 
@@ -1255,7 +1387,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         type=XPlane2BlenderVersion)
 
 # Class: XPlaneObjectSettings
-# Settings for Blender objects.
 #
 # Properties:
 #   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
@@ -1268,13 +1399,10 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 #   float lightLevel_v2 - Light Level Value 2
 #   string lightLevel_dataref - Light Level Dataref
 class XPlaneObjectSettings(bpy.types.PropertyGroup):
-    datarefs = bpy.props.CollectionProperty(
-        attr = "datarefs",
-        name = "X-Plane Datarefs",
-        description = "X-Plane Datarefs",
-        type = XPlaneDataref
-    )
-
+    '''
+    Settings for Blender objects. On Blender Objects these are accessed via a 
+    pointer property called xplane. Ex: bpy.data.objects[0].xplane.datarefs
+    '''
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
         name = "Custom X-Plane Attributes",
@@ -1287,6 +1415,23 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         name = "Custom X-Plane Animation Attributes",
         description = "User defined attributes for animation of the Object",
         type = XPlaneCustomAttribute
+    )
+
+    datarefs = bpy.props.CollectionProperty(
+        attr = "datarefs",
+        name = "X-Plane Datarefs",
+        description = "X-Plane Datarefs",
+        type = XPlaneDataref
+    )
+
+    # Since "Empty" is not a Blender type, only a "type" of Object, we have
+    # to put this on here, even if it might not be relavent
+    # to the current object.
+    # Always check for type == "EMPTY" before using!
+    special_empty_props = bpy.props.PointerProperty(
+        name = "Special Empty Properties",
+        description = "Empty Only Properties",
+        type = XPlaneEmpty
     )
 
     manip = bpy.props.PointerProperty(
@@ -1720,12 +1865,16 @@ def addXPlaneRNA():
     # basic classes
     bpy.utils.register_class(XPlane2BlenderVersion)
     bpy.utils.register_class(XPlaneAxisDetentRange)
+    bpy.utils.register_class(XPlaneCondition)
     bpy.utils.register_class(XPlaneCustomAttribute)
     bpy.utils.register_class(XPlaneDataref)
-    bpy.utils.register_class(XPlaneCondition)
+    bpy.utils.register_class(XPlaneEmitter)
+    bpy.utils.register_class(XPlaneEmpty)
+    bpy.utils.register_class(XPlaneExportPathDirective)
+    bpy.utils.register_class(ListItemCommand)
+    bpy.utils.register_class(XPlaneCommandSearchWindow)
     bpy.utils.register_class(ListItemDataref)
     bpy.utils.register_class(XPlaneDatarefSearchWindow)
-    bpy.utils.register_class(XPlaneExportPathDirective)
     bpy.utils.register_class(XPlaneManipulatorSettings)
     bpy.utils.register_class(XPlaneCockpitRegion)
     bpy.utils.register_class(XPlaneLOD)
@@ -1772,6 +1921,7 @@ def addXPlaneRNA():
 
 # Function: removeXPlaneRNA
 # Unregisters all properties.
+# TODO: Not sure if it is necissary to unregister in reverse order
 def removeXPlaneRNA():
     # complex classes, depending on basic classes
     bpy.utils.unregister_class(XPlaneObjectSettings)
@@ -1784,11 +1934,16 @@ def removeXPlaneRNA():
     # basic classes
     bpy.utils.unregister_class(XPlane2BlenderVersion)
     bpy.utils.unregister_class(XPlaneAxisDetentRange)
+    bpy.utils.unregister_class(XPlaneCondition)
     bpy.utils.unregister_class(XPlaneCustomAttribute)
     bpy.utils.unregister_class(XPlaneDataref)
+    bpy.utils.unregister_class(XPlaneEmitter)
+    bpy.utils.unregister_class(XPlaneEmpty)
+    bpy.utils.unregister_class(XPlaneExportPathDirective)
+    bpy.utils.unregister_class(ListItemCommand)
+    bpy.utils.unregister_class(XPlaneCommandSearchWindow)
     bpy.utils.unregister_class(ListItemDataref)
     bpy.utils.unregister_class(XPlaneDatarefSearchWindow)
-    bpy.utils.unregister_class(XPlaneExportPathDirective)
     bpy.utils.unregister_class(XPlaneManipulatorSettings)
     bpy.utils.unregister_class(XPlaneCockpitRegion)
     bpy.utils.unregister_class(XPlaneLOD)
