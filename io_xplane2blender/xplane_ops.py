@@ -6,6 +6,7 @@ import bpy
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_constants import MAX_COCKPIT_REGIONS, MAX_LODS
 from io_xplane2blender.xplane_ops_dev import *
+from io_xplane2blender.xplane_249_converter.xplane_249_ops import *
 from io_xplane2blender.xplane_utils import xplane_commands_txt_parser, \
                                            xplane_datarefs_txt_parser
 
@@ -733,93 +734,58 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
 
         return {'FINISHED'}
 
-# Function: addXPlaneOps
-# Registers all Operators.
-def addXPlaneOps():
-    #List all adds, then all removes in alphabetical order.
-    #Insert line breaks between related groups
-    bpy.utils.register_class(BONE_OT_add_xplane_dataref)
-    bpy.utils.register_class(BONE_OT_add_xplane_dataref_keyframe)
-    bpy.utils.register_class(BONE_OT_remove_xplane_dataref)
-    bpy.utils.register_class(BONE_OT_remove_xplane_dataref_keyframe)
+#List all adds, then all removes in alphabetical order.
+#Insert line breaks between related groups
+_XPlaneOps = [
+    BONE_OT_add_xplane_dataref,
+    BONE_OT_add_xplane_dataref_keyframe,
+    BONE_OT_remove_xplane_dataref,
+    BONE_OT_remove_xplane_dataref_keyframe,
 
-    bpy.utils.register_class(OBJECT_OT_add_xplane_dataref)
-    bpy.utils.register_class(OBJECT_OT_add_xplane_dataref_keyframe)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_dataref)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_dataref_keyframe)
+    OBJECT_OT_add_xplane_dataref,
+    OBJECT_OT_add_xplane_dataref_keyframe,
+    OBJECT_OT_remove_xplane_dataref,
+    OBJECT_OT_remove_xplane_dataref_keyframe,
 
-    bpy.utils.register_class(OBJECT_OT_add_xplane_export_path_directive)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_export_path_directive)
+    OBJECT_OT_add_xplane_export_path_directive,
+    OBJECT_OT_remove_xplane_export_path_directive,
 
-    bpy.utils.register_class(OBJECT_OT_add_xplane_lamp_attribute)
-    bpy.utils.register_class(OBJECT_OT_add_xplane_material_attribute)
-    bpy.utils.register_class(OBJECT_OT_add_xplane_object_attribute)
-    bpy.utils.register_class(OBJECT_OT_add_xplane_object_anim_attribute)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_lamp_attribute)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_material_attribute)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_object_attribute)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_object_anim_attribute)
+    OBJECT_OT_add_xplane_lamp_attribute,
+    OBJECT_OT_add_xplane_material_attribute,
+    OBJECT_OT_add_xplane_object_attribute,
+    OBJECT_OT_add_xplane_object_anim_attribute,
+    OBJECT_OT_remove_xplane_lamp_attribute,
+    OBJECT_OT_remove_xplane_material_attribute,
+    OBJECT_OT_remove_xplane_object_attribute,
+    OBJECT_OT_remove_xplane_object_anim_attribute,
 
-    bpy.utils.register_class(SCENE_OT_add_xplane_layer_attribute)
-    bpy.utils.register_class(SCENE_OT_add_xplane_layers)
-    bpy.utils.register_class(SCENE_OT_remove_xplane_layer_attribute)
+    SCENE_OT_add_xplane_layer_attribute,
+    SCENE_OT_add_xplane_layers,
+    SCENE_OT_remove_xplane_layer_attribute,
 
-    bpy.utils.register_class(OBJECT_OT_add_xplane_object_condition)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_object_condition)
-    bpy.utils.register_class(OBJECT_OT_add_xplane_material_condition)
-    bpy.utils.register_class(OBJECT_OT_remove_xplane_material_condition)
-    
-    bpy.utils.register_class(SCENE_OT_export_to_relative_dir)
+    OBJECT_OT_add_xplane_object_condition,
+    OBJECT_OT_remove_xplane_object_condition,
+    OBJECT_OT_add_xplane_material_condition,
+    OBJECT_OT_remove_xplane_material_condition,
 
-    #See xplane_ops_dev.py
-    #bpy.utils.register_class(SCENE_OT_dev_export_to_current_dir)
-    bpy.utils.register_class(SCENE_OT_dev_layer_names_from_objects)
-    bpy.utils.register_class(SCENE_OT_dev_rerun_updater)
-    bpy.utils.register_class(SCENE_OT_dev_create_lights_txt_summary)
+    SCENE_OT_export_to_relative_dir,
 
-    bpy.utils.register_class(XPLANE_OT_CommandSearchToggle)
-    bpy.utils.register_class(XPLANE_OT_DatarefSearchToggle)
-# Function: removeXPlaneOps
-# Unregisters all Operators.
-def removeXPlaneOps():
-    #List all adds, then all removes in alphabetical order.
-    #Insert line breaks between related groups
-    bpy.utils.unregister_class(BONE_OT_add_xplane_dataref)
-    bpy.utils.unregister_class(BONE_OT_add_xplane_dataref_keyframe)
-    bpy.utils.unregister_class(BONE_OT_remove_xplane_dataref)
-    bpy.utils.unregister_class(BONE_OT_remove_xplane_dataref_keyframe)
+    SCENE_OT_249_do_conversion,
 
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_dataref)
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_dataref_keyframe)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_dataref)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_dataref_keyframe)
+    SCENE_OT_dev_layer_names_from_objects,
+    SCENE_OT_dev_rerun_updater,
+    SCENE_OT_dev_create_lights_txt_summary,
 
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_export_path_directive)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_export_path_directive)
+    XPLANE_OT_CommandSearchToggle,
+    XPLANE_OT_DatarefSearchToggle
+] # type: List[bpy.types.Operator]
 
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_lamp_attribute)
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_attribute)
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_object_attribute)
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_object_anim_attribute)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_lamp_attribute)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_attribute)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_attribute)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_anim_attribute)
+def addXPlaneOps()->None:
+    '''Registers all Operators'''
+    for op in _XPlaneOps:
+        bpy.utils.register_class(op)
 
-    bpy.utils.unregister_class(SCENE_OT_add_xplane_layer_attribute)
-    bpy.utils.unregister_class(SCENE_OT_add_xplane_layers)
-    bpy.utils.unregister_class(SCENE_OT_remove_xplane_layer_attribute)
-
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_object_condition)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_object_condition)
-    bpy.utils.unregister_class(OBJECT_OT_add_xplane_material_condition)
-    bpy.utils.unregister_class(OBJECT_OT_remove_xplane_material_condition)
-
-    bpy.utils.unregister_class(SCENE_OT_export_to_relative_dir)
-
-    bpy.utils.unregister_class(SCENE_OT_dev_layer_names_from_objects)
-    bpy.utils.unregister_class(SCENE_OT_dev_rerun_updater)
-    bpy.utils.unregister_class(SCENE_OT_dev_create_lights_txt_summary)
-
-    bpy.utils.unregister_class(XPLANE_OT_CommandSearchToggle)
-    bpy.utils.unregister_class(XPLANE_OT_DatarefSearchToggle)
+def removeXPlaneOps()->None:
+    '''Unregisters all Operators'''
+    for op in _XPlaneOps:
+        bpy.utils.register_class(op)

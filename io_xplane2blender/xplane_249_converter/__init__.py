@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any, Dict, Optional, Tuple
 
 import bpy
@@ -189,10 +190,15 @@ def _getDatarefs()->Tuple[Dict[str,Tuple[str,int]],Dict[str,Dict[str,Any]]]:#JSO
     #print res
     return res
 
+'''
+These are all the Datarefs.txt in 249 regular and hierarchy formats
+'''
 (_249_datarefs,_249_hierarchy) = _getDatarefs()
 
 #--------------------------------------------------------------------------------
 def get_dataref_from_shortname(dataref_short:str)->Optional[Tuple[str,int]]:
+    #TODO What about custom datarefs? like whatever/leaf?
+    "Object has property {'leaf':'whatever','w_leaf_v1':-14,'w_leaf_v2':52.599}"
     if dataref_short in _249_datarefs: 
         dataref_full = _249_datarefs[dataref_short][0]
         array_size = _249_datarefs[dataref_short][1]
@@ -203,16 +209,29 @@ def get_dataref_from_shortname(dataref_short:str)->Optional[Tuple[str,int]]:
 def get_shortname_from_dataref(dataref_full:str)->Optional[str]:
     return _make_short_name(dataref_full)
 
-def decode_shortname_properties(dataref_short:str)->Dict[str,Any]:
+def decode_shortname_properties(dataref_short:str)->Tuple[str,Tuple[Optional[int],Dict[str,Any]]]:
+    '''
+    Given a 2.49 short name, return the path, frame_number, and a dictionary of properties
+    matching xplane_props.XPlaneDataref
+    '''
     #This comes from attempting to understand XPlaneAnimObject.getvals, line 225-, line 987-999
     #and the property table of a real life example using sa_acf_struct
-    match = re.match("(?P<path>[a-z]\w+)(?P<idx>\[\d+\])?"+\
-                     "(?P<anim_type>_show|_hide)?(?P<prop>_v(?P<frame_number>\d)|_loop)",s);
+    
+    #print("DFSHORT: " + dataref_short)
+    #TODO: Show/Hide doesn't work like the rest for path. It gets split? Value forms part of dataref
+    match = re.match(r"(?P<path>[a-z]\w+)(?P<idx>\[\d+\])?"+\
+                     r"(?P<anim_type>_show|_hide)?(?P<prop>_v(?P<frame_number>\d)|_loop)",dataref_short)
 
-    props = {}
     try:
         m_dict = match.groupdict(default="")
-        props['path'] = get_dataref_from_shortname(m_dict['path']) + m_dict['idx']
+        # print("M_DICT: {}".format(m_dict))
+        path = get_dataref_from_shortname(m_dict['path'])[0] + m_dict['idx'] # type: str
+        frame_number = None # type: int
+        props = dict(
+            #Matches XPlaneDataref, not dataref_short
+            zip(['value', 'loop', 'anim_type', 'show_hide_v1', 'show_hide_v2'], [None]*5)
+        )
+
         if m_dict['anim_type'] == "_show" or m_dict['anim_type'] == "_hide":
             props['anim_type'] = m_dict['anim_type'][1:]
         else:
@@ -220,30 +239,51 @@ def decode_shortname_properties(dataref_short:str)->Dict[str,Any]:
         if m_dict['prop'] == "_loop":
             props['loop'] = m_dict['prop'][1:]
         elif m_dict['prop'].startswith("_v"):
-            props['frame_number'] = m_dict['frame_number']
-        print(props)
-        return props
-    except:
-        return None
+            frame_number = int(m_dict['frame_number'])
+        #print("{},({},{})".format(path,frame_number,props))
+        return path, (frame_number, props)
+    except AttributeError:
+        return None, None
 
 def do_249_conversion():
-    for armature in filter(lambda obj: obj.type == 'ARMATURE',bpy.data.objects):
-        for pose_bone in armature.pose.bones:
-            bpy.ops.bone.add_xplane_dataref()
-            new_dataref = pose_bone.xplane.datarefs[-1]
-            dataref_setting = {}#['anim_type'] = 
-            # Sources for full dataref
-            # 
-            for game_prop in armature.game.properties:
-                ret = decode_shortname_properties(game_prop)
-                if ret:
-                    dataref_setting['anim_type'] = ret['anim_type']
-                    #bpy.context.
+    for armature in filter(lambda obj: obj.type == 'ARMATURE', bpy.data.objects):
+        bpy.context.scene.objects.active = armature
+        # All datarefs mentioned by game properties for bones of this armature
+        all_datarefs = {}
+        for game_prop in armature.game.properties:
+            path,prop_info = decode_shortname_properties(game_prop.name)
+            if not path:
+                continue
+            prop_info[1].update(value=game_prop.value)
+            print(prop_info[0])
+            print(prop_info[1])
+            if path not in all_datarefs:
+                all_datarefs[path] = []
+            #TODO: What about multiple datarefs?
+            all_datarefs[path].append(prop_info)
 
-                    
+        for k in all_datarefs:
+            all_datarefs[k] = sorted(all_datarefs[k])
 
-
-
-           
-
+        # What was the rule for multiple bones? Don't? Oh yes, don't! Short names must be unique or the whole system
+        # falls apart!
+        #for pose_bone in armature.pose.bones:
+        for path,dref_info in all_datarefs.items():
+            print("''''''")
+            print(path)
+            print(dref_info[0][0])
+            print("''''''")
+            if not list(filter(lambda dref: dref.path == dref_info.path, armature.xplane.datarefs)):
+                bpy.ops.object.add_xplane_dataref()
+            xp_dataref = armature.xplane.datarefs[-1]
+            for frame,dref_in in dref_info:
+                bpy.context.scene.frame_current = frame
+                # May get assaigned multiple times
+                xp_dataref.path = path
+                xp_dataref.value = dref_in['value']
+                # Would need to change index to change to different dataref
+                bpy.ops.object.add_xplane_dataref_keyframe(index=0)
+                xp_dataref.anim_type = dref_in['anim_type']
+                # Will need to get datarefs by path instead to set this prop
+                xp_dataref.loop = 0.0 #if dref_in['loop'] is None else dref_info[0][1]['loop']
 

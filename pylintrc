@@ -1,2 +1,5 @@
 [BASIC]
 disable=W0141, W0401, C0103
+
+[IMPORTS]
+ignored-modules=bpy,mathutils
