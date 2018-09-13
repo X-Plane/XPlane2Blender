@@ -20,7 +20,7 @@ class XPlaneEmpty(XPlaneObject):
         return
 
     def write(self):
-        debug = getDebug()
+        debug = xplane_config.getDebug()
         indent = self.xplaneBone.getIndent()
         o = super().write()
 
@@ -41,7 +41,7 @@ class XPlaneEmpty(XPlaneObject):
             bake_matrix = self.xplaneBone.getBakeMatrixForAttached()
             em_location = xplane_helpers.vec_b_to_x(bake_matrix.to_translation())
             #yaw,pitch,roll
-            theta, psi, phi = bake_matrix.to_euler()[:]
+            theta, psi, phi = tuple(map(math.degrees,bake_matrix.to_euler()[:]))
 
             floatToStr = xplane_helpers.floatToStr
             o += '{indent}EMITTER {name} {x} {y} {z} {phi} {theta} {psi}'.format(
