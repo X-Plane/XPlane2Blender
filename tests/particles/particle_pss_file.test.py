@@ -35,6 +35,9 @@ class TestParticlePssFile(XPlaneTestCase):
             filterLines
         )
 
+    def test_empties_without_pss_fails(self):
+        out = self.exportLayer(3)
+        self.assertLoggerErrors(1)
 
 #TI Class name above
 runTestCases([TestParticlePssFile])

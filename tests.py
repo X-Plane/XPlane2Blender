@@ -90,13 +90,21 @@ def main(argv=None)->int:
     clean_tmp_folder()
     if argv is None:
         argv = _make_argparse().parse_args(sys.argv[1:])
+        if argv.filter:
+            argv.filter = re.escape(argv.filter)
+        if argv.start_at:
+            argv.start_at = re.escape(argv.start_at)
+        if argv.exclude:
+            argv.exclude = re.escape(argv.exclude)
 
     def printTestBeginning(text):
         '''
         Print the C-Style and Vim comment block start tokens
         so that text editors can recognize places to automatically fold up the tests
         '''
-        print(("/*=== " + text + " ").ljust(75, '=')+'{{{')
+
+        # Why the hex escapes? So we don't fold our own code!
+        print(("\x2F*=== " + text + " ").ljust(75, '=')+'\x7B\x7B\x7B')
 
     def printTestEnd():
         '''
@@ -131,17 +139,18 @@ def main(argv=None)->int:
 
         return passes
 
+    exit_code = 0
     for root, dirs, files in os.walk('./tests'):
-        if exit_code != 0 and not argv.keep_going:
-            break
-        else:
-            exit_code = 0
-
         filtered_files = list(filter(lambda file: file.endswith('.test.py') and
                                      inFilter(os.path.join(root, file)),
                                      files))
+        if exit_code != 0:
+            break
 
         for pyFile in filtered_files:
+            if exit_code != 0:
+                break
+
             pyFile = os.path.join(root, pyFile)
             blendFile = pyFile.replace('.py', '.blend')
 
@@ -215,16 +224,18 @@ def main(argv=None)->int:
                 total_skipped        += skipped
             finally:
                 if errors or failures:
-                    exit_code = 1
                     if argv.print_fails:
                         printTestBeginning("Running file %s - FAILED" % (pyFile))
                         print(out)
+                        printTestEnd()
                     else:
                         print('%s FAILED' % pyFile)
 
-                    if argv.print_fails:
-                        printTestEnd()
-                elif (argv.quiet or argv.print_fails):
+                    if not argv.keep_going:
+                        exit_code = 1
+                    else:
+                        exit_code = 0
+                elif argv.quiet or argv.print_fails:
                     print('%s passed' % pyFile)
 
                 #THIS IS THE LAST THING TO PRINT BEFORE A TEST ENDS
