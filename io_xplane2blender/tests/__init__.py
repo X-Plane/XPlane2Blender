@@ -107,8 +107,8 @@ class XPlaneTestCase(unittest.TestCase):
         without comments or 0 length strings. All numeric parts are converted
         '''
         lines = [] # type: List[Union[float,str]]
-        for line in filter(lambda l: len(l) > 0, data.split('\n')):
-            if '#' in line and line.index('#') != 0:
+        for line in filter(lambda l: len(l) > 0 and l[0] != '#', data.split('\n')):
+            if '#' in line:
                 line = line[0:line.index('#')]
             line = line.strip()
             if line:

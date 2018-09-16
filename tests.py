@@ -90,6 +90,12 @@ def main(argv=None)->int:
     clean_tmp_folder()
     if argv is None:
         argv = _make_argparse().parse_args(sys.argv[1:])
+        if argv.filter:
+            argv.filter = re.escape(argv.filter)
+        if argv.start_at:
+            argv.start_at = re.escape(argv.start_at)
+        if argv.exclude:
+            argv.exclude = re.escape(argv.exclude)
 
     def printTestBeginning(text):
         '''
