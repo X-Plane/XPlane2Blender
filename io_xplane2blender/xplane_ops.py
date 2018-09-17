@@ -102,7 +102,7 @@ class OBJECT_OT_add_xplane_axis_detent_range(bpy.types.Operator):
     bl_description = 'Add X-Plane Axis Detent Range'
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.manip.axis_detent_ranges.add()
         return {'FINISHED'}
  
@@ -114,7 +114,7 @@ class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.manip.axis_detent_ranges.remove(self.index)
         return {'FINISHED'}
     
@@ -170,7 +170,7 @@ class OBJECT_OT_add_xplane_layer_lods(bpy.types.Operator):
     bl_description = 'Add X-Plane layer LODs'
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
 
         num_lods = int(obj.xplane.layer.lods)
 
@@ -202,7 +202,7 @@ class OBJECT_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
     bl_description = 'Add X-Plane layer Cockpit Regions'
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
 
         num_regions = int(obj.xplane.layer.cockpit_regions)
 
@@ -249,7 +249,7 @@ class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.layer.customAttributes.add()
         return {'FINISHED'}
 
@@ -263,7 +263,7 @@ class OBJECT_OT_remove_xplane_layer_attribute(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.layer.customAttributes.remove(self.index)
         return {'FINISHED'}
 
@@ -275,7 +275,7 @@ class OBJECT_OT_add_xplane_object_attribute(bpy.types.Operator):
     bl_description = 'Add a custom X-Plane Object Property'
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.customAttributes.add()
         return {'FINISHED'}
 
@@ -289,7 +289,7 @@ class OBJECT_OT_remove_xplane_object_attribute(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
@@ -301,7 +301,7 @@ class OBJECT_OT_add_xplane_object_anim_attribute(bpy.types.Operator):
     bl_description = 'Add a custom X-Plane Animation Property'
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.customAnimAttributes.add()
         return {'FINISHED'}
 
@@ -315,7 +315,7 @@ class OBJECT_OT_remove_xplane_object_anim_attribute(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.customAnimAttributes.remove(self.index)
         return {'FINISHED'}
 
@@ -327,7 +327,7 @@ class OBJECT_OT_add_xplane_material_attribute(bpy.types.Operator):
     bl_description = 'Add a custom X-Plane Material Property'
 
     def execute(self, context):
-        obj = context.object.active_material
+        obj = context.active_object.active_material
         obj.xplane.customAttributes.add()
         return {'FINISHED'}
 
@@ -341,7 +341,7 @@ class OBJECT_OT_remove_xplane_material_attribute(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object.active_material
+        obj = context.active_object.active_material
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
@@ -353,7 +353,7 @@ class OBJECT_OT_add_xplane_lamp_attribute(bpy.types.Operator):
     bl_description = 'Add a custom X-Plane Lamp Property'
 
     def execute(self, context):
-        obj = context.object.data
+        obj = context.active_object.data
         obj.xplane.customAttributes.add()
         return {'FINISHED'}
 
@@ -367,7 +367,7 @@ class OBJECT_OT_remove_xplane_lamp_attribute(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object.data
+        obj = context.active_object.data
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
@@ -379,7 +379,7 @@ class OBJECT_OT_add_xplane_dataref(bpy.types.Operator):
     bl_description = 'Add an X-Plane Dataref'
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.datarefs.add()
         return {'FINISHED'}
 
@@ -393,7 +393,7 @@ class OBJECT_OT_remove_xplane_dataref(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.datarefs.remove(self.index)
 
         path = getDatarefValuePath(self.index)
@@ -418,7 +418,7 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         path = getDatarefValuePath(self.index)
         value = obj.xplane.datarefs[self.index].value
 
@@ -442,7 +442,7 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         path = getDatarefValuePath(self.index)
         obj.xplane.datarefs[self.index].keyframe_delete(data_path="value", group="XPlane Datarefs")
 
@@ -456,7 +456,7 @@ class OBJECT_OT_add_xplane_export_path_directive(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.layer.export_path_directives.add()
         return {'FINISHED'}
  
@@ -468,7 +468,7 @@ class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.layer.export_path_directives.remove(self.index)
         return {'FINISHED'}
     
@@ -507,7 +507,7 @@ class BONE_OT_add_xplane_dataref(bpy.types.Operator):
 
     def execute(self, context):
         bone = context.bone
-        obj = context.object
+        obj = context.active_object
         bone.xplane.datarefs.add()
         return {'FINISHED'}
 
@@ -522,7 +522,7 @@ class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
 
     def execute(self, context):
         bone = context.bone
-        obj = context.object
+        obj = context.active_object
         bone.xplane.datarefs.remove(self.index)
         path = getDatarefValuePath(self.index, bone)
 
@@ -550,7 +550,7 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
         bone = context.active_bone # context.bone is not always available, for instance, during test_creation_helpers
                                    # Other uses will be replaced as needed. context.object doesn't appear to be affected
                                    # See also: https://blender.stackexchange.com/q/31759
-        armature = context.object
+        armature = context.active_object
         path = getDatarefValuePath(self.index, bone)
 
         groupName = "XPlane Datarefs "+bone.name
@@ -576,7 +576,7 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     def execute(self, context):
         bone = context.bone
         path = getDatarefValuePath(self.index)
-        armature = context.object
+        armature = context.active_object
         path = getDatarefValuePath(self.index, bone)
         armature.data.keyframe_delete(data_path=path, group="XPlane Datarefs "+bone.name)
 
@@ -590,7 +590,7 @@ class OBJECT_OT_add_xplane_object_condition(bpy.types.Operator):
     bl_description = 'Add an X-Plane condition'
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.conditions.add()
         return {'FINISHED'}
 
@@ -604,7 +604,7 @@ class OBJECT_OT_remove_xplane_object_condition(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object
+        obj = context.active_object
         obj.xplane.conditions.remove(self.index)
         return {'FINISHED'}
 
@@ -616,7 +616,7 @@ class OBJECT_OT_add_xplane_material_condition(bpy.types.Operator):
     bl_description = 'Add an X-Plane condition'
 
     def execute(self, context):
-        obj = context.object.active_material
+        obj = context.active_object.active_material
         obj.xplane.conditions.add()
         return {'FINISHED'}
 
@@ -630,7 +630,7 @@ class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
     index = bpy.props.IntProperty()
 
     def execute(self, context):
-        obj = context.object.active_material
+        obj = context.active_object.active_material
         obj.xplane.conditions.remove(self.index)
         return {'FINISHED'}
 

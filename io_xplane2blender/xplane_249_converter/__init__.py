@@ -4,6 +4,8 @@ from typing import Any, Dict, Optional, Tuple
 
 import bpy
 
+from io_xplane2blender.tests import test_creation_helpers
+
 def _remove_vowels(s):
     for eachLetter in s:
         if eachLetter in ['a','e','i','o','u','A','E','I','O','U','_']:
@@ -246,6 +248,16 @@ def decode_shortname_properties(dataref_short:str)->Tuple[str,Tuple[Optional[int
         return None, None
 
 def do_249_conversion():
+    # Global settings
+    bpy.context.scene.xplane.debug = True
+    #TODO: Take file name and make it layer name (TODO: What about root objects mode?)
+    #TODO: Remove clean up workspace as best as possible,
+    # remove areas with no space data and change to best
+    # defaults like Action Editor to Dope Sheet
+
+    # Make the default material for new objects to be assaigned
+    # TODO: Only needed if you have cubes without materials? Don't create,
+    # except for test files? Just don't be lazy about test files
     for armature in filter(lambda obj: obj.type == 'ARMATURE', bpy.data.objects):
         bpy.context.scene.objects.active = armature
         # All datarefs mentioned by game properties for bones of this armature
@@ -269,21 +281,14 @@ def do_249_conversion():
         # falls apart!
         #for pose_bone in armature.pose.bones:
         for path,dref_info in all_datarefs.items():
-            print("''''''")
-            print(path)
-            print(dref_info[0][0])
-            print("''''''")
-            if not list(filter(lambda dref: dref.path == dref_info.path, armature.xplane.datarefs)):
-                bpy.ops.object.add_xplane_dataref()
-            xp_dataref = armature.xplane.datarefs[-1]
             for frame,dref_in in dref_info:
-                bpy.context.scene.frame_current = frame
-                # May get assaigned multiple times
-                xp_dataref.path = path
-                xp_dataref.value = dref_in['value']
-                # Would need to change index to change to different dataref
-                bpy.ops.object.add_xplane_dataref_keyframe(index=0)
-                xp_dataref.anim_type = dref_in['anim_type']
-                # Will need to get datarefs by path instead to set this prop
-                xp_dataref.loop = 0.0 #if dref_in['loop'] is None else dref_info[0][1]['loop']
+                test_creation_helpers.set_animation_data(armature.pose.bones[0],
+                        [test_creation_helpers.KeyframeInfo(
+                            idx=frame,
+                            dataref_path=path,
+                            dataref_value=dref_in['value'],
+                            dataref_anim_type=dref_in['anim_type'],
+                            dataref_loop=0.0 if dref_in['loop'] is None else dref_in['loop']
+                        )],
+                        parent_armature=armature)
 
