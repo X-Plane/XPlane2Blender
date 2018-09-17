@@ -248,9 +248,21 @@ def decode_shortname_properties(dataref_short:str)->Tuple[str,Tuple[Optional[int
         return None, None
 
 def do_249_conversion():
+    #TODO: Create log, similar to conversion log
+
+    #TODO: Can only run this if it is evident there is 249 data.
+    # We can't simply ask if there are game properties in this file
+    # and probably shouldn't just rely on "it has to exist on disk" or we could
+    # lose out on good automation opportunities. Maybe.
+    if not bpy.data.filepath:
+        return
+
     # Global settings
     bpy.context.scene.xplane.debug = True
     #TODO: Take file name and make it layer name (TODO: What about root objects mode?)
+    filename = os.path.split(bpy.data.filepath)[1]
+    bpy.context.scene.xplane.layers[0].name = filename[:filename.index('.')]
+
     #TODO: Remove clean up workspace as best as possible,
     # remove areas with no space data and change to best
     # defaults like Action Editor to Dope Sheet
