@@ -7,7 +7,7 @@ from bpy.app.handlers import persistent
 import io_xplane2blender
 from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
 from io_xplane2blender.xplane_constants import LOGGER_LEVEL_ERROR,\
-    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS, BLEND_GLASS
+    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS, BLEND_GLASS, MAX_LODS
 from io_xplane2blender.xplane_helpers import XPlaneLogger
 
 
@@ -166,6 +166,22 @@ def load_handler(dummy):
         return
 
     scene = bpy.context.scene
+    # Even if the person doesn't choose Layers Mode,
+    # its just better to just add the dang things
+    # than deal with checking it and having a mouse click
+    if not scene.xplane.layers:
+        for i in range(len(scene.layers)):
+            scene.xplane.layers.add()
+
+            # add all lods
+            for ii in range(0, MAX_LODS-1):
+                scene.xplane.layers[i].lod.add()
+
+            # add cockpit regions
+            for ii in range(0, 4):
+                scene.xplane.layers[i].cockpit_region.add()
+            scene.xplane.layers[i].index = i
+
     current_version = xplane_helpers.VerStruct.current()
     ver_history = scene.xplane.xplane2blender_ver_history
     logger = xplane_helpers.logger

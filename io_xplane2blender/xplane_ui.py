@@ -201,8 +201,6 @@ def scene_layout(self, scene):
             for i in range(0, len(scene.layers)):
                 row = layout.row()
                 scene_layer_layout(self, scene, row, i)
-        else:
-            layout.row().operator('scene.add_xplane_layers')
 
     advanced_box = layout.box()
     advanced_box.label("Advanced Settings")
@@ -212,8 +210,6 @@ def scene_layout(self, scene):
 
     if scene.xplane.debug:
         debug_box = advanced_column.box()
-        #TODO: Remove profiler entirely?
-        #debug_box.prop(scene.xplane, "profile")
         debug_box.prop(scene.xplane, "log")
     
     scene_dev_layout(self,scene,layout)
