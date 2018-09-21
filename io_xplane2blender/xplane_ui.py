@@ -17,9 +17,9 @@ from .xplane_ops import *
 from .xplane_props import *
 
 
-# Class: LAMP_PT_xplane
+# Class: DATA_PT_xplane
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
-class LAMP_PT_xplane(bpy.types.Panel):
+class DATA_PT_xplane(bpy.types.Panel):
     '''XPlane Material Panel'''
     bl_label = "XPlane"
     bl_space_type = "PROPERTIES"
@@ -28,9 +28,14 @@ class LAMP_PT_xplane(bpy.types.Panel):
 
     def draw(self, context):
         obj = context.object
-        if(obj.type == "LAMP"):
+        version = int(bpy.context.scene.xplane.version)
+
+        if obj.type == "LAMP":
             lamp_layout(self, obj.data)
             custom_layout(self, obj.data, "LAMP")
+        if obj.type == "EMPTY" and version >= 1130:
+            empty_layout(self, obj)
+
 
 # Class: MATERIAL_PT_xplane
 # Adds X-Plane Material settings to the material tab. Uses <material_layout> and <custom_layout>.
@@ -101,8 +106,6 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 
         if obj.type in ("MESH", "EMPTY", "ARMATURE", "LAMP"):
             object_layer_layout(self, obj)
-            if obj.type == "EMPTY" and version >= 1130:
-                empty_layout(self, obj)
 
             animation_layout(self, obj)
             if obj.type == "MESH":
@@ -147,6 +150,9 @@ class BONE_PT_xplane(bpy.types.Panel):
 def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
     assert empty_obj.type == 'EMPTY'
 
+    # Note: Even though this is being displayed on the Empty > Data
+    # tab in the properties Window, the propery still comes
+    # from bpy.types.Object.xplane because there is no bpy.types.Empty
     emp = empty_obj.xplane.special_empty_props
 
     layout = self.layout
@@ -619,14 +625,14 @@ def material_layout(layout:UILayout,
             draw_box_column.prop(active_material.xplane, "blend_v1000")
         else:
             draw_box_column.prop(active_material.xplane, "blend")
-        
+
         if version >= 1100:
             draw_box_column.prop(active_material.xplane, "blend_glass")
         if version >= 1000:
             blend_prop_enum = active_material.xplane.blend_v1000
         else:
             blend_prop_enum = None
-            
+
         if active_material.xplane.blend == True and version < 1000:
             draw_box_column.prop(active_material.xplane, "blendRatio")
         elif blend_prop_enum == BLEND_OFF and version >= 1000:
@@ -699,12 +705,12 @@ def canPreviewEmit(mat):
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
 #   string type - Type of object. ("MESH", "MATERIAL", "LAMP")
-def custom_layout(self, obj, type):
-    if type in ("MESH", "ARMATURE", "OBJECT"):
+def custom_layout(self, obj:bpy.types.Object, object_type:str):
+    if object_type in ("MESH", "ARMATURE", "OBJECT"):
         oType = 'object'
-    elif type == "MATERIAL":
+    elif object_type == "MATERIAL":
         oType = 'material'
-    elif type == 'LAMP':
+    elif object_type == 'LAMP':
         oType = 'lamp'
     else:
         oType = None
@@ -725,14 +731,14 @@ def custom_layout(self, obj, type):
             subrow.operator("object.remove_xplane_"+oType+"_attribute", text = "", emboss = False, icon = "X").index = i
             subrow = subbox.row()
             subrow.prop(attr, "value")
-            if type in ("MATERIAL", "MESH", "LAMP", "ARMATURE"):
+            if object_type in ("MATERIAL", "MESH", "LAMP", "ARMATURE"):
                 subrow = subbox.row()
                 subrow.prop(attr, "reset")
                 subrow = subbox.row()
                 subrow.prop(attr, "weight")
 
         # animation attributes
-        if type in ("MESH", "ARMATURE", "OBJECT"):
+        if object_type in ("MESH", "ARMATURE", "OBJECT"):
             row = layout.row()
             row.label("Custom Animation Properties")
             row.operator("object.add_xplane_object_anim_attribute")
@@ -1289,31 +1295,27 @@ class XPlaneError(bpy.types.Operator):
         row = layout.row()
         row.label(text=self.msg_text,icon="ERROR")
 
+_XPlaneUITypes = [
+    BONE_PT_xplane,
+    DATA_PT_xplane,
+    MATERIAL_PT_xplane,
+    OBJECT_PT_xplane,
+    SCENE_PT_xplane,
+
+    UL_CommandSearchList,
+    UL_DatarefSearchList,
+    XPlaneError,
+    XPlaneMessage
+] 
+
 # Function: addXPlaneUI
 # Registers all UI Panels.
 def addXPlaneUI():
-    bpy.utils.register_class(BONE_PT_xplane)
-    bpy.utils.register_class(LAMP_PT_xplane)
-    bpy.utils.register_class(MATERIAL_PT_xplane)
-    bpy.utils.register_class(OBJECT_PT_xplane)
-    bpy.utils.register_class(SCENE_PT_xplane)
-
-    bpy.utils.register_class(UL_CommandSearchList)
-    bpy.utils.register_class(UL_DatarefSearchList)
-    bpy.utils.register_class(XPlaneError)
-    bpy.utils.register_class(XPlaneMessage)
+    for t in _XPlaneUITypes:
+        bpy.utils.register_class(t)
 
 # Function: removeXPlaneUI
 # Unregisters all UI Panels.
 def removeXPlaneUI():
-    bpy.utils.unregister_class(BONE_PT_xplane)
-    bpy.utils.unregister_class(LAMP_PT_xplane)
-    bpy.utils.unregister_class(MATERIAL_PT_xplane)
-    bpy.utils.unregister_class(OBJECT_PT_xplane)
-    bpy.utils.unregister_class(SCENE_PT_xplane)
-
-    bpy.utils.unregister_class(UL_CommandSearchList)
-    bpy.utils.unregister_class(UL_DatarefSearchList)
-    bpy.utils.unregister_class(XPlaneError)
-    bpy.utils.unregister_class(XPlaneMessage)
-
+    for t in _XPlaneUITypes:
+        bpy.utils.unregister_class(t)
