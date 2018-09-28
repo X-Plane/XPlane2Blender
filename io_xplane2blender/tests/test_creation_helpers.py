@@ -78,7 +78,7 @@ class DatablockInfo():
             rotation:Optional[Union[bpy.types.bpy_prop_array,Euler,Quaternion]]=None,
             scale:Vector=Vector((1,1,1))):
         '''
-        datablock_type: Must be 'MESH', 'ARMATURE', 'EMPTY', or 'LAMP' 
+        datablock_type: Must be 'MESH', 'ARMATURE', 'EMPTY', or 'LAMP'
         default for layers will be layer 1
         '''
         self.datablock_type = datablock_type
@@ -192,7 +192,7 @@ SHOW_ANIM_FAKE_T = (
             dataref_value=1.0,
             location=(0,0,0)),
         )
-  
+
 class ParentInfo():
     def __init__(self,
             parent:Optional[bpy.types.Object]=None,
@@ -241,8 +241,8 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
     Extra bones can come in the form of a list of BoneInfos you want created and parented or
     a number of bones and a unit vector in the direction you want them grown in
     When using extra_bones, the intial armature bone's data is replaced by the first bone
-    
-    1. extra_bones=None and bone_direction=None 
+
+    1. extra_bones=None and bone_direction=None
         Armature (uses defaults armature) of bpy.)
         |_Bone
     2. Using extra_bones:List[BoneInfo]
@@ -313,11 +313,11 @@ def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
 
     if info.parent_info:
         set_parent(ob,info.parent_info)
-    
+
     return ob
 
 def create_datablock_mesh(info:DatablockInfo,
-                primitive_shape="cube", #Must be "cube" or "cylinder" 
+                primitive_shape="cube", #Must be "cube" or "cylinder"
                 material_name:str="Material")->bpy.types.Object:
 
     assert info.datablock_type == "MESH"
@@ -333,7 +333,7 @@ def create_datablock_mesh(info:DatablockInfo,
             location=info.location,
             rotation=info.rotation,
             layers=info.layers)
-        
+
     ob = bpy.context.object
     ob.name = info.name if info.name is not None else ob.name
     if info.parent_info:
@@ -349,7 +349,7 @@ def create_datablock_mesh(info:DatablockInfo,
 def create_image_from_disk(filename:str,#Must end in .png
         filepath:str="//tex/{}")->Optional[bpy.types.Image]:
     assert os.path.splitext(filename)[1] == ".png"
-    # Load image file. Change here if the snippet folder is 
+    # Load image file. Change here if the snippet folder is
     # not located in you home directory.
     realpath = bpy.path.abspath(filepath.format(filename))
     try:
@@ -458,7 +458,7 @@ def delete_all_text_files():
     for text in bpy.data.texts:
         text.user_clear()
         bpy.data.texts.remove(text, do_unlink=True)
-    
+
 
 def delete_all_textures():
     for texture in bpy.data.textures:
@@ -621,7 +621,7 @@ def set_material(blender_object:bpy.types.Object,
                  material_name:str="Material",
                  material_props:Optional[Dict[str,Any]]=None,
                  create_missing:bool=True):
-    
+
     if len(blender_object.material_slots) == 0:
         bpy.ops.object.mode_set(mode='OBJECT')
         blender_object.data.materials.append(None)
@@ -646,7 +646,7 @@ def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
 
 def set_xplane_layer(layer:Union[int,io_xplane2blender.xplane_props.XPlaneLayer],layer_props:Dict[str,Any]):
     assert isinstance(layer,int) or isinstance(layer, io_xplane2blender.xplane_props.XPlaneLayer)
-    
+
     if isinstance(layer,int):
        layer = bpy.context.scene.xplane.layers[layer]
 
@@ -657,11 +657,11 @@ def create_initial_test_setup():
     bpy.ops.wm.read_homefile()
     delete_everything()
     bpy.context.scene.layers[0] = True
-    for i in range(1,20):
+    for i in range(1, 20):
         bpy.context.scene.layers[i] = False
-        
-    bpy.ops.scene.add_xplane_layers()
-    create_material_default() 
+
+    bpy.context.scene.xplane.debug = True
+    create_material_default()
 
     # Create text file
     header_str = "Unit Test Overview"
@@ -669,8 +669,8 @@ def create_initial_test_setup():
         unit_test_overview = bpy.data.texts.new(header_str)
     else:
         unit_test_overview = bpy.data.texts[header_str]
-    
-    unit_test_overview.write(header_str + '\n\n')
+
+    unit_test_overview.write(header_str + '\n\n    ')
 
     #bpy.ops.console.insert(text="bpy.ops.export.xplane_obj()")
 

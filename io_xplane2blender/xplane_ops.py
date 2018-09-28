@@ -170,9 +170,6 @@ class OBJECT_OT_add_xplane_layer_lods(bpy.types.Operator):
 
     def execute(self, context):
         obj = context.object
-
-        num_lods = int(obj.xplane.layer.lods)
-
         while len(obj.xplane.layer.lod) < MAX_LODS:
             obj.xplane.layer.lod.add()
 

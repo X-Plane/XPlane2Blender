@@ -114,7 +114,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             objType = obj.type
             if objType == "LAMP":
                 objType = "OBJECT"
-            lod_layout(self, obj)
+            lod_layout(self.layout, obj)
             weight_layout(self, obj)
             custom_layout(self, obj, objType)
 
@@ -1109,11 +1109,11 @@ def conditions_layout(self, obj, obgType):
 # Parameters:
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
-def lod_layout(self, obj):
-    if bpy.context.scene.xplane.exportMode == 'layers':
-        layout = self.layout
+def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
+    if True:
+    #if bpy.context.scene.xplane.exportMode == 'layers':
         row = layout.row()
-        row.prop(obj.xplane, "lod", text = "LOD")
+        row.prop(obj.xplane, "lod", text="LOD")
 
 # Function: weight_layout
 # Draws the UI for Object weight
