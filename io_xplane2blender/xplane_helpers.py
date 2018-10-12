@@ -49,7 +49,7 @@ def resolveBlenderPath(path:str)->str:
     else:
         return path
  
-def get_plugin_resources_folder()->str:
+def get_addon_resources_dir()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
 
 def vec_b_to_x(v):
