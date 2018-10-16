@@ -467,8 +467,8 @@ class XPlaneEmpty(bpy.types.PropertyGroup):
         description="Type XPlane2Blender item this is",
         items= [
             (EMPTY_USAGE_NONE,             "None", "Empty has regular meaning"),
-            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "Empty represents a particle emitter"),
-            (EMPTY_USAGE_EMITTER_SOUND,    "Sound Emitter", "Empty represents a sound emitter")
+            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "Empty represents a particle emitter")
+            #(EMPTY_USAGE_EMITTER_SOUND,    "Sound Emitter", "Empty represents a sound emitter")
         ]
     )
 
