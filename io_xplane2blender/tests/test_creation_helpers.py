@@ -576,7 +576,8 @@ def set_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy
         else:
             dataref_prop.value = kf_info.dataref_value
 
-        dataref_prop.loop = kf_info.dataref_loop
+        if kf_info.dataref_loop is not None:
+            dataref_prop.loop = kf_info.dataref_loop
 
         if kf_info.location:
             blender_struct.location = kf_info.location

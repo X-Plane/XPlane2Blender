@@ -1,8 +1,9 @@
 import os
-
 import shutil
 import sys
 import unittest
+
+from typing import Callable, List, Optional, Tuple, Union
 
 import bpy
 
@@ -23,6 +24,7 @@ TEST_RESULTS_REGEX = "RESULT: After {num_tests} tests got {errors} errors, {fail
 FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
+TMP_DIR = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
 
 class XPlaneTestCase(unittest.TestCase):
     def setUp(self, useLogger = True):
@@ -99,22 +101,20 @@ class XPlaneTestCase(unittest.TestCase):
 
             equals = abs(a[i] - b[i]) < tolerance
 
-    def parseFileToLines(self, data):
-        def parseNumbersInLine(part):
-            if part.isnumeric():
-                return float(part)
+    def parseFileToLines(self, data:str)->List[Union[float,str]]:
+        '''
+        Turns a string of \n seperated lines into a List[Union[float,str]]
+        without comments or 0 length strings. All numeric parts are converted
+        '''
+        lines = [] # type: List[Union[float,str]]
+        for line in filter(lambda l: len(l) > 0 and l[0] != '#', data.split('\n')):
+            if '#' in line:
+                line = line[0:line.index('#')]
+            line = line.strip()
+            if line:
+                lines.append(list(map(lambda part: float(part) if part.isnumeric() else part, line.split())))
 
-            return part
-
-        def parseLine(line):
-            # remove trailing comments
-            line = line.split('#')[0]
-            return list(map(parseNumbersInLine, line.strip().split()))
-
-        def filterLine(line):
-            return len(line) > 0 and line[0] != '#'
-
-        return list(map(parseLine, filter(filterLine, map(str.strip, data.strip().split('\n')))))
+        return lines
 
     def assertFilesEqual(self, a:str, b:str, filterCallback = None, floatTolerance = None):
         '''
@@ -216,6 +216,15 @@ class XPlaneTestCase(unittest.TestCase):
         out = self.exportLayer(layer, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
+    def assertRootObjectExportEqualsFixture(self,
+            root_object:Union[bpy.types.Object, str],
+            fixturePath: str = None,
+            tmpFilename: Optional[str] = None,
+            filterCallback: Callable[[List[Union[float, str]]], bool] = None,
+            floatTolerance: Optional[float] = None):
+        out = self.exportRootObject(root_object, tmpFilename)
+        self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
+
     # asserts that an attributes object equals a dict
     def assertAttributesEqualDict(self, attrs, d, floatTolerance = None):
         self.assertEquals(len(d), len(attrs), 'Attribute lists have different length')
@@ -246,11 +255,27 @@ class XPlaneTestCase(unittest.TestCase):
         out = xplaneFile.write()
 
         if dest:
-            tmpDir = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
-            tmpFile = os.path.join(tmpDir, dest + '.obj')
-            fh = open(tmpFile, 'w')
-            fh.write(out)
-            fh.close()
+            with open(os.path.join(TMP_DIR, dest + '.obj'), 'w') as tmp_file:
+                tmp_file.write(out)
+
+        return out
+
+    def exportRootObject(self, root_object:Union[bpy.types.Object,str], dest:str = None)->str:
+        '''
+        Returns the result of calling xplaneFile.write(),
+        where xplaneFile came from a root object (by name or Blender data).
+
+        The output can also simultaniously written to a destination
+        '''
+        if isinstance(root_object,str):
+            root_object = bpy.data.objects[root_object]
+
+        xplaneFile = xplane_file.createFileFromBlenderRootObject(root_object)
+        out = xplaneFile.write()
+
+        if dest:
+            with open(os.path.join(TMP_DIR, dest + '.obj'), 'w') as tmp_file:
+                tmp_file.write(out)
 
         return out
 

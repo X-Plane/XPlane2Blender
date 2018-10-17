@@ -435,6 +435,7 @@ class XPlaneExportPathDirective(bpy.types.PropertyGroup):
         description="The export path that should be copied into a library.txt",
     )
  
+
 class XPlaneEmitter(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(
         name = "Emitter Name",
@@ -443,8 +444,14 @@ class XPlaneEmitter(bpy.types.PropertyGroup):
 
     index = bpy.props.IntProperty(
         name = "Emitter Index",
-        description = "Index of emitter array (re-work desc)",
-        default = 0
+        description = "The index in the emitter's array",
+        min = 0
+    )
+
+    index_enabled = bpy.props.BoolProperty(
+        name = "Emitter Index Enabled",
+        description = "Enables the emitter array index",
+        default=False
     )
 
 
@@ -460,8 +467,8 @@ class XPlaneEmpty(bpy.types.PropertyGroup):
         description="Type XPlane2Blender item this is",
         items= [
             (EMPTY_USAGE_NONE,             "None", "Empty has regular meaning"),
-            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "Empty represents a particle emitter"),
-            (EMPTY_USAGE_EMITTER_SOUND,    "Sound Emitter", "Empty represents a sound emitter")
+            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "Empty represents a particle emitter")
+            #(EMPTY_USAGE_EMITTER_SOUND,    "Sound Emitter", "Empty represents a sound emitter")
         ]
     )
 
