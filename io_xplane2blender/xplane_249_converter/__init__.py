@@ -1,3 +1,11 @@
+'''
+This is the entry point for the 249 converter. Before you start poking around
+make sure you read the available documentation! Don't assume anything!
+
+Reading List:
+
+- https://github.com/der-On/XPlane2Blender/wiki/2.49:-How-It-Works:-Dataref-Encoding-and-Decoding
+'''
 import collections
 import enum
 import os
@@ -10,21 +18,32 @@ import bpy
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.tests import test_creation_helpers
 
-DatarefFull = Text
-SName = Text
-TailName = Text # Never has an index in it. TODO: Except with sim/weather/wind_altitude_msl_m[2] and etc. AAAARGGGGG!
-BoneName = Union[SName,TailName,Text] # Could have SName + "[idx]" or TailName + "[idx]"
-LookupRecord = Optional[Tuple[DatarefFull, int]]
+DatarefFull = str
+SName = str
+TailName = str
+BoneName = Union[SName, TailName, str] # Could have SName + "[idx]" or TailName + "[idx]"
 
-def _remove_vowels(s:Text)->Text:
+LookupRecord = Optional[Tuple[DatarefFull, int]] # The int represents array size
+
+class LookupResult():
+    __slots__ = ['record', 'sname_success', 'tailname_success']
+    def __init__(self, record:LookupRecord=None, sname_success:bool=False, tailname_success:bool=False):
+        self.record =             record
+        self.sname_success =      sname_success
+        self.tailname_success =   tailname_success
+
+    def __str__(self):
+        return "record: {}, sname_success: {}, tailname_success: {}".format(self.record,self.sname_success,self.tailname_success)
+
+def _remove_vowels(s: str)->str:
     for eachLetter in s:
         if eachLetter in ['a','e','i','o','u','A','E','I','O','U','_']:
             s = s.replace(eachLetter, '')
     b = ''.join([letter for letter in s if letter not in {'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U', '_'}])
-    assert s == b, "s {} b {}".format(s,b)
+    assert s == b, "s {} b {}".format(s, b)
     return s
 
-def _make_short_name(full_path:DatarefFull)->SName:
+def _make_short_name(full_path: DatarefFull)->SName:
     '''
     The spec seems to be
     - take the first letter of every component in the path,
@@ -227,29 +246,6 @@ def get_known_dataref_from_tailname(dataref_tailname:TailName)->Optional[LookupR
     else:
         return None
 
-class LookupResult():
-    __slots__ = ['record', 'sname_success', 'tailname_success']
-    def __init__(self, record:LookupRecord=None, sname_success:bool=False, tailname_success:bool=False):
-        self.record =             record
-        self.sname_success =      sname_success
-        self.tailname_success =   tailname_success
-
-    def __str__(self):
-        return "record: {}, sname_success: {}, tailname_success: {}".format(self.record,self.sname_success,self.tailname_success)
-
-#TODO: Useless?
-'''
-@enum.unique
-class DatarefEncodingTypes(enum.Enum):
-    KNOWN_SNAME = 0,
-    KNOWN_SNAME_IDX = 
-    KNOWN_TAILNAME = 1,
-    KNOWN_TAILNAME_IDX = 2,
-'''
-
-
-
-#def identify_text(text:str)->Set[
 
 def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupResult:
     '''
@@ -268,11 +264,11 @@ def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupRe
     assert sname is not None and tailname is not None, "sname and tailname are both None"
 
     lookup_result = LookupResult()
-    for i,lookup_name in enumerate([sname, tailname]):
+    for i, lookup_name in enumerate([sname, tailname]):
         if lookup_name in _249_datarefs:
-            print("i: {}, lookup_name: {}".format(i,lookup_name))
-            print("lookup = {}".format(_249_datarefs[lookup_name]))
             '''
+            Can't use this without the assumption that sname is always sname.
+            #TODO: Maybe we'd better not use this
             if i == 0:
                 assert _249_datarefs[lookup_name] is not None,\
                     "sname lookup with {} returned None".format(lookup_name)
@@ -281,15 +277,17 @@ def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupRe
             if i == 1 and lookup_result.record != None:
                 assert lookup_result.record == _249_datarefs[lookup_name],\
                     ("good tailname lookup != good sname lookup: {}"
-                        .format(_249_datarefs[lookup_name]))
+                     .format(_249_datarefs[lookup_name]))
 
             lookup_result.record = _249_datarefs[lookup_name]
+            print("{}: Using '{}', found {}".format(i, lookup_name, _249_datarefs[lookup_name]))
+
             if i == 0 and lookup_result.record:
                 lookup_result.sname_success = True
             if i == 1:
                 lookup_result.tailname_success = True
         else:
-            print("skipping " + lookup_name)
+            print("{}: {} not found in datarefs dict, skipping".format(i,lookup_name))
 
     return lookup_result
 
@@ -297,19 +295,14 @@ def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupRe
 # littered with array accessing, string munging. By using
 # a common and clear vocabulary we'll be able to tame
 # the split, convert, append, convert beast
-
-def sname_from_full_dataref(dataref_full:DatarefFull)->SName:
+def sname_from_dataref_full(dataref_full:DatarefFull)->SName:
     '''Turns any full dataref into a shortname version'''
     return _make_short_name(dataref_full)
 
-def tailname_from_full_dataref(dataref_full:DatarefFull)->TailName:
+def tailname_from_dataref_full(dataref_full:DatarefFull)->TailName:
     return dataref_full.split('/')[-1]
 
-def get_shortname_from_gameprop(game_prop:str)->Optional[str]:
-    x = game_prop.split("[")[0].split("_")
-    return x
-
-ParsedGameAnimValueProp = Tuple[DatarefFull, Tuple[Optional[int], Dict[str, Any]]]
+ParsedGameAnimValueProp = Tuple[DatarefFull, Tuple[Optional[int], Dict[str, Union[int, float, str]]]]
 
 def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
                                known_datarefs: Tuple[str, Optional[str]]
@@ -321,44 +314,36 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     #This comes from attempting to understand XPlaneAnimObject.getvals, line 225-, line 987-999
     #and the property table of a real life example using sa_acf_struct
 
-    #TODO: Show/Hide doesn't work like the rest for path. It gets split? Value forms part of dataref
-
-    #Note: This Regex also captures _loop!
     #---This block of code attempts to parse the game prop--------------
     def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,str]]:
+        # Note: This Regex also captures _loop!
         PROP_NAME_IDX_REGEX = r"(?P<prop_root>[a-zA-Z]\w+)(\[(?P<idx>\d+)\])?"
         PROP_NAME_FNUMBER = r"_v(?P<frame_number>\d+)$"
         name = game_prop.name.strip()
 
-        m_dict = { #TODO: Needs better name
-            'anim_type': '',
-            'idx': '',
-            'prop_root': '',
-            'frame_number': '',
-            'loop': ''
-        }
+        parsed_results = {key:'' for key in ['anim_type', 'idx', 'prop_root', 'frame_number', 'loop']}
 
         print("Attempting to parse {}".format(game_prop.name))
         if re.search(r"_v\d+_(show|hide)$", name):
             print("1. Matched show/hide")
-            m_dict.update(
+            parsed_results.update(
                 re.search(PROP_NAME_IDX_REGEX + PROP_NAME_FNUMBER,
                          name).groupdict(default=""))
-            m_dict['anim_type'] = name[-4:]  #capture show or hide
+            parsed_results['anim_type'] = name[-4:]  #capture show or hide
         elif re.search(r"_loop$", name):
             print("2. Matched loop")
-            m_dict.update(
+            parsed_results.update(
                 re.search(PROP_NAME_IDX_REGEX,
                     name).groupdict(default=""))
             # I got tired of re-writing the regex to try and make this work,
             # instead we manually remove '_loop' and be done with it.
-            m_dict['prop_root'] = m_dict['prop_root'].split('_loop')[0]
-            m_dict['loop'] = True
+            parsed_results['prop_root'] = parsed_results['prop_root'].split('_loop')[0]
+            parsed_results['loop'] = True
         elif re.search(PROP_NAME_FNUMBER, name):
-            print("3. Matched value")
-            m_dict.update(
+            print("3. Matched anim-value")
+            parsed_results.update(
                 re.search(PROP_NAME_IDX_REGEX+PROP_NAME_FNUMBER,
-                     name).groupdict(default=""))
+                          name).groupdict(default=""))
         elif re.match(PROP_NAME_IDX_REGEX + "$", name):
             print("4. Matched disambiguating key or other text")
             print("Text: {}".format(name))
@@ -368,29 +353,30 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             print("Unparsable Text: {}".format(name))
             return None
 
-        assert (m_dict['anim_type'] or m_dict['frame_number'] or m_dict['loop']), "Parsed game_prop.name is missing meaningful values: {}".format(m_dict)
-        print("Parse Results: {}".format(m_dict))
-        return m_dict
+        assert parsed_results['anim_type'] or parsed_results['frame_number'] or parsed_results['loop'], "Parsed game_prop.name is missing meaningful values: {}".format(parsed_results)
+        print("Parse Results: {}".format(parsed_results))
+        return parsed_results
 
-    m_dict = parse_game_prop_name(game_prop)
-    if not m_dict:
+    parsed_results = parse_game_prop_name(game_prop)
+    if not parsed_results:
         return None
-    elif m_dict['idx']:
+    elif parsed_results['idx']:
         roots_to_test = [
-            m_dict['prop_root'], # rfind catches the "cloud case"
-            m_dict['prop_root'] + "[{}]".format(m_dict['idx']),
+            parsed_results['prop_root'], # rfind catches the "cloud case"
+            parsed_results['prop_root'] + "[{}]".format(parsed_results['idx']),
             ]
     else:
-        roots_to_test = [m_dict['prop_root']]
-    #What about _make_short_name copy from getcustomdatarefs?
+        roots_to_test = [parsed_results['prop_root']]
+
+    #TODO: What about _make_short_name copy from getcustomdatarefs?
     print("Roots to Test: {}".format(roots_to_test))
     #------------------------------------------------------------------
 
+    #------------------------------------------------------------------
     # Our very important out path
     path = None # type: str
-
     for prop_root in roots_to_test:
-        print("prop_root: {}".format(prop_root))
+        #print("prop_root: {}".format(prop_root))
         def match_root_to_known_datarefs(
                 prop_root: str,
                 known_datarefs: List[DatarefFull])->Optional[DatarefFull]:
@@ -399,14 +385,12 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             (which is not necessarily a problem)
             '''
             for known_dataref in known_datarefs:
-                print("known_dataref: {}".format(known_dataref))
-                # known_tail could have an IDX or not
-                known_tail = known_dataref.split('/')[-1] # type: TailName
+                #print("known_dataref: {}".format(known_dataref))
+                known_tail = tailname_from_dataref_full(known_dataref) # type: TailName
                 known_sname = _make_short_name(known_dataref)
-                # Case 1 or 2
-                # Works for SNames, TailNames and the annoying + "[idx]" cloud case
+                # Works for Known SNames, TailNames and the annoying + "[idx]" cloud case
                 if prop_root in _249_datarefs:
-                    print("prop_root (in _249_datarefs): {}".format(prop_root))
+                    #print("prop_root (in _249_datarefs): {}".format(prop_root))
                     # 1. Tail-Name could be None or in there. Duplicate (this also captures sname case sometimes)
                     if (_249_datarefs[prop_root] and _249_datarefs[prop_root][0] == known_dataref):
                         return known_dataref
@@ -415,36 +399,39 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             else: #nobreak
                 print("prop_root: {} didn't match any of the known_datarefs".format(prop_root))
                 return None
-        path = match_root_to_known_datarefs(prop_root,known_datarefs)
+        path = match_root_to_known_datarefs(prop_root, known_datarefs)
         if path:
             break
     else: #nobreak
         assert False, "Couldn't match prop_root to anything, which isn't how you're developing right now!"
 
-    #TODO: Duplicate
+    #TODO: Duplicate, can't decide if I like the for...else nobreak pattern
     if not path:
         assert False, "Couldn't match prop_root to anything, which isn't how you're developing right now!"
 
+    #print("Final Path: " + path)
+    #------------------------------------------------------------------
 
-    print("Path: " + path)
+    #------------------------------------------------------------------
     frame_number = None # type: int
-    props = dict(
-        # Matches attributes of xplane_props.XPlaneDataref
-        zip(['value', 'loop', 'anim_type', 'show_hide_v1', 'show_hide_v2'], [None]*5)
-    )
-
-    if m_dict['anim_type'] == "show" or m_dict['anim_type'] == "hide":
-        props['anim_type'] = m_dict['anim_type'][1:]
+    # Matches attributes of xplane_props.XPlaneDataref
+    props = {key:None for key in ['value', 'loop', 'anim_type', 'show_hide_v1', 'show_hide_v2']}
+    #TODO: logging, not asserting
+    assert game_prop.type == "INT" or "FLOAT", "game_prop ({},{}) value is not 'FLOAT' vs 'INT'".format(game_prop.name, game_prop.value)
+    if parsed_results['anim_type'] == "show" or parsed_results['anim_type'] == "hide":
+        props['anim_type'] = parsed_results['anim_type'][1:]
+        props['value'] = float(game_prop.value)
     else:
         props['anim_type'] = 'transform'
-    if m_dict['loop']:
-        #TODO: logging, not asserting
-        assert game_prop.type == "INT" or game_prop.type == "FLOAT", "game_prop {}'s value {} is of the wrong type for loop. fix it".format(game_prop.name,game_prop.value)
-        props['loop'] = game_prop.value
-    elif m_dict['frame_number']:
-        frame_number = int(m_dict['frame_number'])
-    print("{}, ({},{})".format(path,frame_number,props))
-    props['value'] = game_prop.value
+        props['value'] = float(game_prop.value)
+
+    if parsed_results['loop']:
+        props['loop'] = float(game_prop.value)
+    elif parsed_results['frame_number']:
+        frame_number = int(parsed_results['frame_number'])
+
+    print("Final Decoded Results: {},  ({}, {})".format(path, frame_number, props))
+    #------------------------------------------------------------------
     return path, (frame_number, props)
 
 def do_249_conversion():
@@ -459,7 +446,9 @@ def do_249_conversion():
 
     # Global settings
     bpy.context.scene.xplane.debug = True
-    #TODO: Take file name and make it layer name (TODO: What about root objects mode?)
+    #TODO: Take file name and make it layer name
+    #TODO: What about root objects mode?
+    #TODO: What about those using layers as LODs?
     filename = os.path.split(bpy.data.filepath)[1]
     bpy.context.scene.xplane.layers[0].name = filename[:filename.index('.')]
 
@@ -471,10 +460,10 @@ def do_249_conversion():
     # TODO: Only needed if you have cubes without materials? Don't create,
     # except for test files? Just don't be lazy about test files
     for armature in filter(lambda obj: obj.type == 'ARMATURE', bpy.data.objects):
-        print(armature.name)
+        print("Decoding Game-Properties for '{}'".format(armature.name))
         bpy.context.scene.objects.active = armature
         # All datarefs mentioned by bone names and game properties in this armature
-        all_arm_drefs = {} # type: Dict[DatarefFull,ParsedGameAnimValueProperty]
+        all_arm_drefs = {} # type: Dict[DatarefFull,List[ParsedGameAnimValueProperty]]
 
         #TODO: What about show/hide which is not dependent on bone names!
         for bone in armature.pose.bones:
@@ -482,79 +471,54 @@ def do_249_conversion():
             bone_name = bone.name.split('.')[0].strip() # type: BoneName
             bone_name_no_idx = bone_name.split('[')[0] # type: Union[SName,TailName]
 
-            #print('---')
-            #print("bone_name: %s" % bone_name)
-            #print("bone_name_no_idx: %s" % bone_name_no_idx)
-            #We don't know what we're looking at here? We need to be precise, so lookup_dataref can make assumptions
+            print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
+            lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
 
-            # Only an sname could actually have an idx, hence why we test.
-            lookup_result = lookup_dataref(bone_name,bone_name_no_idx)
-
-            #print("lookup_results: %s" % lookup_result)
-            if lookup_result.record: # and lookup_result.sname_success:
-                # doesn't matter of which success? If you've got it you've got it. right
+            print("Lookup Results: %s" % lookup_result)
+            if lookup_result.record:
+                # SName or TailName, we've got it!
                 dref_full = lookup_result.record[0] # type: Optional[str]
-            #else lookup_result.record and lookup_result.tailname_success:
-            # Need game property resolution
-            #    dref_full = None
-            #    pass
             else:
-                # and if you don't have it, you don't and you need game prop look up to figure it out conclusively
+                # Catches known but ambiguous and unknown datarefs. Needs disambiguating
                 dref_full = None # type: Optional[str]
-            #print("dref_full: " + str(dref_full))
-            #print('---')
+
             #Test if it is a known name
+            #TODO: Pretty this section can be folded into previous if/else
             if dref_full:
                 all_arm_drefs[dref_full] = []
             else:
-                # Cases:
-                # Sometimes the bone name could match a short prop name, or it, it would actually need to come from matching a full
-                # If the short name wasn't a known name, it could be ambiguious or a custom dataref
                 if bone_name in armature.game.properties:
-                    #dref_short is the last component of the dataref,
-                    #TODO: Unsure if we need another call to make_short_name
                     disambiguating_key = armature.game.properties[bone_name].value + "/" + bone_name
-                    print("disambiguating key: " + disambiguating_key)
+                    print("Disambiguating Key: " + disambiguating_key)
                     all_arm_drefs[disambiguating_key] = []
                 else:
-                    #TODO: Problem bone here
-                    print("PROBLEM NAME! " + bone_name)
                     print("Bone {} found that doesn't have key. Not disambiguated, treating as plain bone.".format(bone_name))
-                    #TODO: Going to need a unit test for this
+                    continue
 
-        print("Finally:")
-        print(all_arm_drefs.keys())
-        print()
+        print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
+
         for game_prop in armature.game.properties:
-            print("game_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
+            print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
             decoded_animval = decode_game_animvalue_prop(game_prop, tuple(all_arm_drefs.keys()))
             if decoded_animval:
                 path, prop_info = decoded_animval
             else:
                 #TODO: Error code goes here? How do we do these?
                 #TODO: What about disambiguating keys returning none from decode_game_animvalue?
-                print("continuing from " + game_prop.name)
+                print("Could not decode {}".format(game_prop.name))
                 continue
-            print('Out: {},{}'.format(path,prop_info))
+            #print('Out: {},{}'.format(path,prop_info))
             assert path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + path
-            #TODO: What abou tthis part?
-            #if path not in all_arm_drefs:
-                #print("not insane!" + path)
-
-                #assert False, "New path discovered! " + path
-
-                #all_arm_drefs[path] = []
             all_arm_drefs[path].append(prop_info)
 
-        print("hi {}".format(all_arm_drefs))
+        #print("all_arm_drefs pre-sorted: {}".format(all_arm_drefs))
         #TODO: If you only have datarefs in bone name only
+        # Sorting by keyframe is necissary so they're applied correctly
         for k in all_arm_drefs:
             all_arm_drefs[k].sort()
-        print("hi {}".format(all_arm_drefs))
+        #print("all_arm_datarefs post-sorted: {}".format(all_arm_drefs))
 
-        # What was the rule for multiple bones? Don't? Oh yes, don't! Short names must be unique or the whole system
-        # falls apart!
-        #for pose_bone in armature.pose.bones:
+        # Finally, the creation step!
         for path, dref_info in all_arm_drefs.items():
             for frame, dref_in in dref_info:
                 test_creation_helpers.set_animation_data(
