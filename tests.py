@@ -193,9 +193,12 @@ def main(argv=None)->int:
                 print(' '.join(blender_args))
 
             #Run Blender, normalize output line endings because Windows is dumb
-            out = subprocess.check_output(blender_args, stderr = subprocess.STDOUT, universal_newlines=True) # type: str
+            out = subprocess.check_output(blender_args, stderr=subprocess.STDOUT, universal_newlines=True) # type: str
             if not (argv.quiet or argv.print_fails):
-                print(out)
+                print('\n'.join(filter(lambda l: not (l.startswith("ID user decrement error")
+                                                      or l.startswith("found bundled python")
+                                                      or l.startswith("read blend")),
+                                       out.splitlines())))
 
             # TestResults from the current test
             testsRun, errors, failures, skipped = (0,) * 4
