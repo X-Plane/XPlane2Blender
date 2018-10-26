@@ -23,7 +23,13 @@ SName = str
 TailName = str
 BoneName = Union[SName, TailName, str] # Could have SName + "[idx]" or TailName + "[idx]"
 
-LookupRecord = Optional[Tuple[DatarefFull, int]] # The int represents array size
+ArraySize = int # From DataRefs.txt datarefs size, always >= 0
+LookupRecord = Optional[Tuple[DatarefFull, ArraySize]] # The int represents array size
+
+FrameNumber = int # always >= 1, the Blender 2.49 frame counter starts at 1
+
+# Representing ('path', ('frame_number', {'value', 'loop', 'anim_type', 'show_hide_v1', 'show_hide_v2'}))
+ParsedGameAnimValueProp = Tuple[DatarefFull, Tuple[Optional[FrameNumber], Dict[str, Optional[Union[int, float, str]]]]]
 
 class LookupResult():
     __slots__ = ['record', 'sname_success', 'tailname_success']
@@ -132,10 +138,6 @@ def _getDatarefs()->Dict[Union[SName,TailName],LookupRecord]:
                     raise err
                 sname=_make_short_name(d[0])
                 ref=d[0].split('/')
-                if 'yoke_roll_ratio' in line:
-                    import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_6.5.0.201809011628\pysrc')
-                    #import pydevd;pydevd.settrace()
-                    #print("sname!: " + sname)
 
                 if ref[1] in ['test', 'version']: # Diff #3
                     continue # hack: no usable datarefs
@@ -299,10 +301,11 @@ def sname_from_dataref_full(dataref_full:DatarefFull)->SName:
     '''Turns any full dataref into a shortname version'''
     return _make_short_name(dataref_full)
 
+
 def tailname_from_dataref_full(dataref_full:DatarefFull)->TailName:
+    '''Gets the tail from any full dataref'''
     return dataref_full.split('/')[-1]
 
-ParsedGameAnimValueProp = Tuple[DatarefFull, Tuple[Optional[int], Dict[str, Union[int, float, str]]]]
 
 def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
                                known_datarefs: Tuple[str, Optional[str]]
@@ -317,7 +320,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     #---This block of code attempts to parse the game prop--------------
     def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,str]]:
         # Note: This Regex also captures _loop!
-        PROP_NAME_IDX_REGEX = r"(?P<prop_root>[a-zA-Z]\w+)(\[(?P<idx>\d+)\])?"
+        PROP_NAME_IDX_REGEX = r"(?P<prop_root>[a-zA-Z]\w+)(\[(?P<idx>\d+)\])?" #TODO: breaks cloud case + "[idx]"
         PROP_NAME_FNUMBER = r"_v(?P<frame_number>\d+)$"
         name = game_prop.name.strip()
 
@@ -369,12 +372,12 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         roots_to_test = [parsed_results['prop_root']]
 
     #TODO: What about _make_short_name copy from getcustomdatarefs?
-    print("Roots to Test: {}".format(roots_to_test))
+    print("Testing Roots: {}".format(roots_to_test))
     #------------------------------------------------------------------
 
     #------------------------------------------------------------------
     # Our very important out path
-    path = None # type: str
+    path = None # type: DatarefFull
     for prop_root in roots_to_test:
         #print("prop_root: {}".format(prop_root))
         def match_root_to_known_datarefs(
@@ -415,9 +418,9 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     #------------------------------------------------------------------
     frame_number = None # type: int
     # Matches attributes of xplane_props.XPlaneDataref
-    props = {key:None for key in ['value', 'loop', 'anim_type', 'show_hide_v1', 'show_hide_v2']}
+    props = {key:None for key in ['value', 'loop', 'anim_type', 'show_hide_v1', 'show_hide_v2']} # type: Dict[str,Optional[int,float,str]]
     #TODO: logging, not asserting
-    assert game_prop.type == "INT" or "FLOAT", "game_prop ({},{}) value is not 'FLOAT' vs 'INT'".format(game_prop.name, game_prop.value)
+    assert game_prop.type in {"INT", "FLOAT"}, "game_prop ({},{}) value is not 'FLOAT' vs 'INT'".format(game_prop.name, game_prop.value)
     if parsed_results['anim_type'] == "show" or parsed_results['anim_type'] == "hide":
         props['anim_type'] = parsed_results['anim_type'][1:]
         props['value'] = float(game_prop.value)
@@ -462,40 +465,68 @@ def do_249_conversion():
     for armature in filter(lambda obj: obj.type == 'ARMATURE', bpy.data.objects):
         print("Decoding Game-Properties for '{}'".format(armature.name))
         bpy.context.scene.objects.active = armature
-        # All datarefs mentioned by bone names and game properties in this armature
-        all_arm_drefs = {} # type: Dict[DatarefFull,List[ParsedGameAnimValueProperty]]
 
-        #TODO: What about show/hide which is not dependent on bone names!
-        for bone in armature.pose.bones:
-            # 2.49 slices and trims bone names before look up
-            bone_name = bone.name.split('.')[0].strip() # type: BoneName
-            bone_name_no_idx = bone_name.split('[')[0] # type: Union[SName,TailName]
+        def find_all_datarefs_in_armature(armature: bpy.types.Object)->Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]:
+            '''
+            Returns a dictionary all datarefs mentioned in the bone names and game props,
+            paired with the Bone the data was taken from an a list for
+            future parsed game properties.
 
-            print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
-            lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
+            Bones without useful names are ignored.
+            '''
 
-            print("Lookup Results: %s" % lookup_result)
-            if lookup_result.record:
-                # SName or TailName, we've got it!
-                dref_full = lookup_result.record[0] # type: Optional[str]
-            else:
-                # Catches known but ambiguous and unknown datarefs. Needs disambiguating
-                dref_full = None # type: Optional[str]
+            all_arm_drefs = {} # type: Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]
 
-            #Test if it is a known name
-            #TODO: Pretty this section can be folded into previous if/else
-            if dref_full:
-                all_arm_drefs[dref_full] = []
-            else:
-                if bone_name in armature.game.properties:
-                    disambiguating_key = armature.game.properties[bone_name].value + "/" + bone_name
-                    print("Disambiguating Key: " + disambiguating_key)
-                    all_arm_drefs[disambiguating_key] = []
+            #TODO: What about show/hide which is not dependent on bone names!
+            for bone in armature.pose.bones:
+                # 2.49 slices and trims bone names before look up
+                bone_name = bone.name.split('.')[0].strip() # type: BoneName
+                bone_name_no_idx = bone_name.split('[')[0] # type: Union[SName,TailName]
+
+                print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
+                lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
+
+                print("Lookup Results: %s" % lookup_result)
+                if lookup_result.record:
+                    # SName or TailName, we've got it!
+                    dref_full = lookup_result.record[0] # type: Optional[str]
                 else:
-                    print("Bone {} found that doesn't have key. Not disambiguated, treating as plain bone.".format(bone_name))
-                    continue
+                    # Catches known but ambiguous and unknown datarefs. Needs disambiguating
+                    dref_full = None # type: Optional[str]
 
-        print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
+                #Test if it is a known name
+                #TODO: Pretty this section can be folded into previous if/else
+                if dref_full:
+                    all_arm_drefs[dref_full] = (bone, [])
+                else:
+                    #TODO: What about a situation where you have my/custom/ref
+                    # and my/custom/ref[1]
+                    # Is this possible? Yes! ref:my/custom is disamb key, snames are ref[1] and ref.
+                    # Seems very unlikely, however.
+                    if bone_name in armature.game.properties:
+                        disambiguating_prop = armature.game.properties[bone_name]
+                    elif bone_name_no_idx in armature.game.properties:
+                        disambiguating_prop = armature.game.properties[bone_name_no_idx]
+                    else:
+                        print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
+                        continue
+
+                    if disambiguating_prop.type == "STRING":
+                        disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"),bone_name)
+                        print("Disambiguating Key: " + disambiguating_key)
+                        all_arm_drefs[disambiguating_key] = (bone,[])
+                    else:
+                        print("Probable disambiguating prop ({}:{}) has wrong value type {}".format(
+                            disambiguating_prop.name,
+                            disambiguating_prop.value,
+                            disambiguating_prop.type))
+                        print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
+                        continue
+
+            print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
+            return all_arm_drefs
+
+        all_arm_drefs = find_all_datarefs_in_armature(armature)
 
         for game_prop in armature.game.properties:
             print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
@@ -509,20 +540,19 @@ def do_249_conversion():
                 continue
             #print('Out: {},{}'.format(path,prop_info))
             assert path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + path
-            all_arm_drefs[path].append(prop_info)
+            all_arm_drefs[path][1].append(prop_info)
 
         #print("all_arm_drefs pre-sorted: {}".format(all_arm_drefs))
-        #TODO: If you only have datarefs in bone name only
         # Sorting by keyframe is necissary so they're applied correctly
         for k in all_arm_drefs:
-            all_arm_drefs[k].sort()
+            all_arm_drefs[k][1].sort()
         #print("all_arm_datarefs post-sorted: {}".format(all_arm_drefs))
 
         # Finally, the creation step!
-        for path, dref_info in all_arm_drefs.items():
+        for path, (bone, dref_info) in all_arm_drefs.items():
             for frame, dref_in in dref_info:
                 test_creation_helpers.set_animation_data(
-                    armature.pose.bones[0], [
+                    bone, [
                         test_creation_helpers.KeyframeInfo(
                             idx=frame,
                             dataref_path=path,
