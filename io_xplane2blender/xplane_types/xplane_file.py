@@ -554,13 +554,6 @@ class XPlaneFile():
                 )
                 o += self.commands.write(lodIndex)
 
-        #TODO: Who's idea was this? Is this in the OBJ Spec?
-        # if lods are present we need to attach a closing lod
-        # containing all objects not in a lod that should always be visible
-        if numLods > 0 and tallestFar < 100000:
-            o += "ATTR_LOD %s 100000\n" % floatToStr(tallestFar)
-            o += self.commands.write()
-
         return o
 
     # Method: cleanup
