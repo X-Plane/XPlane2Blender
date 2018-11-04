@@ -7,15 +7,17 @@ Reading List:
 - https://github.com/der-On/XPlane2Blender/wiki/2.49:-How-It-Works:-Dataref-Encoding-and-Decoding
 '''
 import collections
+import copy
 import enum
 import os
 import re
 import sys
 from typing import Any, Dict, List, Optional, Text, Tuple, Union
+from operator import attrgetter
 
 import bpy
 
-from io_xplane2blender import xplane_helpers
+from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.tests import test_creation_helpers
 
 DatarefFull = str
@@ -28,9 +30,6 @@ LookupRecord = Optional[Tuple[DatarefFull, ArraySize]] # The int represents arra
 
 FrameNumber = int # always >= 1, the Blender 2.49 frame counter starts at 1
 
-# Representing ('path', ('frame_number', {'value', 'loop', 'anim_type', 'show_hide_v1', 'show_hide_v2'}))
-ParsedGameAnimValueProp = Tuple[DatarefFull, Tuple[Optional[FrameNumber], Dict[str, Optional[Union[int, float, str]]]]]
-
 class LookupResult():
     __slots__ = ['record', 'sname_success', 'tailname_success']
     def __init__(self, record:LookupRecord=None, sname_success:bool=False, tailname_success:bool=False):
@@ -40,6 +39,43 @@ class LookupResult():
 
     def __str__(self):
         return "record: {}, sname_success: {}, tailname_success: {}".format(self.record,self.sname_success,self.tailname_success)
+
+class ParsedGameAnimValueProp():
+    '''All the possible data that can be taken from a game prop'''
+    def __init__(self, 
+                path: DatarefFull,
+                anim_type:str, # "show", "hide", or "transform"
+                frame_number: Optional[FrameNumber]=None,
+                loop: Optional[float]=None,
+                show_hide_v1: Optional[float]=None,
+                show_hide_v2: Optional[float]=None,
+                value: Optional[float]=None
+                ):
+        assert any(map(lambda v: v is not None, [loop, show_hide_v1, show_hide_v2, value,])), "ParsedGameAnimValue parameters ({},{},{},{},{},{},{}) did not have meaningful value".format(path,anim_type,frame_number,loop, show_hide_v1, show_hide_v2, value)
+
+        assert anim_type in {xplane_constants.ANIM_TYPE_SHOW, xplane_constants.ANIM_TYPE_HIDE, xplane_constants.ANIM_TYPE_TRANSFORM}, "anim_type cannot be None or '', is {}".format(anim_type)
+        if frame_number is not None:
+            assert frame_number > 0, "frame_number must be > 0, as per Blender 2.49 behavior"
+        assert path, "path cannot be None"
+        sh = {show_hide_v1, show_hide_v2}
+        assert sh == {None,None} or [v for v in sh if isinstance(v,float)]
+
+        self.anim_type = anim_type
+        self.frame_number = frame_number
+        self.loop = loop
+        self.path = path
+        self.show_hide_v1 = show_hide_v1
+        self.show_hide_v2 = show_hide_v2
+        self.value = value
+    def __str__(self):
+        return "{}".format((
+        self.anim_type,
+        self.frame_number,
+        self.loop,
+        self.path,
+        self.show_hide_v1,
+        self.show_hide_v2,
+        self.value,))
 
 def _remove_vowels(s: str)->str:
     for eachLetter in s:
@@ -308,7 +344,7 @@ def tailname_from_dataref_full(dataref_full:DatarefFull)->TailName:
 
 
 def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
-                               known_datarefs: Tuple[str, Optional[str]]
+                               known_datarefs: Tuple[DatarefFull],
                                ) -> Optional[ParsedGameAnimValueProp]:
     '''
     Given a 2.49 short name, return the path, (frame_number, and a dictionary of properties)
@@ -338,6 +374,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             parsed_results.update(
                 re.search(PROP_NAME_IDX_REGEX,
                     name).groupdict(default=""))
+            parsed_results['anim_type'] = xplane_constants.ANIM_TYPE_TRANSFORM
             # I got tired of re-writing the regex to try and make this work,
             # instead we manually remove '_loop' and be done with it.
             parsed_results['prop_root'] = parsed_results['prop_root'].split('_loop')[0]
@@ -347,6 +384,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             parsed_results.update(
                 re.search(PROP_NAME_IDX_REGEX+PROP_NAME_FNUMBER,
                           name).groupdict(default=""))
+            parsed_results['anim_type'] = xplane_constants.ANIM_TYPE_TRANSFORM
         elif re.match(PROP_NAME_IDX_REGEX + "$", name):
             print("4. Matched disambiguating key or other text")
             print("Text: {}".format(name))
@@ -418,24 +456,25 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     #------------------------------------------------------------------
     frame_number = None # type: int
     # Matches attributes of xplane_props.XPlaneDataref
-    props = {key:None for key in ['value', 'loop', 'anim_type', 'show_hide_v1', 'show_hide_v2']} # type: Dict[str,Optional[int,float,str]]
     #TODO: logging, not asserting
+
     assert game_prop.type in {"INT", "FLOAT"}, "game_prop ({},{}) value is not 'FLOAT' vs 'INT'".format(game_prop.name, game_prop.value)
-    if parsed_results['anim_type'] == "show" or parsed_results['anim_type'] == "hide":
-        props['anim_type'] = parsed_results['anim_type'][1:]
-        props['value'] = float(game_prop.value)
-    else:
-        props['anim_type'] = 'transform'
-        props['value'] = float(game_prop.value)
 
-    if parsed_results['loop']:
-        props['loop'] = float(game_prop.value)
-    elif parsed_results['frame_number']:
-        frame_number = int(parsed_results['frame_number'])
+    # Show/Hide always have _v1 and _v2, defaults came from the UI code.
+    # Here 1 and 2 does not mean "Frame 1 and 2" but simply "Value 1 and 2"
+    parsed_prop = ParsedGameAnimValueProp(
+            path = path,
+            anim_type = parsed_results['anim_type'],
+            frame_number = int(parsed_results['frame_number']) if parsed_results['anim_type'] == xplane_constants.ANIM_TYPE_TRANSFORM else None,
+            loop = float(game_prop.value) if parsed_results['loop'] else None,
+            show_hide_v1 = None, #TODO: Show/Hide not implemented yet!
+            show_hide_v2 = None, #TODO: Show/Hide not implemented yet!
+            value = float(game_prop.value) #TODO: Show/Hide not implemented yet
+            )
 
-    print("Final Decoded Results: {},  ({}, {})".format(path, frame_number, props))
+    print("Final Decoded Results: {}".format(parsed_prop))
     #------------------------------------------------------------------
-    return path, (frame_number, props)
+    return parsed_prop
 
 def do_249_conversion():
     #TODO: Create log, similar to conversion log
@@ -488,17 +527,9 @@ def do_249_conversion():
 
                 print("Lookup Results: %s" % lookup_result)
                 if lookup_result.record:
-                    # SName or TailName, we've got it!
-                    dref_full = lookup_result.record[0] # type: Optional[str]
+                    all_arm_drefs[lookup_result.record[0]] = (bone, [])
                 else:
                     # Catches known but ambiguous and unknown datarefs. Needs disambiguating
-                    dref_full = None # type: Optional[str]
-
-                #Test if it is a known name
-                #TODO: Pretty this section can be folded into previous if/else
-                if dref_full:
-                    all_arm_drefs[dref_full] = (bone, [])
-                else:
                     #TODO: What about a situation where you have my/custom/ref
                     # and my/custom/ref[1]
                     # Is this possible? Yes! ref:my/custom is disamb key, snames are ref[1] and ref.
@@ -532,32 +563,78 @@ def do_249_conversion():
             print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
             decoded_animval = decode_game_animvalue_prop(game_prop, tuple(all_arm_drefs.keys()))
             if decoded_animval:
-                path, prop_info = decoded_animval
+                assert decoded_animval.path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + decoded_animval.path
+                all_arm_drefs[decoded_animval.path][1].append(decoded_animval)
             else:
                 #TODO: Error code goes here? How do we do these?
                 #TODO: What about disambiguating keys returning none from decode_game_animvalue?
                 print("Could not decode {}".format(game_prop.name))
                 continue
-            #print('Out: {},{}'.format(path,prop_info))
-            assert path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + path
-            all_arm_drefs[path][1].append(prop_info)
 
-        #print("all_arm_drefs pre-sorted: {}".format(all_arm_drefs))
-        # Sorting by keyframe is necissary so they're applied correctly
-        for k in all_arm_drefs:
-            all_arm_drefs[k][1].sort()
-        #print("all_arm_datarefs post-sorted: {}".format(all_arm_drefs))
+        for path, (bone, parsed_props) in all_arm_drefs.items():
+            '''
+            Animation Data Model
+            Concept   | 2.49                   | 2.78
+            ----------|------------------------|-----
+            Action    | Dict[channel_name,Ipo] | List[FCurves] but also has groups of channels to organize it
+            Channel   | Uses bone name, semanti| List[FCurves], semantics, subsection of Action's list
+            Group     | Optional               | Mandatory, List[Channels], name is bone name
+            Curve     | IPOCurve               | FCurve
+            Anim Data | in bezierPoints        | in keyframe_points
+
+            During read, 2.7x turns channels into groups and IPOCurves into FCurves.
+
+            During export, 2.49 replaces missing dataref values with 0 (if unspecified)
+            and 1 for deleted middle keys and the last key (if unspecified) so that
+            every Blender keyframe has a pair.
+
+            An ex 7 frame animation:
+            nth Frame|Value   |In Game Props?| As In OBJ
+            ---------|--------|--------------|----------------
+                    1|0       | No           | ..._key 0
+                    2|0.0     | Yes          | ..._key 0.0
+                    3|2001.0  | Yes          | ..._key 2001.0
+                    4|-3999.0 | Yes          | ..._key -3999.0
+                    5|1       | No (deleted) | ..._key 1
+                    6|1.0     | Yes          | ..._key 1.0
+                    7|1.0     | No           | ..._key 1
+
+            In 2.78 we make a fake parsed prop to so that we have the same behavior.
+            '''
+
+            # A sorted list of each bone's channel's min/max gets us the first and last created frames
+            # We sort, subtract their components and get y , sorting FCurve's range 
+            s = sorted([c.range() for c in armature.animation_data.action.groups[bone.name].channels])
+            first_frame = int(s[0][0]) # min value of smallest member in list
+            last_frame = max(int(s[-1][1]), 2) # Max val of largest member or 2 (for datarefs with only 0 or 1 parsed props)
+
+            print("\nBone name {}: Filling between first_frame {}, last_frame {}".format(bone.name,first_frame,last_frame))
+            sorted_parsed_props = sorted([p for p in parsed_props if p], key=attrgetter('frame_number'))
+
+            for ensure_has in range(1,last_frame+1):
+                ensure_has_idx = ensure_has-1
+                new_pp_frame = ParsedGameAnimValueProp(path,xplane_constants.ANIM_TYPE_TRANSFORM,ensure_has,value=int(bool(ensure_has_idx))) # Why int? To match 2.49 behavior of using ints, which was and probably is meaningless.
+                try:
+                    if sorted_parsed_props[ensure_has_idx].frame_number != ensure_has:
+                        print("Inserting at %d" % ensure_has_idx)
+                        sorted_parsed_props.insert(ensure_has_idx,new_pp_frame)
+                except IndexError as e:
+                    print("Inserting at %d" % ensure_has_idx)
+                    sorted_parsed_props.insert(ensure_has_idx,new_pp_frame)
+
+            parsed_props[:] = sorted_parsed_props
 
         # Finally, the creation step!
-        for path, (bone, dref_info) in all_arm_drefs.items():
-            for frame, dref_in in dref_info:
+        for path, (bone, parsed_props) in all_arm_drefs.items():
+            for frame, parsed_prop in enumerate(parsed_props, 1):
                 test_creation_helpers.set_animation_data(
                     bone, [
                         test_creation_helpers.KeyframeInfo(
                             idx=frame,
                             dataref_path=path,
-                            dataref_value=dref_in['value'],
-                            dataref_anim_type=dref_in['anim_type'],
-                            dataref_loop=0.0 if dref_in['loop'] is None else dref_in['loop'])
+                            dataref_value=parsed_prop.value,
+                            dataref_anim_type=parsed_prop.anim_type,
+                            dataref_loop=0.0 if parsed_prop.loop is None else parsed_prop.loop)
                     ],
                     parent_armature=armature)
+
