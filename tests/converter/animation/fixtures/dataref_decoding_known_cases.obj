@@ -178,7 +178,7 @@ IDX	143
 	# translation keyframes
 	ANIM_trans_begin	sim/cockpit2/controls/yoke_roll_ratio
 	ANIM_trans_key	0	0	0	0
-	ANIM_trans_key	500	1.35000002	0	0
+	ANIM_trans_key	0.94999999	1.35000002	0	0
 	ANIM_trans_end
 		# 3 Mesh: known_amb_tailname
 		# MESH: known_amb_tailname	weight: 0
@@ -191,9 +191,9 @@ IDX	143
 	# static translation
 	ANIM_trans	2	0	0	2	0	0
 	# translation keyframes
-	ANIM_trans_begin	sim/flightmodel2/engines/engine_rotation_speed_rad_sec
-	ANIM_trans_key	10	0	0	0
-	ANIM_trans_key	1000	0	0	-3
+	ANIM_trans_begin	sim/flightmodel2/engines/engine_rotation_speed_rad_sec[1]
+	ANIM_trans_key	70	0	0	0
+	ANIM_trans_key	200	0	0	-3
 	ANIM_trans_end
 		# 3 Mesh: known_unamb_sname
 		# MESH: known_unamb_sname	weight: 0
@@ -219,14 +219,14 @@ IDX	143
 	# static translation
 	ANIM_trans	-6	0	0	-6	0	0
 	# translation keyframes
-	ANIM_trans_begin	sim/weapons/x
+	ANIM_trans_begin	sim/weapons/x[0]
 	ANIM_trans_key	0	0	0	0
 	ANIM_trans_key	0	-1.25	0	0
-	ANIM_trans_key	-1999	-6.80000019	0	0
-	ANIM_trans_key	2001	-12.39999962	0	0
-	ANIM_trans_key	1	-16.10000038	0	0
-	ANIM_trans_key	1	-18.5	0	0
-	ANIM_trans_key	1	-18.5	0	-3.4000001
+	ANIM_trans_key	0.2	-1.79999995	0	0
+	ANIM_trans_key	0.5	-2	0	0
+	ANIM_trans_key	1	-3	0	0
+	ANIM_trans_key	1	-5.4000001	0	0
+	ANIM_trans_key	1	-5.4000001	0	-3.4000001
 	ANIM_trans_end
 		# 3 Mesh: known_unamb_tailname2
 		# MESH: known_unamb_tailname2	weight: 0

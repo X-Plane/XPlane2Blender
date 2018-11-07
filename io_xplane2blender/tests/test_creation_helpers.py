@@ -96,7 +96,7 @@ class DatablockInfo():
 
 class KeyframeInfo():
     def __init__(self,
-            idx:int,
+            frame_number:int,
             dataref_path:str,
             dataref_value:Optional[float]=None,
             dataref_show_hide_v1:Optional[float]=None,
@@ -113,7 +113,7 @@ class KeyframeInfo():
         default parameters of None represents "no data set", not (0,0,0) or 0.0 or other common default
         '''
 
-        self.idx           = idx
+        self.frame_number = frame_number
         self.dataref_path  = dataref_path
         self.dataref_value = dataref_value
         self.dataref_show_hide_v1 = dataref_show_hide_v1
@@ -144,43 +144,43 @@ class KeyframeInfo():
 # Common presets for animations
 R_2_FRAMES_45_Y_AXIS = (
         KeyframeInfo(
-            idx=1,
+            frame_number=1,
             dataref_path="sim/cockpit2/engine/actuators/throttle_ratio_all",
             dataref_value=0.0,
             rotation=(0,0,0)),
         KeyframeInfo(
-            idx=2,
+            frame_number=2,
             dataref_path="sim/cockpit2/engine/actuators/throttle_ratio_all",
             dataref_value=1.0,
             rotation=(0,45,0)))
 
 T_2_FRAMES_1_X = (
         KeyframeInfo(
-            idx=1,
+            frame_number=1,
             dataref_path="sim/graphics/animation/sin_wave_2",
             dataref_value=0.0,
             location=(0,0,0)),
         KeyframeInfo(
-            idx=2,
+            frame_number=2,
             dataref_path="sim/graphics/animation/sin_wave_2",
             dataref_value=1.0,
             location=(1,0,0)))
 
 T_2_FRAMES_1_Y = (
         KeyframeInfo(
-            idx=1,
+            frame_number=1,
             dataref_path="sim/graphics/animation/sin_wave_2",
             dataref_value=0.0,
             location=(0,0,0)),
         KeyframeInfo(
-            idx=2,
+            frame_number=2,
             dataref_path="sim/graphics/animation/sin_wave_2",
             dataref_value=1.0,
             location=(0,1,0)))
 
 SHOW_ANIM_S = (
         KeyframeInfo(
-            idx=1,
+            frame_number=1,
             dataref_path="show_hide_dataref_show",
             dataref_show_hide_v1=0.0,
             dataref_show_hide_v2=100.0,
@@ -189,7 +189,7 @@ SHOW_ANIM_S = (
 
 SHOW_ANIM_H = (
         KeyframeInfo(
-            idx=1,
+            frame_number=1,
             dataref_path="show_hide_dataref_hide",
             dataref_show_hide_v1=100.0,
             dataref_show_hide_v2=200.0,
@@ -198,12 +198,12 @@ SHOW_ANIM_H = (
 
 SHOW_ANIM_FAKE_T = (
         KeyframeInfo(
-            idx=1,
+            frame_number=1,
             dataref_path="none",
             dataref_value=0.0,
             location=(0,0,0)),
         KeyframeInfo(
-            idx=2,
+            frame_number=2,
             dataref_path="none",
             dataref_value=1.0,
             location=(0,0,0)),
@@ -568,7 +568,7 @@ def set_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy
             dataref_index += 1
 
     for kf_info in keyframe_infos:
-        bpy.context.scene.frame_current = kf_info.idx
+        bpy.context.scene.frame_current = kf_info.frame_number
 
         if kf_info.dataref_anim_type == ANIM_TYPE_SHOW or kf_info.dataref_anim_type == ANIM_TYPE_HIDE:
             dataref_prop.show_hide_v1 = kf_info.dataref_show_hide_v1
