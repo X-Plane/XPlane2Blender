@@ -15,8 +15,8 @@ def filterLines(line):
              "TRIS" in line[0] or\
              "VT" in line[0])
 
-class TestDatarefDecodingKnownCases(XPlaneTestCase):
-    def test_dataref_decoding_known_cases(self):
+class TestDatarefDecodingCustomAndEdgeCases(XPlaneTestCase):
+    def test_dataref_decoding_custom_and_edge_cases(self):
         bpy.ops.xplane.do_249_conversion()
         filename = inspect.stack()[0][3]
         filename = filename.replace("test_","")
@@ -27,4 +27,4 @@ class TestDatarefDecodingKnownCases(XPlaneTestCase):
             filterLines
         )
 
-runTestCases([TestDatarefDecodingKnownCases])
+runTestCases([TestDatarefDecodingCustomAndEdgeCases])

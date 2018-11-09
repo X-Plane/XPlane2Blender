@@ -41,9 +41,18 @@ class LookupResult():
         return "record: {}, sname_success: {}, tailname_success: {}".format(self.record,self.sname_success,self.tailname_success)
 
 class ParsedGameAnimValueProp():
-    '''All the possible data that can be taken from a game prop'''
+    '''
+    All the possible data that can be taken from a game prop.
+    Although 2.78 has the array idx as part of the path,
+    we keep it seperate until the very very end
+
+    If the path has a cloud in it, array_idx is automatically set to ""
+
+    Aside from array_idx, this matches xplane_props.XPlaneDataref
+    '''
     def __init__(self,
                 path: DatarefFull,
+                array_idx: str, # [idx] or ""
                 anim_type:str, # "show", "hide", or "transform"
                 frame_number: Optional[FrameNumber]=None,
                 loop: Optional[float]=None,
@@ -52,6 +61,7 @@ class ParsedGameAnimValueProp():
                 value: Optional[float]=None
                 ):
         assert path, "path cannot be None"
+        assert array_idx is not None, "array_idx cannot be None for path '{}'".format(path)
         assert anim_type in {xplane_constants.ANIM_TYPE_SHOW, xplane_constants.ANIM_TYPE_HIDE, xplane_constants.ANIM_TYPE_TRANSFORM}, "anim_type cannot be None or '', is {}".format(anim_type)
         if frame_number is not None:
             assert frame_number > 0, "frame_number must be > 0, as per Blender 2.49 behavior"
@@ -60,15 +70,28 @@ class ParsedGameAnimValueProp():
         assert sh == {None, None} or [v for v in sh if isinstance(v, float)]
 
         self.anim_type = anim_type
+
+        #-------------------
+        # Cloud Case Fix!
+        # If the path has an idx portion in it,
+        # the array_idx is a false result
+        if idx_portion(path):
+            self.array_idx = ""
+        else:
+            self.array_idx = array_idx
+        #-------------------
+
         self.frame_number = frame_number
         self.loop = loop
         self.path = path
         self.show_hide_v1 = show_hide_v1
         self.show_hide_v2 = show_hide_v2
         self.value = value
+
     def __str__(self):
         return "{}".format((
         self.anim_type,
+        self.array_idx,
         self.frame_number,
         self.loop,
         self.path,
@@ -298,14 +321,6 @@ def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupRe
     lookup_result = LookupResult()
     for i, lookup_name in enumerate([sname, tailname]):
         if lookup_name in _249_datarefs:
-            '''
-            Can't use this without the assumption that sname is always sname.
-            #TODO: Maybe we'd better not use this
-            if i == 0:
-                assert _249_datarefs[lookup_name] is not None,\
-                    "sname lookup with {} returned None".format(lookup_name)
-            '''
-
             if i == 1 and lookup_result.record != None:
                 assert lookup_result.record == _249_datarefs[lookup_name],\
                     ("good tailname lookup != good sname lookup: {}"
@@ -328,33 +343,23 @@ def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupRe
 # a common and clear vocabulary we'll be able to tame
 # the split, convert, append, convert beast
 def idx_portion(name:str)->str:
-    '''Returns the idx portion of a name, if possible. Else an empty'''
-    #TODO: Still a WIP, depending on how handling the cloud case goes. Otherwise its just nice
+    '''Returns the right most [idx] portion of a name, if possible. Else ""'''
     try:
-        return '[' + name.rsplit('[')[1]
+        return '[' + name.rsplit('[',1)[1]
     except IndexError:
         return ""
 
+
 def no_idx(name:str)->str:
-    '''Returns a name, dataref, or other text without the last idx bracket,
-    aka the array portion of a dataref.
-
+    '''Gives a name to simple string processing. Removes the right most "[idx]".'''
     
-    There is a slight semantic difference! Observe:
-    In Datarefs.txt | As 2.49 bone name | no_idx  | In 2.78
-    ----------------------------------|---------------|-----------|
-    sim/weapons/x    float[25]        | x[0]          | sim/weapons/x          | sim/weapons/x[0]
-    sim/weather/cloud_type[1]   int   | cloud_type[1] | sim/weapons/cloud_type | sim/weather/cloud_type[1]
-    double/trouble[0] int[5]          | trouble[0][1] | double/trouble[0]      | double/trouble[0][1]
-    '''
-    #TODO: This is a WIP how we want the cloud case to be handled. The key concern is what
-    #_249_datarefs says (array size of 1), vs what parsed_props says no answer.
-    #Also concerning is the double/trouble[0] int[5] case. How is that handled?
-    # Ultimately does it matter?
-    #
-    #TODO: How about my/whatever/ref vs my/whatever/ref int[5]? This of course gets messy with overwritting tail and snames
+    # "double/trouble[0] int[10] y" was and is invalid,
+    # but we only remove the right most index. Otherwise you're
+    # changing the dataref decleration!
+    # Compare:
+    # "double/trouble[0] int y" vs "double/trouble[0] int[10] y"
+    return name.rsplit('[',1)[0]
 
-    return name.rsplit('[')[0]
 
 def sname_from_dataref_full(dataref_full:DatarefFull)->SName:
     '''Turns any full dataref into a shortname version'''
@@ -378,36 +383,37 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
 
     #---This block of code attempts to parse the game prop--------------
     def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,str]]:
-        # Note: This Regex also captures _loop!
-        PROP_NAME_IDX_REGEX = r"(?P<prop_root>[a-zA-Z]\w+)(\[(?P<array_idx>\d+)\])?" #TODO: breaks cloud case + "[idx]"
+        # TODO: This Regex also captures _loop!
+        # Catches cloud cases too. GameAnimValueProp handles this case for you
+        PROP_NAME_IDX_REGEX = r"(?P<prop_root>[a-zA-Z]\w+)(\[(?P<array_idx>\d+)\])?" 
         PROP_NAME_FNUMBER = r"_v(?P<frame_number>\d+)$"
         name = game_prop.name.strip()
 
-        parsed_results = {key:'' for key in ['anim_type', 'array_idx', 'prop_root', 'frame_number', 'loop']}
+        parsed_result = {key:'' for key in ['anim_type', 'array_idx', 'prop_root', 'frame_number', 'loop']}
 
         print("Attempting to parse {}".format(game_prop.name))
         if re.search(r"_v\d+_(show|hide)$", name):
             print("1. Matched show/hide")
-            parsed_results.update(
+            parsed_result.update(
                 re.search(PROP_NAME_IDX_REGEX + PROP_NAME_FNUMBER,
                          name).groupdict(default=""))
-            parsed_results['anim_type'] = name[-4:]  #capture show or hide
+            parsed_result['anim_type'] = name[-4:]  #capture show or hide
         elif re.search(r"_loop$", name):
             print("2. Matched loop")
-            parsed_results.update(
+            parsed_result.update(
                 re.search(PROP_NAME_IDX_REGEX,
                     name).groupdict(default=""))
-            parsed_results['anim_type'] = xplane_constants.ANIM_TYPE_TRANSFORM
+            parsed_result['anim_type'] = xplane_constants.ANIM_TYPE_TRANSFORM
             # I got tired of re-writing the regex to try and make this work,
             # instead we manually remove '_loop' and be done with it.
-            parsed_results['prop_root'] = parsed_results['prop_root'].split('_loop')[0]
-            parsed_results['loop'] = True
+            parsed_result['prop_root'] = parsed_result['prop_root'].split('_loop')[0]
+            parsed_result['loop'] = True
         elif re.search(PROP_NAME_FNUMBER, name):
             print("3. Matched anim-value")
-            parsed_results.update(
+            parsed_result.update(
                 re.search(PROP_NAME_IDX_REGEX+PROP_NAME_FNUMBER,
                           name).groupdict(default=""))
-            parsed_results['anim_type'] = xplane_constants.ANIM_TYPE_TRANSFORM
+            parsed_result['anim_type'] = xplane_constants.ANIM_TYPE_TRANSFORM
         elif re.match(PROP_NAME_IDX_REGEX + "$", name):
             print("4. Matched disambiguating key or other text")
             print("Text: {}".format(name))
@@ -417,20 +423,21 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             print("Unparsable Text: {}".format(name))
             return None
 
-        assert parsed_results['anim_type'] or parsed_results['frame_number'] or parsed_results['loop'], "Parsed game_prop.name is missing meaningful values: {}".format(parsed_results)
-        print("Parse Results: {}".format(parsed_results))
-        return parsed_results
+        assert parsed_result['anim_type'] or parsed_result['frame_number'] or parsed_result['loop'], "Parsed game_prop.name is missing meaningful values: {}".format(parsed_result)
+        print("Parse Results: {}".format(parsed_result))
+        return parsed_result
 
-    parsed_results = parse_game_prop_name(game_prop)
-    if not parsed_results:
+    parsed_result = parse_game_prop_name(game_prop)
+    if not parsed_result:
         return None
-    elif parsed_results['array_idx']:
+    elif parsed_result['array_idx']:
         roots_to_test = [
-            parsed_results['prop_root'],
-            parsed_results['prop_root'] + "[{}]".format(parsed_results['array_idx']),
+            parsed_result['prop_root'],
+            # Coincidentally (or perhaps too cleverly) also takes care of cloud cases
+            parsed_result['prop_root'] + "[{}]".format(parsed_result['array_idx']), 
             ]
     else:
-        roots_to_test = [parsed_results['prop_root']]
+        roots_to_test = [parsed_result['prop_root']]
 
     for known_dataref in known_datarefs:
         '''
@@ -458,7 +465,6 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
 
     #------------------------------------------------------------------
     # Our very important out path
-    path = None # type: DatarefFull
     for prop_root in roots_to_test:
         #print("prop_root: {}".format(prop_root))
         def match_root_to_known_datarefs(
@@ -472,31 +478,30 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
                 #print("known_dataref: {}".format(known_dataref))
                 known_tail = tailname_from_dataref_full(known_dataref) # type: TailName
                 known_sname = _make_short_name(known_dataref)
+                # In case the disambiguating key of a custom dataref is
+                # also in the Datarefs.txt file, we check our .blend file before checking
+                # DataRefs.txt
+                if prop_root == known_tail: # Disambiguating key, TailName
+                    return known_dataref
                 # Works for Known SNames, TailNames and the annoying + "[idx]" cloud case
-                if prop_root in _249_datarefs:
+                elif prop_root in _249_datarefs:
                     #print("prop_root (in _249_datarefs): {}".format(prop_root))
                     # 1. Tail-Name could be None or in there. Duplicate (this also captures sname case sometimes)
                     if (_249_datarefs[prop_root] and _249_datarefs[prop_root][0] == known_dataref):
                         return known_dataref
-                elif prop_root == known_tail: # Disambiguating key, TailName
-                    return known_dataref
             else: #nobreak
                 print("prop_root: {} didn't match any of the known_datarefs".format(prop_root))
                 return None
-        path = match_root_to_known_datarefs(prop_root, known_datarefs)
+        path = match_root_to_known_datarefs(prop_root, known_datarefs) # type: DatarefFull
         if path:
-            if parsed_results['array_idx']:
-                path += "[{}]".format(parsed_results['array_idx']) 
             break
     else: #nobreak
-        assert False, "Couldn't match prop_root to anything, which isn't how you're developing right now!"
+        assert False, "Couldn't match prop_root {} to anything, which isn't how you're developing right now!".format(roots_to_test)
 
     #print("Final Path: " + path)
     #------------------------------------------------------------------
 
     #------------------------------------------------------------------
-    frame_number = None # type: int
-    # Matches attributes of xplane_props.XPlaneDataref
     #TODO: logging, not asserting
 
     assert game_prop.type in {"INT", "FLOAT"}, "game_prop ({},{}) value is not 'FLOAT' vs 'INT'".format(game_prop.name, game_prop.value)
@@ -505,9 +510,10 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     # Here 1 and 2 does not mean "Frame 1 and 2" but simply "Value 1 and 2"
     parsed_prop = ParsedGameAnimValueProp(
             path = path,
-            anim_type = parsed_results['anim_type'],
-            frame_number = int(parsed_results['frame_number']) if parsed_results['anim_type'] == xplane_constants.ANIM_TYPE_TRANSFORM else None,
-            loop = float(game_prop.value) if parsed_results['loop'] else None,
+            array_idx = "[{}]".format(parsed_result['array_idx']) if parsed_result['array_idx'] else '',
+            anim_type = parsed_result['anim_type'],
+            frame_number = int(parsed_result['frame_number']) if parsed_result['anim_type'] == xplane_constants.ANIM_TYPE_TRANSFORM else None,
+            loop = float(game_prop.value) if parsed_result['loop'] else None,
             show_hide_v1 = None, #TODO: Show/Hide not implemented yet!
             show_hide_v2 = None, #TODO: Show/Hide not implemented yet!
             value = float(game_prop.value) #TODO: Show/Hide not implemented yet
@@ -520,16 +526,11 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
 def do_249_conversion():
     #TODO: Create log, similar to conversion log
 
-    #TODO: Can only run this if it is evident there is 249 data.
-    # We can't simply ask if there are game properties in this file
-    # and probably shouldn't just rely on "it has to exist on disk" or we could
-    # lose out on good automation opportunities. Maybe.
-    if not bpy.data.filepath:
+    if bpy.data.version[1] > 49:
         return
 
     # Global settings
     bpy.context.scene.xplane.debug = True
-    #TODO: Take file name and make it layer name
     #TODO: What about root objects mode?
     #TODO: What about those using layers as LODs?
     filename = os.path.split(bpy.data.filepath)[1]
@@ -604,8 +605,8 @@ def do_249_conversion():
             print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
             decoded_animval = decode_game_animvalue_prop(game_prop, tuple(all_arm_drefs.keys()))
             if decoded_animval:
-                assert no_idx(decoded_animval.path) in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + decoded_animval.path
-                all_arm_drefs[no_idx(decoded_animval.path)][1].append(decoded_animval)
+                assert decoded_animval.path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + decoded_animval.path
+                all_arm_drefs[decoded_animval.path][1].append(decoded_animval)
             else:
                 #TODO: Error code goes here? How do we do these?
                 #TODO: What about disambiguating keys returning none from decode_game_animvalue?
@@ -656,6 +657,7 @@ def do_249_conversion():
                 ensure_has_idx = ensure_has-1
                 new_pp_frame = ParsedGameAnimValueProp(
                         path=path,
+                        array_idx=idx_portion(bone.name),
                         anim_type=xplane_constants.ANIM_TYPE_TRANSFORM,
                         frame_number=ensure_has,
                         value=int(bool(ensure_has_idx))) # Why int? To match 2.49 behavior of using ints, which was and probably is meaningless.
@@ -677,7 +679,7 @@ def do_249_conversion():
                     bone, [
                         test_creation_helpers.KeyframeInfo(
                             frame_number=frame_number,
-                            dataref_path=path + idx_portion(bone.name), # We need the path and idx, not just the unambiguious dataref
+                            dataref_path=path + parsed_prop.array_idx,
                             dataref_value=parsed_prop.value,
                             dataref_anim_type=parsed_prop.anim_type,
                             dataref_loop=0.0 if parsed_prop.loop is None else parsed_prop.loop)
