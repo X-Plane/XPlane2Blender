@@ -98,7 +98,7 @@ class ParsedGameAnimValueProp():
         self.show_hide_v2,
         self.value,))
 
-def _remove_vowels(s: str)->str:
+def remove_vowels(s: str)->str:
     for eachLetter in s:
         if eachLetter in ['a','e','i','o','u','A','E','I','O','U','_']:
             s = s.replace(eachLetter, '')
@@ -106,7 +106,7 @@ def _remove_vowels(s: str)->str:
     assert s == b, "s {} b {}".format(s, b)
     return s
 
-def _make_short_name(full_path: DatarefFull)->SName:
+def make_short_name(full_path: DatarefFull)->SName:
     '''
     The spec seems to be
     - take the first letter of every component in the path,
@@ -124,7 +124,7 @@ def _make_short_name(full_path: DatarefFull)->SName:
             short=short+"_"
             #if the end part before the '['
             if len(comp.split('[')[0]) > 15:
-                short=short+_remove_vowels(comp)
+                short=short+remove_vowels(comp)
             else:
                 short=short+comp
         else:
@@ -133,7 +133,7 @@ def _make_short_name(full_path: DatarefFull)->SName:
                 short=short+"2"
     return short
 
-def _getDatarefs()->Dict[Union[SName,TailName],LookupRecord]:
+def getDatarefs()->Dict[Union[SName,TailName],LookupRecord]:
     '''
     Parses the contents of the dataref file as a dictionary where
     where a short_name or tail-name can retrive
@@ -188,7 +188,7 @@ def _getDatarefs()->Dict[Union[SName,TailName],LookupRecord]:
                     continue
                 if len(d)<3:
                     raise err
-                sname=_make_short_name(d[0])
+                sname=make_short_name(d[0])
                 ref=d[0].split('/')
 
                 if ref[1] in ['test', 'version']: # Diff #3
@@ -264,7 +264,7 @@ def _getDatarefs()->Dict[Union[SName,TailName],LookupRecord]:
 '''
 The contents of DataRefs.txt, after being parsed!
 '''
-_249_datarefs = _getDatarefs()
+_249_datarefs = getDatarefs()
 
 #--------------------------------------------------------------------------------
 
@@ -362,7 +362,7 @@ def no_idx(name:str)->str:
 
 def sname_from_dataref_full(dataref_full:DatarefFull)->SName:
     '''Turns any full dataref into a shortname version'''
-    return _make_short_name(dataref_full)
+    return make_short_name(dataref_full)
 
 
 def tailname_from_dataref_full(dataref_full:DatarefFull)->TailName:
@@ -454,7 +454,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         # Its better to reduce the amount of flow here. Also, precedent.
         '''
 
-        sname = _make_short_name(known_dataref)
+        sname = make_short_name(known_dataref)
         if sname in roots_to_test:
             roots_to_test.append(tailname_from_dataref_full(known_dataref))
             break # We know that duplicate snames aren't possible
@@ -476,7 +476,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             for known_dataref in known_datarefs:
                 #print("known_dataref: {}".format(known_dataref))
                 known_tail = tailname_from_dataref_full(known_dataref) # type: TailName
-                known_sname = _make_short_name(known_dataref)
+                known_sname = make_short_name(known_dataref)
                 # In case the disambiguating key of a custom dataref is
                 # also in the Datarefs.txt file, we check our .blend file before checking
                 # DataRefs.txt
