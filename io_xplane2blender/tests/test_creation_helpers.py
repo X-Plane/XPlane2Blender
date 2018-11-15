@@ -7,6 +7,7 @@ from typing import *
 import bpy
 
 from io_xplane2blender import xplane_constants
+from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW, ANIM_TYPE_TRANSFORM
 from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
 from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
 from mathutils import Vector, Euler, Quaternion
@@ -96,118 +97,166 @@ class DatablockInfo():
 
 class KeyframeInfo():
     def __init__(self,
-            frame_number:int,
-            dataref_path:str,
-            dataref_value:Optional[float]=None,
-            dataref_show_hide_v1:Optional[float]=None,
-            dataref_show_hide_v2:Optional[float]=None,
-            dataref_anim_type:str=xplane_constants.ANIM_TYPE_TRANSFORM, #Must be xplane_constants.ANIM_TYPE_*
-            dataref_loop:Optional[float]=None,
+            dataref_path:Optional[str],
+            dataref_anim_type:Optional[str],
             location:Optional[Vector]=None, 
-            rotation_mode:str="XYZ",
+            rotation_mode:Optional[str]="XYZ",
             rotation:Optional[Union[Tuple[float,Vector],Euler,Quaternion]]=None):
         '''
         KeyframeInfo that represents all the information needed to create Blender and/or
         XPlane2Blender keyframnes. Usually used to specify animations concisely.
 
+        For Dataref Keyframe Values you must use only
+        frame_number, dataref_path, dataref_value, ANIM_TYPE_TRANSFORM, and optionally a location and rotation (with mode)
+
+        For Looping Keyframe Values you must use only dataref_path, dataref_value, ANIM_TYPE_TRANSFORM
+
         default parameters of None represents "no data set", not (0,0,0) or 0.0 or other common default
         '''
+        if dataref_path:
+            assert dataref_path != "", "Dataref Path cannot be empty"
+        if dataref_anim_type:
+            assert dataref_path is not None, "Cannot use dataref_anim_type {} without dataref".format(dataref_anim_type)
 
-        self.frame_number = frame_number
+        assert dataref_anim_type in {ANIM_TYPE_HIDE, ANIM_TYPE_SHOW, ANIM_TYPE_TRANSFORM}
+
+        if rotation:
+            assert rotation_mode in {"QUATERNION", "AXIS_ANGLE"} or set(rotation_mode) == {'X','Y','Z'}, "rotation_mode {} for {} must a known rotation mode".format(rotation_mode,dataref_path)
+            if rotation_mode == "AXIS_ANGLE":
+                assert len(rotation[1]) == 3
+            elif rotation_mode == "QUATERNION":
+                assert len(rotation) == 4
+            elif {*rotation_mode} == {'X','Y','Z'}:
+                assert len(rotation) == 3
+            else:
+                assert False, "Unsupported rotation mode: " + rotation_mode
+
         self.dataref_path  = dataref_path
-        self.dataref_value = dataref_value
-        self.dataref_show_hide_v1 = dataref_show_hide_v1
-        self.dataref_show_hide_v2 = dataref_show_hide_v2
         self.dataref_anim_type = dataref_anim_type
-        self.dataref_loop  = dataref_loop
         self.location      = location
         self.rotation_mode = rotation_mode
         self.rotation = rotation
 
-        if self.rotation:
-            if self.rotation_mode == "AXIS_ANGLE":
-                assert len(self.rotation[1]) == 3
-            elif self.rotation_mode == "QUATERNION":
-                assert len(self.rotation) == 4
-            elif {*self.rotation_mode} == {'X','Y','Z'}:
-                assert len(self.rotation) == 3
-            else:
-                assert False, "Unsupported rotation mode: " + self.rotation_mode
 
-        values_summary = [self.dataref_value, self.dataref_show_hide_v1, self.dataref_show_hide_v2]
-        assert (values_summary == [None]*3 or
-                values_summary[0] is not None and values_summary[1:3] == [None,None] or
-                values_summary[0] is None and values_summary[1] is not None and values_summary is not None), \
-                "Dataref Values must be all None, only Dataref Value, or only Dataref Show/Hide Value or use dataref value"
-   
+class KeyframeInfoDatarefKeyframe(KeyframeInfo):
+    def __init__(self,
+            dataref_path:str,
+            location:Optional[Vector]=None, 
+            rotation_mode:Optional[str]="XYZ",
+            rotation:Optional[Union[Tuple[float,Vector],Euler,Quaternion]]=None,
+            *,
+            frame_number:int,
+            dataref_value:float):
+        super().__init__(dataref_path, ANIM_TYPE_TRANSFORM, location, rotation_mode, rotation)
+        assert frame_number >= 0, "Frame number {} for {} must >= 0".format(frame_number, dataref_value)
+        self.frame_number = frame_number
+        self.dataref_value = dataref_value
+
+
+class KeyframeInfoLoop(KeyframeInfo):
+    def __init__(self,
+            dataref_path:str,
+            location:Optional[Vector]=None, 
+            rotation_mode:Optional[str]="XYZ",
+            rotation:Optional[Union[Tuple[float,Vector],Euler,Quaternion]]=None,
+            *,
+            dataref_loop:float
+        ):
+        super().__init__(dataref_path, ANIM_TYPE_TRANSFORM, location, rotation_mode, rotation)
+
+        self.dataref_loop = dataref_loop
+
+
+class KeyframeInfoShowHide(KeyframeInfo):
+    def __init__(self,
+            dataref_path:str,
+            location:Optional[Vector]=None, 
+            rotation_mode:Optional[str]="XYZ",
+            rotation:Optional[Union[Tuple[float,Vector],Euler,Quaternion]]=None,
+            *,
+            dataref_anim_type:str,
+            dataref_show_hide_v1:float,
+            dataref_show_hide_v2:float
+        ):
+        '''
+        Must be ANIM_TYPE_SHOW or ANIM_TYPE_HIDE
+        '''
+        assert dataref_anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}, "KeyframeInfoShowHide keyframe must have the anim type be {} or {}".format(ANIM_TYPE_SHOW, ANIM_TYPE_HIDE)
+
+        super().__init__(dataref_path, dataref_anim_type, location, rotation_mode, rotation)
 
 # Common presets for animations
 R_2_FRAMES_45_Y_AXIS = (
-        KeyframeInfo(
+        KeyframeInfoDatarefKeyframe(
+            dataref_path="sim/cockpit2/engine/actuators/throttle_ratio_all",
+            rotation=(0,0,0),
             frame_number=1,
-            dataref_path="sim/cockpit2/engine/actuators/throttle_ratio_all",
             dataref_value=0.0,
-            rotation=(0,0,0)),
-        KeyframeInfo(
-            frame_number=2,
+            ),
+        KeyframeInfoDatarefKeyframe(
             dataref_path="sim/cockpit2/engine/actuators/throttle_ratio_all",
+            rotation=(0,45,0),
+            frame_number=2,
             dataref_value=1.0,
-            rotation=(0,45,0)))
+        )
+    )
 
 T_2_FRAMES_1_X = (
-        KeyframeInfo(
+        KeyframeInfoDatarefKeyframe(
+            dataref_path="sim/graphics/animation/sin_wave_2",
+            location=(0,0,0),
             frame_number=1,
-            dataref_path="sim/graphics/animation/sin_wave_2",
             dataref_value=0.0,
-            location=(0,0,0)),
-        KeyframeInfo(
-            frame_number=2,
+        ),
+        KeyframeInfoDatarefKeyframe(
             dataref_path="sim/graphics/animation/sin_wave_2",
+            location=(1,0,0),
+            frame_number=2,
             dataref_value=1.0,
-            location=(1,0,0)))
+        )
+    )
 
 T_2_FRAMES_1_Y = (
-        KeyframeInfo(
+        KeyframeInfoDatarefKeyframe(
+            dataref_value=0.0,
+            location=(0,0,0),
             frame_number=1,
             dataref_path="sim/graphics/animation/sin_wave_2",
-            dataref_value=0.0,
-            location=(0,0,0)),
-        KeyframeInfo(
+        ),
+        KeyframeInfoDatarefKeyframe(
+            dataref_value=1.0,
+            location=(0,1,0),
             frame_number=2,
             dataref_path="sim/graphics/animation/sin_wave_2",
-            dataref_value=1.0,
-            location=(0,1,0)))
+        )
+    )
 
 SHOW_ANIM_S = (
-        KeyframeInfo(
-            frame_number=1,
+        KeyframeInfoShowHide(
             dataref_path="show_hide_dataref_show",
+            dataref_anim_type=ANIM_TYPE_SHOW,
             dataref_show_hide_v1=0.0,
             dataref_show_hide_v2=100.0,
-            dataref_anim_type=xplane_constants.ANIM_TYPE_SHOW),
-        )
+        ),
+    )
 
 SHOW_ANIM_H = (
-        KeyframeInfo(
-            frame_number=1,
+        KeyframeInfoShowHide(
             dataref_path="show_hide_dataref_hide",
+            dataref_anim_type=ANIM_TYPE_HIDE,
             dataref_show_hide_v1=100.0,
             dataref_show_hide_v2=200.0,
-            dataref_anim_type=xplane_constants.ANIM_TYPE_HIDE),
-        )
+        ),
+    )
 
-SHOW_ANIM_FAKE_T = (
-        KeyframeInfo(
-            frame_number=1,
-            dataref_path="none",
-            dataref_value=0.0,
-            location=(0,0,0)),
-        KeyframeInfo(
-            frame_number=2,
-            dataref_path="none",
-            dataref_value=1.0,
-            location=(0,0,0)),
-        )
+#SHOW_ANIM_FAKE_T = (
+#        KeyframeInfo(
+#            dataref_path="none",
+#            dataref_show_hide_v1=0.0),
+#        KeyframeInfo(
+#            dataref_path="none",
+#            dataref_show_hide_v2=1.0),
+#        )
   
 class ParentInfo():
     def __init__(self,
@@ -510,18 +559,6 @@ def set_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy
     assert len({kf_info.dataref_path for kf_info in keyframe_infos}) == 1
     assert len({kf_info.dataref_anim_type for kf_info in keyframe_infos}) == 1
 
-    if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_SHOW or\
-       keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_HIDE:
-        value = keyframe_infos[0].dataref_value
-        value_1 = keyframe_infos[0].dataref_show_hide_v1
-        value_2 = keyframe_infos[0].dataref_show_hide_v2
-        assert value is None and value_1 is not None and value_2 is not None
-    if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_TRANSFORM:
-        value = keyframe_infos[0].dataref_value
-        value_1 = keyframe_infos[0].dataref_show_hide_v1
-        value_2 = keyframe_infos[0].dataref_show_hide_v2
-        assert value is not None and value_1 is None and value_2 is None
-
     struct_is_bone = False
     if isinstance(blender_struct, (bpy.types.Bone, bpy.types.PoseBone)):
         assert parent_armature is not None
@@ -560,24 +597,27 @@ def set_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy
         dataref_prop.anim_type = keyframe_infos[0].dataref_anim_type
         dataref_index = len(datarefs)-1
     else:
-        dataref_index = 0
-        for dref in datarefs:
-            if dref.path == keyframe_infos[0].dataref_path:
-                dataref_prop = dref
-                break
-            dataref_index += 1
+        dataref_index, dataref_prop = [(index, dref)
+                                       for index, dref in enumerate(datarefs)
+                                       if dref.path == keyframe_infos[0].dataref_path][0]
 
     for kf_info in keyframe_infos:
-        bpy.context.scene.frame_current = kf_info.frame_number
+        try:
+            bpy.context.scene.frame_current = kf_info.frame_number
+            dataref_prop.value = kf_info.dataref_value
+        except AttributeError:
+            pass
+        try:
+            dataref_prop.loop = kf_info.dataref_loop
+        except AttributeError:
+            pass
 
         if kf_info.dataref_anim_type == ANIM_TYPE_SHOW or kf_info.dataref_anim_type == ANIM_TYPE_HIDE:
-            dataref_prop.show_hide_v1 = kf_info.dataref_show_hide_v1
-            dataref_prop.show_hide_v2 = kf_info.dataref_show_hide_v2
-        else:
-            dataref_prop.value = kf_info.dataref_value
-
-        if kf_info.dataref_loop is not None:
-            dataref_prop.loop = kf_info.dataref_loop
+            try:
+                dataref_prop.show_hide_v1 = kf_info.dataref_show_hide_v1
+                dataref_prop.show_hide_v2 = kf_info.dataref_show_hide_v2
+            except AttributeError:
+                pass
 
         if kf_info.location:
             blender_struct.location = kf_info.location
@@ -596,12 +636,18 @@ def set_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy
             blender_struct.keyframe_insert(data_path=data_path,
                                            group=blender_bone.name if struct_is_bone else "Rotation")
 
-        if [v for v in (kf_info.dataref_value, kf_info.dataref_show_hide_v1, kf_info.dataref_show_hide_v2)
-                if v is not None]:
-            if struct_is_bone:
-                bpy.ops.bone.add_xplane_dataref_keyframe(index=dataref_index)
-            else:
-                bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
+        if struct_is_bone:
+            bpy.ops.bone.add_xplane_dataref_keyframe(index=dataref_index)
+        else:
+            bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
+
+#def set_blender_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy.types.PoseBone],
+        #keyframe_infos: List[KeyframeInfo],
+        #parent_armature: [bpy.types.Armature]=None)->None:
+    #'''
+    #Just for blender animation, doesn't set any xplane keyframes
+    #'''
+    #pass
 
 #def set_layer_visibility(layer_visibility_settings:Iterable[Tuple[int,bool]]):
     #assert len(layer_visibility_settings) == 0

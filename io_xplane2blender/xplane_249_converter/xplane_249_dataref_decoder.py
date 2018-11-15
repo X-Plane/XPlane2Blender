@@ -16,7 +16,8 @@ from operator import attrgetter
 
 import bpy
 
-from io_xplane2blender import xplane_constants, xplane_helpers
+from io_xplane2blender import xplane_helpers
+from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW, ANIM_TYPE_TRANSFORM
 from io_xplane2blender.tests import test_creation_helpers
 
 DatarefFull = str
@@ -61,7 +62,7 @@ class ParsedGameAnimValueProp():
                 ):
         assert path, "path cannot be None"
         assert array_idx is not None, "array_idx cannot be None for path '{}'".format(path)
-        assert anim_type in {xplane_constants.ANIM_TYPE_SHOW, xplane_constants.ANIM_TYPE_HIDE, xplane_constants.ANIM_TYPE_TRANSFORM}, "anim_type cannot be None or '', is {}".format(anim_type)
+        assert anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE, ANIM_TYPE_TRANSFORM}, "anim_type cannot be None or '', is {}".format(anim_type)
         if frame_number is not None:
             assert frame_number > 0, "frame_number must be > 0, as per Blender 2.49 behavior"
         assert any(map(lambda v: v is not None, [loop, show_hide_v1, show_hide_v2, value,])), "No meaningful values found with (loop={},show_hide_v1={},show_hide_v2={},value={})".format(loop, show_hide_v1, show_hide_v2, value)
@@ -388,7 +389,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         PROP_NAME_FNUMBER = r"_v(?P<frame_number>\d+)$"
         name = game_prop.name.strip()
 
-        parsed_result = {key:'' for key in ['anim_type', 'array_idx', 'prop_root', 'frame_number', 'loop']}
+        parsed_result = {"anim_type": "", "array_idx":"", "prop_root":"", "frame_number":None, "loop":None}
 
         print("Attempting to parse {}".format(game_prop.name))
         if re.search(r"_v\d+_(show|hide)$", name):
@@ -402,17 +403,17 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             parsed_result.update(
                 re.search(PROP_NAME_IDX_REGEX,
                     name).groupdict(default=""))
-            parsed_result['anim_type'] = xplane_constants.ANIM_TYPE_TRANSFORM
+            parsed_result['anim_type'] = ANIM_TYPE_TRANSFORM
             # I got tired of re-writing the regex to try and make this work,
             # instead we manually remove '_loop' and be done with it.
             parsed_result['prop_root'] = parsed_result['prop_root'].split('_loop')[0]
-            parsed_result['loop'] = True
+            parsed_result['loop'] = game_prop.value
         elif re.search(PROP_NAME_FNUMBER, name):
             print("3. Matched anim-value")
             parsed_result.update(
                 re.search(PROP_NAME_IDX_REGEX+PROP_NAME_FNUMBER,
                           name).groupdict(default=""))
-            parsed_result['anim_type'] = xplane_constants.ANIM_TYPE_TRANSFORM
+            parsed_result['anim_type'] = ANIM_TYPE_TRANSFORM
         elif re.match(PROP_NAME_IDX_REGEX + "$", name):
             print("4. Matched disambiguating key or other text")
             print("Text: {}".format(name))
@@ -505,17 +506,28 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
 
     assert game_prop.type in {"INT", "FLOAT"}, "game_prop ({},{}) value is not 'FLOAT' vs 'INT'".format(game_prop.name, game_prop.value)
 
+    if (parsed_result['anim_type'] == ANIM_TYPE_TRANSFORM
+        and not parsed_result['loop']):
+        frame_number = int(parsed_result['frame_number'])
+    else:
+        frame_number = None
+
+    if parsed_result['loop'] is None and parsed_result['anim_type'] == ANIM_TYPE_TRANSFORM:
+        value = float(game_prop.value) 
+    else:
+        value = None
+
     # Show/Hide always have _v1 and _v2, defaults came from the UI code.
     # Here 1 and 2 does not mean "Frame 1 and 2" but simply "Value 1 and 2"
     parsed_prop = ParsedGameAnimValueProp(
             path = path,
             array_idx = "[{}]".format(parsed_result['array_idx']) if parsed_result['array_idx'] else '',
             anim_type = parsed_result['anim_type'],
-            frame_number = int(parsed_result['frame_number']) if parsed_result['anim_type'] == xplane_constants.ANIM_TYPE_TRANSFORM else None,
+            frame_number = frame_number,
             loop = float(game_prop.value) if parsed_result['loop'] else None,
             show_hide_v1 = None, #TODO: Show/Hide not implemented yet!
             show_hide_v2 = None, #TODO: Show/Hide not implemented yet!
-            value = float(game_prop.value) #TODO: Show/Hide not implemented yet
+            value = value
             )
 
     print("Final Decoded Results: {}".format(parsed_prop))
@@ -633,37 +645,71 @@ def convert_armature_animations(armature:bpy.types.Object):
             last_frame = max(int(s[-1][1]), 2) # Max val of largest member or 2 (for datarefs with only 0 or 1 parsed props)
 
             print("\nBone name {}: Filling between first_frame {}, last_frame {}".format(bone.name,first_frame,last_frame))
-            sorted_parsed_props = sorted([p for p in parsed_props if p], key=attrgetter('frame_number'))
+            frameless_props = []
+            keyframe_props = []
+            for p in parsed_props:
+                if p.frame_number:
+                    keyframe_props.append(p)
+                else:
+                    frameless_props.append(p)
+
+            keyframe_props.sort(key=attrgetter('frame_number'))
 
             for ensure_has in range(1,last_frame+1):
                 ensure_has_idx = ensure_has-1
                 new_pp_frame = ParsedGameAnimValueProp(
                         path=path,
                         array_idx=idx_portion(bone.name),
-                        anim_type=xplane_constants.ANIM_TYPE_TRANSFORM,
+                        anim_type=ANIM_TYPE_TRANSFORM,
                         frame_number=ensure_has,
                         value=int(bool(ensure_has_idx))) # Why int? To match 2.49 behavior of using ints, which was and probably is meaningless.
                 try:
-                    if sorted_parsed_props[ensure_has_idx].frame_number != ensure_has:
+                    if keyframe_props[ensure_has_idx].frame_number != ensure_has:
                         print("Inserting at %d" % ensure_has_idx)
-                        sorted_parsed_props.insert(ensure_has_idx,new_pp_frame)
-                except IndexError as e:
+                        keyframe_props.insert(ensure_has_idx, new_pp_frame)
+                except IndexError:
                     print("Inserting at %d" % ensure_has_idx)
-                    sorted_parsed_props.insert(ensure_has_idx,new_pp_frame)
+                    keyframe_props.insert(ensure_has_idx, new_pp_frame)
 
-            parsed_props[:] = sorted_parsed_props
+            parsed_props[:] = keyframe_props + frameless_props
 
         # Finally, the creation step!
         for path, (bone, parsed_props) in all_arm_drefs.items():
-            for frame_number, parsed_prop in enumerate(parsed_props, 1):
+            for parsed_prop in parsed_props:
+                if parsed_prop.value is not None:
+                    test_creation_helpers.set_animation_data(
+                        bone, [
+                            test_creation_helpers.KeyframeInfoDatarefKeyframe(
+                                dataref_path=path + parsed_prop.array_idx,
+                                frame_number=parsed_prop.frame_number,
+                                dataref_value=parsed_prop.value,
+                                )
+                        ],
+                        parent_armature=armature
+                    )
+                elif parsed_prop.loop is not None:
+                    test_creation_helpers.set_animation_data(
+                        bone, [
+                            test_creation_helpers.KeyframeInfoLoop(
+                                dataref_path=path + parsed_prop.array_idx,
+                                dataref_loop=parsed_prop.loop,
+                                ),
+                            ],
+                            parent_armature=armature
+                        )
+                elif {parsed_prop.show_hide_v1,parsed_prop.show_hide_v2} != {None,None}:
+                    test_creation_helpers.set_animation_data(
+                        bone, [
+                            test_creation_helpers.KeyframeInfoShowHide(
+                                dataref_path=path + parsed_prop.array_idx,
+                                dataref_anim_type=parsed_prop.dataref_anim_type,
+                                dataref_show_hide_v1=parsed_prop.show_hide_v1,
+                                dataref_show_hide_v2=parsed_prop.show_hide_v2,
+                                ),
+                            ],
+                            parent_armature=armature
+                        )
 
-                test_creation_helpers.set_animation_data(
-                    bone, [
-                        test_creation_helpers.KeyframeInfo(
-                            frame_number=frame_number,
-                            dataref_path=path + parsed_prop.array_idx,
-                            dataref_value=parsed_prop.value,
-                            dataref_anim_type=parsed_prop.anim_type,
-                            dataref_loop=0.0 if parsed_prop.loop is None else parsed_prop.loop)
-                    ],
-                    parent_armature=armature)
+                else:
+                    assert False, "How did we get here? {}".format(parsed_prop)
+
