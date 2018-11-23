@@ -184,6 +184,9 @@ class KeyframeInfoShowHide(KeyframeInfo):
         assert dataref_anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}, "KeyframeInfoShowHide keyframe must have the anim type be {} or {}".format(ANIM_TYPE_SHOW, ANIM_TYPE_HIDE)
 
         super().__init__(dataref_path, dataref_anim_type, location, rotation_mode, rotation)
+        self.dataref_show_hide_v1 = dataref_show_hide_v1
+        self.dataref_show_hide_v2 = dataref_show_hide_v2
+
 
 # Common presets for animations
 R_2_FRAMES_45_Y_AXIS = (
@@ -613,11 +616,9 @@ def set_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy
             pass
 
         if kf_info.dataref_anim_type == ANIM_TYPE_SHOW or kf_info.dataref_anim_type == ANIM_TYPE_HIDE:
-            try:
-                dataref_prop.show_hide_v1 = kf_info.dataref_show_hide_v1
-                dataref_prop.show_hide_v2 = kf_info.dataref_show_hide_v2
-            except AttributeError:
-                pass
+            # They'd better have show_hide_v1/2! Otherwise, someone forgot an assert!
+            dataref_prop.show_hide_v1 = kf_info.dataref_show_hide_v1
+            dataref_prop.show_hide_v2 = kf_info.dataref_show_hide_v2
 
         if kf_info.location:
             blender_struct.location = kf_info.location

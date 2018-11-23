@@ -48,7 +48,10 @@ class ParsedGameAnimValueProp():
 
     If the path has a cloud in it, array_idx is automatically set to ""
 
-    Aside from array_idx, this matches xplane_props.XPlaneDataref
+    Aside from array_idx, this nearly matches xplane_props.XPlaneDataref. 
+
+    Unlike test_creation_helpers.KeyframeInfo, Show/Hide can be neither or one.
+    decode_game_animvalue_prop
     '''
     def __init__(self,
                 path: DatarefFull,
@@ -67,7 +70,7 @@ class ParsedGameAnimValueProp():
             assert frame_number > 0, "frame_number must be > 0, as per Blender 2.49 behavior"
         assert any(map(lambda v: v is not None, [loop, show_hide_v1, show_hide_v2, value,])), "No meaningful values found with (loop={},show_hide_v1={},show_hide_v2={},value={})".format(loop, show_hide_v1, show_hide_v2, value)
         sh = {show_hide_v1, show_hide_v2}
-        assert sh == {None, None} or [v for v in sh if isinstance(v, float)]
+        assert sh == {None, None} or any(map(lambda s: isinstance(s, float), sh)), "show_hide_v1/2 must be either both None or some floats"
 
         self.anim_type = anim_type
 
@@ -90,22 +93,19 @@ class ParsedGameAnimValueProp():
 
     def __str__(self):
         return "{}".format((
-        self.anim_type,
-        self.array_idx,
-        self.frame_number,
-        self.loop,
-        self.path,
-        self.show_hide_v1,
-        self.show_hide_v2,
-        self.value,))
+            self.anim_type,
+            self.array_idx,
+            self.frame_number,
+            self.loop,
+            self.path,
+            self.show_hide_v1,
+            self.show_hide_v2,
+            self.value,
+            )
+        )
 
 def remove_vowels(s: str)->str:
-    for eachLetter in s:
-        if eachLetter in ['a','e','i','o','u','A','E','I','O','U','_']:
-            s = s.replace(eachLetter, '')
-    b = ''.join([letter for letter in s if letter not in {'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U', '_'}])
-    assert s == b, "s {} b {}".format(s, b)
-    return s
+    return ''.join([letter for letter in s if letter not in {'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U', '_'}])
 
 def make_short_name(full_path: DatarefFull)->SName:
     '''
@@ -269,6 +269,15 @@ _249_datarefs = getDatarefs()
 
 #--------------------------------------------------------------------------------
 
+def _do_dict_lookup(name:str)->Optional[LookupRecord]:
+    if name in _249_datarefs and _249_datarefs[name]:
+        dataref_full = _249_datarefs[name][0]
+        array_size = _249_datarefs[name][1]
+        return (dataref_full, array_size)
+    else:
+        return None
+
+
 def get_known_dataref_from_shortname(dataref_short:SName)->Optional[LookupRecord]:
     '''
     Returns full dataref and array size from an sname lookup,
@@ -278,12 +287,9 @@ def get_known_dataref_from_shortname(dataref_short:SName)->Optional[LookupRecord
     unlike getting None from a tail-name lookup
     '''
 
-    if dataref_short in _249_datarefs and _249_datarefs[dataref_short]:
-        dataref_full = _249_datarefs[dataref_short][0]
-        array_size = _249_datarefs[dataref_short][1]
-        return (dataref_full, array_size)
-    else:
-        return None
+    assert {'a','e','i','o','u'} & set(dataref_short) == None and dataref_short.count("_") <= 1, "{} is an invalid SName".format(dataref_short)
+    return _do_dict_lookup(dataref_short)
+
 
 def get_known_dataref_from_tailname(dataref_tailname:TailName)->Optional[LookupRecord]:
     '''
@@ -294,12 +300,7 @@ def get_known_dataref_from_tailname(dataref_tailname:TailName)->Optional[LookupR
     unlike getting None from an sname lookup
     '''
 
-    if dataref_tailname in _249_datarefs and _249_datarefs[dataref_tailname]:
-        dataref_full = _249_datarefs[dataref_tailname][0]
-        array_size = _249_datarefs[dataref_tailname][1]
-        return (dataref_full, array_size)
-    else:
-        return None
+    return _do_dict_lookup(dataref_tailname)
 
 
 def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupResult:
@@ -352,7 +353,7 @@ def idx_portion(name:str)->str:
 
 def no_idx(name:str)->str:
     '''Gives a name to simple string processing. Removes the right most "[idx]".'''
-    
+
     # "double/trouble[0] int[10] y" was and is invalid,
     # but we only remove the right most index. Otherwise you're
     # changing the dataref decleration!
@@ -383,21 +384,24 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
 
     #---This block of code attempts to parse the game prop--------------
     def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,str]]:
-        # TODO: This Regex also captures _loop!
-        # Catches cloud cases too. GameAnimValueProp handles this case for you
-        PROP_NAME_IDX_REGEX = r"(?P<prop_root>[a-zA-Z]\w+)(\[(?P<array_idx>\d+)\])?" 
-        PROP_NAME_FNUMBER = r"_v(?P<frame_number>\d+)$"
+        # Warning: One has to later remove _loop. Also, "Cloud Case" aren't caught with this
+        PROP_NAME_IDX_REGEX = r"(?P<prop_root>[a-zA-Z]\w+)(\[(?P<array_idx>\d+)\])?"
+        PROP_NAME_SH = r"_(?P<showhide>show|hide)"
+        PROP_NAME_FNUMBER = r"_v(?P<frame_number>\d+)"
         name = game_prop.name.strip()
 
-        parsed_result = {"anim_type": "", "array_idx":"", "prop_root":"", "frame_number":None, "loop":None}
+        parsed_result = {"anim_type": "", "array_idx":"", "prop_root":"", "frame_number":None, "loop":None, "show_hide_v1":None, "show_hide_v2":None}
 
         print("Attempting to parse {}".format(game_prop.name))
-        if re.search(r"_v\d+_(show|hide)$", name):
+        if re.search(PROP_NAME_IDX_REGEX + PROP_NAME_SH + PROP_NAME_FNUMBER + "$", name):
             print("1. Matched show/hide")
             parsed_result.update(
-                re.search(PROP_NAME_IDX_REGEX + PROP_NAME_FNUMBER,
+                re.search(PROP_NAME_IDX_REGEX + PROP_NAME_SH + PROP_NAME_FNUMBER + "$",
                          name).groupdict(default=""))
-            parsed_result['anim_type'] = name[-4:]  #capture show or hide
+            parsed_result['anim_type'] = parsed_result['showhide']
+            # Show/Hide Always comes in pairs (_v1,_v2), (_v3,_v4), etc. Later on, we'll compress them back into one
+            parsed_result['show_hide_v1'] = game_prop.value if int(parsed_result['frame_number']) % 2 == 1 else None
+            parsed_result['show_hide_v2'] = game_prop.value if int(parsed_result['frame_number']) % 2 == 0 else None
         elif re.search(r"_loop$", name):
             print("2. Matched loop")
             parsed_result.update(
@@ -408,10 +412,10 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             # instead we manually remove '_loop' and be done with it.
             parsed_result['prop_root'] = parsed_result['prop_root'].split('_loop')[0]
             parsed_result['loop'] = game_prop.value
-        elif re.search(PROP_NAME_FNUMBER, name):
+        elif re.search(PROP_NAME_FNUMBER + "$", name):
             print("3. Matched anim-value")
             parsed_result.update(
-                re.search(PROP_NAME_IDX_REGEX+PROP_NAME_FNUMBER,
+                re.search(PROP_NAME_IDX_REGEX+PROP_NAME_FNUMBER + "$",
                           name).groupdict(default=""))
             parsed_result['anim_type'] = ANIM_TYPE_TRANSFORM
         elif re.match(PROP_NAME_IDX_REGEX + "$", name):
@@ -434,7 +438,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         roots_to_test = [
             parsed_result['prop_root'],
             # Coincidentally (or perhaps too cleverly) also takes care of cloud cases
-            parsed_result['prop_root'] + "[{}]".format(parsed_result['array_idx']), 
+            parsed_result['prop_root'] + "[{}]".format(parsed_result['array_idx']),
             ]
     else:
         roots_to_test = [parsed_result['prop_root']]
@@ -513,7 +517,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         frame_number = None
 
     if parsed_result['loop'] is None and parsed_result['anim_type'] == ANIM_TYPE_TRANSFORM:
-        value = float(game_prop.value) 
+        value = float(game_prop.value)
     else:
         value = None
 
@@ -524,9 +528,9 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             array_idx = "[{}]".format(parsed_result['array_idx']) if parsed_result['array_idx'] else '',
             anim_type = parsed_result['anim_type'],
             frame_number = frame_number,
-            loop = float(game_prop.value) if parsed_result['loop'] else None,
-            show_hide_v1 = None, #TODO: Show/Hide not implemented yet!
-            show_hide_v2 = None, #TODO: Show/Hide not implemented yet!
+            loop = parsed_result['loop'],
+            show_hide_v1 = parsed_result['show_hide_v1'],
+            show_hide_v2 = parsed_result['show_hide_v2'],
             value = value
             )
 
@@ -550,9 +554,40 @@ def convert_armature_animations(armature:bpy.types.Object):
             Bones without useful names are ignored.
             '''
 
-            all_arm_drefs = {} # type: Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]
+            all_arm_drefs = {} # type: Dict[DatarefFull,Tuple[Union[bpy.types.PoseBone,bpy.types.Object]],List[ParsedGameAnimValueProp]]]
 
-            #TODO: What about show/hide which is not dependent on bone names!
+            for game_prop in filter(lambda p: p.type == "STRING", armature.game.properties):
+                def find_key_uses(key_to_match:str)->bool:
+                    '''
+                    We can use this to find places where the potential disambiguation key
+                    is actually used in a show/hide property. If, after filtering, we find
+                    we have some show/hide props for this key, this key is added to all_arm_drefs
+                    '''
+                    name = key_to_match.strip()
+                    REGEX_STR = ''.join([r"(?P<prop_root>" + game_prop.name + ")",
+                                         r"(\[(?P<array_idx>\d+)\])?",
+                                         r"_(?P<showhide>show|hide)",
+                                         r"_v(?P<frame_number>\d+)"]) + "$"
+
+                    try:
+                        return re.match(REGEX_STR, name).groupdict()['prop_root'] == game_prop.name
+                    except:
+                        return None
+
+                print("Attempting to find uses of (%s/%s)" % (game_prop.value, game_prop.name))
+                matching_key_users = list(
+                        filter(lambda p: find_key_uses(p.name),
+                            filter(lambda p: "_show_" in p.name or "_hide_" in p.name, armature.game.properties)
+                    )
+                )
+
+                print("Matching uses of potential disambiguation key")
+                print([f.name for f in matching_key_users])
+                if matching_key_users:
+                    disambiguating_key = "{}/{}".format(game_prop.value.strip(" /"), game_prop.name.strip())
+                    print("Disambiguating Key: " + disambiguating_key)
+                    all_arm_drefs[disambiguating_key] = (armature,[]) # Show hide applies to armature object
+
             for bone in armature.pose.bones:
                 # 2.49 slices and trims bone names before look up
                 bone_name = bone.name.split('.')[0].strip() # type: BoneName
@@ -600,7 +635,16 @@ def convert_armature_animations(armature:bpy.types.Object):
             decoded_animval = decode_game_animvalue_prop(game_prop, tuple(all_arm_drefs.keys()))
             if decoded_animval:
                 assert decoded_animval.path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + decoded_animval.path
-                all_arm_drefs[decoded_animval.path][1].append(decoded_animval)
+                existing_props = all_arm_drefs[decoded_animval.path][1]
+                # Show/Hide v1 and v2 will come in as seperate properties,
+                # but test_creation_helpers needs them together
+                if (existing_props
+                    and existing_props[-1].anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}
+                    and existing_props[-1].show_hide_v2 is None):
+                    assert existing_props[-1].path == decoded_animval.path, "show hide props out of order"
+                    existing_props[-1].show_hide_v2 = decoded_animval.show_hide_v2
+                else:
+                    all_arm_drefs[decoded_animval.path][1].append(decoded_animval)
             else:
                 #TODO: Error code goes here? How do we do these?
                 #TODO: What about disambiguating keys returning none from decode_game_animvalue?
@@ -608,39 +652,12 @@ def convert_armature_animations(armature:bpy.types.Object):
                 continue
 
         for path, (bone, parsed_props) in all_arm_drefs.items():
-            '''
-            Animation Data Model
-            Concept   | 2.49                   | 2.78
-            ----------|------------------------|-----
-            Action    | Dict[channel_name,Ipo] | List[FCurves] but also has groups of channels to organize it
-            Channel   | Uses bone name, semanti| List[FCurves], semantics, subsection of Action's list
-            Group     | Optional               | Mandatory, List[Channels], name is bone name
-            Curve     | IPOCurve               | FCurve
-            Anim Data | in bezierPoints        | in keyframe_points
-
-            During read, 2.7x turns channels into groups and IPOCurves into FCurves.
-
-            During export, 2.49 replaces missing dataref values with 0 (if unspecified)
-            and 1 for deleted middle keys and the last key (if unspecified) so that
-            every Blender keyframe has a pair.
-
-            An ex 7 frame animation:
-            nth Frame|Value   |In Game Props?| As In OBJ
-            ---------|--------|--------------|----------------
-                    1|0       | No           | ..._key 0
-                    2|0.0     | Yes          | ..._key 0.0
-                    3|2001.0  | Yes          | ..._key 2001.0
-                    4|-3999.0 | Yes          | ..._key -3999.0
-                    5|1       | No (deleted) | ..._key 1
-                    6|1.0     | Yes          | ..._key 1.0
-                    7|1.0     | No           | ..._key 1
-
-            In 2.78 we make a fake parsed prop to so that we have the same behavior.
-            '''
-
             # A sorted list of each bone's channel's min/max gets us the first and last created frames
-            # We sort, subtract their components and get y , sorting FCurve's range 
-            s = sorted([c.range() for c in armature.animation_data.action.groups[bone.name].channels])
+            try:
+                s = sorted([c.range() for c in armature.animation_data.action.groups[bone.name].channels])
+            except KeyError:
+                continue
+
             first_frame = int(s[0][0]) # min value of smallest member in list
             last_frame = max(int(s[-1][1]), 2) # Max val of largest member or 2 (for datarefs with only 0 or 1 parsed props)
 
@@ -657,6 +674,9 @@ def convert_armature_animations(armature:bpy.types.Object):
 
             for ensure_has in range(1,last_frame+1):
                 ensure_has_idx = ensure_has-1
+                # 2.49 makes sure every Blender keyframe has a 
+                # dataref value of 0 (if first frame) or 1
+                # to go with. If missing, it is filled in.
                 new_pp_frame = ParsedGameAnimValueProp(
                         path=path,
                         array_idx=idx_portion(bone.name),
@@ -677,6 +697,7 @@ def convert_armature_animations(armature:bpy.types.Object):
         for path, (bone, parsed_props) in all_arm_drefs.items():
             for parsed_prop in parsed_props:
                 if parsed_prop.value is not None:
+                    #TODO: Must use no_ref for show_hide paths, but what does that mean?
                     test_creation_helpers.set_animation_data(
                         bone, [
                             test_creation_helpers.KeyframeInfoDatarefKeyframe(
@@ -702,7 +723,7 @@ def convert_armature_animations(armature:bpy.types.Object):
                         bone, [
                             test_creation_helpers.KeyframeInfoShowHide(
                                 dataref_path=path + parsed_prop.array_idx,
-                                dataref_anim_type=parsed_prop.dataref_anim_type,
+                                dataref_anim_type=parsed_prop.anim_type,
                                 dataref_show_hide_v1=parsed_prop.show_hide_v1,
                                 dataref_show_hide_v2=parsed_prop.show_hide_v2,
                                 ),
@@ -712,4 +733,3 @@ def convert_armature_animations(armature:bpy.types.Object):
 
                 else:
                     assert False, "How did we get here? {}".format(parsed_prop)
-

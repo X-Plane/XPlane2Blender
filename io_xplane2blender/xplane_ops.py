@@ -664,7 +664,7 @@ class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
         command_search_window_state = context.scene.xplane.command_search_window_state
         #Load on first use
         if len(command_search_window_state.command_search_list) == 0:
-            filepath=pathlib.Path(xplane_helpers.get_plugin_resources_folder(),"Commands.txt")
+            filepath=pathlib.Path(xplane_helpers.get_addon_resources_dir(),"Commands.txt")
             get_commands_txt_result = xplane_commands_txt_parser.get_commands_txt_file_content(filepath.as_posix())
             if isinstance(get_commands_txt_result,str):
                 short_filepath = "..."+os.path.sep.join(filepath.parts[-3:])
@@ -705,7 +705,7 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
         dataref_search_window_state = context.scene.xplane.dataref_search_window_state
         #Load on first use
         if len(dataref_search_window_state.dataref_search_list) == 0:
-            filepath=pathlib.Path(xplane_helpers.get_plugin_resources_folder(),"DataRefs.txt")
+            filepath=pathlib.Path(xplane_helpers.get_addon_resources_dir(),"DataRefs.txt")
             get_datarefs_txt_result = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(filepath.as_posix())
             if isinstance(get_datarefs_txt_result,str):
                 short_filepath = "..."+os.path.sep.join(filepath.parts[-3:])
