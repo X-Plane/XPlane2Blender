@@ -554,7 +554,7 @@ def convert_armature_animations(armature:bpy.types.Object):
             Bones without useful names are ignored.
             '''
 
-            all_arm_drefs = {} # type: Dict[DatarefFull,Tuple[Union[bpy.types.PoseBone,bpy.types.Object]],List[ParsedGameAnimValueProp]]]
+            all_arm_drefs = OrderedDict() # type: OrderedDict[DatarefFull,Tuple[Union[bpy.types.PoseBone,bpy.types.Object]],List[ParsedGameAnimValueProp]]]
 
             for game_prop in filter(lambda p: p.type == "STRING", armature.game.properties):
                 def find_key_uses(key_to_match:str)->bool:
@@ -628,7 +628,7 @@ def convert_armature_animations(armature:bpy.types.Object):
             print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
             return all_arm_drefs
 
-        all_arm_drefs = find_all_datarefs_in_armature(armature) # type: Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]
+        all_arm_drefs = find_all_datarefs_in_armature(armature) # type: OrderedDict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]
 
         for game_prop in armature.game.properties:
             print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
@@ -643,6 +643,7 @@ def convert_armature_animations(armature:bpy.types.Object):
                     and existing_props[-1].show_hide_v2 is None):
                     assert existing_props[-1].path == decoded_animval.path, "show hide props out of order"
                     existing_props[-1].show_hide_v2 = decoded_animval.show_hide_v2
+                    all_arm_drefs.move_to_end(decoded_animval.path) # As we parse game props, we re-order the show/hide disambiguous keys by the order the props are in, not the keys
                 else:
                     all_arm_drefs[decoded_animval.path][1].append(decoded_animval)
             else:
