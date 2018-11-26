@@ -57,10 +57,10 @@ class XPlanePrimitive(XPlaneObject):
         # To qoute: "You aren't going to need it!
         self.faces = None 
 
-        self.getWeight()
+        self.setWeight()
 
-    def getWeight(self, defaultWeight = 0):
-        super(XPlanePrimitive, self).getWeight(defaultWeight)
+    def setWeight(self, defaultWeight = 0):
+        super(XPlanePrimitive, self).setWeight(defaultWeight)
 
         if not hasattr(self.blenderObject.xplane, 'override_weight') or not self.blenderObject.xplane.override_weight:
             mat_weight = 0
