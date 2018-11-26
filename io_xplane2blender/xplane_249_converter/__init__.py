@@ -8,7 +8,7 @@ import enum
 import os
 import re
 import sys
-from typing import Any, Dict, List, Optional, Text, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bpy
 
