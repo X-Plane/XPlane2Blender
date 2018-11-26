@@ -11,6 +11,7 @@ import enum
 import os
 import re
 import sys
+from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Text, Tuple, Union
 from operator import attrgetter
 
@@ -428,7 +429,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             return None
 
         assert parsed_result['anim_type'] or parsed_result['frame_number'] or parsed_result['loop'], "Parsed game_prop.name is missing meaningful values: {}".format(parsed_result)
-        print("Parse Results: {}".format(parsed_result))
+        #print("Parse Results: {}".format(parsed_result))
         return parsed_result
 
     parsed_result = parse_game_prop_name(game_prop)

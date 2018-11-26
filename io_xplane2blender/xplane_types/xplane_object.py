@@ -78,6 +78,10 @@ class XPlaneObject():
         self.attributes = XPlaneAttributes()
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
+
+        # Given that show/hide are explicitly ordered by
+        # the author, a dict of any kind isn't appropriate
+        self.showHideAttributes = [] # type: List[XPlaneAttribute]
         self.conditions = []
 
         if hasattr(self.blenderObject.xplane, 'lod'):
@@ -112,14 +116,6 @@ class XPlaneObject():
         self.animAttributes.order()
         self.cockpitAttributes.order()
 
-    # Method: hasAnimAttributes
-    # Checks if the object has animation attributes.
-    #
-    # Returns:
-    #   bool - True if object has animtaion attributes, False if not.
-    def hasAnimAttributes(self):
-        return (hasattr(self, 'animAttributes') and len(self.animAttributes) > 0)
-
     def collectCustomAttributes(self):
         xplaneFile = self.xplaneBone.xplaneFile
         commands =  xplaneFile.commands
@@ -146,7 +142,7 @@ class XPlaneObject():
             if dataref.anim_type in (ANIM_TYPE_SHOW, ANIM_TYPE_HIDE):
                 name = 'ANIM_' + dataref.anim_type
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
-                self.animAttributes.add(XPlaneAttribute(name, value))
+                self.showHideAttributes.append(XPlaneAttribute(name, value))
 
     #TODO: This needs to be renamed!!! This is just terrible. This doesn't actually get anything, it sets self.weight!
     # Method: getWeight

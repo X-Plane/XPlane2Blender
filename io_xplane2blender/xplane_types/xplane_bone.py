@@ -515,7 +515,10 @@ class XPlaneBone():
                p = None
             '''
         isAnimated = self.isAnimated()
-        hasAnimationAttributes = (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
+        hasAnimationAttributes = (self.xplaneObject != None
+                                  and (self.xplaneObject.animAttributes
+                                       or self.xplaneObject.showHideAttributes)
+                                 )
 
         if not isAnimated and not hasAnimationAttributes:
             return o
@@ -797,6 +800,10 @@ class XPlaneBone():
             for i in range(len(attr.value)):
                 o += indent + '%s\t%s\n' % (attr.name, attr.getValueAsString(i=i))
 
+        for attr in self.xplaneObject.showHideAttributes:
+            for i in range(len(attr.value)):
+                o += indent + "%s\t%s\n" % (attr.name, attr.getValueAsString(i=i))
+
         return o
 
     def writeAnimationSuffix(self):
@@ -804,7 +811,10 @@ class XPlaneBone():
         indent = self.getIndent()
 
         isAnimated = self.isAnimated()
-        hasAnimationAttributes = (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
+        hasAnimationAttributes = (self.xplaneObject != None
+                                  and (self.xplaneObject.animAttributes
+                                       or self.xplaneObject.showHideAttributes)
+                                  )
 
         if not isAnimated and not hasAnimationAttributes:
             return o
