@@ -197,7 +197,6 @@ def load_handler(dummy):
     #    but update won't be re-run. User is on their own if they made real changes to the
     #    data model
     legacy_build_number_w_history = False
-    #TODO: We should run the converter automatically if we don't have 'xplane2blender_version', history version, and game properties. We can even add a specific legacy version indicating we know it was converted from 2.49
     if scene.get('xplane2blender_version') != xplane_constants.DEPRECATED_XP2B_VER:
         # "3.2.0 was the last version without an updater, so default to that."
         # 3.20 was a mistake. If we get to a real version 3.20, we'll deprecate support for 3.2.0

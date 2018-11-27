@@ -386,18 +386,18 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     #---This block of code attempts to parse the game prop--------------
     def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,str]]:
         # Warning: One has to later remove _loop. Also, "Cloud Case" aren't caught with this
-        PROP_NAME_IDX_REGEX = r"(?P<prop_root>[a-zA-Z]\w+)(\[(?P<array_idx>\d+)\])?"
-        PROP_NAME_SH = r"_(?P<showhide>show|hide)"
-        PROP_NAME_FNUMBER = r"_v(?P<frame_number>\d+)"
+        ROOT_IDX = r"(?P<prop_root>\w+)(\[(?P<array_idx>\d+)\])?"
+        SHOWHIDE = r"_(?P<showhide>show|hide)"
+        F_NUMBER = r"_v(?P<frame_number>\d+)"
         name = game_prop.name.strip()
 
         parsed_result = {"anim_type": "", "array_idx":"", "prop_root":"", "frame_number":None, "loop":None, "show_hide_v1":None, "show_hide_v2":None}
 
         print("Attempting to parse {}".format(game_prop.name))
-        if re.search(PROP_NAME_IDX_REGEX + PROP_NAME_SH + PROP_NAME_FNUMBER + "$", name):
+        if re.match(ROOT_IDX + SHOWHIDE + F_NUMBER + "$", name):
             print("1. Matched show/hide")
             parsed_result.update(
-                re.search(PROP_NAME_IDX_REGEX + PROP_NAME_SH + PROP_NAME_FNUMBER + "$",
+                re.match(ROOT_IDX + SHOWHIDE + F_NUMBER + "$",
                          name).groupdict(default=""))
             parsed_result['anim_type'] = parsed_result['showhide']
             # Show/Hide Always comes in pairs (_v1,_v2), (_v3,_v4), etc. Later on, we'll compress them back into one
@@ -406,20 +406,20 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         elif re.search(r"_loop$", name):
             print("2. Matched loop")
             parsed_result.update(
-                re.search(PROP_NAME_IDX_REGEX,
+                re.search(ROOT_IDX,
                     name).groupdict(default=""))
             parsed_result['anim_type'] = ANIM_TYPE_TRANSFORM
             # I got tired of re-writing the regex to try and make this work,
             # instead we manually remove '_loop' and be done with it.
             parsed_result['prop_root'] = parsed_result['prop_root'].split('_loop')[0]
             parsed_result['loop'] = game_prop.value
-        elif re.search(PROP_NAME_FNUMBER + "$", name):
+        elif re.match(ROOT_IDX + F_NUMBER + "$", name):
             print("3. Matched anim-value")
             parsed_result.update(
-                re.search(PROP_NAME_IDX_REGEX+PROP_NAME_FNUMBER + "$",
+                re.match(ROOT_IDX+F_NUMBER + "$",
                           name).groupdict(default=""))
             parsed_result['anim_type'] = ANIM_TYPE_TRANSFORM
-        elif re.match(PROP_NAME_IDX_REGEX + "$", name):
+        elif re.match(ROOT_IDX + "$", name):
             print("4. Matched disambiguating key or other text")
             print("Text: {}".format(name))
             return None

@@ -9,7 +9,6 @@ from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender import xplane_249_converter
 
 
-#TODO, make a counter property so it can only be run once?
 class SCENE_OT_249_do_conversion(bpy.types.Operator):
     bl_label='Perform 2.49 to 2.7x Summary'
     bl_idname='xplane.do_249_conversion'
