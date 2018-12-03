@@ -1,5 +1,6 @@
 import argparse
 import glob
+import itertools
 import os
 import re
 import shutil
@@ -38,6 +39,10 @@ def _make_argparse():
             default=False,
             action="store_true",
             dest="keep_going")
+    test_selection.add_argument("--include-folder",
+            action="append",
+            help="Include another folder of .test.(blend|py). Repeat per folder.",
+            type=str)
 
     output_control = parser.add_argument_group("Output Control")
     output_control.add_argument("-q", "--quiet",
@@ -111,7 +116,7 @@ def main(argv=None)->int:
         Print the C-Style and Vim comment block end tokens
         so that text editors can recognize places to automatically fold up the tests
         '''
-        print(('=' *75)+"}}}*/")
+        print(('='*75)+"\x7D\x7D\x7D*\x2F")
 
     def inFilter(filepath:str)->bool:
         '''
@@ -140,7 +145,7 @@ def main(argv=None)->int:
         return passes
 
     exit_code = 0
-    for root, dirs, files in os.walk('./tests'):
+    for root, dirs, files in itertools.chain(*[os.walk(path) for path in ['./tests', *argv.include_folder]]):
         filtered_files = list(filter(lambda file: file.endswith('.test.py') and
                                      inFilter(os.path.join(root, file)),
                                      files))
