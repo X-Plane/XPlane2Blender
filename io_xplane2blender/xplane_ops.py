@@ -423,12 +423,6 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
         path = getDatarefValuePath(self.index)
         value = obj.xplane.datarefs[self.index].value
 
-        if obj.animation_data is None:
-            # creates only if not existing, but this is not obvious at all
-            obj.animation_data_create()
-        if obj.animation_data.action is None:
-            obj.animation_data.action = bpy.data.actions.new(obj.name + "Action")
-
         if "XPlane Datarefs" not in obj.animation_data.action.groups:
             obj.animation_data.action.groups.new('XPlane Datarefs')
 
@@ -560,13 +554,6 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
                                    # See also: https://blender.stackexchange.com/q/31759
         armature = context.active_object
         path = getDatarefValuePath(self.index, bone)
-
-        if armature.animation_data is None:
-            # create actually don't create if already existing,
-            # but this is not obvious at all
-            armature.animation_data_create()
-        if armature.animation_data.action is None:
-            armature.animation_data.action = bpy.data.actions.new(armature.name + "Action")
 
         groupName = "XPlane Datarefs "+bone.name
 

@@ -6,6 +6,7 @@ from typing import *
 
 import bpy
 
+from bpy.types import Armature, Bone, ImageTexture, Material, Object, PoseBone
 from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW, ANIM_TYPE_TRANSFORM
 from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
@@ -543,15 +544,19 @@ def delete_everything():
     delete_all_other_scenes()
 
 
-def set_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy.types.PoseBone],
+def set_animation_data(blender_struct: Union[Object,Bone,PoseBone],
         keyframe_infos: List[KeyframeInfo],
-        parent_armature: [bpy.types.Armature]=None)->None:
+        parent_armature: [Armature]=None,
+        dataref_per_keyframe_info: bool=False)->None:
     '''
     - blender_struct - A Blender lamp, mesh, armature, or bone to attach keyframes to.
     For a bone set_animation_data will automatically use the correct Bone or PoseBone form.
     - keyframe_infos - A list of keyframe info which will be used to apply keyframes
-    - parent_armature - If the blender_struct is a Bone a PoseBone, the parent armature of it is required
+    - parent_armature - If the blender_struct is a Bone or PoseBone, the parent armature of it is required
     (because Bones do not keep track of who their parent armature is for some reason -Ted, 3/21/2018)
+    - dataref_per_keyframe_info - When true a dataref is created for every keyframe info passed in,
+    even if there is an existing dataref with that same path already in the blender_struct
+    (recommended for Show/Hide)
 
     keyframe_infos must be all the same dataref and all the same animation type. This was a deliberate choice
     to help catch errors in bad data
@@ -580,31 +585,35 @@ def set_animation_data(blender_struct: Union[bpy.types.Object,bpy.types.Bone,bpy
 
         if not parent_armature.animation_data: #"Be explict in your intetions"
             parent_armature.animation_data_create()
+
+        if not parent_armature.animation_data.action:
             #name+Action is the same scheme Blender uses by default
             #We know we won't have a collision because the object name already corrects itself
             parent_armature.animation_data.action = bpy.data.actions.new(name=blender_struct.name+"Action")
     else:
         datarefs = blender_struct.xplane.datarefs
         bpy.context.scene.objects.active = blender_struct
+
         if not blender_struct.animation_data:
             # This can actually be run over and over without overwriting,
             # explict is better than implict
             blender_struct.animation_data_create()
+
+        if not blender_struct.animation_data.action:
             blender_struct.animation_data.action = bpy.data.actions.new(name=blender_struct.name+"Action")
 
-    # If this dataref has never been added before, add it. Otherwise,
-    # find the index in the xplane.datarefs collection
-    if not keyframe_infos[0].dataref_path in [dref.path for dref in datarefs]:
-        dataref_prop = datarefs.add()
-        dataref_prop.path = keyframe_infos[0].dataref_path
-        dataref_prop.anim_type = keyframe_infos[0].dataref_anim_type
-        dataref_index = len(datarefs)-1
-    else:
-        dataref_index, dataref_prop = [(index, dref)
-                                       for index, dref in enumerate(datarefs)
-                                       if dref.path == keyframe_infos[0].dataref_path][0]
-
     for kf_info in keyframe_infos:
+        if (not keyframe_infos[0].dataref_path in [dref.path for dref in datarefs]
+            or dataref_per_keyframe_info):
+            dataref_prop = datarefs.add()
+            dataref_prop.path = keyframe_infos[0].dataref_path
+            dataref_prop.anim_type = keyframe_infos[0].dataref_anim_type
+            dataref_index = len(datarefs)-1
+        else:
+            dataref_index, dataref_prop = [(index, dref)
+                                           for index, dref in enumerate(datarefs)
+                                           if dref.path == keyframe_infos[0].dataref_path][0]
+
         try:
             bpy.context.scene.frame_current = kf_info.frame_number
             dataref_prop.value = kf_info.dataref_value

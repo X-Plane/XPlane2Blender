@@ -1,4 +1,3 @@
-
 '''
 This module handles converting Dataref Keyframes and encoding and decoding bone names
 Reading List:
@@ -550,7 +549,6 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
 
 def convert_armature_animations(armature:bpy.types.Object):
     #TODO: Create log, similar to conversion log
-
     if armature:
         print("Decoding Game-Properties for '{}'".format(armature.name))
         bpy.context.scene.objects.active = armature
@@ -565,8 +563,6 @@ def convert_armature_animations(armature:bpy.types.Object):
             '''
 
             all_arm_drefs = OrderedDict() # type: OrderedDict[DatarefFull,Tuple[Union[bpy.types.PoseBone,bpy.types.Object]],List[ParsedGameAnimValueProp]]]
-
-
 
             # If type is a string and it parses, we search for other properties that use that root
             # Hopefully we find the disambiguating key for an unknown show/hide property
@@ -604,8 +600,13 @@ def convert_armature_animations(armature:bpy.types.Object):
                 try:
                     parsed_search_prop = parse_game_prop_name(game_prop)
                     if parsed_search_prop["anim_type"] in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}:
-                        #TODO: Cloud case needs handling, must use lookup_dataref with and without index to handle
-                        lookup_record = lookup_dataref(parsed_search_prop["prop_root"], no_idx(parsed_search_prop["prop_root"]))
+                        # Handles Cloud Case!
+                        if parsed_search_prop["array_idx"]:
+                            search_prop_root = "{}[{}]".format(parsed_search_prop["prop_root"], parsed_search_prop["array_idx"])
+                        else:
+                            search_prop_root = parsed_search_prop["prop_root"]
+
+                        lookup_record = lookup_dataref(search_prop_root, no_idx(parsed_search_prop["prop_root"]))
                         all_arm_drefs[lookup_record.record[0]] = (armature, [])
                 except TypeError: # parsed_search_prop is None, record is None
                     pass
@@ -635,7 +636,8 @@ def convert_armature_animations(armature:bpy.types.Object):
                         print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
                         continue
 
-                    if disambiguating_prop.type == "STRING":
+                    # Checking for a value catches when people have to use "none:''" or "no_ref:''"
+                    if disambiguating_prop.type == "STRING" and disambiguating_prop.value:
                         disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"),bone_name)
                         print("Disambiguating Key: " + disambiguating_key)
                         all_arm_drefs[disambiguating_key] = (bone,[])
@@ -753,7 +755,8 @@ def convert_armature_animations(armature:bpy.types.Object):
                                 dataref_show_hide_v2=parsed_prop.show_hide_v2,
                                 ),
                             ],
-                            parent_armature=armature
+                            parent_armature=armature,
+                            dataref_per_keyframe_info=True
                         )
 
                 else:
