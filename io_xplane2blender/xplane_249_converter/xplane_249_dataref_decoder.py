@@ -549,215 +549,213 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
 
 def convert_armature_animations(armature:bpy.types.Object):
     #TODO: Create log, similar to conversion log
-    if armature:
-        print("Decoding Game-Properties for '{}'".format(armature.name))
-        bpy.context.scene.objects.active = armature
+    print("Decoding Game-Properties for '{}'".format(armature.name))
+    bpy.context.scene.objects.active = armature
 
-        def find_all_datarefs_in_armature(armature: bpy.types.Object)->Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]:
-            '''
-            Returns a dictionary all datarefs mentioned in the bone names and game props,
-            paired with the Bone the data was taken from an a list for
-            future parsed game properties.
+    def find_all_datarefs_in_armature(armature: bpy.types.Object)->Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]:
+        '''
+        Returns a dictionary all datarefs mentioned in the bone names and game props,
+        paired with the Bone the data was taken from an a list for
+        future parsed game properties.
 
-            Bones without useful names are ignored.
-            '''
+        Bones without useful names are ignored.
+        '''
 
-            all_arm_drefs = OrderedDict() # type: OrderedDict[DatarefFull,Tuple[Union[bpy.types.PoseBone,bpy.types.Object]],List[ParsedGameAnimValueProp]]]
+        all_arm_drefs = OrderedDict() # type: OrderedDict[DatarefFull,Tuple[Union[bpy.types.PoseBone,bpy.types.Object]],List[ParsedGameAnimValueProp]]
 
-            # If type is a string and it parses, we search for other properties that use that root
-            # Hopefully we find the disambiguating key for an unknown show/hide property
-            for game_prop in filter(lambda p: p.type == "STRING", armature.game.properties):
-                def find_key_uses(prop_root_to_find:str, prop_to_match:bpy.types.GameProperty)->bool:
-                    '''
-                    We can use this to find places where the potential disambiguation key
-                    is actually used in a show/hide property. If, after filtering, we find
-                    we have some show/hide props for this key, this key is added to all_arm_drefs
-                    '''
-                    parsed_prop = parse_game_prop_name(prop_to_match)
+        # If type is a string and it parses, we search for other properties that use that root
+        # Hopefully we find the disambiguating key for an unknown show/hide property
+        for game_prop in filter(lambda p: p.type == "STRING", armature.game.properties):
+            def find_key_uses(prop_root_to_find:str, prop_to_match:bpy.types.GameProperty)->bool:
+                '''
+                We can use this to find places where the potential disambiguation key
+                is actually used in a show/hide property. If, after filtering, we find
+                we have some show/hide props for this key, this key is added to all_arm_drefs
+                '''
+                parsed_prop = parse_game_prop_name(prop_to_match)
 
-                    try:
-                        return (parsed_prop["prop_root"] == prop_root_to_find and
-                                parsed_prop["anim_type"] in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE})
-                    except TypeError:
-                        return False
-
-                print("Attempting to find uses of '%s/%s'" % (game_prop.value, game_prop.name))
-                matching_key_users = list(
-                                   filter(lambda p: find_key_uses(game_prop.name, p), armature.game.properties)
-                               )
-
-                if matching_key_users:
-                    disambiguating_key = "{}/{}".format(game_prop.value.strip(" /"), game_prop.name.strip())
-                    print("Matching uses of disambiguating key '{}': {}".format(disambiguating_key, [k.name for k in matching_key_users]))
-                    all_arm_drefs[disambiguating_key] = (armature,[]) # Show hide applies to armature object
-                else:
-                    print("Couldn't find uses for '%s/%s'" % (game_prop.value, game_prop.name))
-
-            # In case we have a show/hide property that doesn't have a disambiguating key
-            # we have to test every game prop
-            for game_prop in filter(lambda p: p.type == "FLOAT" and parse_game_prop_name(p),
-                                    armature.game.properties):
                 try:
-                    parsed_search_prop = parse_game_prop_name(game_prop)
-                    if parsed_search_prop["anim_type"] in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}:
-                        # Handles Cloud Case!
-                        if parsed_search_prop["array_idx"]:
-                            search_prop_root = "{}[{}]".format(parsed_search_prop["prop_root"], parsed_search_prop["array_idx"])
-                        else:
-                            search_prop_root = parsed_search_prop["prop_root"]
+                    return (parsed_prop["prop_root"] == prop_root_to_find and
+                            parsed_prop["anim_type"] in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE})
+                except TypeError:
+                    return False
 
-                        lookup_record = lookup_dataref(search_prop_root, no_idx(parsed_search_prop["prop_root"]))
-                        all_arm_drefs[lookup_record.record[0]] = (armature, [])
-                except TypeError: # parsed_search_prop is None, record is None
-                    pass
+            print("Attempting to find uses of '%s/%s'" % (game_prop.value, game_prop.name))
+            matching_key_users = list(
+                               filter(lambda p: find_key_uses(game_prop.name, p), armature.game.properties)
+                           )
 
-            for bone in armature.pose.bones:
-                # 2.49 slices and trims bone names before look up
-                bone_name = bone.name.split('.')[0].strip() # type: BoneName
-                bone_name_no_idx = no_idx(bone_name) # type: Union[SName,TailName]
-
-                print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
-                lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
-
-                print("Lookup Results: %s" % lookup_result)
-                if lookup_result.record:
-                    all_arm_drefs[lookup_result.record[0]] = (bone, [])
-                else:
-                    # Catches known but ambiguous and unknown datarefs. Needs disambiguating
-                    #TODO: What about a situation where you have my/custom/ref
-                    # and my/custom/ref[1]
-                    # Is this possible? Yes! ref:my/custom is disamb key, snames are ref[1] and ref.
-                    # Seems very unlikely, however.
-                    if bone_name in armature.game.properties:
-                        disambiguating_prop = armature.game.properties[bone_name]
-                    elif bone_name_no_idx in armature.game.properties:
-                        disambiguating_prop = armature.game.properties[bone_name_no_idx]
-                    else:
-                        print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
-                        continue
-
-                    # Checking for a value catches when people have to use "none:''" or "no_ref:''"
-                    if disambiguating_prop.type == "STRING" and disambiguating_prop.value:
-                        disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"),bone_name)
-                        print("Disambiguating Key: " + disambiguating_key)
-                        all_arm_drefs[disambiguating_key] = (bone,[])
-                    else:
-                        print("Probable disambiguating prop ({}:{}) has wrong value type {}".format(
-                            disambiguating_prop.name,
-                            disambiguating_prop.value,
-                            disambiguating_prop.type))
-                        print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
-                        continue
-
-            print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
-            return all_arm_drefs
-
-        all_arm_drefs = find_all_datarefs_in_armature(armature) # type: OrderedDict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]
-
-        for game_prop in armature.game.properties:
-            print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
-            decoded_animval = decode_game_animvalue_prop(game_prop, tuple(all_arm_drefs.keys()))
-            if decoded_animval:
-                assert decoded_animval.path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + decoded_animval.path
-                existing_props = all_arm_drefs[decoded_animval.path][1]
-                # Show/Hide v1 and v2 will come in as seperate properties,
-                # but test_creation_helpers needs them together
-                if (existing_props
-                    and existing_props[-1].anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}
-                    and existing_props[-1].show_hide_v2 is None):
-                    assert existing_props[-1].path == decoded_animval.path, "show hide props out of order"
-                    existing_props[-1].show_hide_v2 = decoded_animval.show_hide_v2
-                    all_arm_drefs.move_to_end(decoded_animval.path) # As we parse game props, we re-order the show/hide disambiguous keys by the order the props are in, not the keys
-                else:
-                    all_arm_drefs[decoded_animval.path][1].append(decoded_animval)
+            if matching_key_users:
+                disambiguating_key = "{}/{}".format(game_prop.value.strip(" /"), game_prop.name.strip())
+                print("Matching uses of disambiguating key '{}': {}".format(disambiguating_key, [k.name for k in matching_key_users]))
+                all_arm_drefs[disambiguating_key] = (armature,[]) # Show hide applies to armature object
             else:
-                #TODO: Error code goes here? How do we do these?
-                #TODO: What about disambiguating keys returning none from decode_game_animvalue?
-                print("Could not decode {}".format(game_prop.name))
-                continue
+                print("Couldn't find uses for '%s/%s'" % (game_prop.value, game_prop.name))
 
-        for path, (bone, parsed_props) in all_arm_drefs.items():
-            # A sorted list of each bone's channel's min/max gets us the first and last created frames
+        # In case we have a show/hide property that doesn't have a disambiguating key
+        # we have to test every game prop
+        for game_prop in filter(lambda p: p.type == "FLOAT" and parse_game_prop_name(p),
+                                armature.game.properties):
             try:
-                s = sorted([c.range() for c in armature.animation_data.action.groups[bone.name].channels])
-            except AttributeError: # In case action is None
-                continue
-            except KeyError: # In case bone.name isn't a group name
-                continue
+                parsed_search_prop = parse_game_prop_name(game_prop)
+                if parsed_search_prop["anim_type"] in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}:
+                    # Handles Cloud Case!
+                    if parsed_search_prop["array_idx"]:
+                        search_prop_root = "{}[{}]".format(parsed_search_prop["prop_root"], parsed_search_prop["array_idx"])
+                    else:
+                        search_prop_root = parsed_search_prop["prop_root"]
 
-            first_frame = int(s[0][0]) # min value of smallest member in list
-            last_frame = max(int(s[-1][1]), 2) # Max val of largest member or 2 (for datarefs with only 0 or 1 parsed props)
+                    lookup_record = lookup_dataref(search_prop_root, no_idx(parsed_search_prop["prop_root"]))
+                    all_arm_drefs[lookup_record.record[0]] = (armature, [])
+            except TypeError: # parsed_search_prop is None, record is None
+                pass
 
-            print("\nBone name {}: Filling between first_frame {}, last_frame {}".format(bone.name,first_frame,last_frame))
-            frameless_props = []
-            keyframe_props = []
-            for p in parsed_props:
-                if p.frame_number:
-                    keyframe_props.append(p)
+        for bone in armature.pose.bones:
+            # 2.49 slices and trims bone names before look up
+            bone_name = bone.name.split('.')[0].strip() # type: BoneName
+            bone_name_no_idx = no_idx(bone_name) # type: Union[SName,TailName]
+
+            print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
+            lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
+
+            print("Lookup Results: %s" % lookup_result)
+            if lookup_result.record:
+                all_arm_drefs[lookup_result.record[0]] = (bone, [])
+            else:
+                # Catches known but ambiguous and unknown datarefs. Needs disambiguating
+                #TODO: What about a situation where you have my/custom/ref
+                # and my/custom/ref[1]
+                # Is this possible? Yes! ref:my/custom is disamb key, snames are ref[1] and ref.
+                # Seems very unlikely, however.
+                if bone_name in armature.game.properties:
+                    disambiguating_prop = armature.game.properties[bone_name]
+                elif bone_name_no_idx in armature.game.properties:
+                    disambiguating_prop = armature.game.properties[bone_name_no_idx]
                 else:
-                    frameless_props.append(p)
+                    print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
+                    continue
 
-            keyframe_props.sort(key=attrgetter('frame_number'))
+                # Checking for a value catches when people have to use "none:''" or "no_ref:''"
+                if disambiguating_prop.type == "STRING" and disambiguating_prop.value:
+                    disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"),bone_name)
+                    print("Disambiguating Key: " + disambiguating_key)
+                    all_arm_drefs[disambiguating_key] = (bone,[])
+                else:
+                    print("Probable disambiguating prop ({}:{}) has wrong value type {}".format(
+                        disambiguating_prop.name,
+                        disambiguating_prop.value,
+                        disambiguating_prop.type))
+                    print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
+                    continue
 
-            for ensure_has in range(1,last_frame+1):
-                ensure_has_idx = ensure_has-1
-                # 2.49 makes sure every Blender keyframe has a
-                # dataref value of 0 (if first frame) or 1
-                # to go with. If missing, it is filled in.
-                new_pp_frame = ParsedGameAnimValueProp(
-                        path=path,
-                        array_idx=idx_portion(bone.name),
-                        anim_type=ANIM_TYPE_TRANSFORM,
-                        frame_number=ensure_has,
-                        value=int(bool(ensure_has_idx))) # Why int? To match 2.49 behavior of using ints, which was and probably is meaningless.
-                try:
-                    if keyframe_props[ensure_has_idx].frame_number != ensure_has:
-                        print("Inserting at %d" % ensure_has_idx)
-                        keyframe_props.insert(ensure_has_idx, new_pp_frame)
-                except IndexError:
+        print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
+        return all_arm_drefs
+
+    all_arm_drefs = find_all_datarefs_in_armature(armature) # type: OrderedDict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]
+
+    for game_prop in armature.game.properties:
+        print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
+        decoded_animval = decode_game_animvalue_prop(game_prop, tuple(all_arm_drefs.keys()))
+        if decoded_animval:
+            assert decoded_animval.path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + decoded_animval.path
+            existing_props = all_arm_drefs[decoded_animval.path][1]
+            # Show/Hide v1 and v2 will come in as seperate properties,
+            # but test_creation_helpers needs them together
+            if (existing_props
+                and existing_props[-1].anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}
+                and existing_props[-1].show_hide_v2 is None):
+                assert existing_props[-1].path == decoded_animval.path, "show hide props out of order"
+                existing_props[-1].show_hide_v2 = decoded_animval.show_hide_v2
+                all_arm_drefs.move_to_end(decoded_animval.path) # As we parse game props, we re-order the show/hide disambiguous keys by the order the props are in, not the keys
+            else:
+                all_arm_drefs[decoded_animval.path][1].append(decoded_animval)
+        else:
+            #TODO: Error code goes here? How do we do these?
+            #TODO: What about disambiguating keys returning none from decode_game_animvalue?
+            print("Could not decode {}".format(game_prop.name))
+            continue
+
+    for path, (bone, parsed_props) in all_arm_drefs.items():
+        # A sorted list of each bone's channel's min/max gets us the first and last created frames
+        try:
+            s = sorted([c.range() for c in armature.animation_data.action.groups[bone.name].channels])
+        except AttributeError: # In case action is None
+            continue
+        except KeyError: # In case bone.name isn't a group name
+            continue
+
+        first_frame = int(s[0][0]) # min value of smallest member in list
+        last_frame = max(int(s[-1][1]), 2) # Max val of largest member or 2 (for datarefs with only 0 or 1 parsed props)
+
+        print("\nBone name {}: Filling between first_frame {}, last_frame {}".format(bone.name,first_frame,last_frame))
+        frameless_props = []
+        keyframe_props = []
+        for p in parsed_props:
+            if p.frame_number:
+                keyframe_props.append(p)
+            else:
+                frameless_props.append(p)
+
+        keyframe_props.sort(key=attrgetter('frame_number'))
+
+        for ensure_has in range(1,last_frame+1):
+            ensure_has_idx = ensure_has-1
+            # 2.49 makes sure every Blender keyframe has a
+            # dataref value of 0 (if first frame) or 1
+            # to go with. If missing, it is filled in.
+            new_pp_frame = ParsedGameAnimValueProp(
+                    path=path,
+                    array_idx=idx_portion(bone.name),
+                    anim_type=ANIM_TYPE_TRANSFORM,
+                    frame_number=ensure_has,
+                    value=int(bool(ensure_has_idx))) # Why int? To match 2.49 behavior of using ints, which was and probably is meaningless.
+            try:
+                if keyframe_props[ensure_has_idx].frame_number != ensure_has:
                     print("Inserting at %d" % ensure_has_idx)
                     keyframe_props.insert(ensure_has_idx, new_pp_frame)
+            except IndexError:
+                print("Inserting at %d" % ensure_has_idx)
+                keyframe_props.insert(ensure_has_idx, new_pp_frame)
 
-            parsed_props[:] = keyframe_props + frameless_props
+        parsed_props[:] = keyframe_props + frameless_props
 
-        # Finally, the creation step!
-        for path, (bone, parsed_props) in all_arm_drefs.items():
-            for parsed_prop in parsed_props:
-                if parsed_prop.value is not None:
-                    #TODO: Must use no_ref for show_hide paths, but what does that mean?
-                    test_creation_helpers.set_animation_data(
-                        bone, [
-                            test_creation_helpers.KeyframeInfoDatarefKeyframe(
-                                dataref_path=path + parsed_prop.array_idx,
-                                frame_number=parsed_prop.frame_number,
-                                dataref_value=parsed_prop.value,
-                                )
+    # Finally, the creation step!
+    for path, (bone, parsed_props) in all_arm_drefs.items():
+        for parsed_prop in parsed_props:
+            if parsed_prop.value is not None:
+                test_creation_helpers.set_animation_data(
+                    bone, [
+                        test_creation_helpers.KeyframeInfoDatarefKeyframe(
+                            dataref_path=path + parsed_prop.array_idx,
+                            frame_number=parsed_prop.frame_number,
+                            dataref_value=parsed_prop.value,
+                            )
+                    ],
+                    parent_armature=armature
+                )
+            elif parsed_prop.loop is not None:
+                test_creation_helpers.set_animation_data(
+                    bone, [
+                        test_creation_helpers.KeyframeInfoLoop(
+                            dataref_path=path + parsed_prop.array_idx,
+                            dataref_loop=parsed_prop.loop,
+                            ),
                         ],
                         parent_armature=armature
                     )
-                elif parsed_prop.loop is not None:
-                    test_creation_helpers.set_animation_data(
-                        bone, [
-                            test_creation_helpers.KeyframeInfoLoop(
-                                dataref_path=path + parsed_prop.array_idx,
-                                dataref_loop=parsed_prop.loop,
-                                ),
-                            ],
-                            parent_armature=armature
-                        )
-                elif {parsed_prop.show_hide_v1,parsed_prop.show_hide_v2} != {None,None}:
-                    test_creation_helpers.set_animation_data(
-                        bone, [
-                            test_creation_helpers.KeyframeInfoShowHide(
-                                dataref_path=path + parsed_prop.array_idx,
-                                dataref_anim_type=parsed_prop.anim_type,
-                                dataref_show_hide_v1=parsed_prop.show_hide_v1,
-                                dataref_show_hide_v2=parsed_prop.show_hide_v2,
-                                ),
-                            ],
-                            parent_armature=armature,
-                            dataref_per_keyframe_info=True
-                        )
+            elif {parsed_prop.show_hide_v1,parsed_prop.show_hide_v2} != {None,None}:
+                test_creation_helpers.set_animation_data(
+                    bone, [
+                        test_creation_helpers.KeyframeInfoShowHide(
+                            dataref_path=path + parsed_prop.array_idx,
+                            dataref_anim_type=parsed_prop.anim_type,
+                            dataref_show_hide_v1=parsed_prop.show_hide_v1,
+                            dataref_show_hide_v2=parsed_prop.show_hide_v2,
+                            ),
+                        ],
+                        parent_armature=armature,
+                        dataref_per_keyframe_info=True
+                    )
 
-                else:
-                    assert False, "How did we get here? {}".format(parsed_prop)
+            else:
+                assert False, "How did we get here? {}".format(parsed_prop)
