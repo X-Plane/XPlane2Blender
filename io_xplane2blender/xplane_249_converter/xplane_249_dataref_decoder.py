@@ -47,22 +47,21 @@ class ParsedGameAnimValueProp():
     Although 2.78 has the array idx as part of the path,
     we keep it seperate until the very very end
 
-    If the path has a cloud in it, array_idx is automatically set to ""
+    If the path has a cloud case in it, array_idx is automatically set to ""
 
     Aside from array_idx, this nearly matches xplane_props.XPlaneDataref.
 
     Unlike test_creation_helpers.KeyframeInfo, Show/Hide can be neither or one.
-    decode_game_animvalue_prop
     '''
     def __init__(self,
-                path: DatarefFull,
-                array_idx: str, # [idx] or ""
-                anim_type:str, # "show", "hide", or "transform"
-                frame_number: Optional[FrameNumber]=None,
-                loop: Optional[float]=None,
-                show_hide_v1: Optional[float]=None,
-                show_hide_v2: Optional[float]=None,
-                value: Optional[float]=None
+                 path: DatarefFull,
+                 array_idx: str, # [idx] or ""
+                 anim_type: str, # "show", "hide", or "transform"
+                 frame_number: Optional[FrameNumber] = None,
+                 loop: Optional[float] = None,
+                 show_hide_v1: Optional[float] = None,
+                 show_hide_v2: Optional[float] = None,
+                 value: Optional[float] = None
                 ):
         assert path, "path cannot be None"
         assert array_idx is not None, "array_idx cannot be None for path '{}'".format(path)
@@ -93,15 +92,16 @@ class ParsedGameAnimValueProp():
         self.value = value
 
     def __str__(self):
-        return "{}".format((
-            self.anim_type,
-            self.array_idx,
-            self.frame_number,
-            self.loop,
-            self.path,
-            self.show_hide_v1,
-            self.show_hide_v2,
-            self.value,
+        return "{}".format(
+            (
+                self.anim_type,
+                self.array_idx,
+                self.frame_number,
+                self.loop,
+                self.path,
+                self.show_hide_v1,
+                self.show_hide_v2,
+                self.value,
             )
         )
 
@@ -135,7 +135,7 @@ def make_short_name(full_path: DatarefFull)->SName:
                 short=short+"2"
     return short
 
-def getDatarefs()->Dict[Union[SName,TailName],LookupRecord]:
+def getDatarefs()->Dict[Union[SName, TailName], Optional[LookupRecord]]:
     '''
     Parses the contents of the dataref file as a dictionary where
     where a short_name or tail-name can retrive
@@ -166,7 +166,7 @@ def getDatarefs()->Dict[Union[SName,TailName],LookupRecord]:
     'sav_acf_tailnum':('sim/aircraft/view/acf_tailnum', 0   )
     }
     '''
-    datarefs={}
+    datarefs={} # type: Dict[Union[SName,TailName],Optional[LookupRecord]]
     err=IOError(0, "Corrupt DataRefs.txt file. Please re-install.")
     try:
         with open(os.path.join(xplane_helpers.get_addon_resources_dir(), "DataRefs.txt")) as f:
@@ -242,9 +242,10 @@ def getDatarefs()->Dict[Union[SName,TailName],LookupRecord]:
     #                elif len(sname) > 17:
     #                   print 'WARNING - dataref ' + d[0] + ' is too long for show/hide'
 
-    # This makes the actual datarefs dictionary.
-    # The key is either the short name or, if short enough, just the tail of the dataref
-    # TODO: What the heck are we implementing if someone used a multiplayer dref? Treat as 3rd party?!
+                # This makes the actual datarefs dictionary.
+                # Two keys representing a dataref: The SName and Tail-name.
+                # Ambiguous SNames are overwritten, ambiguous tailnames become None
+                # indicating additional resolution needed
                 if ref[1]!=('multiplayer'): # too many ambiguous datarefs # Diff #4
                     if sname in datarefs:
                         print('WARNING - ambiguous short name '+ sname + ' for dataref ' + d[0])
@@ -270,13 +271,11 @@ _249_datarefs = getDatarefs()
 
 #--------------------------------------------------------------------------------
 
-def _do_dict_lookup(name:str)->Optional[LookupRecord]:
+def _do_dict_lookup(name: str)->Optional[LookupRecord]:
     if name in _249_datarefs and _249_datarefs[name]:
         dataref_full = _249_datarefs[name][0]
         array_size = _249_datarefs[name][1]
         return (dataref_full, array_size)
-    else:
-        return None
 
 
 def get_known_dataref_from_shortname(dataref_short:SName)->Optional[LookupRecord]:
@@ -292,7 +291,7 @@ def get_known_dataref_from_shortname(dataref_short:SName)->Optional[LookupRecord
     return _do_dict_lookup(dataref_short)
 
 
-def get_known_dataref_from_tailname(dataref_tailname:TailName)->Optional[LookupRecord]:
+def get_known_dataref_from_tailname(dataref_tailname: TailName)->Optional[LookupRecord]:
     '''
     Returns full dataref and array size from a tail-name look up,
     or None if not Found.
@@ -336,7 +335,7 @@ def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupRe
             if i == 1:
                 lookup_result.tailname_success = True
         else:
-            print("{}: {} not found in datarefs dict, skipping".format(i,lookup_name))
+            print("{}: {} not found in datarefs dict, skipping".format(i, lookup_name))
 
     return lookup_result
 
@@ -348,7 +347,7 @@ def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupRe
 def idx_portion(name:str)->str:
     '''Returns the right most [idx] portion of a name, if possible. Else ""'''
     try:
-        return '[' + name.rsplit('[',1)[1]
+        return '[' + name.rsplit('[', 1)[1]
     except IndexError:
         return ""
 
@@ -361,10 +360,10 @@ def no_idx(name:str)->str:
     # changing the dataref decleration!
     # Compare:
     # "double/trouble[0] int y" vs "double/trouble[0] int[10] y"
-    return name.rsplit('[',1)[0]
+    return name.rsplit('[', 1)[0]
 
 
-def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,str]]:
+def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str, Optional[Union[float, int, str]]]]:
     '''
     Returns the parsed contents of a game_prop's name in a dictionary with the keys
     "anim_type","array_idx","prop_root","frame_number","loop","show_hide_v1","show_hide_v2".
@@ -381,7 +380,13 @@ def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,s
     F_NUMBER = r"_v(?P<frame_number>\d+)"
     name = game_prop.name.strip()
 
-    parsed_result = {"anim_type": "", "array_idx":"", "prop_root":"", "frame_number":None, "loop":None, "show_hide_v1":None, "show_hide_v2":None}
+    parsed_result = {"anim_type": "",
+                     "array_idx": "",
+                     "prop_root": "",
+                     "frame_number": None,
+                     "loop": None,
+                     "show_hide_v1": None,
+                     "show_hide_v2": None} # type: Dict[str, Optional[Union[float,int,str]]]
 
     print("Attempting to parse {}".format(game_prop.name))
     if re.match(ROOT_IDX + SHOWHIDE + F_NUMBER + "$", name):
@@ -397,7 +402,7 @@ def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,s
         print("2. Matched loop")
         parsed_result.update(
             re.search(ROOT_IDX,
-                name).groupdict(default=""))
+                      name).groupdict(default=""))
         parsed_result['anim_type'] = ANIM_TYPE_TRANSFORM
         # I got tired of re-writing the regex to try and make this work,
         # instead we manually remove '_loop' and be done with it.
@@ -407,7 +412,7 @@ def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,s
         print("3. Matched anim-value")
         parsed_result.update(
             re.match(ROOT_IDX+F_NUMBER + "$",
-                      name).groupdict(default=""))
+                     name).groupdict(default=""))
         parsed_result['anim_type'] = ANIM_TYPE_TRANSFORM
     elif re.match(ROOT_IDX + "$", name):
         print("4. Matched disambiguating key or other text")
@@ -418,7 +423,10 @@ def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str,s
         print("Unparsable Text: {}".format(name))
         return None
 
-    assert parsed_result['anim_type'] or parsed_result['frame_number'] or parsed_result['loop'], "Parsed game_prop.name is missing meaningful values: {}".format(parsed_result)
+    assert (parsed_result['anim_type']
+            or parsed_result['frame_number']
+            or parsed_result['loop']), \
+            "Parsed game_prop.name is missing meaningful values: {}".format(parsed_result)
     print("Parse Results: {}".format(parsed_result))
     return parsed_result
 
@@ -434,7 +442,7 @@ def tailname_from_dataref_full(dataref_full:DatarefFull)->TailName:
 
 def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
                                known_datarefs: Tuple[DatarefFull],
-                               ) -> Optional[ParsedGameAnimValueProp]:
+                              ) -> Optional[ParsedGameAnimValueProp]:
     '''
     Given a 2.49 short name, return the path, (frame_number, and a dictionary of properties)
     matching xplane_props.XPlaneDataref or None if there was a problem
@@ -484,7 +492,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         #print("prop_root: {}".format(prop_root))
         def match_root_to_known_datarefs(
                 prop_root: str,
-                known_datarefs: List[DatarefFull])->Optional[DatarefFull]:
+                known_datarefs: Tuple[DatarefFull])->Optional[DatarefFull]:
             '''
             Matches root to a known_dataref, or None if the root matched none of them
             (which is not necessarily a problem)
@@ -492,7 +500,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             for known_dataref in known_datarefs:
                 #print("known_dataref: {}".format(known_dataref))
                 known_tail = tailname_from_dataref_full(known_dataref) # type: TailName
-                known_sname = make_short_name(known_dataref)
+                #known_sname = make_short_name(known_dataref)
                 # In case the disambiguating key of a custom dataref is
                 # also in the Datarefs.txt file, we check our .blend file before checking
                 # DataRefs.txt
@@ -507,7 +515,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             else: #nobreak
                 print("prop_root: {} didn't match any of the known_datarefs".format(prop_root))
                 return None
-        path = match_root_to_known_datarefs(prop_root, known_datarefs) # type: DatarefFull
+        path = match_root_to_known_datarefs(prop_root, known_datarefs) # type: Optional[DatarefFull]
         if path:
             break
     else: #nobreak
@@ -533,22 +541,21 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     # Show/Hide always have _v1 and _v2, defaults came from the UI code.
     # Here 1 and 2 does not mean "Frame 1 and 2" but simply "Value 1 and 2"
     parsed_prop = ParsedGameAnimValueProp(
-            path = path,
-            array_idx = "[{}]".format(parsed_result['array_idx']) if parsed_result['array_idx'] else '',
-            anim_type = parsed_result['anim_type'],
-            frame_number = frame_number,
-            loop = parsed_result['loop'],
-            show_hide_v1 = parsed_result['show_hide_v1'],
-            show_hide_v2 = parsed_result['show_hide_v2'],
-            value = value
-            )
+        path=path,
+        array_idx="[{}]".format(parsed_result['array_idx']) if parsed_result['array_idx'] else '',
+        anim_type=parsed_result['anim_type'],
+        frame_number=frame_number,
+        loop=parsed_result['loop'],
+        show_hide_v1=parsed_result['show_hide_v1'],
+        show_hide_v2=parsed_result['show_hide_v2'],
+        value=value
+    )
 
     print("Final Decoded Results: {}".format(parsed_prop))
     #------------------------------------------------------------------
     return parsed_prop
 
 def convert_armature_animations(armature:bpy.types.Object):
-    #TODO: Create log, similar to conversion log
     print("Decoding Game-Properties for '{}'".format(armature.name))
     bpy.context.scene.objects.active = armature
 
@@ -582,13 +589,13 @@ def convert_armature_animations(armature:bpy.types.Object):
 
             print("Attempting to find uses of '%s/%s'" % (game_prop.value, game_prop.name))
             matching_key_users = list(
-                               filter(lambda p: find_key_uses(game_prop.name, p), armature.game.properties)
-                           )
+                    filter(lambda p: find_key_uses(game_prop.name, p), armature.game.properties)
+                )
 
             if matching_key_users:
                 disambiguating_key = "{}/{}".format(game_prop.value.strip(" /"), game_prop.name.strip())
                 print("Matching uses of disambiguating key '{}': {}".format(disambiguating_key, [k.name for k in matching_key_users]))
-                all_arm_drefs[disambiguating_key] = (armature,[]) # Show hide applies to armature object
+                all_arm_drefs[disambiguating_key] = (armature, []) # Show hide applies to armature object
             else:
                 print("Couldn't find uses for '%s/%s'" % (game_prop.value, game_prop.name))
 
@@ -623,10 +630,6 @@ def convert_armature_animations(armature:bpy.types.Object):
                 all_arm_drefs[lookup_result.record[0]] = (bone, [])
             else:
                 # Catches known but ambiguous and unknown datarefs. Needs disambiguating
-                #TODO: What about a situation where you have my/custom/ref
-                # and my/custom/ref[1]
-                # Is this possible? Yes! ref:my/custom is disamb key, snames are ref[1] and ref.
-                # Seems very unlikely, however.
                 if bone_name in armature.game.properties:
                     disambiguating_prop = armature.game.properties[bone_name]
                 elif bone_name_no_idx in armature.game.properties:
@@ -637,9 +640,9 @@ def convert_armature_animations(armature:bpy.types.Object):
 
                 # Checking for a value catches when people have to use "none:''" or "no_ref:''"
                 if disambiguating_prop.type == "STRING" and disambiguating_prop.value:
-                    disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"),bone_name)
+                    disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"), bone_name)
                     print("Disambiguating Key: " + disambiguating_key)
-                    all_arm_drefs[disambiguating_key] = (bone,[])
+                    all_arm_drefs[disambiguating_key] = (bone, [])
                 else:
                     print("Probable disambiguating prop ({}:{}) has wrong value type {}".format(
                         disambiguating_prop.name,
@@ -687,7 +690,7 @@ def convert_armature_animations(armature:bpy.types.Object):
         first_frame = int(s[0][0]) # min value of smallest member in list
         last_frame = max(int(s[-1][1]), 2) # Max val of largest member or 2 (for datarefs with only 0 or 1 parsed props)
 
-        print("\nBone name {}: Filling between first_frame {}, last_frame {}".format(bone.name,first_frame,last_frame))
+        print("\nBone name {}: Filling between first_frame {}, last_frame {}".format(bone.name, first_frame, last_frame))
         frameless_props = []
         keyframe_props = []
         for p in parsed_props:
@@ -698,7 +701,7 @@ def convert_armature_animations(armature:bpy.types.Object):
 
         keyframe_props.sort(key=attrgetter('frame_number'))
 
-        for ensure_has in range(1,last_frame+1):
+        for ensure_has in range(1, last_frame+1):
             ensure_has_idx = ensure_has-1
             # 2.49 makes sure every Blender keyframe has a
             # dataref value of 0 (if first frame) or 1
@@ -708,7 +711,9 @@ def convert_armature_animations(armature:bpy.types.Object):
                     array_idx=idx_portion(bone.name),
                     anim_type=ANIM_TYPE_TRANSFORM,
                     frame_number=ensure_has,
-                    value=int(bool(ensure_has_idx))) # Why int? To match 2.49 behavior of using ints, which was and probably is meaningless.
+                    value=int(bool(ensure_has_idx)) # Why int? To match 2.49 behavior of using ints, which was and probably is meaningless.
+                )
+
             try:
                 if keyframe_props[ensure_has_idx].frame_number != ensure_has:
                     print("Inserting at %d" % ensure_has_idx)
@@ -729,7 +734,7 @@ def convert_armature_animations(armature:bpy.types.Object):
                             dataref_path=path + parsed_prop.array_idx,
                             frame_number=parsed_prop.frame_number,
                             dataref_value=parsed_prop.value,
-                            )
+                        )
                     ],
                     parent_armature=armature
                 )
@@ -739,11 +744,11 @@ def convert_armature_animations(armature:bpy.types.Object):
                         test_creation_helpers.KeyframeInfoLoop(
                             dataref_path=path + parsed_prop.array_idx,
                             dataref_loop=parsed_prop.loop,
-                            ),
-                        ],
-                        parent_armature=armature
-                    )
-            elif {parsed_prop.show_hide_v1,parsed_prop.show_hide_v2} != {None,None}:
+                        ),
+                    ],
+                    parent_armature=armature
+                )
+            elif {parsed_prop.show_hide_v1, parsed_prop.show_hide_v2} != {None, None}:
                 test_creation_helpers.set_animation_data(
                     bone, [
                         test_creation_helpers.KeyframeInfoShowHide(
@@ -751,11 +756,11 @@ def convert_armature_animations(armature:bpy.types.Object):
                             dataref_anim_type=parsed_prop.anim_type,
                             dataref_show_hide_v1=parsed_prop.show_hide_v1,
                             dataref_show_hide_v2=parsed_prop.show_hide_v2,
-                            ),
-                        ],
-                        parent_armature=armature,
-                        dataref_per_keyframe_info=True
-                    )
+                        ),
+                    ],
+                    parent_armature=armature,
+                    dataref_per_keyframe_info=True
+                )
 
             else:
                 assert False, "How did we get here? {}".format(parsed_prop)
