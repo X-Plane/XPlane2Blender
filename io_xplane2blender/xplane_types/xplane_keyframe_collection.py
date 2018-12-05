@@ -2,7 +2,7 @@ from collections import Iterable, namedtuple
 from collections.abc import MutableSequence
 import copy
 import math
-from typing import List 
+from typing import List, Tuple
 
 import bpy
 import mathutils
@@ -23,6 +23,8 @@ class XPlaneKeyframeCollection(MutableSequence):
         'XZY': (1, 2, 0),
         'XYZ': (2, 1, 0)
     }
+
+    TableEntry = namedtuple('TableEntry', ['value', 'degrees'])
 
     def __init__(self, data:List[XPlaneKeyframe]):
         '''
@@ -138,7 +140,7 @@ class XPlaneKeyframeCollection(MutableSequence):
     def getRotationMode(self):
         return self._list[0].rotationMode
 
-    def getRotationKeyframeTable(self): # type: -> List[Tuple[Vector,List[TableEntry]]]
+    def getRotationKeyframeTable(self) -> List[Tuple[Vector,List[TableEntry]]]:
         '''
         Return the rotation portion of a keyframe collection in the form of
         List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.
@@ -149,7 +151,6 @@ class XPlaneKeyframeCollection(MutableSequence):
         #    List[Vector:rotation axis, List[TableEntry]]
         #]
         ret = [[axis,None] for axis in axes]
-        TableEntry = namedtuple('TableEntry', ['value','degrees'])
         if final_rotation_mode == "AXIS_ANGLE" or\
            final_rotation_mode == "QUATERNION":
             keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[0])) for keyframe in self] 
