@@ -558,7 +558,15 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
 def convert_armature_animations(armature:bpy.types.Object):
     print("Decoding Game-Properties for '{}'".format(armature.name))
     bpy.context.scene.objects.active = armature
-
+    
+    # We know what ATTR_manip and manipulator_type means,
+    # we know they couldn't possibly be (without extreme stupidity)
+    # related to datarefs, so we'll skip considering them at all.
+    # TODO: Also need Ben Russel properties
+    game_properties = {
+        name: prop for name, prop in armature.game.properties.items()
+        if not (name.startswith("ATTR_manip_") or name == "manipulator_type")
+    }
     def find_all_datarefs_in_armature(armature: bpy.types.Object)->Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]:
         '''
         Returns a dictionary all datarefs mentioned in the bone names and game props,
@@ -572,7 +580,8 @@ def convert_armature_animations(armature:bpy.types.Object):
 
         # If type is a string and it parses, we search for other properties that use that root
         # Hopefully we find the disambiguating key for an unknown show/hide property
-        for game_prop in filter(lambda p: p.type == "STRING", armature.game.properties):
+        for game_prop in filter(lambda p: p.type == "STRING",
+                                game_properties.values()):
             def find_key_uses(prop_root_to_find:str, prop_to_match:bpy.types.GameProperty)->bool:
                 '''
                 We can use this to find places where the potential disambiguation key
@@ -589,7 +598,7 @@ def convert_armature_animations(armature:bpy.types.Object):
 
             print("Attempting to find uses of '%s/%s'" % (game_prop.value, game_prop.name))
             matching_key_users = list(
-                    filter(lambda p: find_key_uses(game_prop.name, p), armature.game.properties)
+                    filter(lambda prop: find_key_uses(game_prop.name, prop[1]), game_properties.items())
                 )
 
             if matching_key_users:
@@ -602,7 +611,7 @@ def convert_armature_animations(armature:bpy.types.Object):
         # In case we have a show/hide property that doesn't have a disambiguating key
         # we have to test every game prop
         for game_prop in filter(lambda p: p.type == "FLOAT" and parse_game_prop_name(p),
-                                armature.game.properties):
+                                game_properties.values()):
             try:
                 parsed_search_prop = parse_game_prop_name(game_prop)
                 if parsed_search_prop["anim_type"] in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}:
@@ -630,10 +639,10 @@ def convert_armature_animations(armature:bpy.types.Object):
                 all_arm_drefs[lookup_result.record[0]] = (bone, [])
             else:
                 # Catches known but ambiguous and unknown datarefs. Needs disambiguating
-                if bone_name in armature.game.properties:
-                    disambiguating_prop = armature.game.properties[bone_name]
-                elif bone_name_no_idx in armature.game.properties:
-                    disambiguating_prop = armature.game.properties[bone_name_no_idx]
+                if bone_name in game_properties:
+                    disambiguating_prop = game_properties[bone_name]
+                elif bone_name_no_idx in game_properties:
+                    disambiguating_prop = game_properties[bone_name_no_idx]
                 else:
                     print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
                     continue
@@ -656,7 +665,7 @@ def convert_armature_animations(armature:bpy.types.Object):
 
     all_arm_drefs = find_all_datarefs_in_armature(armature) # type: OrderedDict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]
 
-    for game_prop in armature.game.properties:
+    for game_prop in game_properties.values():
         print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
         decoded_animval = decode_game_animvalue_prop(game_prop, tuple(all_arm_drefs.keys()))
         if decoded_animval:

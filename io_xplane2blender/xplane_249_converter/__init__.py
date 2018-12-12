@@ -14,7 +14,7 @@ import bpy
 
 from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.tests import test_creation_helpers
-from io_xplane2blender.xplane_249_converter import xplane_249_dataref_decoder
+from io_xplane2blender.xplane_249_converter import xplane_249_dataref_decoder, xplane_249_manip_decoder
 
 
 def do_249_conversion():
@@ -35,7 +35,6 @@ def do_249_conversion():
     # defaults like Action Editor to Dope Sheet
 
     # Make the default material for new objects to be assaigned
-    # TODO: Only needed if you have cubes without materials? Don't create,
-    # except for test files? Just don't be lazy about test files
     for armature in filter(lambda obj: obj.type == "ARMATURE", bpy.data.objects):
         xplane_249_dataref_decoder.convert_armature_animations(armature)
+        xplane_249_manip_decoder.convert_armature_manipulator(armature)
