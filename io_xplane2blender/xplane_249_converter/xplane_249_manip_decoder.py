@@ -218,63 +218,6 @@ class ParsedManipulatorInfo():
             if isinstance(value, (int, float, str)) and translate_manip_attr(manip_attr):
                 setattr(self, translate_manip_attr(manip_attr), value)
 
-'''
-# Canabalisize for parsing code...?
-def _formatManipulator(manipulator: Dict[str,OndrejManipInfo]):
-    """ Return a string representing a manipular structure.
-    Keyword arguments:
-    manipulator -- the manipulator dictionary
-
-    """
-    if manipulator == None:
-        return 'ATTR_manip_none'
-
-    keys = sorted(manipulator.keys())
-    manipulator_str = manipulator['99@manipulator-name']
-    for key in keys:
-        if key == '99@manipulator-name':
-            break
-
-        data = manipulator[key]
-
-        if key == '96@detents' or key == '95@detentz':
-            if data == '' or data == 0 or data == 0.0:
-                continue
-            schedule = data.split()
-            for x in range(0,len(schedule),3):
-                sub_schedule = schedule[x:x+3]
-                manipulator_str += "\nATTR_axis_detent_range %s %s %s" % (sub_schedule[0],sub_schedule[1],sub_schedule[2])
-
-        elif key == '97@keyframes':
-            if data == '' or data == 0 or data == 0.0:
-                continue
-            frames = data.split()
-            for x in range(0,len(frames),2):
-                frame = frames[x:x+2]
-                manipulator_str += "\nATTR_manip_keyframe %s %s" % (frame[0],frame[1])
-        else:
-
-            if key == '98@wheel':
-                if data == '' or data == 0 or data == 0.0 or data == '0' or data == '0.0':
-                    continue
-                manipulator_str += '\n'
-                manipulator_str += "ATTR_manip_wheel "
-            
-            manipulator_str += '\t'
-            #print 'key=', key
-
-            if type(data).__name__ == 'str':
-                manipulator_str += data.strip()
-
-            if type(data).__name__ == 'float':
-                manipulator_str += '%6.2f' % data
-
-            if type(data).__name__ == 'int':
-                manipulator_str += '%d' % data
-
-    return manipulator_str
-'''
-
 
 def _getmanipulator(armature: bpy.types.Object)->Optional[OndrejManipInfo]:
     try:
@@ -421,12 +364,17 @@ def _decode(armature: bpy.types.Object):
     '''
 
 def convert_armature_manipulator(armature:bpy.types.Object)->None:
+    '''
+    Converts any manipulator game properties in an armature
+    and applies it to all any meshes it is a child of
+    '''
+
     print("Decoding manipulator for '{}'".format(armature.name))
+    parsed_manip_info = _decode(armature) # type: ParsedManipulatorInfo
+    if not parsed_manip_info:
+        return
 
-    import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_7.0.3.201811082356\pysrc')
-    import pydevd;pydevd.settrace()
-    parsed_manip_info = _decode(armature)
-
-    #for objects that are children of armature
-    #, apply
-    pass
+    for obj in filter(lambda child: child.type == "MESH", armature.children):
+        setattr(obj.xplane.manip, "enabled", True)
+        for attr, value in vars(parsed_manip_info).items():
+            setattr(obj.xplane.manip, attr, value)
