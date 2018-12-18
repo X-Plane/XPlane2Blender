@@ -2,7 +2,7 @@ from collections import Iterable, namedtuple
 from collections.abc import MutableSequence
 import copy
 import math
-from typing import List 
+from typing import List, Tuple
 
 import bpy
 import mathutils
@@ -138,7 +138,7 @@ class XPlaneKeyframeCollection(MutableSequence):
     def getRotationMode(self):
         return self._list[0].rotationMode
 
-    def getRotationKeyframeTable(self): # type: -> List[Tuple[Vector,List[TableEntry]]]
+    def getRotationKeyframeTable(self) -> List[Tuple[Vector,List["TableEntry"]]]:
         '''
         Return the rotation portion of a keyframe collection in the form of
         List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.

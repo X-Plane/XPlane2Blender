@@ -14,7 +14,7 @@ class XPlaneAttribute():
         weight indicates where the attribute should be in the OBJ File
         '''
         self.name = name
-        self.value = [value] # type: List[Optional[Union[bool,float,int,str]]
+        self.value = [value] # type: List[Optional[Union[bool,float,int,str]]]
         self.weight = weight
 
     # Method: addValue
