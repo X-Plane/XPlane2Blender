@@ -11,9 +11,10 @@ import re
 
 import bpy
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
-from io_xplane2blender import xplane_helpers
+from io_xplane2blender import xplane_constants, xplane_helpers
+from xplane_constants import *
 from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW, ANIM_TYPE_TRANSFORM
 from io_xplane2blender.tests import test_creation_helpers
 
@@ -115,29 +116,31 @@ class ParsedManipulatorInfo():
     Blender properties
     """
     #TODO: Inputs are validated so that each type has what it needs and only what it needs
-    #being passed in. 
+    #being passed in.
     def __init__(self, manipulator_type: str, **kwargs: Dict[str,Union[int,float,str]]):
         '''
         Takes the contents of a manipulator_dict's sub dictionary and translates them into
-        something matchining XPlaneManipulatorSettings, 
+        something matchining XPlaneManipulatorSettings,
         '''
-        #TODO: Validate input so that each type gets what has needs
-        if manipulator_type.startswith("ATTR_manip_command_"):
-            self.type = manipulator_type.replace("ATTR_manip_command_", "") # type: str
-        elif manipulator_type.startswith("ATTR_manip_"):
-            self.type = manipulator_type.replace("ATTR_manip_", "") # type: str
+        self.axis_detent_ranges = [] # type: List[Tuple[float, float, float]]
+
+        assert manipulator_type.startswith("ATTR_manip_"), "manipulator_type must start with ATTR_manip_"
+        self.type = manipulator_type.replace("ATTR_manip_", "") # type: str
+
+        if self.type == "drag_rotate" and (kwargs.get('detentz', "") + kwargs.get('detents', "")):
+            self.type = "drag_rotate_detent"
 
         self.tooltip          = "" # type: str
-        self.cursor           = "" # type: str
+        self.cursor           = MANIP_CURSOR_HAND # type: str
         self.dx               = 0.0 # type: float
         self.dy               = 0.0 # type: float
         self.dz               = 0.0 # type: float
         self.v1               = 0.0 # type: float
         self.v2               = 0.0 # type: float
         self.v1_min           = 0.0 # type: float
-        self.v1_ma            = 0.0 # type: float
+        self.v1_max           = 0.0 # type: float
         self.v2_min           = 0.0 # type: float
-        self.v2_ma            = 0.0 # type: float
+        self.v2_max           = 0.0 # type: float
         self.v_down           = 0.0 # type: float
         self.v_up             = 0.0 # type: float
         self.v_hold           = 0.0 # type: float
@@ -153,70 +156,137 @@ class ParsedManipulatorInfo():
         self.hold_step        = 0.0 # type: float
         self.wheel_delta      = 0.0 # type: float
         self.exp              = 0.0 # type: float
-        def translate_manip_attr(attr:str)->Optional[str]:
+
+        def translate_manip_attr(manipulator_type: str, attr: str)->Optional[Tuple[Callable, str]]:
             '''
-            Returns the XPlaneManipulatorSettings version
+            Returns the XPlaneManipulatorSettings attr name and the function to convert it
             of Ondrej or BR's (TODO) manipulator info encoding,
             or None if no such mapping exists
             '''
             attr_translation_map = {
                 # 2.49 -> 2.7x
-                'manipulator-name': None, # 2.49 uses ATTR_manip_toggle, 2.78 uses 'toggle'.
-                'cursor'      : 'cursor',
-                'tooltip'     : 'tooltip',
-                'NULL'        : None,
-                'angle-max'   : None, # Drag Rotate now auto detects this
-                'angle-min'   : None, # Drag Rotate now auto detects this
-                'axis_dx'     : None, # Drag Rotate now auto detects this
-                'axis_dy'     : None, # Drag Rotate now auto detects this
-                'axis_dz'     : None, # Drag Rotate now auto detects this
-                'command'     : 'command',
-                'dataref'     : 'dataref1',
-                'detents'     : None,
-                'detentz'     : None,
-                'dref1'       : 'dataref1',
-                'dref2'       : 'dataref2',
-                'dx'          : 'dx',
-                'dy'          : 'dy',
-                'dz'          : 'dz',
-                'hold'        : 'hold_step',
-                'keyframes'   : None, #ATTR_manip_keyframe frame[0] frame[1]
-                'length'      : 'dx',
-                'lift-len'    : 'dx',
-                'neg-command' : 'negative_command',
-                'pivot_x'     : None,
-                'pivot_y'     : None,
-                'pivot_z'     : None,
-                'pos-command' : 'positive_command',
-                'power'       : 'exp',
-                'step'        : 'step',
-                'v-down'      : 'v_down',
-                'v-hold'      : 'v_hold',
-                'v-max'       : 'v_max',
-                'v-min'       : 'v_min',
-                'v-off'       : 'v_off',
-                'v-on'        : 'v_on',
-                'v-up'        : 'v_up',
-                'v1'          : 'v1',
-                'v1max'       : 'v1_min',
-                'v1min'       : 'v1_max',
-                'v2'          : 'v2',
-                'v2max'       : 'v2_max',
-                'v2min'       : 'v2_min',
-                'wheel'       : 'wheel_delta',
+                "manipulator-name": None, # See use of manipulator_type instead
+
+                #Exceptions:
+                #
+                # noop doesn't have a cursor, so we use the default "hand"
+                "cursor"      : (str, "cursor"),
+
+                "tooltip"     : (str, "tooltip"),
+                "NULL"        : None,
+                "angle-max"   : None, # Drag Rotate now auto detects this
+                "angle-min"   : None, # Drag Rotate now auto detects this
+                "axis_dx"     : None, # Drag Rotate now auto detects this
+                "axis_dy"     : None, # Drag Rotate now auto detects this
+                "axis_dz"     : None, # Drag Rotate now auto detects this
+                "command"     : (str, "command"),
+                "dataref"     : (str, "dataref1"),
+                "detentz"     : None, # str->List[Tuple[float,float,float]] of Axis Detent Range
+                "detents"     : None, # A second line for even more axis detent range
+                "dref1"       : (str, "dataref1"),
+                "dref2"       : (str, "dataref2"),
+                "dx"          : (float, "dx"),
+                "dy"          : (float, "dy"),
+                "dz"          : (float, "dz"),
+                "hold"        : (float, "hold_step"),
+                "keyframes"   : None, # Completely dropped, manip_keyframe is autodetected
+                "length"      : (float, "dx"),
+                "lift-len"    : None,
+                "neg-command" : (str, "negative_command"),
+                "pivot_x"     : None,
+                "pivot_y"     : None,
+                "pivot_z"     : None,
+                "pos-command" : (str, "positive_command"),
+                "power"       : (float, "exp"),
+
+                # Exceptions:
+                # 2.78 axis_knob, axis_switch_up_down, axis_switch_left_right
+                # has this special case "step"->"click_step"
+                "step"        : (float, "step"),
+
+                "v-down"      : (float, "v_down"),
+                "v-hold"      : (float, "v_hold"),
+
+                # Exceptions:
+                # 2.78 Delta and Wrap use v1_min/max
+                "v-min"       : (float, "v1"),
+                "v-max"       : (float, "v2"),
+
+                "v-off"       : (float, "v_off"),
+                "v-on"        : (float, "v_on"),
+                "v-up"        : (float, "v_up"),
+                "v1"          : (float, "v1"),
+                "v1min"       : (float, "v1_min"),
+                "v1max"       : (float, "v1_max"),
+                "v2"          : (float, "v2"),
+                "v2min"       : (float, "v2_min"),
+                "v2max"       : (float, "v2_max"),
+
+                # Exceptions:
+                # In 2.49 some manipulators erroniously include this:
+                # during export we ignore it
+                "wheel"       : (float, "wheel_delta"),
             }
 
             try:
+                # Several 2.49 manipulators allowed wheel to be specified, we ignore that data
+                # (even if the exporter ignores these later as well)
+                manipulator_type = manipulator_type.replace("ATTR_manip_", "")
+                if (manipulator_type not in MANIPULATORS_MOUSE_WHEEL) and attr == "wheel":
+                    return None
+
+                if (
+                        manipulator_type in {
+                            MANIP_AXIS_KNOB,
+                            MANIP_AXIS_SWITCH_UP_DOWN,
+                            MANIP_AXIS_SWITCH_LEFT_RIGHT
+                        }
+                        and attr == "step"
+                    ):
+                    return (float, "click_step")
+
+                if (manipulator_type in {MANIP_DELTA, MANIP_WRAP}):
+                    if attr == "v-min":
+                        return (float, "v1_min")
+                    if attr == "v-max":
+                        return (float, "v1_max")
+
                 return attr_translation_map[attr]
             except KeyError:
                 assert False, "Not yet implementing error handling for unknown attrs like " + attr
 
+        # Inner "   " prevents "0" + ".25" -> "0.25"
+        detents_list = list(
+            map(float,
+                "".join(
+                        (
+                            kwargs.get("detentz", ""),
+                            "    ",
+                            kwargs.get("detents", "")
+                        )
+                ).split()
+            )
+        )
+        #print("249 detents", detents_list)
+        assert len(detents_list) % 3 == 0, \
+           "len(detents + detentz) {} % 3 != 0, is {}. Uncaught error" \
+           .format(len(detents_list), len(detents_list) % 3)
+        self.axis_detent_ranges = [
+            (detents_list[i], detents_list[i+1], detents_list[i+2])
+            for i in range(0, len(detents_list), 3)
+        ]
+
+        print("--- Translating Manipulator Attributes ---")
         for manip_attr, value in kwargs.items():
-            if manip_attr in {"detents", "detentz", "keyframes"}:
-                # TODO: Have to add  axis_detent_ranges
-                pass
-            if isinstance(value, (int, float, str)) and translate_manip_attr(manip_attr):
-                setattr(self, translate_manip_attr(manip_attr), value)
+            if (isinstance(value, (int, float, str))
+                and translate_manip_attr(manipulator_type, manip_attr)
+               ):
+                print(manip_attr, value)
+                translated_manip_attr = translate_manip_attr(manipulator_type, manip_attr)
+                assert hasattr(self, translated_manip_attr[1]), \
+                       "{} not in ParsedManipulatorInfo".format(translated_manip_attr[1])
+                setattr(self, translated_manip_attr[1], translated_manip_attr[0](value))
+        print("---")
 
 
 def _getmanipulator(armature: bpy.types.Object)->Optional[OndrejManipInfo]:
@@ -246,16 +316,19 @@ def _getmanipulator(armature: bpy.types.Object)->Optional[OndrejManipInfo]:
     manipulator_dict[manipulator_type]['99@manipulator-name'] = manipulator_type
     return ParsedManipulatorInfo(manipulator_type, **{ondrej_key[3:]: value for ondrej_key, value in manipulator_dict[manipulator_type].items()})
 
+
 def _anim_decode(obj: bpy.types.Object)->Optional[OndrejManipInfo]:
     m = _getmanipulator(obj)
     if m is None:
         if obj.parent is None:
             return None
         if obj.type == 'MESH':
+            assert False, "Recusive manip info in parent look up not implemented yet"
             return _anim_decode(obj.parent)
         return None
 
     return m
+
 
 def _decode(armature: bpy.types.Object):
     #properties = obj.getAllProperties()
@@ -275,9 +348,9 @@ def _decode(armature: bpy.types.Object):
     manip_val2_br         = "<val2>"
     manip_dref_br         = "<dref>"
     manip_tooltip_br     = "<tooltip>"
-    
+
     manip_bone_name_br    = "" #--leave this blank by default, if its not blank the code will try and find the bone name
-        
+
     for prop in properties:
         if( prop.name == "mnp_iscommand" ):     manip_iscommand_br    = prop.data #--expects a boolean value
         if( prop.name == "mnp_command" ):        manip_command_br    = prop.data.strip()
@@ -297,38 +370,38 @@ def _decode(armature: bpy.types.Object):
     # No BR bone name?  Run Ondrej's decoder.
     if manip_bone_name_br == "":
         return _anim_decode(armature)
-    
+
     if( manip_bone_name_br != "" and manip_bone_name_br != "arm_" ):
         obj_manip_armature_br = bpy.data.objects[manip_bone_name_br] # Or is this not getting the armature? bpy.Object.Get means what?
         if( obj_manip_armature_br != None ):
             obj_manip_armature_data_br = obj_manip_armature_br.getData()
             obj_manip_bone_br = obj_manip_armature_data_br.bones.values()[0]
-            
+
             vec_tail = obj_manip_bone_br.tail['ARMATURESPACE']
             vec_arm = [obj_manip_armature_br.LocX, obj_manip_armature_br.LocY, obj_manip_armature_br.LocZ]
-            
+
             #blender Y = x-plane Z, transpose
             manip_x_br = str( round(vec_tail[0],3) )
             manip_y_br = str( round(vec_tail[2],3) )
             manip_z_br = str( round(-vec_tail[1],3) ) #note: value is inverted.
-            
+
             #self.file.write( str( vec_tail ) + "\n" )
             #self.file.write( str( vec_arm ) + "\n" )
-    
-    
-    
+
+
+
     data = ""
-    
-        
+
+
     #TODO: We don't need this, we need to return here our own ManipInfo class
-    return 
+    return
 
     '''
     if( manip_iscommand_br ):
         #wiki def: ATTR_manip_command <cursor> <command> <tooltip>
-        data = ("ATTR_manip_command %s %s %s" 
+        data = ("ATTR_manip_command %s %s %s"
                                                 %(manip_cursor_br,
-                                                manip_command_br, 
+                                                manip_command_br,
                                                 manip_tooltip_br))
     elif( manip_is_push_tk):
         data = ("ATTR_manip_push %s %s %s %s"
@@ -342,24 +415,24 @@ def _decode(armature: bpy.types.Object):
                                                 manip_val1_br,
                                                 manip_val2_br,
                                                 manip_dref_br))
-    
+
     else:
         #wiki def: ATTR_manip_drag_axis <cursor> <x> <y> <z> <value1> < value2> <dataref> <tooltip>
-        data = ("ATTR_manip_drag_axis %s %s %s %s %s %s %s %s" 
+        data = ("ATTR_manip_drag_axis %s %s %s %s %s %s %s %s"
                                                 %(manip_cursor_br,
                                                 manip_x_br,
                                                 manip_y_br,
                                                 manip_z_br,
                                                 manip_val1_br,
-                                                manip_val2_br, 
-                                                manip_dref_br, 
+                                                manip_val2_br,
+                                                manip_dref_br,
                                                 manip_tooltip_br))
-    
-    
+
+
     if data.find("<x>") != -1:
         print(properties)
         raise ExportError("%s: Manipulator '%s' is incomplete but was still exported." % (objname, data))
-    
+
     return data
     '''
 
@@ -377,4 +450,10 @@ def convert_armature_manipulator(armature:bpy.types.Object)->None:
     for obj in filter(lambda child: child.type == "MESH", armature.children):
         setattr(obj.xplane.manip, "enabled", True)
         for attr, value in vars(parsed_manip_info).items():
-            setattr(obj.xplane.manip, attr, value)
+            if attr == "axis_detent_ranges":
+                for (start, end, height) in value:
+                    r = obj.xplane.manip.axis_detent_ranges.add()
+                    r.start, r.end, r.height = (start, end, height)
+            else:
+                setattr(obj.xplane.manip, attr, value)
+

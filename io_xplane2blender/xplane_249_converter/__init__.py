@@ -17,11 +17,19 @@ from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_249_converter import xplane_249_dataref_decoder, xplane_249_manip_decoder
 
 
+_runs = 0
 def do_249_conversion():
     # TODO: Create log, similar to updater log
 
-    if bpy.data.version[1] > 49:
+    #TODO: When we integrate with the updater, (adding 2.49 as a legacy version)
+    # We can use that. Until then, we have this hack to keep unit testing going
+    global _runs
+    if _runs > 0:
         return
+    _runs += 1
+
+    #if bpy.data.version[1] > 49:
+    #    return
 
     # Global settings
     bpy.context.scene.xplane.debug = True
