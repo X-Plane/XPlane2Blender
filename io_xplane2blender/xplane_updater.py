@@ -12,12 +12,12 @@ from io_xplane2blender.xplane_helpers import XPlaneLogger
 
 
 '''
- #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
-  #   #   # #    #  #   ##  #  ## #  #  #  #     #  #   ## #  #  #  ## #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  # 
- ##   #   # #   # # #  ##      ###   ###   #    #####   ###   ###   ###     ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    # 
- ##   #  ####   # # #  #  ###  #     # #   #    #  ##   #     # #   #       # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   # 
- #   #   #  #   #  ##  ##  #   # #   # #        #  #    # #   # #   # #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #     
-#####   ##  ## ##  #    ####  ####  ## ## #    ## ###  ####  ## ## ####    ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #  
+ #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  #
+  #   #   # #    #  #   ##  #  ## #  #  #  #     #  #   ## #  #  #  ## #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
+ ##   #   # #   # # #  ##      ###   ###   #    #####   ###   ###   ###     ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
+ ##   #  ####   # # #  #  ###  #     # #   #    #  ##   #     # #   #       # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   #
+ #   #   #  #   #  ##  ##  #   # #   # #        #  #    # #   # #   # #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #
+#####   ##  ## ##  #    ####  ####  ## ## #    ## ###  ####  ## ## ####    ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #
 
 BEFORE CHANGING THIS FILE have you:
 1. Fully understood what parts of the data model you are changing?
@@ -32,18 +32,18 @@ BEFORE CHANGING THIS FILE have you:
 Put this in your mind:
     A poor defenseless .blend file, with big watery wobbly eyes is lying on the operating table, eyeing the sharp text editors and esoteric command line commands
     about to be used on the codebase that supports it. It says
-            
+
             Will it hurt to change the update function? Is it necessary?
             Is it deterministic and fulfills the "Only update what's needed, when needed" contract?
             Do you remember the 3.4.0 loc/rot/locrot fiasco of Aug. 2017?
-    
+
     You hold the anesthesia mask in one hand, and a terminal prompt in the other. Are you ready to take responsibility for this data model and
     the artists who depend on it? Are you ready to make a change to this file? Or are you another wanna-be console cowboy who is poking their mouse
     in the wrong part of the codebase again?
     ...
     ...
     ...
-    
+
 You may now proceed to the rest of the file.
 '''
 
@@ -78,7 +78,7 @@ def __updateLocRot(obj,logger):
             old_anim_type = 0 # If anim_type was never set in the first place, it's value is the default, aka 0 for the old anim_type
 
         new_anim_type = convert_old_to_new(old_anim_type)
-        d.anim_type = new_anim_type 
+        d.anim_type = new_anim_type
         logger.info("Updated %s's animation dataref (%s)'s animation type from %s to %s" %
               (obj.name,\
                d.path,\
@@ -105,7 +105,6 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
 
             if scene.xplane and scene.xplane.layers and len(scene.xplane.layers) > 0:
                 for layer in scene.xplane.layers:
-                    # set autodetectTextures to False
                     layer.autodetectTextures = False
                     logger.info('Turned layer "%s"\'s Autodetect Textures property to off' % layer.name)
 
@@ -118,7 +117,9 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                     else:
                         layer.export_type = 'aircraft'
 
-                    logger.info('Changed layer "%s"\'s Export Type from "%s" to "%s"' % (layer.name, prev_export_type, layer.export_type))
+                    # Athough I really hate to do this, it generates so much spam it needs to get turned off.
+                    # When we implement --verbose, we'll put this back on.
+                    #logger.info('Changed layer "%s"\'s Export Type from "%s" to "%s"' % (layer.name, prev_export_type, layer.export_type))
 
     if last_version < xplane_helpers.VerStruct.parse_version('3.4.0'):
         for arm in bpy.data.armatures:
@@ -142,7 +143,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 # If the default for blend_v1000 ever changes, we'll be covered.
                 blend_v1000 = bpy.types.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
                 enum_items = blend_v1000.enum_items
-                
+
                 if v10 is None:
                     v10_mode = enum_items[enum_items.find(blend_v1000.default)].name
                 else:
@@ -232,7 +233,7 @@ def load_handler(dummy):
 
     # Get the old_version (end of list, which by now is guaranteed to have something in it)
     last_version = ver_history[-1]
-    
+
     # L:Compare last vs current
     # If the version is out of date
     #     L:Run update

@@ -197,7 +197,8 @@ def main(argv=None)->int:
             if not (argv.quiet or argv.print_fails):
                 print('\n'.join(filter(lambda l: not (l.startswith("ID user decrement error")
                                                       or l.startswith("found bundled python")
-                                                      or l.startswith("read blend")),
+                                                      or l.startswith("read blend")
+                                                      or l.startswith("read_libblock: unknown id code 'PY'")),
                                        out.splitlines())))
 
             # TestResults from the current test

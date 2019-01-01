@@ -178,7 +178,7 @@ def getDatarefs()->Dict[Union[SName, TailName], Optional[LookupRecord]]:
             # 1. 2.49 must have the date time metadata version line
             # 2. Any number of line breaks are allowed after and in between dataref lines
             # 3. sim/test and sim/version are ignored
-            # 4. sim/multiplayer is ignored
+            # 4. sim/multiplayer is ignored, TODO: We should be doing this too. See bug #405
             # 5. byte array is not allowed
             # 6. data type is allowed to have upper or mixed case
             # 7. Multiple indexed array types are allowed, such as 'flightmodel/parts/v_el [73][10][4]'
@@ -227,6 +227,7 @@ def getDatarefs()->Dict[Union[SName, TailName], Optional[LookupRecord]]:
                     n = 0
 
                 #Other parts of the code need to append text like '[10]_v1', so space must be reserved for that
+                '''
                 if n>99:
                     if len(sname) > 23:
                         print('WARNING - dataref ' + line + ' is too long for key frame table')
@@ -241,6 +242,7 @@ def getDatarefs()->Dict[Union[SName, TailName], Optional[LookupRecord]]:
                         print('WARNING - dataref ' + line + ' is too long for key frame table')
     #                elif len(sname) > 17:
     #                   print 'WARNING - dataref ' + d[0] + ' is too long for show/hide'
+                '''
 
                 # This makes the actual datarefs dictionary.
                 # Two keys representing a dataref: The SName and Tail-name.
@@ -248,8 +250,9 @@ def getDatarefs()->Dict[Union[SName, TailName], Optional[LookupRecord]]:
                 # indicating additional resolution needed
                 if ref[1]!=('multiplayer'): # too many ambiguous datarefs # Diff #4
                     if sname in datarefs:
-                        print('WARNING - ambiguous short name '+ sname + ' for dataref ' + d[0])
-                        print("sname " + sname + "is currently used for " + datarefs[sname][0])
+                        #print('WARNING - ambiguous short name '+ sname + ' for dataref ' + d[0])
+                        #print("sname " + sname + "is currently used for " + datarefs[sname][0])
+                        pass
                     else:
                         datarefs[sname]=(d[0], n)
                     if ref[-1] in datarefs:
@@ -556,17 +559,17 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     return parsed_prop
 
 def convert_armature_animations(armature:bpy.types.Object):
-    print("Decoding Game-Properties for '{}'".format(armature.name))
+    print("Decoding dataref Game-Properties for '{}'".format(armature.name))
     bpy.context.scene.objects.active = armature
-    
+
     # We know what ATTR_manip and manipulator_type means,
     # we know they couldn't possibly be (without extreme stupidity)
     # related to datarefs, so we'll skip considering them at all.
     # TODO: Also need Ben Russel properties
-    game_properties = {
-        name: prop for name, prop in armature.game.properties.items()
+    game_properties = OrderedDict([
+        (name, prop) for name, prop in armature.game.properties.items()
         if not (name.startswith("ATTR_manip_") or name == "manipulator_type")
-    }
+    ])
     def find_all_datarefs_in_armature(armature: bpy.types.Object)->Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]:
         '''
         Returns a dictionary all datarefs mentioned in the bone names and game props,
@@ -603,7 +606,7 @@ def convert_armature_animations(armature:bpy.types.Object):
 
             if matching_key_users:
                 disambiguating_key = "{}/{}".format(game_prop.value.strip(" /"), game_prop.name.strip())
-                print("Matching uses of disambiguating key '{}': {}".format(disambiguating_key, [k.name for k in matching_key_users]))
+                print("Matching uses of disambiguating key '{}': {}".format(disambiguating_key, [k[1].name for k in matching_key_users]))
                 all_arm_drefs[disambiguating_key] = (armature, []) # Show hide applies to armature object
             else:
                 print("Couldn't find uses for '%s/%s'" % (game_prop.value, game_prop.name))
