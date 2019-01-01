@@ -10,13 +10,17 @@ import os
 import re
 
 import bpy
-
-from typing import Callable, Dict, List, Optional, Tuple, Union
-
 from io_xplane2blender import xplane_constants, xplane_helpers
-from xplane_constants import *
-from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW, ANIM_TYPE_TRANSFORM
 from io_xplane2blender.tests import test_creation_helpers
+from io_xplane2blender.xplane_constants import (ANIM_TYPE_HIDE, ANIM_TYPE_SHOW,
+                                                ANIM_TYPE_TRANSFORM,
+                                                MANIP_AXIS_KNOB,
+                                                MANIP_AXIS_SWITCH_LEFT_RIGHT,
+                                                MANIP_AXIS_SWITCH_UP_DOWN,
+                                                MANIP_CURSOR_HAND, MANIP_DELTA,
+                                                MANIP_WRAP,
+                                                MANIPULATORS_MOUSE_WHEEL)
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 # Key is ATTR_manip_type, value is dict of manip nn@attributes and their values
 OndrejManipInfo = Dict[str, Union[int, float, str]]
@@ -456,4 +460,3 @@ def convert_armature_manipulator(armature:bpy.types.Object)->None:
                     r.start, r.end, r.height = (start, end, height)
             else:
                 setattr(obj.xplane.manip, attr, value)
-
