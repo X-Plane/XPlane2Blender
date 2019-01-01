@@ -17,10 +17,6 @@ from ..xplane_types import xplane_file
 from ..xplane_types.xplane_primitive import XPlanePrimitive
 from .animation_file_mappings import mappings
 
-
-#TODO: Make this import from XPlane2Blender/tests.py instead of just keeping it in sync manually
-TEST_RESULTS_REGEX = "RESULT: After {num_tests} tests got {errors} errors, {fails} failures, and {skip} skipped"
-
 FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
@@ -152,7 +148,7 @@ class XPlaneTestCase(unittest.TestCase):
             #print("lineA:%s lineB:%s" %(lineA,lineB))
             # ensure same number of line segments
             self.assertEquals(len(lineA), len(lineB))
-            
+
 
             for linePos in range(0, len(lineA)):
                 segmentA = lineA[linePos]
@@ -190,9 +186,9 @@ class XPlaneTestCase(unittest.TestCase):
         tmpFile = open(tmpPath, 'r')
         tmpOutput = tmpFile.read()
         tmpFile.close()
-        
+
         return self.assertFileOutputEqualsFixture(tmpOutput, fixturePath, filterCallback, floatTolerance)
-    
+
 
     # Method: assertLoggerErrors
     #
@@ -201,13 +197,13 @@ class XPlaneTestCase(unittest.TestCase):
     def assertLoggerErrors(self, expected_logger_errors):
         self.assertEqual(len(logger.findErrors()), expected_logger_errors)
         logger.clearMessages()
-    
+
     #TODO: Must filter warnings to have this be useful
     # Method: assertLoggerWarnings
     #
     # expected_logger_warnings - The number of warnings you expected to have happen
     # asserts the number of warnings and clears the logger of all messages
-    #def assertLoggerWarnings(self, expected_logger_warnings):    
+    #def assertLoggerWarnings(self, expected_logger_warnings):
     #    self.assertEqual(len(logger.findWarnings()), expected_logger_warnings)
     #    logger.clearMessages()
     def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
@@ -344,6 +340,7 @@ def runTestCases(testCases):
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(testCases[0])
     test_result = unittest.TextTestRunner().run(suite)
 
+    #TODO: Make this import from XPlane2Blender/tests.py instead of just keeping it in sync manually
     #See XPlane2Blender/tests.py for documentation. The strings must be kept in sync!
     return_string = "RESULT: After {testsRun} tests got {errors} errors, {failures} failures, and {skipped} skipped"\
         .format(testsRun=test_result.testsRun,
