@@ -566,10 +566,27 @@ def convert_armature_animations(armature:bpy.types.Object):
     # we know they couldn't possibly be (without extreme stupidity)
     # related to datarefs, so we'll skip considering them at all.
     # TODO: Also need Ben Russel properties
-    game_properties = OrderedDict([
-        (name, prop) for name, prop in armature.game.properties.items()
-        if not (name.startswith("ATTR_manip_") or name == "manipulator_type")
-    ])
+    game_properties = OrderedDict(
+        [
+            (name, prop) for name, prop in armature.game.properties.items()
+            if (
+                not (name.startswith("ATTR_manip_") or name == "manipulator_type")
+                and name not in {
+                    "mnp_iscommand",
+                    "mnp_command",
+                    "mnp_cursor",
+                    "mnp_dref",
+                    "mnp_tooltip",
+                    "mnp_bone",
+                    "mnp_v1",
+                    "mnp_v2",
+                    "mnp_is_push",
+                    "mnp_is_toggle",
+                    }
+                )
+        ]
+    )
+
     def find_all_datarefs_in_armature(armature: bpy.types.Object)->Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]:
         '''
         Returns a dictionary all datarefs mentioned in the bone names and game props,

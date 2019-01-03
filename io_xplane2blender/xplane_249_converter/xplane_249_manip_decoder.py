@@ -17,13 +17,18 @@ from io_xplane2blender.xplane_constants import (ANIM_TYPE_HIDE, ANIM_TYPE_SHOW,
                                                 MANIP_AXIS_KNOB,
                                                 MANIP_AXIS_SWITCH_LEFT_RIGHT,
                                                 MANIP_AXIS_SWITCH_UP_DOWN,
+                                                MANIP_COMMAND,
                                                 MANIP_CURSOR_HAND, MANIP_DELTA,
+                                                MANIP_DRAG_AXIS,
+                                                MANIP_PUSH,
+                                                MANIP_TOGGLE,
                                                 MANIP_WRAP,
                                                 MANIPULATORS_MOUSE_WHEEL)
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 # Key is ATTR_manip_type, value is dict of manip nn@attributes and their values
 OndrejManipInfo = Dict[str, Union[int, float, str]]
+
 def getManipulators()->Tuple[Dict[str, OndrejManipInfo], List[str]]:
     """Returns data defining x-plane manipulators
     This method currently hard-codes the data definitions for manipulators and
@@ -121,16 +126,14 @@ class ParsedManipulatorInfo():
     """
     #TODO: Inputs are validated so that each type has what it needs and only what it needs
     #being passed in.
-    def __init__(self, manipulator_type: str, **kwargs: Dict[str,Union[int,float,str]]):
+    def __init__(self, manipulator_type: str, **kwargs: Dict[str, Union[int, float, str]]):
         '''
         Takes the contents of a manipulator_dict's sub dictionary and translates them into
         something matchining XPlaneManipulatorSettings,
         '''
         self.axis_detent_ranges = [] # type: List[Tuple[float, float, float]]
 
-        assert manipulator_type.startswith("ATTR_manip_"), "manipulator_type must start with ATTR_manip_"
         self.type = manipulator_type.replace("ATTR_manip_", "") # type: str
-
         if self.type == "drag_rotate" and (kwargs.get('detentz', "") + kwargs.get('detents', "")):
             self.type = "drag_rotate_detent"
 
@@ -230,6 +233,28 @@ class ParsedManipulatorInfo():
                 # In 2.49 some manipulators erroniously include this:
                 # during export we ignore it
                 "wheel"       : (float, "wheel_delta"),
+
+                # Ben Russell's Manipulator Attributes
+                "mnp_iscommand"   : None, # Sets manipulator type is "command"
+                "mnp_command"     : (lambda s: str(s).strip(), "command"),
+                "mnp_cursor"      : (lambda s: str(s).strip(), "cursor"),
+                "mnp_dref"        : (lambda s: str(s).strip(), "dataref1"),
+                "mnp_tooltip"     : (lambda s: str(s).strip(), "tooltip"),
+                "mnp_bone"        : None, # Names the armature this manipulator
+                                          # could take bone info
+                                          # from for dx, dy, and dz
+
+                # Exceptions:
+                # If manipulator_type is "push"
+                #"mnp_v1"          : (float, "v_down"),
+                #"mnp_v2"          : (float, "v_up"),
+                # If manipulator_type is "toggle"
+                #"mnp_v1"          : (float, "v_on"),
+                #"mnp_v2"          : (float, "v_off"),
+                "mnp_v1"          : (float, "v1"),
+                "mnp_v2"          : (float, "v2"),
+                "mnp_is_push"     : None, # Sets manipulator type to "push"
+                "mnp_is_toggle"   : None, # Sets manipulator type to "toggle"
             }
 
             try:
@@ -254,6 +279,16 @@ class ParsedManipulatorInfo():
                         return (float, "v1_min")
                     if attr == "v-max":
                         return (float, "v1_max")
+
+                if manipulator_type == "push" and attr == "mnp_v1":
+                    return (float, "v_down")
+                if manipulator_type == "push" and attr == "mnp_v2":
+                    return (float, "v_up")
+
+                if manipulator_type == "toggle" and attr == "mnp_v1":
+                    return (float, "v_on")
+                if manipulator_type == "toggle" and attr == "mnp_v2":
+                    return (float, "v_off")
 
                 return attr_translation_map[attr]
             except KeyError:
@@ -318,127 +353,81 @@ def _getmanipulator(armature: bpy.types.Object)->Optional[OndrejManipInfo]:
                 manipulator_dict[manipulator_type][real_ondrej_attr_key] = prop.value
 
     manipulator_dict[manipulator_type]['99@manipulator-name'] = manipulator_type
-    return ParsedManipulatorInfo(manipulator_type, **{ondrej_key[3:]: value for ondrej_key, value in manipulator_dict[manipulator_type].items()})
+    return ParsedManipulatorInfo(
+        manipulator_type,
+        **{
+            ondrej_key[3:]: value
+            for ondrej_key, value in manipulator_dict[manipulator_type].items()
+        }
+    )
 
 
 def _anim_decode(obj: bpy.types.Object)->Optional[OndrejManipInfo]:
+    '''
+    Recurses up parent chain attempting to find valid
+    Ondrej manipuator info
+    '''
     m = _getmanipulator(obj)
     if m is None:
         if obj.parent is None:
             return None
         if obj.type == 'MESH':
-            assert False, "Recusive manip info in parent look up not implemented yet"
             return _anim_decode(obj.parent)
         return None
 
     return m
 
 
-def _decode(armature: bpy.types.Object):
-    #properties = obj.getAllProperties()
-    properties = armature.game.properties
-    objname = armature.name
-
-    #setup default manipulator attribute values
-    manip_iscommand_br    = False
-    manip_is_push_tk    = False
-    manip_is_toggle_tk    = False
-    manip_command_br    = "<command>"
-    manip_cursor_br     = "<cursor>"
-    manip_x_br             = "<x>"
-    manip_y_br             = "<y>"
-    manip_z_br             = "<z>"
-    manip_val1_br         = "<val1>"
-    manip_val2_br         = "<val2>"
-    manip_dref_br         = "<dref>"
-    manip_tooltip_br     = "<tooltip>"
-
-    manip_bone_name_br    = "" #--leave this blank by default, if its not blank the code will try and find the bone name
-
-    for prop in properties:
-        if( prop.name == "mnp_iscommand" ):     manip_iscommand_br    = prop.data #--expects a boolean value
-        if( prop.name == "mnp_command" ):        manip_command_br    = prop.data.strip()
-        if( prop.name == "mnp_cursor" ):         manip_cursor_br     = prop.data.strip()
-        if( prop.name == "mnp_dref" ):             manip_dref_br         = prop.data.strip()
-        if( prop.name == "mnp_tooltip" ):         manip_tooltip_br    = prop.data.strip()
-        if( prop.name == "mnp_bone" ):             manip_bone_name_br     = prop.data.strip()
-        if( prop.name == "mnp_v1" ):             manip_val1_br         = str(prop.data)
-        if( prop.name == "mnp_v2" ):             manip_val2_br         = str(prop.data)
-        if( prop.name == "mnp_is_push" ):        manip_is_push_tk    = prop.data
-        if( prop.name == "mnp_is_toggle" ):        manip_is_toggle_tk    = prop.data
-
-    # BR's weird scheme: if there is NO mnp_bone there is no manip, get out.  But the magic
-    # bone names arm_ are place-holders - they're not REAL armatures, it's just a place-holder
-    # to make the export work.
+def _decode(armature: bpy.types.Object)->Optional[ParsedManipulatorInfo]:
+    '''
+    The main entry point to manipulator decoding, branches between BR and Ondrej
+    schemes
+    '''
+    # We're making an assumption that BR manipulators were always 1 arm -> 1 cube
+    # until a real life example proves us otherwise
+    properties = armature.children[0].game.properties
+    manip_bone_name_br = properties.get("mnp_bone", "")
 
     # No BR bone name?  Run Ondrej's decoder.
     if manip_bone_name_br == "":
         return _anim_decode(armature)
 
-    if( manip_bone_name_br != "" and manip_bone_name_br != "arm_" ):
-        obj_manip_armature_br = bpy.data.objects[manip_bone_name_br] # Or is this not getting the armature? bpy.Object.Get means what?
-        if( obj_manip_armature_br != None ):
-            obj_manip_armature_data_br = obj_manip_armature_br.getData()
-            obj_manip_bone_br = obj_manip_armature_data_br.bones.values()[0]
+    # After much re-reading, I still can't figure out what this original
+    # comment or use of hardcoded "arm_"
+    #
+    #   But the magic bone names arm_ are place-holders - they're not REAL armatures,
+    #   it's just a place-holder to make the export work.
+    #
+    # is suppose to mean. Included just in case -Ted, 1/3/2019
+    if (manip_bone_name_br.value != "" and manip_bone_name_br.value != "arm_"):
+        if properties.get("mnp_iscommand"):
+            manip_info_type = MANIP_COMMAND
+        elif properties.get("mnp_is_push"):
+            manip_info_type = MANIP_PUSH
+        elif properties.get("mnp_is_toggle"):
+            manip_info_type = MANIP_TOGGLE
+        else:
+            manip_info_type = MANIP_DRAG_AXIS
+            try:
+                obj_manip_bone_br = bpy.data.objects[manip_bone_name_br.value].pose.bones[0]
+                vec_tail = obj_manip_bone_br.tail
+                # Blender's Y = X-Plane's -Z
+                dx = round(vec_tail[0], 3)
+                dy = round(vec_tail[2], 3)
+                dz = round(-vec_tail[1], 3)
+            except KeyError:
+                print("Armature {} not found, mnp_bone is invalid".format(manip_bone_name_br))
+                return None
 
-            vec_tail = obj_manip_bone_br.tail['ARMATURESPACE']
-            vec_arm = [obj_manip_armature_br.LocX, obj_manip_armature_br.LocY, obj_manip_armature_br.LocZ]
+        mnp_attrs = {"mnp_command", "mnp_cursor", "mnp_dref", "mnp_tooltip", "mnp_v1", "mnp_v2"}
+        kwargs = {prop.name:prop.value for prop in filter(lambda p: p.name in mnp_attrs, properties)}
+        try:
+            kwargs.update({'dx':dx, 'dy':dy, 'dz':dz})
+        except NameError:
+            pass
 
-            #blender Y = x-plane Z, transpose
-            manip_x_br = str( round(vec_tail[0],3) )
-            manip_y_br = str( round(vec_tail[2],3) )
-            manip_z_br = str( round(-vec_tail[1],3) ) #note: value is inverted.
+        return ParsedManipulatorInfo(manip_info_type, **kwargs)
 
-            #self.file.write( str( vec_tail ) + "\n" )
-            #self.file.write( str( vec_arm ) + "\n" )
-
-
-
-    data = ""
-
-
-    #TODO: We don't need this, we need to return here our own ManipInfo class
-    return
-
-    '''
-    if( manip_iscommand_br ):
-        #wiki def: ATTR_manip_command <cursor> <command> <tooltip>
-        data = ("ATTR_manip_command %s %s %s"
-                                                %(manip_cursor_br,
-                                                manip_command_br,
-                                                manip_tooltip_br))
-    elif( manip_is_push_tk):
-        data = ("ATTR_manip_push %s %s %s %s"
-                                                %(manip_cursor_br,
-                                                manip_val1_br,
-                                                manip_val2_br,
-                                                manip_dref_br))
-    elif( manip_is_toggle_tk):
-        data = ("ATTR_manip_toggle %s %s %s %s"
-                                                %(manip_cursor_br,
-                                                manip_val1_br,
-                                                manip_val2_br,
-                                                manip_dref_br))
-
-    else:
-        #wiki def: ATTR_manip_drag_axis <cursor> <x> <y> <z> <value1> < value2> <dataref> <tooltip>
-        data = ("ATTR_manip_drag_axis %s %s %s %s %s %s %s %s"
-                                                %(manip_cursor_br,
-                                                manip_x_br,
-                                                manip_y_br,
-                                                manip_z_br,
-                                                manip_val1_br,
-                                                manip_val2_br,
-                                                manip_dref_br,
-                                                manip_tooltip_br))
-
-
-    if data.find("<x>") != -1:
-        print(properties)
-        raise ExportError("%s: Manipulator '%s' is incomplete but was still exported." % (objname, data))
-
-    return data
-    '''
 
 def convert_armature_manipulator(armature:bpy.types.Object)->None:
     '''
@@ -451,6 +440,8 @@ def convert_armature_manipulator(armature:bpy.types.Object)->None:
     if not parsed_manip_info:
         return
 
+    # Satisfies Ondrej's implentation and works with our assumption of BR
+    # manipulators being a 1 arm-> 1 cube pair
     for obj in filter(lambda child: child.type == "MESH", armature.children):
         setattr(obj.xplane.manip, "enabled", True)
         for attr, value in vars(parsed_manip_info).items():
