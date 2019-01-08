@@ -124,8 +124,6 @@ class ParsedManipulatorInfo():
     to multiple objects that are children of the armature, it does not directly change any
     Blender properties
     """
-    #TODO: Inputs are validated so that each type has what it needs and only what it needs
-    #being passed in.
     def __init__(self, manipulator_type: str, **kwargs: Dict[str, Union[int, float, str]]):
         '''
         Takes the contents of a manipulator_dict's sub dictionary and translates them into
@@ -135,7 +133,7 @@ class ParsedManipulatorInfo():
 
         self.type = manipulator_type.replace("ATTR_manip_", "") # type: str
         if self.type == "drag_rotate" and (kwargs.get('detentz', "") + kwargs.get('detents', "")):
-            self.type = "drag_rotate_detent"
+            self.type = xplane_constants.MANIP_DRAG_ROTATE_DETENT
 
         self.tooltip          = "" # type: str
         self.cursor           = MANIP_CURSOR_HAND # type: str
@@ -166,8 +164,8 @@ class ParsedManipulatorInfo():
 
         def translate_manip_attr(manipulator_type: str, attr: str)->Optional[Tuple[Callable, str]]:
             '''
-            Returns the XPlaneManipulatorSettings attr name and the function to convert it
-            of Ondrej or BR's (TODO) manipulator info encoding,
+            Given a type and an Ondrej or BR manipuator info,
+            returns the XPlaneManipulatorSettings attr name and the function to convert it
             or None if no such mapping exists
             '''
             attr_translation_map = {
@@ -298,14 +296,15 @@ class ParsedManipulatorInfo():
         detents_list = list(
             map(float,
                 "".join(
-                        (
-                            kwargs.get("detentz", ""),
-                            "    ",
-                            kwargs.get("detents", "")
-                        )
+                    (
+                        kwargs.get("detentz", ""),
+                        "    ",
+                        kwargs.get("detents", "")
+                    )
                 ).split()
             )
         )
+
         #print("249 detents", detents_list)
         assert len(detents_list) % 3 == 0, \
            "len(detents + detentz) {} % 3 != 0, is {}. Uncaught error" \
@@ -315,22 +314,22 @@ class ParsedManipulatorInfo():
             for i in range(0, len(detents_list), 3)
         ]
 
-        print("--- Translating Manipulator Attributes ---")
+        #print("--- Translating Manipulator Attributes ---")
         for manip_attr, value in kwargs.items():
             if (isinstance(value, (int, float, str))
                 and translate_manip_attr(manipulator_type, manip_attr)
                ):
-                print(manip_attr, value)
+                #print(manip_attr, value)
                 translated_manip_attr = translate_manip_attr(manipulator_type, manip_attr)
                 assert hasattr(self, translated_manip_attr[1]), \
                        "{} not in ParsedManipulatorInfo".format(translated_manip_attr[1])
                 setattr(self, translated_manip_attr[1], translated_manip_attr[0](value))
-        print("---")
+        #print("---")
 
 
-def _getmanipulator(armature: bpy.types.Object)->Optional[OndrejManipInfo]:
+def _getmanipulator(obj: bpy.types.Object)->Optional[Tuple[bpy.types.Object, OndrejManipInfo]]:
     try:
-        manipulator_type = armature.game.properties['manipulator_type'].value
+        manipulator_type = obj.game.properties['manipulator_type'].value
         if manipulator_type == 'ATTR_manip_none':
             return None
     except KeyError:
@@ -346,14 +345,14 @@ def _getmanipulator(armature: bpy.types.Object)->Optional[OndrejManipInfo]:
 
     manipulator_dict, _ = getManipulators()
     # Loop through every manip property, mapping property key -> manip_info key
-    for prop in filter(lambda p: p.name.startswith(manip_key), armature.game.properties):
+    for prop in filter(lambda p: p.name.startswith(manip_key), obj.game.properties):
         potential_ondrej_attr_key = prop.name.split('_')[-1]
         for real_ondrej_attr_key in manipulator_dict[manipulator_type]:
             if potential_ondrej_attr_key in real_ondrej_attr_key:
                 manipulator_dict[manipulator_type][real_ondrej_attr_key] = prop.value
 
     manipulator_dict[manipulator_type]['99@manipulator-name'] = manipulator_type
-    return ParsedManipulatorInfo(
+    return obj, ParsedManipulatorInfo(
         manipulator_type,
         **{
             ondrej_key[3:]: value
@@ -362,7 +361,7 @@ def _getmanipulator(armature: bpy.types.Object)->Optional[OndrejManipInfo]:
     )
 
 
-def _anim_decode(obj: bpy.types.Object)->Optional[OndrejManipInfo]:
+def _anim_decode(obj: bpy.types.Object)->Optional[Tuple[bpy.types.Object, OndrejManipInfo]]:
     '''
     Recurses up parent chain attempting to find valid
     Ondrej manipuator info
@@ -378,19 +377,19 @@ def _anim_decode(obj: bpy.types.Object)->Optional[OndrejManipInfo]:
     return m
 
 
-def _decode(armature: bpy.types.Object)->Optional[ParsedManipulatorInfo]:
+def _decode(obj: bpy.types.Object)->Optional[Tuple[bpy.types.Object, ParsedManipulatorInfo]]:
     '''
     The main entry point to manipulator decoding, branches between BR and Ondrej
     schemes
     '''
     # We're making an assumption that BR manipulators were always 1 arm -> 1 cube
     # until a real life example proves us otherwise
-    properties = armature.children[0].game.properties
+    properties = obj.game.properties
     manip_bone_name_br = properties.get("mnp_bone", "")
 
     # No BR bone name?  Run Ondrej's decoder.
     if manip_bone_name_br == "":
-        return _anim_decode(armature)
+        return _anim_decode(obj)
 
     # After much re-reading, I still can't figure out what this original
     # comment or use of hardcoded "arm_"
@@ -400,6 +399,8 @@ def _decode(armature: bpy.types.Object)->Optional[ParsedManipulatorInfo]:
     #
     # is suppose to mean. Included just in case -Ted, 1/3/2019
     if (manip_bone_name_br.value != "" and manip_bone_name_br.value != "arm_"):
+        mnp_attrs = {"mnp_command", "mnp_cursor", "mnp_dref", "mnp_tooltip", "mnp_v1", "mnp_v2"}
+        kwargs = {prop.name:prop.value for prop in filter(lambda p: p.name in mnp_attrs, properties)}
         if properties.get("mnp_iscommand"):
             manip_info_type = MANIP_COMMAND
         elif properties.get("mnp_is_push"):
@@ -415,34 +416,28 @@ def _decode(armature: bpy.types.Object)->Optional[ParsedManipulatorInfo]:
                 dx = round(vec_tail[0], 3)
                 dy = round(vec_tail[2], 3)
                 dz = round(-vec_tail[1], 3)
+                kwargs.update({'dx':dx, 'dy':dy, 'dz':dz})
             except KeyError:
-                print("Armature {} not found, mnp_bone is invalid".format(manip_bone_name_br))
+                #print("Armature {} not found, mnp_bone is invalid".format(manip_bone_name_br))
                 return None
 
-        mnp_attrs = {"mnp_command", "mnp_cursor", "mnp_dref", "mnp_tooltip", "mnp_v1", "mnp_v2"}
-        kwargs = {prop.name:prop.value for prop in filter(lambda p: p.name in mnp_attrs, properties)}
-        try:
-            kwargs.update({'dx':dx, 'dy':dy, 'dz':dz})
-        except NameError:
-            pass
-
-        return ParsedManipulatorInfo(manip_info_type, **kwargs)
+        return obj, ParsedManipulatorInfo(manip_info_type, **kwargs)
 
 
-def convert_armature_manipulator(armature:bpy.types.Object)->None:
+def convert_manipulators(obj: bpy.types.Object)->None:
     '''
-    Converts any manipulator game properties in an armature
-    and applies it to all any meshes it is a child of
+    Searches from the bottom up and converts any manipulators found
     '''
 
-    print("Decoding manipulator for '{}'".format(armature.name))
-    parsed_manip_info = _decode(armature) # type: ParsedManipulatorInfo
-    if not parsed_manip_info:
+    try:
+        print("Decoding manipulator for '{}'".format(obj.name))
+        manip_info_source, parsed_manip_info = _decode(obj)
+        #print("Manip info for {} found on {}".format(obj.name, manip_info_source.name))
+    except TypeError: # NoneType is not iterable, incase _decode returns None and can't expand
+        #print("Could not decode manipulator info for '{}'".format(obj.name))
         return
-
-    # Satisfies Ondrej's implentation and works with our assumption of BR
-    # manipulators being a 1 arm-> 1 cube pair
-    for obj in filter(lambda child: child.type == "MESH", armature.children):
+    else:
+        assert not obj.xplane.manip.enabled, "{} has already had its manipulators converted"
         setattr(obj.xplane.manip, "enabled", True)
         for attr, value in vars(parsed_manip_info).items():
             if attr == "axis_detent_ranges":

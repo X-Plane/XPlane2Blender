@@ -331,14 +331,15 @@ def lookup_dataref(sname:Optional[SName], tailname:Optional[TailName])->LookupRe
                      .format(_249_datarefs[lookup_name]))
 
             lookup_result.record = _249_datarefs[lookup_name]
-            print("{}: Using '{}', found {}".format(i, lookup_name, _249_datarefs[lookup_name]))
+            #print("{}: Using '{}', found {}".format(i, lookup_name, _249_datarefs[lookup_name]))
 
             if i == 0 and lookup_result.record:
                 lookup_result.sname_success = True
             if i == 1:
                 lookup_result.tailname_success = True
         else:
-            print("{}: {} not found in datarefs dict, skipping".format(i, lookup_name))
+            #print("{}: {} not found in datarefs dict, skipping".format(i, lookup_name))
+            pass
 
     return lookup_result
 
@@ -391,9 +392,9 @@ def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str, 
                      "show_hide_v1": None,
                      "show_hide_v2": None} # type: Dict[str, Optional[Union[float,int,str]]]
 
-    print("Attempting to parse {}".format(game_prop.name))
+    #print("Attempting to parse {}".format(game_prop.name))
     if re.match(ROOT_IDX + SHOWHIDE + F_NUMBER + "$", name):
-        print("1. Matched show/hide")
+        #print("1. Matched show/hide")
         parsed_result.update(
             re.match(ROOT_IDX + SHOWHIDE + F_NUMBER + "$",
                      name).groupdict(default=""))
@@ -402,7 +403,7 @@ def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str, 
         parsed_result['show_hide_v1'] = game_prop.value if int(parsed_result['frame_number']) % 2 == 1 else None
         parsed_result['show_hide_v2'] = game_prop.value if int(parsed_result['frame_number']) % 2 == 0 else None
     elif re.search(r"_loop$", name):
-        print("2. Matched loop")
+        #print("2. Matched loop")
         parsed_result.update(
             re.search(ROOT_IDX,
                       name).groupdict(default=""))
@@ -412,25 +413,25 @@ def parse_game_prop_name(game_prop: bpy.types.GameProperty)->Optional[Dict[str, 
         parsed_result['prop_root'] = parsed_result['prop_root'].split('_loop')[0]
         parsed_result['loop'] = game_prop.value
     elif re.match(ROOT_IDX + F_NUMBER + "$", name):
-        print("3. Matched anim-value")
+        #print("3. Matched anim-value")
         parsed_result.update(
             re.match(ROOT_IDX+F_NUMBER + "$",
                      name).groupdict(default=""))
         parsed_result['anim_type'] = ANIM_TYPE_TRANSFORM
     elif re.match(ROOT_IDX + "$", name):
-        print("4. Matched disambiguating key or other text")
-        print("Text: {}".format(name))
+        #print("4. Matched disambiguating key or other text")
+        #print("Text: {}".format(name))
         return None
     else:
-        print("5. Could not parse text")
-        print("Unparsable Text: {}".format(name))
+        #print("5. Could not parse text")
+        #print("Unparsable Text: {}".format(name))
         return None
 
     assert (parsed_result['anim_type']
             or parsed_result['frame_number']
             or parsed_result['loop']), \
             "Parsed game_prop.name is missing meaningful values: {}".format(parsed_result)
-    print("Parse Results: {}".format(parsed_result))
+    #print("Parse Results: {}".format(parsed_result))
     return parsed_result
 
 def sname_from_dataref_full(dataref_full:DatarefFull)->SName:
@@ -486,7 +487,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
             roots_to_test.append(tailname_from_dataref_full(known_dataref))
             break # We know that duplicate snames aren't possible
 
-    print("Testing Roots: {}".format(roots_to_test))
+    #print("Testing Roots: {}".format(roots_to_test))
     #------------------------------------------------------------------
 
     #------------------------------------------------------------------
@@ -516,7 +517,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
                     if (_249_datarefs[prop_root] and _249_datarefs[prop_root][0] == known_dataref):
                         return known_dataref
             else: #nobreak
-                print("prop_root: {} didn't match any of the known_datarefs".format(prop_root))
+                #print("prop_root: {} didn't match any of the known_datarefs".format(prop_root))
                 return None
         path = match_root_to_known_datarefs(prop_root, known_datarefs) # type: Optional[DatarefFull]
         if path:
@@ -554,7 +555,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         value=value
     )
 
-    print("Final Decoded Results: {}".format(parsed_prop))
+    #print("Final Decoded Results: {}".format(parsed_prop))
     #------------------------------------------------------------------
     return parsed_prop
 
@@ -562,10 +563,9 @@ def convert_armature_animations(armature:bpy.types.Object):
     print("Decoding dataref Game-Properties for '{}'".format(armature.name))
     bpy.context.scene.objects.active = armature
 
-    # We know what ATTR_manip and manipulator_type means,
-    # we know they couldn't possibly be (without extreme stupidity)
-    # related to datarefs, so we'll skip considering them at all.
-    # TODO: Also need Ben Russel properties
+    # To simplfy some things we can ignore anything we know
+    # is manipulator related. Hopefully no has the disambiguating key
+    # ATTR_manip_why_did_you_do_this?! : my/custom/ref
     game_properties = OrderedDict(
         [
             (name, prop) for name, prop in armature.game.properties.items()
@@ -616,17 +616,18 @@ def convert_armature_animations(armature:bpy.types.Object):
                 except TypeError:
                     return False
 
-            print("Attempting to find uses of '%s/%s'" % (game_prop.value, game_prop.name))
+            #print("Attempting to find uses of '%s/%s'" % (game_prop.value, game_prop.name))
             matching_key_users = list(
                     filter(lambda prop: find_key_uses(game_prop.name, prop[1]), game_properties.items())
                 )
 
             if matching_key_users:
                 disambiguating_key = "{}/{}".format(game_prop.value.strip(" /"), game_prop.name.strip())
-                print("Matching uses of disambiguating key '{}': {}".format(disambiguating_key, [k[1].name for k in matching_key_users]))
+                #print("Matching uses of disambiguating key '{}': {}".format(disambiguating_key, [k[1].name for k in matching_key_users]))
                 all_arm_drefs[disambiguating_key] = (armature, []) # Show hide applies to armature object
             else:
-                print("Couldn't find uses for '%s/%s'" % (game_prop.value, game_prop.name))
+                #print("Couldn't find uses for '%s/%s'" % (game_prop.value, game_prop.name))
+                pass
 
         # In case we have a show/hide property that doesn't have a disambiguating key
         # we have to test every game prop
@@ -651,10 +652,10 @@ def convert_armature_animations(armature:bpy.types.Object):
             bone_name = bone.name.split('.')[0].strip() # type: BoneName
             bone_name_no_idx = no_idx(bone_name) # type: Union[SName,TailName]
 
-            print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
+            #print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
             lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
 
-            print("Lookup Results: %s" % lookup_result)
+            #print("Lookup Results: %s" % lookup_result)
             if lookup_result.record:
                 all_arm_drefs[lookup_result.record[0]] = (bone, [])
             else:
@@ -664,29 +665,26 @@ def convert_armature_animations(armature:bpy.types.Object):
                 elif bone_name_no_idx in game_properties:
                     disambiguating_prop = game_properties[bone_name_no_idx]
                 else:
-                    print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
+                    #print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
                     continue
 
                 # Checking for a value catches when people have to use "none:''" or "no_ref:''"
                 if disambiguating_prop.type == "STRING" and disambiguating_prop.value:
                     disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"), bone_name)
-                    print("Disambiguating Key: " + disambiguating_key)
+                    #print("Disambiguating Key: " + disambiguating_key)
                     all_arm_drefs[disambiguating_key] = (bone, [])
                 else:
-                    print("Probable disambiguating prop ({}:{}) has wrong value type {}".format(
-                        disambiguating_prop.name,
-                        disambiguating_prop.value,
-                        disambiguating_prop.type))
-                    print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
+                    #print("Probable disambiguating prop ({}:{}) has wrong value type {}".format( disambiguating_prop.name, disambiguating_prop.value, disambiguating_prop.type))
+                    #print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
                     continue
 
-        print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
+        #print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
         return all_arm_drefs
 
     all_arm_drefs = find_all_datarefs_in_armature(armature) # type: OrderedDict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]
 
     for game_prop in game_properties.values():
-        print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
+        #print("\ngame_prop.name: {}, value: {}".format(game_prop.name, game_prop.value))
         decoded_animval = decode_game_animvalue_prop(game_prop, tuple(all_arm_drefs.keys()))
         if decoded_animval:
             assert decoded_animval.path in all_arm_drefs, "How is this possible! path not in all_arm_drefs! " + decoded_animval.path
@@ -704,7 +702,7 @@ def convert_armature_animations(armature:bpy.types.Object):
         else:
             #TODO: Error code goes here? How do we do these?
             #TODO: What about disambiguating keys returning none from decode_game_animvalue?
-            print("Could not decode {}".format(game_prop.name))
+            #print("Could not decode {}".format(game_prop.name))
             continue
 
     for path, (bone, parsed_props) in all_arm_drefs.items():
@@ -719,7 +717,7 @@ def convert_armature_animations(armature:bpy.types.Object):
         first_frame = int(s[0][0]) # min value of smallest member in list
         last_frame = max(int(s[-1][1]), 2) # Max val of largest member or 2 (for datarefs with only 0 or 1 parsed props)
 
-        print("\nBone name {}: Filling between first_frame {}, last_frame {}".format(bone.name, first_frame, last_frame))
+        #print("\nBone name {}: Filling between first_frame {}, last_frame {}".format(bone.name, first_frame, last_frame))
         frameless_props = []
         keyframe_props = []
         for p in parsed_props:
@@ -745,10 +743,10 @@ def convert_armature_animations(armature:bpy.types.Object):
 
             try:
                 if keyframe_props[ensure_has_idx].frame_number != ensure_has:
-                    print("Inserting at %d" % ensure_has_idx)
+                    #print("Inserting at %d" % ensure_has_idx)
                     keyframe_props.insert(ensure_has_idx, new_pp_frame)
             except IndexError:
-                print("Inserting at %d" % ensure_has_idx)
+                #print("Inserting at %d" % ensure_has_idx)
                 keyframe_props.insert(ensure_has_idx, new_pp_frame)
 
         parsed_props[:] = keyframe_props + frameless_props
