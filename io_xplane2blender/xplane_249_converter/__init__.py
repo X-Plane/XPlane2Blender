@@ -23,6 +23,8 @@ def do_249_conversion():
 
     #TODO: When we integrate with the updater, (adding 2.49 as a legacy version)
     # We can use that. Until then, we have this hack to keep unit testing going
+    # Also, we should put it in the operator call instead so we can force it
+    # rather than in the API itself
     global _runs
     if _runs > 0:
         return

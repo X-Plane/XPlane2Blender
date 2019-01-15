@@ -346,9 +346,12 @@ def _getmanipulator(obj: bpy.types.Object)->Optional[Tuple[bpy.types.Object, Ond
     manipulator_dict, _ = getManipulators()
     # Loop through every manip property, mapping property key -> manip_info key
     for prop in filter(lambda p: p.name.startswith(manip_key), obj.game.properties):
-        potential_ondrej_attr_key = prop.name.split('_')[-1]
+        potential_ondrej_attr_key = prop.name.split(manip_key + '_')[-1]
         for real_ondrej_attr_key in manipulator_dict[manipulator_type]:
-            if potential_ondrej_attr_key in real_ondrej_attr_key:
+            if (potential_ondrej_attr_key.startswith(
+                    real_ondrej_attr_key[3: len(potential_ondrej_attr_key)+3]
+                    )
+               ):
                 manipulator_dict[manipulator_type][real_ondrej_attr_key] = prop.value
 
     manipulator_dict[manipulator_type]['99@manipulator-name'] = manipulator_type
@@ -424,9 +427,10 @@ def _decode(obj: bpy.types.Object)->Optional[Tuple[bpy.types.Object, ParsedManip
         return obj, ParsedManipulatorInfo(manip_info_type, **kwargs)
 
 
-def convert_manipulators(obj: bpy.types.Object)->None:
+def convert_manipulators(obj: bpy.types.Object)->bool:
     '''
-    Searches from the bottom up and converts any manipulators found
+    Searches from the bottom up and converts any manipulators found,
+    returns True if succesful
     '''
 
     try:
@@ -435,7 +439,7 @@ def convert_manipulators(obj: bpy.types.Object)->None:
         #print("Manip info for {} found on {}".format(obj.name, manip_info_source.name))
     except TypeError: # NoneType is not iterable, incase _decode returns None and can't expand
         #print("Could not decode manipulator info for '{}'".format(obj.name))
-        return
+        return False
     else:
         assert not obj.xplane.manip.enabled, "{} has already had its manipulators converted"
         setattr(obj.xplane.manip, "enabled", True)
@@ -446,3 +450,4 @@ def convert_manipulators(obj: bpy.types.Object)->None:
                     r.start, r.end, r.height = (start, end, height)
             else:
                 setattr(obj.xplane.manip, attr, value)
+        return True
