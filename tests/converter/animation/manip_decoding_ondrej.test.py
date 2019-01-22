@@ -5,6 +5,7 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config, xplane_constants
 from io_xplane2blender.tests import *
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -18,7 +19,7 @@ def filterLines(line):
 
 class TestManipDecodingOndrej(XPlaneTestCase):
     def test_manip_decoding_ondrej(self):
-        bpy.ops.xplane.do_249_conversion()
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.SKIP.name)
         bpy.context.scene.xplane.layers[0].export_type = xplane_constants.EXPORT_TYPE_COCKPIT
         filename = inspect.stack()[0][3].replace("test_", "")
 
@@ -31,7 +32,7 @@ class TestManipDecodingOndrej(XPlaneTestCase):
     def test_manip_decoding_ondrej_drag_rotate(self):
         # This is okay, after it runs once it won't run again
         # TestRunner doesn't always run these in order
-        bpy.ops.xplane.do_249_conversion()
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.SKIP.name)
         bpy.context.scene.xplane.layers[1].export_type = xplane_constants.EXPORT_TYPE_COCKPIT
         filename = inspect.stack()[0][3].replace("test_", "")
         bpy.context.scene.xplane.layers[0].name = filename
@@ -43,7 +44,7 @@ class TestManipDecodingOndrej(XPlaneTestCase):
         )
 
     def test_manip_decoding_ondrej_one_of_everything(self):
-        bpy.ops.xplane.do_249_conversion()
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.SKIP.name)
         bpy.context.scene.xplane.layers[2].export_type = xplane_constants.EXPORT_TYPE_COCKPIT
         filename = inspect.stack()[0][3].replace("test_", "")
         bpy.context.scene.xplane.layers[0].name = filename

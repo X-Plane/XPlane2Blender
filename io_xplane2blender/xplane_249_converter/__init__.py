@@ -14,11 +14,14 @@ import bpy
 
 from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.tests import test_creation_helpers
-from io_xplane2blender.xplane_249_converter import xplane_249_dataref_decoder, xplane_249_manip_decoder
+from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
+                                                    xplane_249_dataref_decoder,
+                                                    xplane_249_manip_decoder,
+                                                    xplane_249_workflow_converter)
 
 
 _runs = 0
-def do_249_conversion():
+def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_constants.WorkflowType):
     # TODO: Create log, similar to updater log
 
     #TODO: When we integrate with the updater, (adding 2.49 as a legacy version)
@@ -30,15 +33,12 @@ def do_249_conversion():
         return
     _runs += 1
 
-    #if bpy.data.version[1] > 49:
-    #    return
-
     # Global settings
     bpy.context.scene.xplane.debug = True
-    # TODO: How will names be assaigned with root objects mode?
-    # TODO: What about those using layers as LODs?
     filename = os.path.split(bpy.data.filepath)[1]
     bpy.context.scene.xplane.layers[0].name = filename[: filename.index(".")]
+
+    success = xplane_249_workflow_converter.convert_workflow(bpy.context.scene, workflow_type)
 
     # TODO: Remove clean up workspace as best as possible,
     # remove areas with no space data and change to best
@@ -47,9 +47,9 @@ def do_249_conversion():
     # Make the default material for new objects to be assaigned
     for armature in filter(lambda obj: obj.type == "ARMATURE", bpy.data.objects):
         xplane_249_dataref_decoder.convert_armature_animations(armature)
-	
-	# TODO: Since most objects aren't manipulators (duh)
-	# this may be very inefficient on large aircraft. Perhaps some
-	# hueristics or better search algorithm can improve this if need be
+
+    # TODO: Since most objects aren't manipulators (duh)
+    # this may be very inefficient on large aircraft. Perhaps some
+    # hueristics or better search algorithm can improve this if need be
     for obj in filter(lambda obj: obj.type == "MESH", bpy.data.objects):
         xplane_249_manip_decoder.convert_manipulators(obj)

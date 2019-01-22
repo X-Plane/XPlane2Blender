@@ -105,7 +105,7 @@ class OBJECT_OT_add_xplane_axis_detent_range(bpy.types.Operator):
         obj = context.active_object
         obj.xplane.manip.axis_detent_ranges.add()
         return {'FINISHED'}
- 
+
 class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
     bl_label = 'Remove Axis Detent Range'
     bl_idname = 'object.remove_xplane_axis_detent_range'
@@ -117,7 +117,7 @@ class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
         obj = context.active_object
         obj.xplane.manip.axis_detent_ranges.remove(self.index)
         return {'FINISHED'}
-    
+
 # Class: SCENE_OT_add_xplane_layers
 # Initially creates xplane relevant data for <XPlaneLayers> in the current Blender scene.
 class SCENE_OT_add_xplane_layers(bpy.types.Operator):
@@ -460,7 +460,7 @@ class OBJECT_OT_add_xplane_export_path_directive(bpy.types.Operator):
         obj = context.active_object
         obj.xplane.layer.export_path_directives.add()
         return {'FINISHED'}
- 
+
 class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
     bl_label = 'Remove Export Path Directive'
     bl_idname = 'object.remove_xplane_export_path_directive'
@@ -472,7 +472,7 @@ class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
         obj = context.active_object
         obj.xplane.layer.export_path_directives.remove(self.index)
         return {'FINISHED'}
-    
+
 class SCENE_OT_add_xplane_export_path_directive(bpy.types.Operator):
     bl_label = 'Add Export Path Directive'
     bl_idname = 'scene.add_xplane_export_path_directive'
@@ -486,7 +486,7 @@ class SCENE_OT_add_xplane_export_path_directive(bpy.types.Operator):
         scene = context.scene
         scene.xplane.layers[self.index].export_path_directives.add()
         return {'FINISHED'}
- 
+
 class SCENE_OT_remove_xplane_export_path_directive(bpy.types.Operator):
     bl_label = 'Remove Export Path Directive'
     bl_idname = 'scene.remove_xplane_export_path_directive'
@@ -642,10 +642,10 @@ class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
     bl_label = 'Export OBJs'
     bl_idname = 'scene.export_to_relative_dir'
     bl_description = 'Exports OBJs relative to the .blend file'
-    
+
     #initial_dir that will be prepended to the path.
     initial_dir = bpy.props.StringProperty()
-    
+
     def execute(self, context):
         bpy.ops.export.xplane_obj(filepath=self.initial_dir, export_is_relative=True)
         return {'FINISHED'}
@@ -653,14 +653,14 @@ class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
 
 class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
     '''
-    This operator very simply passes it's associated command to the search window, which then opens it in the UI. 
+    This operator very simply passes it's associated command to the search window, which then opens it in the UI.
     '''
     bl_label = 'Open/Close Command Search Window'
     bl_description = 'Open/Close Command Search Window'
     bl_idname = 'xplane.command_search_toggle'
 
     # Each operator is placed next to a command string property,
-    # 
+    #
     paired_command_prop = bpy.props.StringProperty()
     def execute(self, context):
         command_search_window_state = context.scene.xplane.command_search_window_state
@@ -686,7 +686,7 @@ class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
 
         #Toggle ourselves
         if prop == self.paired_command_prop:
-            command_search_window_state.command_prop_dest = "" 
+            command_search_window_state.command_prop_dest = ""
         else:
             command_search_window_state.command_prop_dest = self.paired_command_prop
 
@@ -694,14 +694,14 @@ class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
 
 class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
     '''
-    This operator very simply passes it's associated dataref to the search window, which then opens it in the UI. 
+    This operator very simply passes it's associated dataref to the search window, which then opens it in the UI.
     '''
     bl_label = 'Open/Close Dataref Search Window'
     bl_description = 'Open/Close Dataref Search Window'
     bl_idname = 'xplane.dataref_search_toggle'
 
     # Each operator is placed next to a dataref string property,
-    # 
+    #
     paired_dataref_prop = bpy.props.StringProperty()
     def execute(self, context):
         dataref_search_window_state = context.scene.xplane.dataref_search_window_state
@@ -730,7 +730,7 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
 
         #Toggle ourselves
         if prop == self.paired_dataref_prop:
-            dataref_search_window_state.dataref_prop_dest = "" 
+            dataref_search_window_state.dataref_prop_dest = ""
         else:
             dataref_search_window_state.dataref_prop_dest = self.paired_dataref_prop
 
