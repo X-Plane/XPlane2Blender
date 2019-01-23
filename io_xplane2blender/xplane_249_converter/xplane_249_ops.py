@@ -1,30 +1,25 @@
 '''Defines operators for the 249 conversion'''
 
-import re
-
 import bpy
-import io_xplane2blender
 
-from io_xplane2blender import xplane_constants, xplane_helpers
-from io_xplane2blender.xplane_249_converter.xplane_249_workflow_converter import WorkflowType
-
+from io_xplane2blender.xplane_249_converter import xplane_249_constants, xplane_249_convert
 
 class SCENE_OT_249_do_conversion(bpy.types.Operator):
-    bl_label='Perform 2.49 to 2.7x Summary'
-    bl_idname='xplane.do_249_conversion'
+    bl_label = 'Perform 2.49 to 2.7x Summary'
+    bl_idname = 'xplane.do_249_conversion'
     bl_description = "Convert a file's 2.49 property format to 2.7x. WARNING: Running multiple times may have disastrous consequences"
 
     workflow_type = bpy.props.StringProperty(
-        name="Workflow type",
-        description="The workflow type to be used",
+        name="Workflow Type",
+        description="The workflow used in 2.49",
         )
 
-    def execute(self, context):
-        assert self.workflow_type in WorkflowType.__dict__, \
+    def execute(self, context: bpy.types.Context):
+        assert self.workflow_type in xplane_249_constants.WorkflowType.__dict__, \
                 "{} is not a known WorkflowType".format(self.workflow_type)
-        io_xplane2blender.xplane_249_converter.do_249_conversion(
+        xplane_249_convert.do_249_conversion(
             context,
-            workflow_type=WorkflowType[self.workflow_type]
+            workflow_type=xplane_249_constants.WorkflowType[self.workflow_type]
             )
         return {'FINISHED'}
 

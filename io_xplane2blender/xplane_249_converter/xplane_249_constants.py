@@ -1,6 +1,7 @@
 '''Contains constants that the converter uses'''
 import enum
 
+WORKFLOW_REGULAR_NEW_ROOT_NAME = "249_CONVERSION_ROOT"
 
 class WorkflowType(enum.Enum):
     '''
@@ -9,4 +10,4 @@ class WorkflowType(enum.Enum):
     '''
     SKIP = 0
     REGULAR = 1
-    BULK    = 2
+    BULK = 2

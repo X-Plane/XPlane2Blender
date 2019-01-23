@@ -6,7 +6,6 @@ import bpy
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_constants import MAX_COCKPIT_REGIONS, MAX_LODS
 from io_xplane2blender.xplane_ops_dev import *
-from io_xplane2blender.xplane_249_converter.xplane_249_ops import *
 from io_xplane2blender.xplane_utils import xplane_commands_txt_parser, \
                                            xplane_datarefs_txt_parser
 
@@ -771,8 +770,6 @@ _XPlaneOps = [
     OBJECT_OT_remove_xplane_material_condition,
 
     SCENE_OT_export_to_relative_dir,
-
-    SCENE_OT_249_do_conversion,
 
     SCENE_OT_dev_layer_names_from_objects,
     SCENE_OT_dev_rerun_updater,

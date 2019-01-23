@@ -8,6 +8,7 @@ Reading List:
 '''
 import os
 import re
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
 from io_xplane2blender import xplane_constants, xplane_helpers
@@ -24,7 +25,6 @@ from io_xplane2blender.xplane_constants import (ANIM_TYPE_HIDE, ANIM_TYPE_SHOW,
                                                 MANIP_TOGGLE,
                                                 MANIP_WRAP,
                                                 MANIPULATORS_MOUSE_WHEEL)
-from typing import Callable, Dict, List, Optional, Tuple, Union
 
 # Key is ATTR_manip_type, value is dict of manip nn@attributes and their values
 OndrejManipInfo = Dict[str, Union[int, float, str]]

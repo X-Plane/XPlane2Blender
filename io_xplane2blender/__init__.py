@@ -27,7 +27,7 @@ bl_info = {
     "version": (3, 5, 0),
     "blender": (2, 7, 8),
     "location": "File > Import/Export > X-Plane",
-    "description": "Import and Export X-Plane objects/planes (.obj format)",
+    "description": "Converts XPlane2Blender 2.49 .blend files and exports X-Plane scenery/planes (.obj format)",
     "warning": "",
     "wiki_url": "https://github.com/der-On/XPlane2Blender/wiki",
     "tracker_url": "https://github.com/der-On/XPlane2Blender/issues",
@@ -42,6 +42,7 @@ if "bpy" in locals():
     imp.reload(xplane_ops)
     imp.reload(xplane_config)
     imp.reload(xplane_updater)
+    imp.reload(xplane_249_converter)
 else:
     import bpy
     from . import xplane_ui
@@ -50,6 +51,7 @@ else:
     from . import xplane_ops
     from . import xplane_config
     from . import xplane_updater
+    from . import xplane_249_converter
 
 
 # Function: menu_func
@@ -64,6 +66,7 @@ def menu_func(self, context):
 # Function: register
 # Registers the addon with all its classes and the menu function.
 def register():
+    xplane_249_converter.register()
     xplane_props.addXPlaneRNA()
     xplane_ops.addXPlaneOps()
     xplane_ui.addXPlaneUI()
@@ -74,6 +77,7 @@ def register():
 # Function: unregister
 # Unregisters the addon and all its classes and removes the entry from the menu.
 def unregister():
+    xplane_249_converter.unregister()
     xplane_ui.removeXPlaneUI()
     xplane_ops.removeXPlaneOps()
     xplane_props.removeXPlaneRNA()
