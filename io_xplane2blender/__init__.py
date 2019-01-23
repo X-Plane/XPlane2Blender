@@ -27,7 +27,8 @@ bl_info = {
     "version": (3, 5, 0),
     "blender": (2, 7, 8),
     "location": "File > Import/Export > X-Plane",
-    "description": "Converts XPlane2Blender 2.49 .blend files and exports X-Plane scenery/planes (.obj format)",
+    "description": ("Converts XPlane2Blender 2.49 .blend files "
+                    "and exports X-Plane scenery/planes (.obj) format"),
     "warning": "",
     "wiki_url": "https://github.com/der-On/XPlane2Blender/wiki",
     "tracker_url": "https://github.com/der-On/XPlane2Blender/issues",
@@ -35,14 +36,14 @@ bl_info = {
 }
 
 if "bpy" in locals():
-    import imp
-    imp.reload(xplane_ui)
-    imp.reload(xplane_props)
-    imp.reload(xplane_export)
-    imp.reload(xplane_ops)
-    imp.reload(xplane_config)
-    imp.reload(xplane_updater)
-    imp.reload(xplane_249_converter)
+    import importlib
+    importlib.reload(xplane_ui)
+    importlib.reload(xplane_props)
+    importlib.reload(xplane_export)
+    importlib.reload(xplane_ops)
+    importlib.reload(xplane_config)
+    importlib.reload(xplane_updater)
+    importlib.reload(xplane_249_converter)
 else:
     import bpy
     from . import xplane_ui

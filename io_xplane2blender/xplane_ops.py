@@ -787,4 +787,4 @@ def addXPlaneOps()->None:
 def removeXPlaneOps()->None:
     '''Unregisters all Operators'''
     for op in _XPlaneOps:
-        bpy.utils.register_class(op)
+        bpy.utils.unregister_class(op)
