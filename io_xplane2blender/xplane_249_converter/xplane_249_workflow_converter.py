@@ -28,10 +28,24 @@ def convert_workflow(scene: bpy.types.Scene, workflow_type: xplane_249_constants
         new_root.xplane.layer.name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
         new_root.xplane.layer.isExportableRoot = True
         for ob in filter(lambda ob: ob.parent is None and ob != new_root,
-                         bpy.context.scene.objects):
+                         scene.objects):
             ob.parent = new_root
     elif workflow_type == xplane_249_constants.WorkflowType.BULK:
-        assert False, workflow_type.name + "Not implemented yet"
+        new_root = test_creation_helpers.create_datablock_empty(
+            test_creation_helpers.DatablockInfo("EMPTY",
+                                                xplane_249_constants.WORKFLOW_REGULAR_NEW_ROOT_NAME)
+        )
+
+        for ob in filter(lambda ob: ob.parent is None
+                                    and ob.type == "EMPTY"
+                                    and ob != new_root
+                                    and ob.name.startswith("OBJ"),
+                         scene.objects):
+            ob.xplane.isExportableRoot = True
+            try:
+                ob.xplane.layer.name = ob.game.properties["rname"].value
+            except KeyError:
+                ob.xplane.layer.name = ob.name[3:]
     else:
         assert False, workflow_type.name + "Not implemented yet"
     return True

@@ -45,10 +45,10 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
 
     # Make the default material for new objects to be assaigned
     for armature in filter(lambda obj: obj.type == "ARMATURE", bpy.data.objects):
-        xplane_249_dataref_decoder.convert_armature_animations(armature)
+        xplane_249_dataref_decoder.convert_armature_animations(context.scene, armature)
 
     # TODO: Since most objects aren't manipulators (duh)
     # this may be very inefficient on large aircraft. Perhaps some
     # hueristics or better search algorithm can improve this if need be
     for obj in filter(lambda obj: obj.type == "MESH", bpy.data.objects):
-        xplane_249_manip_decoder.convert_manipulators(obj)
+        xplane_249_manip_decoder.convert_manipulators(context.scene, obj)

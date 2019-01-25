@@ -427,7 +427,7 @@ def _decode(obj: bpy.types.Object)->Optional[Tuple[bpy.types.Object, ParsedManip
         return obj, ParsedManipulatorInfo(manip_info_type, **kwargs)
 
 
-def convert_manipulators(obj: bpy.types.Object)->bool:
+def convert_manipulators(scene: bpy.types.Scene, obj: bpy.types.Object)->bool:
     '''
     Searches from the bottom up and converts any manipulators found,
     returns True if succesful
