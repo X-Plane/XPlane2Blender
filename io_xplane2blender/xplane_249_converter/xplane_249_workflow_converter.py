@@ -26,7 +26,7 @@ def convert_workflow(scene: bpy.types.Scene, workflow_type: xplane_249_constants
                                                 xplane_249_constants.WORKFLOW_REGULAR_NEW_ROOT_NAME)
         )
         new_root.xplane.layer.name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
-        new_root.xplane.layer.isExportableRoot = True
+        new_root.xplane.isExportableRoot = True
         for ob in filter(lambda ob: ob.parent is None and ob != new_root,
                          scene.objects):
             ob.parent = new_root
