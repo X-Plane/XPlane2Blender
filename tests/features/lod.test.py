@@ -1,10 +1,12 @@
 """
 Test layout and explanation
 
-Buckets 0, 200
-      200, 400
-      400, 600
-      600, 800
+Bucket | Near | Far
+-------|------|----
+1. | 0   | 200
+2. | 200 | 400
+3. | 400 | 600
+4. | 600 | 800
 
 N = No check boxes
 
@@ -13,7 +15,7 @@ layer 5, defines 4  buckets [] [] [] [] []
 layer 4, defines 3  buckets [] [] [] []
 layer 3, defines 2  buckets [] [] []
 layer 2, defines 1  buckets [] []
-layer 1, defines no buckets [] [] [] [] []
+layer 1, None, always seen  [] [] [] [] []
 """
 
 import bpy
@@ -31,7 +33,7 @@ MAX_XPLANE_LAYERS = 5
 LOD_VAL_INCREMENT = 200
 LOD_N_F_PAIRS = []
 
-def make_lod_near_far_pairs():#{{{1
+def make_lod_near_far_pairs():
     ''' Makes the LOD near and fair pairs, initializing this test's LOD_N_F_PAIRS'''
     for i in range(0,REAL_LOD_BUCKETS):
         n = LOD_VAL_INCREMENT * i
@@ -51,9 +53,8 @@ def make_cubes(current_layer, layer_index, current_scene):
     else:
         num_cubes = layer_index
 
-
-    print("num_cubes: " + str(num_cubes))
-    for i in range(0, num_cubes + 1):
+    #print("num_cubes: " + str(num_cubes))
+    for i in range(num_cubes + 1):
         #Add cube mesh at place in mesh
         bpy.ops.mesh.primitive_cube_add(location=(i*5,0,layer_index*5),layers=layers_array)
 
@@ -70,9 +71,9 @@ def create_test_cubes():
 
     #For now, delete everything by hand if needed
     # delete all existing objects
-    #bpy.ops.object.select_all(action="SELECT")
-    #for blender_obj in bpy.data.objects:
-        #bpy.data.objects.remove(blender_obj, do_unlink=True) For when we have Blender 2.78
+    bpy.ops.object.select_all(action="SELECT")
+    for blender_obj in bpy.data.objects:
+        bpy.data.objects.remove(blender_obj, do_unlink=True)
 
     scene = bpy.data.scenes[0]
 
@@ -99,14 +100,14 @@ def create_test_cubes():
     layer_index = 0
     #For all xplane layers
     for layer in scene.xplane.layers[:MAX_XPLANE_LAYERS]:
-        print("layer_index: " + str(layer_index))
+        #print("layer_index: " + str(layer_index))
 
         if layer_index == 0:
-            layer.name = "layer_1_no_lods"
+            layer.name = "test_layer_1_no_lods"
         else:
             lod_val_far_str = ((layer_index - 1) * LOD_VAL_INCREMENT) + LOD_VAL_INCREMENT
             #layer_i+1_LOD-near_LOD-far (increments of 200)
-            layer.name = "layer_%i_%i_%i" % (layer_index + 1, 0, lod_val_far_str)
+            layer.name = "test_layer_%i_%i_%i" % (layer_index + 1, 0, lod_val_far_str)
 
         layer.export_type = "instanced_scenery"
 
@@ -118,7 +119,7 @@ def create_test_cubes():
             for i in range(len(layer.lod)):
                 layer.lod[i].near = LOD_N_F_PAIRS[i][0] #  0, 200, 400... 
                 layer.lod[i].far = LOD_N_F_PAIRS[i][1] #200, 400, 600... 
-                print(str(layer.lod[i].near) + "," + str(layer.lod[i].far))
+                #print(str(layer.lod[i].near) + "," + str(layer.lod[i].far))
 
         ###########################
         # Create group of objects #
@@ -141,9 +142,14 @@ class TestLODs(XPlaneTestCase):
                     line[0].find('ATTR_LOD')     == 0 or \
                     line[0].find('TRIS')         == 0)
                    
-        
-        for layer_idx in range(0,MAX_XPLANE_LAYERS):
-            filename = "test_lod_layer_" + str(layer_idx + 1)
+        for layer_idx in range(MAX_XPLANE_LAYERS):
+            if layer_idx == 0:
+                filename = "test_layer_1_no_lods"
+            else:
+                lod_val_far_str = ((layer_idx - 1) * LOD_VAL_INCREMENT) + LOD_VAL_INCREMENT
+                filename = "test_layer_%i_%i_%i" % (layer_idx + 1, 0, lod_val_far_str)
+            #print(filename)
+
             self.assertLayerExportEqualsFixture(
                 layer_idx,
                 os.path.join(__dirname__, 'fixtures', filename + '.obj'),

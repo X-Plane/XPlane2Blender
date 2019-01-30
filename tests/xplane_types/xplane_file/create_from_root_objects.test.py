@@ -58,7 +58,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
         fh.close()
 
         # custom file name
-        self.assertEqual(xplaneFile2.filename, 'custom_name')
+        self.assertEqual(xplaneFile2.filename, 'test_export_root_objects_2')
 
         # should contain 1 cube
         self.assertEqual(len(xplaneFile2.objects), 1)
