@@ -3,6 +3,10 @@
 # Introduction
 This addon for Blender 2.78 and up makes it possible to export models made in Blender to the X-Plane object format (.obj). Despite the name "XPlane2Blender", there is no import feature.
 
+## Contact Us
+
+The best way to contact us is through [a bug report](https://github.com/der-On/XPlane2Blender/issues). Otherwise, e-mail **ted at x-plane dot com**, especially if you're worried about the security of your payware models while we debug them.
+
 ## General Requirements
 - Blender 2.78 or higher
 - Latest non-beta version of XPlane2Blender
@@ -25,9 +29,6 @@ People wishing to develop the plugin should the tutorial on Plugin Development i
 - [X-Plane.org's 3d Modeling board](https://forums.x-plane.org/index.php?/forums/forum/45-3d-modeling/)
 - [X-Plane Scenery Developer Blog/Knowledge Base](http://developer.x-plane.com/)
 - [X-Plane Modeling Tutorials](http://developer.x-plane.com/docs/modeling/)
-
-## Contact Us
-The best way to contact us is through [a bug report](https://github.com/der-On/XPlane2Blender/issues). Otherwise, e-mail ted at x-plane dot com, especially if you're worried about the security of your payware models while debugging them.
 
 ## Test Suite
 **The average user does not need the test suite.** Before releasing a build to the public we test the code many many many times! This is only useful for developers and power user who make changes to the source code.
