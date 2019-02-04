@@ -213,8 +213,8 @@ class XPlaneFile():
     def collectBonesFromBlenderObjects(self,parentBone, blenderObjects,
                                        needsFilter:bool = True, # Set to true for when it is unsure if blenderObjects only contains
                                                                 # things with parentBone as it's parent. Needs to filter collection of blenderObjects to just
-                                                                # find the one whose parent is the root, root bone of an Armature, or parentBone 
-                                       noRealBones:bool = False): #noRealBones is used for 
+                                                                # find the one whose parent is the root, root bone of an Armature, or parentBone
+                                       noRealBones:bool = False): #noRealBones is used for
         '''
         The collectBonesFromBlender(Bones|Objects) walk through Blender's parent-child hierarchy and translate it to our XPlaneBone tree
         - Each XPlaneObject has an XPlaneBone
@@ -372,7 +372,7 @@ class XPlaneFile():
         elif blenderObject.type == "EMPTY":
             logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject = xplane_empty.XPlaneEmpty(blenderObject)
-            
+
         return xplaneObject
 
     def getBoneByBlenderName(self, name, parent = None):
@@ -455,7 +455,7 @@ class XPlaneFile():
             build = bpy.app.build_hash
         else:
             build = bpy.app.build_revision
-        
+
         return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, xplane_helpers.VerStruct.current())
 
     # Method: write
@@ -485,10 +485,10 @@ class XPlaneFile():
         # and compare all materials against reference materials
         if self.options.autodetectTextures == False:
             logger.info('Autodetect textures overridden for file %s: not fully checking manually entered textures against Blender-based reference materials\' textures' % (self.filename))
-        
+
         if not self.compareMaterials(self.referenceMaterials):
             return ''
-        
+
         o = ''
         o += self.header.write()
         o += '\n'
@@ -519,9 +519,69 @@ class XPlaneFile():
 
         return o
 
-    def _writeLods(self):
+    def _writeLods(self)->str:
         o = ''
         numLods = int(self.options.lods)
+        lods = self.options.lod[:numLods] #Yes, the pluralization is confusing. Blame xplane_props.py, not this
+
+        if lods and lods[0].near != 0:
+            logger.error(
+                "LOD ranges {} for {} must start at 0"
+                .format(
+                    [(lod_pair.near, lod_pair.far) for lod_pair in lods],
+                    self.options.name
+                )
+            )
+            return ''
+
+        if any([pair.near == pair.far for pair in lods]):
+            logger.error(
+                "LOD ranges {} for {} shouldn't have any pair with same near and far values"
+                .format(
+                    [(lod_pair.near, lod_pair.far) for lod_pair in lods],
+                    self.options.name
+                )
+            )
+
+            return ''
+
+        # Needs to be somewhere else, need xplane_file.collect. Maybe in collectBlenderObjects?
+        is_additive = all([lod_pair.near == 0 for lod_pair in lods])
+        is_selective = all([pair_a.far == pair_b.near for pair_a, pair_b in zip(lods[:-1], lods[1:])])
+
+        if not is_additive:
+            if any([pair_a.far > pair_b.near
+                    for pair_a, pair_b in zip(lods[:-1], lods[1:])]):
+                logger.error(
+                    "LOD ranges {} for {} has overlapping between LOD pairs"
+                    .format([(lod_pair.near, lod_pair.far) for lod_pair in lods], self.options.name)
+                )
+                return ''
+            elif any([pair_a.far < pair_b.near
+                      for pair_a, pair_b in zip(lods[:-1], lods[1:])]):
+                logger.error(
+                    "LOD ranges {} for {} has gap between LOD pairs"
+                    .format([(lod_pair.near, lod_pair.far) for lod_pair in lods], self.options.name)
+                )
+                return ''
+
+        if not (is_additive or is_selective):
+            logger.error(
+                "LOD ranges {} for {} are not in exclusively additive or selective mode"
+                .format([(lod_pair.near, lod_pair.far) for lod_pair in lods], self.options.name)
+            )
+            return ''
+
+        if (int(self.options.lods)
+            and not all([pair_a.far < pair_b.far
+                         for pair_a, pair_b in zip(lods[:-1], lods[1:])])):
+            logger.error(
+                "LOD ranges {} for {} are not in ascending order".format(
+                    [(lod_pair.near, lod_pair.far) for lod_pair in lods],
+                    self.options.name
+                )
+            )
+            return ''
 
         # if lods are present we need one base lod containing all objects
         # not in a lod that should always be visible

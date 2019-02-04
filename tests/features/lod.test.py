@@ -18,9 +18,11 @@ layer 2, defines 1  buckets [] []
 layer 1, None, always seen  [] [] [] [] []
 """
 
-import bpy
+import inspect
 import os
 import sys
+
+import bpy
 from io_xplane2blender.tests import *
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_types import xplane_file
@@ -84,14 +86,14 @@ def create_test_cubes():
     # Set Scene Options #
     #####################
     scene.xplane.version = '1050'
-    scene.xplane.optimize = True    
-    scene.xplane.debug = True    
+    scene.xplane.optimize = True
+    scene.xplane.debug = True
 
     ################################
     # Material and Texture Options #
     ################################
     bpy.data.materials["Material"].texture_slots['Tex'].texture_coords = 'UV'
-    
+
     ########################
     # Setup X-Plane layers #
     ########################
@@ -117,8 +119,8 @@ def create_test_cubes():
         #The collection of actual lods with their near and far
         if layer_index > 0:
             for i in range(len(layer.lod)):
-                layer.lod[i].near = LOD_N_F_PAIRS[i][0] #  0, 200, 400... 
-                layer.lod[i].far = LOD_N_F_PAIRS[i][1] #200, 400, 600... 
+                layer.lod[i].near = LOD_N_F_PAIRS[i][0] #  0, 200, 400...
+                layer.lod[i].far = LOD_N_F_PAIRS[i][1] #200, 400, 600...
                 #print(str(layer.lod[i].near) + "," + str(layer.lod[i].far))
 
         ###########################
@@ -134,14 +136,14 @@ def create_test_cubes():
 #Use this to perfectly recreate the initial test
 #create_test_cubes()
 
+def filterLines(line):
+    return isinstance(line[0], str) and \
+           ('POINT_COUNTS' in line[0]
+            or 'ATTR_LOD'  in line[0]
+            or 'TRIS'      in line[0])
+
 class TestLODs(XPlaneTestCase):
     def test_lods_export(self):
-        def filterLines(line):
-            return isinstance(line[0], str) and \
-                   (line[0].find('POINT_COUNTS') == 0 or \
-                    line[0].find('ATTR_LOD')     == 0 or \
-                    line[0].find('TRIS')         == 0)
-                   
         for layer_idx in range(MAX_XPLANE_LAYERS):
             if layer_idx == 0:
                 filename = "test_layer_1_no_lods"
@@ -155,5 +157,51 @@ class TestLODs(XPlaneTestCase):
                 os.path.join(__dirname__, 'fixtures', filename + '.obj'),
                 filename,
                 filterLines)
+
+    def test_additive_lod_mode(self):
+        filename = inspect.stack()[0].function
+
+        self.assertLayerExportEqualsFixture(
+            5, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
+
+    def test_wrong_lods_order_reversed_sel(self):
+        self.exportLayer(6)
+        self.assertLoggerErrors(1)
+
+    def test_wrong_lods_order_mixed_add(self):
+        self.exportLayer(7)
+        self.assertLoggerErrors(1)
+
+    def test_wrong_lod_mode_switches(self):
+        self.exportLayer(8)
+        self.assertLoggerErrors(1)
+
+    def test_wrong_sel_ranges_overlap(self):
+        self.exportLayer(9)
+        self.assertLoggerErrors(1)
+
+    def test_wrong_sel_ranges_has_gap(self):
+        self.exportLayer(10)
+        self.assertLoggerErrors(1)
+
+    def test_wrong_near_far_pair_0_0(self):
+        self.exportLayer(11)
+        self.assertLoggerErrors(1)
+
+    def test_wrong_near_far_pair_100_100(self):
+        self.exportLayer(12)
+        self.assertLoggerErrors(1)
+
+    def test_wrong_first_lod_near_not_0(self):
+        self.exportLayer(13)
+        self.assertLoggerErrors(1)
+
+    @unittest.skip
+    def test_objects_in_undefind_buckets_skipped(self):
+        self.exportLayer(14)
+        self.assertLoggerErrors(1)
 
 runTestCases([TestLODs])
