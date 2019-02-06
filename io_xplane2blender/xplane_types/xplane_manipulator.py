@@ -197,7 +197,7 @@ def check_bone_is_not_animated_for_rotation(bone:XPlaneBone,log_errors:bool=True
         return False
     else:
         return True
-    
+
 
 def check_bone_is_not_animated_for_translation(bone:XPlaneBone,log_errors:bool=True,manipulator:'XPlaneManipulator'=None) -> bool:
     if log_errors:
@@ -593,7 +593,7 @@ Possible Solutions:
     idx = 0
     collected_bones = []
     current_bone = manipulator.xplanePrimative.xplaneBone
-    
+
     while current_bone is not None and idx < len(white_list):
         current_bone = find_next_animated_bone(current_bone)
         found_error = False
@@ -629,7 +629,7 @@ Possible Solutions:
         return None
 
     return collected_bones
-    
+
 
 def check_spec_rotation_bone(bone:XPlaneBone, log_errors:bool=True,manipulator=None) -> bool:
     '''
@@ -666,7 +666,7 @@ def check_spec_detent_bone(detent_bone:Tuple[XPlaneBone], log_errors:bool=True, 
     - T, R for MANIP_DRAG_ROTATE_DETENT
      Bones must not be none and already checked to be animated for translation
      manip.type must be MANIP_AXIS_DETENT or MANIP_DRAG_ROTATE_DETENT
-    
+
     The bone must
         - have an animated translation/rotation_bone for a parent (take care of by get_information_sources)
         - have exactly 1 dataref
@@ -674,7 +674,7 @@ def check_spec_detent_bone(detent_bone:Tuple[XPlaneBone], log_errors:bool=True, 
         - have two non-clamping location keyframes
         - not be animated for rotation
     '''
-    
+
     # This awesome clean code relies on short circuting to stop checking for problems
     # when a less specific error is detected
     if check_bone_has_n_datarefs(detent_bone,1,"location",log_errors,manipulator) and\
@@ -747,11 +747,11 @@ class XPlaneManipulator():
                 attr = "ATTR_manip_" + MANIP_DRAG_AXIS
                 '''
                 Drag Axis (Opt In)
-                
+
                 Common Rules
                 - Parent must be driven by only 1 dataref
                 - Parent must have exactly 2 (non-clamping) keyframes
-                
+
                 Drag Axis/Drag Axis With Detents
                 Empty/Bone -> Main drag axis animation and (optionally) v1_min/max for validating axis_detent_ranges
                 |_Child mesh -> Manipulator settings and (optionally) detent axis animation
@@ -858,7 +858,7 @@ class XPlaneManipulator():
 
                 Special rules for Translation Bone:
                 - Must be a leaf bone (checked in XPlanePrimative.write)
-                - *Must have a parent with rotation 
+                - *Must have a parent with rotation
                 - **Cannot have rotation keyframes
                 - **Must have exactly 2 (non-clamping) keyframes
                 - Must not animate along rotation bone's axis
@@ -877,7 +877,7 @@ class XPlaneManipulator():
                     black_list = ((check_bone_is_animated_for_rotation,   "rotation"),
                                   (check_bone_is_animated_for_translation,"location"))
 
-                
+
                 info_sources = get_information_sources(self,white_list,black_list,log_errors=True)
 
                 if info_sources is None:
@@ -912,7 +912,7 @@ class XPlaneManipulator():
 
                 elif self.type == MANIP_DRAG_ROTATE and rotation_bone:
                     pass
-                
+
                 if (self.type == MANIP_DRAG_ROTATE and not rotation_bone) or\
                    (self.type == MANIP_DRAG_ROTATE_DETENT and not translation_bone):
 
@@ -1100,7 +1100,7 @@ class XPlaneManipulator():
 
             # 3. All ATTR_axis_detent_range (DRAG_AXIS_DETENT or DRAG_ROTATE)
             if (self.type == MANIP_DRAG_AXIS_DETENT or self.type == MANIP_DRAG_ROTATE_DETENT) and ver_ge_1100:
-                
+
                 #List[AxisDetentRange] -> bool
                 def validate_axis_detent_ranges(axis_detent_ranges, translation_bone, v1_min, v1_max, lift_at_max):
                     '''
@@ -1213,7 +1213,7 @@ class XPlaneManipulator():
             if self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
                 if len(rotation_keyframe_table_cleaned[0][1]) > 2:
                     for rot_keyframe in rotation_keyframe_table_cleaned[0][1][1:-1]:
-                        self.xplanePrimative.cockpitAttributes.add(   
+                        self.xplanePrimative.cockpitAttributes.add(
                             XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
             # add mouse wheel delta

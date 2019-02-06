@@ -57,10 +57,14 @@ class TestRotationBoneRules(XPlaneTestCase):
         out = self.exportLayer(8)
         self.assertLoggerErrors(0)
 
-    def test_10_known_good_rotation_bone(self):
+    def test_10_no_rounding_bug_from_unnormalized_vector(self):
+        out = self.exportLayer(9)
+        self.assertLoggerErrors(0)
+
+    def test_11_known_good_rotation_bone(self):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
-            9, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            10, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )
