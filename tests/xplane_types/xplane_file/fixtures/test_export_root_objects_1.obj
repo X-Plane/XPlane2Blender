@@ -191,7 +191,7 @@ ATTR_LOD 1000 2000
 TRIS	36 36
 	# 2 Mesh: root_1_child_1_child
 # 1 Mesh: root_1_child_2
-ATTR_LOD 3000 4000
+ATTR_LOD 2000 4000
 # 0 Mesh: root_1
 # 1 Mesh: root_1_child_1
 	# 2 Mesh: root_1_child_1_child
@@ -200,4 +200,4 @@ ATTR_LOD 3000 4000
 # MATERIAL: Material
 TRIS	108 36
 
-# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+40.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+44.NO_BUILD_NUMBR

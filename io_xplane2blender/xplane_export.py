@@ -55,7 +55,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         # prepare logging
         self._startLogging()
-        
+
         debug = getDebug()
         export_directory = self.properties.filepath
         
