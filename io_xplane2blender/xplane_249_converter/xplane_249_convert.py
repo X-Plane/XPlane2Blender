@@ -8,7 +8,7 @@ import enum
 import os
 import re
 import sys
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import bpy
 
@@ -19,7 +19,56 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_manip_decoder,
                                                     xplane_249_workflow_converter)
 
-import bpy
+PropDataType = Union[bool, float, int, str]
+def find_property_in_hierarchy(obj: bpy.types.Object,
+                               prop_name: str,
+                               *,
+                               ignore_case: bool=True,
+                               prop_types: Set[str] = {"BOOL", "FLOAT", "INT", "STRING", "TIMER"},
+                               max_parents: Optional[int] = None,
+                               default: Optional[PropDataType] = None)\
+                                   ->Tuple[Optional[PropDataType], Optional[bpy.types.Object]]:
+    """
+    Searches from obj up for a property and the object that has it,
+    returns the value and the object it was found on or (default value, None)
+    """
+    assert prop_types <= {"BOOL", "FLOAT", "INT", "STRING", "TIMER"}, \
+            "Target prop_types {} is not a recognized property type"
+    """
+    print(
+        ("Searching for '{}' starting at {}, with {} and " + ["an unlimited amount of", "a maximum of {}"][bool(max_parents)] + " parents").format(
+            prop_name,
+            obj.name,
+            prop_types if len(prop_types) < 5 else "all types",
+            max_parents
+        )
+    )
+    print("searching for '{}' starting at {}".format(
+            prop_name,
+            obj.name
+        )
+    )
+    """
+
+    try:
+        if ignore_case:
+            filter_fn = lambda prop: prop_name.casefold() == prop.name.casefold() and prop.type in prop_types
+        else:
+            filter_fn = lambda prop: prop_name == prop.name and prop.type in prop_types
+
+        val = next(filter(filter_fn, obj.game.properties)).value
+        #print("Found {}".format(val))
+        return val, obj
+    except StopIteration:
+        if obj.parent and (max_parents is None or max_parents > 0):
+            return find_property_in_hierarchy(obj.parent,
+                                              prop_name,
+                                              prop_types=prop_types,
+                                              max_parents=max_parents - 1 if max_parents else None,
+                                              default=default)
+        else:
+            #print("Not found, using {}".format(default))
+            return default, None
 
 _runs = 0
 def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_constants.WorkflowType):
@@ -34,21 +83,58 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
         return
     _runs += 1
 
-    # Global settings
-    context.scene.xplane.debug = True
+    for scene in bpy.data.scenes:
+        # Global settings
+        scene.xplane.debug = True
 
-    success = xplane_249_workflow_converter.convert_workflow(context.scene, workflow_type)
+        new_roots = xplane_249_workflow_converter.convert_workflow(scene, workflow_type)
 
-    # TODO: Remove clean up workspace as best as possible,
-    # remove areas with no space data and change to best
-    # defaults like Action Editor to Dope Sheet
+        # Make the default material for new objects to be assaigned
+        for armature in filter(lambda obj: obj.type == "ARMATURE", bpy.data.objects):
+            xplane_249_dataref_decoder.convert_armature_animations(scene, armature)
 
-    # Make the default material for new objects to be assaigned
-    for armature in filter(lambda obj: obj.type == "ARMATURE", bpy.data.objects):
-        xplane_249_dataref_decoder.convert_armature_animations(context.scene, armature)
+        for obj in filter(lambda obj: obj.type == "MESH", bpy.data.objects):
+            xplane_249_manip_decoder.convert_manipulators(scene, obj)
 
-    # TODO: Since most objects aren't manipulators (duh)
-    # this may be very inefficient on large aircraft. Perhaps some
-    # hueristics or better search algorithm can improve this if need be
-    for obj in filter(lambda obj: obj.type == "MESH", bpy.data.objects):
-        xplane_249_manip_decoder.convert_manipulators(context.scene, obj)
+        is_additive = workflow_type == xplane_249_constants.WorkflowType.BULK
+
+        #Keep checking from here
+        #TODO: What about checking for LODs in regular mode?
+        for obj in filter(lambda obj: "" in obj.name, new_roots):
+            obj.xplane.layer.lods = "3"
+            #print("\n---------------------")
+            #print("Name: ", obj.name)
+            lod_props_249 = collections.OrderedDict({0: 0, 1: 1000, 2: 4000, 3: 10000})
+            defined_lod_props_249 = {
+                i: find_property_in_hierarchy(obj, "LOD_{}".format(i))[0]
+                for i in range(4)
+                if find_property_in_hierarchy(obj, "LOD_{}".format(i))[0]
+            }
+
+            #print("Hand definied props: %d" % len(defined_lod_props_249))
+            lod_props_249.update(defined_lod_props_249)
+            #print("lod_props_249.values", lod_props_249.values())
+            value, has_prop_obj = find_property_in_hierarchy(obj, "additive_lod")
+            if value is not None:
+                is_additive = bool(value)
+
+            if value:
+                has_prop_obj.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
+                """
+                # double check there isn't also some instanced going on
+                value, has_prop_obj = find_property_in_hierarchy(obj, "instanced")
+                if value is not None and not bool(value):
+                    has_prop_obj.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_SCENERY #I guess? Idk, what is a good default here
+                """
+
+            #print("Is additive {}".format(is_additive))
+            if is_additive:
+                for i, breakpoint in enumerate(list(lod_props_249.values())[1:]):
+                    l = obj.xplane.layer.lod[i]
+                    l.near, l.far = 0, int(breakpoint)
+            else:
+                for i, (near, far) in enumerate(zip(list(lod_props_249.values())[:-1], list(lod_props_249.values())[1:])):
+                    l = obj.xplane.layer.lod[i]
+                    l.near, l.far = int(near), int(far)
+            #print("Final:", [(l.near, l.far) for l in obj.xplane.layer.lod])
+

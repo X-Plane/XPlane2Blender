@@ -1410,6 +1410,15 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     Settings for Blender objects. On Blender Objects these are accessed via a
     pointer property called xplane. Ex: bpy.data.objects[0].xplane.datarefs
     '''
+    def update_isExportableRoot_property(self, context):
+        """When checked, we take this moment to add
+        to layer.lod"""
+        if self.layer.lod:
+            return None
+        else:
+            while len(self.layer.lod) < MAX_LODS:
+                self.layer.lod.add()
+
     customAttributes = bpy.props.CollectionProperty(
         attr = "customAttributes",
         name = "Custom X-Plane Attributes",
@@ -1450,7 +1459,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
 
     lod = bpy.props.BoolVectorProperty(
         name = "Levels Of Detail",
-        description = "Define in wich LODs this object will be used. If none is checked it will be used in all",
+        description = "Define in wich LODs this object will be used. Check none to use in all LODs",
         default = (False, False, False, False),
         size = MAX_LODS-1
     )
@@ -1488,10 +1497,11 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     )
 
     isExportableRoot = bpy.props.BoolProperty(
-        attr = 'isExportableRoot',
-        name = 'Root Object',
-        description = 'Activate to export this object and all its children into it\'s own .obj file',
-        default = False
+        attr='isExportableRoot',
+        name='Root Object',
+        description='Activate to export this object and all its children into it\'s own .obj file',
+        default=False,
+        update=update_isExportableRoot_property
     )
 
     layer = bpy.props.PointerProperty(
