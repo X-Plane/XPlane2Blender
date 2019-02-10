@@ -11,7 +11,7 @@ The best way to contact us is through [a bug report](https://github.com/der-On/X
 - Blender 2.78 or higher
 - Latest non-beta version of XPlane2Blender
 
-People wishing to develop the plugin should the tutorial on Plugin Development in the manual.
+People wishing to develop the plugin should read the tutorial on Plugin Development in the manual.
 
 ## Automatic Installation
 **Note: This process will override an existing copy of the plugin!** To backup your current version of the plugin, see the manual instructions in the [manual](https://der-on.gitbooks.io/xplane2blender-docs/content/v3.4/34_installation.html). **Always make backups of your work, especially when beta testing, as newer versions may not be backwards compatibility.** Read the release notes for more details.
