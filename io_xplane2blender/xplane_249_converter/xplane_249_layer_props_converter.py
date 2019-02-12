@@ -13,8 +13,8 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
 
 
 def _convert_lod_properties(search_objs: List[bpy.types.Object],
-                             workflow_type: xplane_249_constants.WorkflowType,
-                             dest_root: bpy.types.Object)->None:
+                            workflow_type: xplane_249_constants.WorkflowType,
+                            dest_root: bpy.types.Object)->None:
     """
     Searches objs for "LOD_[0123]" properties to apply to dest_root's layer.lod
     member
@@ -22,8 +22,24 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
     if not search_objs:
         return
 
-    is_additive = workflow_type == xplane_249_constants.WorkflowType.BULK
     dest_root.xplane.layer.lods = "3"
+    for obj in search_objs:
+        value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "additive_lod")
+        if value is not None:
+            is_additive = bool(value)
+            break
+        """
+        # TODO: double check there isn't also some instanced going on
+        value, has_prop_obj = find_property_in_hierarchy(obj, "instanced")
+        if value is not None and not bool(value):
+            dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_SCENERY #I guess? Idk, what is a good default here
+        """
+    else: #nobreak
+        is_additive = workflow_type == xplane_249_constants.WorkflowType.BULK
+
+    if is_additive:
+        dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
+
     lod_props_249 = collections.OrderedDict({0: 0, 1: 1000, 2: 4000, 3: 10000})
     for obj in search_objs:
         #print("\n---------------------")
@@ -37,18 +53,6 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
         #print("Hand definied props: %d" % len(defined_lod_props_249))
         lod_props_249.update(defined_lod_props_249)
         #print("lod_props_249.values", lod_props_249.values())
-        value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "additive_lod")
-        if value is not None:
-            is_additive = bool(value)
-
-        if value:
-            dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
-            """
-            # double check there isn't also some instanced going on
-            value, has_prop_obj = find_property_in_hierarchy(obj, "instanced")
-            if value is not None and not bool(value):
-                dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_SCENERY #I guess? Idk, what is a good default here
-            """
 
     #print("Is additive {}".format(is_additive))
     if is_additive:
