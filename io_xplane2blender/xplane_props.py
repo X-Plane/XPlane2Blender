@@ -891,10 +891,13 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
         default = False
     )
 
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #!!!IMPORTANT: THIS IS ACTUALLY <bottom>!!!
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     top = bpy.props.IntProperty(
         attr = "top",
-        name = "Top",
-        description = "Top",
+        name = "Bottom",
+        description = "Bottom of region, in px",
         default = 0,
         min = 0,
         max = 2048
@@ -903,7 +906,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
     left = bpy.props.IntProperty(
         attr = "left",
         name = "Left",
-        description = "Left",
+        description = "Left of region, in px",
         default = 0,
         min = 0,
         max = 2048
@@ -912,7 +915,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
     width = bpy.props.IntProperty(
         attr = "width",
         name = "Width",
-        description = "Width in powers of 2",
+        description = "Width of region, in powers of 2",
         default = 1,
         min = 1,
         max = 11
@@ -921,7 +924,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
     height = bpy.props.IntProperty(
         attr = "height",
         name = "Height",
-        description = "Height in powers of 2",
+        description = "Height, region in powers of 2",
         default = 1,
         min = 1,
         max = 11
@@ -974,6 +977,10 @@ def make_lods_array():
 #   string texture_normal - Normal/Specular Texture to use for this OBJ.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane header attributes.
 class XPlaneLayer(bpy.types.PropertyGroup):
+    def update_cockpit_region_property(self, context):
+        while len(self.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
+            self.cockpit_region.add()
+
     index = bpy.props.IntProperty(
         attr = "index",
         name = "Index",
@@ -1104,7 +1111,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
             ("2", "2", "2"),
             ("3", "3", "3"),
             ("4", "4", "4")
-        ]
+        ],
+        update = update_cockpit_region_property,
     )
 
     cockpit_region = bpy.props.CollectionProperty(

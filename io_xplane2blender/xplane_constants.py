@@ -3,7 +3,7 @@
    #   #   # #    #  #   ##  #  ## #  #  #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
   ##   #   # #   # # #  ##      ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
   ##   #  ####   # # #  #  ###  #     # #     ##   #  # #   ####  #  ### #    #  # # #    ##   #
-  #   #   #  #   #  ##  ##  #   # #   # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  # 
+  #   #   #  #   #  ##  ##  #   # #   # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #
  #####   ##  ## ##  #    ####  ####  ## ##   #####   ## ## ##  ##  ####   ###   ##  #   ####  #
 
 This file is also an important file for the data model! See the special care
@@ -96,7 +96,7 @@ MANIP_COMMAND_SWITCH_UP_DOWN    = "command_switch_up_down"
 
 #11.10 and greater manips
 # Note: these are not new manips in the OBJ spec, we are reusing manip_drag_axis + using ATTR_axis_detented
-# What makes them special is their data is automatically detected as much as possible 
+# What makes them special is their data is automatically detected as much as possible
 MANIP_DRAG_AXIS_DETENT           = "drag_axis_detent"
 
 MANIP_DRAG_ROTATE                = "drag_rotate"
@@ -155,18 +155,26 @@ REQUIRE_SURFACE_NONE = "none"
 REQUIRE_SURFACE_DRY = "dry"
 REQUIRE_SURFACE_WET = "wet"
 
-LAYER_GROUP_NONE = "none"
-LAYER_GROUP_TERRAIN = "terrain"
-LAYER_GROUP_BEACHES = "beaches"
-LAYER_GROUP_SHOULDERS = "shoulders"
-LAYER_GROUP_TAXIWAYS = "taxiways"
-LAYER_GROUP_RUNWAYS = "runways"
-LAYER_GROUP_MARKINGS = "markings"
-LAYER_GROUP_AIRPORTS = "airports"
-LAYER_GROUP_ROADS = "roads"
-LAYER_GROUP_OBJECTS = "objects"
+def _get_all_layer_groups():
+    import inspect
+    current_frame = inspect.currentframe()
+    return {global_name: current_frame.f_globals[global_name] for global_name in current_frame.f_globals\
+            if global_name.startswith("LAYER_GROUP_")}
+
+LAYER_GROUPS_ALL = {*_get_all_layer_groups().values()}
+
+LAYER_GROUP_NONE          = "none"
+LAYER_GROUP_TERRAIN       = "terrain"
+LAYER_GROUP_BEACHES       = "beaches"
+LAYER_GROUP_SHOULDERS     = "shoulders"
+LAYER_GROUP_TAXIWAYS      = "taxiways"
+LAYER_GROUP_RUNWAYS       = "runways"
+LAYER_GROUP_MARKINGS      = "markings"
+LAYER_GROUP_AIRPORTS      = "airports"
+LAYER_GROUP_ROADS         = "roads"
+LAYER_GROUP_OBJECTS       = "objects"
 LAYER_GROUP_LIGHT_OBJECTS = "light_objects"
-LAYER_GROUP_CARS = "cars"
+LAYER_GROUP_CARS          = "cars"
 
 VERSION_900  =  "900"
 VERSION_1000 = "1000"

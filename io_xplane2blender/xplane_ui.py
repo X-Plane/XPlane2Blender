@@ -178,7 +178,7 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
 def scene_layout(self, scene):
     layout = self.layout
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
-    layout.row().operator("xplane.do_249_conversion")
+    layout.row().operator("xplane.do_249_conversion").workflow_type = "BULK"
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
