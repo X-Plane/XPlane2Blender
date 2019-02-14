@@ -3,6 +3,7 @@ Converts (some) 249 global properties whose destination is an XPlaneLayer
 on a new root object. For instance, LODs, Slope Limits, Layer Groups, etc
 """
 import collections
+import math
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import bpy
@@ -12,6 +13,36 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_helpers)
 
 
+def _convert_global_properties(search_objs: List[bpy.types.Object],
+                               workflow_type: xplane_249_constants.WorkflowType,
+                               dest_root: bpy.types.Object)->None:
+    assert search_objs, "Must have objects to search"
+
+    layer = dest_root.xplane.layer
+    for obj in search_objs:
+        value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "COCKPIT_REGION")
+        if value is not None:
+            layer.export_type = xplane_constants.EXPORT_TYPE_COCKPIT
+            layer.cockpit_regions = "1"
+            if (isinstance(value, str)
+                and len(value.split()) == 4
+                and [v.isnumeric() for v in value.split()]):
+                reg = layer.cockpit_region[0]
+                reg.left, reg.top, reg.width, reg.height = [math.log2(int(v)) if int(v) else 0 for v in value.split()]
+            else:
+                print("NEXT-STEP: Set Cockpit Region value for {}".format(dest_root.name))
+
+        dry_value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_DRY", prop_types={"STRING"})
+        if dry_value == "":
+            layer.export_type = xplane_constants.EXPORT_TYPE_SCENERY
+            layer.require_surface = xplane_constants.REQUIRE_SURFACE_DRY
+
+        wet_value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_WET")#, prop_types={"STRING"})
+        if wet_value == "":
+            layer.export_type = xplane_constants.EXPORT_TYPE_SCENERY
+            layer.require_surface = xplane_constants.REQUIRE_SURFACE_WET
+
+
 def _convert_lod_properties(search_objs: List[bpy.types.Object],
                             workflow_type: xplane_249_constants.WorkflowType,
                             dest_root: bpy.types.Object)->None:
@@ -19,8 +50,7 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
     Searches objs for "LOD_[0123]" properties to apply to dest_root's layer.lod
     member
     """
-    if not search_objs:
-        return
+    assert search_objs, "Must have objects to search"
 
     dest_root.xplane.layer.lods = "3"
     for obj in search_objs:
@@ -42,19 +72,14 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
 
     lod_props_249 = collections.OrderedDict({0: 0, 1: 1000, 2: 4000, 3: 10000})
     for obj in search_objs:
-        #print("\n---------------------")
-        #print("Name: ", obj.name)
         defined_lod_props_249 = {
             i: xplane_249_helpers.find_property_in_parents(obj, "LOD_{}".format(i))[0]
             for i in range(4)
             if xplane_249_helpers.find_property_in_parents(obj, "LOD_{}".format(i))[0]
         }
 
-        #print("Hand definied props: %d" % len(defined_lod_props_249))
         lod_props_249.update(defined_lod_props_249)
-        #print("lod_props_249.values", lod_props_249.values())
 
-    #print("Is additive {}".format(is_additive))
     if is_additive:
         for i, breakpoint in enumerate(list(lod_props_249.values())[1:]):
             l = dest_root.xplane.layer.lod[i]
@@ -63,19 +88,23 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
         for i, (near, far) in enumerate(zip(list(lod_props_249.values())[:-1], list(lod_props_249.values())[1:])):
             l = dest_root.xplane.layer.lod[i]
             l.near, l.far = int(near), int(far)
-    #print("Final:", [(l.near, l.far) for l in dest_root.xplane.layer.lod])
 
 
 def do_convert_layer_properties(scene: bpy.types.Scene, workflow_type, root_objects: List[bpy.types.Object]):
     assert workflow_type != xplane_249_constants.WorkflowType.SKIP
 
     for root_object in root_objects:
+        print("Converting XPlaneLayer related properties for '{}'".format(root_object.name))
         if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
             search_objs = scene.objects
         elif workflow_type == xplane_249_constants.WorkflowType.BULK:
-            search_objs = xplane_249_helpers.get_all_children_recursive(root_object)
+            search_objs = [root_object] + xplane_249_helpers.get_all_children_recursive(root_object)
         else:
             assert False, "Unknown workflow type"
 
-        _convert_lod_properties(search_objs, workflow_type, root_object)
+        if search_objs:
+            # Hints towards Instanced Scenery Export
+            _convert_lod_properties(search_objs, workflow_type, root_object)
 
+            # Hints towards Cockpit
+            _convert_global_properties(search_objs, workflow_type, root_object)
