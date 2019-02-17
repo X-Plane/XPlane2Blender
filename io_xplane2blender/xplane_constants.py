@@ -122,6 +122,7 @@ MANIPULATORS_OPT_IN = (
     MANIP_DRAG_AXIS
 )
 
+
 def _get_all_manipulators():
     import inspect
 
@@ -130,6 +131,7 @@ def _get_all_manipulators():
             if global_name.startswith("MANIP_") and "CURSOR" not in global_name}
 
 MANIPULATORS_ALL = {*_get_all_manipulators().values()}
+
 
 MANIP_CURSOR_FOUR_ARROWS = "four_arrows"
 MANIP_CURSOR_HAND = "hand"
@@ -155,13 +157,6 @@ REQUIRE_SURFACE_NONE = "none"
 REQUIRE_SURFACE_DRY = "dry"
 REQUIRE_SURFACE_WET = "wet"
 
-def _get_all_layer_groups():
-    import inspect
-    current_frame = inspect.currentframe()
-    return {global_name: current_frame.f_globals[global_name] for global_name in current_frame.f_globals\
-            if global_name.startswith("LAYER_GROUP_")}
-
-LAYER_GROUPS_ALL = {*_get_all_layer_groups().values()}
 
 LAYER_GROUP_NONE          = "none"
 LAYER_GROUP_TERRAIN       = "terrain"
@@ -175,6 +170,16 @@ LAYER_GROUP_ROADS         = "roads"
 LAYER_GROUP_OBJECTS       = "objects"
 LAYER_GROUP_LIGHT_OBJECTS = "light_objects"
 LAYER_GROUP_CARS          = "cars"
+
+
+def _get_all_layer_groups():
+    import inspect
+    current_frame = inspect.currentframe()
+    return {global_name: current_frame.f_globals[global_name] for global_name in current_frame.f_globals\
+            if global_name.startswith("LAYER_GROUP_")}
+
+LAYER_GROUPS_ALL = {*_get_all_layer_groups().values()}
+
 
 VERSION_900  =  "900"
 VERSION_1000 = "1000"

@@ -45,11 +45,16 @@ class TestGlobalProperties(XPlaneTestCase):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         scene = bpy.context.scene
         root = scene.objects["OBJLODDraped"]
+        self.assertTrue(root.xplane.layer.export_type == xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY)
+        self.assertTrue(root.xplane.layer.lod_draped == 1000.0) #TODO: Update to 1000 when we get clarification of LOD draped being an int or not
+        self.assertTrue(root.xplane.layer.layer_group_draped == xplane_constants.LAYER_GROUP_BEACHES)
+        self.assertTrue(root.xplane.layer.layer_group_draped_offset == 5)
 
     def test_requires_wet(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         scene = bpy.context.scene
         root = scene.objects["OBJRequiresWet"]
+        self.assertTrue(root.xplane.layer.export_type == xplane_constants.EXPORT_TYPE_SCENERY)
         self.assertTrue(root.xplane.layer.require_surface == xplane_constants.REQUIRE_SURFACE_WET)
 
 runTestCases([TestGlobalProperties])

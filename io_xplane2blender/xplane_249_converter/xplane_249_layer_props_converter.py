@@ -86,8 +86,50 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
         if wet_value == "":
             layer.require_surface = xplane_constants.REQUIRE_SURFACE_WET
 
+        #---------------------------------------------------------------------
+        # Draped Scenery Only Properties, export type hint: Instanced
+        #---------------------------------------------------------------------
+        LOD_draped_value, _ = xplane_249_helpers.find_property_in_parents(obj, "ATTR_LOD_draped")
+        if LOD_draped_value is not None:
+            try:
+                if float(LOD_draped_value) >= 0.0:
+                    layer.lod_draped = float(LOD_draped_value) #TODO: This seems wrong, shouldn't this be an int?
+                else:
+                    print("WARN: Value for ATTR_LOD_draped must be >= 0, is '{}'".format(LOD_draped_value))
+            except TypeError: #LOD_draped_value is None
+                print("WARN: Value for ATTR_LOD_draped must be convertable to an float, is '{}'".format(LOD_draped_value))
+            except ValueError: #LOD_draped_value is not convertable to a float
+                print("WARN: Value for ATTR_LOD_draped must be convertable to an float, is '{}'".format(LOD_draped_value))
+
+        layer_group_draped_value, _ = xplane_249_helpers.find_property_in_parents(obj, "ATTR_layer_group_draped", prop_types={"STRING"})
+        if layer_group_draped_value is not None:
+            try:
+                layer_group_draped_type, layer_group_draped_offset = layer_group_draped_value.split()
+                print( layer_group_draped_type, layer_group_draped_offset )
+            except ValueError: # Too many or too few to unpack
+                print("WARN: '{}' is not in the right format, must be <group type> <offset>".format(layer_group_draped_value))
+            else:
+                if layer_group_draped_type in xplane_constants.LAYER_GROUPS_ALL:
+                    layer.layer_group_draped = layer_group_draped_type
+                    try:
+                        if -5 <= int(layer_group_draped_offset) <= 5:
+                            layer.layer_group_draped_offset = int(layer_group_draped_offset)
+                        else:
+                            print("WARN: Layer Group Draped Offset must be between and including -5 and 5, is '{}'".format(layer_group_draped_offset))
+                    except TypeError:
+                        print("WARN: Layer Group Draped Offset must be convertable to an int, is '{}'".format(layer_group_draped_offset))
+                    except ValueError:
+                        print("WARN: Layer Group Draped Offset must be convertable to an int, is '{}'".format(layer_group_draped_offset))
+                else:
+                    print("WARN: '{}' is not a known Layer Group".format(layer_group_draped_type))
+
+
+        # Apply export type hints, from least specific to most specific
         if any([p is not None for p in [slope_limit_value, tilted_value, layer_group_value, dry_value, wet_value]]):
             layer.export_type = xplane_constants.EXPORT_TYPE_SCENERY
+
+        if any([p is not None for p in [LOD_draped_value, layer_group_draped_value]]):
+            layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
 
 
 def _convert_lod_properties(search_objs: List[bpy.types.Object],

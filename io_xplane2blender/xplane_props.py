@@ -1138,7 +1138,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     lod_draped = bpy.props.FloatProperty(
         attr = "lod_draped",
         name = "Max. Draped LOD",
-        description = "Maximum LOD distance for draped geometry. Set to 0 to use farest LOD",
+        description = "Maximum LOD distance for draped geometry. Set to 0 to use farthest LOD",
         default = 0,
         min = 0
     )
