@@ -1,7 +1,8 @@
 '''Contains constants that the converter uses'''
 import enum
 
-WORKFLOW_REGULAR_NEW_ROOT_NAME = "249_CONVERSION_ROOT"
+# Per Scene, a "_01", "_02", "_03" gets appended
+WORKFLOW_REGULAR_NEW_ROOT_NAME = "249_ROOT"
 
 class WorkflowType(enum.Enum):
     '''

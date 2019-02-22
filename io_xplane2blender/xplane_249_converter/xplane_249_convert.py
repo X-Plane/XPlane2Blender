@@ -34,12 +34,14 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
         return
     _runs += 1
 
-    for scene in bpy.data.scenes:
+    for i, scene in enumerate(bpy.data.scenes, start=1):
         # Global settings
         scene.xplane.debug = True
 
         new_roots = xplane_249_workflow_converter.convert_workflow(scene, workflow_type)
 
+        if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
+            new_roots[0].name += "_{:02d}".format(i)
         #TODO: converting too much per export mode? Will certainly be bad with scenes
         # Make the default material for new objects to be assaigned
         for armature in filter(lambda obj: obj.type == "ARMATURE", scene.objects):

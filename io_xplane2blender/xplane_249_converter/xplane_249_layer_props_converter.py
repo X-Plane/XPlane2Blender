@@ -105,7 +105,7 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
         if layer_group_draped_value is not None:
             try:
                 layer_group_draped_type, layer_group_draped_offset = layer_group_draped_value.split()
-                print( layer_group_draped_type, layer_group_draped_offset )
+                #print(layer_group_draped_type, layer_group_draped_offset)
             except ValueError: # Too many or too few to unpack
                 print("WARN: '{}' is not in the right format, must be <group type> <offset>".format(layer_group_draped_value))
             else:

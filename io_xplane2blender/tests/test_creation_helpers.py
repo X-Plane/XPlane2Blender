@@ -368,20 +368,23 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
 
 def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
     assert info.datablock_type == "EMPTY"
-    #TODO: Needs to check if empty already exists
-    bpy.ops.object.empty_add(
-        type='PLAIN_AXES',
-        location=info.location,
-        rotation=info.rotation,
-        layers=info.layers
-        )
-    ob = bpy.context.object
+    ob = bpy.data.objects.new(info.name, None)
+    bpy.context.scene.objects.link(ob)
+    ob.location = info.location
+    if info.rotation_mode == "AXIS_ANGLE":
+        ob.rotation_axis_angle = info.rotation
+    elif info.rotation_mode == "QUATERNION":
+        ob.rotation_quaternion = info.rotation
+    else:
+        ob.rotation_euler = info.rotation
+
+    ob.layers = info.layers
     ob.name = info.name if info.name is not None else ob.name
     ob.rotation_mode = info.rotation_mode
     ob.scale = info.scale
 
     if info.parent_info:
-        set_parent(ob,info.parent_info)
+        set_parent(ob, info.parent_info)
 
     return ob
 
