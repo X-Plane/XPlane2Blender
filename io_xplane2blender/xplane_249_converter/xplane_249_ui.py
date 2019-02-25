@@ -23,7 +23,7 @@ from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WORKFLOW_REGULAR_NEW_ROOT_NAME, WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import WORKFLOW_DEFAULT_ROOT_NAME, WorkflowType
 
 class ImportAndConvert(Operator, ImportHelper):
     """This appears in the tooltip of the operator and in the generated docs"""
@@ -59,7 +59,7 @@ class ImportAndConvert(Operator, ImportHelper):
                 (
                     WorkflowType.REGULAR.name,
                     WorkflowType.REGULAR.name.title(),
-                    "Project used Export v8/v9 script, top objects parented to " + WORKFLOW_REGULAR_NEW_ROOT_NAME
+                    "Project used Export v8/v9 script, top objects parented to " + WORKFLOW_DEFAULT_ROOT_NAME
                 ),
                 (WorkflowType.BULK.name, WorkflowType.BULK.name.title(), "Project used Bulk Export script"),
             ],

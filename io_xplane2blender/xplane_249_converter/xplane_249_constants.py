@@ -2,7 +2,7 @@
 import enum
 
 # Per Scene, a "_01", "_02", "_03" gets appended
-WORKFLOW_REGULAR_NEW_ROOT_NAME = "249_ROOT"
+WORKFLOW_DEFAULT_ROOT_NAME = "249_ROOT"
 
 class WorkflowType(enum.Enum):
     '''
