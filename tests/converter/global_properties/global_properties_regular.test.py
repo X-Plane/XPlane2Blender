@@ -5,7 +5,7 @@ import sys
 import bpy
 from io_xplane2blender import xplane_constants, xplane_config
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WORKFLOW_REGULAR_NEW_ROOT_NAME, WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import WORKFLOW_DEFAULT_ROOT_NAME, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -14,7 +14,7 @@ class TestGlobalPropertiesRegular(XPlaneTestCase):
     def test_global_properties_regular(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         scene = bpy.context.scene
-        root = scene.objects[WORKFLOW_REGULAR_NEW_ROOT_NAME + "_01"]
+        root = scene.objects[WORKFLOW_DEFAULT_ROOT_NAME + "_01"]
         layer = root.xplane.layer
         self.assertTrue(layer.slope_limit is True)
         self.assertTrue((layer.slope_limit_min_pitch,
