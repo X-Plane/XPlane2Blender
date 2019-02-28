@@ -11,7 +11,7 @@ import os
 import re
 import sys
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from operator import attrgetter
 
 import bpy
