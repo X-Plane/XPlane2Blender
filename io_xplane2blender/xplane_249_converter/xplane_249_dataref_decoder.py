@@ -559,9 +559,10 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     #------------------------------------------------------------------
     return parsed_prop
 
-def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Object):
+def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Object)->Set[bpy.types.Object]:
     print("Decoding dataref Game-Properties for '{}'".format(armature.name))
     scene.objects.active = armature
+    converted_armatures = set() # type: Set[bpy.types.Object]
 
     # To simplfy some things we can ignore anything we know
     # is manipulator related. Hopefully no has the disambiguating key
@@ -788,6 +789,7 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
                     parent_armature=armature,
                     dataref_per_keyframe_info=True
                 )
-
             else:
                 assert False, "How did we get here? {}".format(parsed_prop)
+            converted_armatures.update([armature])
+    return converted_armatures

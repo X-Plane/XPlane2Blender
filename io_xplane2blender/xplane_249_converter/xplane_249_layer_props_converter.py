@@ -187,7 +187,7 @@ def do_convert_layer_properties(scene: bpy.types.Scene, workflow_type, root_obje
         if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
             search_objs = scene.objects
         elif workflow_type == xplane_249_constants.WorkflowType.BULK:
-            search_objs = [root_object] + xplane_249_helpers.get_all_children_recursive(root_object)
+            search_objs = [root_object] + xplane_249_helpers.get_all_children_recursive(root_object, scene)
         else:
             assert False, "Unknown workflow type"
 

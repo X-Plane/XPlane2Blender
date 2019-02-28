@@ -21,6 +21,7 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_manip_decoder,
                                                     xplane_249_workflow_converter)
 
+_converted_objects = set() # type: Set[bpy.types.Object]
 _runs = 0
 def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_constants.WorkflowType):
     # TODO: Create log, similar to updater log
@@ -35,6 +36,7 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
     _runs += 1
 
     for i, scene in enumerate(bpy.data.scenes, start=1):
+        bpy.context.window.screen.scene = scene
         # Global settings
         scene.xplane.debug = True
 
@@ -42,13 +44,18 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
 
         if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
             new_roots[0].name += "_{:02d}".format(i)
-        #TODO: converting too much per export mode? Will certainly be bad with scenes
-        # Make the default material for new objects to be assaigned
-        for armature in filter(lambda obj: obj.type == "ARMATURE", scene.objects):
-            xplane_249_dataref_decoder.convert_armature_animations(scene, armature)
 
-        for obj in filter(lambda obj: obj.type == "MESH", bpy.data.objects):
-            xplane_249_manip_decoder.convert_manipulators(scene, obj)
+        # Make the default material for new objects to be assaigned
+        for armature in filter(lambda obj: obj not in _converted_objects and obj.type == "ARMATURE", scene.objects):
+            _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
+
+        #print("Converted objects", _converted_objects)
+
+        for obj in scene.objects:
+            converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
+            #TODO: When we implement better export type settings
+            #if converted_manipulator:
+                #print("root hint: COCKPIT")
 
         #--- Layer Properties (LODs, Layer Groups, Requires Wet/Dry, etc) -----
         if workflow_type == xplane_249_constants.WorkflowType.SKIP:
@@ -60,4 +67,4 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
             assert False, "Unknown workflow type"
         #----------------------------------------------------------------------
 
-
+        #print("NEXT-STEPS: Check the export type of {}".format([root.name for root in new_roots])

@@ -441,7 +441,6 @@ def convert_manipulators(scene: bpy.types.Scene, obj: bpy.types.Object)->bool:
         #print("Could not decode manipulator info for '{}'".format(obj.name))
         return False
     else:
-        assert not obj.xplane.manip.enabled, "{} has already had its manipulators converted"
         setattr(obj.xplane.manip, "enabled", True)
         for attr, value in vars(parsed_manip_info).items():
             if attr == "axis_detent_ranges":

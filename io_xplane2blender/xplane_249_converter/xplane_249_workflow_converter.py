@@ -34,8 +34,7 @@ def convert_workflow(scene: bpy.types.Scene, workflow_type: xplane_249_constants
     elif workflow_type == xplane_249_constants.WorkflowType.REGULAR:
         new_root = test_creation_helpers.create_datablock_empty(
             test_creation_helpers.DatablockInfo("EMPTY",
-                                                xplane_249_constants.WORKFLOW_DEFAULT_ROOT_NAME),
-            scene
+                                                xplane_249_constants.WORKFLOW_DEFAULT_ROOT_NAME)
         )
         if len(bpy.data.scenes) == 1:
             new_root.xplane.layer.name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]

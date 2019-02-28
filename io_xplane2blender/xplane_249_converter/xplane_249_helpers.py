@@ -7,22 +7,22 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import bpy
 
 
-def get_all_children_recursive(obj: bpy.types.Object)->List[bpy.types.Object]:
+def get_all_children_recursive(obj: bpy.types.Object, scene: bpy.types.Scene)->List[bpy.types.Object]:
     """
     Recurse down the tree of parent-child relations and gather all the
-    possible objects under obj in a list, as reported by obj.children.
+    possible objects under the obj in the current scene, in a list, as reported by obj.children.
 
-    An empty list is returned when obj has no list
+    Returns an empty list for no children
     """
     if not obj.children:
         return []
     else:
-        children = []
-        for child in obj.children:
-            sub_children = get_all_children_recursive(child)
+        children = [] # type: List[bpy.types.Object]
+        for child in filter(lambda child: child.name in scene.objects, obj.children):
+            sub_children = get_all_children_recursive(child, scene)
             if sub_children:
-                children.append(sub_children)
-        return children + list(obj.children)
+                children += (sub_children)
+        return children + list(filter(lambda child: child.name in scene.objects, obj.children))
 
 
 PropDataType = Union[bool, float, int, str]

@@ -366,16 +366,10 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
 
     return arm
 
-def create_datablock_empty(info:DatablockInfo,
-        scene:Optional[bpy.types.Scene]=None)->bpy.types.Object: #TODO: This is hopefully a dumb hack and devtalk can tell me how to change bpy.context.scene
+def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
     assert info.datablock_type == "EMPTY"
     ob = bpy.data.objects.new(info.name, None)
-    if scene:
-        scene.objects.link(ob)
-        scene.update()
-    else:
-        bpy.context.scene.objects.link(ob)
-        bpy.context.scene.update()
+    bpy.context.scene.objects.link(ob)
 
     ob.location = info.location
     if info.rotation_mode == "AXIS_ANGLE":
