@@ -8,7 +8,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import bpy
 
-from io_xplane2blender import xplane_constants
+from io_xplane2blender import xplane_constants, xplane_helpers
+from xplane_helpers import logger
 from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_helpers)
 
@@ -18,9 +19,28 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                                dest_root: bpy.types.Object)->None:
     assert search_objs, "Must have objects to search"
 
+    # We do a lot of "is it" testing...
+    def _isint(s):
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
+
+    def _isfloat(s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
+    logger.info("\nConverting Global OBJ Properties for Root Object '{}'\n"
+                "--------------------------------------------------".format(dest_root.name))
+    info = set()
+    warnings = set()
     layer = dest_root.xplane.layer
     for obj in search_objs:
-        cockpit_reg_value, _ = xplane_249_helpers.find_property_in_parents(obj, "COCKPIT_REGION")
+        cockpit_reg_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "COCKPIT_REGION")
         if cockpit_reg_value is not None:
             layer.export_type = xplane_constants.EXPORT_TYPE_COCKPIT
             layer.cockpit_regions = "1"
@@ -28,100 +48,107 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                 if cockpit_reg_value == "":
                     pass
                 elif (len(cockpit_reg_value.split()) == 4
-                      and [v.isnumeric() for v in cockpit_reg_value.split()]):
+                      and [v.isdigit() for v in cockpit_reg_value.split()]):
                     reg = layer.cockpit_region[0]
                     reg.left, reg.top, reg.width, reg.height = [math.log2(int(v)) if int(v) else 0 for v in cockpit_reg_value.split()]
+                else:
+                    warnings.add("COCKPIT_REGION value '{}' on {} couldn't be parsed into 4 integers\n"
+                                 "NEXT STEP: Set Cockpit Region manually"
+                                 .format(cockpit_reg_value, prop_source.name))
             else:
-                print("NEXT-STEP: Set Cockpit Region value for {}."
-                      "'{}' couldn't be parsed to 4 integers."
-                      .format(dest_root.name,cockpit_reg_value))
+                warnings.add("COCKPIT_REGION value '{}' on {} couldn't be parsed into 4 integers\n"
+                             "NEXT STEP: Set Cockpit Region manually"
+                             .format(cockpit_reg_value, prop_source.name))
 
         #---------------------------------------------------------------------
         # Scenery Only Properties, change if hasn't already been set to the
         # more specific INSTANCED instead
         #---------------------------------------------------------------------
-        slope_limit_value, _ = xplane_249_helpers.find_property_in_parents(obj, "SLOPE_LIMIT", prop_types={"STRING"})
+        slope_limit_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "SLOPE_LIMIT", prop_types={"STRING"})
         if slope_limit_value is not None:
             layer.slope_limit = True
-            try:
-                if any([not -90 <= float(v) <= 90 for v in slope_limit_value.split()]):
-                    print("WARN: SLOPE_LIMIT must have 4 floats between -90 and 90 inclusive seperated by space for a value")
-                    print("NEXT-STEP: Change your slope limits")
-            except ValueError:
-                print("WARN: SLOPE_LIMIT must have 4 floats between -90 and 90 inclusive seperated by space for a value")
-            else:
+            if all([_isfloat(v) and -90 <= float(v) <= 90 for v in slope_limit_value.split()]):
                 layer.slope_limit_min_pitch, \
                 layer.slope_limit_max_pitch, \
                 layer.slope_limit_min_roll, \
                 layer.slope_limit_max_roll = [float(v) for v in slope_limit_value.split()]
+            else:
+                warnings.add("SLOPE_LIMIT value '{}' on {} couldn't be converted\n"
+                             "NEXT STEP: Set your Slope Limits manually"
+                             .format(slope_limit_value, prop_source.name))
 
 
         tilted_value, _ = xplane_249_helpers.find_property_in_parents(obj, "TILTED")
         if tilted_value is not None:
             layer.tilted = True
 
-        layer_group_value, _ = xplane_249_helpers.find_property_in_parents(obj, "ATTR_layer_group", prop_types={"STRING"})
+        layer_group_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "ATTR_layer_group", prop_types={"STRING"})
         if layer_group_value is not None:
             try:
                 layer_group_type, layer_group_offset = layer_group_value.split()
-                layer.layer_group = layer_group_type
+                if layer_group_type.lower() in xplane_constants.LAYER_GROUPS_ALL:
+                    layer.layer_group = layer_group_type.lower()
+                else:
+                    warnings.add("Layer Group Type '{}' on {} doesn't exist in modern XPlane2Blender\n"
+                                 "NEXT STEP: Set your Layer Group manually".format(layer_group_type, prop_source.name))
             except ValueError: #split has too many or two few values to unpack (expected 2)
-                print("WARN: '{}' isn't in the right format".format(layer_group_value))
+                warnings.add("ATTR_layer_group value '{}' on {} wasn't in the right format, must be <layer type> <offset>\n"
+                             "NEXT STEP: Set your Layer Group and Layer Group Offset manually"
+                             .format(layer_group_value, prop_source.name))
             else:
-                try:
-                    if -5 <= int(layer_group_offset) <= 5:
-                        layer_group_offset = int(layer_group_offset)
-                        layer.layer_group_offset = layer_group_offset
-                    else:
-                        print("WARN: ATTR_layer_group offset '{}' must be between -5 and 5 inclusive".format(layer_group_offset))
-                        break
-                except ValueError:
-                    print("WARN: ATTR_layer_group \"{}\"'s offset must be a number".format(layer_group_value))
+                if _isint(layer_group_offset) and -5 <= int(layer_group_offset) <= 5:
+                    layer_group_offset = int(layer_group_offset)
+                    layer.layer_group_offset = layer_group_offset
+                else:
+                    warnings.add("ATTR_layer_group offset on {} must be between and including -5 and 5, is '{}'\n"
+                                 "NEXT STEP: Set Layer Group Offset manually"
+                                 .format(prop_source.name, layer_group_offset))
+                    break
 
-        dry_value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_DRY", prop_types={"STRING"})
+        dry_value, _ = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_DRY", prop_types={"STRING"})
         if dry_value == "":
             layer.require_surface = xplane_constants.REQUIRE_SURFACE_DRY
 
-        wet_value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_WET", prop_types={"STRING"})
+        wet_value, _ = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_WET", prop_types={"STRING"})
         if wet_value == "":
             layer.require_surface = xplane_constants.REQUIRE_SURFACE_WET
 
         #---------------------------------------------------------------------
         # Draped Scenery Only Properties, export type hint: Instanced
         #---------------------------------------------------------------------
-        LOD_draped_value, _ = xplane_249_helpers.find_property_in_parents(obj, "ATTR_LOD_draped")
+        LOD_draped_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "ATTR_LOD_draped")
         if LOD_draped_value is not None:
-            try:
+            if _isfloat(LOD_draped_value):
                 if float(LOD_draped_value) >= 0.0:
-                    layer.lod_draped = float(LOD_draped_value) #TODO: This seems wrong, shouldn't this be an int?
+                    layer.lod_draped = float(LOD_draped_value)
                 else:
-                    print("WARN: Value for ATTR_LOD_draped must be >= 0, is '{}'".format(LOD_draped_value))
-            except TypeError: #LOD_draped_value is None
-                print("WARN: Value for ATTR_LOD_draped must be convertable to an float, is '{}'".format(LOD_draped_value))
-            except ValueError: #LOD_draped_value is not convertable to a float
-                print("WARN: Value for ATTR_LOD_draped must be convertable to an float, is '{}'".format(LOD_draped_value))
+                    warnings.add("ATTR_LOD_draped's value '{}' on {} must be >= 0\n"
+                                 "NEXT STEP: Set LOD Draped manually".format(LOD_draped_value, prop_source.name))
+            else:
+                warnings.add("ATTR_LOD_draped's value '{}' on {} is not a float\n"
+                             "NEXT STEP: Set LOD Draped manually".format(LOD_draped_value, prop_source.name))
 
-        layer_group_draped_value, _ = xplane_249_helpers.find_property_in_parents(obj, "ATTR_layer_group_draped", prop_types={"STRING"})
+        layer_group_draped_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "ATTR_layer_group_draped", prop_types={"STRING"})
         if layer_group_draped_value is not None:
             try:
                 layer_group_draped_type, layer_group_draped_offset = layer_group_draped_value.split()
                 #print(layer_group_draped_type, layer_group_draped_offset)
             except ValueError: # Too many or too few to unpack
-                print("WARN: '{}' is not in the right format, must be <group type> <offset>".format(layer_group_draped_value))
+                warnings.add("ATTR_layer_group_draped's value '{}' on {} is not in the right format, must be <layer type> <offset>\n"
+                             "NEXT STEP: Manually set Layer Group Draped and Layer Group Draped Offset".format(layer_group_draped_value, prop_source.name))
             else:
                 if layer_group_draped_type in xplane_constants.LAYER_GROUPS_ALL:
                     layer.layer_group_draped = layer_group_draped_type
-                    try:
-                        if -5 <= int(layer_group_draped_offset) <= 5:
-                            layer.layer_group_draped_offset = int(layer_group_draped_offset)
-                        else:
-                            print("WARN: Layer Group Draped Offset must be between and including -5 and 5, is '{}'".format(layer_group_draped_offset))
-                    except TypeError:
-                        print("WARN: Layer Group Draped Offset must be convertable to an int, is '{}'".format(layer_group_draped_offset))
-                    except ValueError:
-                        print("WARN: Layer Group Draped Offset must be convertable to an int, is '{}'".format(layer_group_draped_offset))
+                    if _isint(layer_group_draped_offset) and -5 <= int(layer_group_draped_offset) <= 5:
+                        layer.layer_group_draped_offset = int(layer_group_draped_offset)
+                    else:
+                        warnings.add("ATTR_layer_group offset on {} must be between and including -5 and 5, is '{}'\n"
+                                     "NEXT STEP: Set Layer Group Draped's Offset manually"
+                                     .format(prop_source.name, layer_group_draped_offset))
                 else:
-                    print("WARN: '{}' is not a known Layer Group".format(layer_group_draped_type))
+                    warnings.add("ATTR_layer_group_draped's type '{}' is not a known Layer Group\n"
+                                 "NEXT STEP: Set Layer Group Draped and Layer Group Draped Offset Manually"
+                                 .format(layer_group_draped_type))
 
 
         # Apply export type hints, from least specific to most specific
@@ -130,6 +157,9 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
 
         if any([p is not None for p in [LOD_draped_value, layer_group_draped_value]]):
             layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
+
+    for warning in warnings:
+        logger.warn(warning)
 
 
 def _convert_lod_properties(search_objs: List[bpy.types.Object],
@@ -141,6 +171,8 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
     """
     assert search_objs, "Must have objects to search"
 
+    logger.info("\nConverting LOD Properties for Root Object '{}'\n"
+                "--------------------------------------------------".format(dest_root.name))
     dest_root.xplane.layer.lods = "3"
     for obj in search_objs:
         value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "additive_lod")
@@ -159,7 +191,11 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
     if is_additive:
         dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
 
-    lod_props_249 = collections.OrderedDict({0: 0, 1: 1000, 2: 4000, 3: 10000})
+    lod_props_249 = collections.OrderedDict()
+    lod_props_249[0] = 0
+    lod_props_249[1] = 1000
+    lod_props_249[2] = 4000
+    lod_props_249[3] = 10000
     for obj in search_objs:
         defined_lod_props_249 = {
             i: xplane_249_helpers.find_property_in_parents(obj, "LOD_{}".format(i))[0]
@@ -178,12 +214,22 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
             l = dest_root.xplane.layer.lod[i]
             l.near, l.far = int(near), int(far)
 
+    final_logger_msg = ("{} now has {} for LODs\n"
+                        "NEXT STEP: Determine if any of these LODs are unnecessary")
+    if any(filter(lambda lod: lod.far in {1000, 4000, 10000}, dest_root.xplane.layer.lod[1:])):
+        final_logger_msg += ", especially some your new values are the 2.49 defaults"
+
+    logger.warn(final_logger_msg.format(
+        dest_root.name,
+        dest_root.xplane.layer.lods,
+        [(l.near, l.far) for l in dest_root.xplane.layer.lod])
+    )
+
 
 def do_convert_layer_properties(scene: bpy.types.Scene, workflow_type, root_objects: List[bpy.types.Object]):
     assert workflow_type != xplane_249_constants.WorkflowType.SKIP
 
     for root_object in root_objects:
-        print("Converting XPlaneLayer related properties for '{}'".format(root_object.name))
         if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
             search_objs = scene.objects
         elif workflow_type == xplane_249_constants.WorkflowType.BULK:
