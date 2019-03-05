@@ -1,7 +1,7 @@
 # File: xplane_helpers.py
 # Defines Helpers
 
-from typing import Optional 
+from typing import Any, Callable, Dict, List, Optional, Union, TextIO
 import bpy
 import mathutils
 
@@ -48,7 +48,7 @@ def resolveBlenderPath(path:str)->str:
         return os.path.join(blenddir, path[2:])
     else:
         return path
- 
+
 def get_addon_resources_dir()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
 
@@ -100,10 +100,10 @@ class VerStruct():
                                                str(self.build_type_version),
                                                str(self.data_model_version),
                                          "'" + str(self.build_number) + "'")
-    
+
     def __str__(self):
         #WARNING! Make sure this is the same as XPlane2BlenderVersion's!!!
-        return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)), 
+        return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)),
                                    self.build_type,
                                    self.build_type_version,
                                    self.data_model_version,
@@ -137,20 +137,20 @@ class VerStruct():
                 elif self.build_type_version <= 0:
                         print("build_type_version must be > 0 when build_type is %s" % self.build_type)
                         return False
-                
+
                 if self.build_type == xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version != 0:
                     print("Invalid build_type,data_model_version combo: legacy and data_model_version is not 0")
                     return False
                 elif self.build_type != xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version <= 0:
                     print("Invalid build_type,data_model_version combo: non-legacy and data_model_version is > 0")
                     return False
-                
+
                 if self.build_number == xplane_constants.BUILD_NUMBER_NONE:
                     return True
                 else:
                     datetime_matches = re.match(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})", self.build_number)
                     try:
-                        # a timezone aware datetime object preforms the validations on construction. 
+                        # a timezone aware datetime object preforms the validations on construction.
                         dt = datetime.datetime(*[int(group) for group in datetime_matches.groups()],tzinfo=timezone.utc)
                     except Exception as e:
                         print('Exception %s occurred while trying to parse datetime' % e)
@@ -167,7 +167,7 @@ class VerStruct():
     @staticmethod
     def add_to_version_history(version_to_add):
         history = bpy.context.scene.xplane.xplane2blender_ver_history
-         
+
         if len(history) == 0 or history[-1].name != repr(version_to_add):
             new_hist_entry = history.add()
             new_hist_entry.name = repr(version_to_add)
@@ -200,7 +200,7 @@ class VerStruct():
 
     @staticmethod
     def make_new_build_number():
-        #Use the UNIX Timestamp in UTC 
+        #Use the UNIX Timestamp in UTC
         return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
 
     # Method: parse_version
@@ -214,7 +214,7 @@ class VerStruct():
     # Formats
     # Old version numbers: '3.2.0', '3.2', or '3.3.13'
     # New, moder format: '3.4.0-beta.5+1.20170906154330'
-    @staticmethod    
+    @staticmethod
     def parse_version(version_str:str)->Optional['VerStruct']:
         version_struct = VerStruct()
         #We're dealing with modern
@@ -223,12 +223,12 @@ class VerStruct():
             # Regex matching and data extraction #
             ######################################
             format_str = r"(\d+\.\d+\.\d+)-(alpha|beta|dev|leg|rc)\.(\d+)"
-                
+
             if '+' in version_str:
                 format_str += r"\+(\d+)\.(\w{14})"
-                             
+
             version_matches = re.match(format_str,version_str)
-            
+
             # Part 1: Major.Minor.revision (1)
             # Part 2: '-' and a build type (2), then a literal '.' and build type number (3)
             # (Optional) literal '+'
@@ -238,7 +238,7 @@ class VerStruct():
                 version_struct.addon_version      = tuple([int(comp) for comp in version_matches.group(1).split('.')])
                 version_struct.build_type         = version_matches.group(2)
                 version_struct.build_type_version = int(version_matches.group(3))
-    
+
                 #If we have a build number, we can take this opportunity to validate it
                 if '+' in version_str:
                     version_struct.data_model_version = int(version_matches.group(4))
@@ -259,29 +259,14 @@ class VerStruct():
             return None
 
 
-#This a hack to help tests.py catch when an error is an error,
-#because everybody and their pet poodle like using the words 'Fail',
-#'Error', "FAIL", and "ERROR" making regex impossible.
-#
-#unittest prints a handy string of .'s, F's, and E's on the first line,
-#but due to reasons beyond my grasp, sometimes they don't print a newline
-#at the end of it when a failure occurs, making it useless, since we use the word
-#"INFO" with an F, meaning you can't search the first line for an F!
-#
-#Hence this stupid stupid hack, which, is hopefully useful in someway
-#Rather than a "did_print_once"
-#
-#This is yet another reminder about how relying on strings printed to a console
-#To tell how your unit test went is a bad idea, epsecially when you can't seem to control
-#What gets output when.
-message_to_str_count = 0
-
 class XPlaneLogger():
     def __init__(self):
-        self.transports = []
-        self.messages = []
-        
-    def addTransport(self, transport, messageTypes = ['error', 'warning', 'info', 'success']):
+        self.transports = [] # type: Dict[str, Union[str, List[str]]]
+        self.messages = [] # type: List[str]
+
+    def addTransport(self, transport: Callable[[str, str, Any], None], messageTypes: Optional[List[str]]=None)->None:
+        if messageTypes is None:
+            messageTypes = ['error', 'warning', 'info', 'success']
         self.transports.append({
             'fn': transport,
             'types': messageTypes
@@ -308,7 +293,7 @@ class XPlaneLogger():
 
         return out
 
-    def log(self, messageType, message, context = None):
+    def log(self, messageType: str, message: str, context: Any = None):
         self.messages.append({
             'type': messageType,
             'message': message,
@@ -319,56 +304,50 @@ class XPlaneLogger():
             if messageType in transport['types']:
                 transport['fn'](messageType, message, context)
 
-    def error(self, message, context = None):
+    def error(self, message: str, context = None):
         self.log('error', message, context)
 
-    def warn(self, message, context = None):
+    def warn(self, message: str, context = None):
         self.log('warning', message, context)
 
-    def info(self, message, context = None):
+    def info(self, message: str, context = None):
         self.log('info', message, context)
 
-    def success(self, message, context = None):
+    def success(self, message: str, context = None):
         self.log('success', message, context)
 
-    def findOfType(self, messageType):
-        messages = []
+    def findOfType(self, messageType: str)->bool:
+        return list(filter(lambda message: message['type'] == messageType, self.messages))
 
-        for message in self.messages:
-            if message['type'] == messageType:
-                messages.append(message)
+    def hasOfType(self, messageType: str)->bool:
+        return any(message['type'] == messageType for message in self.messages)
 
-        return messages
-
-    def hasOfType(self, messageType):
-        for message in self.messages:
-            if message['type'] == messageType:
-                return True
-
-        return False
-
-    def findErrors(self):
+    def findErrors(self)->List[str]:
         return self.findOfType('error')
 
-    def hasErrors(self):
+    def hasErrors(self)->bool:
         return self.hasOfType('error')
 
-    def findWarnings(self):
+    def findWarnings(self)->List[str]:
         return self.findOfType('warning')
 
-    def hasWarnings(self):
+    def hasWarnings(self)->bool:
         return self.hasOfType('warning')
 
-    def findInfos(self):
+    def findInfos(self)->List[str]:
         return self.findOfType('info')
-    
+
+    def hasInfos(self)->bool:
+        return self.hasOfType('info')
+
     @staticmethod
-    def messageToString(messageType, message, context = None):
-        io_xplane2blender.xplane_helpers.message_to_str_count += 1
+    def messageToString(messageType: str, message: str, context: Any=None):
         return '%s: %s' % (messageType.upper(), message)
 
     @staticmethod
-    def InternalTextTransport(name = 'XPlane2Blender.log'):
+    def InternalTextTransport(name: Optional[str] = None):
+        if name is None:
+            name = 'XPlane2Blender.log'
         if bpy.data.texts.find(name) == -1:
             log = bpy.data.texts.new(name)
         else:
@@ -376,23 +355,21 @@ class XPlaneLogger():
 
         log.clear()
 
-        def transport(messageType, message, context = None):
+        def transport(messageType: str, message: str, context: Any = None):
             log.write(XPlaneLogger.messageToString(messageType, message, context) + '\n')
 
         return transport
 
     @staticmethod
     def ConsoleTransport():
-        def transport(messageType, message, context = None):
-            if io_xplane2blender.xplane_helpers.message_to_str_count == 1:
-                print('\n')
+        def transport(messageType: str, message: str, context: Any = None):
             print(XPlaneLogger.messageToString(messageType, message, context))
 
         return transport
 
     @staticmethod
-    def FileTransport(filehandle):
-        def transport(messageType, message, context = None):
+    def FileTransport(filehandle: TextIO):
+        def transport(messageType: str, message: str, context: Any = None):
             filehandle.write(XPlaneLogger.messageToString(messageType, message, context) + '\n')
 
         return transport

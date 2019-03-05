@@ -17,6 +17,7 @@ from operator import attrgetter
 import bpy
 
 from io_xplane2blender import xplane_helpers
+from xplane_helpers import logger
 from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW, ANIM_TYPE_TRANSFORM
 from io_xplane2blender.tests import test_creation_helpers
 
@@ -560,7 +561,7 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
     return parsed_prop
 
 def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Object)->Set[bpy.types.Object]:
-    print("Decoding dataref Game-Properties for '{}'".format(armature.name))
+    #print("Decoding dataref Game-Properties for '{}'".format(armature.name))
     scene.objects.active = armature
     converted_armatures = set() # type: Set[bpy.types.Object]
 
@@ -665,8 +666,9 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
                     disambiguating_prop = game_properties[bone_name]
                 elif bone_name_no_idx in game_properties:
                     disambiguating_prop = game_properties[bone_name_no_idx]
-                else:
-                    #print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
+                elif any(bone_name.startswith(easy_default) for easy_default in {"none", "no_ref", "Bone"}) or bone_name == "":
+                    # Only print the interesting bones that got ignored. Obviously "none
+                    logger.warn("Ignoring Bone '{}' of {}: could not be matched to a full dataref".format(bone_name, armature.name))
                     continue
 
                 # Checking for a value catches when people have to use "none:''" or "no_ref:''"
@@ -676,7 +678,7 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
                     all_arm_drefs[disambiguating_key] = (bone, [])
                 else:
                     #print("Probable disambiguating prop ({}:{}) has wrong value type {}".format( disambiguating_prop.name, disambiguating_prop.value, disambiguating_prop.type))
-                    #print("Bone {} found that can't convert to full dataref, will treat as plain bone.".format(bone_name))
+                    logger.warn("Ignoring Bone '{}' of {}: could not be matched to a full dataref".format(bone_name, armature.name))
                     continue
 
         #print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
@@ -710,9 +712,7 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
         # A sorted list of each bone's channel's min/max gets us the first and last created frames
         try:
             s = sorted([c.range() for c in armature.animation_data.action.groups[bone.name].channels])
-        except AttributeError: # In case action is None
-            continue
-        except KeyError: # In case bone.name isn't a group name
+        except (AttributeError, KeyError): # In case action is None or bone.name isn't a group name
             continue
 
         first_frame = int(s[0][0]) # min value of smallest member in list
@@ -754,6 +754,7 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
 
     # Finally, the creation step!
     for path, (bone, parsed_props) in all_arm_drefs.items():
+        logger.info("Converted Animation of Bone '{}' from {} using dataref '{}'".format(bone.name, armature.name, path))
         for parsed_prop in parsed_props:
             if parsed_prop.value is not None:
                 test_creation_helpers.set_animation_data(
@@ -791,5 +792,5 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
                 )
             else:
                 assert False, "How did we get here? {}".format(parsed_prop)
-            converted_armatures.update([armature])
+            converted_armatures.add(armature)
     return converted_armatures

@@ -12,6 +12,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
 from io_xplane2blender import xplane_constants, xplane_helpers
+from xplane_helpers import logger
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_constants import (ANIM_TYPE_HIDE, ANIM_TYPE_SHOW,
                                                 ANIM_TYPE_TRANSFORM,
@@ -434,9 +435,9 @@ def convert_manipulators(scene: bpy.types.Scene, obj: bpy.types.Object)->bool:
     '''
 
     try:
-        print("Decoding manipulator for '{}'".format(obj.name))
+        #print("Decoding manipulator for '{}'".format(obj.name))
         manip_info_source, parsed_manip_info = _decode(obj)
-        #print("Manip info for {} found on {}".format(obj.name, manip_info_source.name))
+        logger.info("A {} manipulator was found and converted on {}".format(parsed_manip_info.type.title(), manip_info_source.name))
     except TypeError: # NoneType is not iterable, incase _decode returns None and can't expand
         #print("Could not decode manipulator info for '{}'".format(obj.name))
         return False

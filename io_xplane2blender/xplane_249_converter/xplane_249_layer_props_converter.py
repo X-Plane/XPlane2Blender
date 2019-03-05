@@ -24,17 +24,18 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
         try:
             int(s)
             return True
-        except ValueError:
+        except (TypeError, ValueError):
             return False
 
     def _isfloat(s):
         try:
             float(s)
             return True
-        except ValueError:
+        except (TypeError, ValueError):
             return False
 
-    logger.info("\nConverting Global OBJ Properties for Root Object '{}'\n"
+    logger.info("")
+    logger.info("Converting Any Global OBJ Properties for Root Object '{}'\n"
                 "--------------------------------------------------".format(dest_root.name))
     info = set()
     warnings = set()
@@ -164,16 +165,16 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
 
 def _convert_lod_properties(search_objs: List[bpy.types.Object],
                             workflow_type: xplane_249_constants.WorkflowType,
-                            dest_root: bpy.types.Object)->None:
+                            dest_root: bpy.types.Object)->int:
     """
     Searches objs for "LOD_[0123]" properties to apply to dest_root's layer.lod
-    member
+    member, returns the number of defined properties found unless the user defined the defaults
     """
     assert search_objs, "Must have objects to search"
 
-    logger.info("\nConverting LOD Properties for Root Object '{}'\n"
+    logger.info("")
+    logger.info("Converting Any LOD Properties for Root Object '{}'\n"
                 "--------------------------------------------------".format(dest_root.name))
-    dest_root.xplane.layer.lods = "3"
     for obj in search_objs:
         value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "additive_lod")
         if value is not None:
@@ -191,39 +192,55 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
     if is_additive:
         dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
 
-    lod_props_249 = collections.OrderedDict()
-    lod_props_249[0] = 0
-    lod_props_249[1] = 1000
-    lod_props_249[2] = 4000
-    lod_props_249[3] = 10000
+    lod_props_249 = [0, 1000, 4000, 10000]
+    # In 2.49, if 2 or more layers were used, the defaults were always applied
+    layers_used = [False, False, False]
+    found_lod_props = 0
+    warnings = set() # type: Set[str]
     for obj in search_objs:
-        defined_lod_props_249 = {
-            i: xplane_249_helpers.find_property_in_parents(obj, "LOD_{}".format(i))[0]
-            for i in range(4)
-            if xplane_249_helpers.find_property_in_parents(obj, "LOD_{}".format(i))[0]
-        }
+        layers_used[0] |= obj.layers[0]
+        layers_used[1] |= obj.layers[1]
+        layers_used[2] |= obj.layers[2]
+        for i in range(4):
+            lod_prop_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "LOD_{}".format(i))
+            if lod_prop_value is not None:
+                try:
+                    lod_props_249[i] = int(lod_prop_value)
+                    found_lod_props += 1
+                except (TypeError, ValueError) as e:
+                    warnings.add("Property 'LOD_{}':'{}' on {} could not be converted to an int, using {} instead"
+                                 .format(i, lod_prop_value, prop_source.name, lod_props_249[i]))
 
-        lod_props_249.update(defined_lod_props_249)
+    if not found_lod_props and layers_used.count(True) == 1:
+        #print("Found no LOD properties for {}".format(dest_root.name))
+        for warning in warnings:
+            logger.warn(warning)
+        return 0
 
+    dest_root.xplane.layer.lods = "3"
     if is_additive:
-        for i, breakpoint in enumerate(list(lod_props_249.values())[1:]):
+        for i, breakpoint in enumerate(lod_props_249[1:]):
             l = dest_root.xplane.layer.lod[i]
-            l.near, l.far = 0, int(breakpoint)
+            l.near, l.far = 0, breakpoint
     else:
-        for i, (near, far) in enumerate(zip(list(lod_props_249.values())[:-1], list(lod_props_249.values())[1:])):
+        for i, (near, far) in enumerate(zip(lod_props_249[:-1], lod_props_249[1:])):
             l = dest_root.xplane.layer.lod[i]
             l.near, l.far = int(near), int(far)
 
-    final_logger_msg = ("{} now has {} for LODs\n"
+    final_logger_msg = ("{} now has {} for LODs: {}\n"
                         "NEXT STEP: Determine if any of these LODs are unnecessary")
     if any(filter(lambda lod: lod.far in {1000, 4000, 10000}, dest_root.xplane.layer.lod[1:])):
         final_logger_msg += ", especially some your new values are the 2.49 defaults"
 
-    logger.warn(final_logger_msg.format(
+    warnings.add(final_logger_msg.format(
         dest_root.name,
         dest_root.xplane.layer.lods,
         [(l.near, l.far) for l in dest_root.xplane.layer.lod])
     )
+
+    for warning in warnings:
+        logger.warn(warning)
+    return found_lod_props
 
 
 def do_convert_layer_properties(scene: bpy.types.Scene, workflow_type, root_objects: List[bpy.types.Object]):

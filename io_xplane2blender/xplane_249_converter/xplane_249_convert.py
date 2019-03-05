@@ -40,7 +40,6 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
     logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Converter Log'), xplane_constants.LOGGER_LEVELS_ALL)
     logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
 
-
     for i, scene in enumerate(bpy.data.scenes, start=1):
         logger.info("Converting scene '{}' using a {} workflow"
                     .format(scene.name, workflow_type.name))
@@ -65,16 +64,24 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
             assert False, "Unknown workflow type"
         #----------------------------------------------------------------------
 
+        logger.info("")
+        logger.info("Converting Any Animations In Scene '{}'\n"
+                    "--------------------------------------------------".format(scene.name))
         # Make the default material for new objects to be assaigned
         for armature in filter(lambda obj: obj not in _converted_objects and obj.type == "ARMATURE", scene.objects):
             _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
 
+        if _converted_objects:
+            logger.info("\nNEXT STEP: Check for missing or incorrect animations. See XPlaneDuplicateActionDatablocks.py for more")
         #print("Converted objects", _converted_objects)
 
+
+        logger.info("")
+        logger.info("Converting Any Manipulators In Scene '{}'\n"
+                    "--------------------------------------------------".format(scene.name))
         for obj in scene.objects:
             converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
-            #TODO: When we implement better export type settings
             #if converted_manipulator:
                 #print("root hint: COCKPIT")
 
-        logger.warn("NEXT-STEPS: Check the Export Type of {}".format([root.name for root in new_roots]))
+        logger.warn("NEXT-STEPS: Check the Export Type of {}".format(','.join([root.name for root in new_roots])))
