@@ -34,7 +34,7 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
         except (TypeError, ValueError):
             return False
 
-    logger.info("")
+    logger.info("", "raw")
     logger.info("Converting Any Global OBJ Properties for Root Object '{}'\n"
                 "--------------------------------------------------".format(dest_root.name))
     info = set()
@@ -172,7 +172,7 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
     """
     assert search_objs, "Must have objects to search"
 
-    logger.info("")
+    logger.info("", "raw")
     logger.info("Converting Any LOD Properties for Root Object '{}'\n"
                 "--------------------------------------------------".format(dest_root.name))
     for obj in search_objs:
@@ -214,7 +214,7 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
 
     if (not found_lod_props and
         not (layers_used[1] and layers_used[2])):
-        print("Found no LOD properties for {}".format(dest_root.name))
+        #print("Found no LOD properties for {}".format(dest_root.name))
         for warning in warnings:
             logger.warn(warning)
         return 0
@@ -230,7 +230,7 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
             l.near, l.far = int(near), int(far)
 
     final_logger_msg = ("{} now has {} for LODs: {}\n"
-                        "NEXT STEP: Determine if any of these LODs are unnecessary")
+                        "NEXT STEP: Check if these LODs are necessary and correct")
     if any(filter(lambda lod: lod.far in {1000, 4000, 10000}, dest_root.xplane.layer.lod[1:])):
         final_logger_msg += ", especially some your new values are the 2.49 defaults"
 

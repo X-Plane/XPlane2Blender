@@ -260,6 +260,7 @@ class VerStruct():
 
 
 class XPlaneLogger():
+    """A logger somewhat similar (but not as robust) as Python's logger"""
     def __init__(self):
         self.transports = [] # type: Dict[str, Union[str, List[str]]]
         self.messages = [] # type: List[str]
@@ -294,6 +295,10 @@ class XPlaneLogger():
         return out
 
     def log(self, messageType: str, message: str, context: Any = None):
+        """
+        Currently there is one known use of 'context', "raw" means supress the "INFO:" or other type
+        portion of a message
+        """
         self.messages.append({
             'type': messageType,
             'message': message,
@@ -304,16 +309,16 @@ class XPlaneLogger():
             if messageType in transport['types']:
                 transport['fn'](messageType, message, context)
 
-    def error(self, message: str, context = None):
+    def error(self, message: str, context: Any = None):
         self.log('error', message, context)
 
-    def warn(self, message: str, context = None):
+    def warn(self, message: str, context: Any = None):
         self.log('warning', message, context)
 
-    def info(self, message: str, context = None):
+    def info(self, message: str, context: Any = None):
         self.log('info', message, context)
 
-    def success(self, message: str, context = None):
+    def success(self, message: str, context: Any = None):
         self.log('success', message, context)
 
     def findOfType(self, messageType: str)->bool:
@@ -342,7 +347,10 @@ class XPlaneLogger():
 
     @staticmethod
     def messageToString(messageType: str, message: str, context: Any=None):
-        return '%s: %s' % (messageType.upper(), message)
+        if context == 'raw':
+            return '%s' % (message)
+        else:
+            return '%s: %s' % (messageType.upper(), message)
 
     @staticmethod
     def InternalTextTransport(name: Optional[str] = None):

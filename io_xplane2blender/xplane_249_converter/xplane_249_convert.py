@@ -64,7 +64,7 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
             assert False, "Unknown workflow type"
         #----------------------------------------------------------------------
 
-        logger.info("")
+        logger.info("", "raw")
         logger.info("Converting Any Animations In Scene '{}'\n"
                     "--------------------------------------------------".format(scene.name))
         # Make the default material for new objects to be assaigned
@@ -76,7 +76,7 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
         #print("Converted objects", _converted_objects)
 
 
-        logger.info("")
+        logger.info("", "raw")
         logger.info("Converting Any Manipulators In Scene '{}'\n"
                     "--------------------------------------------------".format(scene.name))
         for obj in scene.objects:
@@ -84,4 +84,5 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
             #if converted_manipulator:
                 #print("root hint: COCKPIT")
 
+        logger.info("", "raw")
         logger.warn("NEXT-STEPS: Check the Export Type of {}".format(','.join([root.name for root in new_roots])))
