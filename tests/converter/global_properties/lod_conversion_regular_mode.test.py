@@ -16,7 +16,6 @@ class TestLODConversionRegularMode(XPlaneTestCase):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         fixture_lods = [(0, 200), (0, 3000), (0, 5000), (0, 0), (0, 0)]
         lods = bpy.context.scene.objects[WORKFLOW_DEFAULT_ROOT_NAME + "_01"].xplane.layer.lod
-        print([(l.near, l.far) for l in lods])
-        self.assertTrue([(l.near, l.far) for l in lods] == fixture_lods)
+        self.assertEqual([(l.near, l.far) for l in lods], fixture_lods)
 
 runTestCases([TestLODConversionRegularMode])

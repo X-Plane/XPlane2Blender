@@ -194,8 +194,9 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
 
     lod_props_249 = [0, 1000, 4000, 10000]
     # In 2.49, if 2 or more layers were used, the defaults were always applied
-    layers_used = [False, False, False]
     found_lod_props = 0
+
+    layers_used = [False, False, False]
     warnings = set() # type: Set[str]
     for obj in search_objs:
         layers_used[0] |= obj.layers[0]
@@ -211,8 +212,9 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
                     warnings.add("Property 'LOD_{}':'{}' on {} could not be converted to an int, using {} instead"
                                  .format(i, lod_prop_value, prop_source.name, lod_props_249[i]))
 
-    if not found_lod_props and layers_used.count(True) == 1:
-        #print("Found no LOD properties for {}".format(dest_root.name))
+    if (not found_lod_props and
+        not (layers_used[1] and layers_used[2])):
+        print("Found no LOD properties for {}".format(dest_root.name))
         for warning in warnings:
             logger.warn(warning)
         return 0
