@@ -26,7 +26,7 @@ def convert_workflow(scene: bpy.types.Scene, workflow_type: xplane_249_constants
     Bulk:
         A list of identified root objects
     """
-    print("Converting {} workflow for scene '{}'".format(workflow_type.name, scene.name))
+    #print("Converting {} workflow for scene '{}'".format(workflow_type.name, scene.name))
     scene.xplane.exportMode = xplane_constants.EXPORT_MODE_ROOT_OBJECTS
 
     if workflow_type == xplane_249_constants.WorkflowType.SKIP:

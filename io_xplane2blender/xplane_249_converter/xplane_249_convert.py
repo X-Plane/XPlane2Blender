@@ -56,7 +56,8 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
 
         #--- Layer Properties (LODs, Layer Groups, Requires Wet/Dry, etc) -----
         if workflow_type == xplane_249_constants.WorkflowType.SKIP:
-            pass
+            logger.warn("Skipping converting global OBJ settings, project may not export correctly\n"
+                        "NEXT STEP: Set up .blend file for Layers or Root Objects mode and fill out OBJ settings")
         elif (workflow_type == xplane_249_constants.WorkflowType.REGULAR
               or workflow_type == xplane_249_constants.WorkflowType.BULK):
             xplane_249_layer_props_converter.do_convert_layer_properties(scene, workflow_type, new_roots)
