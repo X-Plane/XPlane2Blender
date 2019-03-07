@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import bpy
 
 from io_xplane2blender import xplane_constants, xplane_helpers
+from xplane_helpers import logger
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_dataref_decoder,
@@ -35,31 +36,28 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
         return
     _runs += 1
 
+    logger.clear()
+    logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Converter Log'), xplane_constants.LOGGER_LEVELS_ALL)
+    logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
+
     for i, scene in enumerate(bpy.data.scenes, start=1):
+        logger.info("Converting scene '{}' using a {} workflow"
+                    .format(scene.name, workflow_type.name))
         bpy.context.window.screen.scene = scene
         # Global settings
         scene.xplane.debug = True
 
+        #--- Making New Roots-------------------------------------------------
         new_roots = xplane_249_workflow_converter.convert_workflow(scene, workflow_type)
 
         if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
             new_roots[0].name += "_{:02d}".format(i)
-
-        # Make the default material for new objects to be assaigned
-        for armature in filter(lambda obj: obj not in _converted_objects and obj.type == "ARMATURE", scene.objects):
-            _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
-
-        #print("Converted objects", _converted_objects)
-
-        for obj in scene.objects:
-            converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
-            #TODO: When we implement better export type settings
-            #if converted_manipulator:
-                #print("root hint: COCKPIT")
+        #---------------------------------------------------------------------
 
         #--- Layer Properties (LODs, Layer Groups, Requires Wet/Dry, etc) -----
         if workflow_type == xplane_249_constants.WorkflowType.SKIP:
-            pass
+            logger.warn("Skipping converting global OBJ settings, project may not export correctly\n"
+                        "NEXT STEP: Set up .blend file for Layers or Root Objects mode and fill out OBJ settings")
         elif (workflow_type == xplane_249_constants.WorkflowType.REGULAR
               or workflow_type == xplane_249_constants.WorkflowType.BULK):
             xplane_249_layer_props_converter.do_convert_layer_properties(scene, workflow_type, new_roots)
@@ -67,4 +65,25 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
             assert False, "Unknown workflow type"
         #----------------------------------------------------------------------
 
-        #print("NEXT-STEPS: Check the export type of {}".format([root.name for root in new_roots])
+        logger.info("", "raw")
+        logger.info("Converting Any Animations In Scene '{}'\n"
+                    "--------------------------------------------------".format(scene.name))
+        # Make the default material for new objects to be assaigned
+        for armature in filter(lambda obj: obj not in _converted_objects and obj.type == "ARMATURE", scene.objects):
+            _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
+
+        if _converted_objects:
+            logger.info("\nNEXT STEP: Check for missing or incorrect animations. See XPlaneDuplicateActionDatablocks.py for more")
+        #print("Converted objects", _converted_objects)
+
+
+        logger.info("", "raw")
+        logger.info("Converting Any Manipulators In Scene '{}'\n"
+                    "--------------------------------------------------".format(scene.name))
+        for obj in scene.objects:
+            converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
+            #if converted_manipulator:
+                #print("root hint: COCKPIT")
+
+        logger.info("", "raw")
+        logger.warn("NEXT-STEPS: Check the Export Type of {}".format(','.join([root.name for root in new_roots])))
