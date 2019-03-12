@@ -23,7 +23,7 @@
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
     "name": "Export: X-Plane (.obj)",
-    "author": "Ondrej Brinkel",
+    "author": "Ondrej Brinkel, Ted Greene",
     "version": (3, 5, 0),
     "blender": (2, 7, 8),
     "location": "File > Import/Export > X-Plane",
