@@ -457,21 +457,44 @@ class XPlaneEmitter(bpy.types.PropertyGroup):
         default=False
     )
 
+class XPlaneMagnet(bpy.types.PropertyGroup):
+    debug_name = bpy.props.StringProperty(
+        name="Debug Name",
+        description="Human readable name for debugging purposes"
+    )
+
+    magnet_type_is_xpad = bpy.props.BoolProperty(
+        name="xpad",
+        description="Sets the type to include 'xpad'"
+    )
+
+    magnet_type_is_flashlight = bpy.props.BoolProperty(
+        name="flashlight",
+        description="Sets the type to include 'flashlight'"
+    )
+
 
 class XPlaneEmpty(bpy.types.PropertyGroup):
     emitter_props = bpy.props.PointerProperty(
         name="Emitter Settings",
-        description="Settings for emitter, if special Type is an Emitter",
+        description="Settings for emitter, if special type is an Emitter",
         type=XPlaneEmitter
+    )
+
+    magnet_props = bpy.props.PointerProperty(
+        name="Magnet Settings",
+        description="Settings for magnet, if special type is Magnet",
+        type=XPlaneMagnet
     )
 
     special_type = bpy.props.EnumProperty(
         name="Empty Special Type",
         description="Type XPlane2Blender item this is",
         items= [
-            (EMPTY_USAGE_NONE,             "None", "Empty has regular meaning"),
-            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "Empty represents a particle emitter")
-            #(EMPTY_USAGE_EMITTER_SOUND,    "Sound Emitter", "Empty represents a sound emitter")
+            (EMPTY_USAGE_NONE,             "None",             "Empty has no special use", 0),
+            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "A particle emitter", 1),
+            #(EMPTY_USAGE_EMITTER_SOUND,   "Sound Emitter",    "Empty represents a sound emitter", 2), #One day...
+            (EMPTY_USAGE_MAGNET,           "Magnet",           "A mounting point on a yoke where a VR tablet can be attached", 3)
         ]
     )
 
@@ -1899,33 +1922,39 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
     )
 
 
+_classes = [
+    XPlane2BlenderVersion,
+    XPlaneAxisDetentRange,
+    XPlaneCondition,
+    XPlaneCustomAttribute,
+    XPlaneDataref,
+    XPlaneEmitter,
+    XPlaneMagnet,
+    XPlaneEmpty,
+    XPlaneExportPathDirective,
+    ListItemCommand,
+    XPlaneCommandSearchWindow,
+    ListItemDataref,
+    XPlaneDatarefSearchWindow,
+    XPlaneManipulatorSettings,
+    XPlaneCockpitRegion,
+    XPlaneLOD,
+
+    # complex classes, depending on basic classes
+    XPlaneLayer,
+    XPlaneObjectSettings,
+    XPlaneBoneSettings,
+    XPlaneMaterialSettings,
+    XPlaneLampSettings,
+    XPlaneSceneSettings
+]
+
 # Function: addXPlaneRNA
 # Registers all properties.
 def addXPlaneRNA():
     # basic classes
-    bpy.utils.register_class(XPlane2BlenderVersion)
-    bpy.utils.register_class(XPlaneAxisDetentRange)
-    bpy.utils.register_class(XPlaneCondition)
-    bpy.utils.register_class(XPlaneCustomAttribute)
-    bpy.utils.register_class(XPlaneDataref)
-    bpy.utils.register_class(XPlaneEmitter)
-    bpy.utils.register_class(XPlaneEmpty)
-    bpy.utils.register_class(XPlaneExportPathDirective)
-    bpy.utils.register_class(ListItemCommand)
-    bpy.utils.register_class(XPlaneCommandSearchWindow)
-    bpy.utils.register_class(ListItemDataref)
-    bpy.utils.register_class(XPlaneDatarefSearchWindow)
-    bpy.utils.register_class(XPlaneManipulatorSettings)
-    bpy.utils.register_class(XPlaneCockpitRegion)
-    bpy.utils.register_class(XPlaneLOD)
-
-    # complex classes, depending on basic classes
-    bpy.utils.register_class(XPlaneLayer)
-    bpy.utils.register_class(XPlaneObjectSettings)
-    bpy.utils.register_class(XPlaneBoneSettings)
-    bpy.utils.register_class(XPlaneMaterialSettings)
-    bpy.utils.register_class(XPlaneLampSettings)
-    bpy.utils.register_class(XPlaneSceneSettings)
+    for c in _classes:
+        bpy.utils.register_class(c)
 
     bpy.types.Scene.xplane = bpy.props.PointerProperty(
         attr = "xplane",
@@ -1961,29 +1990,6 @@ def addXPlaneRNA():
 
 # Function: removeXPlaneRNA
 # Unregisters all properties.
-# TODO: Not sure if it is necissary to unregister in reverse order
 def removeXPlaneRNA():
-    # complex classes, depending on basic classes
-    bpy.utils.unregister_class(XPlaneObjectSettings)
-    bpy.utils.unregister_class(XPlaneBoneSettings)
-    bpy.utils.unregister_class(XPlaneMaterialSettings)
-    bpy.utils.unregister_class(XPlaneLampSettings)
-    bpy.utils.unregister_class(XPlaneSceneSettings)
-    bpy.utils.unregister_class(XPlaneLayer)
-
-    # basic classes
-    bpy.utils.unregister_class(XPlane2BlenderVersion)
-    bpy.utils.unregister_class(XPlaneAxisDetentRange)
-    bpy.utils.unregister_class(XPlaneCondition)
-    bpy.utils.unregister_class(XPlaneCustomAttribute)
-    bpy.utils.unregister_class(XPlaneDataref)
-    bpy.utils.unregister_class(XPlaneEmitter)
-    bpy.utils.unregister_class(XPlaneEmpty)
-    bpy.utils.unregister_class(XPlaneExportPathDirective)
-    bpy.utils.unregister_class(ListItemCommand)
-    bpy.utils.unregister_class(XPlaneCommandSearchWindow)
-    bpy.utils.unregister_class(ListItemDataref)
-    bpy.utils.unregister_class(XPlaneDatarefSearchWindow)
-    bpy.utils.unregister_class(XPlaneManipulatorSettings)
-    bpy.utils.unregister_class(XPlaneCockpitRegion)
-    bpy.utils.unregister_class(XPlaneLOD)
+    for c in _classes:
+        bpy.utils.unregister_class(c)
