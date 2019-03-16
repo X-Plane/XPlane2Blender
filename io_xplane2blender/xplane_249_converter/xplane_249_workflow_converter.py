@@ -53,9 +53,14 @@ def convert_workflow(scene: bpy.types.Scene, workflow_type: xplane_249_constants
         for ob in new_roots:
             ob.xplane.isExportableRoot = True
             try:
-                ob.xplane.layer.name = ob.game.properties["rname"].value
+                layer_name  = ob.game.properties["rname"].value
             except KeyError:
-                ob.xplane.layer.name = ob.name[3:]
+                layer_name = ob.name[3:]
+            try:
+                layer_name = ob.game.properties["path"].value + "/" + layer_name
+            except KeyError:
+                pass
+            ob.xplane.layer.name = layer_name
 
         return new_roots
     else:
