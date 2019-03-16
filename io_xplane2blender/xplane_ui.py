@@ -174,9 +174,12 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
         box.label("Magnet Settings")
         row = box.row()
         row.prop(emp.magnet_props, "debug_name")
-        row = box.row()
-        row.prop(emp.magnet_props, "magnet_type_is_xpad")
-        row.prop(emp.magnet_props, "magnet_type_is_flashlight")
+        row = box.row(align=True)
+        row.label("Magnet Type:")
+        sub_row = row.row(align=True)
+        sub_row.alignment = "RIGHT"
+        sub_row.prop(emp.magnet_props, "magnet_type_is_xpad")
+        sub_row.prop(emp.magnet_props, "magnet_type_is_flashlight")
 
 
 # Function: scene_layout
