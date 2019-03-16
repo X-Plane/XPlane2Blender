@@ -9,7 +9,7 @@ from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
 from mathutils import Vector
 from numbers import Number
-from typing import List
+from typing import List, Union
 
 
 '''
@@ -70,7 +70,6 @@ def _get_sw_light_callback(dref):
         "sim/graphics/animation/lights/airplane_beacon_light_dir":     _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_generic_light":        _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_generic_light_flash":  _do_rgb_to_dxyz_w_calc,
-        "sim/graphics/animation/lights/airplane_generic_light_spill":  _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_landing_light":        _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_landing_light_flash":  _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_navigation_light_dir": _do_rgb_to_dxyz_w_calc,
@@ -94,6 +93,7 @@ def _get_sw_light_callback(dref):
         "sim/graphics/animation/lights/wigwag":                        _do_force_omni,
         "sim/graphics/animation/lights/wigwag_sp":                     _do_force_omni
     }
+
     try:
         return drefs[dref]
     except:
@@ -108,6 +108,9 @@ class ParsedLightParamDef():
         self.prototype = tuple(light_prototype)
         #To be filled in later during xplane_light's collect method
         self.user_values = [None]*len(self.prototype)
+
+    def __str__(self):
+        return "Prototype: {}, User Values: {}".format(self.prototype, self.user_values)
 
     def set_user_values(self,user_values):
         def isfloat(number_str):
@@ -154,18 +157,25 @@ class ParsedDataSource():
 
         self.data = [float(d) if isfloat(d) else d for d in light_data]
 
+    def __str__(self):
+        return "Light Type: {}, Data: {}".format(self.type, self.data)
+
     def get_prototype(self):
             return self.TYPE_PROTOTYPES[self.type]
 
 
 class ParsedLightOverload():
     def __init__(self,light_name):
-        self.light_name = light_name
-        self.light_param_def = None
-        self.data_source = None
+        self.light_name = light_name # type: str
+        self.light_param_def = None # type: ParsedLightParamDef
+        self.data_source = None # type: ParsedDataSource
+
+    def __str__(self):
+        return "Light Name: {}, Light Param Def: {}, Data Source: {}"\
+                .format(self.light_name, self.light_param_def, self.data_source)
 
     #query must be a valid number or one of the column names
-    def get(self,query):
+    def get(self,query: Union[Number, str]):
         if isinstance(query,Number):
             return self.data_source.data[query]
         elif isinstance(query,str):
@@ -194,7 +204,7 @@ class ParsedLightOverload():
 
     def is_param_light(self):
         return self.light_param_def is not None
-    
+
     def apply_sw_light_callback(self):
         _get_sw_light_callback(self.get("DREF"))(self.data_source.get_prototype(),self.data_source.data)
 
@@ -275,7 +285,7 @@ def parse_lights_file():
         if len(lines) == 0:
             logger.error("lights.txt file is empty")
             raise Exception
-        
+
         for line in lines:
             line = line.strip()
 
