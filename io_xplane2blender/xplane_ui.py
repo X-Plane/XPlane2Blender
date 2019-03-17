@@ -168,6 +168,18 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
         sub.prop(emp.emitter_props, "index_enabled", text="")
         sub.active = getattr(emp.emitter_props, "index_enabled")
         sub.prop(emp.emitter_props, "index", text="Index")
+    elif emp.special_type == EMPTY_USAGE_MAGNET:
+        box = layout.box()
+        box.label("Magnet Settings")
+        row = box.row()
+        row.prop(emp.magnet_props, "debug_name")
+        row = box.row(align=True)
+        row.label("Magnet Type:")
+        sub_row = row.row(align=True)
+        sub_row.alignment = "RIGHT"
+        sub_row.prop(emp.magnet_props, "magnet_type_is_xpad")
+        sub_row.prop(emp.magnet_props, "magnet_type_is_flashlight")
+
 
 # Function: scene_layout
 # Draws the UI layout for scene tabs. Uses <layer_layout>.

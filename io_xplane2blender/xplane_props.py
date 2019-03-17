@@ -231,15 +231,18 @@ class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
     start = bpy.props.FloatProperty(
             name = "Start",
             description = "Start value (from Dataref 1) of the detent region",
-            default=0.0)
+            default=0.0,
+            precision = 3)
     end = bpy.props.FloatProperty(
             name = "End",
             description = "End value (from Dataref 1) of the detent region",
-            default=0.0)
+            default=0.0,
+            precision = 3)
     height = bpy.props.FloatProperty(
             name = "Height",
             description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
-            default=0.0)
+            default=0.0,
+            precision = 3)
 
     def __str__(self):
        return "({0},{1},{2})".format(self.start,self.end,self.height)
@@ -454,21 +457,44 @@ class XPlaneEmitter(bpy.types.PropertyGroup):
         default=False
     )
 
+class XPlaneMagnet(bpy.types.PropertyGroup):
+    debug_name = bpy.props.StringProperty(
+        name="Debug Name",
+        description="Human readable name for debugging purposes"
+    )
+
+    magnet_type_is_xpad = bpy.props.BoolProperty(
+        name="xpad",
+        description="Sets the type to include 'xpad'"
+    )
+
+    magnet_type_is_flashlight = bpy.props.BoolProperty(
+        name="flashlight",
+        description="Sets the type to include 'flashlight'"
+    )
+
 
 class XPlaneEmpty(bpy.types.PropertyGroup):
     emitter_props = bpy.props.PointerProperty(
         name="Emitter Settings",
-        description="Settings for emitter, if special Type is an Emitter",
+        description="Settings for emitter, if special type is an Emitter",
         type=XPlaneEmitter
+    )
+
+    magnet_props = bpy.props.PointerProperty(
+        name="Magnet Settings",
+        description="Settings for magnet, if special type is Magnet",
+        type=XPlaneMagnet
     )
 
     special_type = bpy.props.EnumProperty(
         name="Empty Special Type",
         description="Type XPlane2Blender item this is",
         items= [
-            (EMPTY_USAGE_NONE,             "None", "Empty has regular meaning"),
-            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "Empty represents a particle emitter")
-            #(EMPTY_USAGE_EMITTER_SOUND,    "Sound Emitter", "Empty represents a sound emitter")
+            (EMPTY_USAGE_NONE,             "None",             "Empty has no special use", 0),
+            (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "A particle emitter", 1),
+            #(EMPTY_USAGE_EMITTER_SOUND,   "Sound Emitter",    "Empty represents a sound emitter", 2), #One day...
+            (EMPTY_USAGE_MAGNET,           "Magnet",           "A mounting point on a yoke where a VR tablet can be attached", 3)
         ]
     )
 
@@ -519,14 +545,16 @@ class XPlaneDataref(bpy.types.PropertyGroup):
         attr = "show_hide_v1",
         name = "Value 1",
         description = "Show/Hide value 1",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     show_hide_v2 = bpy.props.FloatProperty(
         attr = "show_hide_v2",
         name = "Value 2",
         description = "Show/Hide value 2",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
 
@@ -697,98 +725,112 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         attr = "dx",
         name = "Drag X",
         description = "X-Drag axis length",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     dy = bpy.props.FloatProperty(
         attr = "dy",
         name = "Drag Y",
         description = "Y-Drag axis length",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     dz = bpy.props.FloatProperty(
         attr = "dz",
         name = "Drag Z",
         description = "Z-Drag axis length",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v1 = bpy.props.FloatProperty(
         attr = "v1",
         name = "Value 1",
         description = "Value 1",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v2 = bpy.props.FloatProperty(
         attr = "v2",
         name = "Value 2",
         description = "Value 2",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v1_min = bpy.props.FloatProperty(
         attr = "v1_min",
         name = "Value 1 Min",
         description = "Value 1 min",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v1_max = bpy.props.FloatProperty(
         attr = "v1_max",
         name = "Value 1 Max",
         description = "Value 1 max",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v2_min = bpy.props.FloatProperty(
         attr = "v2_min",
         name = "Value 2 Min",
         description = "Value 2 min",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v2_max = bpy.props.FloatProperty(
         attr = "v2_max",
         name = "Value 2 Max",
         description = "Value 2 max",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v_down = bpy.props.FloatProperty(
         attr = "v_down",
         name = "Value On Mouse Down",
         description = "Value to set dataref on mouse down",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v_up = bpy.props.FloatProperty(
         attr = "v_up",
         name = "Value On Mouse Up",
         description = "Value to set dataref on mouse up",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v_hold = bpy.props.FloatProperty(
         attr = "v_hold",
         name = "Value On Mouse Hold",
         description = "Value to set dataref on mouse hold",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v_on = bpy.props.FloatProperty(
         attr = "v_on",
         name = "On Value",
         description = "On value",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     v_off = bpy.props.FloatProperty(
         attr = "v_off",
         name = "Off Value",
         description = "Off value",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     command = bpy.props.StringProperty(
@@ -829,35 +871,40 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         attr = "step",
         name = "Step",
         description = "Dataref increment",
-        default = 1.0
+        default = 1.0,
+        precision = 3
     )
 
     click_step = bpy.props.FloatProperty(
         attr = "click_step",
         name = "Click Step",
         description = "Value change on click",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     hold_step = bpy.props.FloatProperty(
         attr = "hold_step",
         name = "Hold Step",
         description = "Value change on hold",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     wheel_delta = bpy.props.FloatProperty(
         attr = "wheel_delta",
         name = "Wheel Delta",
         description = "Value change on mouse wheel tick",
-        default = 0.0
+        default = 0.0,
+        precision = 3
     )
 
     exp = bpy.props.FloatProperty(
         attr = "exp",
         name = "Exp",
         description = "Power of an exponential curve that controls the speed at which the dataref changes. Higher numbers cause a more “non-linear” response, where small drags are very precise and large drags are very fast",
-        default = 1.0
+        default = 1.0,
+        precision = 3
     )
 
     def get_effective_type_desc(self) -> str:
@@ -1164,7 +1211,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         attr = "slope_limit_min_pitch",
         name = "Min. Pitch",
         description = "Represents the ground sloping down at the front of the object in degrees",
-        default = 0.0
+        default = 0.0,
+        precision = 2
     )
 
     # v1000
@@ -1172,7 +1220,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         attr = "slope_limit_max_pitch",
         name = "Max. Pitch",
         description = "Represents the ground sloping down at the front of the object in degrees",
-        default = 0.0
+        default = 0.0,
+        precision = 2
     )
 
     # v1000
@@ -1180,7 +1229,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         attr = "slope_limit_min_roll",
         name = "Min. Roll",
         description = "Represents the ground sloping down to the left of the object in degrees",
-        default = 0.0
+        default = 0.0,
+        precision = 2
     )
 
     # v1000
@@ -1188,7 +1238,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         attr = "slope_limit_max_roll",
         name = "Max. Roll",
         description = "Represents the ground sloping down to the left of the object in degrees",
-        default = 0.0
+        default = 0.0,
+        precision = 2
     )
 
     # v1000
@@ -1683,14 +1734,16 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         attr = "lightLevel_v1",
         name = "Value 1",
         description = "Value 1 for light level",
-        default = 0.0
+        default = 0.0,
+        precision = 2
     )
 
     lightLevel_v2 = bpy.props.FloatProperty(
         attr = "lightLevel_v2",
         name = "Value 2",
         description = "Value 2 for light level",
-        default = 1.0
+        default = 1.0,
+        precision = 2
     )
 
     lightLevel_dataref = bpy.props.StringProperty(
@@ -1776,8 +1829,9 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Albedo tint. 0.0 no darkening, 1.0 total darkening",
         min = 0.0,
         max = 1.0,
-        step = 1 / 255,
-        default = 0.0
+        step = .01,
+        default = 0.0,
+        precision = 2
     )
 
     # v1000 (only for instances)
@@ -1787,8 +1841,9 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "Emissive tint. 0.0 no darkening, 1.0 total darkening",
         min = 0.0,
         max = 1.0,
-        step = 1 / 255,
-        default = 0.0
+        step = 0.01,
+        default = 0.0,
+        precision = 2
     )
 
 # Class: XPlaneLampSettings
@@ -1817,6 +1872,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
         default = (0.0,0.0,0.0),
         subtype = "NONE",
         unit    = "NONE",
+        precision = 3,
         size = 3
         )
 
@@ -1884,33 +1940,39 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
     )
 
 
+_classes = [
+    XPlane2BlenderVersion,
+    XPlaneAxisDetentRange,
+    XPlaneCondition,
+    XPlaneCustomAttribute,
+    XPlaneDataref,
+    XPlaneEmitter,
+    XPlaneMagnet,
+    XPlaneEmpty,
+    XPlaneExportPathDirective,
+    ListItemCommand,
+    XPlaneCommandSearchWindow,
+    ListItemDataref,
+    XPlaneDatarefSearchWindow,
+    XPlaneManipulatorSettings,
+    XPlaneCockpitRegion,
+    XPlaneLOD,
+
+    # complex classes, depending on basic classes
+    XPlaneLayer,
+    XPlaneObjectSettings,
+    XPlaneBoneSettings,
+    XPlaneMaterialSettings,
+    XPlaneLampSettings,
+    XPlaneSceneSettings
+]
+
 # Function: addXPlaneRNA
 # Registers all properties.
 def addXPlaneRNA():
     # basic classes
-    bpy.utils.register_class(XPlane2BlenderVersion)
-    bpy.utils.register_class(XPlaneAxisDetentRange)
-    bpy.utils.register_class(XPlaneCondition)
-    bpy.utils.register_class(XPlaneCustomAttribute)
-    bpy.utils.register_class(XPlaneDataref)
-    bpy.utils.register_class(XPlaneEmitter)
-    bpy.utils.register_class(XPlaneEmpty)
-    bpy.utils.register_class(XPlaneExportPathDirective)
-    bpy.utils.register_class(ListItemCommand)
-    bpy.utils.register_class(XPlaneCommandSearchWindow)
-    bpy.utils.register_class(ListItemDataref)
-    bpy.utils.register_class(XPlaneDatarefSearchWindow)
-    bpy.utils.register_class(XPlaneManipulatorSettings)
-    bpy.utils.register_class(XPlaneCockpitRegion)
-    bpy.utils.register_class(XPlaneLOD)
-
-    # complex classes, depending on basic classes
-    bpy.utils.register_class(XPlaneLayer)
-    bpy.utils.register_class(XPlaneObjectSettings)
-    bpy.utils.register_class(XPlaneBoneSettings)
-    bpy.utils.register_class(XPlaneMaterialSettings)
-    bpy.utils.register_class(XPlaneLampSettings)
-    bpy.utils.register_class(XPlaneSceneSettings)
+    for c in _classes:
+        bpy.utils.register_class(c)
 
     bpy.types.Scene.xplane = bpy.props.PointerProperty(
         attr = "xplane",
@@ -1946,29 +2008,6 @@ def addXPlaneRNA():
 
 # Function: removeXPlaneRNA
 # Unregisters all properties.
-# TODO: Not sure if it is necissary to unregister in reverse order
 def removeXPlaneRNA():
-    # complex classes, depending on basic classes
-    bpy.utils.unregister_class(XPlaneObjectSettings)
-    bpy.utils.unregister_class(XPlaneBoneSettings)
-    bpy.utils.unregister_class(XPlaneMaterialSettings)
-    bpy.utils.unregister_class(XPlaneLampSettings)
-    bpy.utils.unregister_class(XPlaneSceneSettings)
-    bpy.utils.unregister_class(XPlaneLayer)
-
-    # basic classes
-    bpy.utils.unregister_class(XPlane2BlenderVersion)
-    bpy.utils.unregister_class(XPlaneAxisDetentRange)
-    bpy.utils.unregister_class(XPlaneCondition)
-    bpy.utils.unregister_class(XPlaneCustomAttribute)
-    bpy.utils.unregister_class(XPlaneDataref)
-    bpy.utils.unregister_class(XPlaneEmitter)
-    bpy.utils.unregister_class(XPlaneEmpty)
-    bpy.utils.unregister_class(XPlaneExportPathDirective)
-    bpy.utils.unregister_class(ListItemCommand)
-    bpy.utils.unregister_class(XPlaneCommandSearchWindow)
-    bpy.utils.unregister_class(ListItemDataref)
-    bpy.utils.unregister_class(XPlaneDatarefSearchWindow)
-    bpy.utils.unregister_class(XPlaneManipulatorSettings)
-    bpy.utils.unregister_class(XPlaneCockpitRegion)
-    bpy.utils.unregister_class(XPlaneLOD)
+    for c in _classes:
+        bpy.utils.unregister_class(c)
