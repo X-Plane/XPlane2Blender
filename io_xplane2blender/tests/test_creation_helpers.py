@@ -1,19 +1,22 @@
 import math
 import os.path
-import typing
 from collections import namedtuple
+
+import typing
 from typing import *
 
 import bpy
-
+import mathutils
 from bpy.types import Armature, Bone, ImageTexture, Material, Object, PoseBone
-from io_xplane2blender import xplane_constants
-from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW, ANIM_TYPE_TRANSFORM
-from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
-from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
-from mathutils import Vector, Euler, Quaternion
-from io_xplane2blender.xplane_constants import ANIM_TYPE_SHOW,ANIM_TYPE_HIDE
+from mathutils import Euler, Quaternion, Vector
+
 import io_xplane2blender
+from io_xplane2blender import xplane_constants
+from io_xplane2blender.xplane_constants import (ANIM_TYPE_HIDE, ANIM_TYPE_SHOW,
+                                                ANIM_TYPE_TRANSFORM)
+from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
+from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
+
 '''
 test_creation_tools
 
@@ -83,6 +86,7 @@ class DatablockInfo():
         datablock_type: Must be 'MESH', 'ARMATURE', 'EMPTY', or 'LAMP'
         default for layers will be layer 1
         '''
+        assert datablock_type in {"MESH", "ARMATURE", "EMPTY", "LAMP"}
         self.datablock_type = datablock_type
         self.name = name
         self.layers = layers
@@ -90,10 +94,15 @@ class DatablockInfo():
         self.location = location
         self.rotation_mode = rotation_mode
         if rotation is None:
-            if set(self.rotation_mode) == {'X','Y','Z'}:
-                self.rotation = Vector()
-            elif self.rotation_mode == "AXIS_ANGLE":
+            if self.rotation_mode == "AXIS_ANGLE":
                 self.rotation = (0.0,Vector((0,0,0,0)))
+            elif self.rotation_mode == "QUATERNION":
+                self.rotation = Quaternion((0.0, 0.0, 0.0, 0.0))
+            elif set(self.rotation_mode) == {'X','Y','Z'}:
+                self.rotation = mathutils.Euler()
+        else:
+            self.rotation = rotation
+
         self.scale = scale
 
 class KeyframeInfo():
@@ -388,6 +397,30 @@ def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
         set_parent(ob, info.parent_info)
 
     return ob
+
+def create_datablock_lamp(info: DatablockInfo,
+                          blender_light_type: str="POINT")->bpy.types.Object:
+    assert info.datablock_type == "LAMP"
+    assert blender_light_type in {"POINT", "SUN", "SPOT", "HEMI", "AREA"}
+    lamp = bpy.data.lamps.new(info.name, blender_light_type)
+    ob = bpy.data.objects.new(info.name, lamp)
+    bpy.context.scene.objects.link(ob)
+    print(ob)
+    print(type(ob))
+    if info.parent_info:
+        set_parent(ob, info.parent_info)
+    ob.rotation_mode = info.rotation_mode
+    if info.rotation_mode == "AXIS_ANGLE":
+        ob.rotation_axis_angle = info.rotation
+    elif info.rotation_mode == "QUATERNION":
+        ob.rotation_quaternion = info.rotation
+    else:
+        ob.rotation_euler = info.rotation
+
+    ob.scale = info.scale
+
+    return ob
+
 
 def create_datablock_mesh(info:DatablockInfo,
                 primitive_shape="cube", #Must be "cube" or "cylinder"
@@ -764,4 +797,3 @@ def create_initial_test_setup():
     unit_test_overview.write(header_str + '\n\n')
 
     #bpy.ops.console.insert(text="bpy.ops.export.xplane_obj()")
-

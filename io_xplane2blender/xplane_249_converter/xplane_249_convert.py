@@ -19,6 +19,7 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_dataref_decoder,
                                                     xplane_249_helpers,
                                                     xplane_249_layer_props_converter,
+                                                    xplane_249_light_converter,
                                                     xplane_249_manip_decoder,
                                                     xplane_249_workflow_converter)
 
@@ -84,6 +85,14 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
             converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
             #if converted_manipulator:
                 #print("root hint: COCKPIT")
+
+        logger.info("", "raw")
+        logger.info("Converting Any Lights In Scene '{}'\n"
+                    "--------------------------------------------------".format(scene.name))
+        for root in new_roots:
+            #ALSO! This breaks if there are no new roots becaues of SKIP. SKIP should only affect workflow
+            xplane_249_light_converter.convert_lights(scene, workflow_type, root)
+
 
         logger.info("", "raw")
         logger.warn("NEXT-STEPS: Check the Export Type of {}".format(','.join([root.name for root in new_roots])))
