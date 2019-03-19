@@ -24,8 +24,7 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
     print([o.name for o in search_objs])
     def isLight(obj: bpy.types.Object):
         try:
-            if (obj.type == "LAMP"
-                and obj.data.type == "POINT"):
+            if (obj.type == "LAMP"):
                 return True
             if (obj.type == "MESH"
                 and obj.material_slots
@@ -35,8 +34,13 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
             return False
 
     for search_obj in filter(isLight, search_objs):
+        if search_obj.type == "LAMP" and search_obj.data.type != "POINT":
+            logger.warn("Modern XPlane2Blender exports all lamp including {}s\n"
+                        "NEXT STEPS: Move {} to a non-exporting layer or root object, or use another method to prevent export"
+                        .format(search_obj.data.type.title(), search_obj.name))
         simple_name = (search_obj.name[:search_obj.name.index('.')]
                        if '.' in search_obj.name else search_obj.name).strip().casefold()
+        logger.info("Attempting to convert {}".format(simple_name))
         if search_obj.type == "MESH":
             print("CUSTOM LAMP!")
             for vert in search_obj.data.vertices:
@@ -84,7 +88,6 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                             "NEXT STEPS: Consider using a modern particle emitter instead")
             else: # named/param light
                 props = {p.name.casefold(): p.value for p in light.game.properties}
-                print("items",props.items())
                 light.data.xplane.name = props["name"].strip() if "name" in props else simple_name
                 params = props["params"].strip() if "params" in props else ""
                 if params:
@@ -94,3 +97,4 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                     light.data.xplane.type = xplane_constants.LIGHT_NAMED
 
                 light.data.type = "SPOT" if simple_name.endswith("_sp") else "POINT"
+            logger.info("Set {}'s X-Plane Light Type to {}".format(simple_name, light.data.xplane.type.title()))

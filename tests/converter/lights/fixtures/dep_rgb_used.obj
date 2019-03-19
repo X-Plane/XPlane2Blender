@@ -1,0 +1,19 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	2	0
+
+VLIGHT	0	3	0	-1	0	0
+VLIGHT	1	3	0	1	0	1
+
+# 0 Empty: OBJdep_rgb_used
+# EMPTY: OBJdep_rgb_used	weight: 0
+# 1 Lamp: flash
+# LAMP: flash	weight: 10000
+LIGHTS	0 1
+# 1 Lamp: lamp
+# LAMP: lamp	weight: 10000
+LIGHTS	1 1
+
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+48.NO_BUILD_NUMBR

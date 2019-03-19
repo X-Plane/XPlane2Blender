@@ -1,0 +1,23 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	3	0
+
+VLIGHT	1	3	0	9.8	9.8	9.8
+VLIGHT	0	3	0	9.9	9.9	9.9
+VLIGHT	2	3	0	9.7	9.7	9.7
+
+# 0 Empty: OBJdep_rgb_ignore
+# EMPTY: OBJdep_rgb_ignore	weight: 0
+# 1 Lamp: my_strobe_light
+# LAMP: my_strobe_light	weight: 10000
+LIGHTS	0 1
+# 1 Lamp: PuLsE
+# LAMP: PuLsE	weight: 10000
+LIGHTS	1 1
+# 1 Lamp: traffic
+# LAMP: traffic	weight: 10000
+LIGHTS	2 1
+
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+48.NO_BUILD_NUMBR

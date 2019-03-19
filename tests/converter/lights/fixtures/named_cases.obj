@@ -1,0 +1,22 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 Empty: OBJnamed_cases
+# EMPTY: OBJnamed_cases	weight: 0
+# 1 Lamp: custom_smoke_black
+# LAMP: custom_smoke_black	weight: 10000
+LIGHT_NAMED	custom_smoke_black 3 3 0
+# 1 Lamp: HasNameEmptyParams
+# LAMP: HasNameEmptyParams	weight: 10000
+LIGHT_NAMED	airplane_nav_tail 1 3 0
+# 1 Lamp: NamedFromProp
+# LAMP: NamedFromProp	weight: 10000
+LIGHT_NAMED	airplane_nav_right 0 3 0
+# 1 Lamp: smoke_white_from_prop
+# LAMP: smoke_white_from_prop	weight: 10000
+LIGHT_NAMED	smoke_white 4 3 0
+
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+48.NO_BUILD_NUMBR

@@ -1,0 +1,16 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 Empty: OBJparam_cases
+# EMPTY: OBJparam_cases	weight: 0
+# 1 Lamp: NameParamFromProps
+# LAMP: NameParamFromProps	weight: 10000
+LIGHT_PARAM	spot_params_bb 0 3 0 1 1 1 1.0 2.121 0 2.121 -2
+# 1 Lamp: spot_params_sp
+# LAMP: spot_params_sp	weight: 10000
+LIGHT_PARAM	spot_params_sp 1 3 0 0 .2 1    20 30   0 -1  0   1
+
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+48.NO_BUILD_NUMBR
