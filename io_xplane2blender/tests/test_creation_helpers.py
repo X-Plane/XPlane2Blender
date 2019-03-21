@@ -375,7 +375,7 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
 
     return arm
 
-def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
+def create_datablock_empty(info:DatablockInfo, special_type: str=xplane_constants.EMPTY_USAGE_NONE)->bpy.types.Object:
     assert info.datablock_type == "EMPTY"
     ob = bpy.data.objects.new(info.name, None)
     bpy.context.scene.objects.link(ob)
@@ -396,6 +396,7 @@ def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
     if info.parent_info:
         set_parent(ob, info.parent_info)
 
+    ob.xplane.special_empty_props.special_type = special_type
     return ob
 
 def create_datablock_lamp(info: DatablockInfo,
