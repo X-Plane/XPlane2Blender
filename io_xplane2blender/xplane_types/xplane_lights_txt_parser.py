@@ -70,10 +70,7 @@ def _get_sw_light_callback(dref):
         "sim/graphics/animation/lights/airplane_beacon_light_dir":     _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_generic_light":        _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_generic_light_flash":  _do_rgb_to_dxyz_w_calc,
-        "sim/graphics/animation/lights/airplane_landing_light":        _do_rgb_to_dxyz_w_calc,
-        "sim/graphics/animation/lights/airplane_landing_light_flash":  _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_navigation_light_dir": _do_rgb_to_dxyz_w_calc,
-        "sim/graphics/animation/lights/airplane_strobe_light_dir":     _do_rgb_to_dxyz_w_calc,
 
         "sim/graphics/animation/lights/airport_beacon":                _do_rgba_to_dxyz_w, #As of 11/14/2017, all lights with this are commented out
         "sim/graphics/animation/lights/airport_beacon_flash":          _do_rgba_to_dxyz_w, #As of 11/14/2017, none of this dataref appears in lights.txt
