@@ -9,12 +9,33 @@ from io_xplane2blender.xplane_249_converter.xplane_249_constants import Workflow
 
 __dirname__ = os.path.dirname(__file__)
 
-#def filterLines(line):
-    #return isinstance(line[0],str) and\
+def filterLines(line):
+    return isinstance(line[0],str) and\
+            ("VLIGHT" in line[0] and
+             "LIGHTS" in line[0])
 
 class TestConvertLights(XPlaneTestCase):
+    def test_dep_rgb_ignore(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        filename = inspect.stack()[0].function
+
+        self.assertRootObjectExportEqualsFixture(
+                "OBJdep_rgb_ignore", os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+                filename,
+                filterLines
+            )
+
+    def test_dep_rgb_used(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        filename = inspect.stack()[0].function
+
+        self.assertRootObjectExportEqualsFixture(
+                "OBJdep_rgb_used", os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+                filename,
+                filterLines
+            )
+
     def test_magnet_cases(self):
-        from io_xplane2blender.xplane_types import xplane_light
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         def test_magnet(ob:bpy.types.Object, is_xpad:bool, is_flashlight:bool):
             self.assertEqual(ob.type, "EMPTY")
@@ -28,6 +49,26 @@ class TestConvertLights(XPlaneTestCase):
         test_magnet(bpy.data.objects["magnet_empty_params"], is_xpad=False, is_flashlight=False)
         test_magnet(bpy.data.objects["magnet_strip_spaces"], is_xpad=True,  is_flashlight=False)
         self.assertEqual(bpy.data.objects["not_a_magnet"].type, "LAMP")
+
+    def test_named_cases(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        filename = inspect.stack()[0].function
+
+        self.assertRootObjectExportEqualsFixture(
+                "OBJnamed_cases", os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+                filename,
+                filterLines
+            )
+
+    def test_param_cases(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        filename = inspect.stack()[0].function
+
+        self.assertRootObjectExportEqualsFixture(
+                "OBJparam_cases", os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+                filename,
+                filterLines
+            )
         #access object using bpy.data.objects
         # use constructor for xplane_type, use methods
         #out = self.exportLayer(0)
@@ -40,7 +81,7 @@ class TestConvertLights(XPlaneTestCase):
         #filename = inspect.stack()[0].function
 
         #self.assertLayerExportEqualsFixture(
-        #    0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+        #    0, os.path.join(__dirname__, "fixtures", filename + ".obj"),
         #    filename,
         #    filterLines
         #)

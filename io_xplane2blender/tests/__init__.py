@@ -212,12 +212,17 @@ class XPlaneTestCase(unittest.TestCase):
         out = self.exportLayer(layer, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
-    def assertRootObjectExportEqualsFixture(self,
-            root_object:Union[bpy.types.Object, str],
+    def assertRootObjectExportEqualsFixture(
+            self,
+            root_object: Union[bpy.types.Object, str],
             fixturePath: str = None,
             tmpFilename: Optional[str] = None,
-            filterCallback: Callable[[List[Union[float, str]]], bool] = None,
+            filterCallback: Optional[Callable[[List[Union[float, str]]], bool]] = None,
             floatTolerance: Optional[float] = None):
+        """
+        Tests that the export of the root object given equals some (optionally filtered) fixture.
+        root_object can be the name of a root object in bpy.data.objects or the object itself
+        """
         out = self.exportRootObject(root_object, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
