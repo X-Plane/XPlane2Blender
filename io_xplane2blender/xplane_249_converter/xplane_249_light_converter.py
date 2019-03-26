@@ -38,8 +38,9 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
         simple_name = (search_obj.name[:search_obj.name.index('.')]
                        if '.' in search_obj.name else search_obj.name).strip().casefold()
         logger.info("Attempting to convert {}".format(simple_name))
-        if search_obj.type == "MESH":
+        if search_obj.type == "MESH" and search_obj.data.vertices:
             print("CUSTOM LAMP!")
+            clights = []
             for vert in search_obj.data.vertices:
                 #TODO NEED R,G,B, S1,T1, S2, T2 and custom dataref
                 if search_obj.rotation_mode == "AXIS_ANGLE":
@@ -63,11 +64,32 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                         rotation=rotation
                     ),
                     blender_light_type="SPOT" if simple_name.endswith("_sp") else "POINT"
-                )
-                clight.xplane.type = xplane_constants.LIGHT_CUSTOM
-                logger.warn("Custom Light '{}' created from a vertex of {}\n"
-                            "NEXT STEPS: Consider deleting {} as modern XPlane2Blender won't use it"
-                            .format(clight.name, search_obj, search_obj))
+                ) # type: bpy.types.Object
+                clights.append(clight)
+                clight.data.xplane.type = xplane_constants.LIGHT_CUSTOM
+                material = search_obj.material_slots[0].material #Guarantees from isLight
+                def find_color(color:str):
+                    assert color in {"R", "G", "B", "A"}, "Color must be R, G, B, or A"
+                    try:
+                        if clight.game.properties[color].type in {"FLOAT", "INT"}:
+                            return float(clight.game.properties[color].value)
+                    except KeyError:
+                        if color == "A":
+                            return material.alpha
+                        else:
+                            return material.diffuse_color[["R", "G", "B"].index(color)]
+
+                clight.data.color = (find_color("R"), find_color("B"), find_color("G"))
+                clight.data.energy = (find_color("A"))
+                clight.data.xplane.size = material.halo.size
+
+                tex = material.texture_slots[0].texture
+                clight.data.xplane.uv = (tex.crop_min_x, tex.crop_min_y, tex.crop_max_x, tex.crop_max_y)
+                #clight.xplane.dataref = #TODO
+
+            logger.warn("Custom Light{} {} created from the vertices of {}\n"
+                        "NEXT STEPS: Consider deleting {} as modern XPlane2Blender won't use it"
+                        .format("s" if clights else "", [clight.name for clight in clights], search_obj, search_obj))
         else:
             lamp = search_obj
             if 'pulse' in simple_name:
