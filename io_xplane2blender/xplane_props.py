@@ -1889,7 +1889,8 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
                 (LIGHT_TRAFFIC,  "Traffic"  + " (deprecated)",  "Traffic"  + " (deprecated)"),
                 (LIGHT_NAMED,    "Named",                       "Named"),
                 (LIGHT_CUSTOM,   "Custom",                      "Custom"),
-                (LIGHT_PARAM,    "Param",                       "Param")
+                (LIGHT_PARAM,    "Param",                       "Param"),
+                (LIGHT_NON_EXPORTING, "Non-Exporting", "Light will not be in the OBJ"),
         ]
     )
 

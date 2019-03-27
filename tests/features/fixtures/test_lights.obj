@@ -11,6 +11,7 @@ VLIGHT	3	3	-3	9.9	9.9	9.9
 VLIGHT	1	1	-1	0	1	0
 
 # 0 ROOT
+# 1 Lamp: 09_Lamp_non_exporting
 # 1 Lamp: 02_Lamp_flash
 # LAMP: 02_Lamp_flash	weight: 10000
 LIGHTS	0 1
@@ -36,4 +37,4 @@ LIGHT_PARAM	spot_params_sp 8 8 -8 0 .2 1    20 30   0 -1  0   1
 # LAMP: 01_Lamp_default	weight: 10000
 LIGHTS	4 1
 
-# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+41.NO_BUILD_NUMBR
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+49.NO_BUILD_NUMBR

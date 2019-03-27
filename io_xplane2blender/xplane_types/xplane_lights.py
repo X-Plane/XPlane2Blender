@@ -20,7 +20,11 @@ class XPlaneLights():
 
     def append(self, light):
         # we only write vlights here, all other lights go into the commands table directly
-        if  light.lightType not in (LIGHT_NAMED, LIGHT_PARAM, LIGHT_CUSTOM):
+        if  light.lightType in {LIGHT_DEFAULT,
+                                LIGHT_FLASHING,
+                                LIGHT_PULSING,
+                                LIGHT_STROBE,
+                                LIGHT_TRAFFIC}:
             self.items.append(light)
             light.indices[0] = self.globalindex
 
