@@ -1,3 +1,39 @@
+"""
+This file controls parsing the lights.txt file
+and making light name, data, and overload information available.
+
+API Rules:
+1. The lights.txt file is only ever read and parsed once
+2. After reading the file, we only have valid data
+3. All data is transformed to it's correct state ("float"->float) before entering _parsed_lights
+4. An unknown light name returns a None for an overload
+5. During software autocorrect, an unknown dataref or irrelevant dataref is a noop correction
+
+The API is used in 3 steps:
+1. Read the lights.txt file, produce the master immutable dictionary (_parsed_lights)
+2. Clients can get overload information out, and use it
+3. Clients can fill in data for parameter lights and have the parser bake the information in
+3a. xplane_lights_txt_parser can automatically apply the equivalent of what X-Plane will do to the light,
+which is necessary for the Autocorrecting-to-match-WYSIWYG feature
+
+The API is not particularly error tolerant, your lights.txt file must be valid or else.
+"""
+
+
+"""
+This API was really developed for one purpose: Support lights WYSIWYG.
+It was also developed while trying very hard to understand the very esoteric enigma known
+as lights.txt. Much like lights.txt, it is thought out just enough
+If future code wants to do more with understanding and using the contents of lights.txt,
+I highly recommend a refactor, especially one that doesn't involve making 3 POD classes,
+making dictionaries out of lists, and only partially filling in data until later on.
+
+Its xplane_lights_txt_parser, not baker or autocorrector
+
+-Ted, 3/27/2019
+"""
+
+
 import collections
 import copy
 import functools
@@ -9,63 +45,56 @@ from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
 from mathutils import Vector
 from numbers import Number
-from typing import List
+from typing import cast, Any, Dict, Optional, List, Tuple, Union
 
-
-'''
-API Rules:
-1. After reading the file, we only have valid data
-2. All data is transformed to it's correct state ("float"->float) before entering _parsed_lights
-3. If we don't know a light name, it can't be used by this API
-4. If we don't know a dataref, it is a noop
-'''
-def _get_rgb(prototype,lhs):
+DataSourceType = List[Union[float, str]]
+def _get_rgb(prototype: Tuple[str], lhs: DataSourceType):
     return lhs[prototype.index("R"):prototype.index("B") + 1]
 
-def _set_rgb(prototype,lhs,value):
+def _set_rgb(prototype: Tuple[str], lhs: DataSourceType, value:List[float]):
     lhs[prototype.index("R"):prototype.index("B")+1] = value
 
-def _get_a(prototype,lhs):
+def _get_a(prototype: Tuple[str], lhs: DataSourceType):
     return lhs[prototype.index("A")]
 
-def _set_a(prototype,lhs,value):
+def _set_a(prototype: Tuple[str], lhs: DataSourceType, value: float):
     lhs[prototype.index("A")] = value
 
-def _get_xyz(prototype,lhs):
+def _get_xyz(prototype: Tuple[str], lhs: DataSourceType):
     return lhs[prototype.index("DX"):prototype.index("DZ")+1]
 
-def _set_xyz(prototype,lhs,value):
+def _set_xyz(prototype: Tuple[str], lhs:DataSourceType, value:List[float]):
     lhs[prototype.index("DX"):prototype.index("DZ")+1] = value
 
-def _get_width(prototype,lhs,value):
+def _get_width(prototype: Tuple[str], lhs: DataSourceType):
     return lhs[prototype.index("WIDTH")]
 
-def _set_width(prototype,lhs,value):
+def _set_width(prototype: Tuple[str], lhs, value: float):
     lhs[prototype.index("WIDTH")] = value
 
-def _do_rgba_to_dxyz_w(prototype,data):
+def _do_rgba_to_dxyz_w(prototype: Tuple[str], data: DataSourceType):
     r = data
     _set_xyz(prototype, data, _get_rgb(prototype, data))
-    _set_width(prototype, data, r[prototype.index("A")])
+    _set_width(prototype, data, cast(float, r[prototype.index("A")]))
     _set_rgb(prototype,data,[1,1,1])
     _set_a(prototype,data,1)
 
-def _do_rgb_to_dxyz_w_calc(prototype,data):
+def _do_rgb_to_dxyz_w_calc(prototype: Tuple[str], data: DataSourceType):
     r = data
-    _set_xyz(prototype, r, r[prototype.index("R"):prototype.index("B")])
+    _set_xyz(prototype, r, cast(List[float], r[prototype.index("R"):prototype.index("B")]))
     dir_vec = Vector((_get_xyz(prototype,r)))
     _set_width(prototype, r, 1 - dir_vec.magnitude)
     _set_xyz(prototype, r, dir_vec.normalized())
     _set_rgb(prototype, r, [1,1,1])
 
-def _do_force_omni(prototype,data):
+def _do_force_omni(prototype: Tuple[str], data: List[str]):
     r = data
     _set_width(prototype,r,1)
 
-def _do_noop(prototype,data):
+def _do_noop(prototype: Tuple[str], data: DataSourceType):
     pass
 
-def _get_sw_light_callback(dref):
+def _get_sw_light_callback(dref: str):
     drefs = {
         "sim/graphics/animation/lights/airplane_beacon_light_dir":     _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_generic_light":        _do_rgb_to_dxyz_w_calc,
@@ -100,17 +129,18 @@ def _get_sw_light_callback(dref):
         return _do_noop
 
 # The parsed lights dictionary, where the key is the light name (str)
-# and the value is a ParsedOverload
-_parsed_lights = None
+# and the value is a ParsedLightOverload
+_parsed_lights = {} # type: Dict[str, "ParsedLightOverload"]
 
 class ParsedLightParamDef():
-    def __init__(self,light_prototype):
+    def __init__(self, light_prototype: List[str])->None:
         self.prototype = tuple(light_prototype)
         #To be filled in later during xplane_light's collect method
-        self.user_values = [None]*len(self.prototype)
+        self.user_values = [None]*len(self.prototype) # type: Any
+        # But also, List[DataSourceType]]
 
-    def set_user_values(self,user_values):
-        def isfloat(number_str):
+    def set_user_values(self, user_values: DataSourceType):
+        def isfloat(number_str: Union[float, str]):
             try:
                 val = float(number_str)
             except:
@@ -118,7 +148,7 @@ class ParsedLightParamDef():
             else:
                 return True
         assert len(user_values) == len(self.user_values)
-        self.user_values = [float(v) if isfloat(v) else v for v in user_values]
+        self.user_values = cast(DataSourceType, [float(v) if isfloat(v) else v for v in user_values])
 
 
 class ParsedDataSource():
@@ -141,9 +171,9 @@ class ParsedDataSource():
 "SPILL_SW":     ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                           "DREF")
 }
 
-    def __init__(self,light_type,light_data):
+    def __init__(self, light_type: str, light_data: List[str])->None:
         self.type = light_type
-        assert isinstance(light_data,list)
+        assert isinstance(light_data, list)
         def isfloat(number_str):
             try:
                 val = float(number_str)
@@ -152,23 +182,24 @@ class ParsedDataSource():
             else:
                 return True
 
-        self.data = [float(d) if isfloat(d) else d for d in light_data]
+        self.data = [float(d) if isfloat(d) else d for d in light_data] # type: DataSourceType
 
     def get_prototype(self):
-            return self.TYPE_PROTOTYPES[self.type]
+        return self.TYPE_PROTOTYPES[self.type]
 
 
 class ParsedLightOverload():
-    def __init__(self,light_name):
-        self.light_name = light_name
-        self.light_param_def = None
-        self.data_source = None
+    def __init__(self, light_name: str)->None:
+        self.light_name = light_name # type: str
+        self.light_param_def = None # type: Optional[ParsedLightParamDef]
+        self.data_source = None # type: Optional[ParsedDataSource]
 
     #query must be a valid number or one of the column names
-    def get(self,query):
-        if isinstance(query,Number):
+    def get(self, query: Union[int, str])->Optional[Union[float, str]]:
+        assert self.data_source is not None, "Cannot use get if data_source is still None"
+        if isinstance(query, int):
             return self.data_source.data[query]
-        elif isinstance(query,str):
+        elif isinstance(query, str):
             keys = self.data_source.get_prototype()
             values = self.data_source.data
             try:
@@ -179,7 +210,8 @@ class ParsedLightOverload():
         else:
             raise TypeError
 
-    def set(self,query,value):
+    def set(self, query: Union[float, str], value: Union[float, str]):
+        assert self.data_source is not None, "Cannot use set if data_source is still None"
         if isinstance(query,Number):
             self.data_source.data[query] = value
         elif isinstance(query,str):
@@ -192,13 +224,16 @@ class ParsedLightOverload():
         else:
             raise TypeError
 
-    def is_param_light(self):
+    def is_param_light(self)->bool:
         return self.light_param_def is not None
-    
-    def apply_sw_light_callback(self):
-        _get_sw_light_callback(self.get("DREF"))(self.data_source.get_prototype(),self.data_source.data)
 
-    def bake_user_values(self,user_values=None):
+    def apply_sw_light_callback(self)->None:
+        assert self.data_source is not None, "Cannot apply_sw_light_callback if data_source is still None"
+        cb = _get_sw_light_callback(cast(str, self.get("DREF")))
+        cb(self.data_source.get_prototype(),self.data_source.data)
+
+    def bake_user_values(self, user_values: Optional[List[Union[float,str]]]=None):
+        assert self.data_source is not None, "Cannot bake_user_values if data_source is still None"
         if self.light_param_def is not None:
             assert user_values is not None
             self.light_param_def.set_user_values(user_values)
@@ -213,7 +248,8 @@ class ParsedLightOverload():
                 self.apply_sw_light_callback()
 
 
-def get_overload(light_name):
+def get_overload(light_name: str)->Optional[ParsedLightOverload]:
+    """Get, if possible, the most trusted overload for a given light name"""
     try:
         return copy.deepcopy(_parsed_lights[light_name])
     except:
@@ -224,7 +260,7 @@ def get_overload(light_name):
 # light_type_str<str> - A supported light types, such as "BILLBOARD_HW" or "LIGHT_PARAM_DEF
 # light_name<str>     - The name of the light, found in lights.txt
 # light_data<list>    - The data of the light after the name.
-def _add_light(light_type_str:str,light_name:str,light_data:List[str]):
+def _add_light(light_type_str:str, light_name:str, light_data:List[str]):
     if light_name not in _parsed_lights:
         _parsed_lights[light_name] = ParsedLightOverload(light_name)
 
@@ -243,7 +279,7 @@ def _add_light(light_type_str:str,light_name:str,light_data:List[str]):
                     "SPILL_HW_DIR"] #Most trustworthy
 
         if _parsed_lights[light_name].data_source is not None:
-            existing_trust = rankings.index(_parsed_lights[light_name].data_source.type)
+            existing_trust = rankings.index(cast(ParsedDataSource, _parsed_lights[light_name].data_source).type)
         else:
             existing_trust = -1
         new_trust = rankings.index(light_type_str)
@@ -258,9 +294,9 @@ def _add_light(light_type_str:str,light_name:str,light_data:List[str]):
 #
 # Returns:
 #    True when file is parsed, False when there was an error or exception
-def parse_lights_file():
+def parse_lights_file()->bool:
     global _parsed_lights
-    if _parsed_lights is not None:
+    if _parsed_lights:
         return True
 
     LIGHTS_FILEPATH = os.path.join(xplane_constants.ADDON_RESOURCES_FOLDER,"lights.txt")
@@ -275,7 +311,7 @@ def parse_lights_file():
         if len(lines) == 0:
             logger.error("lights.txt file is empty")
             raise Exception
-        
+
         for line in lines:
             line = line.strip()
 
@@ -291,7 +327,7 @@ def parse_lights_file():
                 light_data = light_str_split[2:]
                 _add_light(light_type,light_name,light_data)
     except:
-        _parsed_lights = None
+        _parsed_lights = {}
     finally:
         filename.close()
 
