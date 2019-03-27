@@ -14,7 +14,7 @@ from xplane_helpers import logger
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_249_converter import xplane_249_constants, xplane_249_helpers
 
-def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object):
+def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->None:
     if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
         search_objs = scene.objects
     elif workflow_type == xplane_249_constants.WorkflowType.BULK:
@@ -24,7 +24,7 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
 
     def isLight(obj: bpy.types.Object):
         try:
-            if (obj.type == "LAMP" and obj.data.type == "POINT"):
+            if (obj.type == "LAMP"):
                 return True
             if (obj.type == "MESH"
                 and obj.material_slots
@@ -33,16 +33,20 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
         except (AttributeError, IndexError) as e: # material is None, or material_slots is empty
             return False
 
-    #TODO: Find all non-point lights, convert to Non-Exporting Lights
     for search_obj in filter(isLight, search_objs):
+        logger.info("Attempting to convert {}".format(search_obj.name))
+        if search_obj.data.type != "POINT":
+            search_obj.data.xplane.type = xplane_constants.LIGHT_NON_EXPORTING
+            # No autospot correction because we don't know their intent for the light
+            continue
+
         simple_name = (search_obj.name[:search_obj.name.index('.')]
                        if '.' in search_obj.name else search_obj.name).strip().casefold()
-        logger.info("Attempting to convert {}".format(simple_name))
         if search_obj.type == "MESH" and search_obj.data.vertices:
             print("CUSTOM LAMP!")
             clights = []
             for vert in search_obj.data.vertices:
-                #TODO NEED R,G,B, S1,T1, S2, T2 and custom dataref
+                #TODO: custom dataref
                 if search_obj.rotation_mode == "AXIS_ANGLE":
                     rotation = search_obj.rotation_axis_angle
                 elif search_obj.rotation_mode == "QUATERNION":
@@ -105,6 +109,8 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
             elif simple_name in {'smoke_black', 'smoke_white'}:
                 logger.warn("Smoke type lights are not supported in XPlane2Blender\n"
                             "NEXT STEPS: Consider using a modern particle emitter instead")
+                lamp.data.xplane.type = xplane_constants.LIGHT_NON_EXPORTING
+                continue
             else: # named/param light
                 props = {p.name.casefold(): p.value for p in lamp.game.properties}
                 lamp.data.xplane.name = props["name"].strip() if "name" in props else simple_name
@@ -154,9 +160,9 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                     else:
                         lamp.data.xplane.type = xplane_constants.LIGHT_NAMED
 
-                    #TODO: Auto-Spot Correction
-                    lamp.data.type = "SPOT" if simple_name.endswith("_sp") else "POINT"
             try:
+                #TODO: Auto-Spot Correction
+                lamp.data.type = "SPOT" if simple_name.endswith("_sp") else "POINT"
                 logger.info("Set {}'s X-Plane Light Type to {}".format(simple_name, lamp.data.xplane.type.title()))
             except ReferenceError: #lamp was a magnet, got removed
                 pass

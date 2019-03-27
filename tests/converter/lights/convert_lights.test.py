@@ -3,7 +3,7 @@ import os
 import sys
 
 import bpy
-from io_xplane2blender import xplane_config
+from io_xplane2blender import xplane_config, xplane_constants
 from io_xplane2blender.tests import *
 from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
 
@@ -34,6 +34,28 @@ class TestConvertLights(XPlaneTestCase):
                 filename,
                 filterLines
             )
+
+    def test_ignored_cases(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+
+        sun_autospot_real_name_ignored = bpy.data.objects["airplane_taxi_sp"]
+        self.assertEqual(sun_autospot_real_name_ignored.data.type, "SUN")
+        self.assertEqual(sun_autospot_real_name_ignored.data.xplane.type, xplane_constants.LIGHT_NON_EXPORTING)
+
+        hemi_ignored = bpy.data.objects["my_named_hemi"]
+        self.assertEqual(hemi_ignored.data.type, "HEMI")
+        self.assertEqual(hemi_ignored.data.xplane.type, xplane_constants.LIGHT_NON_EXPORTING)
+
+        pulse_spot_ignored = bpy.data.objects["pulse"]
+
+        self.assertEqual(pulse_spot_ignored.data.type, "SPOT")
+        self.assertEqual(pulse_spot_ignored.data.xplane.type, xplane_constants.LIGHT_NON_EXPORTING)
+
+        smoke_black = bpy.data.objects["smoke_black"]
+        self.assertEqual(smoke_black.data.xplane.type, xplane_constants.LIGHT_NON_EXPORTING)
+
+        smoke_white = bpy.data.objects["smoke_white"]
+        self.assertEqual(smoke_white.data.xplane.type, xplane_constants.LIGHT_NON_EXPORTING)
 
     def test_magnet_cases(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
