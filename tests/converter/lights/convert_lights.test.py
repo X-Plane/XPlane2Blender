@@ -91,21 +91,11 @@ class TestConvertLights(XPlaneTestCase):
                 filename,
                 filterLines
             )
-        #access object using bpy.data.objects
-        # use constructor for xplane_type, use methods
-        #out = self.exportLayer(0)
 
-        #self.assertLoggerErrors(1)
+    def test_could_auto_spot_cases(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        # One day we'll be able to check specific info messages in the log
+        pass
 
-        # Note, I would recommend layout out your layers, tests, and names so they are all in order.
-        # It makes everything much easier
-        #
-        #filename = inspect.stack()[0].function
-
-        #self.assertLayerExportEqualsFixture(
-        #    0, os.path.join(__dirname__, "fixtures", filename + ".obj"),
-        #    filename,
-        #    filterLines
-        #)
 
 runTestCases([TestConvertLights])

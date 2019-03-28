@@ -95,4 +95,4 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
 
 
         logger.info("", "raw")
-        logger.warn("NEXT-STEPS: Check the Export Type of {}".format(','.join([root.name for root in new_roots])))
+        logger.warn("NEXT-STEPS: Check the Export Type of {}".format(", ".join([root.name for root in new_roots])))
