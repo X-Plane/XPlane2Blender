@@ -1,0 +1,13 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 Empty: OBJRGBAFromProps
+# EMPTY: OBJRGBAFromProps	weight: 0
+# 1 Lamp: mesh_rgba_from_props
+# LAMP: mesh_rgba_from_props	weight: 10000
+LIGHT_CUSTOM	0 0 0 0.25 0.5 0.75 0.89999998 0.5 0 0 1 1 none
+
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+49.NO_BUILD_NUMBR

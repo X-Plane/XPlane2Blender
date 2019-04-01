@@ -74,7 +74,7 @@ class XPlaneObject():
         self.name = blenderObject.name # type: str
         self.datarefs = {} # type: Dict[str,str]
         self.bakeMatrix = None
-        
+
         self.attributes = XPlaneAttributes()
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()

@@ -34,7 +34,7 @@ FrameNumber = int # always >= 1, the Blender 2.49 frame counter starts at 1
 
 class LookupResult():
     __slots__ = ['record', 'sname_success', 'tailname_success']
-    def __init__(self, record:LookupRecord=None, sname_success:bool=False, tailname_success:bool=False):
+    def __init__(self, record:LookupRecord=None, sname_success:bool=False, tailname_success:bool=False)->None:
         self.record =             record
         self.sname_success =      sname_success
         self.tailname_success =   tailname_success
@@ -63,7 +63,7 @@ class ParsedGameAnimValueProp():
                  show_hide_v1: Optional[float] = None,
                  show_hide_v2: Optional[float] = None,
                  value: Optional[float] = None
-                ):
+                )->None:
         assert path, "path cannot be None"
         assert array_idx is not None, "array_idx cannot be None for path '{}'".format(path)
         assert anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE, ANIM_TYPE_TRANSFORM}, "anim_type cannot be None or '', is {}".format(anim_type)
@@ -280,6 +280,8 @@ def _do_dict_lookup(name: str)->Optional[LookupRecord]:
         dataref_full = _249_datarefs[name][0]
         array_size = _249_datarefs[name][1]
         return (dataref_full, array_size)
+    else:
+        return None
 
 
 def get_known_dataref_from_shortname(dataref_short:SName)->Optional[LookupRecord]:

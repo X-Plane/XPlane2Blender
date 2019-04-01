@@ -275,7 +275,7 @@ class ParentInfo():
     def __init__(self,
             parent:Optional[bpy.types.Object]=None,
             parent_type:str=_OBJECT, #Must be "ARMATURE", "BONE", or "OBJECT"
-            parent_bone:Optional[str]=None):
+            parent_bone:Optional[str]=None)->None:
         assert parent_type == _ARMATURE or parent_type == _BONE or parent_type == _OBJECT
         if parent:
             assert isinstance(parent,bpy.types.Object)
@@ -406,10 +406,9 @@ def create_datablock_lamp(info: DatablockInfo,
     lamp = bpy.data.lamps.new(info.name, blender_light_type)
     ob = bpy.data.objects.new(info.name, lamp)
     bpy.context.scene.objects.link(ob)
-    print(ob)
-    print(type(ob))
     if info.parent_info:
         set_parent(ob, info.parent_info)
+    ob.location = info.location
     ob.rotation_mode = info.rotation_mode
     if info.rotation_mode == "AXIS_ANGLE":
         ob.rotation_axis_angle = info.rotation
@@ -571,6 +570,15 @@ def delete_all_textures():
     for texture in bpy.data.textures:
         texture.user_clear()
         bpy.data.textures.remove(texture,do_unlink=True)
+
+def delete_datablock(datablock: Any, do_unlink=True)->None:
+    '''
+    Uses type information to smartly remove datablock from its relavent data catagory
+    '''
+    if isinstance(datablock, bpy.types.Object):
+        bpy.data.objects.remove(datablock, do_unlink)
+    else:
+        assert False, "Not implemented yet"
 
 
 def delete_everything():

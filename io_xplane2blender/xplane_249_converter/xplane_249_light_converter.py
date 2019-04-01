@@ -7,13 +7,116 @@ import re
 from typing import cast, Callable, Dict, List, Match, Optional, Tuple, Union
 
 import bpy
+import mathutils
 
 
 from io_xplane2blender import xplane_constants, xplane_helpers
 from xplane_helpers import logger
 from io_xplane2blender.tests import test_creation_helpers
-from io_xplane2blender.xplane_249_converter import xplane_249_constants, xplane_249_helpers
+from io_xplane2blender.xplane_249_converter import xplane_249_constants, xplane_249_dataref_decoder, xplane_249_helpers
 from io_xplane2blender.xplane_types import xplane_lights_txt_parser
+
+def _could_autospot(lamp_obj: bpy.types.Object)->bool:
+    #TODO: This is dumb
+    is_parsed = xplane_lights_txt_parser.parse_lights_file()
+    if is_parsed == False:
+        logger.error("lights.txt file could not be parsed")
+    return bool(xplane_lights_txt_parser.get_overload(lamp_obj.data.xplane.name))
+
+
+def _convert_custom_lights(search_obj: bpy.types.Object)->List[bpy.types.Object]:
+    '''
+    Creates Custom Lights with the information of an applicable MESH object,
+    returning a list of those new light objects (if any)
+    '''
+    assert (search_obj.type == "MESH" \
+            and search_obj.material_slots \
+            and search_obj.material_slots[0].material.type == "HALO"), \
+            "{} must be an applicable MESH type".format(search_obj.name)
+    simple_name = (search_obj.name[:search_obj.name.index('.')]
+                   if '.' in search_obj.name else search_obj.name).strip().casefold()
+    clights = [] # type: List[bpy.types.Object]
+    for vert in search_obj.data.vertices:
+        clight_obj = test_creation_helpers.create_datablock_lamp(
+            test_creation_helpers.DatablockInfo(
+                "LAMP",
+                name=simple_name, # Blender naturally orders this for us
+                layers=search_obj.layers,
+                parent_info=test_creation_helpers.ParentInfo(
+                    search_obj.parent,
+                    search_obj.parent_type,
+                    search_obj.parent_bone),
+                location=vert.co+search_obj.matrix_world.translation,
+                rotation_mode=search_obj.rotation_mode,
+                rotation=(0, 0, 0)
+            ),
+            blender_light_type="POINT"
+        ) # type: bpy.types.Object
+        clights.append(clight_obj)
+        clight_obj.data.xplane.type = xplane_constants.LIGHT_CUSTOM
+        material = search_obj.material_slots[0].material #Guaranteed from assertion
+
+        def find_color(color:str)->float:
+            assert color in {"R", "G", "B", "A"}, "Color must be R, G, B, or A"
+            try:
+                if search_obj.game.properties[color].type in {"FLOAT", "INT"}:
+                    return float(search_obj.game.properties[color].value)
+                else:
+                    raise TypeError("Prop '{}' is of type '{}', but should have been a 'FLOAT' or 'INT'"
+                                    .format(color, search_obj.game.properties[color].type))
+            except (KeyError, TypeError) as e:
+                if color == "A":
+                    return material.alpha
+                else:
+                    return material.diffuse_color[["R", "G", "B"].index(color)]
+
+        clight_obj.data.color = (find_color("R"), find_color("G"), find_color("B"))
+        clight_obj.data.energy = (find_color("A"))
+        clight_obj.data.xplane.size = material.halo.size
+
+        try:
+            tex = material.texture_slots[0].texture
+            clight_obj.data.xplane.uv = (tex.crop_min_x, tex.crop_min_y, tex.crop_max_x, tex.crop_max_y)
+        except AttributeError: # No texture slots or tex doesn't have crop_min/max_x/y
+            logger.warn("No suitable texture found to take S1, T1, S2, T2 co-ordinates from. Using the default values\n"
+                        "NEXT STEPS: Consider adding a texture to your custom light") #TODO format statement here, better logging statement
+            clight_obj.data.xplane.uv = (0, 0, 1, 1)
+
+        #--- Custom Dataref Light Lookup) -------------------------------------
+        try:
+            s_or_tailname = search_obj.game.properties["name"]
+        except KeyError:
+            clight_obj.data.xplane.dataref = "none"
+            logger.warn("Name not found, Using dataref '{}' for custom light {}".format(clight_obj.data.xplane.dataref, clight_obj.name))
+        else:
+            lookup_record = xplane_249_dataref_decoder.lookup_dataref(s_or_tailname.value, s_or_tailname.value)
+            if lookup_record.record:
+                clight_obj.data.xplane.dataref = lookup_record.record[0]
+                logger.info("Using dataref '{}' for custom light {}".format(clight_obj.data.xplane.dataref, clight_obj.name))
+                if lookup_record.record[1] != 9:
+                    logger.warn("Dataref datatype {} does not have an array size of 9\n"
+                                "NEXT STEPS: Consider choosing a different dataref whose type is an array of 9 floats or ints")
+            elif not lookup_record.sname_success or not lookup_record.tailname_success:
+                # We can disambiguate without all the madness!
+                try:
+                    disamb_path = search_obj.game.properties[s_or_tailname.value].value
+                    clight_obj.data.xplane.dataref = (disamb_path if disamb_path[-1] == "/" else disamb_path + "/") + s_or_tailname.value
+                    logger.info("Using custom dataref '{}' for custom light {}".format(clight_obj.data.xplane.dataref, clight_obj.name))
+                except KeyError:
+                    logger.warn("Could not disambiguate the custom dataref used, using 'none'\n"
+                                "NEXT STEPS: If desired, re-enter your own dataref")
+                    clight_obj.data.xplane.dataref = "none"
+
+        #----------------------------------------------------------------------
+        if _could_autospot(clight_obj):
+            logger.info("{} is possibly eligible for Blender based rotation support\n"
+                        "NEXT STEPS: Consider changing {}'s type to 'Spot' to use Blender rotation for light aiming".format(clight_obj.name, clight_obj.name))
+
+    logger.warn("Custom Light{} {} created from the vertices of {}, deleted original Mesh\n"
+                "NEXT STEPS: Consider deleting {} as modern XPlane2Blender won't use it"
+                .format("s" if clights else "", [clight.name for clight in clights], search_obj, search_obj))
+    test_creation_helpers.delete_datablock(search_obj)
+    return clights
 
 def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->None:
     if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
@@ -34,81 +137,20 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
         except (AttributeError, IndexError) as e: # material is None, or material_slots is empty
             return False
 
-    #TODO: Move this to a better place? Or, make xplane_lights_txt_parser load automatically
-    is_parsed = xplane_lights_txt_parser.parse_lights_file()
-    if is_parsed == False:
-        logger.error("lights.txt file could not be parsed")
-        return
-
-    def could_autospot(lamp: bpy.types.Object)->bool:
-        return bool(xplane_lights_txt_parser.get_overload(lamp.data.xplane.name))
-
     for search_obj in filter(isLight, search_objs):
     #--- All Lights -----------------------------------------------------------
         logger.info("Attempting to convert {}".format(search_obj.name))
-        if search_obj.data.type != "POINT":
-            search_obj.data.xplane.type = xplane_constants.LIGHT_NON_EXPORTING
+        if (search_obj.type == "LAMP"
+            and search_obj.data.type != "POINT"):
             # No autospot correction because we don't know their intent for the light
+            search_obj.data.xplane.type = xplane_constants.LIGHT_NON_EXPORTING
             continue
 
         simple_name = (search_obj.name[:search_obj.name.index('.')]
                        if '.' in search_obj.name else search_obj.name).strip().casefold()
         #--- Custom Lights ---------------------------------------------------
         if search_obj.type == "MESH" and search_obj.data.vertices:
-            clights = []
-            for vert in search_obj.data.vertices:
-                #TODO: custom dataref
-                if search_obj.rotation_mode == "AXIS_ANGLE":
-                    rotation = search_obj.rotation_axis_angle
-                elif search_obj.rotation_mode == "QUATERNION":
-                    rotation = search_obj.rotation_quaternion
-                else:
-                    rotation = search_obj.rotation_euler
-
-                clight_obj = test_creation_helpers.create_datablock_lamp(
-                    test_creation_helpers.DatablockInfo(
-                        "LAMP",
-                        name=simple_name, # Blender naturally orders this for us
-                        layers=search_obj.layers,
-                        parent_info=test_creation_helpers.ParentInfo(
-                            search_obj.parent,
-                            search_obj.parent_type,
-                            search_obj.parent_bone),
-                        location=vert.co+search_obj.matrix_world.translation,
-                        rotation_mode=search_obj.rotation_mode,
-                        rotation=rotation
-                    ),
-                    blender_light_type="POINT"
-                ) # type: bpy.types.Object
-                clights.append(clight_obj)
-                clight_obj.data.xplane.type = xplane_constants.LIGHT_CUSTOM
-                material = search_obj.material_slots[0].material #Guarantees from isLight
-                def find_color(color:str):
-                    assert color in {"R", "G", "B", "A"}, "Color must be R, G, B, or A"
-                    try:
-                        if clight_obj.game.properties[color].type in {"FLOAT", "INT"}:
-                            return float(clight_obj.game.properties[color].value)
-                    except KeyError:
-                        if color == "A":
-                            return material.alpha
-                        else:
-                            return material.diffuse_color[["R", "G", "B"].index(color)]
-
-                clight_obj.data.color = (find_color("R"), find_color("B"), find_color("G"))
-                clight_obj.data.energy = (find_color("A"))
-                clight_obj.data.xplane.size = material.halo.size
-
-                tex = material.texture_slots[0].texture
-                clight_obj.data.xplane.uv = (tex.crop_min_x, tex.crop_min_y, tex.crop_max_x, tex.crop_max_y)
-                #clight.xplane.dataref = #TODO
-
-                if could_autospot(clight_obj.data.xplane):
-                    logger.info("{} is possibly eligible for Blender based rotation support\n"
-                                "NEXT STEPS: Consider changing {}'s type to 'Spot' to use Blender rotation for light aiming".format(clight_obj.name, clight_obj.name))
-
-            logger.warn("Custom Light{} {} created from the vertices of {}\n"
-                        "NEXT STEPS: Consider deleting {} as modern XPlane2Blender won't use it"
-                        .format("s" if clights else "", [clight.name for clight in clights], search_obj, search_obj))
+            clights = _convert_custom_lights(search_obj)
         #--- End Custom Lights ------------------------------------------------
         else:
         #--- Not Custom Lights ------------------------------------------------
@@ -185,12 +227,15 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                     else:
                         lamp_obj.data.xplane.type = xplane_constants.LIGHT_NAMED
 
-                    if could_autospot(lamp_obj):
+                    if _could_autospot(lamp_obj):
                         logger.info("{} is possibly eligible for Blender based rotation support\n"
                                     "NEXT STEPS: Consider changing {}'s type to 'Spot' and use it's Blender rotation light aiming".format(lamp_obj.name, lamp_obj.name))
 
                 #--- End Named/Param Lights -----------------------------------
             #--- End Named/Param/Magent Lights --------------------------------
-        logger.info("Set {}'s X-Plane Light Type to {}".format(lamp_obj.name, lamp_obj.data.xplane.type.title()))
+        try:
+            logger.info("Set {}'s X-Plane Light Type to {}".format(lamp_obj.name, lamp_obj.data.xplane.type.title()))
+        except: # TODO: Bad!
+            pass
         #--- End Not Custom Lights --------------------------------------------
     #--- End All Lights -------------------------------------------------------
