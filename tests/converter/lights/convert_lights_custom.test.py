@@ -20,7 +20,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
@@ -30,7 +30,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
@@ -40,7 +40,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
@@ -50,7 +50,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
@@ -60,7 +60,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
@@ -70,7 +70,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
@@ -80,7 +80,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
@@ -90,7 +90,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
@@ -100,7 +100,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
-        "OBJ" + filename, os.path.join(__dirname__, 'fixtures', filename + ".obj"),
+            filename.replace("test_", "OBJ"), os.path.join(__dirname__, 'fixtures', filename + ".obj"),
             filename,
                 filterLines
             )
