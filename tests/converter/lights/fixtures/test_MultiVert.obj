@@ -1,0 +1,34 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 Empty: OBJMultiVert
+# EMPTY: OBJMultiVert	weight: 0
+# 1 Lamp: Mesh_multi_vertice.001
+# LAMP: Mesh_multi_vertice.001	weight: 10000
+LIGHT_CUSTOM	8.21234131 -7.44399452 -6.42578888 1 1 1 1 0.5 0 0 1 1 none
+# 1 Lamp: Mesh_multi_vertice.002
+# LAMP: Mesh_multi_vertice.002	weight: 10000
+LIGHT_CUSTOM	8.21234131 -7.44399452 6.42578888 1 1 1 1 0.5 0 0 1 1 none
+# 1 Lamp: Mesh_multi_vertice.003
+# LAMP: Mesh_multi_vertice.003	weight: 10000
+LIGHT_CUSTOM	-4.44399452 -5.21233988 6.42578745 1 1 1 1 0.5 0 0 1 1 none
+# 1 Lamp: Mesh_multi_vertice.004
+# LAMP: Mesh_multi_vertice.004	weight: 10000
+LIGHT_CUSTOM	-4.44399118 -5.21234035 -6.42579126 1 1 1 1 0.5 0 0 1 1 none
+# 1 Lamp: Mesh_multi_vertice.005
+# LAMP: Mesh_multi_vertice.005	weight: 10000
+LIGHT_CUSTOM	10.44399738 5.2123394 -6.42578602 1 1 1 1 0.5 0 0 1 1 none
+# 1 Lamp: Mesh_multi_vertice.006
+# LAMP: Mesh_multi_vertice.006	weight: 10000
+LIGHT_CUSTOM	10.44399071 5.21234035 6.42579269 1 1 1 1 0.5 0 0 1 1 none
+# 1 Lamp: Mesh_multi_vertice.007
+# LAMP: Mesh_multi_vertice.007	weight: 10000
+LIGHT_CUSTOM	-2.21234274 7.44399452 6.4257865 1 1 1 1 0.5 0 0 1 1 none
+# 1 Lamp: Mesh_multi_vertice.008
+# LAMP: Mesh_multi_vertice.008	weight: 10000
+LIGHT_CUSTOM	-2.21233964 7.44399405 -6.42578888 1 1 1 1 0.5 0 0 1 1 none
+
+# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+49.NO_BUILD_NUMBR

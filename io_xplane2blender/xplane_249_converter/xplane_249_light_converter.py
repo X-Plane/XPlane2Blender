@@ -33,22 +33,20 @@ def _convert_custom_lights(search_obj: bpy.types.Object)->List[bpy.types.Object]
             and search_obj.material_slots \
             and search_obj.material_slots[0].material.type == "HALO"), \
             "{} must be an applicable MESH type".format(search_obj.name)
-    simple_name = (search_obj.name[:search_obj.name.index('.')]
-                   if '.' in search_obj.name else search_obj.name).strip().casefold()
+    new_name = (search_obj.name[:search_obj.name.index('.')] if '.' in search_obj.name else search_obj.name)
     clights = [] # type: List[bpy.types.Object]
-    for vert in search_obj.data.vertices:
+    for vert in [search_obj.matrix_local * v.co for v in search_obj.data.vertices]:
         clight_obj = test_creation_helpers.create_datablock_lamp(
             test_creation_helpers.DatablockInfo(
                 "LAMP",
-                name=simple_name, # Blender naturally orders this for us
+                name=new_name, # Blender naturally adds numbers, ordering these for us
                 layers=search_obj.layers,
                 parent_info=test_creation_helpers.ParentInfo(
                     search_obj.parent,
                     search_obj.parent_type,
                     search_obj.parent_bone),
-                location=vert.co+search_obj.matrix_world.translation,
-                rotation_mode=search_obj.rotation_mode,
-                rotation=(0, 0, 0)
+                location=vert,
+                rotation_mode=search_obj.rotation_mode
             ),
             blender_light_type="POINT"
         ) # type: bpy.types.Object

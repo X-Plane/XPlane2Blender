@@ -406,6 +406,7 @@ def create_datablock_lamp(info: DatablockInfo,
     lamp = bpy.data.lamps.new(info.name, blender_light_type)
     ob = bpy.data.objects.new(info.name, lamp)
     bpy.context.scene.objects.link(ob)
+    ob.layers = info.layers
     if info.parent_info:
         set_parent(ob, info.parent_info)
     ob.location = info.location
