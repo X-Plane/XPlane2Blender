@@ -16,8 +16,9 @@ from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_249_converter import xplane_249_constants, xplane_249_dataref_decoder, xplane_249_helpers
 from io_xplane2blender.xplane_types import xplane_lights_txt_parser
 
+
 def _could_autospot(lamp_obj: bpy.types.Object)->bool:
-    #TODO: This is dumb
+    #TODO: xplane_lights_txt_parser.parse_lights_file's lazy parsing is dumb
     is_parsed = xplane_lights_txt_parser.parse_lights_file()
     if is_parsed == False:
         logger.error("lights.txt file could not be parsed")
@@ -76,8 +77,9 @@ def _convert_custom_lights(search_obj: bpy.types.Object)->List[bpy.types.Object]
             tex = material.texture_slots[0].texture
             clight_obj.data.xplane.uv = (tex.crop_min_x, tex.crop_min_y, tex.crop_max_x, tex.crop_max_y)
         except AttributeError: # No texture slots or tex doesn't have crop_min/max_x/y
-            logger.warn("No suitable texture found to take S1, T1, S2, T2 co-ordinates from. Using the default values\n"
-                        "NEXT STEPS: Consider adding a texture to your custom light") #TODO format statement here, better logging statement
+            logger.warn("{}'s material has no suitable texture to take Texture Coordinates from: using defaults\n"
+                        "NEXT STEPS: Consider adding an Image texture to your Custom Light"
+                        .format(search_obj.name))
             clight_obj.data.xplane.uv = (0, 0, 1, 1)
 
         #--- Custom Dataref Light Lookup) -------------------------------------
@@ -85,15 +87,18 @@ def _convert_custom_lights(search_obj: bpy.types.Object)->List[bpy.types.Object]
             s_or_tailname = search_obj.game.properties["name"]
         except KeyError:
             clight_obj.data.xplane.dataref = "none"
-            logger.warn("Name not found, Using dataref '{}' for custom light {}".format(clight_obj.data.xplane.dataref, clight_obj.name))
+            logger.warn("{} has no 'name' properties, using dataref '{}'"
+                        .format(clight_obj.name, clight_obj.data.xplane.dataref))
         else:
             lookup_record = xplane_249_dataref_decoder.lookup_dataref(s_or_tailname.value, s_or_tailname.value)
             if lookup_record.record:
                 clight_obj.data.xplane.dataref = lookup_record.record[0]
-                logger.info("Using dataref '{}' for custom light {}".format(clight_obj.data.xplane.dataref, clight_obj.name))
+                logger.info("Using dataref '{}' for custom light {}"
+                            .format(clight_obj.data.xplane.dataref, clight_obj.name))
                 if lookup_record.record[1] != 9:
-                    logger.warn("Dataref datatype {} does not have an array size of 9\n"
-                                "NEXT STEPS: Consider choosing a different dataref whose type is an array of 9 floats or ints")
+                    logger.warn("Dataref {} does not have the required array size of 9 float\n"
+                                "NEXT STEPS: Consider choosing a different dataref which uses an array of 9 floats or ints"
+                                .format(clight_obj.data.xplane.dataref))
             elif not lookup_record.sname_success or not lookup_record.tailname_success:
                 # We can disambiguate without all the madness!
                 try:
@@ -101,28 +106,33 @@ def _convert_custom_lights(search_obj: bpy.types.Object)->List[bpy.types.Object]
                     clight_obj.data.xplane.dataref = (disamb_path if disamb_path[-1] == "/" else disamb_path + "/") + s_or_tailname.value
                     logger.info("Using custom dataref '{}' for custom light {}".format(clight_obj.data.xplane.dataref, clight_obj.name))
                 except KeyError:
-                    logger.warn("Could not disambiguate the custom dataref used, using 'none'\n"
-                                "NEXT STEPS: If desired, re-enter your own dataref")
                     clight_obj.data.xplane.dataref = "none"
+                    logger.warn("Could not disambiguate the custom dataref used: using '{}'\n"
+                                "NEXT STEPS: If desired, re-enter your own dataref"
+                                .format(clight_obj.data.xplane.dataref))
 
         #----------------------------------------------------------------------
         if _could_autospot(clight_obj):
             logger.info("{} is possibly eligible for Blender based rotation support\n"
                         "NEXT STEPS: Consider changing {}'s type to 'Spot' to use Blender rotation for light aiming".format(clight_obj.name, clight_obj.name))
 
-    logger.warn("Custom Light{} {} created from the vertices of {}, deleted original Mesh\n"
-                "NEXT STEPS: Consider deleting {} as modern XPlane2Blender won't use it"
-                .format("s" if clights else "", [clight.name for clight in clights], search_obj, search_obj))
+    logger.warn("Custom Light{} {} created from the vertices of {name}, deleted original Mesh"
+                .format("s" if clights else "", [clight.name for clight in clights], name=search_obj))
     test_creation_helpers.delete_datablock(search_obj)
     return clights
 
-def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->None:
+def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
     if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
         search_objs = scene.objects
     elif workflow_type == xplane_249_constants.WorkflowType.BULK:
         search_objs = [root_object] + xplane_249_helpers.get_all_children_recursive(root_object, scene)
     else:
         assert False, "Unknown workflow type"
+
+    def add_converted_light(converted_obj: bpy.types.Object):
+        assert converted_obj.type == "LAMP"
+        logger.info("Set {}'s X-Plane Light Type to {}".format(converted_obj.name, converted_obj.data.xplane.type.title()))
+        converted_objects.append(converted_obj)
 
     def isLight(obj: bpy.types.Object):
         try:
@@ -135,6 +145,9 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
         except (AttributeError, IndexError) as e: # material is None, or material_slots is empty
             return False
 
+
+    # All objects we change or create (but not remove)
+    converted_objects = [] # type: List[bpy.types.Object]
     for search_obj in filter(isLight, search_objs):
     #--- All Lights -----------------------------------------------------------
         logger.info("Attempting to convert {}".format(search_obj.name))
@@ -142,6 +155,7 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
             and search_obj.data.type != "POINT"):
             # No autospot correction because we don't know their intent for the light
             search_obj.data.xplane.type = xplane_constants.LIGHT_NON_EXPORTING
+            converted_objects.append(search_obj)
             continue
 
         simple_name = (search_obj.name[:search_obj.name.index('.')]
@@ -149,25 +163,32 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
         #--- Custom Lights ---------------------------------------------------
         if search_obj.type == "MESH" and search_obj.data.vertices:
             clights = _convert_custom_lights(search_obj)
+            converted_objects.extend(clights)
         #--- End Custom Lights ------------------------------------------------
         else:
         #--- Not Custom Lights ------------------------------------------------
             #--- Default and Deprecated Lights --------------------------------
             lamp_obj = search_obj
-            if 'pulse' in simple_name:
+            if "pulse" in simple_name:
                 lamp_obj.data.xplane.type = xplane_constants.LIGHT_PULSING
-            elif 'strobe' in simple_name:
+                add_converted_light(lamp_obj)
+            elif "strobe" in simple_name:
                 lamp_obj.data.xplane.type = xplane_constants.LIGHT_STROBE
-            elif 'traffic' in simple_name:
+                add_converted_light(lamp_obj)
+            elif "traffic" in simple_name:
                 lamp_obj.data.xplane.type = xplane_constants.LIGHT_TRAFFIC
-            elif 'flash' in simple_name:
+                add_converted_light(lamp_obj)
+            elif "flash" in simple_name:
                 lamp_obj.data.xplane.type = xplane_constants.LIGHT_FLASHING
-            elif 'lamp' in simple_name:
+                add_converted_light(lamp_obj)
+            elif "lamp" in simple_name:
                 lamp_obj.data.xplane.type = xplane_constants.LIGHT_DEFAULT
-            elif simple_name in {'smoke_black', 'smoke_white'}:
+                add_converted_light(lamp_obj)
+            elif simple_name in {"smoke_black", "smoke_white"}:
                 logger.warn("Smoke type lights are no longer supported, set light to Non-Exporting instead\n"
                             "NEXT STEPS: Consider using a modern particle emitter instead")
                 lamp_obj.data.xplane.type = xplane_constants.LIGHT_NON_EXPORTING
+                add_converted_light(lamp_obj)
                 continue
             #--- End Default and Deprecated Lights ----------------------------
             else:
@@ -196,6 +217,7 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                                                             rotation),
                         xplane_constants.EMPTY_USAGE_MAGNET)
                     bpy.data.objects.remove(lamp_obj, do_unlink=True)
+                    converted_objects.append(empty)
                     logger.info("Changed {} from a Lamp to a special Magnet Empty"
                                 .format(empty.name))
                     magnet_props = empty.xplane.special_empty_props.magnet_props
@@ -229,11 +251,9 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                         logger.info("{} is possibly eligible for Blender based rotation support\n"
                                     "NEXT STEPS: Consider changing {}'s type to 'Spot' and use it's Blender rotation light aiming".format(lamp_obj.name, lamp_obj.name))
 
+                    add_converted_light(lamp_obj)
                 #--- End Named/Param Lights -----------------------------------
             #--- End Named/Param/Magent Lights --------------------------------
-        try:
-            logger.info("Set {}'s X-Plane Light Type to {}".format(lamp_obj.name, lamp_obj.data.xplane.type.title()))
-        except: # TODO: Bad!
-            pass
         #--- End Not Custom Lights --------------------------------------------
     #--- End All Lights -------------------------------------------------------
+    return converted_objects
