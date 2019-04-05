@@ -12,7 +12,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
 from io_xplane2blender import xplane_constants, xplane_helpers
-from xplane_helpers import logger
+from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_constants import (ANIM_TYPE_HIDE, ANIM_TYPE_SHOW,
                                                 ANIM_TYPE_TRANSFORM,

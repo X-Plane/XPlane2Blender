@@ -11,7 +11,7 @@ import mathutils
 
 
 from io_xplane2blender import xplane_constants, xplane_helpers
-from xplane_helpers import logger
+from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_249_converter import xplane_249_constants, xplane_249_dataref_decoder, xplane_249_helpers
 from io_xplane2blender.xplane_types import xplane_lights_txt_parser

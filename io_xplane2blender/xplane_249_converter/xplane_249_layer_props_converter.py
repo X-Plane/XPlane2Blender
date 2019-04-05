@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import bpy
 
 from io_xplane2blender import xplane_constants, xplane_helpers
-from xplane_helpers import logger
+from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_helpers)
 
