@@ -139,6 +139,9 @@ class ParsedLightParamDef():
         self.user_values = [None]*len(self.prototype) # type: Any
         # But also, List[DataSourceType]]
 
+    def __str__(self):
+        return "Prototype: {}, User Values: {}".format(self.prototype, self.user_values)
+
     def set_user_values(self, user_values: DataSourceType):
         def isfloat(number_str: Union[float, str]):
             try:
@@ -183,6 +186,9 @@ class ParsedDataSource():
                 return True
 
         self.data = [float(d) if isfloat(d) else d for d in light_data] # type: DataSourceType
+
+    def __str__(self):
+        return "Light Type: {}, Data: {}".format(self.type, self.data)
 
     def get_prototype(self):
         return self.TYPE_PROTOTYPES[self.type]
