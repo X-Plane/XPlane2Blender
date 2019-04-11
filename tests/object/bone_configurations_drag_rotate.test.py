@@ -13,7 +13,7 @@ from io_xplane2blender.xplane_constants import *
 __dirname__ = os.path.dirname(__file__)
 
 class TestBoneConfigurationsDragRotate(XPlaneTestCase):
-    #Case 1: The Classic 
+    #Case 1: The Classic
     def test_drag_rotate_case_01(self):
         #print("def test_drag_rotate_case_01(self):")
         create_initial_test_setup()
@@ -144,7 +144,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 
-    #Case 9: R,S
+    #Case 9: R,S (not a failure)
     def test_drag_rotate_case_09(self):
         #print("def test_drag_rotate_case_09(self):")
         create_initial_test_setup()
@@ -156,7 +156,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         set_manipulator_settings(A,MANIP_DRAG_ROTATE)
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(1)
+        self.assertLoggerErrors(0)
 
     #Case 10: Missing R, version 1
     def test_drag_rotate_case_10(self):

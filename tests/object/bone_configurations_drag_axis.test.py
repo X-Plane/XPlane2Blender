@@ -13,7 +13,7 @@ from io_xplane2blender.xplane_constants import *
 __dirname__ = os.path.dirname(__file__)
 
 class TestBoneConfigurationsDragAxis(XPlaneTestCase):
-    #Case 1: The Classic 
+    #Case 1: The Classic
     def test_drag_axis_case_01(self):
         #print("def test_drag_axis_case_01(self):")
         create_initial_test_setup()
@@ -141,7 +141,7 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 
-    #Case 9: T,S/H
+    #Case 9: T,S/H (not a failure)
     def test_drag_axis_case_09(self):
         #print("def test_drag_axis_case_09(self):")
         create_initial_test_setup()
@@ -154,7 +154,7 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
         set_manipulator_settings(A,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(1)
+        self.assertLoggerErrors(0)
 
     #Case 10: Missing T, version 1
     def test_drag_axis_case_10(self):
