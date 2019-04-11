@@ -1,15 +1,15 @@
 [![Build Status](https://travis-ci.org/der-On/XPlane2Blender.svg?branch=v3-3)](https://travis-ci.org/der-On/XPlane2Blender)
 
 # Introduction
-This addon for Blender 2.78 and up makes it possible to export models made in Blender to the X-Plane object format (.obj). Despite the name "XPlane2Blender", there is no import feature.
+This addon for Blender 2.78 and up makes it possible to export models made in Blender to the X-Plane object format (.obj). **Despite the name "XPlane2Blender", there is no import feature.**
 
 ## Contact Us
 
 The best way to contact us is through [a bug report](https://github.com/der-On/XPlane2Blender/issues). Otherwise, e-mail **ted at x-plane dot com**, especially if you're worried about the security of your payware models while we debug them.
 
 ## General Requirements
-- Blender 2.78 or higher
-- Latest non-beta version of XPlane2Blender
+- Blender 2.78 or 2.79
+- Latest non-beta version of [XPlane2Blender](https://github.com/der-On/XPlane2Blender/releases/latest)
 
 People wishing to develop the plugin should read the tutorial on Plugin Development in the manual.
 
@@ -24,6 +24,7 @@ People wishing to develop the plugin should read the tutorial on Plugin Developm
 
 ## Documentation Sources
 - [XPlane2Blender Manual](https://der-on.gitbooks.io/xplane2blender-docs/content/)
+- [BD-5J Microjet, a complete open source Airplane](https://forums.x-plane.org/index.php?/files/file/27269-bd-5j-microjet)
 - [Dan Klaue's "Using Blender With PlaneMaker" Playlist](https://www.youtube.com/playlist?list=PLDB0F4B925CF9169C)
 - [X-Plane Scenery File Formats](http://developer.x-plane.com/docs/specs/)
 - [X-Plane.org's 3d Modeling board](https://forums.x-plane.org/index.php?/forums/forum/45-3d-modeling/)
