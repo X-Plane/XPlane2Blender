@@ -92,7 +92,6 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
         out = self.exportLayer(0)
         self.assertLoggerErrors(0)
 
-    #Failure
     #Case 6: N->SH->T
     def test_drag_axis_case_06(self):
         #print("def test_drag_axis_case_06(self):")
@@ -107,8 +106,9 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
         set_manipulator_settings(C,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(1) #currently show/hide misses "specific parent" error
+        self.assertLoggerErrors(0) # S/H is ignored, not a problem
 
+    #Failures
     #Case 7: Wrong Order R->T
     def test_drag_axis_case_07(self):
         #print("def test_drag_axis_case_07(self):")

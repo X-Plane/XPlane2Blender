@@ -441,12 +441,17 @@ def get_information_sources(manipulator:'XPlaneManipulator',
         #Note the use of blenderObject.xplane.datarefs, as opposed to bone.datarefs!
         while bone is not None:
             if bone.blenderBone is None:
-                if len(bone.animations.values()) > 0 or\
-                   (bone.blenderObject and len(bone.blenderObject.xplane.datarefs) > 0):
+                if (len(bone.animations.values()) > 0
+                    or (bone.blenderObject
+                    and list(
+                            filter(lambda d: d.anim_type == ANIM_TYPE_TRANSFORM,
+                                   bone.blenderObject.xplane.datarefs)))):
                     break
             else:
-                if len(bone.animations.values()) > 0 or\
-                   len(bone.blenderBone.xplane.datarefs) > 0:
+                if (len(bone.animations.values()) > 0
+                    or list(
+                        filter(lambda d: d.anim_type == ANIM_TYPE_TRANSFORM,
+                               bone.blenderBone.xplane.datarefs))):
                     break
 
             bone = bone.parent
