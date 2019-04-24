@@ -21,6 +21,7 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_layer_props_converter,
                                                     xplane_249_light_converter,
                                                     xplane_249_manip_decoder,
+                                                    xplane_249_material_converter,
                                                     xplane_249_workflow_converter)
 
 _converted_objects = set() # type: Set[bpy.types.Object]
@@ -92,6 +93,8 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
         for root in new_roots:
             #ALSO! This breaks if there are no new roots becaues of SKIP. SKIP should only affect workflow
             xplane_249_light_converter.convert_lights(scene, workflow_type, root)
+            print("converting material")
+            xplane_249_material_converter.convert_materials(scene, workflow_type, root)
 
 
         logger.info("", "raw")
