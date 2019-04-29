@@ -55,7 +55,7 @@ class XPlaneLight(XPlaneObject):
         if blenderObject.data.xplane.enable_rgb_override:
             self.color = blenderObject.data.xplane.rgb_override_values[:]
         else:
-            self.color = blenderObject.data.color[:]
+            self.color = list(blenderObject.data.color[:])
 
         self.energy = blenderObject.data.energy
         self.lightType = blenderObject.data.xplane.type
