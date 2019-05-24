@@ -405,11 +405,11 @@ class XPlaneFile():
     # Method: getObjectsList
     # Returns objects as a list
     def getObjectsList(self):
-        objects = []
-        for name in self.objects:
-            objects.append(self.objects[name])
-
-        return objects
+        '''
+        Returns the objects that could be in this .obj.
+        Can only be called after collectBlenderObjects during xplane_file's collection
+        '''
+        return self.objects.values()
 
     def validateMaterials(self):
         objects = self.getObjectsList()

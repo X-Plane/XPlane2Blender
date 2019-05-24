@@ -30,7 +30,7 @@ class XPlaneHeader():
     # Parameters:
     #   XPlaneFile xplaneFile - A <XPlaneFile>.
     #   int obj_version - OBJ format version.
-    def __init__(self, xplaneFile:'XPlaneFile', obj_version:int):
+    def __init__(self, xplaneFile: 'XPlaneFile', obj_version: int)->None:
         self.obj_version = obj_version
         self.xplaneFile = xplaneFile
 
@@ -57,7 +57,7 @@ class XPlaneHeader():
 
             if potential_match is None:
                 logger.error('Export path %s is not properly formed. Ensure it contains the words "Custom Scenery" or "default_scenery" followed by a directory')
-                return
+                return #TODO: Returning early in an __init__!
             else:
                 last_folder = os.path.dirname(potential_match.group(4)).split('/')[-1:][0]
 
@@ -67,7 +67,7 @@ class XPlaneHeader():
                 self.export_path_dirs.append((export_path_directive.export_path, last_folder + xplaneFile.filename + ".obj"))
 
         self.attributes = XPlaneAttributes()
-        
+
         # object attributes
         self.attributes.add(XPlaneAttribute("PARTICLE_SYSTEM", None))
         self.attributes.add(XPlaneAttribute("ATTR_layer_group", None))
@@ -91,11 +91,11 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_specular", None))
         self.attributes.add(XPlaneAttribute("BLEND_GLASS", None))
-        
+
         # draped shader attributes
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED_NORMAL", None))
-        
+
         # This is a hack to get around duplicate keynames!
         # There is no NORMAL_METALNESS_draped_hack,
         # self.write will check later for draped_hack and remove it
@@ -174,7 +174,7 @@ class XPlaneHeader():
                                 .setValue(mat.getEffectiveNormalMetalness())
                 elif not has_texture_normal and mat.getEffectiveNormalMetalness():
                     logger.warn("Material '%s' has Normal Metalness, but no Normal Texture" % mat.name)
-        
+
         if xplane_version >= 1100:
             if self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]
@@ -190,7 +190,7 @@ class XPlaneHeader():
                 #"That's the scaling factor for the normal map available ONLY for the draped info. Without that , it can't find the texture.
                 #That makes a non-fatal error in x-plane. Without the normal map, the metalness directive is ignored" -Ben Supnik, 07/06/17 8:35pm
                 self.attributes['TEXTURE_DRAPED_NORMAL'].setValue("1.0 " + self.getPathRelativeToOBJ(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
-            
+
             if self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[1]
                 if xplane_version >= 1100:
@@ -217,7 +217,7 @@ class XPlaneHeader():
                 else:
                     # draped specular
                     self.attributes['SPECULAR'].setValue(mat.attributes['ATTR_shiny_rat'].getValue())
-                
+
                     # prevent of writing again in material
                 mat.attributes['ATTR_shiny_rat'].setValue(None)
             # draped LOD
@@ -288,7 +288,7 @@ class XPlaneHeader():
                 self.attributes['GLOBAL_specular'].setValue(1.0)
                 self.xplaneFile.commands.written['ATTR_shiny_rat'] = 1.0 # Here we are fooling ourselves
                 write_user_specular_values = False #It will be skipped from now on
-        
+
         # v1000
         if xplane_version >= 1000:
             if self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY and\
@@ -344,6 +344,9 @@ class XPlaneHeader():
                                       self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY)
 
             if self.xplaneFile.options.shadow == False and is_scenery_like_export:
+                for mat in self.xplaneFile.getMaterials():
+                    if mat.options.shadow_local:
+                        logger.error("Material '{}' cannot use Cast Shadows (Local) if Cast Shadows (Global) is off".format(mat.name))
                 self.attributes['GLOBAL_no_shadow'].setValue(True)
 
             # cockpit_lit
@@ -608,7 +611,7 @@ class XPlaneHeader():
 
                 else:
                     #This is a double fix. Boolean values with True get written (sans the word true), False does not,
-                    #and strings that start with True or False don't get treated as as booleans 
+                    #and strings that start with True or False don't get treated as as booleans
                     is_bool = len(values) == 1 and isinstance(values[0],bool)
                     if is_bool and values[0] == True:
                         o += '%s\n' % (attr.name)

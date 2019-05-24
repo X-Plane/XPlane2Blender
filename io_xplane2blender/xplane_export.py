@@ -58,7 +58,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         debug = getDebug()
         export_directory = self.properties.filepath
-        
+
         if not self.properties.export_is_relative:
             export_directory = os.path.dirname(export_directory)
         else:
@@ -77,7 +77,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
                 #import sys;sys.path.append(r'YOUR_PYDEVPATH')
                 import pydevd;
                 #Port must be set to 5678 for Blender to connect!
-                pydevd.settrace(stdoutToServer=False,#Enable to have logger and print statements sent to 
+                pydevd.settrace(stdoutToServer=False,#Enable to have logger and print statements sent to
                                                      #the Eclipse console, as well as Blender's console.
                                                      #Only logger statements will show in xplane2blender.log
                                 stderrToServer=False,#Same as stdoutToServer
@@ -85,7 +85,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
                                               #Get used to immediately pressing continue unfortunately.
             except:
                 logger.info("Pydevd could not be imported, breakpoints not enabled. Ensure PyDev is installed and configured properly")
-        
+
         exportMode = bpy.context.scene.xplane.exportMode
 
         if exportMode == 'layers':
@@ -130,7 +130,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.scene.frame_set(frame = currentFrame)
         bpy.context.scene.update()
 
-        #TODO: enable when log dialog box is working 
+        #TODO: enable when log dialog box is working
         #if logger.hasErrors() or logger.hasWarnings():
             #showLogDialog()
 
@@ -172,41 +172,41 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         if self.logFile:
             self.logFile.close()
 
-    def _writeXPlaneFile(self, xplaneFile, dir):
+    def _writeXPlaneFile(self, xplaneFile: xplane_file.XPlaneFile, directory: str)->bool:
         debug = getDebug()
 
         # only write layers that contain objects
         if len(xplaneFile.objects) == 0:
             return
-        
+
         if xplaneFile.filename.find('//') == 0:
             xplaneFile.filename = xplaneFile.filename.replace('//','',1)
-        
+
         #Change any backslashes to foward slashes for file paths
-        xplaneFile.filename = xplaneFile.filename.replace('\\','/')    
-        
+        xplaneFile.filename = xplaneFile.filename.replace('\\','/')
+
         if os.path.isabs(xplaneFile.filename):
             logger.error("Bad export path %s: File paths must be relative to the .blend file" % (xplaneFile.filename))
             return False
-        
+
         #Get the relative path
         #Append .obj if needed
         #Make paths based on the absolute path
         #Write
-        relpath = os.path.normpath(os.path.join(dir, xplaneFile.filename))
+        relpath = os.path.normpath(os.path.join(directory, xplaneFile.filename))
         if not '.obj' in relpath:
             relpath += '.obj'
-        
+
         fullpath = os.path.abspath(os.path.join(os.path.dirname(bpy.context.blend_data.filepath),relpath))
         out = xplaneFile.write()
-       
+
         if logger.hasErrors():
             return False
 
         # write the file
-        if (bpy.context.scene.xplane.plugin_development is False) or \
-            (bpy.context.scene.xplane.plugin_development and         \
-             bpy.context.scene.xplane.dev_export_as_dry_run is False):
+        if (bpy.context.scene.xplane.plugin_development is False
+            or (bpy.context.scene.xplane.plugin_development
+                and bpy.context.scene.xplane.dev_export_as_dry_run is False)):
             try:
                 os.makedirs(os.path.dirname(fullpath),exist_ok=True)
                 objFile = open(fullpath, "w")

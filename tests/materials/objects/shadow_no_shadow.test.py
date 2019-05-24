@@ -44,7 +44,8 @@ class TestShadowNoShadow(XPlaneTestCase):
     def test_04_bad_GLOBAL_no_shadow_ATTR_shadow(self):
         filename = inspect.stack()[0].function
         out = self.exportRootObject(bpy.data.objects[filename[5:]])
-        self.assertLoggerErrors(1)
+        #We test that both materials give an error so users can track down each breaking case
+        self.assertLoggerErrors(2)
 
     def test_05_ignored_export_type_aircraft(self):
         filename = inspect.stack()[0].function
