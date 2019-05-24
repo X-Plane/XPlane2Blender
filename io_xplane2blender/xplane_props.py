@@ -1614,6 +1614,12 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         ]
     )
 
+    shadow_local = bpy.props.BoolProperty(
+        name="Cast Shadows (Local)",
+        description="If enabled, object will cast shadows. Must have 'Cast Shadows (Global)' checked",
+        default=True
+    )
+
     deck = bpy.props.BoolProperty(
         name = "Deck",
         description = "Allows the user to fly under the surface",
