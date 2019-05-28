@@ -7,7 +7,6 @@ from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
-#from .xplane_file import getXPlaneVersion
 
 # Class: XPlaneMaterial
 # A Material
@@ -138,7 +137,8 @@ class XPlaneMaterial():
                             self.attributes['ATTR_blend'].setValue(True)
 
                     if xplane_version >= 1010:
-                        if (self.xplaneObject.xplaneBone.xplaneFile.options.export_type in {EXPORT_TYPE_SCENERY, EXPORT_TYPE_INSTANCED_SCENERY}):
+                        if (self.xplaneObject.xplaneBone.xplaneFile.options.shadow
+                            or self.xplaneObject.xplaneBone.xplaneFile.options.export_type in {EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT}):
                             if mat.xplane.shadow_local:
                                 self.attributes['ATTR_shadow'].setValue(True)
                                 self.attributes['ATTR_no_shadow'].setValue(False)

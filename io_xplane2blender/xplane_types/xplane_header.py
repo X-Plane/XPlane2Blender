@@ -344,10 +344,32 @@ class XPlaneHeader():
                                       self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY)
 
             if self.xplaneFile.options.shadow == False and is_scenery_like_export:
-                for mat in self.xplaneFile.getMaterials():
-                    if mat.options.shadow_local:
-                        logger.error("Material '{}' cannot use Cast Shadows (Local) if Cast Shadows (Global) is off".format(mat.name))
-                self.attributes['GLOBAL_no_shadow'].setValue(True)
+                mats = self.xplaneFile.getMaterials()
+                if mats:
+                    # We seperate all materials into two buckets, shadow local on or off
+                    shadow_local_on = [] # type: List[bpy.types.Material]
+                    shadow_local_off = [] # type: List[bpy.types.Material]
+                    for mat in mats:
+                        if mat.options.shadow_local:
+                            shadow_local_on.append(mat)
+                        if not mat.options.shadow_local:
+                            shadow_local_off.append(mat)
+
+                    if ((shadow_local_on and not shadow_local_off)
+                         or (not shadow_local_on and shadow_local_off)):
+                        # No mix and match! Great!
+                        self.attributes['GLOBAL_no_shadow'].setValue(True)
+                    else:
+                        # Otherwise we tell the user the minority of cases (hopefully small)
+                        # that are not uniform. We hope the result of an incorrect click
+                        min_list = min(shadow_local_on, shadow_local_off)
+                        minority_value = True if min_list == shadow_local_on else False
+                        logger.error(
+                            "All material's 'Cast Shadows (Local)' setting must be the same the if scene's 'Cast Shadows (Global)' is off."
+                            "Materials {} are {} when the majority are {}"
+                            .format(min_list,
+                                    minority_value,
+                                    not minority_value,))
 
             # cockpit_lit
             if isCockpit and (self.xplaneFile.options.cockpit_lit == True or xplane_version >= 1100):

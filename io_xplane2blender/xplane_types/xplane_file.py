@@ -429,7 +429,12 @@ class XPlaneFile():
 
         return True
 
-    def getMaterials(self):
+    def getMaterials(self)->List[bpy.types.Material]:
+        '''
+        Returns a list of the materials used in the OBJ, or an empty list if none found
+        Must be called after XPlaneFile.collectBlenderObjects
+        '''
+
         materials = []
         objects = self.getObjectsList()
 
