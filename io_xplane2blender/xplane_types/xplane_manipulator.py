@@ -1126,7 +1126,7 @@ class XPlaneManipulator():
                         AxisDetentStruct = collections.namedtuple("AxisDetentStruct", ['start','end','height'])
                         try:
                             detent_range_next = axis_detent_ranges[i+1]
-                        except:
+                        except IndexError:
                             detent_range_next = AxisDetentStruct(detent_range.end, v1_max, float('inf'))
 
 
@@ -1138,8 +1138,8 @@ class XPlaneManipulator():
                             return False
 
                         try:
-                            detent_range_prev = axis_detent_ranges[i-1]
-                        except:
+                            detent_range_prev = axis_detent_ranges[i-1] if i > 0 else AxisDetentStruct(v1_min, detent_range.start, float('inf'))
+                        except IndexError:
                             detent_range_prev = AxisDetentStruct(v1_min, detent_range.start, float('inf'))
 
                         if detent_range.start == detent_range.end and\
@@ -1148,8 +1148,8 @@ class XPlaneManipulator():
                                          " previous {} and next detent ranges {}".format(
                                              translation_bone.getBlenderName(),
                                             (detent_range),
-                                            (detent_range_prev.start,detent_range_prev.end,detent_range.height),
-                                            (detent_range_next.start,detent_range_next.end,detent_range_next.height))
+                                            (detent_range_prev.start, detent_range_prev.end, detent_range.height),
+                                            (detent_range_next.start, detent_range_next.end, detent_range_next.height))
                                          )
                             return False
 
