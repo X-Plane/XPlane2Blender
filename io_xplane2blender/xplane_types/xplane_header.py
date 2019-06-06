@@ -120,6 +120,13 @@ class XPlaneHeader():
     # TODO: Shouldn't this just be inside XPlaneHeader.write if it is only called once and only here?
     # If not should it be called collect?
     def init(self):
+        """
+        This is similar to other classes 'collect' methods, however it is called during
+        xplane_header.write, after everything else is collected.
+
+        The reason is we can only tell if certain directives should be written
+        after everything is collected (like GLOBALs)
+        """
         isAircraft = self.xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT
         isCockpit  = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
         isInstance = self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY
@@ -346,8 +353,9 @@ class XPlaneHeader():
                     self.attributes['GLOBAL_no_shadow'].setValue(True)
 
                 if self.attributes['GLOBAL_no_shadow'].getValue():
-                    #TODO: Is this the right way to do this? What about the reference materials?
                     for mat in mats:
+                        # Erase the collected material's value, ensuring it won't be written
+                        # "All ATTR_shadow is false" guaranteed by GLOBAL_no_shadow
                         mat.attributes["ATTR_no_shadow"].setValue(None)
 
             # cockpit_lit

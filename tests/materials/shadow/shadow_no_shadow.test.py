@@ -18,7 +18,7 @@ class TestShadowNoShadow(XPlaneTestCase):
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
             bpy.data.objects[filename[5:]],
-            os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
+            os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )
@@ -27,7 +27,7 @@ class TestShadowNoShadow(XPlaneTestCase):
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
             bpy.data.objects[filename[5:]],
-            os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
+            os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )
@@ -36,7 +36,7 @@ class TestShadowNoShadow(XPlaneTestCase):
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
             bpy.data.objects[filename[5:]],
-            os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
+            os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )
@@ -45,17 +45,17 @@ class TestShadowNoShadow(XPlaneTestCase):
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
             bpy.data.objects[filename[5:]],
-            os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
+            os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )
 
 
-    def test_05_all_cash_shadows_off_non_scenery(self):
+    def test_05_all_cast_shadows_off_non_scenery(self):
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
             bpy.data.objects[filename[5:]],
-            os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
+            os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines
         )

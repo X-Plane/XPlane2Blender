@@ -137,14 +137,12 @@ class XPlaneMaterial():
                             self.attributes['ATTR_blend'].setValue(True)
 
                     if xplane_version >= 1010:
-                        if (self.xplaneObject.xplaneBone.xplaneFile.options.shadow
-                            or self.xplaneObject.xplaneBone.xplaneFile.options.export_type in {EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT}):
-                            if mat.xplane.shadow_local:
-                                self.attributes['ATTR_shadow'].setValue(True)
-                                self.attributes['ATTR_no_shadow'].setValue(False)
-                            else:
-                                self.attributes['ATTR_shadow'].setValue(False)
-                                self.attributes['ATTR_no_shadow'].setValue(True)
+                        if mat.xplane.shadow_local:
+                            self.attributes['ATTR_shadow'].setValue(True)
+                            self.attributes['ATTR_no_shadow'].setValue(False)
+                        else:
+                            self.attributes['ATTR_shadow'].setValue(False)
+                            self.attributes['ATTR_no_shadow'].setValue(True)
 
                 # draped
                 if mat.xplane.draped:
