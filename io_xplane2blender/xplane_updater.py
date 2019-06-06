@@ -1,5 +1,6 @@
 # File: xplane_updater.py
 # Automagically updates blend data created with older XPlane2Blender Versions
+import enum
 
 import bpy
 from bpy.app.handlers import persistent
@@ -12,12 +13,12 @@ from io_xplane2blender.xplane_helpers import XPlaneLogger
 
 
 '''
- #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
-  #   #   # #    #  #   ##  #  ## #  #  #  #     #  #   ## #  #  #  ## #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  # 
- ##   #   # #   # # #  ##      ###   ###   #    #####   ###   ###   ###     ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    # 
- ##   #  ####   # # #  #  ###  #     # #   #    #  ##   #     # #   #       # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   # 
- #   #   #  #   #  ##  ##  #   # #   # #        #  #    # #   # #   # #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #     
-#####   ##  ## ##  #    ####  ####  ## ## #    ## ###  ####  ## ## ####    ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #  
+ #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  #
+  #   #   # #    #  #   ##  #  ## #  #  #  #     #  #   ## #  #  #  ## #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
+ ##   #   # #   # # #  ##      ###   ###   #    #####   ###   ###   ###     ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
+ ##   #  ####   # # #  #  ###  #     # #   #    #  ##   #     # #   #       # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   #
+ #   #   #  #   #  ##  ##  #   # #   # #        #  #    # #   # #   # #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #
+#####   ##  ## ##  #    ####  ####  ## ## #    ## ###  ####  ## ## ####    ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #
 
 BEFORE CHANGING THIS FILE have you:
 1. Fully understood what parts of the data model you are changing?
@@ -32,18 +33,18 @@ BEFORE CHANGING THIS FILE have you:
 Put this in your mind:
     A poor defenseless .blend file, with big watery wobbly eyes is lying on the operating table, eyeing the sharp text editors and esoteric command line commands
     about to be used on the codebase that supports it. It says
-            
+
             Will it hurt to change the update function? Is it necessary?
             Is it deterministic and fulfills the "Only update what's needed, when needed" contract?
             Do you remember the 3.4.0 loc/rot/locrot fiasco of Aug. 2017?
-    
+
     You hold the anesthesia mask in one hand, and a terminal prompt in the other. Are you ready to take responsibility for this data model and
     the artists who depend on it? Are you ready to make a change to this file? Or are you another wanna-be console cowboy who is poking their mouse
     in the wrong part of the codebase again?
     ...
     ...
     ...
-    
+
 You may now proceed to the rest of the file.
 '''
 
@@ -78,7 +79,7 @@ def __updateLocRot(obj,logger):
             old_anim_type = 0 # If anim_type was never set in the first place, it's value is the default, aka 0 for the old anim_type
 
         new_anim_type = convert_old_to_new(old_anim_type)
-        d.anim_type = new_anim_type 
+        d.anim_type = new_anim_type
         logger.info("Updated %s's animation dataref (%s)'s animation type from %s to %s" %
               (obj.name,\
                d.path,\
@@ -142,7 +143,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 # If the default for blend_v1000 ever changes, we'll be covered.
                 blend_v1000 = bpy.types.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
                 enum_items = blend_v1000.enum_items
-                
+
                 if v10 is None:
                     v10_mode = enum_items[enum_items.find(blend_v1000.default)].name
                 else:
@@ -155,6 +156,46 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 # It appears when get returns None, del throws an error,
                 # which is not how normal python works
                 del mat.xplane['blend_v1100']
+
+    if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-beta.1+43.20190605111000"):
+        for scene in bpy.data.scenes:
+            # From this we get the potential objects in an
+            if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_LAYERS:
+                for layer_idx in range(20):
+                    potential_objects = xplane_helpers.get_potential_objects_in_layer(layer_idx, scene)
+                    if not potential_objects:
+                        continue
+                    layer_options = scene.xplane.layers[layer_idx]
+                    print("layer name", layer_options.name)
+                    for mat in [slot.material for obj in potential_objects for slot in obj.material_slots]:
+                        val = (bool(layer_options.get("shadow")))
+                        print("val for {} is {}".format(mat.name,val))
+                        mat.xplane.shadow_local =  val # Easy case #1
+
+                    try:
+                        del layer_options["shadow"]
+                    except KeyError:
+                        pass
+            elif scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
+                for root in xplane_helpers.get_root_objects_in_scene(scene):
+                    potential_objects = xplane_helpers.get_potential_objects_in_root_object(root)
+                    layer_options = root.xplane.layer
+            else:
+                assert False, "How did we get here?!"
+
+            # Dumb enum
+            GLOBAL_ON    = 0
+            GLOBAL_OFF   = 1
+            GLOBAL_MIXED = 2
+            # bpy.types.Material->Tuple[List[Origin XPlaneLayer objects], True, False, needs de-duplication]
+            # Per scene, we find all the potential objects in an OBJ,
+            # and save what buckets a material belongs to.
+            #
+            # When we have all the material's and their buckets
+            # For a material that is in multiple buckets with different "Cast Shadow (Global) values", figure out
+            # Which bucket has the minimum
+            material_origin = {}
+
 
 
 @persistent
@@ -216,7 +257,7 @@ def load_handler(dummy):
 
     # Get the old_version (end of list, which by now is guaranteed to have something in it)
     last_version = ver_history[-1]
-    
+
     # L:Compare last vs current
     # If the version is out of date
     #     L:Run update

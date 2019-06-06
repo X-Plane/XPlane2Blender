@@ -1225,14 +1225,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1010
-    shadow = bpy.props.BoolProperty(
-        attr = "shadow",
-        name = "Cast Shadows (Global)",
-        description = "If disabled object will not cast any shadows",
-        default = True
-    )
-
-    # v1010
     cockpit_lit = bpy.props.BoolProperty(
         attr = "cockpit_lit",
         name = "3D-Cockpit Lighting",

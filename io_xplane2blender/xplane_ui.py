@@ -435,15 +435,6 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         layer_group_box.prop(layerObj, "layer_group_draped")
         layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
-    # v1010
-    if version >= 1010 and (layerObj.export_type == EXPORT_TYPE_SCENERY or
-                            layerObj.export_type == EXPORT_TYPE_INSTANCED_SCENERY):
-
-        #TODO: Shouldn't these be material properties instead?
-        # shadow
-        shadow_box = scenery_props_group_box.box()
-        shadow_box.prop(layerObj, "shadow")
-
     # v1000
     if version >= 1000:
         # slope_limit
