@@ -202,7 +202,8 @@ def main(argv=None)->int:
                         "found bundled python",
                         "Read new prefs",
                         "ID user decrement error",
-                        "Smart Projection time"
+                        "Smart Projection time",
+                        "WARNING.*has no UV-Map."
                     )
                 )
 

@@ -163,20 +163,26 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
             if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_LAYERS:
                 for layer_idx, layer_options in enumerate(scene.xplane.layers):
                     potential_objects = xplane_helpers.get_potential_objects_in_layer(layer_idx, scene)
-                    if not potential_objects:
-                        continue
                     for mat in [slot.material for obj in potential_objects for slot in obj.material_slots]:
                         # Default for shadow was True. get can't find shadow == no explicit value give
                         val = (bool(layer_options.get("shadow", True)))
-                        mat.xplane.shadow_local =  val # Easy case #1
+                        mat.xplane.shadow_local = val # Easy case #1
                     try:
                         del layer_options["shadow"]
                     except KeyError:
                         pass
             elif scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
-                for root in xplane_helpers.get_root_objects_in_scene(scene):
-                    potential_objects = xplane_helpers.get_potential_objects_in_root_object(root)
-                    layer_options = root.xplane.layer
+                for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
+                    potential_objects = xplane_helpers.get_potential_objects_in_root_object(root_obj)
+                    layer_options = root_obj.xplane.layer
+                    for mat in [slot.material for obj in potential_objects for slot in obj.material_slots]:
+                        # Default for shadow was True. get can't find shadow == no explicit value give
+                        val = (bool(layer_options.get("shadow", True)))
+                        mat.xplane.shadow_local = val # Easy case #1
+                    try:
+                        del layer_options["shadow"]
+                    except KeyError:
+                        pass
             else:
                 assert False, "How did we get here?!"
 

@@ -1,0 +1,53 @@
+I
+800
+OBJ
+
+GLOBAL_no_shadow
+GLOBAL_specular	0.5
+POINT_COUNTS	18	0	0	18
+
+VT	1	4	-1	0	1	-0	0	0	# 0
+VT	1	4	1	0	1	-0	0	0	# 1
+VT	-1	4	1	0	1	-0	0	0	# 2
+VT	-1	4	1	0	1	-0	0	0	# 3
+VT	-1	4	-1	0	1	-0	0	0	# 4
+VT	1	4	-1	0	1	-0	0	0	# 5
+VT	1	4	-5	0	1	-0	0	0	# 6
+VT	1	4	-3	0	1	-0	0	0	# 7
+VT	-1	4	-3	0	1	-0	0	0	# 8
+VT	-1	4	-3	0	1	-0	0	0	# 9
+VT	-1	4	-5	0	1	-0	0	0	# 10
+VT	1	4	-5	0	1	-0	0	0	# 11
+VT	1	4	-9	0	1	-0	0	0	# 12
+VT	1	4	-7	0	1	-0	0	0	# 13
+VT	-1	4	-7	0	1	-0	0	0	# 14
+VT	-1	4	-7	0	1	-0	0	0	# 15
+VT	-1	4	-9	0	1	-0	0	0	# 16
+VT	1	4	-9	0	1	-0	0	0	# 17
+
+IDX10	0	1	2	3	4	5	6	7	8	9
+IDX	10
+IDX	11
+IDX	12
+IDX	13
+IDX	14
+IDX	15
+IDX	16
+IDX	17
+
+# 0 Empty: 01_global_off
+# EMPTY: 01_global_off	weight: 0
+# 1 Mesh: Plane
+# MESH: Plane	weight: 0
+# MATERIAL: Material_shadow_should_be_off_1
+TRIS	0 6
+# 1 Mesh: Plane.001
+# MESH: Plane.001	weight: 1
+# MATERIAL: Material_shadow_should_be_off_2
+TRIS	6 6
+# 1 Mesh: Plane.002
+# MESH: Plane.002	weight: 2
+# MATERIAL: Material_shadow_should_be_off_3
+TRIS	12 6
+
+# Build with Blender 2.79 (sub 0) (build b'5bd8ac9'). Exported with XPlane2Blender 3.5.0-rc.1+40.20181016150257
