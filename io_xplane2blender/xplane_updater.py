@@ -161,17 +161,14 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
             if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_LAYERS:
-                for layer_idx in range(20):
+                for layer_idx, layer_options in enumerate(scene.xplane.layers):
                     potential_objects = xplane_helpers.get_potential_objects_in_layer(layer_idx, scene)
                     if not potential_objects:
                         continue
-                    layer_options = scene.xplane.layers[layer_idx]
-                    print("layer name", layer_options.name)
                     for mat in [slot.material for obj in potential_objects for slot in obj.material_slots]:
-                        val = (bool(layer_options.get("shadow")))
-                        print("val for {} is {}".format(mat.name,val))
+                        # Default for shadow was True. get can't find shadow == no explicit value give
+                        val = (bool(layer_options.get("shadow", True)))
                         mat.xplane.shadow_local =  val # Easy case #1
-
                     try:
                         del layer_options["shadow"]
                     except KeyError:
