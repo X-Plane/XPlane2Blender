@@ -157,7 +157,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 # which is not how normal python works
                 del mat.xplane['blend_v1100']
 
-    if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-beta.1+43.20190605111000"):
+    if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-dev.0+43.20190606030000"):
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
             if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_LAYERS:
