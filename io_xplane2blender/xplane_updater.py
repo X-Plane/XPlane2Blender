@@ -203,8 +203,15 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 for layer_idx, layer_options in enumerate(scene.xplane.layers):
                     potential_objects = xplane_helpers.get_potential_objects_in_layer(layer_idx, scene)
                     # So we don't do all this update code for empty layers
+                    # or Aircraft or Cockpit which should remain True
                     if not potential_objects:
                         continue
+                    if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
+                        # Force shadow, in case a user somehow changed "Cast Shadow (Global)"
+                        # to False but has non scenery export type
+
+                        # We don't normally do things this way, but, "Cast Shadow (Global)" is soon to be deleted
+                        layer_options["shadow"] = True
                     potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
                     _update_potential_materials(potential_materials, layer_options)
                     # Save usage of materials in this layer
@@ -221,9 +228,11 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                     _delete_shadow(layer_options)
             elif scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
                 for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
+                    layer_options = root_obj.xplane.layer
+                    if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
+                        layer_options["shadow"] = True
                     potential_objects = xplane_helpers.get_potential_objects_in_root_object(root_obj)
                     potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
-                    layer_options = root_obj.xplane.layer
                     _update_potential_materials(potential_materials, layer_options)
                     used_layer_info = UsedLayerInfo(
                                             options=layer_options,
