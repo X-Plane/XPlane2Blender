@@ -1,5 +1,7 @@
-# File: xplane_updater.py
-# Automagically updates blend data created with older XPlane2Blender Versions
+'''
+Automagically updates blend data created with older XPlane2Blender Versions
+'''
+import collections
 import enum
 import functools
 
@@ -171,15 +173,11 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
             except KeyError:
                 pass
 
-        # bpy.types.Material->Tuple[List[Origin XPlaneLayer objects], True, False, needs de-duplication]
-        # Per scene, we find all the potential objects in an OBJ,
-        # and save what buckets a material belongs to.
-        #
-        # When we have all the material's and their buckets
-        # For a material that is in multiple buckets with different "Cast Shadow (Global) values", figure out
-        # Which bucket has the minimum
-        GlobalShadowUses = enum.IntEnum("GlobalShadowUse", {"OFF":1, "ON":2, "MIXED":3})
-        material_uses = {}
+        # This helps us conveniently save the Cast shadow value for later after we delete it
+        UsedLayerInfo = collections.namedtuple("UsedLayerInfo", ["options", "cast_shadow", "final_name"])
+
+        # This way we'll be able to map the usage (and shared-ness) of a material
+        material_uses = {} # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
 
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
@@ -191,34 +189,36 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                         continue
                     potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
                     _update_potential_materials(potential_materials, layer_options)
+                    # Save usage of materials in this layer
                     for mat in potential_materials:
                         if mat not in material_uses:
-                            material_uses[mat] = [[], layer_idx] # List of uses and indexes (since we need to give a name which may be "")
-                        material_uses[mat][0].append(layer_options)
-                for mat, (layers_used_in, idx) in material_uses.items():
-                    if len(layers_used_in) > 1:
-                        shadow_fn = (lambda a, b:
-                                        int(a.get("shadow", True)) + 1
-                                        | int(b.get("shadow", True)) + 1)
+                            material_uses[mat] = []
+                        material_uses[mat].append(
+                            UsedLayerInfo(
+                                options=layer_options,
+                                cast_shadow=bool(layer_options.get("shadow", True)),
+                                final_name=layer_options.name if layer_options.name else "layer_{:02}".format(layer_idx)
+                            )
+                        )
+                # Attempt to find shared usage, print out a table displaying issues
+                for mat, layers_used_in in material_uses.items():
+                    if (len(layers_used_in) > 1
+                        and len({l.cast_shadow for l in layers_used_in}) > 1): # Checks for mixed use of Cast Shadow (Global)
+                        pad = max([len(final_name) for _, _, final_name in layers_used_in])
+                        logger.error(
+                                "\n".join(
+                                    ["Material '{"  "}' is used across OBJs with different 'Cast Shadow (Global)' values:".format(mat.name),
+                                     "Ambiguous OBJs".ljust(pad) + "| Cast Shadow (Global)",
+                                     "-" * pad +                  "|---------------------",
+                                     "\n".join("{}| {}".format(final_name.ljust(pad), "On" if cast_shadow else "Off")
+                                               for options, cast_shadow, final_name in layers_used_in),
+                                     "",
+                                     "'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ"
+                                    ]
+                                )
+                            )
 
-                        if functools.reduce(shadow_fn, layers_used_in) == GlobalShadowUses.MIXED:
-                            layers_used_in = layers_used_in[:-1]
-                            pad = max(len(layer.name) for layer in layers_used_in)
-                            logger.error(
-                                    "\n".join(
-                                        ["Material '{"  "}' is used across OBJs with different 'Cast Shadow (Global)' values:".format(mat.name)]
-                                        + ["Ambiguous OBJs".ljust(pad) + "| Cast Shadow (Global)"]
-                                        + ["-" * pad +                   "|---------------------"]
-                                         # TODO:What if ""?
-                                        + [("{}| {}").format(
-                                               (layer.name if layer.name else "layer_" + str(idx).zfill(0)).ljust(pad),
-                                               "On" if bool(layer.get("shadow", True)) else "Off")
-                                            for layer in layers_used_in]
-                                        + ["\n"]
-                                        + ["'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ"]
-                                        )
-                                    )
-
+                for layer_idx, layer_options in enumerate(scene.xplane.layers):
                     _delete_shadow(layer_options)
             elif scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
                 for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
