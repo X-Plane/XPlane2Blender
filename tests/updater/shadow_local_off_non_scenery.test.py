@@ -23,8 +23,11 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
                     bpy.data.materials["Material_shadow_should_be_on_2_shared"],]:
             self.assertTrue(mat.xplane.shadow_local)
 
-        for layer_idx in range(4):
-            self.assertIsNone(bpy.context.scene.xplane.layers[layer_idx].get("shadow"))
+        for layer_idx in range(20):
+            self.assertIsNone(bpy.data.scenes["Scene_layers"].xplane.layers[layer_idx].get("shadow"))
+
+        self.assertIsNone(bpy.data.objects["01_aircraft_force_global_shadows_root"].get("shadow"))
+        self.assertIsNone(bpy.data.objects["02_cockpit_force_global_shadows_root"].get("shadow"))
 
     def test_01_aircraft_force_global_shadows(self):
         filename = inspect.stack()[0].function
@@ -39,6 +42,24 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         filename = inspect.stack()[0].function
         self.assertLayerExportEqualsFixture(
             1,
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
+
+    def test_01_aircraft_force_global_shadows_root(self):
+        filename = inspect.stack()[0].function
+        self.assertRootObjectExportEqualsFixture(
+            bpy.data.objects[filename[5:]],
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
+
+    def test_02_cockpit_force_global_shadows_root(self):
+        filename = inspect.stack()[0].function
+        self.assertRootObjectExportEqualsFixture(
+            bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
             filterLines
