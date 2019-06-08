@@ -1,6 +1,7 @@
 # File: xplane_updater.py
 # Automagically updates blend data created with older XPlane2Blender Versions
 import enum
+import functools
 
 import bpy
 from bpy.app.handlers import persistent
@@ -158,47 +159,76 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 del mat.xplane['blend_v1100']
 
     if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-dev.0+43.20190606030000"):
+        def _update_potential_materials(potential_objects: bpy.types.Material, layer_options:'XPlaneLayer')->None:
+            for mat in potential_materials:
+                # Default for shadow was True. get can't find shadow == no explicit value give
+                val = bool(layer_options.get("shadow", True))
+                mat.xplane.shadow_local = val # Easy case #1
+
+        def _delete_shadow(layer_options: 'XPlaneLayer')->None:
+            try:
+                del layer_options["shadow"]
+            except KeyError:
+                pass
+
+        # bpy.types.Material->Tuple[List[Origin XPlaneLayer objects], True, False, needs de-duplication]
+        # Per scene, we find all the potential objects in an OBJ,
+        # and save what buckets a material belongs to.
+        #
+        # When we have all the material's and their buckets
+        # For a material that is in multiple buckets with different "Cast Shadow (Global) values", figure out
+        # Which bucket has the minimum
+        GlobalShadowUses = enum.IntEnum("GlobalShadowUse", {"OFF":1, "ON":2, "MIXED":3})
+        material_uses = {}
+
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
             if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_LAYERS:
                 for layer_idx, layer_options in enumerate(scene.xplane.layers):
                     potential_objects = xplane_helpers.get_potential_objects_in_layer(layer_idx, scene)
-                    for mat in [slot.material for obj in potential_objects for slot in obj.material_slots]:
-                        # Default for shadow was True. get can't find shadow == no explicit value give
-                        val = (bool(layer_options.get("shadow", True)))
-                        mat.xplane.shadow_local = val # Easy case #1
-                    try:
-                        del layer_options["shadow"]
-                    except KeyError:
-                        pass
+                    # So we don't do all this update code for empty layers
+                    if not potential_objects:
+                        continue
+                    potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
+                    _update_potential_materials(potential_materials, layer_options)
+                    for mat in potential_materials:
+                        if mat not in material_uses:
+                            material_uses[mat] = [[], layer_idx] # List of uses and indexes (since we need to give a name which may be "")
+                        material_uses[mat][0].append(layer_options)
+                for mat, (layers_used_in, idx) in material_uses.items():
+                    if len(layers_used_in) > 1:
+                        shadow_fn = (lambda a, b:
+                                        int(a.get("shadow", True)) + 1
+                                        | int(b.get("shadow", True)) + 1)
+
+                        if functools.reduce(shadow_fn, layers_used_in) == GlobalShadowUses.MIXED:
+                            layers_used_in = layers_used_in[:-1]
+                            pad = max(len(layer.name) for layer in layers_used_in)
+                            logger.error(
+                                    "\n".join(
+                                        ["Material '{"  "}' is used across OBJs with different 'Cast Shadow (Global)' values:".format(mat.name)]
+                                        + ["Ambiguous OBJs".ljust(pad) + "| Cast Shadow (Global)"]
+                                        + ["-" * pad +                   "|---------------------"]
+                                         # TODO:What if ""?
+                                        + [("{}| {}").format(
+                                               (layer.name if layer.name else "layer_" + str(idx).zfill(0)).ljust(pad),
+                                               "On" if bool(layer.get("shadow", True)) else "Off")
+                                            for layer in layers_used_in]
+                                        + ["\n"]
+                                        + ["'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ"]
+                                        )
+                                    )
+
+                    _delete_shadow(layer_options)
             elif scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
                 for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
                     potential_objects = xplane_helpers.get_potential_objects_in_root_object(root_obj)
+                    potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
                     layer_options = root_obj.xplane.layer
-                    for mat in [slot.material for obj in potential_objects for slot in obj.material_slots]:
-                        # Default for shadow was True. get can't find shadow == no explicit value give
-                        val = (bool(layer_options.get("shadow", True)))
-                        mat.xplane.shadow_local = val # Easy case #1
-                    try:
-                        del layer_options["shadow"]
-                    except KeyError:
-                        pass
+                    _update_potential_materials(potential_materials, layer_options)
+                    _delete_shadow(layer_options)
             else:
                 assert False, "How did we get here?!"
-
-            # Dumb enum
-            GLOBAL_ON    = 0
-            GLOBAL_OFF   = 1
-            GLOBAL_MIXED = 2
-            # bpy.types.Material->Tuple[List[Origin XPlaneLayer objects], True, False, needs de-duplication]
-            # Per scene, we find all the potential objects in an OBJ,
-            # and save what buckets a material belongs to.
-            #
-            # When we have all the material's and their buckets
-            # For a material that is in multiple buckets with different "Cast Shadow (Global) values", figure out
-            # Which bucket has the minimum
-            material_origin = {}
-
 
 
 @persistent

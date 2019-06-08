@@ -50,11 +50,25 @@ class TestShadowLocalOffLayersMode(XPlaneTestCase):
             filterLines
         )
 
+    '''
     def test_03_global_off_shared(self):
-        pass
+        filename = inspect.stack()[0].function + "_layers"
+        self.assertLayerExportEqualsFixture(
+            2,
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
 
     def test_04_global_on_shared(self):
-        pass
+        filename = inspect.stack()[0].function + "_layers"
+        self.assertLayerExportEqualsFixture(
+            3,
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
+    '''
 
 
 runTestCases([TestShadowLocalOffLayersMode])
