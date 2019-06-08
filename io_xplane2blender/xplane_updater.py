@@ -4,6 +4,7 @@ Automagically updates blend data created with older XPlane2Blender Versions
 import collections
 import enum
 import functools
+from typing import Dict, List, Tuple
 
 import bpy
 from bpy.app.handlers import persistent
@@ -161,6 +162,8 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 del mat.xplane['blend_v1100']
 
     if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-dev.0+43.20190606030000"):
+        # This helps us conveniently save the Cast shadow value for later after we delete it
+        UsedLayerInfo = collections.namedtuple("UsedLayerInfo", ["options", "cast_shadow", "final_name"])
         def _update_potential_materials(potential_objects: bpy.types.Material, layer_options:'XPlaneLayer')->None:
             for mat in potential_materials:
                 # Default for shadow was True. get can't find shadow == no explicit value give
@@ -173,11 +176,26 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
             except KeyError:
                 pass
 
-        # This helps us conveniently save the Cast shadow value for later after we delete it
-        UsedLayerInfo = collections.namedtuple("UsedLayerInfo", ["options", "cast_shadow", "final_name"])
+        def _print_error_table(material_uses: Dict[bpy.types.Material, List[UsedLayerInfo]])->None:
+            for mat, layers_used_in in material_uses.items():
+                if (len(layers_used_in) > 1
+                    and any(layers_used_in[0].cast_shadow != l.cast_shadow for l in layers_used_in)): # Checks for mixed use of Cast Shadow (Global)
+                    pad = max([len(final_name) for _, _, final_name in layers_used_in])
+                    logger.error(
+                            "\n".join(
+                                ["Material '{}' is used across OBJs with different 'Cast Shadow (Global)' values:".format(mat.name),
+                                 "Ambiguous OBJs".ljust(pad) + "| Cast Shadow (Global)",
+                                 "-" * pad +                   "|---------------------",
+                                 "\n".join("{}| {}".format(final_name.ljust(pad), "On" if cast_shadow else "Off")
+                                           for options, cast_shadow, final_name in layers_used_in),
+                                 "",
+                                 "'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ"
+                                ]
+                            )
+                        )
 
         # This way we'll be able to map the usage (and shared-ness) of a material
-        material_uses = {} # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
+        material_uses = collections.defaultdict(list) # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
 
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
@@ -190,33 +208,14 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                     potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
                     _update_potential_materials(potential_materials, layer_options)
                     # Save usage of materials in this layer
+                    used_layer_info = UsedLayerInfo(
+                                            options=layer_options,
+                                            cast_shadow=bool(layer_options.get("shadow", True)),
+                                            final_name=layer_options.name if layer_options.name else "layer_{:02}".format(layer_idx)
+                                        )
+
                     for mat in potential_materials:
-                        if mat not in material_uses:
-                            material_uses[mat] = []
-                        material_uses[mat].append(
-                            UsedLayerInfo(
-                                options=layer_options,
-                                cast_shadow=bool(layer_options.get("shadow", True)),
-                                final_name=layer_options.name if layer_options.name else "layer_{:02}".format(layer_idx)
-                            )
-                        )
-                # Attempt to find shared usage, print out a table displaying issues
-                for mat, layers_used_in in material_uses.items():
-                    if (len(layers_used_in) > 1
-                        and len({l.cast_shadow for l in layers_used_in}) > 1): # Checks for mixed use of Cast Shadow (Global)
-                        pad = max([len(final_name) for _, _, final_name in layers_used_in])
-                        logger.error(
-                                "\n".join(
-                                    ["Material '{"  "}' is used across OBJs with different 'Cast Shadow (Global)' values:".format(mat.name),
-                                     "Ambiguous OBJs".ljust(pad) + "| Cast Shadow (Global)",
-                                     "-" * pad +                  "|---------------------",
-                                     "\n".join("{}| {}".format(final_name.ljust(pad), "On" if cast_shadow else "Off")
-                                               for options, cast_shadow, final_name in layers_used_in),
-                                     "",
-                                     "'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ"
-                                    ]
-                                )
-                            )
+                        material_uses[mat].append(used_layer_info)
 
                 for layer_idx, layer_options in enumerate(scene.xplane.layers):
                     _delete_shadow(layer_options)
@@ -226,9 +225,19 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                     potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
                     layer_options = root_obj.xplane.layer
                     _update_potential_materials(potential_materials, layer_options)
+                    used_layer_info = UsedLayerInfo(
+                                            options=layer_options,
+                                            cast_shadow=bool(layer_options.get("shadow", True)),
+                                            final_name=layer_options.name if layer_options.name else root_obj.name
+                                        )
+                    for mat in potential_materials:
+                        material_uses[mat].append(used_layer_info)
                     _delete_shadow(layer_options)
             else:
                 assert False, "How did we get here?!"
+
+            # Attempt to find shared usage, print out a table displaying issues
+            _print_error_table(material_uses)
 
 
 @persistent

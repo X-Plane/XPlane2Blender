@@ -26,7 +26,7 @@ class TestShadowLocalOffRootObjectsMode(XPlaneTestCase):
                     bpy.data.materials["Material_shadow_should_be_on_3"],]:
             self.assertTrue(mat.xplane.shadow_local)
 
-        for root_name in ["01_global_off", "02_global_on"]:#, "03_global_off_shared", "04_global_on_shared"]:
+        for root_name in ["01_global_off", "02_global_on", "03_global_off_shared", "04_global_on_shared"]:
             self.assertIsNone(bpy.data.objects[root_name].xplane.layer.get("shadow"))
 
     def test_01_global_off(self):
@@ -47,11 +47,25 @@ class TestShadowLocalOffRootObjectsMode(XPlaneTestCase):
                 filterLines
             )
 
+    """
     def test_03_global_off_shared(self):
-        pass
+        filename = inspect.stack()[0].function
+        self.assertRootObjectExportEqualsFixture(
+                bpy.data.objects[filename[5:]],
+                os.path.join(__dirname__, 'fixtures', filename + '_root_objects.obj'),
+                filename,
+                filterLines
+            )
 
     def test_04_global_on_shared(self):
-        pass
+        filename = inspect.stack()[0].function
+        self.assertRootObjectExportEqualsFixture(
+                bpy.data.objects[filename[5:]],
+                os.path.join(__dirname__, 'fixtures', filename + '_root_objects.obj'),
+                filename,
+                filterLines
+            )
+    """
 
 
 runTestCases([TestShadowLocalOffRootObjectsMode])

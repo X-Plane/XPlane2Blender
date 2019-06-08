@@ -50,7 +50,7 @@ class TestShadowLocalOffLayersMode(XPlaneTestCase):
             filterLines
         )
 
-    '''
+    """
     def test_03_global_off_shared(self):
         filename = inspect.stack()[0].function + "_layers"
         self.assertLayerExportEqualsFixture(
@@ -68,7 +68,7 @@ class TestShadowLocalOffLayersMode(XPlaneTestCase):
             filename,
             filterLines
         )
-    '''
+    """
 
 
 runTestCases([TestShadowLocalOffLayersMode])
