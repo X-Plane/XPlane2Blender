@@ -29,11 +29,13 @@ class TestUpdateCastShadow(XPlaneTestCase):
                     bpy.data.materials["Material_shadow_should_be_on_3"],]:
             self.assertTrue(mat.xplane.shadow_local)
 
-        for layer_idx in range(4):
+        # Test that every layer.shadow property was removed as well
+        for layer_idx in range(20):
             self.assertIsNone(bpy.data.scenes["Scene_layers_mode"].xplane.layers[layer_idx].get("shadow"))
 
-        for root_name in ["01_global_off.001", "02_global_on.001", "03_global_off_shared.001", "04_global_on_shared.001"]:
-            self.assertIsNone(bpy.data.objects[root_name].xplane.layer.get("shadow"))
+        for obj in bpy.data.objects:
+            self.assertIsNone(obj.xplane.layer.get("shadow"))
+
 
     def test_01_global_off_layers(self):
         bpy.context.window.screen.scene = bpy.data.scenes["Scene_layers_mode"]

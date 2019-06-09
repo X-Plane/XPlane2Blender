@@ -241,13 +241,19 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                                         )
                     for mat in potential_materials:
                         material_uses[mat].append(used_layer_info)
-                    _delete_shadow(layer_options)
             else:
                 assert False, "How did we get here?!"
+
 
             # Attempt to find shared usage, print out a table displaying issues
             _print_error_table(material_uses)
 
+        # They might not all be root objects, but all objects have a XPlaneLayer property group!
+        for obj in bpy.data.objects:
+            try:
+                del obj.xplane.layer["shadow"]
+            except KeyError:
+                pass
 
 @persistent
 def load_handler(dummy):
