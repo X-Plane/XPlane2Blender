@@ -189,10 +189,10 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                                  "\n".join("{}| {}".format(final_name.ljust(pad), "On" if cast_shadow else "Off")
                                            for options, cast_shadow, final_name in layers_used_in),
                                  "",
-                                 "'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ"
                                 ]
                             )
                         )
+            logger.info("'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ")
 
         # This way we'll be able to map the usage (and shared-ness) of a material
         material_uses = collections.defaultdict(list) # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
