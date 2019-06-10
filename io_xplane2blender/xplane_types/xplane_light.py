@@ -55,16 +55,16 @@ class XPlaneLight(XPlaneObject):
         if blenderObject.data.xplane.enable_rgb_override:
             self.color = blenderObject.data.xplane.rgb_override_values[:]
         else:
-            self.color = blenderObject.data.color[:]
-        
+            self.color = list(blenderObject.data.color[:])
+
         self.energy = blenderObject.data.energy
         self.lightType = blenderObject.data.xplane.type
         self.size = blenderObject.data.xplane.size
         self.lightName = blenderObject.data.xplane.name
         self.params = blenderObject.data.xplane.params
-        
+
         self.lightOverload = None
-        
+
         self.comment = None
 
         self.is_omni = False
@@ -121,7 +121,7 @@ class XPlaneLight(XPlaneObject):
 
             params_formal = self.lightOverload.light_param_def.prototype
             params_actual = re.findall(r" *[^ ]*",self.params)[:-1]
-            
+
             if len(params_actual) < len(params_formal):
                 logger.error("Not enough actual parameters (%s) to satisfy LIGHT_PARAM_DEF %s" % (' '.join(params_actual),' '.join(params_formal)))
                 return
@@ -130,7 +130,7 @@ class XPlaneLight(XPlaneObject):
                 self.comment = (''.join(params_actual[len(params_formal):])).lstrip()
                 if not (self.comment.startswith("//") or self.comment.startswith("#")):
                     logger.warn("Comment in param light %s does not start with '//' or '#'" % self.comment)
-            
+
 
             params_actual = [p.strip() for p in params_actual[0:len(params_formal)]]
             user_values   = [None]*len(params_actual) # type: List[Optional[float]]
@@ -143,7 +143,7 @@ class XPlaneLight(XPlaneObject):
                     else:
                         return True
                 if isfloat(param):
-                    user_values[i] = float(param) 
+                    user_values[i] = float(param)
                 else:
                     logger.error("Parameter %s (%s) is not a number" % (i,param))
                     return
@@ -152,9 +152,9 @@ class XPlaneLight(XPlaneObject):
 
             self.is_omni = float(self.lightOverload.get("WIDTH")) >= 1.0
             dir_vec = Vector((self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ")))
-            if dir_vec.magnitude == 0.0 and self.is_omni is False: 
+            if dir_vec.magnitude == 0.0 and self.is_omni is False:
                 logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
-           
+
             if logger.hasErrors():
                 return
         elif self.lightType == LIGHT_PARAM and self.lightOverload is None:
@@ -184,7 +184,7 @@ class XPlaneLight(XPlaneObject):
         def vec_x_to_b(v):
             return Vector((v.x, -v.z, v.y))
 
-           
+
         if self.blenderObject.data.type == 'POINT':
             pass
         elif self.blenderObject.data.type != 'POINT' and self.lightOverload is not None:
@@ -192,7 +192,7 @@ class XPlaneLight(XPlaneObject):
             (dx,dy,dz) = (self.lightOverload.get("DX"),self.lightOverload.get("DY"),self.lightOverload.get("DZ"))
             if dx is not None and dy is not None and dz is not None:
                 dir_vec_p_norm_b = vec_x_to_b(Vector((dx,dy,dz)).normalized())
-                
+
                 # Multiple bake matrix by Vector to get the direction of the Blender object
                 dir_vec_b_norm = bakeMatrix.to_3x3() * Vector((0,0,-1))
 
@@ -200,15 +200,15 @@ class XPlaneLight(XPlaneObject):
                 # "We take the X-Plane light and turn it until it matches what the artist wanted"
                 axis_angle_vec3 = dir_vec_p_norm_b.cross(dir_vec_b_norm)
 
-                dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm) 
+                dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm)
 
                 if dot_product_p_b < 0:
                     axis_angle_theta = math.pi - math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
                 else:
                     axis_angle_theta = math.asin(self.clamp(axis_angle_vec3.magnitude,-1.0,1.0))
-                
+
                 translation = bakeMatrix.to_translation()
-            
+
                 # Ben says: lights always have some kind of offset because the light itself
                 # is "at" 0,0,0, so we treat the translation as the light position.
                 # But if there is a ROTATION then in the light's bake matrix, the
@@ -220,10 +220,10 @@ class XPlaneLight(XPlaneObject):
                 # itself.
                 if round(axis_angle_theta,5) != 0.0 and self.is_omni is False:
                     o += "%sANIM_begin\n" % indent
-                    
+
                     if debug:
                         o += indent + '# static rotation\n'
-                    
+
                     axis_angle_vec3_x = vec_b_to_x(axis_angle_vec3).normalized()
                     anim_rotate_dir =  indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
                         floatToStr(axis_angle_vec3_x[0]),

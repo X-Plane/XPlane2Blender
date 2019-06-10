@@ -1248,14 +1248,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1010
-    shadow = bpy.props.BoolProperty(
-        attr = "shadow",
-        name = "Cast Shadows (Global)",
-        description = "If disabled object will not cast any shadows",
-        default = True
-    )
-
-    # v1010
     cockpit_lit = bpy.props.BoolProperty(
         attr = "cockpit_lit",
         name = "3D-Cockpit Lighting",
@@ -1635,6 +1627,12 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
             (SURFACE_TYPE_SHOULDER, "Shoulder","Shoulder"),
             (SURFACE_TYPE_BLASTPAD, "Blastpad","Blastpad"),
         ]
+    )
+
+    shadow_local = bpy.props.BoolProperty(
+        name="Cast Shadows (Local)",
+        description="If enabled, object will cast shadows. Must have 'Cast Shadows (Global)' checked",
+        default=True
     )
 
     deck = bpy.props.BoolProperty(

@@ -194,6 +194,23 @@ def main(argv=None)->int:
 
             #Run Blender, normalize output line endings because Windows is dumb
             out = subprocess.check_output(blender_args, stderr = subprocess.STDOUT, universal_newlines=True) # type: str
+            if not argv.force_blender_debug:
+                # Ignore the junk!
+                pattern = "^(%s)" % "|".join(
+                    (
+                        "DAG zero",
+                        "found bundled python",
+                        "Read new prefs",
+                        "ID user decrement error",
+                        "Smart Projection time",
+                        "WARNING.*has no UV-Map."
+                    )
+                )
+
+                out = "\n".join(filter(
+                    lambda line: not re.match(pattern, line),
+                    out.splitlines()
+                ))
             if not (argv.quiet or argv.print_fails):
                 print(out)
 

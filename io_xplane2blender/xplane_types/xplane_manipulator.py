@@ -98,33 +98,6 @@ def check_bone_is_animated_for_rotation(bone:XPlaneBone,log_errors:bool=True,man
         return True
 
 
-def check_bone_is_animated_for_hide(bone:XPlaneBone,log_errors:bool=True)->bool:
-    '''
-    Checks if a bone has a hide dataref at all, even if it is not valid
-    '''
-    try:
-        if bone.blenderBone:
-            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderBone.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
-        else:
-            # Note the use of bone.blenderObject.xplane.datarefs!!!
-            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_HIDE]) > 0
-    except:
-        return False
-
-def check_bone_is_animated_for_show(bone:XPlaneBone,log_errors:bool=True)->bool:
-    '''
-    Checks if a bone has a show or hide dataref at all, even if it is not valid
-    '''
-    try:
-        if bone.blenderBone:
-            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderBone.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW]) > 0
-        else:
-            # Note the use of bone.blenderObject.xplane.datarefs!!!
-            return len([(path,dataref_prop) for path,dataref_prop in bone.blenderObject.xplane.datarefs.items() if dataref_prop.anim_type == ANIM_TYPE_SHOW]) > 0
-    except:
-        return False
-
-
 def check_bone_is_animated_for_translation(bone:XPlaneBone,log_errors:bool=True,manipulator:'XPlaneManipulator'=None) -> bool:
     '''
     Returns true if bone has at least two translation keyframes that are different
@@ -468,12 +441,17 @@ def get_information_sources(manipulator:'XPlaneManipulator',
         #Note the use of blenderObject.xplane.datarefs, as opposed to bone.datarefs!
         while bone is not None:
             if bone.blenderBone is None:
-                if len(bone.animations.values()) > 0 or\
-                   (bone.blenderObject and len(bone.blenderObject.xplane.datarefs) > 0):
+                if (len(bone.animations.values()) > 0
+                    or (bone.blenderObject
+                    and list(
+                            filter(lambda d: d.anim_type == ANIM_TYPE_TRANSFORM,
+                                   bone.blenderObject.xplane.datarefs)))):
                     break
             else:
-                if len(bone.animations.values()) > 0 or\
-                   len(bone.blenderBone.xplane.datarefs) > 0:
+                if (len(bone.animations.values()) > 0
+                    or list(
+                        filter(lambda d: d.anim_type == ANIM_TYPE_TRANSFORM,
+                               bone.blenderBone.xplane.datarefs))):
                     break
 
             bone = bone.parent
@@ -488,12 +466,10 @@ def get_information_sources(manipulator:'XPlaneManipulator',
             collected_bones:List[XPlaneBone],
             last_index:int, # Since we allow gaps in the parent-child chain, idx != last_bone
             last_bone_examined:XPlaneBone,
-            last_show_result:bool, last_hide_result:bool,
             last_white_result:bool, last_black_result:bool):
 
         # Something, anything, has to be wrong in some way or this shouldn't have been called!
         assert len(collected_bones) != len(white_list) or\
-                last_show_result or last_hide_result or\
                 last_white_result or last_black_result
 
         error_header = "Requirements for {manip_type} manipulator on '{manipulator_name}' are not met".format(
@@ -547,14 +523,6 @@ Stopped searching because
                 anim_type_black=black_list[idx][1].title(),
                 name=last_bone_examined.getName(ignore_indent_level=True)))
 
-        if last_show_result:
-            problems_found_strs.append("- Show animation was found on {name}".format(
-                name=last_bone_examined.getName(ignore_indent_level=True)))
-
-        if last_hide_result:
-            problems_found_strs.append("- Hide animation was found on {name}".format(
-                name=last_bone_examined.getName(ignore_indent_level=True)))
-
         if last_bone_examined is None:
             problems_found_strs.append("- {anim_count_str} found before exporter ran out of bones to inspect".format(
                 anim_count_str=("{} animation" + ("" if len(collected_bones) == 1 else "s")).format(len(collected_bones))))
@@ -576,12 +544,6 @@ Possible Solutions:
             solutions_found_strs.append("- Remove {anim_type_black} animation from {name}".format(
                 anim_type_black=black_list[idx][1].title(),
                 name=last_bone_examined.getName(ignore_indent_level=True)))
-        if last_show_result:
-            solutions_found_strs.append("- Remove Show animation from {name}".format(
-                name=last_bone_examined.getName(ignore_indent_level=True)))
-        if last_hide_result:
-            solutions_found_strs.append("- Remove Hide animation from {name}".format(
-                name=last_bone_examined.getName(ignore_indent_level=True)))
         if last_bone_examined is None:
             solutions_found_strs.append("- You may have missing animations, not enough objects or bones, or have incorrectly set up your parent-child relationships")
 
@@ -597,20 +559,15 @@ Possible Solutions:
     while current_bone is not None and idx < len(white_list):
         current_bone = find_next_animated_bone(current_bone)
         found_error = False
-        show_result = False; hide_result = False
         white_list_result = False; black_list_result = False
         if current_bone is None:
             found_error = True
             break
         else:
-            show_result = check_bone_is_animated_for_show(current_bone)
-            hide_result = check_bone_is_animated_for_hide(current_bone)
-
             white_list_result = white_list[idx][0](current_bone,False)
             black_list_result = black_list[idx][0](current_bone,False)
 
-            if show_result or hide_result or\
-               not white_list_result or black_list_result:
+            if not white_list_result or black_list_result:
                 found_error = True
                 break
             else:
@@ -624,7 +581,6 @@ Possible Solutions:
     if (found_error or len(collected_bones) != len(white_list)) and log_errors:
         log_error(manipulator,white_list,black_list,collected_bones,
                 last_index=idx, last_bone_examined=current_bone,
-                last_show_result=show_result, last_hide_result=hide_result,
                 last_white_result=white_list_result, last_black_result=black_list_result)
         return None
 
@@ -1170,7 +1126,7 @@ class XPlaneManipulator():
                         AxisDetentStruct = collections.namedtuple("AxisDetentStruct", ['start','end','height'])
                         try:
                             detent_range_next = axis_detent_ranges[i+1]
-                        except:
+                        except IndexError:
                             detent_range_next = AxisDetentStruct(detent_range.end, v1_max, float('inf'))
 
 
@@ -1182,8 +1138,8 @@ class XPlaneManipulator():
                             return False
 
                         try:
-                            detent_range_prev = axis_detent_ranges[i-1]
-                        except:
+                            detent_range_prev = axis_detent_ranges[i-1] if i > 0 else AxisDetentStruct(v1_min, detent_range.start, float('inf'))
+                        except IndexError:
                             detent_range_prev = AxisDetentStruct(v1_min, detent_range.start, float('inf'))
 
                         if detent_range.start == detent_range.end and\
@@ -1192,8 +1148,8 @@ class XPlaneManipulator():
                                          " previous {} and next detent ranges {}".format(
                                              translation_bone.getBlenderName(),
                                             (detent_range),
-                                            (detent_range_prev.start,detent_range_prev.end,detent_range.height),
-                                            (detent_range_next.start,detent_range_next.end,detent_range_next.height))
+                                            (detent_range_prev.start, detent_range_prev.end, detent_range.height),
+                                            (detent_range_next.start, detent_range_next.end, detent_range_next.height))
                                          )
                             return False
 

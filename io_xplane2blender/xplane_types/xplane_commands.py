@@ -81,6 +81,7 @@ class XPlaneCommands():
             'ATTR_light_level':'ATTR_light_level_reset',
             'ATTR_cockpit|ATTR_cockpit_region':'ATTR_no_cockpit',
             'ATTR_manip_(?!none)(?!wheel)(.*)':'ATTR_manip_none',
+            'ATTR_no_shadow':'ATTR_shadow',
             'ATTR_draw_disable':'ATTR_draw_enable',
             'ATTR_poly_os':'ATTR_poly_os 0',
             'ATTR_hard|ATTR_hard_deck':'ATTR_no_hard',
@@ -99,9 +100,9 @@ class XPlaneCommands():
         self.written = {
             'ATTR_no_hard': True,
             'ATTR_blend': True,
-            'ATTR_no_hard': True,
             'ATTR_no_cockpit': True,
             'ATTR_no_solid_camera': True,
+            'ATTR_shadow': True,
             'ATTR_draw_enable': True,
             'ATTR_no_draped': True
         }
@@ -221,7 +222,7 @@ class XPlaneCommands():
                         # If there is a resetter for this attribute, we need to
                         # nuke it from the written list - we are replacing it.
                         counterparts = self.getAttributeCounterparts(name)
-                        
+
                         for counterpart in counterparts:
                             if counterpart in self.written:
                                 del self.written[counterpart]
@@ -311,7 +312,7 @@ class XPlaneCommands():
             # The attribute is a setter - the resetter is a counter part
             if compiledPattern.fullmatch(attr):
                 found.append(resetter)
-    
+
             # The pattern is a resetter or ONE of the setters.
             # Every other setter but us is a counterpart.
             if attr == resetter or compiledPattern.fullmatch(attr):
@@ -338,7 +339,7 @@ class XPlaneCommands():
         debug = getDebug()
         o = ''
         indent = xplaneObject.xplaneBone.getIndent()
-        
+
         # create a temporary attributes dict
         attributes = XPlaneAttributes()
         # add custom attributes
@@ -374,10 +375,12 @@ class XPlaneCommands():
                 'ATTR_blend',
                 'ATTR_draped',
                 'ATTR_no_draped',
+                'ATTR_shadow',
+                'ATTR_no_shadow',
                 'ATTR_solid_camera',
                 'ATTR_no_solid_camera'
                 }
-        
+
         #  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         # <What's up with WHITE_LIST? IT'S A STUPID HACK!>
         #  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -421,7 +424,7 @@ class XPlaneCommands():
                 print("WARNING: multiple written attributes matched %s" % setterPattern)
                 print(matchingWritten)
 
-            
+
             if matchingWritten and not matchingAttribute:
                 # only reset attributes that wont be written with this object again
                 #logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
