@@ -17,18 +17,18 @@ LIGHT_SPECS
 # In Sergio's textures, the default ground halo orientation is such that the RIGHT side of the halo will be aligned with the front/south
 # of the light.
 
-# This chart shows the values for each light type.  * means the light can be parameterized via a text parameter, . means it exists but is illegal for parameterization
-#                  Name   R   G   B   A   Size   Cell   Dx   Dy   Dz   Width   Frq   Phase   Amp   Day   Dataref
-# BILLBOARD_HW     .      *   *   *   .   *      .      *    *    *    *       *     *       .     .
-# BILLBOARD_SW     .      *   *   *   *   *      .      *    *    *    *                                 .
-# CONE_HW          .      *   *   *   *   *      .      *    *    *    *                                 .
-# CONE_SW          .      *   *   *   *   *      .      *    *    *    *                                 .
-# SPILL_GND        .                      *      .                    
-# SPILL_GND_REV    .                      *      .                    
-# SPILL_HW_DIR     .      *   *   *   *   *             *    *    *    *                                 .
-# SPILL_HW_FLA     .      *   *   *   *   *                                    *     *       .     .
-# SPILL_SW         .      *   *   *   *   *             *    *    *    *                                 .
-
+# This chart shows the values for each light type.  * means the light can be parameterized via a text parameter.  
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
+# BILLBOARD_HW		.					*	*	*	.	*	.	*	*	*	*	*	*	.	.
+# BILLBOARD_SW		.					*	*	*	*	*	.	*	*	*	*					.
+# CONE_HW		.					*	*	*	*	*	.	*	*	*	*					.
+# CONE_SW		.					*	*	*	*	*	.	*	*	*	*					.
+# SPILL_GND		.									*	.
+# SPILL_GND_REV		.									*	.
+# SPILL_HW_DIR		.					*	*	*	*	*		*	*	*	*					.
+# SPILL_HW_FLA		.					*	*	*	*	*						*	*	.	.
+# SPILL_SW		.					*	*	*	*	*		*	*	*	*					.
+#
 # BILLBOARD_HW - hardware accelerated billboard.  This is the same as the old LIGHT_DIRECTIONAL and LIGHT_FLASHING except now we can have both.
 # BILLBOARD_SW - dataref-driven billboard.  Same as the old LIGHT_ANIMATION and LIGHT_PARAM.
 # SPILL_GND, SPILL_GND_REV - old v8-style quads-on-the-ground light spill for runway lights.
@@ -36,6 +36,7 @@ LIGHT_SPECS
 # SPILL_SW - dataref driven spill.
 
 # NOTE: hardware billboards must have an alpha of 1.0 if any of the RGB values are parameterized!
+
 # RGBA:			This is the color tint that is applied to the light spill or the billboard.  Since light is additive, alpha is really just a master dimmer.
 # Size:			Light size.  This is the total size in meters for spill, or a 'size constant' for billboards.
 # Cell:			A triplet of ints (size, row, column, 0,0 is lower left) for billboards. Size is a power-of-two multiplier for cell size. 
@@ -303,21 +304,21 @@ BILLBOARD_SW		airplane_nav_right			1	1	1	1	0.7	1 6 7	0	0	0	1					sim/graphics/an
 
 # STATIC aircraft NAV lights
 # heavy
-#			Name					R	G	B	A	Size	Cell	DX	DY	DZ	Width	Frq	Phase	Amp	Day
-SPILL_HW_DIR		airplane_nav_tail_static_h		1	1	0.8	1.0	10		0 	0 	1 	0.2	0	0	0	1
+
+SPILL_HW_DIR		airplane_nav_tail_static_h		1	1	0.8	1.0	10		0 	0 	1 	0.2	0
 BILLBOARD_HW		airplane_nav_tail_static_h		1	1	1	1.0	0.6	1 5 7	0	0	0.83	0.3	0	0	0	1					
-SPILL_HW_DIR		airplane_nav_left_static_h		0.9	0.1	0	1.0	9.5		-0.95 	0 	-0.31	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_left_static_h		0.9	0.1	0	1.0	9.5		-0.95 	0 	-0.31	0.2	0
 BILLBOARD_HW		airplane_nav_left_static_h		1	1	1	1.0	0.65	1 7 7	-0.8	0	-0.25	0.3	0	0	0	1				
-SPILL_HW_DIR		airplane_nav_right_static_h		0.02	0.74	0.36	1.0	9.5		0.95 	0 	-0.31 	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_right_static_h		0.02	0.74	0.36	1.0	9.5		0.95 	0 	-0.31 	0.2	0
 BILLBOARD_HW		airplane_nav_right_static_h		1	1	1	1.0	0.65	1 6 7	0.8	0	-0.25	0.3	0	0	0	1					
 
 # normal
 
-SPILL_HW_DIR		airplane_nav_tail_static		1	1	0.8	1.0	5.5		0 	0 	1 	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_tail_static		1	1	0.8	1.0	5.5		0 	0 	1 	0.2	0
 BILLBOARD_HW		airplane_nav_tail_static		1	1	1	1.0	0.5	1 5 7	0	0	0.83	0.3	0	0	0	1					
-SPILL_HW_DIR		airplane_nav_left_static		0.9	0.1	0	1.0	5.5		-0.95 	0 	-0.31	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_left_static		0.9	0.1	0	1.0	5.5		-0.95 	0 	-0.31	0.2	0
 BILLBOARD_HW		airplane_nav_left_static		1	1	1	1.0	0.6	1 7 7	-0.8	0	-0.25	0.3	0	0	0	1				
-SPILL_HW_DIR		airplane_nav_right_static		0.02	0.74	0.36	1.0	5.5		0.95 	0 	-0.31 	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_right_static		0.02	0.74	0.36	1.0	5.5		0.95 	0 	-0.31 	0.2	0
 BILLBOARD_HW		airplane_nav_right_static		1	1	1	1.0	0.6	1 6 7	0.8	0	-0.25	0.3	0	0	0	1					
 
 
@@ -958,6 +959,12 @@ BILLBOARD_HW		traffic_amber_W				0.978	0.772	0.071	1.0	0.8	1 4 7	-3	0	0	-2	0.02	
 BILLBOARD_HW		traffic_amber_W 			0.978	0.772	0.071	1.0	0.8	1 4 7	-3	0	0	-2	0.02	0.44	1060	1					
 BILLBOARD_HW		traffic_green_W				0.015	0.983	0.966	1.0	0.8	1 4 7	-3	0	0	-2	0.02	0.1	1340	1
 
+BILLBOARD_HW		traffic_green_N_static			0.015	0.983	0.966	1.0	0.8	1 4 7	0	0	-3	-2	0	0	0	1
+BILLBOARD_HW		traffic_green_S_static			0.015	0.983	0.966	1.0	0.8	1 4 7	0	0	3	-2	0	0	0	1
+BILLBOARD_HW		traffic_green_E_static			0.015	0.983	0.966	1.0	0.8	1 4 7	3	0	0	-2	0	0	0	1
+BILLBOARD_HW		traffic_green_W_static			0.015	0.983	0.966	1.0	0.8	1 4 7	-3	0	0	-2	0	0	0	1
+
+
 # Railway Signals:
 # CPL sequence:
 #		0	0.1	0.2	0.3	0.4	0.5	0.6	0.7	0.8	0.9
@@ -1015,7 +1022,7 @@ LIGHT_PARAM_DEF		amb_std_fl_1_sp		3	X 	Y	Z
 SPILL_HW_DIR		amb_std_fl_1_sp			0.957	1.000	0.980	0.2	30		X 	Y	Z	0.85				0
 LIGHT_PARAM_DEF		amb_std_fl_2_sp		3	X 	Y	Z
 SPILL_HW_DIR		amb_std_fl_2_sp			0.957	1.000	0.980	0.3	30		X 	Y	Z	0.85				0
-LIGHT_PARAM_DEF		amb_sZZtd_fl_3_sp		3	X 	Y	Z
+LIGHT_PARAM_DEF		amb_std_fl_3_sp		3	X 	Y	Z
 SPILL_HW_DIR		amb_std_fl_3_sp			0.957	1.000	0.980	0.4	40		X 	Y	Z	0.85				0
 
 	# cool fluorescent (typical of offices):
