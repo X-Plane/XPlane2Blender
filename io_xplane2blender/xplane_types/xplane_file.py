@@ -20,7 +20,7 @@ import collections
 import bpy
 import mathutils
 
-from typing import Union
+from typing import List, Union, Optional
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_types import xplane_empty
 
@@ -125,7 +125,7 @@ def createFilesFromBlenderRootObjects(scene):
 # Class: XPlaneFile
 # X-Plane OBJ file
 class XPlaneFile():
-    def __init__(self, filename:str, options:xplane_props.XPlaneLayer):
+    def __init__(self, filename:str, options:xplane_props.XPlaneLayer)->None:
         self.filename = filename
 
         self.options = options
@@ -139,10 +139,10 @@ class XPlaneFile():
         self.commands = XPlaneCommands(self)
 
         # list of temporary objects that will be removed after export
-        self._tempBlenderObjects = []
+        self._tempBlenderObjects = [] # type: List[bpy.types.Object]
 
         # list of already expanded/resolved blender group instances
-        self._resolvedBlenderGroupInstances = []
+        self._resolvedBlenderGroupInstances = [] # type: List[str]
 
         # dict of xplane objects within the file
         self.objects = collections.OrderedDict() # type: collections.OrderedDict
@@ -363,19 +363,17 @@ class XPlaneFile():
         # restore frame before export
         bpy.context.scene.frame_set(frame = currentFrame)
 
-    # Method: convertBlenderObject
-    # Converts/wraps blender object into an <XPlaneObject> or subtype
-    #
-    # Returns:
-    #   <XPlaneObject> or None if object type is not supported
-    def convertBlenderObject(self, blenderObject):
-        xplaneObject = None # type: Union[XPlanePrimitive,XPlaneLight,XPlaneObject]
+    def convertBlenderObject(self, blenderObject: bpy.types.Object)->Optional[XPlaneObject]:
+        '''
+        Converts Blender object into an XPlaneObject or subtype and returns it.
+        Returns None if Blender Object isn't supported
+        '''
+        xplaneObject = None # type: Optional[XPlaneObject]
 
         # mesh: let's create a prim out of it
         if blenderObject.type == "MESH":
             logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject = XPlanePrimitive(blenderObject)
-
         # lamp: let's create a XPlaneLight. Those cannot have children (yet).
         elif blenderObject.type == "LAMP":
             logger.info("\t %s: adding to list" % blenderObject.name)
@@ -389,10 +387,11 @@ class XPlaneFile():
 
         return xplaneObject
 
-    def getBoneByBlenderName(self, name, parent = None):
-        if not parent:
-            parent = self.rootBone
-
+    def getBoneByBlenderName(self, name: str, parent: XPlaneBone)->Optional[XPlaneBone]:
+        '''
+        Performs a depth first search of the child bones for a bone with matching name.
+        Returns the bone or None if not found
+        '''
         for bone in parent.children:
             if bone.getBlenderName() == name:
                 return bone
@@ -406,11 +405,11 @@ class XPlaneFile():
     # Method: getObjectsList
     # Returns objects as a list
     def getObjectsList(self):
-        objects = []
-        for name in self.objects:
-            objects.append(self.objects[name])
-
-        return objects
+        '''
+        Returns the objects that could be in this .obj.
+        Can only be called after collectBlenderObjects during xplane_file's collection
+        '''
+        return self.objects.values()
 
     def validateMaterials(self):
         objects = self.getObjectsList()
@@ -430,7 +429,12 @@ class XPlaneFile():
 
         return True
 
-    def getMaterials(self):
+    def getMaterials(self)->List[bpy.types.Material]:
+        '''
+        Returns a list of the materials used in the OBJ, or an empty list if none found
+        Must be called after XPlaneFile.collectBlenderObjects
+        '''
+
         materials = []
         objects = self.getObjectsList()
 

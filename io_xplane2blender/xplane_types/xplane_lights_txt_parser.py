@@ -99,11 +99,7 @@ def _get_sw_light_callback(dref: str):
         "sim/graphics/animation/lights/airplane_beacon_light_dir":     _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_generic_light":        _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_generic_light_flash":  _do_rgb_to_dxyz_w_calc,
-        "sim/graphics/animation/lights/airplane_generic_light_spill":  _do_rgb_to_dxyz_w_calc,
-        "sim/graphics/animation/lights/airplane_landing_light":        _do_rgb_to_dxyz_w_calc,
-        "sim/graphics/animation/lights/airplane_landing_light_flash":  _do_rgb_to_dxyz_w_calc,
         "sim/graphics/animation/lights/airplane_navigation_light_dir": _do_rgb_to_dxyz_w_calc,
-        "sim/graphics/animation/lights/airplane_strobe_light_dir":     _do_rgb_to_dxyz_w_calc,
 
         "sim/graphics/animation/lights/airport_beacon":                _do_rgba_to_dxyz_w, #As of 11/14/2017, all lights with this are commented out
         "sim/graphics/animation/lights/airport_beacon_flash":          _do_rgba_to_dxyz_w, #As of 11/14/2017, none of this dataref appears in lights.txt
@@ -123,6 +119,7 @@ def _get_sw_light_callback(dref: str):
         "sim/graphics/animation/lights/wigwag":                        _do_force_omni,
         "sim/graphics/animation/lights/wigwag_sp":                     _do_force_omni
     }
+
     try:
         return drefs[dref]
     except:
@@ -199,6 +196,10 @@ class ParsedLightOverload():
         self.light_name = light_name # type: str
         self.light_param_def = None # type: Optional[ParsedLightParamDef]
         self.data_source = None # type: Optional[ParsedDataSource]
+
+    def __str__(self):
+        return "Light Name: {}, Light Param Def: {}, Data Source: {}"\
+                .format(self.light_name, self.light_param_def, self.data_source)
 
     #query must be a valid number or one of the column names
     def get(self, query: Union[int, str])->Optional[Union[float, str]]:

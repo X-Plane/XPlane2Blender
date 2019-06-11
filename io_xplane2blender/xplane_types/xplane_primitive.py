@@ -48,7 +48,6 @@ class XPlanePrimitive(XPlaneObject):
     def __init__(self, blenderObject):
         assert blenderObject.type == 'MESH'
         super(XPlanePrimitive, self).__init__(blenderObject)
-        self.type = 'MESH'
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
         self.manipulator = XPlaneManipulator(self)

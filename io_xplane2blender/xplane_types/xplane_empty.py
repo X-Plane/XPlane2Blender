@@ -13,7 +13,6 @@ class XPlaneEmpty(XPlaneObject):
     def __init__(self, blenderObject):
         assert blenderObject.type == 'EMPTY'
         super().__init__(blenderObject)
-        self.type = "EMPTY"
         self.magnet_type = ""
 
     def collect(self):

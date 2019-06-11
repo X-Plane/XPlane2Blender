@@ -24,7 +24,7 @@
 bl_info = {
     "name": "Export: X-Plane (.obj)",
     "author": "Ondrej Brinkel",
-    "version": (3, 5, 0),
+    "version": (3, 5, 1),
     "blender": (2, 7, 8),
     "location": "File > Import/Export > X-Plane",
     "description": ("Converts XPlane2Blender 2.49 .blend files "

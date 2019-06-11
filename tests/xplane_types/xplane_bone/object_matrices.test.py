@@ -20,12 +20,12 @@ class TestMatrices(XPlaneTestCase):
         identityMatrix = mathutils.Matrix.Identity(4)
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
 
-        cubeStatic = xplaneFile.getBoneByBlenderName('Cube_static')
+        cubeStatic = xplaneFile.getBoneByBlenderName('Cube_static', parent=xplaneFile.rootBone)
 
         # FIXME: we are actually testing getBoneByBlenderName() here, should be in it's own test file
         self.assertIsNotNone(cubeStatic)
 
-        cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated')
+        cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated', parent=xplaneFile.rootBone)
         self.assertIsNotNone(cubeAnimated)
 
         preMatrix = cubeAnimated.getPreAnimationMatrix()
@@ -45,14 +45,14 @@ class TestMatrices(XPlaneTestCase):
         identityMatrix = mathutils.Matrix.Identity(4)
         xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
 
-        cubeStatic = xplaneFile.getBoneByBlenderName('Cube_static')
-        cubeStaticChildStatic = xplaneFile.getBoneByBlenderName('Cube_static.child_static')
+        cubeStatic = xplaneFile.getBoneByBlenderName('Cube_static', parent=xplaneFile.rootBone)
+        cubeStaticChildStatic = xplaneFile.getBoneByBlenderName('Cube_static.child_static', parent=xplaneFile.rootBone)
 
         # FIXME: we are actually testing getBoneByBlenderName() here, should be in it's own test file
         self.assertIsNotNone(cubeStaticChildStatic)
 
         # no to the animated child
-        cubeStaticChildAnimated = xplaneFile.getBoneByBlenderName('Cube_static.child_animated')
+        cubeStaticChildAnimated = xplaneFile.getBoneByBlenderName('Cube_static.child_animated', parent=xplaneFile.rootBone)
 
         preMatrix = cubeStaticChildAnimated.getPreAnimationMatrix()
         postMatrix = cubeStaticChildAnimated.getPostAnimationMatrix()
@@ -67,7 +67,7 @@ class TestMatrices(XPlaneTestCase):
         # bake matrix should be inverted identity matrix *  own preanimation matrix
         self.assertMatricesEqual(bakeMatrix, identityMatrix.inverted_safe() * preMatrix)
 
-        cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated')
-        cubeAnimatedChildStatic = xplaneFile.getBoneByBlenderName('Cube_animated.child_static')
+        cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated', parent=xplaneFile.rootBone)
+        cubeAnimatedChildStatic = xplaneFile.getBoneByBlenderName('Cube_animated.child_static', parent=xplaneFile.rootBone)
 
 runTestCases([TestMatrices])

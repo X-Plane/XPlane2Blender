@@ -49,14 +49,48 @@ def resolveBlenderPath(path:str)->str:
     else:
         return path
 
+
 def get_addon_resources_dir()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
+
+
+def get_potential_objects_in_layer(layer_idx: int, scene: bpy.types.Scene)->List[bpy.types.Object]:
+    '''
+    Returns roughly what xplane_file will collect in a Layer Mode
+    export, taking into account only object type and layer, not its visibilty
+    '''
+    assert layer_idx in range(0,20), "Layer must be between 0 and 19"
+
+    return list(
+            filter(
+                lambda obj: obj.layers[layer_idx] and obj.type in {"MESH", "LAMP", "ARMATURE", "EMPTY"},
+                scene.objects))
+
+
+def get_potential_objects_in_root_object(root_object: bpy.types.Object)->List[bpy.types.Object]:
+    assert root_object.xplane.isExportableRoot, "Must be Root Object"
+    def collect_children(obj: bpy.types.Object)->List[bpy.types.Object]:
+        objects = [] # type: List[bpy.types.Object]
+        for child in obj.children:
+            if child.type in {"MESH", "LAMP", "ARMATURE", "EMPTY"}:
+                objects.append(child)
+            objects.extend(collect_children(child))
+        return objects
+    return collect_children(root_object)
+
+
+def get_root_objects_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
+    return [obj for obj in scene.objects if obj.xplane.isExportableRoot]
+
 
 def vec_b_to_x(v):
     return mathutils.Vector((v.x, v.z, -v.y))
 
+
 def vec_x_to_b(v):
     return mathutils.Vector((v.x, -v.z, v.y))
+
+
 # This is a convience struct to help prevent people from having to repeateld copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():

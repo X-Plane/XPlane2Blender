@@ -443,15 +443,6 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         layer_group_box.prop(layerObj, "layer_group_draped")
         layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
-    # v1010
-    if version >= 1010 and (layerObj.export_type == EXPORT_TYPE_SCENERY or
-                            layerObj.export_type == EXPORT_TYPE_INSTANCED_SCENERY):
-
-        #TODO: Shouldn't these be material properties instead?
-        # shadow
-        shadow_box = scenery_props_group_box.box()
-        shadow_box.prop(layerObj, "shadow", "Cast shadows")
-
     # v1000
     if version >= 1000:
         # slope_limit
@@ -636,6 +627,10 @@ def material_layout(layout:UILayout,
 
         if version >= 1100:
             draw_box_column.prop(active_material.xplane, "blend_glass")
+
+        if version >= 1010:
+            draw_box_column.prop(active_material.xplane, "shadow_local")
+
         if version >= 1000:
             blend_prop_enum = active_material.xplane.blend_v1000
         else:

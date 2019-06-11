@@ -735,9 +735,7 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
 
         return {'FINISHED'}
 
-#List all adds, then all removes in alphabetical order.
-#Insert line breaks between related groups
-_XPlaneOps = [
+_ops = [
     BONE_OT_add_xplane_dataref,
     BONE_OT_add_xplane_dataref_keyframe,
     BONE_OT_remove_xplane_dataref,
@@ -772,19 +770,25 @@ _XPlaneOps = [
     SCENE_OT_export_to_relative_dir,
 
     SCENE_OT_dev_layer_names_from_objects,
+    SCENE_OT_dev_root_names_from_objects,
     SCENE_OT_dev_rerun_updater,
     SCENE_OT_dev_create_lights_txt_summary,
 
     XPLANE_OT_CommandSearchToggle,
-    XPLANE_OT_DatarefSearchToggle
+    XPLANE_OT_DatarefSearchToggle,
 ] # type: List[bpy.types.Operator]
 
-def addXPlaneOps()->None:
-    '''Registers all Operators'''
-    for op in _XPlaneOps:
+# Function: addXPlaneOps
+# Registers all Operators.
+def addXPlaneOps():
+    #List all adds, then all removes in alphabetical order.
+    #Insert line breaks between related groups
+    for op in _ops:
         bpy.utils.register_class(op)
 
-def removeXPlaneOps()->None:
-    '''Unregisters all Operators'''
-    for op in _XPlaneOps:
+# Function: removeXPlaneOps
+# Unregisters all Operators.
+def removeXPlaneOps():
+    #List all adds, then all removes in alphabetical order.
+    for op in _ops:
         bpy.utils.unregister_class(op)
