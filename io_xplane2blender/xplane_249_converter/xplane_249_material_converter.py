@@ -276,24 +276,25 @@ CLIP:      {CLIP}
             if mode.TEX:
                 if ALPHA:
                     if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
-                        mat.xplane.blend_v1000 = "shadow"
+                        mat.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
                         mat.xplane.blendRatio = 0.5
                         logger.info("{}: Blend Mode='Shadow' and Blend Ratio=0.5".format(mat.name))
                     if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
-                        mat.xplane.blend_v1000 = "shadow"
+                        mat.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
                         mat.xplane.blendRatio = 0.5
                         root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                         logger.info("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
                 if CLIP:
                     if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
-                        mat.xplane.blend_v1000 = "off"
+                        mat.xplane.blend_v1000 = xplane_constants.BLEND_OFF
                         mat.xplane.blendRatio = 0.5
                         logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
                     if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
-                        mat.xplane.blend_v1000 = "off"
+                        mat.xplane.blend_v1000 = xplane_constants.BLEND_OFF
                         mat.xplane.blendRatio = 0.5
                         root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                         logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
+
             #TODO: Haven't done panels yet
             if mode.TEX and ISPANEL:
                 pass

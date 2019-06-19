@@ -113,6 +113,13 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
         self._test_prop_values_still_default(bpy.data.objects[name], ["blend_v1000", "blendRatio"])
         self._test_prop_values_have_changes(bpy.data.objects[name], changed_props)
 
+    def _clip_test(self, name):
+        changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
+        changed_props["blend_v1000"] = xplane_constants.BLEND_OFF
+        changed_props["blendRatio"] = 0.5
+        self._test_prop_values_still_default(bpy.data.objects[name], ["blend_v1000", "blendRatio"])
+        self._test_prop_values_have_changes(bpy.data.objects[name], changed_props)
+
     def test_02a_tex_alpha_at(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function.replace("test_", "")
@@ -126,6 +133,20 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
     def test_02c_tex_alpha_no(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         self._no_change("02c_tex_alpha_no")
+
+    def test_02d_tex_clip_at(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._clip_test(filename)
+
+    def test_02e_tex_clip_gl(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._clip_test(filename)
+
+    def test_02f_tex_clip_no(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        self._no_change("02f_tex_clip_no")
 
     @unittest.skip
     def test_02b_tex_clip(self):
