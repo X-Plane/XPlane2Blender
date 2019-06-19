@@ -74,15 +74,18 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
                                                  zip(sorted(default_props.items()),
                                                      sorted(current_props.items()))
                                                  ):
-            self.assertEqual(item_default[1], item_current[1], msg="Default and current values for prop '{}' don't match: '{}', {}'".format(item_default[0], item_default[1], item_current[1]))
+            self.assertEqual(item_default[1], item_current[1],
+                    msg="Default and current values for prop '{}' don't match: '{}', {}'"
+                    .format(item_default[0], item_default[1], item_current[1]))
 
     def _test_prop_values_have_changes(self, obj: bpy.types.Object, changed_props: Dict[str, Any]):
         mat = obj.material_slots[0].material
         current_props = self._get_mat_values_for_test_props(mat)
         # Then compare that the relavent changed props have been changed
         for item_current, item_changed in zip(sorted(current_props.items()), sorted(changed_props.items())):
-            self.assertEqual(item_current[1], item_changed[1])
-
+            self.assertEqual(item_current[1], item_changed[1],
+                    msg="Current and required values for prop '{}' don't match: '{}', '{}'"
+                    .format(item_current[0], item_current[1], item_changed[1]))
 
     def test_01_default(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
@@ -120,37 +123,56 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
         changed_props["draped"] = True # Mirrors what should happen
-        self._test_prop_values_still_default(bpy.data.objects["03_tiles"], ["draped"])
-        self._test_prop_values_have_changes(bpy.data.objects["03_tiles"], changed_props)
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._test_prop_values_still_default(bpy.data.objects[filename], ["draped"])
+        self._test_prop_values_have_changes(bpy.data.objects[filename], changed_props)
         #TestMatAllTypesSingleFace._test(self)
 
-    @unittest.skip
     def test_03b_tiles_no_attr_draped(self):
-        """
-        This should not have any changes
-        """
+        self._test_prop_values_still_default(bpy.data.objects["03b_tiles_no_att"], [])
 
-    @unittest.skip
-    def test_04_light(self):
-        pass
+    def test_04a_light(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
+        changed_props["draped"] = True # Mirrors what should happen
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._test_prop_values_still_default(bpy.data.objects[filename], ["draped"])
+        self._test_prop_values_have_changes(bpy.data.objects[filename], changed_props)
         #TestMatAllTypesSingleFace._test(self)
-    @unittest.skip
+
     def test_04b_light_no_attr_draped(self):
-        pass
-        #TestMatAllTypesSingleFace._test(self)
-    @unittest.skip
-    def test_05_invisible(self):
-        pass
+        self._test_prop_values_still_default(bpy.data.objects["04b_light_no_att"], [])
         #TestMatAllTypesSingleFace._test(self)
 
-    @unittest.skip
-    def test_06_dynamic(self):
-        pass
+    def test_05_invisible(self):
+        changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
+        changed_props["draw"] = False
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._test_prop_values_still_default(bpy.data.objects[filename], ["draw"])
+        self._test_prop_values_have_changes(bpy.data.objects[filename], changed_props)
         #TestMatAllTypesSingleFace._test(self)
+
+    def test_06a_dynamic(self):
+        changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
+        changed_props["solid_camera"] = True
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._test_prop_values_still_default(bpy.data.objects[filename], ["solid_camera"])
+        self._test_prop_values_have_changes(bpy.data.objects[filename], changed_props)
+        #TestMatAllTypesSingleFace._test(self)
+
+    def test_06b_dynamic_invisible(self):
+        changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
+        changed_props["draw"] = False
+        self._test_prop_values_still_default(bpy.data.objects["06b_dynamic_invi"], ["draw"])
+        self._test_prop_values_have_changes(bpy.data.objects["06b_dynamic_invi"], changed_props)
+
+    def test_06c_dynamic_cockpit(self):
+        self._test_prop_values_still_default(bpy.data.objects["06c_dynamic_ckp"], [])
 
     @unittest.skip
     def test_07_twoside(self):
-        pass
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._test_prop_values_still_default(bpy.data.objects[filename], [])
         #TestMatAllTypesSingleFace._test(self)
 
     @unittest.skip

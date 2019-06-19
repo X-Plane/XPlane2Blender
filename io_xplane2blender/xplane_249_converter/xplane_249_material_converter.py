@@ -213,7 +213,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             # (which is important for TWOSIDE)
             # PANEL isn't a button but a fact that
             ISCOCKPIT = any(
-                        [root_object.xplane.layer.name.lower().endswith(cockpit_suffix)
+                        [(root_object.xplane.layer.name.lower() + ".obj").endswith(cockpit_suffix)
                          for cockpit_suffix in
                             ["_cockpit.obj",
                              "_cockpit_inn.obj",
@@ -223,6 +223,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             ISPANEL = ISCOCKPIT # type: bool
             ALPHA     = mat.game_settings.alpha_blend == "ALPHA" # type: bool
             CLIP      = mat.game_settings.alpha_blend == "CLIP" # type: bool
+            print("ISCOCKPIT", ISCOCKPIT)
 
             '''
             print(
@@ -265,21 +266,21 @@ CLIP:      {CLIP}
             #---TEX----------------------------------------------------------
             if mode.TEX:
                 if ALPHA:
-                    if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")):
+                    if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
                         mat.xplane.blend_v1000 = "shadow"
                         mat.xplane.blendRatio = 0.5
                         logger.info("{}: Blend Mode='Shadow' and Blend Ratio=0.5".format(mat.name))
-                    if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")):
+                    if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
                         mat.xplane.blend_v1000 = "shadow"
                         mat.xplane.blendRatio = 0.5
                         root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                         logger.info("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
                 if CLIP:
-                    if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")):
+                    if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
                         mat.xplane.blend_v1000 = "off"
                         mat.xplane.blendRatio = 0.5
                         logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
-                    if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")):
+                    if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
                         mat.xplane.blend_v1000 = "off"
                         mat.xplane.blendRatio = 0.5
                         root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
@@ -293,12 +294,14 @@ CLIP:      {CLIP}
                 logger.info("{}: Poly Offset={}".format(mat.name, mat.xplane.poly_os))
 
             #-----------------------------------------------------------------
+
             #---TILES/LIGHT---------------------------------------------------
             if ((mode.TILES
                 or mode.LIGHT)
-                and xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")):
-                mat.xplane.draped = True
-                logger.info("{}: Draped={}".format(mat.name, mat.xplane.draped))
+                and xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")[1]):
+                    mat.xplane.draped = True
+                    logger.info("{}: Draped={}".format(mat.name, mat.xplane.draped))
+            #-----------------------------------------------------------------
 
             #---INVISIBLE-----------------------------------------------------
             if mode.INVISIBLE:
