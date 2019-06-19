@@ -1,4 +1,4 @@
-'''
+"""
 This module is the starting point for converting 2.49's
 combined UV + Texture, Material TextureFace button hybrid
 model to our Material + Material's Textures model
@@ -6,7 +6,7 @@ model to our Material + Material's Textures model
 It is not named material_and_texture_converter because
 there is no texture datablock or setting to convert and
 our modern model is entirely material based.
-'''
+"""
 
 import re
 import collections
@@ -24,6 +24,8 @@ from io_xplane2blender.xplane_helpers import logger
 # The members, and any collection of dealing with these things,
 # they are in the order that 2.49's interface presents them in.
 # An arbitrary choice had to be made, this is it.
+
+# True when pressed (we interpret what that means later)
 _ModeMembers = collections.namedtuple(
         "_ModeMembers",
         ["TEX",
@@ -33,13 +35,13 @@ _ModeMembers = collections.namedtuple(
          "DYNAMIC", # aka not "DYNAMIC", since we care about it when it isn't two sided
          "TWOSIDE",
          "SHADOW",
-        ])
+         ]) # type: Tuple[bool, bool, bool, bool, bool, bool, bool]
 
 
 def _get_mtpoly_mode(obj:bpy.types.Object)->_ModeMembers:
     '''
-    This giant method finds the MTFace* in DNA_mesh_types.h's Mesh struct,
-    and returns the mode that will tell us the state of TEX, TILES, and LIGHT.
+    This giant method finds the MTexPoly* in DNA_mesh_types.h's Mesh struct,
+    and returns the pressed state of the mode entry
     '''
     assert obj.type == "MESH", obj.name + " is not a MESH type"
     import ctypes
@@ -177,15 +179,17 @@ def _get_mtpoly_mode(obj:bpy.types.Object)->_ModeMembers:
         def __repr__(self):
             s = ("(" + " ".join((name + "={" + name + "}," for name, ctype in self._fields_)) + ")")
             return s.format(**{key:getattr(self, key) for key, ctype in self._fields_ if key in {"id","mtpoly"}})
+
     mode = Mesh.from_address(obj.data.as_pointer()).mtpoly.contents.mode
     return _ModeMembers(TEX       = bool(mode & (1 << 2)),
                         TILES     = bool(mode & (1 << 7)),
                         LIGHT     = bool(mode & (1 << 4)),
                         INVISIBLE = bool(mode & (1 << 10)),
-                        DYNAMIC   = not bool(mode & (1 << 0)),
+                        DYNAMIC   = bool(mode & (1 << 0)),
                         TWOSIDE   = bool(mode & (1 << 9)),
                         SHADOW    = bool(mode & (1 << 13))
                     )
+
 
 def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
     if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
@@ -195,12 +199,10 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
     else:
         assert False, "Unknown workflow type"
 
-    print([s.name for s in search_objs])
-    scene.render.engine = 'BLENDER_GAME'
+    #scene.render.engine = 'BLENDER_GAME' # Only for testing purposes
 
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
-        print(search_obj.name)
-        print("slots:", [s.name for s in search_obj.material_slots])
+        print("Converting materials for", search_obj.name)
         mode = _get_mtpoly_mode(search_obj)
         for slot in search_obj.material_slots:
             mat = slot.material
@@ -219,60 +221,49 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                         ]
                     ) # type: bool
             ISPANEL = ISCOCKPIT # type: bool
-            TEX = "tex" in search_obj.name # type: bool
-            TILES = "tiles" in search_obj.name # type: bool, HACK
-            LIGHT = "light" in search_obj.name # type: bool, HACK
-            INVISIBLE = mat.game_settings.invisible # type: bool
-            DYNAMIC   = not mat.game_settings.physics # type: bool
-            TWOSIDE   = mat.game_settings.use_backface_culling # type: bool
-            SHADOW    = mat.game_settings.face_orientation == "SHADOW" # type: bool
-
             ALPHA     = mat.game_settings.alpha_blend == "ALPHA" # type: bool
             CLIP      = mat.game_settings.alpha_blend == "CLIP" # type: bool
 
+            '''
             print(
 """
-         Buttons| mode flag
-ISCOCKPIT  {ISCOCKPIT}
+           Button State
+ISCOCKPIT: {ISCOCKPIT}
 ISPANEL:   {ISPANEL}
-TEX:       {TEX},  {mTEX}
-TILES:     {TILES},  {mTILES}
-LIGHT:     {LIGHT},  {mLIGHT}
-INVISIBLE: {INVISIBLE},  {mINVISIBLE}
-DYNAMIC:   {DYNAMIC},  {mDYNAMIC}
-TWOSIDE:   {TWOSIDE},  {mTWOSIDE}
-SHADOW:    {SHADOW},  {mSHADOW}
+
+TEX:       {TEX}
+TILES:     {TILES}
+LIGHT:     {LIGHT}
+INVISIBLE: {INVISIBLE}
+DYNAMIC:   {DYNAMIC}
+TWOSIDE:   {TWOSIDE}
+SHADOW:    {SHADOW}
+
 ALPHA:     {ALPHA}
 CLIP:      {CLIP}
 """.format(
         ISCOCKPIT=ISCOCKPIT,
         ISPANEL=ISPANEL,
-        TEX=TEX,
-        TILES=TILES,
-        LIGHT=LIGHT,
-        INVISIBLE=INVISIBLE,
 
-        mTEX=mode.TEX,
-        mTILES=mode.TILES,
-        mLIGHT=mode.LIGHT,
-        mINVISIBLE=mode.INVISIBLE,
+        TEX=mode.TEX,
+        TILES=mode.TILES,
+        LIGHT=mode.LIGHT,
+        INVISIBLE=mode.INVISIBLE,
 
-        DYNAMIC=DYNAMIC, #AKA COLLISION
-        TWOSIDE=TWOSIDE,
+        DYNAMIC=mode.DYNAMIC, #AKA COLLISION
+        TWOSIDE=mode.TWOSIDE,
 
-        mDYNAMIC=mode.DYNAMIC, #AKA COLLISION
-        mTWOSIDE=mode.TWOSIDE,
-
-        SHADOW=SHADOW,
-        mSHADOW=mode.SHADOW,
+        SHADOW=mode.SHADOW,
 
         ALPHA=ALPHA,
         CLIP=CLIP,
     )
 )
+'''
+
             # This section roughly mirrors the order in which 2.49 deals with these face buttons
             #---TEX----------------------------------------------------------
-            if TEX:
+            if mode.TEX:
                 if ALPHA:
                     if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")):
                         mat.xplane.blend_v1000 = "shadow"
@@ -294,43 +285,44 @@ CLIP:      {CLIP}
                         root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                         logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             #TODO: Haven't done panels yet
-            if TEX and ISPANEL:
+            if mode.TEX and ISPANEL:
                 pass
 
-            if TEX and (not (TILES or LIGHT)) and ISCOCKPIT:
+            if mode.TEX and (not (mode.TILES or mode.LIGHT)) and ISCOCKPIT:
                 mat.xplane.poly_os = 2
-                logger.info("{}: Poly Offset=2".format(mat.name))
+                logger.info("{}: Poly Offset={}".format(mat.name, mat.xplane.poly_os))
 
             #-----------------------------------------------------------------
             #---TILES/LIGHT---------------------------------------------------
-            if ((TILES
-                or LIGHT)
+            if ((mode.TILES
+                or mode.LIGHT)
                 and xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")):
                 mat.xplane.draped = True
-                logger.info("{}: Draped=True".format(mat.name))
+                logger.info("{}: Draped={}".format(mat.name, mat.xplane.draped))
 
             #---INVISIBLE-----------------------------------------------------
-            if INVISIBLE:
+            if mode.INVISIBLE:
                 mat.xplane.draw = False
-                logger.info("{}: Draw Linked Objects=False".format(mat.name))
+                logger.info("{}: Draw Objects With This Material={}".format(mat.name, mat.xplane.draw))
             #-----------------------------------------------------------------
 
             #---DYNAMIC-------------------------------------------------------
-            if not INVISIBLE and not ISCOCKPIT and DYNAMIC: #TODO: And """not self.iscockpit"""
+            if (not mode.INVISIBLE
+                and not ISCOCKPIT
+                and not mode.DYNAMIC):
                 mat.xplane.solid_camera = True
-                logger.info("{}: Solid Camera=True".format(mat.name))
+                logger.info("{}: Solid Camera={}".format(mat.name, mat.xplane.solid_camera))
             #-----------------------------------------------------------------
 
             #---TWOSIDE-------------------------------------------------------
-            if TWOSIDE:
-                logger.info("{}: Two Sided deprecated, skipping".format(mat.name))
+            if mode.TWOSIDE:
+                logger.warn("{}: Two Sided is deprecated, skipping".format(mat.name))
                 pass
             #-----------------------------------------------------------------
 
             #---SHADOW--------------------------------------------------------
-            if SHADOW:
-                #TODO: Implement Shadow mat.xplane.shadow = True
-                #logger.info("{}: Shadow=True".format(mat.name))
-                logger.info("{}: ATTR_shadow not yet implemented, skipping".format(mat.name))
+            mat.xplane.shadow_local = not mode.SHADOW
+            if not mat.xplane.shadow_local:
+                logger.info("{}: Cast Shadow (Local)={}".format(mat.name, mat.xplane.shadow_local))
             #-----------------------------------------------------------------
 
