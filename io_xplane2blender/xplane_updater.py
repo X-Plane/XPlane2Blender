@@ -178,6 +178,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 pass
 
         def _print_error_table(material_uses: Dict[bpy.types.Material, List[UsedLayerInfo]])->None:
+            prev_error_count = len(logger.findErrors())
             for mat, layers_used_in in material_uses.items():
                 if (len(layers_used_in) > 1
                     and any(layers_used_in[0].cast_shadow != l.cast_shadow for l in layers_used_in)): # Checks for mixed use of Cast Shadow (Global)
@@ -193,7 +194,8 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                                 ]
                             )
                         )
-            logger.info("'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ")
+            if len(logger.findErrors()) > prev_error_count:
+                logger.info("'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ")
 
         # This way we'll be able to map the usage (and shared-ness) of a material
         material_uses = collections.defaultdict(list) # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
