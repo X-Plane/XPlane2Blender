@@ -57,7 +57,17 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
     @classmethod
     def _get_mat_values_for_test_props(cls, mat: bpy.types.Material):
         defaults = cls._get_default_values_for_test_props()
-        return {prop: mat.xplane.get(prop, defaults[prop]) for prop in cls._relavent_properties}
+        def get_enum_aware(mat:bpy.types.Material, prop:str):
+            """
+            Like get, but turns enum values back into their identifiers
+            """
+            mat_props = mat.xplane.bl_rna.properties
+            if mat_props[prop].type == "ENUM":
+                return mat_props[prop].enum_items[mat.xplane.get(prop, defaults[prop])].identifier
+            else:
+                return mat.xplane.get(prop, defaults[prop])
+
+        return {prop: get_enum_aware(mat, prop) for prop in cls._relavent_properties}
 
     def _test_prop_values_still_default(self, obj: bpy.types.Object, ignore_keys: Iterable[str]):
         """
@@ -87,21 +97,45 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
                     msg="Current and required values for prop '{}' don't match: '{}', '{}'"
                     .format(item_current[0], item_current[1], item_changed[1]))
 
+    def _no_change(self, name):
+        self._test_prop_values_still_default(bpy.data.objects[name], [])
+
     def test_01_default(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
-        self._test_prop_values_still_default(bpy.data.objects["01_default"], [])
+        self._no_change("01_default")
 
         #TestMatAllTypesSingleFace._test(self)
 
-    @unittest.skip
-    def test_02a_tex_alpha(self):
-        #shadow, .5
-        pass
-        #TestMatAllTypesSingleFace._test(self)
+    def _shadow_test(self, name):
+        changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
+        changed_props["blend_v1000"] = xplane_constants.BLEND_SHADOW
+        changed_props["blendRatio"] = 0.5
+        self._test_prop_values_still_default(bpy.data.objects[name], ["blend_v1000", "blendRatio"])
+        self._test_prop_values_have_changes(bpy.data.objects[name], changed_props)
+
+    def test_02a_tex_alpha_at(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._shadow_test(filename)
+
+    def test_02b_tex_alpha_gl(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._shadow_test(filename)
+
+    def test_02c_tex_alpha_no(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        self._no_change("02c_tex_alpha_no")
 
     @unittest.skip
     def test_02b_tex_clip(self):
-        #off, .5
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
+        changed_props["blend_v1000"] = xplane_constants.BLEND_OFF
+        changed_props["blendRatio"] = 0.5
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._test_prop_values_still_default(bpy.data.objects[filename], ["blend_v1000", "blendRatio"])
+        self._test_prop_values_have_changes(bpy.data.objects[filename], changed_props)
         pass
         #TestMatAllTypesSingleFace._test(self)
 
@@ -129,7 +163,7 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
         #TestMatAllTypesSingleFace._test(self)
 
     def test_03b_tiles_no_attr_draped(self):
-        self._test_prop_values_still_default(bpy.data.objects["03b_tiles_no_att"], [])
+        self._no_change("03b_tiles_no_att")
 
     def test_04a_light(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
@@ -141,7 +175,7 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
         #TestMatAllTypesSingleFace._test(self)
 
     def test_04b_light_no_attr_draped(self):
-        self._test_prop_values_still_default(bpy.data.objects["04b_light_no_att"], [])
+        self._no_change("04b_light_no_att")
         #TestMatAllTypesSingleFace._test(self)
 
     def test_05_invisible(self):
@@ -169,15 +203,17 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
     def test_06c_dynamic_cockpit(self):
         self._test_prop_values_still_default(bpy.data.objects["06c_dynamic_ckp"], [])
 
-    @unittest.skip
     def test_07_twoside(self):
         filename = inspect.stack()[0].function.replace("test_", "")
-        self._test_prop_values_still_default(bpy.data.objects[filename], [])
+        self._no_change(filename)
         #TestMatAllTypesSingleFace._test(self)
 
-    @unittest.skip
     def test_08_shadow(self):
-        pass
+        changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
+        changed_props["shadow_local"] = False
+        filename = inspect.stack()[0].function.replace("test_", "")
+        self._test_prop_values_still_default(bpy.data.objects[filename], ["shadow_local"])
+        self._test_prop_values_have_changes(bpy.data.objects[filename], changed_props)
         #TestMatAllTypesSingleFace._test(self)
 
 
