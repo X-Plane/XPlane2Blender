@@ -32,7 +32,7 @@ _ModeMembers = collections.namedtuple(
          "TILES",
          "LIGHT",
          "INVISIBLE",
-         "DYNAMIC", # aka not "DYNAMIC", since we care about it when it isn't two sided
+         "DYNAMIC", # This is pressed by default, unlike the others (also, called "Collision" in UI)
          "TWOSIDE",
          "SHADOW",
          ]) # type: Tuple[bool, bool, bool, bool, bool, bool, bool]
@@ -41,7 +41,9 @@ _ModeMembers = collections.namedtuple(
 def _get_mtpoly_mode(obj:bpy.types.Object)->_ModeMembers:
     '''
     This giant method finds the MTexPoly* in DNA_mesh_types.h's Mesh struct,
-    and returns the pressed state of the mode entry
+    and returns the pressed state of the mode entry.
+
+    If the mesh was not unwrapped, this throws a ValueError: NULL pointer access
     '''
     assert obj.type == "MESH", obj.name + " is not a MESH type"
     import ctypes
@@ -203,7 +205,14 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
         print("Converting materials for", search_obj.name)
-        mode = _get_mtpoly_mode(search_obj)
+        try:
+            mode = _get_mtpoly_mode(search_obj)
+        except ValueError: # NULL Pointer Exception
+            #TODO: If there are no other things we extract from a material, we should skip. No unwrap, no side effects
+            # Otherwise, we should get the default button presses
+            print("Couldn't get mode from search_obj, skipping")
+            continue
+
         for slot in search_obj.material_slots:
             mat = slot.material
             print("Convertering", mat.name)
