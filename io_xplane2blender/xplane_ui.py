@@ -190,7 +190,8 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
 def scene_layout(self, scene):
     layout = self.layout
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
-    layout.row().operator("xplane.do_249_conversion").workflow_type = "BULK"
+    layout.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Bulk)").workflow_type = "BULK"
+    layout.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Regular)").workflow_type = "REGULAR"
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
@@ -248,6 +249,7 @@ def scene_dev_layout(self,scene,layout):
         #Exact same operator, more convient place
         dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
         dev_box_column.operator("scene.dev_layer_names_from_objects")
+        dev_box_column.operator("scene.dev_root_names_from_objects")
         updater_row = dev_box_column.row()
         updater_row.prop(scene.xplane,"dev_fake_xplane2blender_version")
         updater_row.operator("scene.dev_rerun_updater")

@@ -5,13 +5,13 @@ import bpy
 from io_xplane2blender.xplane_249_converter import xplane_249_constants, xplane_249_convert
 
 class SCENE_OT_249_do_conversion(bpy.types.Operator):
-    bl_label = 'Perform 2.49 to 2.7x Summary'
+    bl_label = 'Perform 2.49 to 2.79 Conversion'
     bl_idname = 'xplane.do_249_conversion'
     bl_description = "Convert a file's 2.49 property format to 2.7x. WARNING: Running multiple times may have disastrous consequences"
 
     workflow_type = bpy.props.StringProperty(
         name="Workflow Type",
-        description="The workflow used in 2.49",
+        description="The workflow used in 2.49, one of " + ", ".join([attr.name for attr in xplane_249_constants.WorkflowType]),
         )
 
     def execute(self, context: bpy.types.Context):

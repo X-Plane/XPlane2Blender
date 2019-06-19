@@ -60,7 +60,7 @@ class SCENE_OT_dev_create_lights_txt_summary(bpy.types.Operator):
 
 
 class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
-    bl_label = 'Create Layer Names from Objects'
+    bl_label = 'Create OBJ Name from Objects Name'
     bl_idname = 'scene.dev_layer_names_from_objects'
     bl_description = 'Create layer names from objects, stripping Cube_ and Empty_ and prepending "test_" to them'
 
@@ -96,7 +96,7 @@ class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
 
 
 class SCENE_OT_dev_root_names_from_objects(bpy.types.Operator):
-    bl_label = "Create Layer Names"
+    bl_label = "Create OBJ Name From Root Object Names"
     bl_idname = "scene.dev_root_names_from_objects"
     bl_description = "Creates root object names from root objects, prepending 'test_'"
 
