@@ -104,8 +104,6 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         self._no_change("01_default")
 
-        #TestMatAllTypesSingleFace._test(self)
-
     def _shadow_test(self, name):
         changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
         changed_props["blend_v1000"] = xplane_constants.BLEND_SHADOW
@@ -148,31 +146,16 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         self._no_change("02f_tex_clip_no")
 
-    @unittest.skip
-    def test_02b_tex_clip(self):
+
+    def test_02g_tex_poly_os_2(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
-        changed_props["blend_v1000"] = xplane_constants.BLEND_OFF
-        changed_props["blendRatio"] = 0.5
-        filename = inspect.stack()[0].function.replace("test_", "")
-        self._test_prop_values_still_default(bpy.data.objects[filename], ["blend_v1000", "blendRatio"])
-        self._test_prop_values_have_changes(bpy.data.objects[filename], changed_props)
-        pass
-        #TestMatAllTypesSingleFace._test(self)
+        changed_props["poly_os"] = 2
+        self._test_prop_values_still_default(bpy.data.objects["02g_tex_poly_os_2"], ["poly_os"])
+        self._test_prop_values_have_changes(bpy.data.objects["02g_tex_poly_os_2"], changed_props)
 
-    @unittest.skip
-    def test_02c_tex_panel(self):
-        pass
-
-    @unittest.skip
-    def test_02d_tex_no_tiles_or_light_cockpit(self):
-        #poly_os =2
-        pass
-
-    @unittest.skip
-    def test_02e_tex_tiles_cockpit(self):
-        #no poly_os 2
-        pass
+    def test_02h_tex_no_poly_os(self):
+        self._no_change("02h_tex_no_poly_os")
 
     def test_03a_tiles(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)

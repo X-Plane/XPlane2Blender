@@ -295,10 +295,6 @@ CLIP:      {CLIP}
                         root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                         logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
 
-            #TODO: Haven't done panels yet
-            if mode.TEX and ISPANEL:
-                pass
-
             if mode.TEX and (not (mode.TILES or mode.LIGHT)) and ISCOCKPIT:
                 mat.xplane.poly_os = 2
                 logger.info("{}: Poly Offset={}".format(mat.name, mat.xplane.poly_os))
