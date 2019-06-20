@@ -8,8 +8,9 @@ there is no texture datablock or setting to convert and
 our modern model is entirely material based.
 """
 
-import re
 import collections
+import sys
+import re
 from typing import Callable, Dict, List, Match, Optional, Tuple, Union, cast
 
 import bpy
@@ -26,8 +27,8 @@ from io_xplane2blender.xplane_helpers import logger
 # An arbitrary choice had to be made, this is it.
 
 # True when pressed (we interpret what that means later)
-_ModeMembers = collections.namedtuple(
-        "_ModeMembers",
+_CMembers = collections.namedtuple(
+        "__CMembers",
         ["TEX",
          "TILES",
          "LIGHT",
@@ -35,10 +36,12 @@ _ModeMembers = collections.namedtuple(
          "DYNAMIC", # This is pressed by default, unlike the others (also, called "Collision" in UI)
          "TWOSIDE",
          "SHADOW",
-         ]) # type: Tuple[bool, bool, bool, bool, bool, bool, bool]
+         "ALPHA",
+         "CLIP"
+         ]) # type: Tuple[bool, bool, bool, bool, bool, bool, bool, bool, bool]
 
 
-def _get_mtpoly_mode(obj:bpy.types.Object)->_ModeMembers:
+def _get_mtpoly_mode_and_transp(obj:bpy.types.Object)->_CMembers:
     '''
     This giant method finds the MTexPoly* in DNA_mesh_types.h's Mesh struct,
     and returns the pressed state of the mode entry.
@@ -71,7 +74,7 @@ def _get_mtpoly_mode(obj:bpy.types.Object)->_ModeMembers:
     class MTexPoly(ctypes.Structure):
         _fields_ = [
                 ("tpage", ctypes.c_void_p), # Image *
-                ("flag",  ctypes.c_char),
+                ("flag",  ctypes.c_char), # Also this!
                 ("transp", ctypes.c_char),
                 ("mode",   ctypes.c_short), # THIS IS WHAT IT HAS ALL BEEN ABOUT! RIGHT HERE!
                 ("tile",   ctypes.c_short),
@@ -182,14 +185,21 @@ def _get_mtpoly_mode(obj:bpy.types.Object)->_ModeMembers:
             s = ("(" + " ".join((name + "={" + name + "}," for name, ctype in self._fields_)) + ")")
             return s.format(**{key:getattr(self, key) for key, ctype in self._fields_ if key in {"id","mtpoly"}})
 
-    mode = Mesh.from_address(obj.data.as_pointer()).mtpoly.contents.mode
-    return _ModeMembers(TEX       = bool(mode & (1 << 2)),
+    mesh = Mesh.from_address(obj.data.as_pointer())
+    mode = mesh.mtpoly.contents.mode
+    transp = int.from_bytes(mesh.mtpoly.contents.transp, sys.byteorder)
+    return _CMembers(
+                        # From DNA_meshdata_types.h, lines 477-495
+                        TEX       = bool(mode & (1 << 2)),
                         TILES     = bool(mode & (1 << 7)),
                         LIGHT     = bool(mode & (1 << 4)),
                         INVISIBLE = bool(mode & (1 << 10)),
                         DYNAMIC   = bool(mode & (1 << 0)),
                         TWOSIDE   = bool(mode & (1 << 9)),
-                        SHADOW    = bool(mode & (1 << 13))
+                        SHADOW    = bool(mode & (1 << 13)),
+                        # From DNA_meshdata_types.h, lines 502-503
+                        ALPHA     = bool(transp & (1 << 1)),
+                        CLIP      = bool(transp & (1 << 2)),
                     )
 
 
@@ -206,7 +216,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
         print("Converting materials for", search_obj.name)
         try:
-            mode = _get_mtpoly_mode(search_obj)
+            mode_and_transp = _get_mtpoly_mode_and_transp(search_obj)
         except ValueError: # NULL Pointer Exception
             #TODO: If there are no other things we extract from a material, we should skip. No unwrap, no side effects
             # Otherwise, we should get the default button presses
@@ -230,9 +240,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                         ]
                     ) # type: bool
             ISPANEL = ISCOCKPIT # type: bool
-            ALPHA     = mat.game_settings.alpha_blend == "ALPHA" # type: bool
-            CLIP      = mat.game_settings.alpha_blend == "CLIP" # type: bool
-            print("ISCOCKPIT", ISCOCKPIT)
 
             '''
             print(
@@ -265,16 +272,16 @@ CLIP:      {CLIP}
 
         SHADOW=mode.SHADOW,
 
-        ALPHA=ALPHA,
-        CLIP=CLIP,
+        ALPHA=mode_and_transp.ALPHA,
+        CLIP=mode_and_transp.CLIP,
     )
 )
 '''
 
             # This section roughly mirrors the order in which 2.49 deals with these face buttons
             #---TEX----------------------------------------------------------
-            if mode.TEX:
-                if ALPHA:
+            if mode_and_transp.TEX:
+                if mode_and_transp.ALPHA:
                     if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
                         mat.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
                         mat.xplane.blendRatio = 0.5
@@ -284,7 +291,7 @@ CLIP:      {CLIP}
                         mat.xplane.blendRatio = 0.5
                         root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                         logger.info("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
-                if CLIP:
+                if mode_and_transp.CLIP:
                     if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
                         mat.xplane.blend_v1000 = xplane_constants.BLEND_OFF
                         mat.xplane.blendRatio = 0.5
@@ -295,42 +302,42 @@ CLIP:      {CLIP}
                         root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                         logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
 
-            if mode.TEX and (not (mode.TILES or mode.LIGHT)) and ISCOCKPIT:
+            if mode_and_transp.TEX and (not (mode_and_transp.TILES or mode_and_transp.LIGHT)) and ISCOCKPIT:
                 mat.xplane.poly_os = 2
                 logger.info("{}: Poly Offset={}".format(mat.name, mat.xplane.poly_os))
 
             #-----------------------------------------------------------------
 
             #---TILES/LIGHT---------------------------------------------------
-            if ((mode.TILES
-                or mode.LIGHT)
+            if ((mode_and_transp.TILES
+                or mode_and_transp.LIGHT)
                 and xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")[1]):
                     mat.xplane.draped = True
                     logger.info("{}: Draped={}".format(mat.name, mat.xplane.draped))
             #-----------------------------------------------------------------
 
             #---INVISIBLE-----------------------------------------------------
-            if mode.INVISIBLE:
+            if mode_and_transp.INVISIBLE:
                 mat.xplane.draw = False
                 logger.info("{}: Draw Objects With This Material={}".format(mat.name, mat.xplane.draw))
             #-----------------------------------------------------------------
 
             #---DYNAMIC-------------------------------------------------------
-            if (not mode.INVISIBLE
+            if (not mode_and_transp.INVISIBLE
                 and not ISCOCKPIT
-                and not mode.DYNAMIC):
+                and not mode_and_transp.DYNAMIC):
                 mat.xplane.solid_camera = True
                 logger.info("{}: Solid Camera={}".format(mat.name, mat.xplane.solid_camera))
             #-----------------------------------------------------------------
 
             #---TWOSIDE-------------------------------------------------------
-            if mode.TWOSIDE:
+            if mode_and_transp.TWOSIDE:
                 logger.warn("{}: Two Sided is deprecated, skipping".format(mat.name))
                 pass
             #-----------------------------------------------------------------
 
             #---SHADOW--------------------------------------------------------
-            mat.xplane.shadow_local = not mode.SHADOW
+            mat.xplane.shadow_local = not mode_and_transp.SHADOW
             if not mat.xplane.shadow_local:
                 logger.info("{}: Cast Shadow (Local)={}".format(mat.name, mat.xplane.shadow_local))
             #-----------------------------------------------------------------
