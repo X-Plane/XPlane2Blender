@@ -1,6 +1,7 @@
 import array
 import time
 import re
+from typing import List
 
 import bpy
 from ..xplane_config import getDebug
@@ -24,22 +25,14 @@ class XPlaneMesh():
         self.vertIndexDict = dict()
 
     # Thank you Premek Truska! For this code!
-    def getHash(self, args):
-        result = ''
-        for num in args:
-            result += (str(num))
-            result += '_'
-        return result
-
-    def getVertIndex(self, args):
-        key = self.getHash(args)
-        if key in self.vertIndexDict:
-            index = self.vertIndexDict[key]
+    def getVertIndex(self, vert_info: List[float]):
+        if vert_info in self.vertIndexDict:
+            index = self.vertIndexDict[vert_info]
         else:
             index = self.globalindex
+            self.vertices.append(vert_info)
+            self.vertIndexDict[vert_info] = index;
             self.globalindex += 1
-            self.vertices.append(args)
-            self.vertIndexDict[key] = index;
         return index
 
     # Method: collectXPlaneObjects
@@ -128,30 +121,25 @@ class XPlaneMesh():
                             ns = f['norms'][2 - i] if supports_split_normals else v.normal
 
                             if f['original_face'].use_smooth: # use smoothed vertex normal
-                                vert = [
+                                vert = (
                                     co[0], co[2], -co[1],
                                     ns[0], ns[2], -ns[1],
                                     f['uv'][i][0], f['uv'][i][1]
-                                ]
+                                )
                             else: # use flat face normal
-                                vert = [
+                                vert = (
                                     co[0], co[2], -co[1],
                                     f['original_face'].normal[0], f['original_face'].normal[2], -f['original_face'].normal[1],
                                     f['uv'][i][0], f['uv'][i][1]
-                                ]
+                                )
 
-                            #if bpy.context.scene.xplane.optimize:
-                            #    #check for duplicates
-                            #    index = self.getDupliVerticeIndex(vert, first_vertice_of_this_xplaneObject)
-                            #else:
-                            #    index = -1
-
-                            #if index == -1:
-                            #    index = self.globalindex
-                            #    self.vertices.append(vert)
-                            #    self.globalindex += 1
-
-                            index = self.getVertIndex(vert)
+                            if bpy.context.scene.xplane.optimize:
+                                #check for duplicates
+                                index = self.getVertIndex(vert)
+                            else:
+                                index = self.globalindex
+                                self.vertices.append(vert)
+                                self.globalindex += 1
 
                             # store face information in one struct
                             xplaneFace.vertices[i] = (vert[0], vert[1], vert[2])
@@ -190,36 +178,6 @@ class XPlaneMesh():
                 logger.info('%s: faces %d | xplaneObject-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],tris_to_quads,d['end_index']-d['start_index'],d['vertices']))
 
             logger.info('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
-
-    # Method: getDupliVerticeIndex
-    # Returns the index of a vertice duplicate if any.
-    #
-    # Parameters:
-    #   v - The OBJ vertice.
-    #   int startIndex - (default=0) From which index to start searching for duplicates.
-    #
-    # Returns:
-    #   int - Index of the duplicate or -1 if none was found.
-    def getDupliVerticeIndex(self, v, startIndex = 0):
-        l = len(self.vertices)
-
-        for i in range(startIndex, l):
-            match = True
-            ii = 0
-            vl = len(v)
-
-            while ii < vl:
-                if self.vertices[i][ii] != v[ii]:
-                    match = False
-                    ii = vl
-
-                ii += 1
-
-            if match:
-                return i
-
-        return -1
-
 
     # Method: getUVFaces
     # Returns Blender the UV faces of a Blender mesh.
