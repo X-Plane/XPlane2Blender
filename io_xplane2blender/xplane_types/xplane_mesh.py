@@ -21,6 +21,26 @@ class XPlaneMesh():
         # int - Stores the current global vertex index.
         self.globalindex = 0
         self.debug = []
+        self.vertIndexDict = dict()
+
+    # Thank you Premek Truska! For this code!
+    def getHash(self, args):
+        result = ''
+        for num in args:
+            result += (str(num))
+            result += '_'
+        return result
+
+    def getVertIndex(self, args):
+        key = self.getHash(args)
+        if key in self.vertIndexDict:
+            index = self.vertIndexDict[key]
+        else:
+            index = self.globalindex
+            self.globalindex += 1
+            self.vertices.append(args)
+            self.vertIndexDict[key] = index;
+        return index
 
     # Method: collectXPlaneObjects
     # Fills the <vertices> and <indices> from a list of <XPlaneObjects>.
@@ -120,16 +140,18 @@ class XPlaneMesh():
                                     f['uv'][i][0], f['uv'][i][1]
                                 ]
 
-                            if bpy.context.scene.xplane.optimize:
-                                #check for duplicates
-                                index = self.getDupliVerticeIndex(vert, first_vertice_of_this_xplaneObject)
-                            else:
-                                index = -1
+                            #if bpy.context.scene.xplane.optimize:
+                            #    #check for duplicates
+                            #    index = self.getDupliVerticeIndex(vert, first_vertice_of_this_xplaneObject)
+                            #else:
+                            #    index = -1
 
-                            if index == -1:
-                                index = self.globalindex
-                                self.vertices.append(vert)
-                                self.globalindex += 1
+                            #if index == -1:
+                            #    index = self.globalindex
+                            #    self.vertices.append(vert)
+                            #    self.globalindex += 1
+
+                            index = self.getVertIndex(vert)
 
                             # store face information in one struct
                             xplaneFace.vertices[i] = (vert[0], vert[1], vert[2])
