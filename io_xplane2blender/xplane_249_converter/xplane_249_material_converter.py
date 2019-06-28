@@ -9,11 +9,14 @@ our modern model is entirely material based.
 """
 
 import collections
+import ctypes
+import functools
 import sys
 import re
 from typing import Callable, Dict, List, Match, Optional, Tuple, Union, cast
 
 import bpy
+import bmesh
 import mathutils
 from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.tests import test_creation_helpers
@@ -40,22 +43,30 @@ _CMembers = collections.namedtuple(
          "CLIP"
          ]) # type: Tuple[bool, bool, bool, bool, bool, bool, bool, bool, bool]
 
+_CMembers.__repr__ = lambda self: (
+    "TEX={}, TILES={}, LIGHT={}, INVISIBLE={}, DYNAMIC={}, TWOSIDE={}, SHADOW={}, ALPHA={}, CLIP={}"
+     .format(self.TEX, self.TILES, self.LIGHT, self.INVISIBLE, self.DYNAMIC, self.TWOSIDE, self.SHADOW, self.ALPHA, self.CLIP))
 
-def _get_mtpoly_mode_and_transp(obj:bpy.types.Object)->_CMembers:
-    '''
-    This giant method finds the MTexPoly* in DNA_mesh_types.h's Mesh struct,
-    and returns the pressed state of the mode entry.
+
+def _get_poly_struct_info(obj:bpy.types.Object)->Dict[_CMembers, int]:
+    """
+    This giant method finds the information from MPoly* and MTexPoly* in DNA_mesh_types.h's Mesh struct,
+    and returns a dictionary of pressed states and all polygon indexes that share it
 
     If the mesh was not unwrapped, this throws a ValueError: NULL pointer access
-    '''
+    """
     assert obj.type == "MESH", obj.name + " is not a MESH type"
-    import ctypes
+    import sys
+
+    def repr_all(self):
+        s = ("(" + " ".join((name + "={" + name + "}," for name, ctype in self._fields_)) + ")")
+        return s.format(**{key:getattr(self, key) for key, ctype in self._fields_})
+
     class ID(ctypes.Structure):
         pass
 
         def __repr__(self):
-            s = ("(" + " ".join((name + "={" + name + "}," for name, ctype in self._fields_)) + ")")
-            return s.format(**{key:getattr(self, key) for key, ctype in self._fields_})
+            return repr_all(self)
 
     ID._fields_ = [
                 ("next",       ctypes.c_void_p), # void*
@@ -71,6 +82,17 @@ def _get_mtpoly_mode_and_transp(obj:bpy.types.Object)->_CMembers:
                 ("properties", ctypes.c_void_p) # IDProperty *
             ]
 
+    # /* new face structure, replaces MFace, which is now only used for storing tessellations.*/
+    class MPoly(ctypes.Structure):
+        _fields_ = [
+                #/* offset into loop array and number of loops in the face */
+                ("loopstart", ctypes.c_int),
+                ("totloop",   ctypes.c_int), # /* keep signed since we need to subtract when getting the previous loop */
+                ("mat_nr", ctypes.c_short), # We can use this to interact with Mesh.mat, to get a Material *. 0 is no material?
+                ("flag", ctypes.c_char),
+                ("pad", ctypes.c_char),
+            ]
+
     class MTexPoly(ctypes.Structure):
         _fields_ = [
                 ("tpage", ctypes.c_void_p), # Image *
@@ -82,8 +104,7 @@ def _get_mtpoly_mode_and_transp(obj:bpy.types.Object)->_CMembers:
             ]
 
         def __repr__(self):
-            s = ("(" + " ".join((name + "={" + name + "}," for name, ctype in self._fields_)) + ")")
-            return s.format(**{key:getattr(self, key) for key, ctype in self._fields_})
+            return repr_all(self)
 
     class CustomData(ctypes.Structure):
         _fields_ = [
@@ -108,7 +129,7 @@ def _get_mtpoly_mode_and_transp(obj:bpy.types.Object)->_CMembers:
             ('key', ctypes.c_void_p), #Key *
             ('mat', ctypes.c_void_p), # Material **
             ('mselect',  ctypes.c_void_p), # MSelect *
-            ('mpoly',    ctypes.c_void_p), #MPoly *
+            ('mpoly',    ctypes.POINTER(MPoly)), #MPoly *
             ('mtpoly',   ctypes.POINTER(MTexPoly)), #MTexPoly *, THIS IS WHAT WE'VE BEEN FIGHTING FOR!!!
             ("mloop",    ctypes.c_void_p), # MLoop *
             ("mloopuv",  ctypes.c_void_p), # MLoopUV *
@@ -131,23 +152,23 @@ def _get_mtpoly_mode_and_transp(obj:bpy.types.Object)->_CMembers:
             #/* When the object is available, the preferred access method is: BKE_editmesh_from_object(ob) */
             ("edit_btmesh", ctypes.c_void_p), # BMEditMesh * /* not saved in file! */
 
-            ("vdata", CustomData),
-            ("edata", CustomData),
-            ("fdata", CustomData),
+            ("vdata", CustomData), # CustomData is CD_MVERT
+            ("edata", CustomData), # CustomData is CD_MEDGE
+            ("fdata", CustomData), # CustomData is CD_MFACE
 
         #/* BMESH ONLY */
-            ("pdata", CustomData),
-            ("ldata", CustomData),
+            ("pdata", CustomData), # CustomData is CD_MPOLY
+            ("ldata", CustomData), # CustomData is CD_MLOOP
         #/* END BMESH ONLY */
 
-            ("totvert",   ctypes.c_int),
-            ("totedge",   ctypes.c_int),
-            ("totface",   ctypes.c_int),
+            ("totvert",   ctypes.c_int), # Applies to length of mvert
+            ("totedge",   ctypes.c_int), # Applies to length of medge
+            ("totface",   ctypes.c_int), # Applies to length of mface
             ("totselect", ctypes.c_int),
 
         #/* BMESH ONLY */
-            ("totpoly", ctypes.c_int),
-            ("totloop", ctypes.c_int),
+            ("totpoly", ctypes.c_int), # Applies to length of mpoly
+            ("totloop", ctypes.c_int), # Applies to length of mloop
         #/* END BMESH ONLY */
 
             #/* the last selected vertex/edge/face are used for the active face however
@@ -186,22 +207,27 @@ def _get_mtpoly_mode_and_transp(obj:bpy.types.Object)->_CMembers:
             return s.format(**{key:getattr(self, key) for key, ctype in self._fields_ if key in {"id","mtpoly"}})
 
     mesh = Mesh.from_address(obj.data.as_pointer())
-    mode = mesh.mtpoly.contents.mode
-    transp = int.from_bytes(mesh.mtpoly.contents.transp, sys.byteorder)
-    return _CMembers(
+    poly_c_info = collections.defaultdict(list) # type: Dict[_CMembers, List[int]]
+    for idx, (mpoly_current, mtpoly_current) in enumerate(zip(mesh.mpoly[:mesh.totpoly], mesh.mtpoly[:mesh.totpoly])):
+        mtpoly_mode = mtpoly_current.mode
+        mtpoly_transp = int.from_bytes(mtpoly_current.transp, sys.byteorder)
+        cmembers = _CMembers(
                         # From DNA_meshdata_types.h, lines 477-495
-                        TEX       = bool(mode & (1 << 2)),
-                        TILES     = bool(mode & (1 << 7)),
-                        LIGHT     = bool(mode & (1 << 4)),
-                        INVISIBLE = bool(mode & (1 << 10)),
-                        DYNAMIC   = bool(mode & (1 << 0)),
-                        TWOSIDE   = bool(mode & (1 << 9)),
-                        SHADOW    = bool(mode & (1 << 13)),
+                        TEX       = bool(mtpoly_mode & (1 << 2)),
+                        TILES     = bool(mtpoly_mode & (1 << 7)),
+                        LIGHT     = bool(mtpoly_mode & (1 << 4)),
+                        INVISIBLE = bool(mtpoly_mode & (1 << 10)),
+                        DYNAMIC   = bool(mtpoly_mode & (1 << 0)),
+                        TWOSIDE   = bool(mtpoly_mode & (1 << 9)),
+                        SHADOW    = bool(mtpoly_mode & (1 << 13)),
                         # From DNA_meshdata_types.h, lines 502-503
-                        ALPHA     = bool(transp & (1 << 1)),
-                        CLIP      = bool(transp & (1 << 2)),
+                        ALPHA     = bool(mtpoly_transp & (1 << 1)),
+                        CLIP      = bool(mtpoly_transp & (1 << 2)),
                     )
 
+        poly_c_info[cmembers].append(idx)
+
+    return poly_c_info
 
 def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
     if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
@@ -215,21 +241,24 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
         print("Converting materials for", search_obj.name)
-        try:
-            mode_and_transp = _get_mtpoly_mode_and_transp(search_obj)
-        except ValueError: # NULL Pointer Exception
-            #TODO: If there are no other things we extract from a material, we should skip. No unwrap, no side effects
-            # Otherwise, we should get the default button presses
-            print("Couldn't get mode from search_obj, skipping")
-            continue
+        info = _get_poly_struct_info(search_obj)
 
+        for cmembers, faceids in info.items():
+            print(cmembers)
+            print(faceids)
+
+        continue
+
+        #for cmembers, polys in info:
+
+        #TODO: During split, what if Object already has a material?
         for slot in search_obj.material_slots:
             mat = slot.material
             print("Convertering", mat.name)
 
             #-- TexFace Flags ------------------------------------------------
             # If True, it means this is semantically enabled for export
-            # (which is important for TWOSIDE)
+            # (which is important for DYNAMIC)
             # PANEL isn't a button but a fact that
             ISCOCKPIT = any(
                         [(root_object.xplane.layer.name.lower() + ".obj").endswith(cockpit_suffix)
