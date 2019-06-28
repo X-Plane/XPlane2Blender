@@ -243,13 +243,31 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         print("Converting materials for", search_obj.name)
         info = _get_poly_struct_info(search_obj)
 
-        for cmembers, faceids in info.items():
-            print(cmembers)
-            print(faceids)
+        def copy_obj(obj):
+            new_obj = search_obj.copy()
+            scene.objects.link(new_obj)
+            new_mesh = search_obj.data.copy()
+            new_obj.data = new_mesh
+            return new_obj
+
+        info_more = {cmembers: (faces_idx, copy_obj(search_obj)) for cmembers, faces_idx in info.items()}
+        print("Deleting " + search_obj.name)
+        bpy.data.meshes.remove(search_obj.data)
+        bpy.data.objects.remove(search_obj) # What about other work ahead of us to convert?
+        for cmembers, (faceids, new_obj) in info_more.items():
+            print("New Obj: ", new_obj.name)
+            print("New Mesh:", new_obj.data.name)
+            print("Group:" , cmembers)
+            bm = bmesh.new()
+            bm.from_mesh(new_obj.data)
+            facesids_to_remove = [face for face in bm.faces if face.index not in faceids]
+            print("Faces To Keep:  ", faceids)
+            print("Faces To Remove:", [face.index for face in facesids_to_remove])
+            bmesh.ops.delete(bm, geom=facesids_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
+            bm.to_mesh(new_obj.data)
+            bm.free()
 
         continue
-
-        #for cmembers, polys in info:
 
         #TODO: During split, what if Object already has a material?
         for slot in search_obj.material_slots:
@@ -270,8 +288,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     ) # type: bool
             ISPANEL = ISCOCKPIT # type: bool
 
-            '''
-            print(
+            def print_data():
+                print(
 """
            Button State
 ISCOCKPIT: {ISCOCKPIT}
@@ -305,7 +323,6 @@ CLIP:      {CLIP}
         CLIP=mode_and_transp.CLIP,
     )
 )
-'''
 
             # This section roughly mirrors the order in which 2.49 deals with these face buttons
             #---TEX----------------------------------------------------------
