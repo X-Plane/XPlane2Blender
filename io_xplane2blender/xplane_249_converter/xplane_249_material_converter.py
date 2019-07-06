@@ -311,19 +311,17 @@ CLIP:      {CLIP}
                 mat.xplane.blendRatio = 0.5
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
-
-    if cmembers.TEX and (not (cmembers.TILES or cmembers.LIGHT)) and is_cockpit:
-        mat.xplane.poly_os = 2
-        logger.info("{}: Poly Offset={}".format(mat.name, mat.xplane.poly_os))
-
     #-----------------------------------------------------------------
 
     #---TILES/LIGHT---------------------------------------------------
-    if ((cmembers.TILES
-        or cmembers.LIGHT)
-        and xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")[1]):
+    # Yes! This is not 2.49's code, but it is what 2.49 produces!
+    if not is_cockpit and (cmembers.TILES or cmembers.LIGHT):
+        if xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")[1]:
             mat.xplane.draped = True
             logger.info("{}: Draped={}".format(mat.name, mat.xplane.draped))
+        else:
+            mat.xplane.poly_os = 2
+            logger.info("{}: Poly Offset={}".format(mat.name, mat.xplane.poly_os))
     #-----------------------------------------------------------------
 
     #---INVISIBLE-----------------------------------------------------
@@ -374,6 +372,9 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
         print("Converting materials for", search_obj.name)
         info = _get_poly_struct_info(search_obj)
+        if len(info.items()) == 1:
+            _convert_material(scene, root_object, search_obj, ISCOCKPIT, list(info.items())[0][0], search_obj.material_slots[0].material)
+            continue
 
         def copy_obj(obj):
             new_obj = search_obj.copy()
@@ -384,8 +385,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
         info_more = {cmembers: (faces_idx, copy_obj(search_obj)) for cmembers, faces_idx in info.items()}
         print("Deleting " + search_obj.name)
-        bpy.data.meshes.remove(search_obj.data)
-        bpy.data.objects.remove(search_obj) # What about other work ahead of us to convert?
+        bpy.data.meshes.remove(search_obj.data, do_unlink=True)
+        bpy.data.objects.remove(search_obj, do_unlink=True) # What about other work ahead of us to convert?
         for cmembers, (faceids, new_obj) in info_more.items():
             print("New Obj: ", new_obj.name)
             print("New Mesh:", new_obj.data.name)
@@ -400,5 +401,5 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             bm.free()
             mat = bpy.data.materials.new(new_obj.name + "_converted")
             _convert_material(scene, root_object, new_obj, ISCOCKPIT, cmembers, mat)
-            new_obj.material_slots[0].material = mat
+            test_creation_helpers.set_material(new_obj, mat.name)
             new_obj.active_material_index = 0

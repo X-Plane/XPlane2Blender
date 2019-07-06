@@ -757,10 +757,11 @@ def set_material(blender_object:bpy.types.Object,
                  create_missing:bool=True):
 
     if len(blender_object.material_slots) == 0:
-        bpy.ops.object.mode_set(mode='OBJECT')
+        #bpy.ops.object.mode_set(mode='OBJECT')
         blender_object.data.materials.append(None)
     mat = create_material(material_name)
     blender_object.material_slots[0].material = mat
+    blender_object.active_material_index = 0
 
     if material_props:
         for prop,value in material_props.items():
