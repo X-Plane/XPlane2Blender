@@ -17,7 +17,7 @@ class TestCommandsTxtParser(XPlaneTestCase):
         filepath = os.path.join(__dirname__, "test_commands_txts",  inspect.stack()[0][3].replace("test_", "") + ".txt")
         result = xplane_commands_txt_parser.parse_commands_txt(filepath)
         #print(result)
-        self.assertEqual(len(result),2) 
+        self.assertEqual(len(result),2)
 
     def test_Commands_empty_file(self):
         filepath = os.path.join(__dirname__, "test_commands_txts",  inspect.stack()[0][3].replace("test_", "") + ".txt")
@@ -50,7 +50,7 @@ class TestCommandsTxtParser(XPlaneTestCase):
         result = xplane_commands_txt_parser.parse_commands_txt(filepath)
         #print(result)
         #3 because it could be easy to it work once on accident
-        self.assertEqual(len(result),3) 
+        self.assertEqual(len(result),3)
 
     def test_Commands_missing(self):
         result = xplane_commands_txt_parser.parse_commands_txt(
@@ -61,13 +61,13 @@ class TestCommandsTxtParser(XPlaneTestCase):
     def test_Commands_in_resource_passes(self):
         #We should be able to parse the Commands.txt we ship with!
         #Tests that resource and our code.
-        
+
         result = xplane_commands_txt_parser.parse_commands_txt(
             os.path.join(__dirname__, "..", "..", "io_xplane2blender", "resources", "Commands.txt"))
         #print(result)
         self.assertIsInstance(result, list)
         # Anytime we update Commands.txt we'll update this number.
         # A little annoying? Sure, but we'll get it exactly right
-        self.assertEqual(len(result), 1914)
+        self.assertEqual(len(result), 1963, msg="Did you remember to change this hardcoded number after updating the file?")
 
 runTestCases([TestCommandsTxtParser])

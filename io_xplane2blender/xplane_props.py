@@ -1622,7 +1622,7 @@ def updateMaterialLitPreview(self, context):
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     draw = bpy.props.BoolProperty(
         attr = "draw",
-        name = "Draw Linked Objects",
+        name = "Draw Objects With This Material",
         description = "If turned off, objects with this material won't be drawn",
         default = True
     )
