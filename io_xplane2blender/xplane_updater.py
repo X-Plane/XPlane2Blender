@@ -164,7 +164,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
     if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-dev.0+43.20190606030000"):
         # This helps us conveniently save the Cast shadow value for later after we delete it
         UsedLayerInfo = collections.namedtuple("UsedLayerInfo", ["options", "cast_shadow", "final_name"])
-        def _update_potential_materials(potential_objects: bpy.types.Material, layer_options:'XPlaneLayer')->None:
+        def _update_potential_materials(potential_materials: List[bpy.types.Material], layer_options:'XPlaneLayer')->None:
             for mat in potential_materials:
                 # Default for shadow was True. get can't find shadow == no explicit value give
                 val = bool(layer_options.get("shadow", True))
@@ -212,7 +212,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
 
                         # We don't normally do things this way, but, "Cast Shadow (Global)" is soon to be deleted
                         layer_options["shadow"] = True
-                    potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
+                    potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots if slot.material]
                     _update_potential_materials(potential_materials, layer_options)
                     # Save usage of materials in this layer
                     used_layer_info = UsedLayerInfo(
