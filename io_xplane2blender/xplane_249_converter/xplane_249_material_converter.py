@@ -30,8 +30,8 @@ from io_xplane2blender.xplane_helpers import logger
 # An arbitrary choice had to be made, this is it.
 
 # True when pressed (we interpret what that means later)
-_CMembers = collections.namedtuple(
-        "__CMembers",
+_TexFaceModes = collections.namedtuple(
+        "_TexFaceModes",
         ["TEX",
          "TILES",
          "LIGHT",
@@ -43,12 +43,12 @@ _CMembers = collections.namedtuple(
          "CLIP"
          ]) # type: Tuple[bool, bool, bool, bool, bool, bool, bool, bool, bool]
 
-_CMembers.__repr__ = lambda self: (
+_TexFaceModes.__repr__ = lambda self: (
     "TEX={}, TILES={}, LIGHT={}, INVISIBLE={}, DYNAMIC={}, TWOSIDE={}, SHADOW={}, ALPHA={}, CLIP={}"
      .format(self.TEX, self.TILES, self.LIGHT, self.INVISIBLE, self.DYNAMIC, self.TWOSIDE, self.SHADOW, self.ALPHA, self.CLIP))
 
 
-def _get_poly_struct_info(obj:bpy.types.Object)->Dict[_CMembers, int]:
+def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Dict[_TexFaceModes, int]:
     """
     This giant method finds the information from MPoly* and MTexPoly* in DNA_mesh_types.h's Mesh struct,
     and returns a dictionary of pressed states and all polygon indexes that share it
@@ -222,7 +222,8 @@ def _get_poly_struct_info(obj:bpy.types.Object)->Dict[_CMembers, int]:
     for idx, (mpoly_current, mtpoly_current) in enumerate(zip(mesh.mpoly[:mesh.totpoly], mesh.mtpoly[:mesh.totpoly])):
         mtpoly_mode = mtpoly_current.mode
         mtpoly_transp = int.from_bytes(mtpoly_current.transp, sys.byteorder)
-        cmembers = _CMembers(
+        print("mtpoly_mode", "mypoly_transp", mtpoly_mode, mtpoly_transp)
+        tf_modes = _TexFaceModes(
                         # From DNA_meshdata_types.h, lines 477-495
                         TEX       = bool(mtpoly_mode & (1 << 2)),
                         TILES     = bool(mtpoly_mode & (1 << 7)),
@@ -236,7 +237,7 @@ def _get_poly_struct_info(obj:bpy.types.Object)->Dict[_CMembers, int]:
                         CLIP      = bool(mtpoly_transp & (1 << 2)),
                     )
 
-        poly_c_info[cmembers].append(idx)
+        poly_c_info[tf_modes].append(idx)
 
     return poly_c_info
 
@@ -244,7 +245,7 @@ def _convert_material(scene: bpy.types.Scene,
                       root_object: bpy.types.Object,
                       search_obj: bpy.types.Object,
                       is_cockpit: bool,
-                      cmembers: _CMembers,
+                      tf_modes: _TexFaceModes,
                       mat: bpy.types.Material):
     #TODO: During split, what if Object already has a material?
     print("Convertering", mat.name)
@@ -273,25 +274,25 @@ CLIP:      {CLIP}
         ISCOCKPIT=is_cockpit,
         ISPANEL=is_cockpit,
 
-        TEX=cmembers.TEX,
-        TILES=cmembers.TILES,
-        LIGHT=cmembers.LIGHT,
-        INVISIBLE=cmembers.INVISIBLE,
+        TEX=tf_modes.TEX,
+        TILES=tf_modes.TILES,
+        LIGHT=tf_modes.LIGHT,
+        INVISIBLE=tf_modes.INVISIBLE,
 
-        DYNAMIC=cmembers.DYNAMIC, #AKA COLLISION
-        TWOSIDE=cmembers.TWOSIDE,
+        DYNAMIC=tf_modes.DYNAMIC, #AKA COLLISION
+        TWOSIDE=tf_modes.TWOSIDE,
 
-        SHADOW=cmembers.SHADOW,
+        SHADOW=tf_modes.SHADOW,
 
-        ALPHA=cmembers.ALPHA,
-        CLIP=cmembers.CLIP,
+        ALPHA=tf_modes.ALPHA,
+        CLIP=tf_modes.CLIP,
     )
 )
 
     # This section roughly mirrors the order in which 2.49 deals with these face buttons
     #---TEX----------------------------------------------------------
-    if cmembers.TEX:
-        if cmembers.ALPHA:
+    if tf_modes.TEX:
+        if tf_modes.ALPHA:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
                 mat.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
                 mat.xplane.blendRatio = 0.5
@@ -301,7 +302,7 @@ CLIP:      {CLIP}
                 mat.xplane.blendRatio = 0.5
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger.info("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
-        if cmembers.CLIP:
+        if tf_modes.CLIP:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
                 mat.xplane.blend_v1000 = xplane_constants.BLEND_OFF
                 mat.xplane.blendRatio = 0.5
@@ -315,7 +316,7 @@ CLIP:      {CLIP}
 
     #---TILES/LIGHT---------------------------------------------------
     # Yes! This is not 2.49's code, but it is what 2.49 produces!
-    if not is_cockpit and (cmembers.TILES or cmembers.LIGHT):
+    if not is_cockpit and (tf_modes.TILES or tf_modes.LIGHT):
         if xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")[1]:
             mat.xplane.draped = True
             logger.info("{}: Draped={}".format(mat.name, mat.xplane.draped))
@@ -325,27 +326,27 @@ CLIP:      {CLIP}
     #-----------------------------------------------------------------
 
     #---INVISIBLE-----------------------------------------------------
-    if cmembers.INVISIBLE:
+    if tf_modes.INVISIBLE:
         mat.xplane.draw = False
         logger.info("{}: Draw Objects With This Material={}".format(mat.name, mat.xplane.draw))
     #-----------------------------------------------------------------
 
     #---DYNAMIC-------------------------------------------------------
-    if (not cmembers.INVISIBLE
+    if (not tf_modes.INVISIBLE
         and not is_cockpit
-        and not cmembers.DYNAMIC):
+        and not tf_modes.DYNAMIC):
         mat.xplane.solid_camera = True
         logger.info("{}: Solid Camera={}".format(mat.name, mat.xplane.solid_camera))
     #-----------------------------------------------------------------
 
     #---TWOSIDE-------------------------------------------------------
-    if cmembers.TWOSIDE:
+    if tf_modes.TWOSIDE:
         logger.warn("{}: Two Sided is deprecated, skipping".format(mat.name))
         pass
     #-----------------------------------------------------------------
 
     #---SHADOW--------------------------------------------------------
-    mat.xplane.shadow_local = not cmembers.SHADOW
+    mat.xplane.shadow_local = not tf_modes.SHADOW
     if not mat.xplane.shadow_local:
         logger.info("{}: Cast Shadow (Local)={}".format(mat.name, mat.xplane.shadow_local))
     #-----------------------------------------------------------------
@@ -370,36 +371,121 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
     #scene.render.engine = 'BLENDER_GAME' # Only for testing purposes
 
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
+        """
+        This tests that:
+            - Every Object ends with a Material, even if it is the 249_default Material
+            - Blender's auto generated Materials are removed and replaced with the 249_default
+            - Meshs are split according to their TexFace groups (including None or Collision Only), not Materials
+            - Meshes are split only as much as needed
+            - The relationship between a face and its Material's specularity and Diffuse/Emissive RGB* is preserved,
+            even when splitting a mesh
+            - Materials and material slots are created as little as possible and never deleted
+            - During a split, the minimal amount of Materials are preserved
+
+        * Why? Though deprecated, we shouldn't delete data. We should, in fact copy first instead of create and assign,
+        but that is UX, not spec correctness.
+
+        # Spec implications for algorithm
+        In more detail this results in:
+        """
         print("Converting materials for", search_obj.name)
-        info = _get_poly_struct_info(search_obj)
-        if len(info.items()) == 1:
-            _convert_material(scene, root_object, search_obj, ISCOCKPIT, list(info.items())[0][0], search_obj.material_slots[0].material)
-            continue
+        # If we end the conversion without any users of this, we'll delete it
+        default_material=bpy.data.materials.new(xplane_249_constants.DEFAULT_MATERIAL_NAME)
 
-        def copy_obj(obj):
-            new_obj = search_obj.copy()
-            scene.objects.link(new_obj)
-            new_mesh = search_obj.data.copy()
-            new_obj.data = new_mesh
-            return new_obj
+        """
+        def give_face_default(ob: bpy.types.Object):
+            for face in search_obj.polygons:
+                mat = face.material_index
+        """
 
-        info_more = {cmembers: (faces_idx, copy_obj(search_obj)) for cmembers, faces_idx in info.items()}
-        print("Deleting " + search_obj.name)
-        bpy.data.meshes.remove(search_obj.data, do_unlink=True)
-        bpy.data.objects.remove(search_obj, do_unlink=True) # What about other work ahead of us to convert?
-        for cmembers, (faceids, new_obj) in info_more.items():
-            print("New Obj: ", new_obj.name)
-            print("New Mesh:", new_obj.data.name)
-            print("Group:" , cmembers)
-            bm = bmesh.new()
-            bm.from_mesh(new_obj.data)
-            facesids_to_remove = [face for face in bm.faces if face.index not in faceids]
-            print("Faces To Keep:  ", faceids)
-            print("Faces To Remove:", [face.index for face in facesids_to_remove])
-            bmesh.ops.delete(bm, geom=facesids_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
-            bm.to_mesh(new_obj.data)
-            bm.free()
+        # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
+        # Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
+        # Unused materials aren't deleted (#19)
+
+        # A mesh with >0 faces and 0 TF groups is unsplit
+        # A mesh with >0 faces and 1 TF group is unsplit
+        # A mesh with >1 faces and 0 TF groups is unsplit
+        # A mesh with >1 faces and 1 TF groups is unsplit
+        all_tf_modes = _get_tf_modes_from_ctypes(search_obj)
+        new_objs = []
+        if len(all_tf_modes) > 2:
+            # The number of new meshes after a split should match its # of TF groups
+            pre_split_obj_count = len(scene.objects) # TODO: Should use scene instead of bpy.data.objects?
+
+            ##############################
+            # The heart of this function #
+            ##############################
+            #--Begining of Operation-----------------------
+
+            i = 0
+            def copy_obj(obj):
+                nonlocal i
+                new_obj = search_obj.copy()
+                scene.objects.link(new_obj)
+                new_mesh = search_obj.data.copy()
+
+                new_obj.name += ["SHADOW", "TILE", "INVISIBLE"][i]
+                i += 1
+                new_obj.data = new_mesh
+                return new_obj
+
+            modes_to_faces_col = {tf_modes: (faces_idx, copy_obj(search_obj)) for tf_modes, faces_idx in all_tf_modes.items()}
+            #print("Deleting " + search_obj.name)
+            #bpy.data.meshes.remove(search_obj.data, do_unlink=True)
+            #bpy.data.objects.remove(search_obj, do_unlink=True) # What about other work ahead of us to convert?
+            #TODO: Better name? Select? Keep_only? trim?
+            def remove_faces(face_ids: List[int], obj: bpy.types.Object):
+                # Remove faces
+                bm = bmesh.new()
+                bm.from_mesh(new_obj.data)
+                faces_to_keep = [face for face in bm.faces if face.index in face_ids]
+                faces_to_remove = [face for face in bm.faces if face.index not in face_ids]
+                slot_idxs_to_remove = sorted({face.material_index for face in faces_to_remove}
+                                              - {face.material_index for face  in faces_to_keep},
+                                              reverse=True)
+                print("Faces To Keep:  ", face_ids)
+                print("Faces To Remove:", [f.index for f in faces_to_remove])
+                bmesh.ops.delete(bm, geom=faces_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
+                bm.to_mesh(new_obj.data)
+                bm.free()
+
+                # Remove unused or empty material_slots
+                scene.objects.active = new_obj
+                print("slots to remove (reversed)", (slot_idxs_to_remove))
+                # We go through in reverse so as not to disturbe the order of future slots until needed
+                for slot_idx in (slot_idxs_to_remove):
+                    #TODO: Make this remove material slots as well, but that
+                    scene.objects.active.active_material_index = slot_idx
+                    bpy.ops.object.material_slot_remove()
+
+
+            for tf_modes, (faceids, new_obj) in modes_to_faces_col.items():
+                print("New Obj: ", new_obj.name)
+                print("New Mesh:", new_obj.data.name)
+                print("Group:" , tf_modes)
+                remove_faces(faceids, new_obj)
+            #--End of Split Operation----------------------
+
+            intended_count = pre_split_obj_count - 1 + len(all_tf_modes)
+            #assert intended_count == len(scene.objects),\
+            #        "After split, object count should be TF groups - deleted original ({}), is {}".format(intended_count, len(scene.objects))
+        else:
+            new_objs = [search_obj]
+
+        # The relationship between a face and its material is preserved when there is no split**
+        # The relationship between a face and its material is preserved when splitting
+        # After split, number of Materials should only include what is needed
+        #for new_object in new_objs:
+            #if new_object.
+
+
+
+            """
             mat = bpy.data.materials.new(new_obj.name + "_converted")
-            _convert_material(scene, root_object, new_obj, ISCOCKPIT, cmembers, mat)
+            _convert_material(scene, root_object, new_obj, ISCOCKPIT, tf_modes, mat)
             test_creation_helpers.set_material(new_obj, mat.name)
             new_obj.active_material_index = 0
+            """
+
+    if not bpy.data.materials[xplane_249_constants.DEFAULT_MATERIAL_NAME].users:
+        bpy.data.materials.remove(bpy.data.materials[xplane_249_constants.DEFAULT_MATERIAL_NAME])
