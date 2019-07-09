@@ -47,6 +47,15 @@ _TexFaceModes.__repr__ = lambda self: (
     "TEX={}, TILES={}, LIGHT={}, INVISIBLE={}, DYNAMIC={}, TWOSIDE={}, SHADOW={}, ALPHA={}, CLIP={}"
      .format(self.TEX, self.TILES, self.LIGHT, self.INVISIBLE, self.DYNAMIC, self.TWOSIDE, self.SHADOW, self.ALPHA, self.CLIP))
 
+"""
+def _get_short_name(self):
+    short_name = ""
+    for field in self._fields:
+        # If we includ DY in every single new material, this is going to get old fast
+        if not getattr(self, "DYNAMIC"):
+            """
+_cmp_dyn = lambda self, field: (field == "DYNAMIC" and not getattr(self, "DYNAMIC")) or (field != "DYNAMIC" and getattr(self, field))
+_TexFaceModes.short_name = lambda self: ''.join([field[:2] for field in self._fields if _cmp_dyn(self, field)])
 
 def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Dict[_TexFaceModes, int]:
     """
@@ -250,93 +259,69 @@ def _convert_material(scene: bpy.types.Scene,
     #TODO: During split, what if Object already has a material?
     print("Convertering", mat.name)
 
-        #-- TexFace Flags ------------------------------------------------
-        # PANEL isn't a button but a fact that
 
-    def print_data():
-        print(
-"""
-           Button State
-ISCOCKPIT: {ISCOCKPIT}
-ISPANEL:   {ISPANEL}
+    #material_changes = { "blend_v1000":mat.xplane.blend_v1000 }
 
-TEX:       {TEX}
-TILES:     {TILES}
-LIGHT:     {LIGHT}
-INVISIBLE: {INVISIBLE}
-DYNAMIC:   {DYNAMIC}
-TWOSIDE:   {TWOSIDE}
-SHADOW:    {SHADOW}
+    new_material = mat.copy()
+    new_material.name = mat.name + "_split_" tf_modes.short_name()
 
-ALPHA:     {ALPHA}
-CLIP:      {CLIP}
-""".format(
-        ISCOCKPIT=is_cockpit,
-        ISPANEL=is_cockpit,
-
-        TEX=tf_modes.TEX,
-        TILES=tf_modes.TILES,
-        LIGHT=tf_modes.LIGHT,
-        INVISIBLE=tf_modes.INVISIBLE,
-
-        DYNAMIC=tf_modes.DYNAMIC, #AKA COLLISION
-        TWOSIDE=tf_modes.TWOSIDE,
-
-        SHADOW=tf_modes.SHADOW,
-
-        ALPHA=tf_modes.ALPHA,
-        CLIP=tf_modes.CLIP,
-    )
-)
-
+    converted_something_at_all = False
     # This section roughly mirrors the order in which 2.49 deals with these face buttons
     #---TEX----------------------------------------------------------
     if tf_modes.TEX:
         if tf_modes.ALPHA:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
-                mat.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
-                mat.xplane.blendRatio = 0.5
+                new_material.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
+                new_material.xplane.blendRatio = 0.5
                 logger.info("{}: Blend Mode='Shadow' and Blend Ratio=0.5".format(mat.name))
+                converted_something_at_all = True
             if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
-                mat.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
-                mat.xplane.blendRatio = 0.5
+                new_material.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
+                new_material.xplane.blendRatio = 0.5
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger.info("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
+                converted_something_at_all = True
         if tf_modes.CLIP:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
-                mat.xplane.blend_v1000 = xplane_constants.BLEND_OFF
-                mat.xplane.blendRatio = 0.5
+                new_material.xplane.blend_v1000 = xplane_constants.BLEND_OFF
+                new_material.xplane.blendRatio = 0.5
                 logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
+                converted_something_at_all = True
             if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
-                mat.xplane.blend_v1000 = xplane_constants.BLEND_OFF
-                mat.xplane.blendRatio = 0.5
+                new_material.xplane.blend_v1000 = xplane_constants.BLEND_OFF
+                new_material.xplane.blendRatio = 0.5
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger.info("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
+                converted_something_at_all = True
     #-----------------------------------------------------------------
 
     #---TILES/LIGHT---------------------------------------------------
     # Yes! This is not 2.49's code, but it is what 2.49 produces!
     if not is_cockpit and (tf_modes.TILES or tf_modes.LIGHT):
         if xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")[1]:
-            mat.xplane.draped = True
-            logger.info("{}: Draped={}".format(mat.name, mat.xplane.draped))
+            new_material.xplane.draped = True
+            logger.info("{}: Draped={}".format(mat.name, new_material.xplane.draped))
+            converted_something_at_all = True
         else:
-            mat.xplane.poly_os = 2
-            logger.info("{}: Poly Offset={}".format(mat.name, mat.xplane.poly_os))
+            new_material.xplane.poly_os = 2
+            logger.info("{}: Poly Offset={}".format(mat.name, new_material.xplane.poly_os))
+            converted_something_at_all = True
     #-----------------------------------------------------------------
 
     #---INVISIBLE-----------------------------------------------------
     if tf_modes.INVISIBLE:
-        mat.xplane.draw = False
-        logger.info("{}: Draw Objects With This Material={}".format(mat.name, mat.xplane.draw))
+        new_material.xplane.draw = False
+        logger.info("{}: Draw Objects With This Material={}".format(mat.name, new_material.xplane.draw))
+        converted_something_at_all = True
     #-----------------------------------------------------------------
 
     #---DYNAMIC-------------------------------------------------------
     if (not tf_modes.INVISIBLE
         and not is_cockpit
         and not tf_modes.DYNAMIC):
-        mat.xplane.solid_camera = True
-        logger.info("{}: Solid Camera={}".format(mat.name, mat.xplane.solid_camera))
+        new_material.xplane.solid_camera = True
+        logger.info("{}: Solid Camera={}".format(mat.name, new_material.xplane.solid_camera))
+        converted_something_at_all = True
     #-----------------------------------------------------------------
 
     #---TWOSIDE-------------------------------------------------------
@@ -346,10 +331,12 @@ CLIP:      {CLIP}
     #-----------------------------------------------------------------
 
     #---SHADOW--------------------------------------------------------
-    mat.xplane.shadow_local = not tf_modes.SHADOW
-    if not mat.xplane.shadow_local:
-        logger.info("{}: Cast Shadow (Local)={}".format(mat.name, mat.xplane.shadow_local))
+    new_material.xplane.shadow_local = not tf_modes.SHADOW
+    if not new_material.xplane.shadow_local:
+        logger.info("{}: Cast Shadow (Local)={}".format(mat.name, new_material.xplane.shadow_local))
+        converted_something_at_all = True
     #-----------------------------------------------------------------
+    return new_material
 
 def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
     if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
@@ -446,17 +433,31 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 print("Faces To Keep:  ", face_ids)
                 print("Faces To Remove:", [f.index for f in faces_to_remove])
                 bmesh.ops.delete(bm, geom=faces_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
+                #TODO: TODO: TODO:
+                #TODO: First draft doesn't split by materials.
+                #TODO: TODO: TODO:
                 bm.to_mesh(new_obj.data)
                 bm.free()
 
                 # Remove unused or empty material_slots
                 scene.objects.active = new_obj
                 print("slots to remove (reversed)", (slot_idxs_to_remove))
-                # We go through in reverse so as not to disturbe the order of future slots until needed
+
+                #TODO: Are we sure we never remove all slots?
+                #TODO: What about null materials,
+                # We go through in reverse
                 for slot_idx in (slot_idxs_to_remove):
                     #TODO: Make this remove material slots as well, but that
                     scene.objects.active.active_material_index = slot_idx
                     bpy.ops.object.material_slot_remove()
+
+
+            def convert_material(tf_modes, new_obj):
+                current_material = new_obj.material_slots[0].material
+                new_material = _convert_material(scene, root_object, new_obj, ISCOCKPIT, tf_modes, current_material)
+                new_obj.material_slots[0].material = new_material
+                #_convert_material(scene, root_object, new_obj, ISCOCKPIT, tf_modes, mat)
+#TW            test_creation_helpers.set_material(new_obj, mat.name)
 
 
             for tf_modes, (faceids, new_obj) in modes_to_faces_col.items():
@@ -464,11 +465,17 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 print("New Mesh:", new_obj.data.name)
                 print("Group:" , tf_modes)
                 remove_faces(faceids, new_obj)
+                convert_material(tf_modes, new_obj)
+
             #--End of Split Operation----------------------
 
             intended_count = pre_split_obj_count - 1 + len(all_tf_modes)
             #assert intended_count == len(scene.objects),\
             #        "After split, object count should be TF groups - deleted original ({}), is {}".format(intended_count, len(scene.objects))
+
+            #for new_obj in new_objects:
+                #pass
+                #test_creation_helpers.set_material(
         else:
             new_objs = [search_obj]
 
@@ -477,15 +484,15 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # After split, number of Materials should only include what is needed
         #for new_object in new_objs:
             #if new_object.
-
-
-
-            """
-            mat = bpy.data.materials.new(new_obj.name + "_converted")
-            _convert_material(scene, root_object, new_obj, ISCOCKPIT, tf_modes, mat)
-            test_creation_helpers.set_material(new_obj, mat.name)
-            new_obj.active_material_index = 0
-            """
+#TE
+#TI
+#LI
+#IN            """
+              #mat = bpy.data.materials.new(new_obj.name + "_converted")
+#DY            _convert_material(scene, root_object, new_obj, ISCOCKPIT, tf_modes, mat)
+#TW            test_creation_helpers.set_material(new_obj, mat.name)
+              #new_obj.active_material_index = 0
+#SH            """
 
     if not bpy.data.materials[xplane_249_constants.DEFAULT_MATERIAL_NAME].users:
         bpy.data.materials.remove(bpy.data.materials[xplane_249_constants.DEFAULT_MATERIAL_NAME])
