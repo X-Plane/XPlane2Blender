@@ -365,6 +365,9 @@ def _convert_material(scene: bpy.types.Scene,
         except KeyError:
             new_material = mat.copy()
             new_material.name = new_name
+            for prop, value in changed_material_values.items():
+                setattr(new_material.xplane, prop, value)
+
             print("Created new converted material:", new_material.name)
 
         return new_material
@@ -459,7 +462,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         #--- Get Materials and the faces that use them-------------------------
         materials_and_their_faces = collections.defaultdict(set) # type: Dict[bpy.types.MaterialSlot, Set[FaceId]]
         for face in search_obj.data.polygons:
-            materials_and_their_faces[search_obj.material_slots[face.material_index]].add(face.index)
+            materials_and_their_faces[search_obj.material_slots[face.material_index].material].add(face.index)
 
         all_tf_faceids =       list(itertools.chain([face_ids for tf_modes, face_ids in tf_modes_and_their_faces.items()]))
         all_material_faceids = list(itertools.chain([face_ids for tf_modes, face_ids in materials_and_their_faces.items()]))
@@ -481,17 +484,16 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         print()
         split_groups = {} # type: Dict[bpy.types.Material, List[FaceId]]
         for tf_modes, t_face_ids in tf_modes_and_their_faces.items():
-            for material_slot, m_face_ids in materials_and_their_faces.items():
+            for material, m_face_ids in materials_and_their_faces.items():
                 cross_over_faces = t_face_ids & m_face_ids
                 if cross_over_faces:
-                    current = material_slot.material
-                    converted = _convert_material(scene, root_object, search_obj, ISCOCKPIT, tf_modes, current)
-                    if converted == current:
+                    converted = _convert_material(scene, root_object, search_obj, ISCOCKPIT, tf_modes, material)
+                    if converted == material:
                         print("Didn't convert anything")
-                    material_slot.material = converted
-                    split_groups[material_slot] = cross_over_faces
+                    #material_slot.material = converted
+                    split_groups[converted] = cross_over_faces
                 else:
-                    print("No cross over for ", tf_modes, "and", material_slot.material.name)
+                    print("No cross over for ", tf_modes, "and", material.name)
 
         print("After (Slots):         ", *[slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"], sep=",")
         print("After (All Materials): ", *[mat.name for mat in search_obj.data.materials], sep=",")
@@ -520,7 +522,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             # The heart of this function #
             ##############################
             #--Begining of Operation-----------------------
-            for i, (slot, face_ids) in enumerate(split_groups.items()):
+            for i, (material, face_ids) in enumerate(split_groups.items()):
                 new_obj = copy_obj(search_obj, search_obj.name + "_%d" % i)
                 print("New Obj: ", new_obj.name)
                 print("New Mesh:", new_obj.data.name)
@@ -541,7 +543,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 scene.objects.active = new_obj
                 for i in range(len(scene.objects.active.material_slots)-1):
                     bpy.ops.object.material_slot_remove()
-                new_obj.material_slots[0].material = slot.material
+                new_obj.material_slots[0].material = material
                 new_objs.append(new_obj)
 
             logger.info("Split '{}' into {} groups".format(search_obj.name, len(split_groups)))
