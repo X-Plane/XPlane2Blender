@@ -10,6 +10,7 @@ our modern model is entirely material based.
 
 import collections
 import functools
+import itertools
 import re
 import sys
 from typing import Callable, Dict, List, Match, Optional, Set, Tuple, Union, cast
@@ -61,10 +62,12 @@ FaceId = int
 TFModeAndFaceIndexes = Dict[_TexFaceModes, Set[FaceId]]
 def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndexes]:
     """
-    This giant method finds the information from MPoly* and MTexPoly* in DNA_mesh_types.h's Mesh struct,
-    and returns a dictionary of pressed states and all polygon indexes that share it
+    Finds the information from MPoly* and MTexPoly* in DNA_mesh_types.h's Mesh struct,
+    and returns a dictionary of pressed states and all polygon indexes that share it.
 
-    If the mesh was not unwrapped, this returns None
+    It is garunteed to cover every polygon index in the mesh.
+
+    Returns None if the mesh was not unwrapped, or it had other trouble
     """
     assert obj.type == "MESH", obj.name + " is not a MESH type"
     import sys
@@ -354,7 +357,6 @@ def _convert_material(scene: bpy.types.Scene,
                 ("_SHADOW" if cv["shadow_local"] != ov["shadow_local"] and tf_modes.SHADOW else ""),
             ))
 
-        new_material = mat.copy()
         new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
                                                  # If we're using these for dict keys we can't afford
                                                  # to get truncated and not know
@@ -409,6 +411,9 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         """
         print("Converting materials for", search_obj.name)
 
+        # Rules:
+        # Every face is going to have a TexFace mode (even if we have to force it to be default)
+        # Every face is going to have a material_index to a real material (even if we have to make a default for the 0 slot)
         #--- Get TexFace Modes and the faces that use them--------------------
         ############################################
         # DO NOT CHANGE THE MESH BEFORE THIS LINE! #
@@ -423,6 +428,19 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         #--- Prepare the Object's Material Slots ------------------------------
         # If we end the conversion without any users of this, we'll delete it
         default_material=bpy.data.materials.new(xplane_249_constants.DEFAULT_MATERIAL_NAME)
+        try:
+            def _try(fn):
+                try:
+                    return fn()
+                except:
+                    pass
+
+            print("Before (Slots):         ", *[_try(lambda: slot.material.name) for slot in search_obj.material_slots if slot.link == "DATA"], sep=",")
+            print("Before (All Materials): ", *[_try(lambda: mat.name) for mat in search_obj.data.materials], sep=",")
+        except:
+            print("passing")
+            pass
+        print()
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
         if not search_obj.material_slots:
             scene.objects.active = search_obj
@@ -441,21 +459,42 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # Unused materials aren't deleted (#19)
 
         #--- Get Materials and the faces that use them-------------------------
-        materials_and_their_faces = collections.defaultdict(set) # type: Dict[bpy.data.Materials, Set[FaceId]]
+        materials_and_their_faces = collections.defaultdict(set) # type: Dict[bpy.types.MaterialSlot, Set[FaceId]]
         for face in search_obj.data.polygons:
-            materials_and_their_faces[search_obj.material_slots[face.material_index].material].add(face.index)
+            materials_and_their_faces[search_obj.material_slots[face.material_index]].add(face.index)
+
+        all_tf_faceids =       list(itertools.chain([face_ids for tf_modes, face_ids in tf_modes_and_their_faces.items()]))
+        all_material_faceids = list(itertools.chain([face_ids for tf_modes, face_ids in materials_and_their_faces.items()]))
+        print(all_tf_faceids)
+        print(all_material_faceids)
+        def flatten(l):
+            for el in l:
+                if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
+                    yield from flatten(el)
+                else:
+                    yield el
+        assert sorted(flatten(all_tf_faceids)) == sorted(flatten(all_material_faceids)), "TF Face Ids and Material Face Ids must cover the same faces!"
+        assert len(list(flatten(all_tf_faceids))) == len(list(flatten(all_material_faceids))) == len(search_obj.data.polygons), "TF FaceIds, Material FaceIds must cover all of object's faces!"
+               #len(itertools.chain([faces for tf_modes, face_ids in tf_modes_and_their_faces.items()]), "dicts should cover the same range of faces"
         #----------------------------------------------------------------------
-        split_groups = {} # type: Dict[Tuple[[TFModeAndFaceIndexes], List[MaterialSlotIndexes]], Set[FaceId]]
+        print()
+        print("Before (Slots):         ", *[slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"], sep=",")
+        print("Before (All Materials): ", *[mat.name for mat in search_obj.data.materials], sep=",")
+        print()
         for tf_modes, t_face_ids in tf_modes_and_their_faces.items():
-            for material, m_face_ids in materials_and_their_faces.items():
+            for material_slot, m_face_ids in materials_and_their_faces.items():
                 cross_over = t_face_ids & m_face_ids
                 if cross_over:
-                    print(tf_modes, "and", material.name, "share", cross_over)
-                    split_groups[(tf_modes, material)] = cross_over
+                    current = material_slot.material
+                    converted = _convert_material(scene, root_object, search_obj, ISCOCKPIT, tf_modes, current)
+                    material_slot.material = converted
                 else:
-                    print("No cross over for ", tf_modes, "and", material.name)
+                    print("No cross over for ", tf_modes, "and", material_slot.material.name)
 
 
+        print("After (Slots):         ", *[slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"], sep=",")
+        print("After (All Materials): ", *[mat.name for mat in search_obj.data.materials], sep=",")
+        print()
         # Two possibilities:
         # (Default Mode, Default material) = [face ids that match this pattern]
         # (Default Mode, Some Material) = [face ids that match this pattern]
@@ -463,11 +502,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # (Some Mode, Some Material) = [face ids that match this pattern]
         # Materials not referenced by any faces are deleted only by virtue of not being copied
 
-
-        # Split groups define unique buckets of face ids by "faces that have TFMode X and MaterialSlot index Y"
-
-
-        #all_material_idxs = _get_material_idxes_from(search_obj) #TODO: Even if it is not distincy
         new_objs = []
         def copy_obj(obj: bpy.types.Object, name:str)->bpy.types.Object:
             """Makes a copy of obj and links it to the current scene"""
@@ -482,10 +516,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # A mesh with >0 faces and 1 TF group is unsplit
         if len(tf_modes_and_their_faces) == 0:
             new_objs = [search_obj.name]
-            pass
         elif len(tf_modes_and_their_faces) == 1:
             new_objs = [search_obj.name]
-            pass
         elif len(tf_modes_and_their_faces) > 2:
             # The number of new meshes after a split should match its # of TF groups
             pre_split_obj_count = len(scene.objects) # TODO: Should use scene instead of bpy.data.objects?
@@ -495,6 +527,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             ##############################
             #--Begining of Operation-----------------------
             modes_to_faces_col = {tf_modes: (faces_idx, copy_obj(search_obj, search_obj.name + "_%d" % i)) for i, (tf_modes, faces_idx) in enumerate(tf_modes_and_their_faces.items())}
+            material
             logger.info("Split '{}' into {} groups".format(search_obj.name, len(tf_modes_and_their_faces)))
             #print("Deleting " + search_obj.name)
             #bpy.data.meshes.remove(search_obj.data, do_unlink=True)
@@ -509,24 +542,25 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
                 # Remove faces
                 bm = bmesh.new()
-                bm.from_mesh(new_obj.data)
+                bm.from_mesh(obj.data)
                 faces_to_keep =   [face for face in bm.faces if face.index in face_ids]
                 faces_to_remove = [face for face in bm.faces if face.index not in face_ids]
-                #TODO: TODO: TODO:
-                #TODO: First draft doesn't split by materials.
-                #TODO: TODO: TODO:
-                slot_idxs_to_remove = sorted({face.material_index for face in faces_to_remove}
-                                              - {face.material_index for face  in faces_to_keep},
-                                              reverse=True)
+                #slot_idxs_to_remove = sorted({face.material_index for face in faces_to_remove}
+                                              #- {face.material_index for face  in faces_to_keep},
+                                              #reverse=True)
                 print("Faces To Keep:  ", face_ids)
                 print("Faces To Remove:", [f.index for f in faces_to_remove])
                 bmesh.ops.delete(bm, geom=faces_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
-                bm.to_mesh(new_obj.data)
+                bm.to_mesh(obj.data)
                 bm.free()
 
                 # Remove unused or empty material_slots
-                scene.objects.active = new_obj
-                print("slots to remove (reversed)", (slot_idxs_to_remove))
+                scene.objects.active = obj
+                for i in range(len(scene.objects.active.material_slots)-1):
+                    bpy.ops.object.material_slot_remove()
+                #print("slots to remove (reversed)", (slot_idxs_to_remove))
+
+                obj.material_slots[0]
 
                 #TODO: Are we sure we never remove all slots?
                 #TODO: What about null materials,
@@ -535,11 +569,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     #TODO: Make this remove material slots as well, but that
                     scene.objects.active.active_material_index = slot_idx
                     bpy.ops.object.material_slot_remove()
-
-            def change_material(tf_modes, new_obj):
-                current_material = new_obj.material_slots[0].material
-                new_material = _convert_material(scene, root_object, new_obj, ISCOCKPIT, tf_modes, current_material)
-                new_obj.material_slots[0].material = new_material
 
             for tf_modes, (faceids, new_obj) in modes_to_faces_col.items():
                 print("New Obj: ", new_obj.name)
