@@ -521,8 +521,11 @@ def get_image(name:str)->Optional[bpy.types.Image]:
     return bpy.data.images.get(name)
 
 #Returns the bpy.types.Material or creates it as needed
-def get_material(material_name:str)->Optional[bpy.types.Material]:
-    return bpy.data.materials.get(material_name)
+def get_material(material_name:str)->bpy.types.Material:
+    try:
+        return bpy.data.materials[material_name]
+    except KeyError:
+        return bpy.data.materials.new(material_name)
 
 def get_material_default()->bpy.types.Material:
     mat = bpy.data.materials.get("Material")
