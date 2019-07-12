@@ -656,8 +656,11 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
             bone_name = bone.name.split('.')[0].strip() # type: BoneName
             bone_name_no_idx = no_idx(bone_name) # type: Union[SName,TailName]
 
-            #print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
-            lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
+            if "wind_direction_degt" in bone_name:
+                lookup_result = LookupResult(("sim/weather/" + bone_name, 1), True, True)
+            else:
+                #print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
+                lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
 
             #print("Lookup Results: %s" % lookup_result)
             if lookup_result.record:

@@ -44,10 +44,9 @@ _TexFaceModes = collections.namedtuple(
          "CLIP"
          ]) # type: Tuple[bool, bool, bool, bool, bool, bool, bool, bool, bool]
 
-_TexFaceModes.__repr__ = lambda self: ("".join(["{}={}".format(key, value) for (key, value) in self._asdict().items() if (key == "DYANMIC" and not value) or (key != "DYNAMIC" and value)]))
 
 DEFAULT_TF_MODES = _TexFaceModes(
-        TEX = False,
+        TEX       = False,
         TILES     = False,
         LIGHT     = False,
         INVISIBLE = False,
@@ -57,6 +56,7 @@ DEFAULT_TF_MODES = _TexFaceModes(
         ALPHA     = False,
         CLIP      = False)
 
+_TexFaceModes.__repr__ = lambda self: ("DEFMODE" if self == DEFAULT_TF_MODES else "".join(["{}={}".format(key, value) for (key, value) in self._asdict().items() if (key == "DYANMIC" and not value) or (key != "DYNAMIC" and value)]))
 # The face ids of an Object's mesh, usually to keep or remove
 FaceId = int
 TFModeAndFaceIndexes = Dict[_TexFaceModes, Set[FaceId]]
@@ -256,6 +256,9 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
         return poly_c_info
     except ValueError: #NULL Pointer access
         return None
+    except Exception as e:
+        print(e)
+        return None
 
 
 def _convert_material(scene: bpy.types.Scene,
@@ -263,7 +266,13 @@ def _convert_material(scene: bpy.types.Scene,
                       search_obj: bpy.types.Object,
                       is_cockpit: bool,
                       tf_modes: _TexFaceModes,
-                      mat: bpy.types.Material):
+                      mat: bpy.types.Material)->Optional[bpy.types.Material]:
+    """
+    Using face meta data (TexFace Modes, Material referenced by from face.material_index),
+    attempt to make a new converted convert.
+
+    Even if No matter
+    """
     #TODO: During split, what if Object already has a material?
     print("Attempting to convert", mat.name)
 
@@ -277,6 +286,9 @@ def _convert_material(scene: bpy.types.Scene,
                 "shadow_local",
                 ]
             }
+
+    # Will have to make special case later
+    original_material_values.update({attr:getattr(mat, attr) for attr in ["diffuse_color", "specular_intensity"]})
     changed_material_values = dict(original_material_values)
 
     logger_info_msgs = [] # type: List[str]
@@ -288,18 +300,24 @@ def _convert_material(scene: bpy.types.Scene,
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
                 logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5".format(mat.name))
-            if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
+            elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
-        if tf_modes.CLIP:
+            else:
+                logger_warn_msgs.append("'Tex' and 'Alpha' buttons pressed, but no 'ATTR_/GLOBAL_shadow_blend' game property given. Did you forget something?")
+        elif tf_modes.CLIP:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
-            if (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
+            elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
+            else:
+                logger_warn_msgs.append("'Tex' and 'Clip' buttons pressed, but no 'ATTR_/GLOBAL_no_blend' game property given. Did you forget something?")
+        else:
+            logger_warn_msgs.append("'Tex' button pressed but not 'Alpha' or 'Clip'. Did you forget something?")
     #-----------------------------------------------------------------
 
     #---TILES/LIGHT---------------------------------------------------
@@ -346,34 +364,62 @@ def _convert_material(scene: bpy.types.Scene,
             logger.warn(msg)
         # Here we ask "What Face Buttons really did end up mattering?" and make
         # a short name to hint the user as to what happened
+        # Note: This is actually really important! TODO: Explain how this clever thing works!
         ov = original_material_values
         cv = changed_material_values
+        round_tuple = lambda t, ndigits=3: tuple(round(n, ndigits) for n in t)
         hint_suffix = "".join((
-                ("_TEX"    if cv["blend_v1000"] != ov["blend_v1000"] else ""),
+                ("_TEX_" + {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]] if cv["blend_v1000"] != ov["blend_v1000"] else ""),
+
                 ("_TILES"  if (cv["draped"] != ov["draped"] or cv["poly_os"] != cv["poly_os"]) and tf_modes.TILES else ""),
                 ("_LIGHT"  if (cv["draped"] != ov["draped"] or cv["poly_os"] != cv["poly_os"]) and tf_modes.LIGHT else ""),
-                ("_INVIS"  if cv["draw"] != ov["draw"] and tf_modes.INVISIBLE else ""),
+
+                ("_INVIS"  if cv["draw"]         != ov["draw"]         and tf_modes.INVISIBLE   else ""),
                 ("_COLL"   if cv["solid_camera"] != ov["solid_camera"] and not tf_modes.DYNAMIC else ""),
-                ("_SHADOW" if cv["shadow_local"] != ov["shadow_local"] and tf_modes.SHADOW else ""),
+                ("_SHADOW" if cv["shadow_local"] != ov["shadow_local"] and tf_modes.SHADOW      else ""),
+
+                ("_" + ",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
+                ("_" + str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
             ))
 
-        new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
+        # Using _NO_CHANGE ensures that upon first encounter of a material that doesn't convert,
+        #
+        new_name = (mat.name + hint_suffix if hint_suffix else "_NO_CHANGE")[:63] # Max datablock name length.
                                                  # If we're using these for dict keys we can't afford
                                                  # to get truncated and not know
         try:
+            # TODO: Is that right? Suppose we have a completely boring material, everything was the default, and its used
+            # with two or more useless TF Groups. We can reuse the material after the first time we make a _NO_CHANGE copy
+            # aka, the second time we encounter it
             new_material = bpy.data.materials[new_name]
         except KeyError:
             new_material = mat.copy()
             new_material.name = new_name
             for prop, value in changed_material_values.items():
-                setattr(new_material.xplane, prop, value)
+                try:
+                    setattr(new_material.xplane, prop, value)
+                except AttributeError: # diffuse_color and specular_intensity are mat props itself
+                    setattr(new_material, prop, value)
 
             print("Created new converted material:", new_material.name)
 
         return new_material
     else:
+        # Observe:
+        # X stands for id's used in both relations, -> creates makes split group
+        # (TF_Mode_No_Convert_TEX   X Material) -> ?
+        # (TF_Mode_No_Convert_TILES X Material) -> ?
+        # (TF_Mode_INVISIBLE X Material) -> Make a mesh from only FaceIDs and Material_INVIS (copied and changed Material)
+        #
+        # We could simply always create a new material (Material_TEX_NO_CHANGE, Material_TILES_NO_CHANGE), but that would make a lot of new materials
+        # Instead we return None and have later code accumulate Face Ids to go into Material_NO_CHANGE
+        # (All Useless TF_Mode_No_Convert_Tex X_all Material) -> Make a mesh from only all FaceIDs of the TF_Modes that didn't convert
+        #
+        # TODO: Make a copy called "Material_NO_CHANGE" and use that?
+        # Rename current material Material_NO_CHANGE to show its been changed?
+        # Do we need the record?
         print("{} had nothing to convert".format(mat))
-        return mat
+        return None
 
 def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
     if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
@@ -425,7 +471,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # "Pragmatic paranioa is a programmer's pal" - Somebody's abandoned programming blog
         tf_modes_and_their_faces = _get_tf_modes_from_ctypes(search_obj) # type: TFModeAndFaceIndexes
         if not tf_modes_and_their_faces:
-            tf_modes_and_their_faces[DEFAULT_TF_MODES] = [face.index for face in search_obj.data.polygons]
+            tf_modes_and_their_faces = collections.defaultdict(set)
+            tf_modes_and_their_faces[DEFAULT_TF_MODES] = {face.index for face in search_obj.data.polygons}
         #----------------------------------------------------------------------
 
         #--- Prepare the Object's Material Slots ------------------------------
@@ -445,7 +492,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
         if not search_obj.material_slots:
             scene.objects.active = search_obj
-            bpy.ops.object.add_material_slot()
+            bpy.ops.object.material_slot_add()
 
         for slot in search_obj.material_slots:
             if not slot.material:
@@ -459,7 +506,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # TODO: Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
         # Unused materials aren't deleted (#19)
 
-        #--- Get Materials and the faces that use them-------------------------
+        #--- Get old materials and the faces that use them-------------------------
         materials_and_their_faces = collections.defaultdict(set) # type: Dict[bpy.types.MaterialSlot, Set[FaceId]]
         for face in search_obj.data.polygons:
             materials_and_their_faces[search_obj.material_slots[face.material_index].material].add(face.index)
@@ -482,16 +529,20 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         print("Before (Slots):         ", *[slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"], sep=",")
         print("Before (All Materials): ", *[mat.name for mat in search_obj.data.materials], sep=",")
         print()
-        split_groups = {} # type: Dict[bpy.types.Material, List[FaceId]]
+
+        # Materials have a few guaruntees,
+        # - All have a new name, either hinting at the buttons used in conversion or simply that it was used
+        split_groups = collections.defaultdict(set) # type: Dict[bpy.types.Material, List[FaceId]]
         for tf_modes, t_face_ids in tf_modes_and_their_faces.items():
             for material, m_face_ids in materials_and_their_faces.items():
                 cross_over_faces = t_face_ids & m_face_ids
                 if cross_over_faces:
                     converted = _convert_material(scene, root_object, search_obj, ISCOCKPIT, tf_modes, material)
-                    if converted == material:
+                    if not converted:
                         print("Didn't convert anything")
-                    #material_slot.material = converted
-                    split_groups[converted] = cross_over_faces
+                        split_groups[material].update(cross_over_faces)
+                    else:
+                        split_groups[converted] = cross_over_faces
                 else:
                     print("No cross over for ", tf_modes, "and", material.name)
 
