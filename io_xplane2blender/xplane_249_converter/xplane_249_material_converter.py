@@ -56,7 +56,7 @@ DEFAULT_TF_MODES = _TexFaceModes(
         ALPHA     = False,
         CLIP      = False)
 
-_TexFaceModes.__repr__ = lambda self: ("DEFMODE" if self == DEFAULT_TF_MODES else "".join(["{}={}".format(key, value) for (key, value) in self._asdict().items() if (key == "DYANMIC" and not value) or (key != "DYNAMIC" and value)]))
+_TexFaceModes.__repr__ = lambda self: ("DEFMODE" if self == DEFAULT_TF_MODES else " ".join(["{}={}".format(key, value) for (key, value) in self._asdict().items() if (key == "DYANMIC" and not value) or (key != "DYNAMIC" and value)]))
 # The face ids of an Object's mesh, usually to keep or remove
 FaceId = int
 TFModeAndFaceIndexes = Dict[_TexFaceModes, Set[FaceId]]
@@ -316,8 +316,6 @@ def _convert_material(scene: bpy.types.Scene,
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             else:
                 logger_warn_msgs.append("'Tex' and 'Clip' buttons pressed, but no 'ATTR_/GLOBAL_no_blend' game property given. Did you forget something?")
-        else:
-            logger_warn_msgs.append("'Tex' button pressed but not 'Alpha' or 'Clip'. Did you forget something?")
     #-----------------------------------------------------------------
 
     #---TILES/LIGHT---------------------------------------------------
@@ -378,8 +376,11 @@ def _convert_material(scene: bpy.types.Scene,
                 ("_COLL"   if cv["solid_camera"] != ov["solid_camera"] and not tf_modes.DYNAMIC else ""),
                 ("_SHADOW" if cv["shadow_local"] != ov["shadow_local"] and tf_modes.SHADOW      else ""),
 
-                ("_" + ",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
-                ("_" + str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
+                #TODO: Do we need to sub split on diffuse_color and specular intensity as well?
+                # No? Each specular intensity is already going to be split by the material buckets themselves, and
+                # we're not going to be consolidating Mat_a.25, Mat_b.25, Mat_c.25 into one group even when we could
+                #("_" + ",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
+                #("_" + str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
             ))
 
         # Using _NO_CHANGE ensures that upon first encounter of a material that doesn't convert,
@@ -418,6 +419,7 @@ def _convert_material(scene: bpy.types.Scene,
         # TODO: Make a copy called "Material_NO_CHANGE" and use that?
         # Rename current material Material_NO_CHANGE to show its been changed?
         # Do we need the record?
+        # After split, number of Materials should only include what is needed
         print("{} had nothing to convert".format(mat))
         return None
 
@@ -476,18 +478,14 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         #----------------------------------------------------------------------
 
         #--- Prepare the Object's Material Slots ------------------------------
-        try:
-            def _try(fn):
-                try:
-                    return fn()
-                except:
-                    pass
+        def _try(fn: Callable[[],str], ret_on_except=""):
+            try:
+                return fn()
+            except:
+                return ""
 
-            print("Before (Slots):         ", *[_try(lambda: slot.material.name) for slot in search_obj.material_slots if slot.link == "DATA"], sep=",")
-            print("Before (All Materials): ", *[_try(lambda: mat.name) for mat in search_obj.data.materials], sep=",")
-        except:
-            print("passing")
-            pass
+        print("Before Material Slots Prep (Slots):         ", ",".join([_try(lambda: slot.material.name) for slot in search_obj.material_slots if slot.link == "DATA"]))
+        print("Before Material Slots Prep (All Materials): ", ",".join([_try(lambda: mat.name) for mat in search_obj.data.materials]))
         print()
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
         if not search_obj.material_slots:
@@ -501,9 +499,11 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 # when asking "what faces have a mat index of 0", the answer is automatically "all of them"
                 slot.material = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
                 slot.material.specular_intensity = 0.0 # This was the default in 2.49
+        print("After Material Slots Prep (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
+        print("After Material Slots Prep (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
+        print()
         #----------------------------------------------------------------------
 
-        # TODO: Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
         # Unused materials aren't deleted (#19)
 
         #--- Get old materials and the faces that use them-------------------------
@@ -526,9 +526,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                #len(itertools.chain([faces for tf_modes, face_ids in tf_modes_and_their_faces.items()]), "dicts should cover the same range of faces"
         #----------------------------------------------------------------------
         print()
-        print("Before (Slots):         ", *[slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"], sep=",")
-        print("Before (All Materials): ", *[mat.name for mat in search_obj.data.materials], sep=",")
-        print()
 
         # Materials have a few guaruntees,
         # - All have a new name, either hinting at the buttons used in conversion or simply that it was used
@@ -546,8 +543,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 else:
                     print("No cross over for ", tf_modes, "and", material.name)
 
-        print("After (Slots):         ", *[slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"], sep=",")
-        print("After (All Materials): ", *[mat.name for mat in search_obj.data.materials], sep=",")
+        print("After Splitting (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
+        print("After Splitting (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
         print()
 
         new_objs = []
