@@ -497,8 +497,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         print()
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
         if not search_obj.material_slots:
-            scene.objects.active = search_obj
-            bpy.ops.object.material_slot_add()
+            search_obj.data.materials.append(test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME))
 
         for slot in search_obj.material_slots:
             if not slot.material:
@@ -506,6 +505,11 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 # In addition, a face's material_index will never be None or less than 0,
                 # when asking "what faces have a mat index of 0", the answer is automatically "all of them"
                 slot.material = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
+                slot.material.specular_intensity = 0.0 # This was the default behavior in XPlane2Blender 2.49
+            # TODO: Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
+            # This still has the werid name and is the same as a DEFAULT_MATERIAL. No point.
+            if re.match("Material\.TF\.\d{1,5}", slot.material.name):
+                # Auto generated from blenloader need  to correct their default specularity to XPlane2Blender 2.49's default behavior
                 slot.material.specular_intensity = 0.0 # This was the default in 2.49
         print("After Material Slots Prep (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
         print("After Material Slots Prep (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
