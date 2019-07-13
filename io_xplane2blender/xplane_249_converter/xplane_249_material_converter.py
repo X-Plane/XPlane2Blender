@@ -234,7 +234,11 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
     try:
         poly_c_info = collections.defaultdict(set) # type: TFModeAndFaceIndexes
         mesh = Mesh.from_address(obj.data.as_pointer())
-        for idx, (mpoly_current, mtpoly_current) in enumerate(zip(mesh.mpoly[:mesh.totpoly], mesh.mtpoly[:mesh.totpoly])):
+        mpolys  = mesh.mpoly[:mesh.totpoly]
+        mtpolys = mesh.mtpoly[:mesh.totpoly]
+        #print(mpolys)
+        #print(mtpolys)
+        for idx, (mpoly_current, mtpoly_current) in enumerate(zip(mpolys, mtpolys)):
             mtpoly_mode = mtpoly_current.mode
             mtpoly_transp = int.from_bytes(mtpoly_current.transp, sys.byteorder)
             #print("mtpoly_mode", "mypoly_transp", mtpoly_mode, mtpoly_transp)
@@ -254,10 +258,14 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
 
             poly_c_info[tf_modes].add(idx)
         return poly_c_info
-    except ValueError: #NULL Pointer access
+    except ValueError as ve: #NULL Pointer access
+        print("VE:", ve, obj.name)
+        return None
+    except KeyError as ke:
+        print("KE:", ke, obj.name)
         return None
     except Exception as e:
-        print(e)
+        print("E:", e, obj.name)
         return None
 
 
