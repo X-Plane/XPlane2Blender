@@ -561,11 +561,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
         new_objs = []
         # A mesh with <2 TF groups is unsplit
-        if len(split_groups) == 0:
-            new_objs = [search_obj.name]
-        elif len(split_groups) == 1:
-            new_objs = [search_obj.name]
-        elif len(split_groups) > 2:
+        if len(split_groups): #TODO: Dumb, split_groups will always be at least 1 because of DEF_MAT in place of no slot
             # The number of new meshes after a split should match its # of TF groups
             pre_split_obj_count = len(scene.objects)
 
@@ -582,41 +578,51 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             # The heart of this function #
             ##############################
             #--Begining of Operation-----------------------
-            for i, (material, face_ids) in enumerate(split_groups.items()):
-                new_obj = copy_obj(search_obj, search_obj.name + "_%d" % i)
-                print("New Obj: ", new_obj.name)
-                print("New Mesh:", new_obj.data.name)
-                print("Group:" , slot.material.name)
-                if len(face_ids) < 2:
-                    continue
-                # Remove faces
-                bm = bmesh.new()
-                bm.from_mesh(new_obj.data)
-                faces_to_keep   = [face for face in bm.faces if face.index in face_ids]
-                faces_to_remove = [face for face in bm.faces if face.index not in face_ids]
-                print("Faces To Keep:  ", [f.index for f in faces_to_keep])
-                print("Faces To Remove:", [f.index for f in faces_to_remove])
-                bmesh.ops.delete(bm, geom=faces_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
-                bm.to_mesh(new_obj.data)
-                bm.free()
+            if len(split_groups) > 1:
+                for i, (material, face_ids) in enumerate(split_groups.items()):
+                    new_obj = copy_obj(search_obj, search_obj.name + "_%d" % i)
+                    new_objs.append(new_obj)
+                    print("New Obj: ", new_obj.name)
+                    print("New Mesh:", new_obj.data.name)
+                    print("Group:" , slot.material.name)
+                    if len(face_ids) < 2:
+                        continue
+                    # Remove faces
+                    bm = bmesh.new()
+                    bm.from_mesh(new_obj.data)
+                    faces_to_keep   = [face for face in bm.faces if face.index in face_ids]
+                    faces_to_remove = [face for face in bm.faces if face.index not in face_ids]
+                    print("Faces To Keep:  ", [f.index for f in faces_to_keep])
+                    print("Faces To Remove:", [f.index for f in faces_to_remove])
+                    bmesh.ops.delete(bm, geom=faces_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
+                    bm.to_mesh(new_obj.data)
+                    bm.free()
 
-                scene.objects.active = new_obj
-                for i in range(len(scene.objects.active.material_slots)-1):
-                    bpy.ops.object.material_slot_remove()
-                new_obj.material_slots[0].material = material
-                new_objs.append(new_obj)
-
-            logger.info("Split '{}' into {} groups".format(search_obj.name, len(split_groups)))
-            #print("Deleting " + search_obj.name)
-            #bpy.data.meshes.remove(search_obj.data, do_unlink=True)
-            #bpy.data.objects.remove(search_obj, do_unlink=True) # What about other work ahead of us to convert?
+                    scene.objects.active = new_obj
+                    #TODO: But what about `NoSplit` with Materials A, B, and C? What should go here?
+                    #TODO: After split, number of Materials should only include what is needed
+                    #TODO: What about slots [None, Material.TF.135]?
+                    for i in range(len(scene.objects.active.material_slots)-1):
+                        bpy.ops.object.material_slot_remove()
+                    new_obj.material_slots[0].material = material
+                else:
+                    scene.objects.active = search_obj
+                    new_obj = search_obj # TODO: Bad name
+                logger.info("Split '{}' into {} groups".format(search_obj.name, len(split_groups)))
+                print("Deleting " + search_obj.name)
+                bpy.data.meshes.remove(search_obj.data, do_unlink=True)
+                bpy.data.objects.remove(search_obj, do_unlink=True) # What about other work ahead of us to convert?
+            else:
+                # Case 1: Split groups [0] has a DEF_MAT, wasting time to assaign, but its fine
+                # Case 2: Split groups [0] has a _NO_CHANGE, may or may not be different than DEF_MAT, its fine
+                # Case 3: Split groups [0] has a converted_material, gotta have it!
+                search_obj.material_slots[0].material = list(split_groups.keys())[0]
             #--End of Split Operation----------------------
 
-            intended_count = pre_split_obj_count - 1 + len(tf_modes_and_their_faces)
-            #assert intended_count == len(scene.objects),\
-            #        "After split, object count should be TF groups - deleted original ({}), is {}".format(intended_count, len(scene.objects))
+            intended_count = pre_split_obj_count - 1 + len(split_groups)
+            assert intended_count == len(scene.objects),\
+                    "Object count (%d) should match pre_count -1 + # split groups (%d)" % (len(scene.objects), intended_count)
+        else: #len(split_groups) < 2
+            new_objs = [search_obj.name]
 
 
-        # The relationship between a face and its material is preserved when there is no split**
-        # The relationship between a face and its material is preserved when splitting
-        # After split, number of Materials should only include what is needed
