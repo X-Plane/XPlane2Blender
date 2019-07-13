@@ -371,8 +371,8 @@ def _convert_material(scene: bpy.types.Scene,
         hint_suffix = "".join((
                 ("_TEX_" + {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]] if cv["blend_v1000"] != ov["blend_v1000"] else ""),
 
-                ("_TILES"  if (cv["draped"] != ov["draped"] or cv["poly_os"] != cv["poly_os"]) and tf_modes.TILES else ""),
-                ("_LIGHT"  if (cv["draped"] != ov["draped"] or cv["poly_os"] != cv["poly_os"]) and tf_modes.LIGHT else ""),
+                ("_TILES"  if (cv["draped"] != ov["draped"] or cv["poly_os"] != ov["poly_os"]) and tf_modes.TILES else ""),
+                ("_LIGHT"  if (cv["draped"] != ov["draped"] or cv["poly_os"] != ov["poly_os"]) and tf_modes.LIGHT else ""),
 
                 ("_INVIS"  if cv["draw"]         != ov["draw"]         and tf_modes.INVISIBLE   else ""),
                 ("_COLL"   if cv["solid_camera"] != ov["solid_camera"] and not tf_modes.DYNAMIC else ""),
