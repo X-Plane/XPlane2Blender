@@ -353,7 +353,6 @@ def _convert_material(scene: bpy.types.Scene,
     #---TWOSIDE-------------------------------------------------------
     if tf_modes.TWOSIDE:
         logger_warn_msgs.append("{}: Two Sided is deprecated, skipping".format(mat.name))
-        pass
     #-----------------------------------------------------------------
 
     #---SHADOW--------------------------------------------------------
@@ -377,20 +376,18 @@ def _convert_material(scene: bpy.types.Scene,
         hint_suffix = "".join((
                 ("_TEX_" + {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]] if cv["blend_v1000"] != ov["blend_v1000"] else ""),
 
-                ("_TILES"  if (cv["draped"] != ov["draped"] or cv["poly_os"] != ov["poly_os"]) and tf_modes.TILES else ""),
-                ("_LIGHT"  if (cv["draped"] != ov["draped"] or cv["poly_os"] != ov["poly_os"]) and tf_modes.LIGHT else ""),
+                ("_TILES"  if tf_modes.TILES and (cv["draped"] != ov["draped"] or cv["poly_os"] != ov["poly_os"]) else ""),
+                ("_LIGHT"  if tf_modes.LIGHT and (cv["draped"] != ov["draped"] or cv["poly_os"] != ov["poly_os"]) else ""),
 
-                ("_INVIS"  if cv["draw"]         != ov["draw"]         and tf_modes.INVISIBLE   else ""),
-                ("_COLL"   if cv["solid_camera"] != ov["solid_camera"] and not tf_modes.DYNAMIC else ""),
-                ("_SHADOW" if cv["shadow_local"] != ov["shadow_local"] and tf_modes.SHADOW      else ""),
+                ("_INVIS"  if cv["draw"]         != ov["draw"]         else ""),
+                ("_COLL"   if cv["solid_camera"] != ov["solid_camera"] else ""),
+                ("_SHADOW" if cv["shadow_local"] != ov["shadow_local"] else ""),
 
                 # Debugging only. Since we don't combine materials with the same diffuse or specularity,
                 # we don't need to make it part of the lookup key
                 #(",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
                 #(str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
             ))
-
-        hint_suffix = hint_suffix if hint_suffix else "_NO_CHANGE"
 
         #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
         #2.49's max name length is 21, so we have 42 characters to work with
