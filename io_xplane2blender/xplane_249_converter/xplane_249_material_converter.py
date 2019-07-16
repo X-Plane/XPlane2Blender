@@ -261,7 +261,7 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
     except ValueError as ve: #NULL Pointer access
         print("VE:", ve, obj.name)
         return None
-    except KeyError as ke:
+    except KeyError as ke: #That weird 'loopstart' not found in __repr__ call...
         print("KE:", ke, obj.name)
         return None
     except Exception as e:
@@ -281,7 +281,6 @@ def _convert_material(scene: bpy.types.Scene,
 
     Even if No matter
     """
-    #TODO: During split, what if Object already has a material?
     print("Attempting to convert", mat.name)
 
     original_material_values = {
@@ -369,11 +368,12 @@ def _convert_material(scene: bpy.types.Scene,
         for msg in logger_warn_msgs:
             logger.warn(msg)
         # Here we ask "What Face Buttons really did end up mattering?" and make
-        # a short name to hint the user as to what happened
-        # Note: This is actually really important! TODO: Explain how this clever thing works!
+        # a short name to hint the user as to what happened.
+        # !!! THIS IS NOT JUST FOR READABILITY!!!
+        # We use the key-name for bpy.data.materials to re-use materials and limit new data creation
         ov = original_material_values
         cv = changed_material_values
-        round_tuple = lambda t, ndigits=3: tuple(round(n, ndigits) for n in t)
+        #round_tuple = lambda t, ndigits=3: tuple(round(n, ndigits) for n in t)
         hint_suffix = "".join((
                 ("_TEX_" + {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]] if cv["blend_v1000"] != ov["blend_v1000"] else ""),
 
@@ -384,22 +384,28 @@ def _convert_material(scene: bpy.types.Scene,
                 ("_COLL"   if cv["solid_camera"] != ov["solid_camera"] and not tf_modes.DYNAMIC else ""),
                 ("_SHADOW" if cv["shadow_local"] != ov["shadow_local"] and tf_modes.SHADOW      else ""),
 
-                #TODO: Do we need to sub split on diffuse_color and specular intensity as well?
-                # No? Each specular intensity is already going to be split by the material buckets themselves, and
-                # we're not going to be consolidating Mat_a.25, Mat_b.25, Mat_c.25 into one group even when we could
-                #("_" + ",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
-                #("_" + str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
+                # Debugging only. Since we don't combine materials with the same diffuse or specularity,
+                # we don't need to make it part of the lookup key
+                #(",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
+                #(str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
             ))
 
-        # Using _NO_CHANGE ensures that upon first encounter of a material that doesn't convert,
-        #
-        new_name = (mat.name + hint_suffix if hint_suffix else "_NO_CHANGE")[:63] # Max datablock name length.
-                                                 # If we're using these for dict keys we can't afford
-                                                 # to get truncated and not know
+        hint_suffix = hint_suffix if hint_suffix else "_NO_CHANGE"
+
+        #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
+        #2.49's max name length is 21, so we have 42 characters to work with
+        if len(mat.name + hint_suffix) > 63:
+            print(mat.name + hint_suffix, "is about to get truncated, potentially messing up a lot of stuff! Should should highly consider renaming them to be shorter and check if your TexFace buttons are correct")
+
+        # _NO_CHANGE semantically means "a material that doesn't have anything to convert, but didn't fail"
+        # It is impossible to get the same mat.name + "_NO_CHANGE" twice:
+        # - Any duplicate TF groups would already be grouped
+        # - Blender doesn't let datablocks share a name,
+        # - and no two different TF groupings, with convertible changes or not, can make the same hint string
+        # this is a coincidence  of how the TF groups were used. Otherwise, we'd probably need some guard for this edge case.
+        # Tricky tricky tricky...
+        new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
         try:
-            # TODO: Is that right? Suppose we have a completely boring material, everything was the default, and its used
-            # with two or more useless TF Groups. We can reuse the material after the first time we make a _NO_CHANGE copy
-            # aka, the second time we encounter it
             new_material = bpy.data.materials[new_name]
         except KeyError:
             new_material = mat.copy()
@@ -423,12 +429,8 @@ def _convert_material(scene: bpy.types.Scene,
         # We could simply always create a new material (Material_TEX_NO_CHANGE, Material_TILES_NO_CHANGE), but that would make a lot of new materials
         # Instead we return None and have later code accumulate Face Ids to go into Material_NO_CHANGE
         # (All Useless TF_Mode_No_Convert_Tex X_all Material) -> Make a mesh from only all FaceIDs of the TF_Modes that didn't convert
-        #
-        # TODO: Make a copy called "Material_NO_CHANGE" and use that?
-        # Rename current material Material_NO_CHANGE to show its been changed?
-        # Do we need the record?
-        # After split, number of Materials should only include what is needed
         print("{} had nothing to convert".format(mat))
+        #
         return None
 
 def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
@@ -539,8 +541,10 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         #----------------------------------------------------------------------
         print()
 
-        # Materials have a few guaruntees,
-        # - All have a new name, either hinting at the buttons used in conversion or simply that it was used
+        # Split Groups Guarantees:
+        # - List[FaceId], will never be Empty
+        # - split_groups will eventually contain every FaceId, once
+        # - At the end of getting groups, you will have a dictionary of materials to put in the first slot and face ids to keep when splitting the mesh
         split_groups = collections.defaultdict(set) # type: Dict[bpy.types.Material, List[FaceId]]
         for tf_modes, t_face_ids in tf_modes_and_their_faces.items():
             for material, m_face_ids in materials_and_their_faces.items():
@@ -558,9 +562,9 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         print("After Splitting (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
         print("After Splitting (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
         print()
+        print("Split Groups", {mat.name:faces for mat, faces in split_groups.items()})
 
         new_objs = []
-        # A mesh with <2 TF groups is unsplit
         if len(split_groups): #TODO: Dumb, split_groups will always be at least 1 because of DEF_MAT in place of no slot
             # The number of new meshes after a split should match its # of TF groups
             pre_split_obj_count = len(scene.objects)
@@ -577,16 +581,15 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             ##############################
             # The heart of this function #
             ##############################
-            #--Begining of Operation-----------------------
-            if len(split_groups) > 1:
+            #--Beginning of Operation-----------------------
+            # A mesh with <2 TF groups is unsplit
+            if len(split_groups) > 1 and len(search_obj.data.polygons) > 1:
                 for i, (material, face_ids) in enumerate(split_groups.items()):
                     new_obj = copy_obj(search_obj, search_obj.name + "_%d" % i)
                     new_objs.append(new_obj)
                     print("New Obj: ", new_obj.name)
                     print("New Mesh:", new_obj.data.name)
-                    print("Group:" , slot.material.name)
-                    if len(face_ids) < 2:
-                        continue
+                    print("Group:" , material.name)
                     # Remove faces
                     bm = bmesh.new()
                     bm.from_mesh(new_obj.data)
@@ -613,16 +616,16 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 bpy.data.meshes.remove(search_obj.data, do_unlink=True)
                 bpy.data.objects.remove(search_obj, do_unlink=True) # What about other work ahead of us to convert?
             else:
-                # Case 1: Split groups [0] has a DEF_MAT, wasting time to assaign, but its fine
-                # Case 2: Split groups [0] has a _NO_CHANGE, may or may not be different than DEF_MAT, its fine
-                # Case 3: Split groups [0] has a converted_material, gotta have it!
+                # Case 1: Split group has a DEF_MAT, wasting time to assign, but its fine
+                # Case 2: Split group has a _NO_CHANGE, may or may not be different than DEF_MAT, its fine
+                # Case 3: Split group has a converted_material, gotta have it!
                 search_obj.material_slots[0].material = list(split_groups.keys())[0]
             #--End of Split Operation----------------------
 
             intended_count = pre_split_obj_count - 1 + len(split_groups)
             assert intended_count == len(scene.objects),\
                     "Object count (%d) should match pre_count -1 + # split groups (%d)" % (len(scene.objects), intended_count)
-        else: #len(split_groups) < 2
+        else:
             new_objs = [search_obj.name]
 
 
