@@ -276,10 +276,17 @@ def _convert_material(scene: bpy.types.Scene,
                       tf_modes: _TexFaceModes,
                       mat: bpy.types.Material)->Optional[bpy.types.Material]:
     """
-    Using face meta data (TexFace Modes, Material referenced by from face.material_index),
-    attempt to make a new converted convert.
+    Attempts to convert TexFace, game prop, and material data
+    to produce or return an existing unique derivative.
 
-    Even if No matter
+    scene - The current scene TODO: remove unused paramater
+    root_object - Changes Export Type hint
+    search_obj - Used to search for game properties
+    is_cockpit - Used for lookup
+    tf_modes - For turning button presses into props
+    mat - The material referenced by search_obj's i-th slot's material (where i is the face's material index)
+
+    Returns None if there was nothing to convert
     """
     print("Attempting to convert", mat.name)
 
@@ -417,17 +424,7 @@ def _convert_material(scene: bpy.types.Scene,
 
         return new_material
     else:
-        # Observe:
-        # X stands for id's used in both relations, -> creates makes split group
-        # (TF_Mode_No_Convert_TEX   X Material) -> ?
-        # (TF_Mode_No_Convert_TILES X Material) -> ?
-        # (TF_Mode_INVISIBLE X Material) -> Make a mesh from only FaceIDs and Material_INVIS (copied and changed Material)
-        #
-        # We could simply always create a new material (Material_TEX_NO_CHANGE, Material_TILES_NO_CHANGE), but that would make a lot of new materials
-        # Instead we return None and have later code accumulate Face Ids to go into Material_NO_CHANGE
-        # (All Useless TF_Mode_No_Convert_Tex X_all Material) -> Make a mesh from only all FaceIDs of the TF_Modes that didn't convert
-        print("{} had nothing to convert".format(mat))
-        #
+        print("Material '{}' had nothing to convert".format(mat.name))
         return None
 
 def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
@@ -549,7 +546,12 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 if cross_over_faces:
                     converted = _convert_material(scene, root_object, search_obj, ISCOCKPIT, tf_modes, material)
                     if not converted:
-                        print("Didn't convert anything")
+                        # Why extend on None?
+                        # (TEX Pressed, MaterialA) and (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
+                        # represent different semantic groups of FaceIds. What we really have is
+                        # - (All combinations of meaningless buttons, MaterialA)
+                        # - (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
+                        # so for every combination of meaningless buttons, we combine their FaceIds
                         split_groups[material].update(cross_over_faces)
                     else:
                         split_groups[converted] = cross_over_faces
