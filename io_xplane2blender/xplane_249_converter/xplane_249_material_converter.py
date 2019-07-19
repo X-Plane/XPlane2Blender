@@ -294,16 +294,20 @@ def _convert_material(scene: bpy.types.Scene,
             attr:getattr(mat.xplane, attr) for attr in [
                 "blend_v1000",
                 "draped",
+                "draw", #TexFace and Game Prop
+                "lightLevel",
+                "lightLevel_v1",
+                "lightLevel_v2",
+                "lightLevel_dataref",
                 "poly_os",
-                "draw",
-                "solid_camera",
+                "solid_camera", #TexFace and Game Prop
                 "shadow_local",
                 ]
             }
 
     # Will have to make special case later
     original_material_values.update({attr:getattr(mat, attr) for attr in ["diffuse_color", "specular_intensity"]})
-    changed_material_values = dict(original_material_values)
+    changed_material_values = original_material_values.copy()
 
     logger_info_msgs = [] # type: List[str]
     logger_warn_msgs = [] # type: List[str]
@@ -344,15 +348,20 @@ def _convert_material(scene: bpy.types.Scene,
     #-----------------------------------------------------------------
 
     #---INVISIBLE-----------------------------------------------------
-    if tf_modes.INVISIBLE:
+    draw_disable_by_texface = tf_modes.INVISIBLE
+    draw_disable_by_prop = bool(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draw_disable")[1])
+    if draw_disable_by_texface or draw_disable_by_prop:
         changed_material_values["draw"] = False
         logger_info_msgs.append("{}: Draw Objects With This Material={}".format(mat.name, changed_material_values["draw"]))
     #-----------------------------------------------------------------
 
     #---DYNAMIC-------------------------------------------------------
-    if (not tf_modes.INVISIBLE
+    solid_cam_by_texface = not tf_modes.INVISIBLE
+    solid_cam_by_prop = bool(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_solid_camera")[1])
+    if ((not tf_modes.INVISIBLE
         and not is_cockpit
-        and not tf_modes.DYNAMIC):
+        and not tf_modes.DYNAMIC)
+        or solid_cam_by_prop): # TODO: Prop version seems to override INVISIBLE button, confirm with test case
         changed_material_values["solid_camera"] = True
         logger_info_msgs.append("{}: Solid Camera={}".format(mat.name, changed_material_values["solid_camera"]))
     #-----------------------------------------------------------------
@@ -368,6 +377,41 @@ def _convert_material(scene: bpy.types.Scene,
         logger_info_msgs.append("{}: Cast Shadow (Local)={}".format(mat.name, changed_material_values["shadow_local"]))
     #-----------------------------------------------------------------
 
+    #---Lit Level-----------------------------------------------------
+    #lit_level is the whole data for v1, v2, dataref
+    lit_level = str(xplane_249_helpers.find_property_in_parents(search_obj, "lit_level", default="")[0]).strip()
+    #ATTR_light_level could be just the dataref or the v1, v2, dataref
+    ATTR_light_level    = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level", default="")[0]).strip()
+    ATTR_light_level_v1 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v1", default=0.0)[0])
+    ATTR_light_level_v2 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v2", default=0.0)[0])
+
+    lightLevel_v1, lightLevel_v2, lightLevel_dataref = ("", "", "")
+
+    #Why this complicated logic? It mirrors how 2.49 would allow ATTR_light_level to override lit_level
+    if lit_level:
+        #TODO: What if they had "0 1 sim/my/dataref whatever"? or "0 1"?
+        lightLevel_v1, lightLevel_v2, lightLevel_dataref = lit_level.split()
+    if len(ATTR_light_level.split()) == 3:
+        lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level.split()
+    elif ATTR_light_level:
+        lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level_v1, ATTR_light_level_v2, ATTR_light_level
+    """
+    Tricky, because lightLevel by lit_level
+    elif (lightLevel_v1, lightLevel_v2, lightLevel_dataref) != ("", "", ""):
+        print("v1:", lightLevel_v1,"v2:",  lightLevel_v2, "dref:", lightLevel_dataref)
+        # TODO: Potential edge cases:
+        # - ATTR_light_level: "sim/whatever .5 1.0 oh no too many args!"
+        # - ATTR_light_level: "sim/whatever 0.0" (too few args)
+        assert False, "What do we do now? Log?"
+        """
+    if mat.xplane.lightLevel:
+        mat.xplane.lightLevel_v1 = float(lightLevel_v1)
+        mat.xplane.lightLevel_v2 = float(lightLevel_v2)
+        mat.xplane.lightLevel_dataref = lightLevel_dataref
+    #-----------------------------------------------------------------
+
+    #TODO: Deck
+    #deck = bool(xplane_249_helpers.find_property_in_parents(search_obj, "deck", default=0)[0]) and surfaceType != NONE #TODO That is how it works in 2.78, maybe different
     if changed_material_values != original_material_values:
         for msg in logger_info_msgs:
             logger.info(msg)
@@ -380,15 +424,22 @@ def _convert_material(scene: bpy.types.Scene,
         ov = original_material_values
         cv = changed_material_values
         #round_tuple = lambda t, ndigits=3: tuple(round(n, ndigits) for n in t)
+        cmp_cv_ov = lambda key: cv[key] != ov[key]
         hint_suffix = "".join((
-                ("_TEX_" + {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]] if cv["blend_v1000"] != ov["blend_v1000"] else ""),
+                ("_TEX_" + {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]] if cmp_cv_ov("blend_v1000") else ""),
 
-                ("_TILES"  if tf_modes.TILES and (cv["draped"] != ov["draped"] or cv["poly_os"] != ov["poly_os"]) else ""),
-                ("_LIGHT"  if tf_modes.LIGHT and (cv["draped"] != ov["draped"] or cv["poly_os"] != ov["poly_os"]) else ""),
+                ("_TILES"  if tf_modes.TILES and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
+                ("_LIGHT"  if tf_modes.LIGHT and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
 
-                ("_INVIS"  if cv["draw"]         != ov["draw"]         else ""),
-                ("_COLL"   if cv["solid_camera"] != ov["solid_camera"] else ""),
-                ("_SHADOW" if cv["shadow_local"] != ov["shadow_local"] else ""),
+                ("_INVIS"             if draw_disable_by_texface and cmp_cv_ov("draw") else ""),
+                ("_DRAW_DISABLE_PROP" if draw_disable_by_prop    and cmp_cv_ov("draw") else ""),
+
+                ("_COLL"           if solid_cam_by_texface and cmp_cv_ov("solid_camera") else ""),
+                ("_SOLID_CAM_PROP" if solid_cam_by_prop    and cmp_cv_ov("solid_camera") else ""),
+
+                ("_SHADOW" if cmp_cv_ov("shadow_local") else ""),
+
+                ("_LIT_LEVEL" if cmp_cv_ov("lightLevel") else ""),
 
                 # Debugging only. Since we don't combine materials with the same diffuse or specularity,
                 # we don't need to make it part of the lookup key
@@ -445,6 +496,27 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             ) # type: bool
     ISPANEL = ISCOCKPIT # type: bool
     #scene.render.engine = 'BLENDER_GAME' # Only for testing purposes
+
+    # Dictionary of "GLOBAL_attr" to value, to be applied later
+    global_mat_props = {} # type: Dict[str, Union[bool, float, Tuple[float, float]]]
+    for obj in filter(lambda obj: obj.game.properties, scene.objects):
+        props = obj.game.properties
+        if "GLOBAL_cockpit_lit" in props: # Move this to xplane_convert_layer_props
+            global_mat_props["GLOBAL_cockpit_lit"] = True
+        elif "GLOBAL_no_blend" in props:
+            global_mat_props["GLOBAL_no_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
+        elif "GLOBAL_shadow_blend" in props:
+            global_mat_props["GLOBAL_shadow_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
+        elif "GLOBAL_specular" in props:
+            global_mat_props["GLOBAL_specular"] = round(float(obj.game.properties["GLOBAL_specular"].value),2)
+        elif "GLOBAL_tint" in props:
+            #TODO: Issues with split()! Must be two!
+            #TODO: Issues with float conversion, no safety!
+            global_mat_props["GLOBAL_tint"] = tuple(float(v) for v in obj.game.properties["GLOBAL_tint"].value.split())
+        elif "NORMAL_METALNESS" in props:
+            global_mat_props["NORMAL_METALNESS"] = True
+        elif "BLEND_GLASS" in props:
+            global_mat_props["BLEND_GLASS"] = True
 
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
         """
