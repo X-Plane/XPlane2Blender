@@ -499,25 +499,34 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
     # Dictionary of "GLOBAL_attr" to value, to be applied later
     global_mat_props = {} # type: Dict[str, Union[bool, float, Tuple[float, float]]]
+    global_hint_suffix = collections.OrderedDict()
     for obj in filter(lambda obj: obj.game.properties, scene.objects):
         props = obj.game.properties
         if "GLOBAL_cockpit_lit" in props: # Move this to xplane_convert_layer_props
             global_mat_props["GLOBAL_cockpit_lit"] = True
+            global_hint_suffix["ck"] = True
         elif "GLOBAL_no_blend" in props:
             global_mat_props["GLOBAL_no_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
+            global_hint_suffix["nb"] = True
         elif "GLOBAL_shadow_blend" in props:
             global_mat_props["GLOBAL_shadow_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
+            global_hint_suffix["sb"] = True
         elif "GLOBAL_specular" in props:
             global_mat_props["GLOBAL_specular"] = round(float(obj.game.properties["GLOBAL_specular"].value),2)
+            global_hint_suffix["sp"] = True
         elif "GLOBAL_tint" in props:
             #TODO: Issues with split()! Must be two!
             #TODO: Issues with float conversion, no safety!
             global_mat_props["GLOBAL_tint"] = tuple(float(v) for v in obj.game.properties["GLOBAL_tint"].value.split())
+            global_hint_suffix["tn"] = True
         elif "NORMAL_METALNESS" in props:
             global_mat_props["NORMAL_METALNESS"] = True
+            global_hint_suffix["nm"] = True
         elif "BLEND_GLASS" in props:
             global_mat_props["BLEND_GLASS"] = True
+            global_hint_suffix["bg"] = True
 
+    global_hint_suffix = "".join(global_hint_suffix)
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
         """
         This tests that:
@@ -578,7 +587,36 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             # This still has the werid name and is the same as a DEFAULT_MATERIAL. No point.
             if re.match("Material\.TF\.\d{1,5}", slot.material.name):
                 # Auto generated from blenloader need  to correct their default specularity to XPlane2Blender 2.49's default behavior
+                slot.material = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
                 slot.material.specular_intensity = 0.0 # This was the default in 2.49
+
+            if global_mat_props:
+                if (slot.material.name + global_hint_suffix) not in bpy.data.materials:
+                    oname = slot.material.name
+                    slot.material = slot.material.copy()
+                    slot.material.name  = oname + global_hint_suffix
+                elif (slot.material.name + global_hint_suffix) in bpy.data.materials:
+                    slot.material = bpy.data.materials[(slot.material.name + global_hint_suffix)]
+            for prop_name, prop_value in global_mat_props.items():
+                if prop_name == "GLOBAL_cockpit_lit":
+                    root_object.xplane.cockpit_lit = True
+                elif prop_name == "GLOBAL_no_blend":
+                    slot.material.xplane.blend_mode = xplane_constants.BLEND_OFF
+                    slot.material.xplane.blendRatio = prop_value
+                elif prop_name == "GLOBAL_shadow_blend":
+                    slot.material.xplane.blend_mode = xplane_constants.BLEND_SHADOW
+                    #slot.material.xplane.blendRatio = prop_value #TODO: 2.79 ATTR_shadow_blend/GLOBAL_ doesn't appear to use blendRatio. Is this okay?
+                elif prop_name == "GLOBAL_specular":
+                    #This doesn't really make sense unless you're doing scenery or instanced scenery to mess with everyone's specularity
+                    #slot.material.specular_intensity = prop_value
+                    pass
+                elif prop_name == "GLOBAL_tint":
+                    slot.material.xplane.tint_albedo, slot.material.xplane.tint_emission = prop_value
+                elif prop_name == "NORMAL_METALNESS":
+                    slot.material.xplane.normal_metalness = prop_value
+                elif prop_name == "BLEND_GLASS":
+                    slot.material.xplane.blend_glass = prop_value
+
         print("After Material Slots Prep (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
         print("After Material Slots Prep (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
         print()
@@ -586,7 +624,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
         # Unused materials aren't deleted (#19)
 
-        #--- Get old materials and the faces that use them-------------------------
+        #--- Get old materials and the faces that use them---------------------
         materials_and_their_faces = collections.defaultdict(set) # type: Dict[bpy.types.MaterialSlot, Set[FaceId]]
         for face in search_obj.data.polygons:
             materials_and_their_faces[search_obj.material_slots[face.material_index].material].add(face.index)

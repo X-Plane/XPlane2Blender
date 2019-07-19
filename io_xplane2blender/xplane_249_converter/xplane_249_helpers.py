@@ -38,7 +38,7 @@ def find_property_in_parents(obj: bpy.types.Object,
     Searches from obj up for a property and the object that has it,
     returns the value and the object it was found on or (default value, None).
 
-    Calling this without changing any parameters is essentially XPlaneUtil.has_prop
+    This function can give the same information as 2.49's get_prop and has_prop at the same time
     """
     assert prop_types <= {"BOOL", "FLOAT", "INT", "STRING", "TIMER"}, \
             "Target prop_types {} is not a recognized property type"

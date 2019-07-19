@@ -41,6 +41,11 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
     warnings = set()
     layer = dest_root.xplane.layer
     for obj in search_objs:
+        #TODO: Add to unit test
+        global_cockpit_level, prop_source = xplane_249_helpers.find_property_in_parents(obj, "GLOBAL_cockpit_lit")
+        if global_cockpit_level is not None:
+            layer.cockpit_lit_level = True
+
         cockpit_reg_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "COCKPIT_REGION")
         if cockpit_reg_value is not None:
             layer.export_type = xplane_constants.EXPORT_TYPE_COCKPIT
@@ -176,16 +181,13 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
     logger.info("Converting Any LOD Properties for Root Object '{}'\n"
                 "--------------------------------------------------".format(dest_root.name))
     for obj in search_objs:
-        value, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "additive_lod")
-        if value is not None:
-            is_additive = bool(value)
+        additive_lod, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "additive_lod")
+        if additive_lod is not None:
+            is_additive = bool(additive_lod)
             break
-        """
-        # TODO: double check there isn't also some instanced going on
-        value, has_prop_obj = find_property_in_hierarchy(obj, "instanced")
-        if value is not None and not bool(value):
-            dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_SCENERY #I guess? Idk, what is a good default here
-        """
+        instanced, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "instanced", default=additive_lod)
+        if instanced is not None and not bool(instanced):
+            dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
     else: #nobreak
         is_additive = workflow_type == xplane_249_constants.WorkflowType.BULK
 
