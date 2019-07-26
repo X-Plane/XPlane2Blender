@@ -1,4 +1,4 @@
-2 1133 Fri Apr  5 17:46:31 2019
+2 1135 Fri Jul 12 18:07:36 2019
 
 sim/aircraft/autopilot/vvi_step_ft	float	y	Feet	Step increment for autopilot VVI
 sim/aircraft/autopilot/alt_step_ft	float	y	Feet	Step increment for autopilot altitude
@@ -68,6 +68,8 @@ sim/aircraft/engine/acf_face_rocket	float	y
 sim/aircraft/engine/acf_spooltime_jet	float	y	seconds	This is the delay in increasing the throttle for jet engines - it is the number of seconds to actuate a full advance.
 sim/aircraft/engine/acf_spooltime_prop	float	y	seconds	This is the delay in increasing the throttle for prop/turboprop engines - it is the number of seconds to actuate a full advance.
 sim/aircraft/engine/acf_spooltime_turbine	float	y	seconds	This is the number of seconds it takes for a free turbine to spin up from idle to full RPM.
+sim/aircraft/engine/acf_fuel_intro_time_prop	float	y	seconds	This is the number of seconds it takes for full idle fuel flow to be reached on engine start, for propeller engines
+sim/aircraft/engine/fuel_intro_time_jet	float	y	seconds	This is the number of seconds it takes for full idle fuel flow to be reached on engine start, for jet engines
 sim/aircraft/engine/acf_max_mach_eff	float	y
 sim/aircraft/engine/acf_fmax_sl	float	y
 sim/aircraft/engine/acf_fmax_opt	float	y
@@ -91,6 +93,10 @@ sim/aircraft/engine/acf_starter_torque_ratio	float	y	Ratio	This is the ratio of 
 sim/aircraft/engine/acf_starter_max_rpm_ratio	float	y	Ratio	This is the ratio of the engine's max RPM that the starter can spin the engine up to before it loses torque.
 sim/aircraft/engine/boost_ratio	float	y	ratio	Boost Amount
 sim/aircraft/engine/boost_max_seconds	float	y	seconds	Boost Capacity
+sim/aircraft/engine/acf_APU_door_time	float	y	seconds	How long the APU door takes to open or close
+sim/aircraft/engine/acf_APU_cooldown_time	float	y	seconds	How fast the APU EGT cools down after use - influences how long the APU runs in cool down mode before it is shut down
+sim/aircraft/engine/acf_APU_spoolup_time	float	y	seconds	How long the APU takes to spool up to 100 percent
+sim/aircraft/engine/acf_APU_spooldn_time	float	y	seconds	How long the APU takes to spool down to 10 percent
 sim/aircraft/limits/green_lo_MP	float	n	inhg	Low value of the green arc for the manifold pressure instrument
 sim/aircraft/limits/green_hi_MP	float	n	inhg	High value of the green arc for the manifold pressure instrument
 sim/aircraft/limits/yellow_lo_MP	float	n	inhg	Low value of the yellow arc for the manifold pressure instrument
@@ -661,7 +667,7 @@ sim/cockpit/misc/ah_adjust2	float	y	pixels	Adjustment to the artificial horizon 
 sim/cockpit/misc/compass_indicated	float	y	degm	Indicated cockpit heading in magnetic degrees
 sim/cockpit/misc/hydraulic_quantity	float	y	???	Hydraulic Quantity 1
 sim/cockpit/misc/hydraulic_quantity2	float	y	???	Hydraulic Quantity 2
-sim/cockpit/pressure/bleed_air_on	int	y	bool	Bleeding air is on (legacy)
+sim/cockpit/pressure/bleed_air_on	int	y	bool	Bleed air is on (legacy)
 sim/cockpit/pressure/bleed_air_mode	int	y	enum	0=off,1=L,2=B,3=R,4=APU
 sim/cockpit/pressure/cabin_altitude_set_m_msl	float	y	???	The desired cabin altitude (BEFORE 730 this was incorrectly int type)
 sim/cockpit/pressure/cabin_vvi_set_m_msec	float	y	???	The desired cabin altitude rate change (BEFORE 730 this was incorrectly int type)
@@ -1653,7 +1659,8 @@ sim/graphics/animation/draw_object_y	float	n	float	Y position in cartesian space
 sim/graphics/animation/draw_object_z	float	n	float	Z position in cartesian space of currently drawn object
 sim/graphics/animation/draw_object_psi	float	n	float	rotation in cartesian space of currently drawn object
 sim/graphics/animation/draw_light_level	float	n	float	This is the default _LIT light level that the object is being drawn at, before ATTR_light_level is applied.
-sim/graphics/animation/airport_beacon_rotation	float	n	degrees	angle this beacon is rotating (0-360)
+sim/graphics/animation/airport_beacon_rotation	float	n	degrees	angle this beacon is rotating (0-360). Civillian beacons rotate at 11-13 RPM, giving 22-26 flashes/min for an airport and 33-39/min flashes for a heliport. 
+sim/graphics/animation/airport_beacon_rotation_military	float	n	degrees	angle this military airport beacon is rotating (0-360). Military beacons rotate at 8-10 RPM, giving off 16-20 flashes/min where the double white counts as one flash. 
 sim/graphics/animation/windsock_psi	float	n	degrees	windsock heading
 sim/graphics/animation/windsock_the	float	n	degrees	windsock pitch
 sim/graphics/animation/windsock_phi	float	n	degrees	windsock roll
@@ -3028,6 +3035,8 @@ sim/operation/failures/rel_pyl7b	int	y	failure_enum	Engine Pylon 7b Separate
 sim/operation/failures/rel_pyl8b	int	y	failure_enum	Engine Pylon 8b Separate
 sim/operation/failures/rel_gen_esys	int	y	failure_enum	General electrical failure
 sim/operation/failures/rel_gen_avio	int	y	failure_enum	General avionics bus failure
+sim/operation/failures/rel_apu	int	y	failure_enum	APU failure to start or run
+sim/operation/failures/rel_apu_fire	int	y	failure_enum	APU catastrophic failure with fire
 sim/operation/g430/G430_is_vloc	int[2]	n	boolean	If true, vertical guidance is a glide slope - otherwise it is a GPS vertical guidance indicator.  Comes from the physical units!
 sim/operation/misc/debug_network	int	y	boolean	Enable logging of network data
 sim/operation/misc/frame_rate_period	float	y	secs	The frame rate period. Use the reciprocal to get the frame rate (e.g. 1/mnw.prd).  Writable via override_timestep in 11.10
@@ -3271,10 +3280,11 @@ sim/weather/wave_dir	int	y	degrees	Direction of waves.
 sim/weather/temperature_sealevel_c	float	y	degreesC	The temperature at sea level.
 sim/weather/temperature_tropo_c	float	y	degreesC	???
 sim/weather/tropo_alt_mtr	float	y	meters	???
-sim/weather/dewpoi_sealevel_c	float	y	degrees	C			The dew point at sea level.
-sim/weather/temperature_ambient_c	float	n	degrees	C			The air temperature outside the aircraft (at altitude).
-sim/weather/temperature_le_c	float	n	degrees	C			The air temperature at the leading edge of the wings in degrees C.
-sim/weather/thermal_percent	float	y	[0.0	- 1.0]			The percentage of thermal occurance in the area.
+sim/weather/dewpoi_sealevel_c	float	y	degreesC	The dew point at sea level.
+sim/weather/relative_humidity_sealevel_percent	float	n	percent	Relative humidity at sea-level
+sim/weather/temperature_ambient_c	float	n	degreesC	The air temperature outside the aircraft (at altitude).
+sim/weather/temperature_le_c	float	n	degreesC	The air temperature at the leading edge of the wings in degrees C.
+sim/weather/thermal_percent	float	y	[0..1]	The percentage of thermal occurance in the area.
 sim/weather/thermal_rate_ms	float	y	m/s	>= 0			The climb rate for thermals.
 sim/weather/thermal_altitude_msl_m	float	y	m	MSL >= 0			The top of thermals in meters MSL.
 sim/weather/runway_friction	float	y	0,1,2	The friction constant for runways (how wet they are).  0 = good, 1 = fair, 2 = poor
@@ -3436,39 +3446,47 @@ sim/cockpit2/autopilot/airspeed_dial_kts	float	y	Knots	Airspeed hold bug, always
 sim/cockpit2/autopilot/heading_dial_deg_mag_pilot	float	y	degrees_magnetic	Heading hold commanded, in degrees magnetic.
 sim/cockpit2/autopilot/heading_dial_deg_mag_copilot	float	y	degrees_magnetic	Heading hold commanded, in degrees magnetic.
 sim/cockpit2/autopilot/heading_is_gpss	int	y	boolean	0 = Heading bug supplies HDG to autopilot, 1 = GPSS supplies heading to autopilot
+sim/cockpit2/autopilot/trk_fpa	int	y	boolean	0 = HDG/VS, 1 = TRK/FPA
 sim/cockpit2/autopilot/vvi_dial_fpm	float	y	feet/minute	VVI commanded in FPM.
+sim/cockpit2/autopilot/fpa	float	y	degrees	FPA commanded in degrees.
 sim/cockpit2/autopilot/altitude_dial_ft	float	y	feet	VVI commanded in FPM.
 sim/cockpit2/autopilot/altitude_hold_ft	float	n	feet	Altitude hold commanded in feet indicated.
 sim/cockpit2/autopilot/altitude_vnav_ft	float	n	feet	Target altitude hold in VNAV mode.
 sim/cockpit2/autopilot/barometer_setting_in_hg_alt_preselector	float	y	inHg	baro setting of the altitude preselector
 sim/cockpit2/autopilot/altitude_readout_preselector	float	y	feet	current barometric altitude sensed by the altitude preselector
+sim/cockpit2/autopilot/climb_adjust	float	y	knots	climb mode adjust base speed knots (by default 150KIAS below 10.000ft)
+sim/cockpit2/autopilot/des_adjust	float	y	feet/minute	descend mode adjust target vertical speed (by default -1500ft/min)
 sim/cockpit2/autopilot/sync_hold_pitch_deg	float	y	degrees	Pitch-hold commanded in degrees up.
 sim/cockpit2/autopilot/sync_hold_roll_deg	float	y	degrees	Roll-hold commanded in degrees right.
+sim/cockpit2/autopilot/set_roll_deg	float	y	degrees	Roll-hold command in degrees right, turn knob that won't turn with other modes
 sim/cockpit2/autopilot/turn_rate_deg_sec	float	y	deg/sec	Turn rate commanded in degrees per second, positive right
 sim/cockpit2/autopilot/flight_director_pitch_deg	float	n	degrees	Flight director pitch deflection in degrees, pos up.
 sim/cockpit2/autopilot/flight_director_roll_deg	float	n	degrees	Flight director roll deflection in degrees, pos right.
 sim/cockpit2/autopilot/flight_director2_pitch_deg	float	n	degrees	Flight director 2 pitch deflection in degrees, pos up.
 sim/cockpit2/autopilot/flight_director2_roll_deg	float	n	degrees	Flight director 2 roll deflection in degrees, pos right.
 sim/cockpit2/autopilot/TOGA_pitch_deg	float	y	degrees	Nose-up pitch to hold when TOGA operations are in effect.  Set this back when your aircraft unloads!
-sim/cockpit2/autopilot/roll_status	int	n	enum	Autopilot Roll-Hold Status. 0=off,1=armed,2=captured
+sim/cockpit2/autopilot/roll_status	int	n	enum	Autopilot Roll-Hold Status. 0=off,2=captured
 sim/cockpit2/autopilot/rate_status	int	n	enum	Autopilot turn rate hold status: 0=off, 2=captured
-sim/cockpit2/autopilot/heading_status	int	n	enum	Autopilot Heading Select Status. 0=off,1=armed,2=captured
-sim/cockpit2/autopilot/heading_hold_status	int	n	enum	Autopilot Heading Hold Status. 0=off,1=armed,2=captured
+sim/cockpit2/autopilot/heading_status	int	n	enum	Autopilot Heading Select Status. 0=off,2=captured
+sim/cockpit2/autopilot/heading_hold_status	int	n	enum	Autopilot Heading Hold Status. 0=off,2=captured
+sim/cockpit2/autopilot/track_status	int	n	enum	Autopilot Track Select Status: 0=off,2=captured
 sim/cockpit2/autopilot/nav_status	int	n	enum	Autopilot Nav Status. 0=off,1=armed,2=captured
 sim/cockpit2/autopilot/gpss_status	int	n	enum	Autopilot GPSS Status. 0=off, 2=active
 sim/cockpit2/autopilot/rollout_status	int	n	enum	Autopilot Rollout Status. 0=off,1=armed,2=captured
 sim/cockpit2/autopilot/flare_status	int	n	enum	Autopilot Flare Status. 0=off,1=armed,2=captured
 sim/cockpit2/autopilot/backcourse_status	int	n	enum	Autopilot Back-course Status. 0=off,1=armed,2=captured
-sim/cockpit2/autopilot/TOGA_lateral_status	int	n	enum	Autopilot Lateral TOGA mode: 0=off,1=armed,2=captured
-sim/cockpit2/autopilot/pitch_status	int	n	enum	Autopilot Pitch-Hold Status. 0=off,1=armed,2=captured
-sim/cockpit2/autopilot/vvi_status	int	n	enum	Autopilot VVI Status. 0=off,1=armed,2=captured
-sim/cockpit2/autopilot/speed_status	int	n	enum	Autopilot Speed-hold (via pitch) status. 0=off,1=armed,2=captured
+sim/cockpit2/autopilot/TOGA_lateral_status	int	n	enum	Autopilot Lateral TOGA mode: 0=off,2=captured
+sim/cockpit2/autopilot/pitch_status	int	n	enum	Autopilot Pitch-Hold Status. 0=off,2=captured
+sim/cockpit2/autopilot/vvi_status	int	n	enum	Autopilot VVI Status. 0=off,2=captured
+sim/cockpit2/autopilot/fpa_status	int	n	enum	Autopilot FPA Status. 0=off,2=captured
+sim/cockpit2/autopilot/speed_status	int	n	enum	Autopilot Speed-hold (via pitch) status. 0=off,2=captured
 sim/cockpit2/autopilot/altitude_hold_status	int	n	enum	Autopilot Altitude hold status. 0=off,1=armed,2=captured
 sim/cockpit2/autopilot/glideslope_status	int	n	enum	Autopilot glideslope status. 0=off,1=armed,2=captured
 sim/cockpit2/autopilot/vnav_status	int	n	enum	Autopilot VNAV status. 0=off,1=armed,2=captured - for a physical hardware g1000 connected by Ethernet only!!!
 sim/cockpit2/autopilot/fms_vnav	int	y	boolean	Enables the FMS to take over vertical control of the autopilot.   This matches the command "sim/autopilot/FMS"."
 sim/cockpit2/autopilot/TOGA_status	int	n	enum	Autopilot TOGA vertical (go-around) status. 0=off,1=armed,2=captured
 sim/cockpit2/autopilot/approach_status	int	n	enum	Autopilot approach status.  0=off,1=armed,2=captured
+sim/cockpit2/autopilot/dead_reckoning	int	n	boolean	Whether the autopilot is using dead-reckoning to fly over a VOR station
 sim/cockpit2/camera/camera_offset_pitch	float	y	degrees	In-cockpit camera angular offset relative to airplane orientation (Pitch)
 sim/cockpit2/camera/camera_offset_heading	float	y	degrees	In-cockpit camera angular offset relative to airplane orientation (Heading)
 sim/cockpit2/camera/camera_offset_roll	float	y	degrees	In-cockpit camera angular offset relative to airplane orientation (Roll)
@@ -3541,8 +3559,10 @@ sim/cockpit2/electrical/generator_on	int[8]	y	boolean	Generator turned on, 0 or 
 sim/cockpit2/electrical/generator_amps	float[8]	n	amps	Generator amperage.
 sim/cockpit2/electrical/APU_generator_on	int	y	boolean	APU generator is turned on, 0 or 1.
 sim/cockpit2/electrical/APU_generator_amps	float	y	amps	APU generator amperage.
-sim/cockpit2/electrical/APU_starter_switch	int	y	boolean	APU power switch, 0 is off, 1 is on, 2 is start-er-up!
+sim/cockpit2/electrical/APU_starter_switch	int	y	enum	APU power switch, 0 is off, 1 is on, 2 is start-er-up!
 sim/cockpit2/electrical/APU_N1_percent	float	n	percent	N1 of the APU
+sim/cockpit2/electrical/APU_EGT_c	float	n	celsius	EGT of the APU
+sim/cockpit2/electrical/APU_door	float	n	ratio	APU door open ratio
 sim/cockpit2/electrical/APU_running	int	n	boolean	APU actually running, 0 or 1.
 sim/cockpit2/electrical/cross_tie	int	y	boolean	Switch to connect the two busses together - power from one feeds the other.  0 or 1.
 sim/cockpit2/electrical/dc_voltmeter_selection	int	n	enum	Volt-meter selection (0=external,1=ctr,2=lft,3=rgt,4=tpl,5=bat - use cmnds to set!
@@ -3596,9 +3616,9 @@ sim/cockpit2/engine/actuators/start_lock_engaged	int[8]	y	boolean	Start lock to 
 sim/cockpit2/engine/actuators/unfeather_pump_running	int[8]	y	boolean	Manual unfeather pump can provide oil pressure to the governor, to unfeather a stopped prop when the startlocks weren't engaged. Running the pump first unfeathers the prop and then engages the startlock
 sim/cockpit2/engine/actuators/governor_on	int[8]	y	boolean	Governor on-off switch.
 sim/cockpit2/engine/actuators/fire_extinguisher_on	int[8]	y	boolean	Fire extinguisher on
-sim/cockpit2/engine/actuators/clutch_engage	float[1]	y	boolean	XP10: the on/off status of the clutch, either per engine or per prop, depending on voodoo, dim 8.  V11: there is only ONE clutch for the whle airplane.
-sim/cockpit2/engine/actuators/clutch_ratio	float[1]	y
-sim/cockpit2/engine/actuators/manual_feather_prop	float[8]	y	ratio	XP10: the ratio of the clutch, either per engine or per prop, depending on voodoo, dim 8.  V11: there is only ONE clutch for the whle airplane.
+sim/cockpit2/engine/actuators/clutch_engage	float[1]	y	boolean	XP10: the on/off status of the clutch, either per engine or per prop, depending on voodoo, dim 8. XP11: there is only ONE clutch for the whle airplane.
+sim/cockpit2/engine/actuators/clutch_ratio	float[1]	y	ratio	XP10: the ratio of the clutch, either per engine or per prop, depending on voodoo, dim 8. XP11: there is only ONE clutch for the whole airplane.
+sim/cockpit2/engine/actuators/manual_feather_prop	float[8]	y	boolean	override and activate the feather, no matter what any auto-feather logic does.
 sim/cockpit2/engine/actuators/N1_target_bug	float[8]	y	percent	N1 bug (target for thrust reference), %
 sim/cockpit2/engine/actuators/EPR_target_bug	float[8]	y	percent	EPR bug (target for thrust reference), %
 sim/cockpit2/engine/indicators/N1_percent	float[8]	n	percent	N1, %.
@@ -3619,16 +3639,30 @@ sim/cockpit2/engine/indicators/thrust_n	float[8]	n	newtons	Engine thrust in Newt
 sim/cockpit2/engine/indicators/engine_speed_rpm	float[8]	n	revolutions/minute	Engine speed, radians per second
 sim/cockpit2/engine/indicators/prop_speed_rpm	float[8]	n	revolutions/minute	Prop speed, radians per second                                                                                                                                                                                                         boolean			 Requests that the prop be feathered immediately, for plugin control of feathering.  Requires the prop to NOT be overriden for x-plane to actuate this.
 sim/cockpit2/engine/indicators/carburetor_temperature_C	float[8]	n	degrees_C	Carburator temperature in degrees C
+sim/cockpit2/engine/indicators/igniter_sparking	int[8]	n	boolean	Whether igniters are sparking, either because the pilot or system logic turned them on, power is available and they are not failed
+sim/cockpit2/engine/indicators/igniter_volt	float[8]	n	volt	Voltage we have to charge the ignition, useful for sound effects
 sim/cockpit2/fuel/fuel_tank_selector_left	int	y	enum	This is the left-engine fuel-tank selector.
 sim/cockpit2/fuel/fuel_tank_selector_right	int	y	enum	This is the right-engine fuel-tank selector.
 sim/cockpit2/fuel/fuel_tank_selector	int	y	enum	0=none,1=left,2=center,3=right,4=all
-sim/cockpit2/fuel/fuel_tank_transfer_to	int	y	enum	0=none,1=left,2=center,3=right
-sim/cockpit2/fuel/fuel_tank_transfer_from	int	y	enum	0=none,1=left,2=center,3=right
+sim/cockpit2/fuel/fuel_tank_transfer_to	int	y	enum	0=none,1=left,2=center,3=right,5=aft
+sim/cockpit2/fuel/fuel_tank_transfer_from	int	y	enum	0=none,1=left,2=center,3=right,5=aft
 sim/cockpit2/fuel/fuel_tank_pump_on	int[9]	y	bool	True if the pump for this tank is on.
 sim/cockpit2/fuel/showing_aux	int	n	bool	True if user is holding down the aux-tank button.
 sim/cockpit2/fuel/fuel_quantity	float[9]	n	kgs	Indicated fuel level per tank
 sim/cockpit2/fuel/fuel_totalizer_init_kg	float	y	kg	Total fuel on board the fuel totalizer was initialized with
 sim/cockpit2/fuel/fuel_totalizer_sum_kg	float	y	kg	Total accumulated fuel used by all engines since totalizer initialization
+sim/cockpit2/fuel/transfer_pump_left	int	y	enum	Transfer from left AUXes to left FEEDers: 0: Off, 1: Auto, 2: On/Override 
+sim/cockpit2/fuel/transfer_pump_right	int	y	enum	Transfer from right AUXes to right FEEDers: 0: Off, 1: Auto, 2: On/Override
+sim/cockpit2/fuel/transfer_pump_activation	float	y	kg	Automatically transfer from AUXes to FEEDers in auto mode when feeder has more than X kg left to full
+sim/cockpit2/fuel/fuel_level_indicated_left	float	n	kg	Indicated fuel level left, shows total or only nacelle tanks depending if user is holding down the aux-tank button.
+sim/cockpit2/fuel/fuel_level_indicated_right	float	n	kg	Indicated fuel level right, shows total or only nacelle tanks depending if user is holding down the aux-tank button.
+sim/cockpit2/fuel/firewall_closed_left	int	y	boolean	Firewall valve closed, left
+sim/cockpit2/fuel/firewall_closed_right	int	y	boolean	Firewall valve closed, right
+sim/cockpit2/fuel/auto_crossfeed	int	y	enum	0=Off 1=Auto 2=On - If fuel pressure on one side is low, due to fuel pump failure for example, cross-feed is opened to allow one pump to supply pressure to both engines.
+sim/cockpit2/fuel/no_transfer_left	int	n	boolean	Warning light, will illuminate when transfer from aux to feeder is requested, but aux tank is empty
+sim/cockpit2/fuel/no_transfer_right	int	n	boolean	Warning light, will illuminate when transfer from aux to feeder is requested, but aux tank is empty
+sim/cockpit2/fuel/transfer_test	int	y	boolean	Transfer test switch. 0 = normal, -1 = test left, +1 = test right
+sim/cockpit2/fuel/tank_pump_pressure_psi	float[9]	y	psi	Pressure generated by the fuel pump per tank. If multiple tanks are accesible per the fuel selector, fuel will be consumed from the tanks in order of pump pressure
 sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot	float	y	inches_hg	Barometric pressure setting, inches HG.  Pilot side.
 sim/cockpit2/gauges/actuators/barometer_setting_in_hg_copilot	float	y	inches_hg	Barometric pressure setting, inches HG.  Copilot side.
 sim/cockpit2/gauges/actuators/barometer_setting_in_hg_stby	float	y	inches_hg	Barometric pressure setting, inches HG.  Standby instrument.
@@ -3742,9 +3776,27 @@ sim/cockpit2/pressurization/actuators/dump_to_altitude_on	int	y	feet	Dump pressu
 sim/cockpit2/pressurization/actuators/cabin_altitude_ft	float	y	feet	Cabin altitude commanded, feet.
 sim/cockpit2/pressurization/actuators/cabin_vvi_fpm	float	y	feet/minute	Cabin VVI commanded, feet.
 sim/cockpit2/pressurization/actuators/max_allowable_altitude_ft	float	y	feet	Maximum allowable altitude for this airplane to maintain the requested cabin altitude.
+sim/cockpit2/pressurization/actuators/air_cond_on	int	y	boolean	Electrical air conditioning compressor on, consuming all the amps of rel_HVAC - not needed on airplanes with air cycle machines that drive the air conditioner off the bleed air power itself.
+sim/cockpit2/pressurization/actuators/heater_on	int	y	boolean	Electrical heater grid on, 0 = off, 1 = flight max (consumes rel_HVAC amps), 2 = ground max (consumes 2x rel_HVAC amps, turned off by weight-off-wheels) - not needed on airplanes that are using hot bleed air and have no heaters
+sim/cockpit2/pressurization/actuators/fan_setting	int	y	enum	Electric fan (vent blower) setting, consuming 0.1 of rel_HVAVC amps when running. 0 = Auto (Runs whenever air_cond_on or heater_on is on), 1 = Low, 2 = High
 sim/cockpit2/pressurization/indicators/cabin_altitude_ft	float	n	feet	Cabin altitude actually occurring, feet.
 sim/cockpit2/pressurization/indicators/cabin_vvi_fpm	float	n	feet/minute	Cabin VVI actually occurring, fpm.
 sim/cockpit2/pressurization/indicators/pressure_diffential_psi	float	n	pounds/square_inch	Cabin differential pressure, psi.
+sim/cockpit2/pressurization/indicators/outflow_valve	float	y	ratio	Pressurization outflow valve ratio. 0 for fully closed, 1 for fully open. Writeable with override_pressurization
+sim/cockpit2/pressurization/indicators/fan_speed	float	y	ratio	Electric fan speed, will be 1.0 or 2.0 depending on fan setting or 0 when there's no power or the fan is turned off. Writeable with override_pressurization
+sim/cockpit2/bleedair/actuators/engine_bleed_sov	int[8]	y	boolean	Engine bleed air shut off valve, close or open
+sim/cockpit2/bleedair/actuators/apu_bleed	int	y	boolean	APU bleed air valve, close or open. APU must be running at 100%N1 to provide bleed air
+sim/cockpit2/bleedair/actuators/gpu_bleed	int	y	boolean	GPU bleed air valve, close or open. A GPU is supposed to be always available.
+sim/cockpit2/bleedair/actuators/isol_valve_left	int	y	boolean	Isolation Valve for left duct, close or open. This separates all engines on the left side of the plane, the left wing, and the left pack from the rest of the system
+sim/cockpit2/bleedair/actuators/isol_valve_right	int	y	boolean	Isolation Valve for right duct, close or open. This separates all engines on the right side of the plane, the right wing, and the right pack from the rest of the system
+sim/cockpit2/bleedair/actuators/pack_left	int	y	boolean	Left pressurization pack, off or on. The left pack is supplied from the left side of the plane or through the left isolation valve and only available for airplanes made for 11.35 or newer
+sim/cockpit2/bleedair/actuators/pack_center	int	y	boolean	Center pressurization pack, off or on. The center pack is supplied from center duct, which can be supplied from a center engine, APU, GPU, or, via the isolation valves, the left and/or right ducts. This pack is the only pack available for airplanes made for X-Plane 11.33 or older
+sim/cockpit2/bleedair/actuators/pack_right	int	y	boolean	Right pressurization pack, off or on. The right pack is supplied from the right side of the plane or through the right isolation valve and only available for airplanes made for 11.35 or newer
+sim/cockpit2/bleedair/indicators/bleed_available_left	float	n	ratio	Bleed air available in the left duct, which can come from left engines or through the left isolation valve. 
+sim/cockpit2/bleedair/indicators/bleed_available_center	float	n	ratio	Bleed air available in the center duct, which can come from a center engine, APU, GPU, or, via the isolation valves, the left and/or right ducts.
+sim/cockpit2/bleedair/indicators/bleed_available_right	float	n	ratio	Bleed air available in the right duct, which can come from right engines or through the right isolation valve. 
+sim/cockpit2/bleedair/indicators/engine_loss_from_bleed_air_ratio	float[8]	y	ratio	Bleed air being sapped from the engine, stealing efficiency from the compressor. Writeable only with override_pressurization set
+sim/cockpit2/bleedair/indicators/APU_loss_from_bleed_air_ratio	float	y	ratio	Bleed air being sapped from the APU, stealing efficiency from the compressor. Writeable only with override_pressurization set
 sim/cockpit2/oxygen/actuators/o2_valve_on	int	y	boolean	crew oxygen valve open
 sim/cockpit2/oxygen/actuators/demand_flow_setting	int	y	enum	0 = off, 1 = unregulated, 2 = now/night, 3 = day/delay 5, 4 = day/delay 10, 5 = fat/face mask 1, 6 = fat/face mask 2, 7 = fat/face mask 3, 8 = fat/face mask 4
 sim/cockpit2/oxygen/actuators/num_plugged_in_o2	int	y	int	number of people plugged into the bottle O2 system - note that airliners usually have a chemical oxygen system, so this is for the two pilots, while the PAX a served by a chemical oxygenator
@@ -3772,6 +3824,10 @@ sim/cockpit2/radios/actuators/nav2_frequency_khz	int	y	khz	Nav radio 2 frequency
 sim/cockpit2/radios/actuators/nav_frequency_hz	int[12]	y	10hertz	Nav radio N frequency, hz
 sim/cockpit2/radios/actuators/nav_frequency_Mhz	int[12]	y	Mhz	Nav radio N frequency, Mhz component only
 sim/cockpit2/radios/actuators/nav_frequency_khz	int[12]	y	khz	Nav radio N frequency, khz component only
+sim/cockpit2/radios/actuators/nav_dme_hold	int[12]	y	boolean	Nav radio N in DME hold, stops slaving DME frequency to NAV frequency
+sim/cockpit2/radios/actuators/nav_dme_frequency_hz	int[12]	y	10hertz	DME radio N frequency, hz
+sim/cockpit2/radios/actuators/nav_dme_frequency_Mhz	int[12]	y	Mhz	DME radio N frequency, Mhz component only
+sim/cockpit2/radios/actuators/nav_dme_frequency_khz	int[12]	y	khz	DME radio N frequency, khz component only
 sim/cockpit2/radios/actuators/com1_frequency_hz	int	y	10hertz	Com radio 1 frequency, 10 hz
 sim/cockpit2/radios/actuators/com1_frequency_Mhz	int	y	Mhz	Com radio 1 frequency, Mhz component only
 sim/cockpit2/radios/actuators/com1_frequency_khz	int	y	khz	Com radio 1 frequency, khz component only
@@ -3834,13 +3890,17 @@ sim/cockpit2/radios/actuators/transponder_code	int	y	transponder_code	Current Tr
 sim/cockpit2/radios/actuators/transponder_mode	int	y	enum	Transponder mode (off=0,stdby=1,on=2,test=3)
 sim/cockpit2/radios/actuators/audio_com_selection	int	y	enum	6=com1,7=com2
 sim/cockpit2/radios/actuators/audio_nav_selection	int	y	enum	0=nav1,1=nav2,2=adf1,3=adf2,9=none
+sim/cockpit2/radios/actuators/audio_com_selection_man	int	y	enum	6=com1,7=com2 - this is for old audio panels that do not automatically select the listener as well
+sim/cockpit2/radios/actuators/audio_selection_com_auto	int	y	boolean	is com automatically selected for listening (selects the same as the transmit selector)
 sim/cockpit2/radios/actuators/audio_selection_com1	int	y	boolean	is com1 selected for listening
 sim/cockpit2/radios/actuators/audio_selection_com2	int	y	boolean	is com2 selected for listening
 sim/cockpit2/radios/actuators/audio_selection_nav1	int	y	boolean	is nav1 selected for listening
 sim/cockpit2/radios/actuators/audio_selection_nav2	int	y	boolean	is nav2 selected for listening
 sim/cockpit2/radios/actuators/audio_selection_adf1	int	y	boolean	is adf1 selected for listening
 sim/cockpit2/radios/actuators/audio_selection_adf2	int	y	boolean	is adf2 selected for listening
-sim/cockpit2/radios/actuators/audio_dme_enabled	int	y	boolean	Is DME audio enabled?  This only matters if the current selection has DME
+sim/cockpit2/radios/actuators/audio_dme_enabled	int	y	boolean	Is DME audio enabled?  This only listens to the dedicated DME receiver
+sim/cockpit2/radios/actuators/audio_selection_dme1	int	y	boolean	Is DME portion on NAV1 selected for listening
+sim/cockpit2/radios/actuators/audio_selection_dme2	int	y	boolean	Is DME portion on NAV2 selected for listening
 sim/cockpit2/radios/actuators/audio_marker_enabled	int	y	boolean	Is audio for the marker beacons enabled?
 sim/cockpit2/radios/actuators/audio_volume_com1	float	y	[0..1]	Audio level (0 is off, 1 is max) for com1 audio
 sim/cockpit2/radios/actuators/audio_volume_com2	float	y	[0..1]	Audio level (0 is off, 1 is max) for com2 audio
@@ -3848,7 +3908,9 @@ sim/cockpit2/radios/actuators/audio_volume_nav1	float	y	[0..1]	Audio level (0 is
 sim/cockpit2/radios/actuators/audio_volume_nav2	float	y	[0..1]	Audio level (0 is off, 1 is max) for nav2 audio
 sim/cockpit2/radios/actuators/audio_volume_adf1	float	y	[0..1]	Audio level (0 is off, 1 is max) for adf1 audio
 sim/cockpit2/radios/actuators/audio_volume_adf2	float	y	[0..1]	Audio level (0 is off, 1 is max) for adf2 audio
-sim/cockpit2/radios/actuators/audio_volume_dme	float	y	[0..1]	Audio level (0 is off, 1 is max) for dme audio
+sim/cockpit2/radios/actuators/audio_volume_dme	float	y	[0..1]	Audio level (0 is off, 1 is max) for dme audio on standalone DME receiver
+sim/cockpit2/radios/actuators/audio_volume_dme1	float	y	[0..1]	Audio level (0 is off, 1 is max) for dme audio on NAV1 receiver
+sim/cockpit2/radios/actuators/audio_volume_dme2	float	y	[0..1]	Audio level (0 is off, 1 is max) for dme audio on NAV2 receiver
 sim/cockpit2/radios/actuators/audio_volume_mark	float	y	[0..1]	Audio level (0 is off, 1 is max) for marker beacon audio
 sim/cockpit2/radios/actuators/hsi_obs_deg_mag_pilot	float	y	degrees_magnetic	HSI OBS (pilot side) selection, in degrees magnetic.
 sim/cockpit2/radios/actuators/hsi_obs_deg_mag_copilot	float	y	degrees_magnetic	HSI OBS (copilot side) selection, in degrees magnetic.
@@ -3973,6 +4035,16 @@ sim/cockpit2/radios/indicators/nav9_nav_id	byte[150]	n	string	current selected n
 sim/cockpit2/radios/indicators/nav10_nav_id	byte[150]	n	string	current selected navID - nav radio 10
 sim/cockpit2/radios/indicators/nav11_nav_id	byte[150]	n	string	current selected navID - nav radio 11. WAAS/EGNOS receiver
 sim/cockpit2/radios/indicators/nav12_nav_id	byte[150]	n	string	current selected navID - nav radio 12. WAAS/EGNOS receiver
+sim/cockpit2/radios/indicators/nav1_dme_id	byte[150]	n	string	current selected dme ID - nav radio 1
+sim/cockpit2/radios/indicators/nav2_dme_id	byte[150]	n	string	current selected dme ID - nav radio 2
+sim/cockpit2/radios/indicators/nav3_dme_id	byte[150]	n	string	current selected dme ID - nav radio 3
+sim/cockpit2/radios/indicators/nav4_dme_id	byte[150]	n	string	current selected dme ID - nav radio 4
+sim/cockpit2/radios/indicators/nav5_dme_id	byte[150]	n	string	current selected dme ID - nav radio 5
+sim/cockpit2/radios/indicators/nav6_dme_id	byte[150]	n	string	current selected dme ID - nav radio 6
+sim/cockpit2/radios/indicators/nav7_dme_id	byte[150]	n	string	current selected dme ID - nav radio 7
+sim/cockpit2/radios/indicators/nav8_dme_id	byte[150]	n	string	current selected dme ID - nav radio 8
+sim/cockpit2/radios/indicators/nav9_dme_id	byte[150]	n	string	current selected dme ID - nav radio 9
+sim/cockpit2/radios/indicators/nav10_dme_id	byte[150]	n	string	current selected dme ID - nav radio 10
 sim/cockpit2/radios/indicators/nav1_type	int	n	enum	Type of navaid that's currently tuned in and being received - nav1
 sim/cockpit2/radios/indicators/nav2_type	int	n	enum	Type of navaid that's currently tuned in and being received - nav2
 sim/cockpit2/radios/indicators/nav_type	int[12]	n	enum	Type of navaid that's currently tuned in and being received - any nav receiver
@@ -3990,6 +4062,8 @@ sim/cockpit2/radios/indicators/morse_id_tone_nav2	int	n	enum	The morse-code id o
 sim/cockpit2/radios/indicators/morse_id_tone_adf1	int	n	enum	The morse-code id output for the tuned radio. Only if the audio is being monitored. 0 for silent. 1 for dot. 2 for dash.
 sim/cockpit2/radios/indicators/morse_id_tone_adf2	int	n	enum	The morse-code id output for the tuned radio. Only if the audio is being monitored. 0 for silent. 1 for dot. 2 for dash.
 sim/cockpit2/radios/indicators/morse_id_tone_dme	int	n	enum	The morse-code id output for the tuned radio. Only if the audio is being monitored. 0 for silent. 1 for dot. 2 for dash.
+sim/cockpit2/radios/indicators/morse_id_tone_dme1	int	n	enum	The morse-code id output for the tuned radio. Only if the audio is being monitored. 0 for silent. 1 for dot. 2 for dash.
+sim/cockpit2/radios/indicators/morse_id_tone_dme2	int	n	enum	The morse-code id output for the tuned radio. Only if the audio is being monitored. 0 for silent. 1 for dot. 2 for dash.
 sim/cockpit2/radios/indicators/hsi_bearing_deg_mag_pilot	float	n	degrees_magnetic	Indicated bearing to the pilot's HSI-selected navaid
 sim/cockpit2/radios/indicators/hsi_bearing_deg_mag_copilot	float	n	degrees_magnetic	Indicated bearing to the copilot's HSI-selected navaid
 sim/cockpit2/radios/indicators/hsi_relative_bearing_deg_pilot	float	n	degrees	Indicated relative bearing to the pilot's HSI-selected navaid
@@ -4062,6 +4136,70 @@ sim/cockpit2/radios/indicators/fms_vtk_pilot	float	n	Degrees	FMS Vertical Track 
 sim/cockpit2/radios/indicators/fms_distance_to_tod_pilot	float	n	nm	FMS Distance to Top of Descent
 sim/cockpit2/radios/indicators/fms_tod_before_index_pilot	int	n	index	Index of waypoint in flightplan before which top of descent is located
 sim/cockpit2/radios/indicators/fms_tod_before_distance_pilot	float	n	nm	Distance from top of descent to Nth waypoint (wayoint found via fms_tod_before_index_pilot)
+sim/cockpit2/radios/indicators/fms_cdu1_text_line0	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line1	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line2	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line3	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line4	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line5	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line6	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line7	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line8	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line9	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line10	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line11	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line12	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line13	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line14	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_text_line15	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line0	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line1	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line2	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line3	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line4	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line5	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line6	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line7	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line8	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line9	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line10	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line11	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line12	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line13	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line14	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu1_style_line15	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line0	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line1	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line2	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line3	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line4	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line5	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line6	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line7	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line8	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line9	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line10	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line11	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line12	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line13	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line14	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_text_line15	byte[96]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line0	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line1	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line2	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line3	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line4	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line5	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line6	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line7	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line8	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line9	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line10	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line11	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line12	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line13	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line14	byte[24]	n
+sim/cockpit2/radios/indicators/fms_cdu2_style_line15	byte[24]	n
 sim/cockpit2/switches/avionics_power_on	int	y	boolean	Switch, 0 or 1.
 sim/cockpit2/switches/navigation_lights_on	int	y	boolean	Switch, 0 or 1.
 sim/cockpit2/switches/beacon_on	int	y	boolean	Switch, 0 or 1.
@@ -4099,7 +4237,9 @@ sim/cockpit2/switches/prop_feather_mode	int	y	boolean	Switch, 0 or 1.
 sim/cockpit2/switches/pre_rotate_level	int	y	boolean	Switch, 0 or 1.
 sim/cockpit2/switches/clutch_engage	int	y	boolean	Switch, 0 or 1 - engage/disengage rotor clutch
 sim/cockpit2/switches/rotor_brake	int	y	boolean	Switch, 0 or 1 - turns on the rotor brake.
+sim/cockpit2/switches/hotel_mode	int	y	boolean	Switch, 0 or 1 - turns on hotel mode on free turbines.
 sim/cockpit2/switches/rotor_brake_ratio	float	y	ratio	This is the relative strength of the rotor brake compared to X-Plane default.
+sim/cockpit2/switches/hotel_mode_ratio	float	y	ratio	This is the relative strength of the hotel mode brake compared to X-Plane default.
 sim/cockpit2/switches/clutch_ratio	float	y	ratio	Current clutch ratio, 0.0 is off, 1.0 is on - follows clutch engage with some lag.
 sim/cockpit2/switches/rocket_mode	int	y	enum	This will have an enumeration based on the direction of fire of any maneuvering rockets.
 sim/cockpit2/switches/burner_level	int	y	enum	This can be 0 (half-power afterburners) or 1 (full-power burner).

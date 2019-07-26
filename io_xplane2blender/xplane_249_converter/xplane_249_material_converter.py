@@ -502,6 +502,23 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
     global_hint_suffix = collections.OrderedDict()
     for obj in filter(lambda obj: obj.game.properties, scene.objects):
         props = obj.game.properties
+        me = obj.data
+        try:
+            if me.uv_textures:
+                for face in me.uv_textures.active.data:
+                    #Gotta double check "panel."
+                    if face.image.name != me.uv_textures.active.data[0].image.name and "panel." not in face.image.name.lower():
+                        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_7.2.1.201904261721\pysrc')
+                        #import pydevd;pydevd.settrace()
+                        x = 1
+                #assert all(), obj.name + " You had different textures per face. This wasn't allowed!"
+                #TODO: also need to be checking for TEX in face
+                if "panel_ok" in props or (ISPANEL and "panel." in obj.data.uv_textures.active.data[0].image.name.lower()):
+                    global_mat_props["panel_ok"] = True
+                    global_hint_suffix["pn"] = True
+        except AttributeError:
+            pass
+
         if "GLOBAL_cockpit_lit" in props: # Move this to xplane_convert_layer_props
             global_mat_props["GLOBAL_cockpit_lit"] = True
             global_hint_suffix["ck"] = True
@@ -583,6 +600,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 # when asking "what faces have a mat index of 0", the answer is automatically "all of them"
                 slot.material = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
                 slot.material.specular_intensity = 0.0 # This was the default behavior in XPlane2Blender 2.49
+
             # TODO: Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
             # This still has the werid name and is the same as a DEFAULT_MATERIAL. No point.
             if re.match("Material\.TF\.\d{1,5}", slot.material.name):
@@ -598,7 +616,9 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 elif (slot.material.name + global_hint_suffix) in bpy.data.materials:
                     slot.material = bpy.data.materials[(slot.material.name + global_hint_suffix)]
             for prop_name, prop_value in global_mat_props.items():
-                if prop_name == "GLOBAL_cockpit_lit":
+                if prop_name == "panel_ok":
+                    slot.material.xplane.panel = True
+                elif prop_name == "GLOBAL_cockpit_lit":
                     root_object.xplane.cockpit_lit = True
                 elif prop_name == "GLOBAL_no_blend":
                     slot.material.xplane.blend_mode = xplane_constants.BLEND_OFF
@@ -633,6 +653,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         all_material_faceids = list(itertools.chain([face_ids for tf_modes, face_ids in materials_and_their_faces.items()]))
         print(all_tf_faceids)
         print(all_material_faceids)
+        # Thanks to https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists/48569551#48569551
         def flatten(l):
             for el in l:
                 if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
