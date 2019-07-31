@@ -11,10 +11,10 @@ from io_xplane2blender.xplane_249_converter.xplane_249_constants import Workflow
 
 __dirname__ = os.path.dirname(__file__)
 
+"""
 def filterLines(line):
     return isinstance(line[0],str) and\
-            ("VLIGHT" in line[0] and
-             "LIGHTS" in line[0])
+"""
 
 class TestMatAllTypesSingleFace(XPlaneTestCase):
     """
@@ -48,7 +48,7 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
                     }
     # These are the possible properties this test could alter
     @classmethod
-    def _get_default_values_for_test_props(cls):
+    def _get_default_values_for_test_props(cls)->Dict[bpy.types.Property, Union[float, int, str]]:
         return {
                 prop: bpy.types.XPlaneMaterialSettings.bl_rna.properties[prop].default
                 for prop in cls._relavent_properties
@@ -94,8 +94,8 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
         # Then compare that the relavent changed props have been changed
         for item_current, item_changed in zip(sorted(current_props.items()), sorted(changed_props.items())):
             self.assertEqual(item_current[1], item_changed[1],
-                    msg="Current and required values for prop '{}' don't match: '{}', '{}'"
-                    .format(item_current[0], item_current[1], item_changed[1]))
+                    msg="Current and required values for prop '{}' on material '{}' don't match: '{}', '{}'"
+                    .format(item_current[0], mat.name, item_current[1], item_changed[1]))
 
     def _no_change(self, name):
         self._test_prop_values_still_default(bpy.data.objects[name], [])

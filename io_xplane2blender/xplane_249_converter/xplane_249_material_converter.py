@@ -317,9 +317,11 @@ def _convert_material(scene: bpy.types.Scene,
         if tf_modes.ALPHA:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
+                changed_material_values["blendRatio"] = 0.5
                 logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5".format(mat.name))
             elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
+                changed_material_values["blendRatio"] = 0.5
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             else:
@@ -327,9 +329,11 @@ def _convert_material(scene: bpy.types.Scene,
         elif tf_modes.CLIP:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
+                changed_material_values["blendRatio"] = 0.5
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
             elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
+                changed_material_values["blendRatio"] = 0.5
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             else:
@@ -499,6 +503,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
     # Dictionary of "GLOBAL_attr" to value, to be applied later
     global_mat_props = {} # type: Dict[str, Union[bool, float, Tuple[float, float]]]
+    #TODO: Dumbdumbdumb just moving as fast as possible. Why doesn't Python have an OrderedSet?!
     global_hint_suffix = collections.OrderedDict()
     for obj in filter(lambda obj: obj.game.properties, scene.objects):
         props = obj.game.properties
@@ -509,7 +514,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             global_mat_props["GLOBAL_no_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
             global_hint_suffix["nb"] = True
         elif "GLOBAL_shadow_blend" in props:
-            global_mat_props["GLOBAL_shadow_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
+            global_mat_props["GLOBAL_shadow_blend"] = float(obj.game.properties["GLOBAL_shadow_blend"].value)
             global_hint_suffix["sb"] = True
         elif "GLOBAL_specular" in props:
             global_mat_props["GLOBAL_specular"] = round(float(obj.game.properties["GLOBAL_specular"].value),2)
@@ -605,7 +610,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     slot.material.xplane.blendRatio = prop_value
                 elif prop_name == "GLOBAL_shadow_blend":
                     slot.material.xplane.blend_mode = xplane_constants.BLEND_SHADOW
-                    #slot.material.xplane.blendRatio = prop_value #TODO: 2.79 ATTR_shadow_blend/GLOBAL_ doesn't appear to use blendRatio. Is this okay?
+                    #TODO: We'll have to normalize specularity across all materials?
                 elif prop_name == "GLOBAL_specular":
                     #This doesn't really make sense unless you're doing scenery or instanced scenery to mess with everyone's specularity
                     #slot.material.specular_intensity = prop_value
@@ -631,8 +636,9 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
         all_tf_faceids =       list(itertools.chain([face_ids for tf_modes, face_ids in tf_modes_and_their_faces.items()]))
         all_material_faceids = list(itertools.chain([face_ids for tf_modes, face_ids in materials_and_their_faces.items()]))
-        print(all_tf_faceids)
-        print(all_material_faceids)
+        #print(all_tf_faceids)
+        #print(all_material_faceids)
+        # Thanks to https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists/48569551#48569551
         def flatten(l):
             for el in l:
                 if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
@@ -656,6 +662,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 if cross_over_faces:
                     converted = _convert_material(scene, root_object, search_obj, ISCOCKPIT, tf_modes, material)
                     if not converted:
+                        print("Didn't convert anything")
                         # Why extend on None?
                         # (TEX Pressed, MaterialA) and (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
                         # represent different semantic groups of FaceIds. What we really have is

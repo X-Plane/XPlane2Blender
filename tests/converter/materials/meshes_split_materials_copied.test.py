@@ -19,18 +19,19 @@ __dirname__ = os.path.dirname(__file__)
              #and ("OBJ_DIRECTIVE" in line[0]
                    #or)
 
-class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
+class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
     """
     # New objects will have one material only, made of only grouped faces
     """
     _M25 = bpy.data.materials["Material_.25"] # Red
     _M75 = bpy.data.materials["Material_.75"] # Blue
-    _M90 = bpy.data.materials["Material_.90"] # Yellow
-    _MDEF = bpy.data.materials["249_CONVERSION_DEFAULT_MAT"] # Created during material conversion process, grey
+    _M90 = bpy.data.materials["Material_.9"] # Yellow
+    #_MDEF = bpy.data.materials["249__DEFAULT_MAT"] # Created during material conversion process, grey
     _ObjectDetails = collections.namedtuple(
         "_ObjectDetails",
         ["new_name",
         "mat_name",]
+        )
 
     # Tuple of list of objectnames to a dictionary of TF group types ("TILE", "SHADOW", "DEFAULT", "NONE") and
     # what specularity/diffuse RGB material found to be used for it further code will check that Material
@@ -72,7 +73,8 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         # 4test_faces
         ("4face_3mat_1tf", {"DYNAMIC": (_M25, _M25, _M75, _M90)}),
         ("4face_3mat_2tf", {"TILES": (_M25, _M25), "SHADOW": (_M75,_M90)}),
-        ("4face_3mat_3tf_1as", {"NONE": (_MDEF, _MDEF, _MDEF), "SHADOW": _M90}),)
+        ("4face_3mat_3tf_1as", {"NONE": (_MDEF, _MDEF, _MDEF), "SHADOW": _M90}),
+        )
     )
 
     def _check_object(self, name):
@@ -149,6 +151,7 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         #    filename,
         #    filterLines
         #)
+        pass
 
 #TI Class name above
-runTestCases([Test])
+runTestCases([TestMeshesSplitMaterialsCopied])
