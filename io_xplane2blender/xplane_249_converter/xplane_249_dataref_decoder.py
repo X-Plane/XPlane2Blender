@@ -676,6 +676,9 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
                     logger.warn("Ignoring Bone '{}' of {}: could not be matched to a full dataref".format(bone_name, armature.name))
                     continue
 
+                #TODO: This needs some kind of check "2.79 and 2.49 DataRefs.txt file don't match
+                # disambiguating prop is not found, but also, no record found. A fall through here
+                # is terrible
                 # Checking for a value catches when people have to use "none:''" or "no_ref:''"
                 if disambiguating_prop.type == "STRING" and disambiguating_prop.value:
                     disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"), bone_name)
