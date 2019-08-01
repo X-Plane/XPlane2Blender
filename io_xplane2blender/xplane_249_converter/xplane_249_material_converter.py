@@ -505,12 +505,13 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
     global_mat_props = {} # type: Dict[str, Union[bool, float, Tuple[float, float]]]
     #TODO: Dumbdumbdumb just moving as fast as possible. Why doesn't Python have an OrderedSet?!
     global_hint_suffix = collections.OrderedDict()
+    if ISPANEL: # Move this to xplane_convert_layer_props
+        global_mat_props["GLOBAL_cockpit_lit"] = True
+        global_hint_suffix["ck"] = True
+
     for obj in filter(lambda obj: obj.game.properties, scene.objects):
         props = obj.game.properties
-        if "GLOBAL_cockpit_lit" in props: # Move this to xplane_convert_layer_props
-            global_mat_props["GLOBAL_cockpit_lit"] = True
-            global_hint_suffix["ck"] = True
-        elif "GLOBAL_no_blend" in props:
+        if "GLOBAL_no_blend" in props:
             global_mat_props["GLOBAL_no_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
             global_hint_suffix["nb"] = True
         elif "GLOBAL_shadow_blend" in props:
@@ -613,7 +614,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     #TODO: We'll have to normalize specularity across all materials?
                 elif prop_name == "GLOBAL_specular":
                     #This doesn't really make sense unless you're doing scenery or instanced scenery to mess with everyone's specularity
-                    #slot.material.specular_intensity = prop_value
+                    slot.material.specular_intensity = prop_value
                     pass
                 elif prop_name == "GLOBAL_tint":
                     slot.material.xplane.tint_albedo, slot.material.xplane.tint_emission = prop_value
