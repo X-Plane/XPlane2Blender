@@ -20,7 +20,7 @@ from .xplane_props import *
 # Class: DATA_PT_xplane
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
 class DATA_PT_xplane(bpy.types.Panel):
-    '''XPlane Material Panel'''
+    '''XPlane Data/Lamp Panel'''
     bl_label = "XPlane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -161,7 +161,7 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
     if emp.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
        emp.special_type == EMPTY_USAGE_EMITTER_SOUND:
         box = layout.box()
-        box.label("Emitter Settings")
+        box.label(text="Emitter Settings")
         row = box.row()
         row.prop(emp.emitter_props,"name",text="Name")
         # Adapted from properties_texture.py, factor_but
@@ -171,11 +171,11 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
         sub.prop(emp.emitter_props, "index", text="Index")
     elif emp.special_type == EMPTY_USAGE_MAGNET:
         box = layout.box()
-        box.label("Magnet Settings")
+        box.label(text="Magnet Settings")
         row = box.row()
         row.prop(emp.magnet_props, "debug_name")
         row = box.row(align=True)
-        row.label("Magnet Type:")
+        row.label(text="Magnet Type:")
         sub_row = row.row(align=True)
         sub_row.alignment = "RIGHT"
         sub_row.prop(emp.magnet_props, "magnet_type_is_xpad")
@@ -197,25 +197,25 @@ def scene_layout(self, scene):
 
     xp2b_ver = xplane_helpers.VerStruct.current()
     if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_RC and xp2b_ver.build_number != xplane_constants.BUILD_NUMBER_NONE:
-        layout.row().label("XPlane2Blender Version: " + str(xp2b_ver), icon="FILE_TICK")
+        layout.row().label(text="XPlane2Blender Version: " + str(xp2b_ver), icon="FILE_TICK")
     else:
-        layout.row().label("XPlane2Blender Version: " + str(xp2b_ver), icon="NONE")
+        layout.row().label(text="XPlane2Blender Version: " + str(xp2b_ver), icon="NONE")
 
     needs_warning = False
     if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_ALPHA or\
         xp2b_ver.build_type == xplane_constants.BUILD_TYPE_BETA:
-        layout.row().label("BEWARE: " + xp2b_ver.build_type.capitalize() + " versions can damage files!", icon="ERROR")
+        layout.row().label(text="BEWARE: " + xp2b_ver.build_type.capitalize() + " versions can damage files!", icon="ERROR")
         needs_warning = True
     elif xp2b_ver.build_type == xplane_constants.BUILD_TYPE_DEV:
-        layout.row().label("Developer versions are DANGEROUS and UNSTABLE!", icon="RADIO")
+        layout.row().label(text="Developer versions are DANGEROUS and UNSTABLE!", icon="RADIO")
         needs_warning = True
 
     if xp2b_ver.build_number == xplane_constants.BUILD_NUMBER_NONE:
-        layout.row().label("No build number: addon may be EXTRA UNSTABLE.", icon="CANCEL")
+        layout.row().label(text="No build number: addon may be EXTRA UNSTABLE.", icon="CANCEL")
         needs_warning = True
 
     if needs_warning is True:
-        layout.row().label("     Make backups or switch to a more stable release!")
+        layout.row().label(text="     Make backups or switch to a more stable release!")
 
     if scene.xplane.exportMode == 'layers':
         if len(scene.xplane.layers) != 0:
@@ -226,7 +226,7 @@ def scene_layout(self, scene):
             layout.row().operator('scene.add_xplane_layers')
 
     advanced_box = layout.box()
-    advanced_box.label("Advanced Settings")
+    advanced_box.label(text="Advanced Settings")
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "optimize")
     advanced_column.prop(scene.xplane, "debug")
@@ -259,7 +259,7 @@ def scene_dev_layout(self,scene,layout):
         updater_row.operator("scene.dev_create_lights_txt_summary")
 
         history_box = dev_box_column.box()
-        history_box.label("XPlane2Blender Version History")
+        history_box.label(text="XPlane2Blender Version History")
         history_list = list(scene.xplane.xplane2blender_ver_history)
         history_list.reverse()
         for entry in history_list:
@@ -340,7 +340,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     layout.prop(layerObj, "export_type")
 
     tex_box = layout.box()
-    tex_box.label('Textures')
+    tex_box.label(text='Textures')
 
     tex_box.prop(layerObj, "autodetectTextures")
 
@@ -356,7 +356,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     # cockpit regions
     if layerObj.export_type == 'cockpit':
         cockpit_box = layout.box()
-        cockpit_box.label('Cockpits')
+        cockpit_box.label(text='Cockpits')
         #cockpit_box.prop(layerObj, "panel_texture")
         cockpit_box.prop(layerObj, "cockpit_regions", text= "Regions")
         num_regions = int(layerObj.cockpit_regions)
@@ -388,10 +388,10 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
                             region_box.prop(cockpit_region, "top")
                             region_split = region_box.split(percentage = 0.5)
                             region_split.prop(cockpit_region, "width")
-                            region_split.label("= %d" % (2 ** cockpit_region.width))
+                            region_split.label(text="= %d" % (2 ** cockpit_region.width))
                             region_split = region_box.split(percentage = 0.5)
                             region_split.prop(cockpit_region, "height")
-                            region_split.label("= %d" % (2 ** cockpit_region.height))
+                            region_split.label(text="= %d" % (2 ** cockpit_region.height))
 
         # v1010
         if version < 1100:
@@ -401,7 +401,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     # LODs
     else:
         lods_box = layout.box()
-        lods_box.label('Levels of Detail')
+        lods_box.label(text='Levels of Detail')
         lods_box.prop(layerObj, "lods", text="LODs")
         num_lods = int(layerObj.lods)
 
@@ -436,10 +436,10 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 
     #Scenery Properties Group
     scenery_props_group_box = layout.box()
-    scenery_props_group_box.label("Scenery Properties")
+    scenery_props_group_box.label(text="Scenery Properties")
 
     layer_group_box = scenery_props_group_box.box()
-    layer_group_box.label("Layer Grouping")
+    layer_group_box.label(text="Layer Grouping")
     layer_group_box.prop(layerObj, "layer_group")
     layer_group_box.prop(layerObj, "layer_group_offset")
 
@@ -451,7 +451,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     if version >= 1000:
         # slope_limit
         slope_box = scenery_props_group_box.box()
-        slope_box.label("Slope Properties")
+        slope_box.label(text="Slope Properties")
         slope_box.prop(layerObj, "slope_limit")
 
         if layerObj.slope_limit == True:
@@ -470,7 +470,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     # Other Options
     #layout.separator()
     advanced_box = layout.box()
-    advanced_box.label("Advanced Options")
+    advanced_box.label(text="Advanced Options")
     if version >= 1130:
         advanced_box.prop(layerObj, "particle_system_file", text="Particle System File")
     advanced_box.prop(layerObj, "slungLoadWeight")
@@ -488,7 +488,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
     layout.separator()
     row = layout.row()
-    row.label("Custom Properties")
+    row.label(text="Custom Properties")
 
     if context == 'scene':
         row.operator("scene.add_xplane_layer_attribute").index = layerObj.index
@@ -525,7 +525,7 @@ def dataref_search_window_layout(layout):
 def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'scene'):
     layout.separator()
     row = layout.row()
-    row.label("Export Path Directives")
+    row.label(text="Export Path Directives")
 
     if context == 'scene':
         row.operator("scene.add_xplane_export_path_directive").index = layerObj.index
@@ -580,7 +580,7 @@ def lamp_layout(self:bpy.types.UILayout, obj):
         row = layout.row()
         row.prop(obj.xplane, "size")
         row = layout.row()
-        row.label("Texture Coordinates:")
+        row.label(text="Texture Coordinates:")
         row = layout.row()
         row.prop(obj.xplane, "uv", text = "")
         row = layout.row()
@@ -613,7 +613,7 @@ def material_layout(layout:UILayout,
                     active_material:bpy.types.Material):
     version = int(bpy.context.scene.xplane.version)
     draw_box = layout.box()
-    draw_box.label("Draw Settings")
+    draw_box.label(text="Draw Settings")
     draw_box_column = draw_box.column()
     draw_box_column.prop(active_material.xplane, "draw")
 
@@ -646,7 +646,7 @@ def material_layout(layout:UILayout,
             draw_box_column.prop(active_material.xplane, "blendRatio")
 
     surface_behavior_box = layout.box()
-    surface_behavior_box.label("Surface Behavior")
+    surface_behavior_box.label(text="Surface Behavior")
     surface_behavior_box_column = surface_behavior_box.column()
     surface_behavior_box_column.prop(active_material.xplane, "surfaceType")
 
@@ -655,7 +655,7 @@ def material_layout(layout:UILayout,
 
     surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
     ll_box = layout.box()
-    ll_box.label("Light Levels")
+    ll_box.label(text="Light Levels")
     ll_box_column = ll_box.column()
     ll_box_column.prop(active_material.xplane, "lightLevel")
 
@@ -682,14 +682,14 @@ def material_layout(layout:UILayout,
 
     ll_box_column.row()
     if not canPreviewEmit(active_material):
-        ll_box_column.label("To enable the Day-Night Preview feature, add an albedo texture (uses Diffuse->Color) and a night texture (uses Shading->Emit)", icon = "INFO")
+        ll_box_column.label(text="To enable the Day-Night Preview feature, add an albedo texture (uses Diffuse->Color) and a night texture (uses Shading->Emit)", icon = "INFO")
     else:
         ll_box_column.prop(active_material.xplane, "litFactor", slider = True)
 
 
     # instancing effects
     instanced_box = layout.box()
-    instanced_box.label("Instancing Effects")
+    instanced_box.label(text="Instancing Effects")
     instanced_box_column = instanced_box.column()
     instanced_box_column.prop(active_material.xplane, 'tint')
 
@@ -728,7 +728,7 @@ def custom_layout(self, obj:bpy.types.Object, object_type:str):
     if oType:
         # regular attributes
         row = layout.row()
-        row.label("Custom Properties")
+        row.label(text="Custom Properties")
         row.operator("object.add_xplane_"+oType+"_attribute")
         box = layout.box()
         for i, attr in enumerate(obj.xplane.customAttributes):
@@ -747,7 +747,7 @@ def custom_layout(self, obj:bpy.types.Object, object_type:str):
         # animation attributes
         if object_type in ("MESH", "ARMATURE", "OBJECT"):
             row = layout.row()
-            row.label("Custom Animation Properties")
+            row.label(text="Custom Animation Properties")
             row.operator("object.add_xplane_object_anim_attribute")
             box = layout.box()
             for i, attr in enumerate(obj.xplane.customAnimAttributes):
@@ -771,7 +771,7 @@ def animation_layout(self, obj, bone = False):
     layout = self.layout
     layout.separator()
     row = layout.row()
-    row.label("Datarefs")
+    row.label(text="Datarefs")
     if bone:
         row.operator("bone.add_xplane_dataref", text = "Add Dataref")
         current_dataref_prop_template = "bpy.context.active_bone.xplane.datarefs[{index}].path"
@@ -822,7 +822,7 @@ def animation_layout(self, obj, bone = False):
                 subrow = subbox.row()
                 subrow.prop(attr, "loop")
             else:
-                subrow.label('Object not animated')
+                subrow.label(text='Object not animated')
         elif attr.anim_type in ("show", "hide"):
             subrow.prop(attr, "show_hide_v1")
             subrow = subbox.row()
@@ -837,7 +837,7 @@ def animation_layout(self, obj, bone = False):
 def cockpit_layout(self, active_material:bpy.types.Material):
     layout = self.layout
     cockpit_box = layout.box()
-    cockpit_box.label("Cockpit Panel")
+    cockpit_box.label(text="Cockpit Panel")
     cockpit_box_column = cockpit_box.column()
     cockpit_box_column.prop(active_material.xplane, 'panel')
 
@@ -847,7 +847,7 @@ def cockpit_layout(self, active_material:bpy.types.Material):
 def axis_detent_ranges_layout(self, layout, manip):
     layout.separator()
     row = layout.row()
-    row.label("Axis Detent Range")
+    row.label(text="Axis Detent Range")
 
     row.operator("object.add_xplane_axis_detent_range")
 
@@ -1099,7 +1099,7 @@ def conditions_layout(self, obj, obgType):
 
     # regular attributes
     row = layout.row()
-    row.label("Conditions")
+    row.label(text="Conditions")
     row.operator('object.add_xplane_' + obgType + '_condition', text = "Add Condition")
     box = layout.box()
     for i, attr in enumerate(obj.xplane.conditions):
@@ -1149,9 +1149,9 @@ class XPLANE_UL_CommandSearchList(bpy.types.UIList):
             layout.alignment = "EXPAND"
             row = layout.row(align=True)
             row.alignment = "LEFT"
-            row.label(item.command, icon="NONE")
-            row.label("|")
-            row.label(item.command_description, icon="NONE")
+            row.label(text=item.command, icon="NONE")
+            row.label(text="|")
+            row.label(text=item.command_description, icon="NONE")
             return
 
         elif self.layout_type in {'GRID'}:
@@ -1211,13 +1211,13 @@ class XPLANE_UL_DatarefSearchList(bpy.types.UIList):
             layout.alignment = "EXPAND"
             row = layout.row(align=True)
             row.alignment = "LEFT"
-            row.label(item.dataref_path, icon="NONE")
-            row.label("|")
-            row.label(item.dataref_type, icon="NONE")
-            row.label("|")
-            row.label(item.dataref_is_writable, icon="NONE")
-            row.label("|")
-            row.label(item.dataref_units, icon="NONE")
+            row.label(text=item.dataref_path, icon="NONE")
+            row.label(text="|")
+            row.label(text=item.dataref_type, icon="NONE")
+            row.label(text="|")
+            row.label(text=item.dataref_is_writable, icon="NONE")
+            row.label(text="|")
+            row.label(text=item.dataref_units, icon="NONE")
             return
 
         elif self.layout_type in {'GRID'}:
@@ -1279,7 +1279,7 @@ class XPlaneMessage(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        row.label(text = self.msg_type+': '+self.msg_text)
+        row.label(text=self.msg_type+': '+self.msg_text)
 
 
 class XPlaneError(bpy.types.Operator):
