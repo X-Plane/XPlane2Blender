@@ -1838,27 +1838,27 @@ def addXPlaneRNA():
     for c in _classes:
         bpy.utils.register_class(c)
 
-    bpy.types.Scene.xplane: bpy.props.PointerProperty(
+    bpy.types.Scene.xplane = bpy.props.PointerProperty(
         type = XPlaneSceneSettings,
         name = "X-Plane Scene Settings",
         description = "X-Plane Scene Settings"
     )
-    bpy.types.Object.xplane: bpy.props.PointerProperty(
+    bpy.types.Object.xplane = bpy.props.PointerProperty(
         type = XPlaneObjectSettings,
         name = "X-Plane Object Settings",
         description = "X-Plane Object Settings"
     )
-    bpy.types.Bone.xplane: bpy.props.PointerProperty(
+    bpy.types.Bone.xplane = bpy.props.PointerProperty(
         type = XPlaneBoneSettings,
         name = "X-Plane Bone Settings",
         description = "X-Plane Bone Settings"
     )
-    bpy.types.Material.xplane: bpy.props.PointerProperty(
+    bpy.types.Material.xplane = bpy.props.PointerProperty(
         type = XPlaneMaterialSettings,
         name = "X-Plane Material Settings",
         description = "X-Plane Material Settings"
     )
-    bpy.types.Light.xplane: bpy.props.PointerProperty(
+    bpy.types.Light.xplane = bpy.props.PointerProperty(
         type = XPlaneLampSettings,
         name = "X-Plane Light Settings",
         description = "X-Plane Lamp Settings"
