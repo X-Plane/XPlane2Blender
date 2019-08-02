@@ -21,7 +21,7 @@ from .xplane_props import *
 # Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
 class DATA_PT_xplane(bpy.types.Panel):
     '''XPlane Data/Lamp Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"
@@ -41,7 +41,7 @@ class DATA_PT_xplane(bpy.types.Panel):
 # Adds X-Plane Material settings to the material tab. Uses <material_layout> and <custom_layout>.
 class MATERIAL_PT_xplane(bpy.types.Panel):
     '''XPlane Material Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -69,7 +69,7 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
 # Adds X-Plane Layer settings to the scene tab. Uses <scene_layout>.
 class SCENE_PT_xplane(bpy.types.Panel):
     '''XPlane Scene Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
@@ -86,7 +86,7 @@ class SCENE_PT_xplane(bpy.types.Panel):
 # Adds X-Plane settings to the object tab. Uses <mesh_layout>, <cockpit_layout>, <manipulator_layout> and <custom_layout>.
 class OBJECT_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
@@ -127,7 +127,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 # Adds X-Plane settings to the bone tab. Uses <animation_layout>.
 class BONE_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "bone"
