@@ -515,12 +515,12 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
 def command_search_window_layout(layout):
     scene = bpy.context.scene
     row = layout.row()
-    row.template_list("UL_CommandSearchList", "", scene.xplane.command_search_window_state, "command_search_list", scene.xplane.command_search_window_state, "command_search_list_idx")
+    row.template_list("XPLANE_UL_CommandSearchList", "", scene.xplane.command_search_window_state, "command_search_list", scene.xplane.command_search_window_state, "command_search_list_idx")
 
 def dataref_search_window_layout(layout):
     scene = bpy.context.scene
     row = layout.row()
-    row.template_list("UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
+    row.template_list("XPLANE_UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
 
 def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'scene'):
     layout.separator()
@@ -1135,7 +1135,7 @@ def weight_layout(self, obj):
     if obj.xplane.override_weight:
         row.prop(obj.xplane, 'weight')
 
-class UL_CommandSearchList(bpy.types.UIList):
+class XPLANE_UL_CommandSearchList(bpy.types.UIList):
     import io_xplane2blender.xplane_utils.xplane_commands_txt_parser
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
@@ -1197,7 +1197,7 @@ class UL_CommandSearchList(bpy.types.UIList):
 
         return flt_flags, flt_neworder
 
-class UL_DatarefSearchList(bpy.types.UIList):
+class XPLANE_UL_DatarefSearchList(bpy.types.UIList):
     import io_xplane2blender.xplane_utils.xplane_datarefs_txt_parser
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
@@ -1309,8 +1309,8 @@ _XPlaneUITypes = (
     OBJECT_PT_xplane,
     SCENE_PT_xplane,
 
-    UL_CommandSearchList,
-    UL_DatarefSearchList,
+    XPLANE_UL_CommandSearchList,
+    XPLANE_UL_DatarefSearchList,
     XPlaneError,
     XPlaneMessage
 )
