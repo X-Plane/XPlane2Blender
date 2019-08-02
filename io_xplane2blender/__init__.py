@@ -68,8 +68,7 @@ def register():
     xplane_ops.addXPlaneOps()
     xplane_ui.addXPlaneUI()
     bpy.utils.register_class(xplane_export.ExportXPlane)
-    bpy.types.INFO_MT_file_export.append(menu_func)
-    bpy.utils.register_module(__name__)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func)
 
 # Function: unregister
 # Unregisters the addon and all its classes and removes the entry from the menu.
@@ -78,8 +77,7 @@ def unregister():
     xplane_ops.removeXPlaneOps()
     xplane_props.removeXPlaneRNA()
     bpy.utils.unregister_class(xplane_export.ExportXPlane)
-    bpy.types.INFO_MT_file_export.remove(menu_func)
-    bpy.utils.unregister_module(__name__)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func)
 
 if __name__ == "__main__":
     register()

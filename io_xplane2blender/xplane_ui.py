@@ -1324,5 +1324,5 @@ def addXPlaneUI():
 # Function: removeXPlaneUI
 # Unregisters all UI Panels.
 def removeXPlaneUI():
-    for t in _XPlaneUITypes:
+    for t in reversed(_XPlaneUITypes):
         bpy.utils.unregister_class(t)

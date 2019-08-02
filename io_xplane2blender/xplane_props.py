@@ -1868,5 +1868,5 @@ def addXPlaneRNA():
 # Function: removeXPlaneRNA
 # Unregisters all properties.
 def removeXPlaneRNA():
-    for c in _classes:
+    for c in reversed(_classes):
         bpy.utils.unregister_class(c)
