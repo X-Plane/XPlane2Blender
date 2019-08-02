@@ -23,14 +23,14 @@
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
     "name": "Export: X-Plane (.obj)",
-    "author": "Ondrej Brinkel",
-    "version": (3, 5, 1),
-    "blender": (2, 7, 8),
-    "location": "File > Import/Export > X-Plane",
     "description": "Import and Export X-Plane objects/planes (.obj format)",
+    "author": "Ted Greene",
+    "version": (4, 0, 0),
+    "blender": (2, 80, 0),
+    "location": "File > Import/Export > X-Plane",
     "warning": "",
-    "wiki_url": "https://github.com/der-On/XPlane2Blender/wiki",
-    "tracker_url": "https://github.com/der-On/XPlane2Blender/issues",
+    "wiki_url": "https://github.com/X-Plane/XPlane2Blender/wiki",
+    "tracker_url": "https://github.com/X-Plane/XPlane2Blender/issues",
     "category": "Import-Export"
 }
 
