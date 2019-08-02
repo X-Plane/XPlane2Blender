@@ -108,7 +108,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Property: addon_version
     #
     # Tuple of Blender addon version, (major, minor, revision)
-    addon_version = bpy.props.IntVectorProperty(
+    addon_version: bpy.props.IntVectorProperty(
         name = "XPlane2Blender Addon Version",
         description = "The version of the addon (also found in it's addon information)",
         default=xplane_config.CURRENT_ADDON_VERSION,
@@ -118,7 +118,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Property: build_type
     #
     # The type of build this is, always a value in BUILD_TYPES
-    build_type = bpy.props.StringProperty(
+    build_type: bpy.props.StringProperty(
         name="Build Type",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=xplane_config.CURRENT_BUILD_TYPE,
@@ -128,7 +128,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Property: build_type_version
     #
     # The iteration in the build cycle, 0 for dev and legacy, > 0 for everything else
-    build_type_version = bpy.props.IntProperty(
+    build_type_version: bpy.props.IntProperty(
         name="Build Type Version",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=xplane_config.CURRENT_BUILD_TYPE_VERSION,
@@ -138,7 +138,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Property: data_model_version
     #
     # The version of the data model, tracked separately. Always incrementing.
-    data_model_version = bpy.props.IntProperty(
+    data_model_version: bpy.props.IntProperty(
         name="Data Model Version",
         description="Version of the data model (constants,props, and updater functionality) this version of the addon is. Always incrementing on changes",
         default=xplane_config.CURRENT_DATA_MODEL_VERSION,
@@ -150,7 +150,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # If run as a public facing build, this value will be replaced
     # with the YYYYMMSSHHMMSS at build creation date in UTC.
     # Otherwise, it defaults to xplane_constants.BUILD_NUMBER_NONE
-    build_number = bpy.props.StringProperty(
+    build_number: bpy.props.StringProperty(
         name="Build Number",
         description="Build number of XPlane2Blender. If xplane_constants.BUILD_NUMBER_NONE, this is a development or legacy build!",
         default=xplane_config.CURRENT_BUILD_NUMBER,
@@ -228,17 +228,17 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
                                    self.build_number)
 
 class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
-    start = bpy.props.FloatProperty(
+    start: bpy.props.FloatProperty(
             name = "Start",
             description = "Start value (from Dataref 1) of the detent region",
             default=0.0,
             precision = 3)
-    end = bpy.props.FloatProperty(
+    end: bpy.props.FloatProperty(
             name = "End",
             description = "End value (from Dataref 1) of the detent region",
             default=0.0,
             precision = 3)
-    height = bpy.props.FloatProperty(
+    height: bpy.props.FloatProperty(
             name = "Height",
             description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
             default=0.0,
@@ -255,25 +255,25 @@ class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
 #   string value - Value of the attribute
 #   string reset - Reseter of the attribute
 class XPlaneCustomAttribute(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(
+    name: bpy.props.StringProperty(
         name = "Name",
         description = "Name",
         default = ""
     )
 
-    value = bpy.props.StringProperty(
+    value: bpy.props.StringProperty(
         name = "Value",
         description = "Value",
         default = ""
     )
 
-    reset = bpy.props.StringProperty(
+    reset: bpy.props.StringProperty(
         name = "Reset",
         description = "Reset",
         default = ""
     )
 
-    weight = bpy.props.IntProperty(
+    weight: bpy.props.IntProperty(
         name = "Weight",
         description = "The more weight an attribute has the later it gets written in the OBJ",
         default = 0,
@@ -285,12 +285,12 @@ class ListItemCommand(bpy.types.PropertyGroup):
     '''
     This is essentially a copy of xplane_commands_txt_parser.CommandInfoStruct's members
     '''
-    command = bpy.props.StringProperty(
+    command: bpy.props.StringProperty(
         name="Command For Search List",
         description="A command path in the command search window. Comes from a Commands definitions file"
     )
 
-    command_description = bpy.props.StringProperty(
+    command_description: bpy.props.StringProperty(
         name="Command Description For Search List",
         description="Indicates the type, shown in a column in the commands search window. Comes from a Commands definitions file"
     )
@@ -299,27 +299,27 @@ class ListItemDataref(bpy.types.PropertyGroup):
     '''
     This is essentially a copy of xplane_datarefs_txt_parser.DatarefInfoStruct's members
     '''
-    dataref_path = bpy.props.StringProperty(
+    dataref_path: bpy.props.StringProperty(
         name="Dataref Path Data For Search List",
         description="A dataref path in the dataref search window. Comes from a Datarefs definitions file"
     )
 
-    dataref_type = bpy.props.StringProperty(
+    dataref_type: bpy.props.StringProperty(
         name="Dataref Type Data For Search List",
         description="Indicates the type, shown in a column in the datarefs search window. Comes from a Datarefs definitions file"
     )
 
-    dataref_is_writable = bpy.props.StringProperty(
+    dataref_is_writable: bpy.props.StringProperty(
         name="Dataref 'Is Writable' Data For Search List",
         description = "A "
     )
 
-    dataref_units = bpy.props.StringProperty(
+    dataref_units: bpy.props.StringProperty(
         name="",
         description=""
     )
 
-    dataref_description = bpy.props.StringProperty(
+    dataref_description: bpy.props.StringProperty(
         name="",
         description=""
     )
@@ -330,7 +330,7 @@ class XPlaneCommandSearchWindow(bpy.types.PropertyGroup):
     # It should be the full path to the command property to change,
     # as if it were being put into the Python console.
     # For instance: "bpy.context.active_object.xplane.commands[0].path"
-    command_prop_dest = bpy.props.StringProperty(
+    command_prop_dest: bpy.props.StringProperty(
             default="",
             name="Current Command Property To Change",
             description="The destination command property, starting with 'bpy.context...'"
@@ -373,8 +373,8 @@ class XPlaneCommandSearchWindow(bpy.types.PropertyGroup):
         setattr(getattr_recursive(bpy, components[1:-1]), components[-1], command)
         xplane.command_search_window_state.command_prop_dest = ""
 
-    command_search_list = bpy.props.CollectionProperty(type=ListItemCommand)
-    command_search_list_idx = bpy.props.IntProperty(update=onclick_command)
+    command_search_list: bpy.props.CollectionProperty(type=ListItemCommand)
+    command_search_list_idx: bpy.props.IntProperty(update=onclick_command)
 
 
 class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
@@ -382,7 +382,7 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
     # It should be the full path to the dataref property to change,
     # as if it were being put into the Python console.
     # For instance: "bpy.context.active_object.xplane.datarefs[0].path"
-    dataref_prop_dest = bpy.props.StringProperty(
+    dataref_prop_dest: bpy.props.StringProperty(
             default="",
             name="Current Dataref Property To Change",
             description="The destination dataref property, starting with 'bpy.context...'"
@@ -425,66 +425,66 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
         setattr(getattr_recursive(bpy, components[1:-1]), components[-1], path)
         xplane.dataref_search_window_state.dataref_prop_dest = ""
 
-    dataref_search_list = bpy.props.CollectionProperty(type=ListItemDataref)
-    dataref_search_list_idx = bpy.props.IntProperty(update=onclick_dataref)
+    dataref_search_list: bpy.props.CollectionProperty(type=ListItemDataref)
+    dataref_search_list_idx: bpy.props.IntProperty(update=onclick_dataref)
 
 
 class XPlaneExportPathDirective(bpy.types.PropertyGroup):
-    export_path = bpy.props.StringProperty(
+    export_path: bpy.props.StringProperty(
         name = "Export Path",
         description="The export path that should be copied into a library.txt",
     )
 
 
 class XPlaneEmitter(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(
+    name: bpy.props.StringProperty(
         name = "Emitter Name",
         description = "The name of the emitter, coming from the .pss file"
     )
 
-    index = bpy.props.IntProperty(
+    index: bpy.props.IntProperty(
         name = "Emitter Index",
         description = "The index in the emitter's array",
         min = 0
     )
 
-    index_enabled = bpy.props.BoolProperty(
+    index_enabled: bpy.props.BoolProperty(
         name = "Emitter Index Enabled",
         description = "Enables the emitter array index",
         default=False
     )
 
 class XPlaneMagnet(bpy.types.PropertyGroup):
-    debug_name = bpy.props.StringProperty(
+    debug_name: bpy.props.StringProperty(
         name="Debug Name",
         description="Human readable name for debugging purposes"
     )
 
-    magnet_type_is_xpad = bpy.props.BoolProperty(
+    magnet_type_is_xpad: bpy.props.BoolProperty(
         name="xpad",
         description="Sets the type to include 'xpad'"
     )
 
-    magnet_type_is_flashlight = bpy.props.BoolProperty(
+    magnet_type_is_flashlight: bpy.props.BoolProperty(
         name="flashlight",
         description="Sets the type to include 'flashlight'"
     )
 
 
 class XPlaneEmpty(bpy.types.PropertyGroup):
-    emitter_props = bpy.props.PointerProperty(
+    emitter_props: bpy.props.PointerProperty(
         name="Emitter Settings",
         description="Settings for emitter, if special type is an Emitter",
         type=XPlaneEmitter
     )
 
-    magnet_props = bpy.props.PointerProperty(
+    magnet_props: bpy.props.PointerProperty(
         name="Magnet Settings",
         description="Settings for magnet, if special type is Magnet",
         type=XPlaneMagnet
     )
 
-    special_type = bpy.props.EnumProperty(
+    special_type: bpy.props.EnumProperty(
         name="Empty Special Type",
         description="Type XPlane2Blender item this is",
         items= [
@@ -504,27 +504,27 @@ class XPlaneEmpty(bpy.types.PropertyGroup):
 #   float value - Dataref value (can be keyframed)
 #   int loop - Loop amount of dataref animation.
 class XPlaneDataref(bpy.types.PropertyGroup):
-    path = bpy.props.StringProperty(
+    path: bpy.props.StringProperty(
         name = "Dataref Path",
         description = "Dataref Path",
         default = ""
     )
 
-    value = bpy.props.FloatProperty(
+    value: bpy.props.FloatProperty(
         name = "Value",
         description = "Value",
         default = 0.0,
         precision = 6
     )
 
-    loop = bpy.props.FloatProperty(
+    loop: bpy.props.FloatProperty(
         name = "Loop Animation Every",
         description = "Loop amount of animation, useful for ever increasing Datarefs. A value of 0 will ignore this setting",
         min = 0.0,
         precision = 3
     )
 
-    anim_type = bpy.props.EnumProperty(
+    anim_type: bpy.props.EnumProperty(
         name = "Animation Type",
         description = "Type of animation this Dataref will use",
         default = ANIM_TYPE_TRANSFORM,
@@ -535,14 +535,14 @@ class XPlaneDataref(bpy.types.PropertyGroup):
         ]
     )
 
-    show_hide_v1 = bpy.props.FloatProperty(
+    show_hide_v1: bpy.props.FloatProperty(
         name = "Value 1",
         description = "Show/Hide value 1",
         default = 0.0,
         precision = 3
     )
 
-    show_hide_v2 = bpy.props.FloatProperty(
+    show_hide_v2: bpy.props.FloatProperty(
         name = "Value 2",
         description = "Show/Hide value 2",
         default = 0.0,
@@ -558,7 +558,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
 #   string value - Value of the variable
 #   string operator - Conditional operator to use
 class XPlaneCondition(bpy.types.PropertyGroup):
-    variable = bpy.props.EnumProperty(
+    variable: bpy.props.EnumProperty(
         name = "Variable",
         description = "Variable",
         default = CONDITION_GLOBAL_LIGHTING,
@@ -569,7 +569,7 @@ class XPlaneCondition(bpy.types.PropertyGroup):
         ]
     )
 
-    value = bpy.props.BoolProperty(
+    value: bpy.props.BoolProperty(
         name = "Must Be On",
         description = "On/Off",
         default = True
@@ -605,26 +605,26 @@ class XPlaneCondition(bpy.types.PropertyGroup):
 #   string dataref1 - Dataref 1
 #   string dataref2 - Dataref 2
 class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
-    autodetect_datarefs = bpy.props.BoolProperty(
+    autodetect_datarefs: bpy.props.BoolProperty(
         name = "Autodetect Datarefs",
         description = "If checked, dataref(s) for this manipulator will be taken from its mesh's animations",
         default = True
         )
 
     #This is meant for making old manipulator types smarter, not new manipulator types
-    autodetect_settings_opt_in = bpy.props.BoolProperty(
+    autodetect_settings_opt_in: bpy.props.BoolProperty(
         name = "Autodetect Settings",
         description = "Use new algorithms to autodetect certain manipulator settings from animation data",
         default = False
     )
 
-    axis_detent_ranges = bpy.props.CollectionProperty(
+    axis_detent_ranges: bpy.props.CollectionProperty(
         name = "Axis Detent Range",
         description = "The ranges where a drag rotate manipulator can move freely, and what heights must be overcome to enter each range",
         type=XPlaneAxisDetentRange
     )
 
-    enabled = bpy.props.BoolProperty(
+    enabled: bpy.props.BoolProperty(
         name = "Manipulator",
         description = "If checked, this object will be treated as a manipulator",
         default = False
@@ -667,20 +667,20 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         else:
             return type_items
 
-    type = bpy.props.EnumProperty(
+    type: bpy.props.EnumProperty(
         name = "Manipulator Type",
         description = "The type of the manipulator",
         items = get_manip_types_for_this_version
 
     )
 
-    tooltip = bpy.props.StringProperty(
+    tooltip: bpy.props.StringProperty(
         name = "Manipulator Tooltip",
         description = "The tooltip will be displayed when hovering over the object",
         default = ""
     )
 
-    cursor = bpy.props.EnumProperty(
+    cursor: bpy.props.EnumProperty(
         name = "Manipulator Cursor",
         description = "The mouse cursor type when hovering over the object",
         default = MANIP_CURSOR_HAND,
@@ -707,162 +707,162 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    dx = bpy.props.FloatProperty(
+    dx: bpy.props.FloatProperty(
         name = "Drag X",
         description = "X-Drag axis length",
         default = 0.0,
         precision = 3
     )
 
-    dy = bpy.props.FloatProperty(
+    dy: bpy.props.FloatProperty(
         name = "Drag Y",
         description = "Y-Drag axis length",
         default = 0.0,
         precision = 3
     )
 
-    dz = bpy.props.FloatProperty(
+    dz: bpy.props.FloatProperty(
         name = "Drag Z",
         description = "Z-Drag axis length",
         default = 0.0,
         precision = 3
     )
 
-    v1 = bpy.props.FloatProperty(
+    v1: bpy.props.FloatProperty(
         name = "Value 1",
         description = "Value 1",
         default = 0.0,
         precision = 3
     )
 
-    v2 = bpy.props.FloatProperty(
+    v2: bpy.props.FloatProperty(
         name = "Value 2",
         description = "Value 2",
         default = 0.0,
         precision = 3
     )
 
-    v1_min = bpy.props.FloatProperty(
+    v1_min: bpy.props.FloatProperty(
         name = "Value 1 Min",
         description = "Value 1 min",
         default = 0.0,
         precision = 3
     )
 
-    v1_max = bpy.props.FloatProperty(
+    v1_max: bpy.props.FloatProperty(
         name = "Value 1 Max",
         description = "Value 1 max",
         default = 0.0,
         precision = 3
     )
 
-    v2_min = bpy.props.FloatProperty(
+    v2_min: bpy.props.FloatProperty(
         name = "Value 2 Min",
         description = "Value 2 min",
         default = 0.0,
         precision = 3
     )
 
-    v2_max = bpy.props.FloatProperty(
+    v2_max: bpy.props.FloatProperty(
         name = "Value 2 Max",
         description = "Value 2 max",
         default = 0.0,
         precision = 3
     )
 
-    v_down = bpy.props.FloatProperty(
+    v_down: bpy.props.FloatProperty(
         name = "Value On Mouse Down",
         description = "Value to set dataref on mouse down",
         default = 0.0,
         precision = 3
     )
 
-    v_up = bpy.props.FloatProperty(
+    v_up: bpy.props.FloatProperty(
         name = "Value On Mouse Up",
         description = "Value to set dataref on mouse up",
         default = 0.0,
         precision = 3
     )
 
-    v_hold = bpy.props.FloatProperty(
+    v_hold: bpy.props.FloatProperty(
         name = "Value On Mouse Hold",
         description = "Value to set dataref on mouse hold",
         default = 0.0,
         precision = 3
     )
 
-    v_on = bpy.props.FloatProperty(
+    v_on: bpy.props.FloatProperty(
         name = "On Value",
         description = "On value",
         default = 0.0,
         precision = 3
     )
 
-    v_off = bpy.props.FloatProperty(
+    v_off: bpy.props.FloatProperty(
         name = "Off Value",
         description = "Off value",
         default = 0.0,
         precision = 3
     )
 
-    command = bpy.props.StringProperty(
+    command: bpy.props.StringProperty(
         name = "Command",
         description = "The command to fire when manipulator is used",
         default = ""
     )
 
-    positive_command = bpy.props.StringProperty(
+    positive_command: bpy.props.StringProperty(
         name = "Positive Command",
         description = "Positive command",
         default = ""
     )
 
-    negative_command = bpy.props.StringProperty(
+    negative_command: bpy.props.StringProperty(
         name = "Negative Command",
         description = "Negative command",
         default = ""
     )
 
-    dataref1 = bpy.props.StringProperty(
+    dataref1: bpy.props.StringProperty(
         name = "Dataref 1",
         description = "Dataref 1",
         default = "")
 
-    dataref2 = bpy.props.StringProperty(
+    dataref2: bpy.props.StringProperty(
         name = "Dataref 2",
         description = "Dataref 2",
         default = ""
     )
 
-    step = bpy.props.FloatProperty(
+    step: bpy.props.FloatProperty(
         name = "Step",
         description = "Dataref increment",
         default = 1.0,
         precision = 3
     )
 
-    click_step = bpy.props.FloatProperty(
+    click_step: bpy.props.FloatProperty(
         name = "Click Step",
         description = "Value change on click",
         default = 0.0,
         precision = 3
     )
 
-    hold_step = bpy.props.FloatProperty(
+    hold_step: bpy.props.FloatProperty(
         name = "Hold Step",
         description = "Value change on hold",
         default = 0.0,
         precision = 3
     )
 
-    wheel_delta = bpy.props.FloatProperty(
+    wheel_delta: bpy.props.FloatProperty(
         name = "Wheel Delta",
         description = "Value change on mouse wheel tick",
         default = 0.0,
         precision = 3
     )
 
-    exp = bpy.props.FloatProperty(
+    exp: bpy.props.FloatProperty(
         name = "Exp",
         description = "Power of an exponential curve that controls the speed at which the dataref changes. Higher numbers cause a more “non-linear” response, where small drags are very precise and large drags are very fast",
         default = 1.0,
@@ -894,13 +894,13 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
 #   int width - width of the region in powers of 2
 #   int height - height of the region in powers of 2
 class XPlaneCockpitRegion(bpy.types.PropertyGroup):
-    expanded = bpy.props.BoolProperty(
+    expanded: bpy.props.BoolProperty(
         name = "Expanded",
         description = "Toggle this cockpit region settings visibility",
         default = False
     )
 
-    top = bpy.props.IntProperty(
+    top: bpy.props.IntProperty(
         name = "Top",
         description = "Top",
         default = 0,
@@ -908,7 +908,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
         max = 2048
     )
 
-    left = bpy.props.IntProperty(
+    left: bpy.props.IntProperty(
         name = "Left",
         description = "Left",
         default = 0,
@@ -916,7 +916,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
         max = 2048
     )
 
-    width = bpy.props.IntProperty(
+    width: bpy.props.IntProperty(
         name = "Width",
         description = "Width in powers of 2",
         default = 1,
@@ -924,7 +924,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
         max = 11
     )
 
-    height = bpy.props.IntProperty(
+    height: bpy.props.IntProperty(
         name = "Height",
         description = "Height in powers of 2",
         default = 1,
@@ -939,20 +939,20 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
 #   int near - near distance
 #   int far - far distance
 class XPlaneLOD(bpy.types.PropertyGroup):
-    expanded = bpy.props.BoolProperty(
+    expanded: bpy.props.BoolProperty(
         name = "Expanded",
         description = "Toggle this LOD settings visibility",
         default = False
     )
 
-    near = bpy.props.IntProperty(
+    near: bpy.props.IntProperty(
         name = "Near",
         description = "Near distance (inclusive) in meters",
         default = 0,
         min = 0
     )
 
-    far = bpy.props.IntProperty(
+    far: bpy.props.IntProperty(
         name = "Far",
         description = "Far distance (exclusive) in meters",
         default = 0,
@@ -979,49 +979,49 @@ def make_lods_array():
 #   string texture_normal - Normal/Specular Texture to use for this OBJ.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane header attributes.
 class XPlaneLayer(bpy.types.PropertyGroup):
-    index = bpy.props.IntProperty(
+    index: bpy.props.IntProperty(
         name = "Index",
         description = "The blender layer index",
         default = -1
     )
 
-    expanded = bpy.props.BoolProperty(
+    expanded: bpy.props.BoolProperty(
         name = "Expanded",
         description = "Toggles the layer settings visibility",
         default = False
     )
 
-    export = bpy.props.BoolProperty(
+    export: bpy.props.BoolProperty(
         name = "Export",
         description = "If checked, this layer will be exported if visible",
         default = True
     )
 
-    export_path_directives = bpy.props.CollectionProperty(
+    export_path_directives: bpy.props.CollectionProperty(
         name = "Export Directives for Layer",
         description = "A collection of export paths intended for an OBJ's EXPORT directives",
         type = XPlaneExportPathDirective
     )
 
-    particle_system_file = bpy.props.StringProperty(
+    particle_system_file: bpy.props.StringProperty(
         name = "Particle System Definition File",
         description = "Relative file path to a .pss that defines particles",
         subtype = "FILE_PATH"
     )
 
-    debug = bpy.props.BoolProperty(
+    debug: bpy.props.BoolProperty(
         name = "Debug",
         description = "If checked, this OBJ file will put diagnostics in Plane's log.txt",
         default = True
     )
 
-    name = bpy.props.StringProperty(
+    name: bpy.props.StringProperty(
         name = "Name",
         description = "This name will be used as a filename hint for OBJ file(s)",
         default = ""
     )
 
-    export_type = bpy.props.EnumProperty(
+    export_type: bpy.props.EnumProperty(
         name = "Type",
         description = "What kind of thing are you going to export?",
         default = "aircraft",
@@ -1034,13 +1034,13 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # Deprecated: This will be removed in v3.4
-    cockpit = bpy.props.BoolProperty(
+    cockpit: bpy.props.BoolProperty(
         name = "Cockpit",
         description = "If checked the exported object will be interpreted as a cockpit",
         default = False
     )
 
-    slungLoadWeight = bpy.props.FloatProperty(
+    slungLoadWeight: bpy.props.FloatProperty(
         name = "Slung Load Weight",
         description = "Weight of the object in pounds, for use in the physics engine if the object is being carried by a plane or helicopter",
         default = 0.0,
@@ -1048,21 +1048,21 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         precision = 3
     )
 
-    texture = bpy.props.StringProperty(
+    texture: bpy.props.StringProperty(
         subtype = "FILE_PATH",
         name = "Texture",
         description = "Texture to use for objects on this layer",
         default = ""
     )
 
-    texture_lit = bpy.props.StringProperty(
+    texture_lit: bpy.props.StringProperty(
         subtype = "FILE_PATH",
         name = "Night Texture",
         description = "Night Texture to use for objects on this layer",
         default = ""
     )
 
-    texture_normal = bpy.props.StringProperty(
+    texture_normal: bpy.props.StringProperty(
         subtype = "FILE_PATH",
         name = "Normal/Specular Texture",
         description = "Normal/Specular Texture to use for objects on this layer",
@@ -1070,7 +1070,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
-    texture_draped = bpy.props.StringProperty(
+    texture_draped: bpy.props.StringProperty(
         subtype = "FILE_PATH",
         name = "Draped Texture",
         description = "Texture to use for draped objects on this layer",
@@ -1078,14 +1078,14 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
-    texture_draped_normal = bpy.props.StringProperty(
+    texture_draped_normal: bpy.props.StringProperty(
         subtype = "FILE_PATH",
         name = "Normal/Specular Texture Draped Texture",
         description = "Normal/Specular Texture to use for draped objects on this layer",
         default = ""
     )
 
-    cockpit_regions = bpy.props.EnumProperty(
+    cockpit_regions: bpy.props.EnumProperty(
         name = "Cockpit Regions",
         description = "Number of Cockpit regions to use",
         default = "0",
@@ -1098,27 +1098,27 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         ]
     )
 
-    cockpit_region = bpy.props.CollectionProperty(
+    cockpit_region: bpy.props.CollectionProperty(
         name = "Cockpit Region",
         type = XPlaneCockpitRegion,
         description = "Cockpit Region"
     )
 
-    lods = bpy.props.EnumProperty(
+    lods: bpy.props.EnumProperty(
         name = "Levels of Detail",
         description = "Levels of detail",
         default = "0",
         items = make_lods_array()
     )
 
-    lod = bpy.props.CollectionProperty(
+    lod: bpy.props.CollectionProperty(
         name = "LOD",
         type = XPlaneLOD,
         description = "Level of detail"
     )
 
     # v1000
-    lod_draped = bpy.props.FloatProperty(
+    lod_draped: bpy.props.FloatProperty(
         name = "Max. Draped LOD",
         description = "Maximum LOD distance for draped geometry. Set to 0 to use farest LOD",
         default = 0,
@@ -1126,21 +1126,21 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
-    tilted = bpy.props.BoolProperty(
+    tilted: bpy.props.BoolProperty(
         name = "Tilted",
         description = "Causes objects placed on a scenery tile to sit “on” the ground even if it is sloped",
         default = False
     )
 
     # v1000
-    slope_limit = bpy.props.BoolProperty(
+    slope_limit: bpy.props.BoolProperty(
         name = "Slope Limit",
         description = "Establishes the maximum slope limit an object will tolerate (in degrees) for library objects placed in a DSF",
         default = False
     )
 
     # v1000
-    slope_limit_min_pitch = bpy.props.FloatProperty(
+    slope_limit_min_pitch: bpy.props.FloatProperty(
         name = "Min. Pitch",
         description = "Represents the ground sloping down at the front of the object in degrees",
         default = 0.0,
@@ -1148,7 +1148,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
-    slope_limit_max_pitch = bpy.props.FloatProperty(
+    slope_limit_max_pitch: bpy.props.FloatProperty(
         name = "Max. Pitch",
         description = "Represents the ground sloping down at the front of the object in degrees",
         default = 0.0,
@@ -1156,7 +1156,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
-    slope_limit_min_roll = bpy.props.FloatProperty(
+    slope_limit_min_roll: bpy.props.FloatProperty(
         name = "Min. Roll",
         description = "Represents the ground sloping down to the left of the object in degrees",
         default = 0.0,
@@ -1164,7 +1164,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
-    slope_limit_max_roll = bpy.props.FloatProperty(
+    slope_limit_max_roll: bpy.props.FloatProperty(
         name = "Max. Roll",
         description = "Represents the ground sloping down to the left of the object in degrees",
         default = 0.0,
@@ -1172,7 +1172,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1000
-    require_surface = bpy.props.EnumProperty(
+    require_surface: bpy.props.EnumProperty(
         name = "Require Surface",
         description = "Whether an object should be used over wet or dry terrain when placed from the library",
         default = "none",
@@ -1184,7 +1184,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     # v1010
-    cockpit_lit = bpy.props.BoolProperty(
+    cockpit_lit: bpy.props.BoolProperty(
         name = "3D-Cockpit Lighting",
         default = True
     )
@@ -1205,14 +1205,14 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         (LAYER_GROUP_CARS,          "Cars",          "Cars")
     ]
 
-    layer_group = bpy.props.EnumProperty(
+    layer_group: bpy.props.EnumProperty(
         name = "Layer Group",
         description = "Draw this OBJ in a special group",
         default = "none",
         items = layerGroups
     )
 
-    layer_group_offset = bpy.props.IntProperty(
+    layer_group_offset: bpy.props.IntProperty(
         name = "Layer Group Offset",
         description = "Use to fine tune drawing order",
         default = 0,
@@ -1220,14 +1220,14 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         max = 5
     )
 
-    layer_group_draped = bpy.props.EnumProperty(
+    layer_group_draped: bpy.props.EnumProperty(
         name = "Draped Layer Group",
         description = "Draws draped geometry in a special group",
         default = "none",
         items = layerGroups
     )
 
-    layer_group_draped_offset = bpy.props.IntProperty(
+    layer_group_draped_offset: bpy.props.IntProperty(
         name = "Draped Layer Group Offset",
         description = "Use to fine tune drawing order of draped geometry",
         default = 0,
@@ -1235,13 +1235,13 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         max = 5
     )
 
-    customAttributes = bpy.props.CollectionProperty(
+    customAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Header Attributes",
         description = "User defined header attributes for the X-Plane file",
         type = XPlaneCustomAttribute
     )
 
-    autodetectTextures = bpy.props.BoolProperty(
+    autodetectTextures: bpy.props.BoolProperty(
         name = "Autodetect Textures",
         description = "Automaticly determines textures based on materials",
         default = True
@@ -1254,71 +1254,71 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 # Properties:
 #   layers - Collection of <XPlaneLayers>. Export settings for the Blender layers.
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
-    command_search_window_state = bpy.props.PointerProperty(
+    command_search_window_state: bpy.props.PointerProperty(
             name = "Command Search Window State",
             description = "An internally important property that keeps track of the state of the command search window",
             type = XPlaneCommandSearchWindow
             )
 
-    dataref_search_window_state = bpy.props.PointerProperty(
+    dataref_search_window_state: bpy.props.PointerProperty(
             name = "Dataref Search Window State",
             description = "An internally important property that keeps track of the state of the dataref search window",
             type = XPlaneDatarefSearchWindow
             )
-    debug = bpy.props.BoolProperty(
+    debug: bpy.props.BoolProperty(
         name = "Print Debug Info To Output, OBJ",
         description = "If checked debug information will be printed to the console and into OBJ files",
         default = False
     )
 
-    log = bpy.props.BoolProperty(
+    log: bpy.props.BoolProperty(
         name = "Create Log File",
         description = "If checked the debug information will be written to a log file",
         default = False
     )
 
     # Plugin development tools
-    plugin_development = bpy.props.BoolProperty(
+    plugin_development: bpy.props.BoolProperty(
         name = "Plugin Development Tools (Experimental!)",
         description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
         default = False) # Set this to true during development to avoid re-checking it
 
     #######################################
     #TODO: Should these be in their own namespace?
-    dev_enable_breakpoints = bpy.props.BoolProperty(
+    dev_enable_breakpoints: bpy.props.BoolProperty(
         name = "Enable Breakpoints",
         description = "Allows use of Eclipse breakpoints (must have PyDev, Eclipse installed and configured to use and Pydev Debug Server running!)",
         default = False)
 
-    dev_continue_export_on_error = bpy.props.BoolProperty(
+    dev_continue_export_on_error: bpy.props.BoolProperty(
         name = "Continue Export On Error",
         description = "Exporter continues even when an OBJ cannot be exported. It does not affect unit tests",
         default = False)
 
-    dev_export_as_dry_run = bpy.props.BoolProperty(
+    dev_export_as_dry_run: bpy.props.BoolProperty(
         name        = 'Dry Run',
         description = 'Run exporter without actually writing .objs to disk',
         default = False)
 
-    dev_fake_xplane2blender_version = bpy.props.StringProperty(
+    dev_fake_xplane2blender_version: bpy.props.StringProperty(
         name       = "Fake XPlane2Blender Version",
         description = "The Fake XPlane2Blender Version to re-run the upgrader with",
         default = "")#str(bpy.context.scene.xplane.get("xplane2blender_ver")))
     #######################################
 
-    layers = bpy.props.CollectionProperty(
+    layers: bpy.props.CollectionProperty(
         name = "Layers",
         description = "Export settings for the Blender layers",
         type = XPlaneLayer
     )
 
-    optimize = bpy.props.BoolProperty(
+    optimize: bpy.props.BoolProperty(
         name = "Optimize",
         description = "If checked file size will be optimized. However this can increase export time dramatically",
         default = False
     )
 
-    version = bpy.props.EnumProperty(
+    version: bpy.props.EnumProperty(
         name = "X-Plane Version",
         default = VERSION_1130,
         items = [
@@ -1333,7 +1333,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    exportMode = bpy.props.EnumProperty(
+    exportMode: bpy.props.EnumProperty(
         name = "Export Mode",
         default = "layers",
         items = [
@@ -1342,7 +1342,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    compositeTextures = bpy.props.BoolProperty(
+    compositeTextures: bpy.props.BoolProperty(
         name = "Compile Normal-Textures",
         description = "Will automatically create and use corrected normal textures",
         default = True
@@ -1350,7 +1350,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
     # This list of version histories the .blend file has encountered,
     # from the earliest
-    xplane2blender_ver_history = bpy.props.CollectionProperty(
+    xplane2blender_ver_history: bpy.props.CollectionProperty(
         name="XPlane2Blender History",
         description="Every version of XPlane2Blender this .blend file has been opened with",
         type=XPlane2BlenderVersion)
@@ -1372,19 +1372,19 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     Settings for Blender objects. On Blender Objects these are accessed via a
     pointer property called xplane. Ex: bpy.data.objects[0].xplane.datarefs
     '''
-    customAttributes = bpy.props.CollectionProperty(
+    customAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Attributes",
         description = "User defined attributes for the Object",
         type = XPlaneCustomAttribute
     )
 
-    customAnimAttributes = bpy.props.CollectionProperty(
+    customAnimAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Animation Attributes",
         description = "User defined attributes for animation of the Object",
         type = XPlaneCustomAttribute
     )
 
-    datarefs = bpy.props.CollectionProperty(
+    datarefs: bpy.props.CollectionProperty(
         name = "X-Plane Datarefs",
         description = "X-Plane Datarefs",
         type = XPlaneDataref
@@ -1394,32 +1394,32 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     # to put this on here, even if it might not be relavent
     # to the current object.
     # Always check for type == "EMPTY" before using!
-    special_empty_props = bpy.props.PointerProperty(
+    special_empty_props: bpy.props.PointerProperty(
         name = "Special Empty Properties",
         description = "Empty Only Properties",
         type = XPlaneEmpty
     )
 
-    manip = bpy.props.PointerProperty(
+    manip: bpy.props.PointerProperty(
         name = "Manipulator",
         description = "X-Plane Manipulator Settings",
         type = XPlaneManipulatorSettings
     )
 
-    lod = bpy.props.BoolVectorProperty(
+    lod: bpy.props.BoolVectorProperty(
         name = "Levels Of Detail",
         description = "Define in wich LODs this object will be used. If none is checked it will be used in all",
         default = (False, False, False, False),
         size = MAX_LODS-1
     )
 
-    override_weight = bpy.props.BoolProperty(
+    override_weight: bpy.props.BoolProperty(
         name = "Override Weight",
         description = "If checked you can override the internal weight of the object. Heavier objects will be written later in OBJ",
         default = False
     )
 
-    weight = bpy.props.IntProperty(
+    weight: bpy.props.IntProperty(
         name = "Weight",
         description = "Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lamps > = 10000",
         default = 0,
@@ -1430,7 +1430,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     while len(exportMeshValues) < 20:
         exportMeshValues.append(True)
 
-    export_mesh = bpy.props.BoolVectorProperty(
+    export_mesh: bpy.props.BoolVectorProperty(
         name = "Export Mesh in Layers",
         description = "If disabled only object's animations will be exported in the selected layers, but not the mesh itself",
         default = exportMeshValues,
@@ -1438,19 +1438,19 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         subtype = 'LAYER')
 
     # v1000
-    conditions = bpy.props.CollectionProperty(
+    conditions: bpy.props.CollectionProperty(
         name = "Conditions",
         description = "Hide/show object depending on rendering settings",
         type = XPlaneCondition
     )
 
-    isExportableRoot = bpy.props.BoolProperty(
+    isExportableRoot: bpy.props.BoolProperty(
         name = 'Root Object',
         description = 'Activate to export this object and all its children into it\'s own .obj file',
         default = False
     )
 
-    layer = bpy.props.PointerProperty(
+    layer: bpy.props.PointerProperty(
         name = "X-Plane Layer",
         description = "X-Plane Layer/File Settings",
         type = XPlaneLayer
@@ -1462,31 +1462,31 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
 # Properties:
 #   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
 class XPlaneBoneSettings(bpy.types.PropertyGroup):
-    datarefs = bpy.props.CollectionProperty(
+    datarefs: bpy.props.CollectionProperty(
         name = "X-Plane Datarefs",
         description = "X-Plane Datarefs",
         type = XPlaneDataref
     )
 
-    customAttributes = bpy.props.CollectionProperty(
+    customAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Attributes",
         description = "User defined attributes for the Object",
         type = XPlaneCustomAttribute
     )
 
-    customAnimAttributes = bpy.props.CollectionProperty(
+    customAnimAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Animation Attributes",
         description = "User defined attributes for animation of the Object",
         type = XPlaneCustomAttribute
     )
 
-    override_weight = bpy.props.BoolProperty(
+    override_weight: bpy.props.BoolProperty(
         name = "Override Weight",
         description = "If checked you can override the internal weight of the object. Heavier objects will be written later in OBJ",
         default = False
     )
 
-    weight = bpy.props.IntProperty(
+    weight: bpy.props.IntProperty(
         name = "Weight",
         description = "Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lamps > = 10000",
         default = 0,
@@ -1511,13 +1511,13 @@ def updateMaterialLitPreview(self, context):
 #   float blendRatio - Alpha cutoff ratio.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
-    draw = bpy.props.BoolProperty(
+    draw: bpy.props.BoolProperty(
         name = "Draw Objects With This Material",
         description = "If turned off, objects with this material won't be drawn",
         default = True
     )
 
-    surfaceType = bpy.props.EnumProperty(
+    surfaceType: bpy.props.EnumProperty(
         name = 'Surface Type',
         description = 'Controls the bumpiness of material in X-Plane',
         default = 'none',
@@ -1536,37 +1536,37 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    shadow_local = bpy.props.BoolProperty(
+    shadow_local: bpy.props.BoolProperty(
         name="Cast Shadows (Local)",
         description="If enabled, object will cast shadows. Must have 'Cast Shadows (Global)' checked",
         default=True
     )
 
-    deck = bpy.props.BoolProperty(
+    deck: bpy.props.BoolProperty(
         name = "Deck",
         description = "Allows the user to fly under the surface",
         default = False
     )
 
-    solid_camera = bpy.props.BoolProperty(
+    solid_camera: bpy.props.BoolProperty(
         name = "Camera Collision",
         description = "X-Plane's camera will be prevented from moving through objects with this material. Only allowed in Cockpit type exports",
         default = False
     )
 
-    blend = bpy.props.BoolProperty(
+    blend: bpy.props.BoolProperty(
         name = "Use Alpha Cutoff",
         description = "If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio",
         default = False
     )
-    blend_glass = bpy.props.BoolProperty(
+    blend_glass: bpy.props.BoolProperty(
         name = "Blend Glass",
         description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering",
         default = False
     )
 
     # v1000
-    blend_v1000 = bpy.props.EnumProperty(
+    blend_v1000: bpy.props.EnumProperty(
         name = "Blend",
         description = "Controls texture alpha/blending",
         default = BLEND_ON,
@@ -1577,7 +1577,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    blendRatio = bpy.props.FloatProperty(
+    blendRatio: bpy.props.FloatProperty(
         name = "Alpha Cutoff Ratio",
         description = "Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque",
         default = 0.5,
@@ -1587,13 +1587,13 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         min = 0.0
     )
 
-    panel = bpy.props.BoolProperty(
+    panel: bpy.props.BoolProperty(
         name = "Part Of Cockpit Panel",
         description = "If checked this object will use the panel texture and will be clickable",
         default = False
     )
 
-    cockpit_region = bpy.props.EnumProperty(
+    cockpit_region: bpy.props.EnumProperty(
         name = "Cockpit Region",
         description = "Cockpit region to use",
         default = "0",
@@ -1606,33 +1606,33 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    lightLevel = bpy.props.BoolProperty(
+    lightLevel: bpy.props.BoolProperty(
         name = "Override Light Level",
         description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
         default = False
     )
 
-    lightLevel_v1 = bpy.props.FloatProperty(
+    lightLevel_v1: bpy.props.FloatProperty(
         name = "Value 1",
         description = "Value 1 for light level",
         default = 0.0,
         precision = 2
     )
 
-    lightLevel_v2 = bpy.props.FloatProperty(
+    lightLevel_v2: bpy.props.FloatProperty(
         name = "Value 2",
         description = "Value 2 for light level",
         default = 1.0,
         precision = 2
     )
 
-    lightLevel_dataref = bpy.props.StringProperty(
+    lightLevel_dataref: bpy.props.StringProperty(
         name = "Dataref",
         description = "The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped",
         default = ""
     )
 
-    poly_os = bpy.props.IntProperty(
+    poly_os: bpy.props.IntProperty(
         name = "Polygon Offset",
         description = "Sets the polygon offset state. Leave at 0 for default behaviour",
         default = 0,
@@ -1641,19 +1641,19 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     # v1000
-    conditions = bpy.props.CollectionProperty(
+    conditions: bpy.props.CollectionProperty(
         name = "Conditions",
         description = "Hide/show objects with material depending on rendering settings",
         type = XPlaneCondition
     )
 
-    customAttributes = bpy.props.CollectionProperty(
+    customAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Material Attributes",
         description = "User defined material attributes for the X-Plane file",
         type = XPlaneCustomAttribute
     )
 
-    litFactor = bpy.props.FloatProperty(
+    litFactor: bpy.props.FloatProperty(
         name = "Day-Night Preview Balance",
         description = "Adjusts 3D View's preview of day vs night texture",
         default = 0,
@@ -1664,14 +1664,14 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     # v1000
-    draped = bpy.props.BoolProperty(
+    draped: bpy.props.BoolProperty(
         name = "Draped",
         description = "Will perfectly match with the ground",
         default = False
     )
 
     # v1100
-    normal_metalness = bpy.props.BoolProperty(
+    normal_metalness: bpy.props.BoolProperty(
         name = "Normal Metalness",
         description = "Blue channel will be used for base reflectance",
         default = False
@@ -1679,7 +1679,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
 
     # v1000 (draped only)
-    bump_level = bpy.props.FloatProperty(
+    bump_level: bpy.props.FloatProperty(
         name = "Draped Bump Level",
         description = "Scales the Bump for draped geometry up or down",
         default = 1.0,
@@ -1688,14 +1688,14 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     # v1000 (only for instances)
-    tint = bpy.props.BoolProperty(
+    tint: bpy.props.BoolProperty(
         name = "Tint",
         description = "If active you can set the albedo and emissive tint",
         default = False
     )
 
     # v1000 (only for instances)
-    tint_albedo = bpy.props.FloatProperty(
+    tint_albedo: bpy.props.FloatProperty(
         name = "Albedo",
         description = "Albedo tint. 0.0 no darkening, 1.0 total darkening",
         min = 0.0,
@@ -1706,7 +1706,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     # v1000 (only for instances)
-    tint_emissive = bpy.props.FloatProperty(
+    tint_emissive: bpy.props.FloatProperty(
         name = "Emissive",
         description = "Emissive tint. 0.0 no darkening, 1.0 total darkening",
         min = 0.0,
@@ -1730,13 +1730,13 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneLampSettings(bpy.types.PropertyGroup):
     # TODO: deprecate named{?}, flashing, pulising, strobe, traffic lights in v3.4
-    enable_rgb_override = bpy.props.BoolProperty(
+    enable_rgb_override: bpy.props.BoolProperty(
         name = "Enable RGB Picker Override",
         description = "Used instead of the Blender color picker to input any RGB values. Useful for certain datarefs",
         default = False
         )
 
-    rgb_override_values = bpy.props.FloatVectorProperty(
+    rgb_override_values: bpy.props.FloatVectorProperty(
         name = "RGB Override Values",
         description = "The values that will be used instead of the RGB picker",
         default = (0.0,0.0,0.0),
@@ -1746,7 +1746,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
         size = 3
         )
 
-    type = bpy.props.EnumProperty(
+    type: bpy.props.EnumProperty(
         name = "Type",
         description = "Defines the type of the light in X-Plane",
         default = LIGHT_DEFAULT,
@@ -1762,32 +1762,32 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    name = bpy.props.StringProperty(
+    name: bpy.props.StringProperty(
         name = 'Name',
         description = "Named lights allow a light to be created based on pre-existing types",
         default = ""
     )
 
-    params = bpy.props.StringProperty(
+    params: bpy.props.StringProperty(
         name = 'Parameters',
         description = "The additional parameters vary in number and definition based on the particular parameterized light selected",
         default = ""
     )
 
-    size = bpy.props.FloatProperty(
+    size: bpy.props.FloatProperty(
         name = 'Size',
         description = "The size of the light - this is not in a particular unit (like meters), but larger numbers produce bigger brighter lights",
         default = 1.0,
         min = 0.0
     )
 
-    dataref = bpy.props.StringProperty(
+    dataref: bpy.props.StringProperty(
         name = 'Dataref',
         description = "A X-Plane Dataref",
         default = ""
     )
 
-    uv = bpy.props.FloatVectorProperty(
+    uv: bpy.props.FloatVectorProperty(
         name = "Texture Coordinates",
         description = "The texture coordinates in the following order: left,top,right,bottom (fractions from 0 to 1)",
         default = (0.0, 0.0, 1.0, 1.0),
@@ -1797,7 +1797,7 @@ class XPlaneLampSettings(bpy.types.PropertyGroup):
         size = 4
     )
 
-    customAttributes = bpy.props.CollectionProperty(
+    customAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Light Attributes",
         description = "User defined light attributes for the X-Plane file",
         type = XPlaneCustomAttribute
@@ -1838,29 +1838,29 @@ def addXPlaneRNA():
     for c in _classes:
         bpy.utils.register_class(c)
 
-    bpy.types.Scene.xplane = bpy.props.PointerProperty(
+    bpy.types.Scene.xplane: bpy.props.PointerProperty(
         type = XPlaneSceneSettings,
-        name = "XPlane",
+        name = "X-Plane Scene Settings",
         description = "X-Plane Scene Settings"
     )
-    bpy.types.Object.xplane = bpy.props.PointerProperty(
+    bpy.types.Object.xplane: bpy.props.PointerProperty(
         type = XPlaneObjectSettings,
-        name = "XPlane",
+        name = "X-Plane Object Settings",
         description = "X-Plane Object Settings"
     )
-    bpy.types.Bone.xplane = bpy.props.PointerProperty(
+    bpy.types.Bone.xplane: bpy.props.PointerProperty(
         type = XPlaneBoneSettings,
-        name = "XPlane",
+        name = "X-Plane Bone Settings",
         description = "X-Plane Bone Settings"
     )
-    bpy.types.Material.xplane = bpy.props.PointerProperty(
+    bpy.types.Material.xplane: bpy.props.PointerProperty(
         type = XPlaneMaterialSettings,
-        name = "XPlane",
+        name = "X-Plane Material Settings",
         description = "X-Plane Material Settings"
     )
-    bpy.types.Lamp.xplane = bpy.props.PointerProperty(
+    bpy.types.Light.xplane: bpy.props.PointerProperty(
         type = XPlaneLampSettings,
-        name = "XPlane",
+        name = "X-Plane Light Settings",
         description = "X-Plane Lamp Settings"
     )
 

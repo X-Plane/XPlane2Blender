@@ -1266,8 +1266,8 @@ class UL_DatarefSearchList(bpy.types.UIList):
 class XPlaneMessage(bpy.types.Operator):
     bl_idname = 'xplane.msg'
     bl_label = 'XPlane2Blender message'
-    msg_type = bpy.props.StringProperty(default = 'INFO')
-    msg_text = bpy.props.StringProperty(default = '')
+    msg_type: bpy.props.StringProperty(default = 'INFO')
+    msg_text: bpy.props.StringProperty(default = '')
     def execute(self, context):
         self.report(self.msg_type, self.msg_text)
         return {'FINISHED'}
@@ -1285,9 +1285,9 @@ class XPlaneMessage(bpy.types.Operator):
 class XPlaneError(bpy.types.Operator):
     bl_idname = 'xplane.error'
     bl_label = 'XPlane2Blender Error'
-    msg_type = bpy.props.StringProperty(default = 'ERROR')
-    msg_text = bpy.props.StringProperty(default = '')
-    report_text = bpy.props.StringProperty(default = '')
+    msg_type: bpy.props.StringProperty(default = 'ERROR')
+    msg_text: bpy.props.StringProperty(default = '')
+    report_text: bpy.props.StringProperty(default = '')
 
     def execute(self, context):
         self.report({self.msg_type}, self.report_text)
@@ -1302,7 +1302,7 @@ class XPlaneError(bpy.types.Operator):
         row = layout.row()
         row.label(text=self.msg_text,icon="ERROR")
 
-_XPlaneUITypes = [
+_XPlaneUITypes = (
     BONE_PT_xplane,
     DATA_PT_xplane,
     MATERIAL_PT_xplane,
@@ -1313,7 +1313,7 @@ _XPlaneUITypes = [
     UL_DatarefSearchList,
     XPlaneError,
     XPlaneMessage
-]
+)
 
 # Function: addXPlaneUI
 # Registers all UI Panels.

@@ -33,7 +33,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
     bl_idname = "export.xplane_obj"
     bl_label = 'Export X-Plane Object'
 
-    filepath = bpy.props.StringProperty(
+    filepath: bpy.props.StringProperty(
         name = "File Path",
         description = "Filepath used for exporting the X-Plane file(s)",
         maxlen= 1024, default= ""
@@ -41,7 +41,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
     filename_ext = '.obj'
 
-    export_is_relative = bpy.props.BoolProperty(
+    export_is_relative: bpy.props.BoolProperty(
         name = "Export Is Relative",
         description="Set to true when starting the export via the button (with or without the GUI on in case of unit testing)",
         default=False)
