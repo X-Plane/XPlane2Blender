@@ -207,7 +207,7 @@ def scene_layout(self, scene):
         layout.row().label(text="BEWARE: " + xp2b_ver.build_type.capitalize() + " versions can damage files!", icon="ERROR")
         needs_warning = True
     elif xp2b_ver.build_type == xplane_constants.BUILD_TYPE_DEV:
-        layout.row().label(text="Developer versions are DANGEROUS and UNSTABLE!", icon="RADIO")
+        layout.row().label(text="Developer versions are DANGEROUS and UNSTABLE!", icon="ORPHAN_DATA")
         needs_warning = True
 
     if xp2b_ver.build_number == xplane_constants.BUILD_NUMBER_NONE:
@@ -241,7 +241,7 @@ def scene_layout(self, scene):
 
 def scene_dev_layout(self,scene,layout):
     dev_box = layout.box()
-    dev_box_row = dev_box.column_flow(2,True)
+    dev_box_row = dev_box.column_flow(columns=2, align=True)
     dev_box_row.prop(scene.xplane, "plugin_development")
     dev_box_row.label(text="", icon="ERROR")
     if scene.xplane.plugin_development:
@@ -465,7 +465,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 
         # require surface
         require_box = scenery_props_group_box.row()
-        require_box.prop(layerObj, "require_surface", "Require surface")
+        require_box.prop(layerObj, "require_surface", text="Require surface")
 
     # Other Options
     #layout.separator()
