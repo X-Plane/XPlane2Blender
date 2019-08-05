@@ -31,19 +31,19 @@ class XPlaneLight(XPlaneObject):
     # float - Energy taken from Blender light.
 
     # Property: lightType
-    # string - Type of the light taken from <XPlaneLampSettings>.
+    # string - Type of the light taken from <XPlaneLightSettings>.
 
     # Property: size
-    # float - Size of the light taken from <XPlaneLampSettings>.
+    # float - Size of the light taken from <XPlaneLightSettings>.
 
     # Property: lightName
-    # string - Name of the light taken from <XPlaneLampSettings>.
+    # string - Name of the light taken from <XPlaneLightSettings>.
 
     # Property: params
-    # string - Parameters taken from <XPlaneLampSettings>.
+    # string - Parameters taken from <XPlaneLightSettings>.
 
     # Property: dataref
-    # string - Dataref path taken from <XPlaneLampSettings>.
+    # string - Dataref path taken from <XPlaneLightSettings>.
 
     # Constructor: __init__
     #

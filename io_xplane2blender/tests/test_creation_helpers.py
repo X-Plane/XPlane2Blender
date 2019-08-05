@@ -78,7 +78,7 @@ class DatablockInfo():
             rotation:Optional[Union[bpy.types.bpy_prop_array,Euler,Quaternion]]=None,
             scale:Vector=Vector((1,1,1))):
         '''
-        datablock_type: Must be 'MESH', 'ARMATURE', 'EMPTY', or 'LAMP' 
+        datablock_type: Must be 'MESH', 'ARMATURE', 'EMPTY', or "LIGHT" 
         default for layers will be layer 1
         '''
         self.datablock_type = datablock_type
@@ -479,7 +479,7 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
         keyframe_infos:List[KeyframeInfo],
         parent_armature:[bpy.types.Armature]=None)->None:
     '''
-    - blender_struct - A Blender lamp, mesh, armature, or bone to attach keyframes to. For a bone, pass it
+    - blender_struct - A Blender light, mesh, armature, or bone to attach keyframes to. For a bone, pass it
     in (excluding EditBones) and the function will take care of choosing between Bone and EditBone as needed
     - keyframe_infos - A list of keyframe info which will be used to apply keyframes
     - parent_armature - If the blender_struct is a Bone but not a PoseBone, the parent armature of it is required

@@ -374,8 +374,8 @@ class XPlaneFile():
         if blenderObject.type == "MESH":
             logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject = XPlanePrimitive(blenderObject)
-        # lamp: let's create a XPlaneLight. Those cannot have children (yet).
-        elif blenderObject.type == "LAMP":
+        # light: let's create a XPlaneLight. Those cannot have children (yet).
+        elif blenderObject.type == "LIGHT":
             logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject  = XPlaneLight(blenderObject)
         elif blenderObject.type == "ARMATURE":

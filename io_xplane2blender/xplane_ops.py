@@ -344,12 +344,12 @@ class OBJECT_OT_remove_xplane_material_attribute(bpy.types.Operator):
         obj.xplane.customAttributes.remove(self.index)
         return {'FINISHED'}
 
-# Class: OBJECT_OT_add_xplane_lamp_attribute
-# Adds a custom attribute to a Blender Lamp.
-class OBJECT_OT_add_xplane_lamp_attribute(bpy.types.Operator):
-    bl_label = 'Add Lamp Property'
-    bl_idname = 'object.add_xplane_lamp_attribute'
-    bl_description = 'Add a custom X-Plane Lamp Property'
+# Class: OBJECT_OT_add_xplane_light_attribute
+# Adds a custom attribute to a Blender Light.
+class OBJECT_OT_add_xplane_light_attribute(bpy.types.Operator):
+    bl_label = 'Add Light Property'
+    bl_idname = 'object.add_xplane_light_attribute'
+    bl_description = 'Add a custom X-Plane Light Property'
 
     def execute(self, context):
         obj = context.object.data
@@ -357,11 +357,11 @@ class OBJECT_OT_add_xplane_lamp_attribute(bpy.types.Operator):
         return {'FINISHED'}
 
 # Class: OBJECT_OT_remove_xplane_object_attribute
-# Removes a custom attribute from a Blender Lamp.
-class OBJECT_OT_remove_xplane_lamp_attribute(bpy.types.Operator):
-    bl_label = 'Remove Lamp Property'
-    bl_idname = 'object.remove_xplane_lamp_attribute'
-    bl_description = 'Remove the custom X-Plane Lamp Property'
+# Removes a custom attribute from a Blender Light.
+class OBJECT_OT_remove_xplane_light_attribute(bpy.types.Operator):
+    bl_label = 'Remove Light Property'
+    bl_idname = 'object.remove_xplane_light_attribute'
+    bl_description = 'Remove the custom X-Plane Light Property'
 
     index: bpy.props.IntProperty()
 
@@ -747,11 +747,11 @@ _ops = [
     OBJECT_OT_add_xplane_export_path_directive,
     OBJECT_OT_remove_xplane_export_path_directive,
 
-    OBJECT_OT_add_xplane_lamp_attribute,
+    OBJECT_OT_add_xplane_light_attribute,
     OBJECT_OT_add_xplane_material_attribute,
     OBJECT_OT_add_xplane_object_attribute,
     OBJECT_OT_add_xplane_object_anim_attribute,
-    OBJECT_OT_remove_xplane_lamp_attribute,
+    OBJECT_OT_remove_xplane_light_attribute,
     OBJECT_OT_remove_xplane_material_attribute,
     OBJECT_OT_remove_xplane_object_attribute,
     OBJECT_OT_remove_xplane_object_anim_attribute,

@@ -18,9 +18,9 @@ from .xplane_props import *
 
 
 # Class: DATA_PT_xplane
-# Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
+# Adds X-Plane light settings to the light tab. Uses <light_layout> and <custom_layout>.
 class DATA_PT_xplane(bpy.types.Panel):
-    '''XPlane Data/Lamp Panel'''
+    '''XPlane Data/Light Panel'''
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -30,9 +30,9 @@ class DATA_PT_xplane(bpy.types.Panel):
         obj = context.object
         version = int(bpy.context.scene.xplane.version)
 
-        if obj.type == "LAMP":
-            lamp_layout(self, obj.data)
-            custom_layout(self, obj.data, "LAMP")
+        if obj.type == "LIGHT":
+            light_layout(self, obj.data)
+            custom_layout(self, obj.data, "LIGHT")
         if obj.type == "EMPTY" and version >= 1130:
             empty_layout(self, obj)
 
@@ -95,7 +95,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     def poll(self, context):
         obj = context.object
 
-        if obj.type in ("MESH", "EMPTY", "ARMATURE", "LAMP"):
+        if obj.type in ("MESH", "EMPTY", "ARMATURE", "LIGHT"):
             return True
         else:
             return False
@@ -104,7 +104,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
         obj = context.object
         version = int(context.scene.xplane.version)
 
-        if obj.type in ("MESH", "EMPTY", "ARMATURE", "LAMP"):
+        if obj.type in ("MESH", "EMPTY", "ARMATURE", "LIGHT"):
             object_layer_layout(self, obj)
 
             animation_layout(self, obj)
@@ -112,7 +112,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
                 mesh_layout(self, obj)
                 manipulator_layout(self, obj)
             objType = obj.type
-            if objType == "LAMP":
+            if objType == "LIGHT":
                 objType = "OBJECT"
             lod_layout(self, obj)
             weight_layout(self, obj)
@@ -558,13 +558,13 @@ def mesh_layout(self, obj):
 
     row = layout.row()
 
-# Function: lamp_layout
-# Draws the UI layout for lamps.
+# Function: light_layout
+# Draws the UI layout for lights.
 #
 # Parameters:
 #   UILayout self - Instance of current UILayout.
-#   obj - Blender data object, the lamp itself
-def lamp_layout(self:bpy.types.UILayout, obj):
+#   obj - Blender data object, the light itself
+def light_layout(self:bpy.types.UILayout, obj:bpy.types.Light):
     layout = self.layout
     row = layout.row()
     row.prop(obj.xplane, "type", text = "Type")
@@ -711,14 +711,14 @@ def canPreviewEmit(mat):
 # Parameters:
 #   UILayout self - Instance of current UILayout.
 #   obj - Blender object.
-#   string type - Type of object. ("MESH", "MATERIAL", "LAMP")
+#   string type - Type of object. ("MESH", "MATERIAL", "LIGHT")
 def custom_layout(self, obj:bpy.types.Object, object_type:str):
     if object_type in ("MESH", "ARMATURE", "OBJECT"):
         oType = 'object'
     elif object_type == "MATERIAL":
         oType = 'material'
-    elif object_type == 'LAMP':
-        oType = 'lamp'
+    elif object_type == "LIGHT":
+        oType = 'light'
     else:
         oType = None
 
@@ -738,7 +738,7 @@ def custom_layout(self, obj:bpy.types.Object, object_type:str):
             subrow.operator("object.remove_xplane_"+oType+"_attribute", text = "", emboss = False, icon = "X").index = i
             subrow = subbox.row()
             subrow.prop(attr, "value")
-            if object_type in ("MATERIAL", "MESH", "LAMP", "ARMATURE"):
+            if object_type in ("MATERIAL", "MESH", "LIGHT", "ARMATURE"):
                 subrow = subbox.row()
                 subrow.prop(attr, "reset")
                 subrow = subbox.row()

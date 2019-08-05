@@ -63,7 +63,7 @@ def get_potential_objects_in_layer(layer_idx: int, scene: bpy.types.Scene)->List
 
     return list(
             filter(
-                lambda obj: obj.layers[layer_idx] and obj.type in {"MESH", "LAMP", "ARMATURE", "EMPTY"},
+                lambda obj: obj.layers[layer_idx] and obj.type in {"MESH", "LIGHT", "ARMATURE", "EMPTY"},
                 scene.objects))
 
 
@@ -72,7 +72,7 @@ def get_potential_objects_in_root_object(root_object: bpy.types.Object)->List[bp
     def collect_children(obj: bpy.types.Object)->List[bpy.types.Object]:
         objects = [] # type: List[bpy.types.Object]
         for child in obj.children:
-            if child.type in {"MESH", "LAMP", "ARMATURE", "EMPTY"}:
+            if child.type in {"MESH", "LIGHT", "ARMATURE", "EMPTY"}:
                 objects.append(child)
             objects.extend(collect_children(child))
         return objects

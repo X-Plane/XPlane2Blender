@@ -1421,7 +1421,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
 
     weight: bpy.props.IntProperty(
         name = "Weight",
-        description = "Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lamps > = 10000",
+        description = "Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lights > = 10000",
         default = 0,
         min = 0
     )
@@ -1488,7 +1488,7 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
 
     weight: bpy.props.IntProperty(
         name = "Weight",
-        description = "Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lamps > = 10000",
+        description = "Usual weights are: Meshes 0-8999, Lines 9000 - 9999, Lights > = 10000",
         default = 0,
         min = 0
     )
@@ -1716,8 +1716,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         precision = 2
     )
 
-# Class: XPlaneLampSettings
-# Settings for Blender lamps.
+# Class: XPlaneLightSettings
+# Settings for Blender lights.
 #
 # Properties:
 #   bool enable_rgb_manual_override - Overrides the use of Blender's color picker
@@ -1728,7 +1728,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 #   float size - Light size, if "type" is 'custom'.
 #   string dataref - Dataref driving the light, if "type" is 'custom'.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
-class XPlaneLampSettings(bpy.types.PropertyGroup):
+class XPlaneLightSettings(bpy.types.PropertyGroup):
     # TODO: deprecate named{?}, flashing, pulising, strobe, traffic lights in v3.4
     enable_rgb_override: bpy.props.BoolProperty(
         name = "Enable RGB Picker Override",
@@ -1827,7 +1827,7 @@ _classes = (
     XPlaneObjectSettings,
     XPlaneBoneSettings,
     XPlaneMaterialSettings,
-    XPlaneLampSettings,
+    XPlaneLightSettings,
     XPlaneSceneSettings
 )
 
@@ -1859,9 +1859,9 @@ def addXPlaneRNA():
         description = "X-Plane Material Settings"
     )
     bpy.types.Light.xplane = bpy.props.PointerProperty(
-        type = XPlaneLampSettings,
+        type = XPlaneLightSettings,
         name = "X-Plane Light Settings",
-        description = "X-Plane Lamp Settings"
+        description = "X-Plane Light Settings"
     )
 
 
