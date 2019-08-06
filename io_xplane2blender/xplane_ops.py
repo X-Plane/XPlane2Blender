@@ -789,4 +789,4 @@ def addXPlaneOps():
 def removeXPlaneOps():
     #List all adds, then all removes in alphabetical order.
     for op in _ops:
-        bpy.utils.register_class(op)
+        bpy.utils.unregister_class(op)
