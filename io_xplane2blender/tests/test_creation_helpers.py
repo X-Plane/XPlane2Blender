@@ -369,6 +369,7 @@ def create_texture(name:str,
     else:
         return get_texture(name)
 
+"""
 def create_textures(material_name:str,
                     name:str,
                     image_name:List[str], #Will be paired with xp2b_tex_types
@@ -392,6 +393,7 @@ def create_textures(material_name:str,
     #mat_tex_slot.use_map_color_diffuse = False
     #mat_tex_slot.use_map_normal = True
     #return
+"""
 
 def create_material(material_name:str):
     try:

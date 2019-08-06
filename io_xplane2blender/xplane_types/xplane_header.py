@@ -156,7 +156,8 @@ class XPlaneHeader():
             exportdir = os.path.dirname(os.path.abspath(os.path.normpath(os.path.join(blenddir, self.xplaneFile.filename))))
 
         if self.xplaneFile.options.autodetectTextures:
-            self._autodetectTextures()
+            #2.8 doesn't work with Texture Slots Anymore. self._autodetectTextures()
+            pass
 
         # standard textures
         if self.xplaneFile.options.texture != '':
