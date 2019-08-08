@@ -97,19 +97,25 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
                 self.assertEqual(obj.material_slots[0].material, bpy.data.materials[seq + hint_suffix])
 
     def test_diffuse_specularity_copied(self):
-        pass
-
+        for mat in filter(lambda mat: mat.users, bpy.data.materials):
+            if ".25" in mat.name:
+                self.assertAlmostEqual(mat.specular_intensity, 0.25)
+                self.assertAlmostEqual(mat.diffuse_color[0], 0.770)
+                self.assertAlmostEqual(mat.diffuse_color[1], 0.000)
+                self.assertAlmostEqual(mat.diffuse_color[2], 0.000)
+            elif ".75" in mat.name:
+                self.assertAlmostEqual(mat.specular_intensity, 0.75)
+                self.assertAlmostEqual(mat.diffuse_color[0], 0.000)
+                self.assertAlmostEqual(mat.diffuse_color[1], 0.000)
+                self.assertAlmostEqual(mat.diffuse_color[2], 0.880)
+            elif ".9" in mat.name:
+                self.assertAlmostEqual(mat.specular_intensity, 0.990)
+                self.assertAlmostEqual(mat.diffuse_color[0], 0.990)
+                self.assertAlmostEqual(mat.diffuse_color[1], 0.990)
+                self.assertAlmostEqual(mat.diffuse_color[2], 0.0)
 
     def test_fewest_materials_made(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
-        # NONE (aka reuse base materials): MDEF, M25
-        # UNUSED Base Materials: M75, M90
-        #
-        # Derivative Materials
-        # TILES: MDEF, M25
-        # DYNAMIC: MDEF, M25, M75, M90
-        # SHADOW: M75, M90
-        # Total: 11
         self.assertEqual(len([mat for mat in bpy.data.materials if mat.users]), 11)
 
 runTestCases([TestMeshesSplitMaterialsCopied])
