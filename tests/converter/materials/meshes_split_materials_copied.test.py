@@ -1,6 +1,6 @@
 import inspect
 
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
 from typing import Tuple
 
 import os
@@ -9,7 +9,9 @@ import re
 
 import bpy
 from io_xplane2blender import xplane_config
+from io_xplane2blender.xplane_249_converter import xplane_249_constants as xp249c
 from io_xplane2blender.tests import *
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -23,11 +25,11 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
     """
     # New objects will have one material only, made of only grouped faces
     """
-    _M25 = bpy.data.materials["Material_.25"] # Red
-    _M75 = bpy.data.materials["Material_.75"] # Blue
-    _M90 = bpy.data.materials["Material_.9"] # Yellow
-    #_MDEF = bpy.data.materials["249__DEFAULT_MAT"] # Created during material conversion process, grey
-    _ObjectDetails = collections.namedtuple(
+    _M25 = "Material_.25" # Red
+    _M75 = "Material_.75" # Blue
+    _M90 = "Material_.9" # Yellow
+    _MDEF = xp249c.DEFAULT_MATERIAL_NAME # Created during material conversion process, grey
+    _ObjectDetails = namedtuple(
         "_ObjectDetails",
         ["new_name",
         "mat_name",]
@@ -38,77 +40,68 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
     # not only the specualrty and Diffuse RGB are correct but that the correct dirivative copy is made from it
     # material properties
 
-    #TODO: Currently these dictionaries simply test the faces exist, but they aren't testing the specific faces
-    # still have their specific materials
-    #  ___________.__________       ___________.___________
-    # | Blue Tile | Red Tile | ==  | Red Tile  | Blue Tile |
-    #  -----------.-----------      -----------.-----------
-    #
-    # We needed OrderedDicts (until Python 3.7, sigh), and have the order correspond to specific faces
-    _after_report = OrderedDict((# 1face_tests
-        ("1face_0mat_0tf", {"NONE" :_MDEF}),
-        ("1face_0mat_1tf", {"TILES":_MDEF}),
-        ("1face_1mat_0tf", {"NONE" :_M25}),
-        ("1face_1mat_1tf", {"TILES":_M25}),
+    _results = OrderedDict() # type: Dict[str,Tuple[Union[str,str]]
+    # 1face_tests
+    _results["1face_0mat_0tf"] = ("NONE", _MDEF)
+    _results["1face_0mat_1tf"] = (xp249c.HINT_TF_TEX, _MDEF)
+    _results["1face_1mat_0tf"] = ("NONE", _M25)
+    _results["1face_1mat_1tf"] = (xp249c.HINT_TF_TEX, _M25)
 
-        # 2face_tests
-        ("2face_0mat_0tf", {"NONE" :_MDEF}),
-        ("2face_0mat_2tf", {"TILES"  :_MDEF,
-                            "DYNAMIC":_MDEF}),
+    #2face_tests
+    _results["2face_0mat_0tf"] = ("NONE", _MDEF)
+    _results["2face_0mat_2tf"] = (xp249c.HINT_TF_TEX, _MDEF, xp249c.HINT_TF_SHADOW, _MDEF)
 
-        ("2face_1mat_0tf", {"NONE":_M25}),
-        ("2face_1mat_2tf", {"TILES"  :_M25,
-                            "DYNAMIC":_M25}),
+    _results["2face_1mat_0tf"] = ("NONE", _M25)
+    _results["2face_1mat_2tf"] = (xp249c.HINT_TF_TEX, _M25, xp249c.HINT_TF_SHADOW, _M25)
 
-        ("2face_2mat_0tf", {"NONE":(_M75, _M25)}), # Thanks to not splitting, we need to test
-        # the EXACT material slot layout. TODO: What if they have an empty slot? How does it affect our algorithm?
+    _results["2face_2mat_0tf"] = ("NONE", _M75, _M25)
 
-        ("2face_2mat_2tf", {"TILES"  :_M25,
-                            "DYNAMIC":_M75}),
+    _results["2face_2mat_2tf"] = (xp249c.HINT_TF_TEX, _M25, xp249c.HINT_TF_SHADOW, _M75)
 
-        # 3test_faces
-        ("3face_3mat_2tf_2used", {"TILES":_M25,
-                                  "DYNAMIC":(_M25, _M75)}),
+    #3test_faces
+    _results["3face_3mat_2tf_2used"] = (xp249c.HINT_TF_TEX, _M25, xp249c.HINT_TF_COLL, _M25, _M75)
 
-        # 4test_faces
-        ("4face_3mat_1tf", {"DYNAMIC": (_M25, _M25, _M75, _M90)}),
-        ("4face_3mat_2tf", {"TILES": (_M25, _M25), "SHADOW": (_M75,_M90)}),
-        ("4face_3mat_3tf_1as", {"NONE": (_MDEF, _MDEF, _MDEF), "SHADOW": _M90}),
-        )
-    )
+    #4test_faces
+    _results["4face_3mat_1tf"] = (xp249c.HINT_TF_COLL, _M25, _M25, _M75, _M90)
+    _results["4face_3mat_2tf"] = (xp249c.HINT_TF_TEX, _M25, _M25, xp249c.HINT_TF_SHADOW, _M75, _M90)
+    _results["4face_3mat_3tf_1as"] = ("NONE", _MDEF, _MDEF, _MDEF, xp249c.HINT_TF_SHADOW, _M90)
 
-    def _check_object(self, name):
-        for num in max(1, re.match("(\dtf)", name).group(0)):
-            obj = bpy.data.objects[name+"_"+str(num)] #TODO: If we change "prepend _n to split groups", change this too
+    print(_results)
+    def test_no_generated_materials(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        self.assertFalse([mat for mat in bpy.data.materials if re.match(r"Material\.TF\.\d{1,5}", mat.name) and mat.users])
 
-            # We don't have to worry about empty slots. Right? see above TODO
-            # If an object has empty slots it can only mean it wasn't split. The only one that gets that treatment
-            material_slots = [slot for slot in obj.material_slots if slot.link == "DATA"]
-            mat = material_slots[0].material
-            # Did the material end up with draped? Must have been "TILES" (we hope!)
-            def cmp_mat(obj, name, tf_mode_type):#, test_mat, generated_mat):
-                for i, face in enumerate(obj.data.polygons):
-                    self.assertEqual(
-                            self._after_report[name][tf_mode_type][i].material.specular_intensity,
-                            material_slots[face.material_index].material.specular_intensity
-                        )
+    def test_split_groups_carry(self):
+        for obj_name, face_sequence in self._results.items():
+            face_id = None
+            for seq in face_sequence:
+                if isinstance(seq, str):
+                    hint_suffix = seq
+                    try:
+                        face_id += 1
+                    except TypeError:
+                        face_id = 0
+                    continue
 
-                    self.assertEqual(
-                            self._after_report[name][tf_mode_type][i].material.diffuse_rgb,
-                            material_slots[face.material_index].material.diffuse_rgb
-                        )
+                obj_suffix = "_%d" % face_id
 
-            if mat.xplane.draped:
-                cmp_mat(obj, name, "TILES")
-            elif mat.xplane.solid_camera:
-                cmp_mat(obj, name, "DYNAMIC"), #gonnahave to changethis one
-            elif mat.xplane.shadow_local:
-                cmp_mat(obj, name, "SHADOW")
-            else:
-                cmp_mat(obj, name, "NONE")
+                # These both turn to no hint
+                if hint_suffix in {xp249c.HINT_TF_TEX, "NONE"}:
+                    hint_suffix = ""
+                else:
+                    hint_suffix = "_" + hint_suffix
+
+                obj = bpy.data.object[obj_name + obj_suffix]
+
+                # How do we know the materials are correct? Other unit tests cover it
+                self.assertEqual(obj.material_slots[0].material, bpy.data.materials[seq + hint_suffix])
+
+    def test_diffuse_specularity_copied(self):
+        pass
 
 
     def test_fewest_materials_made(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         # NONE (aka reuse base materials): MDEF, M25
         # UNUSED Base Materials: M75, M90
         #
@@ -116,42 +109,7 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
         # TILES: MDEF, M25
         # DYNAMIC: MDEF, M25, M75, M90
         # SHADOW: M75, M90
-        # Total: 12
-        self.assertEqual(len(bpy.data.materials), 12)
+        # Total: 11
+        self.assertEqual(len([mat for mat in bpy.data.materials if mat.users]), 11)
 
-    #TI as per unittest requirements, all test methods must start
-    #TI with "test_"
-    def test_fixture_or_layer_name_snake_case(self):
-        #TI Example of whitebox testing
-        #from io_xplane2blender.xplane_types import xplane_
-        #access object using bpy.data.objects
-        # use constructor for xplane_type, use methods
-        #TI
-        #TI Testing the results of an export without a fixture
-        #out = self.exportLayer(0)
-
-        #TI Example of expecting a failure
-        #self.assertLoggerErrors(1)
-
-        #TI Test layer against fixture
-        # Note, I would recommend layout out your layers, tests, and names so they are all in order.
-        # It makes everything much easier
-        #
-        #filename = inspect.stack()[0].function
-
-        #self.assertLayerExportEqualsFixture(
-        #    0,
-        #    os.path.join(__dirname__, "fixtures", filename + ".obj"),
-        #    filename,
-        #    filterLines
-        #)
-        #self.assertRootObjectExportEqualsFixture(
-        #    bpy.data.objects[filename[5:]],
-        #    os.path.join(__dirname__, "fixtures", filename + ".obj"),
-        #    filename,
-        #    filterLines
-        #)
-        pass
-
-#TI Class name above
 runTestCases([TestMeshesSplitMaterialsCopied])
