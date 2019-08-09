@@ -24,6 +24,7 @@ TMP_DIR = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
 
 class XPlaneTestCase(unittest.TestCase):
     def setUp(self, useLogger = True):
+        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w')
         dd_index = sys.argv.index('--')
         blender_args, xplane_args = sys.argv[:dd_index],sys.argv[dd_index+1:]
         setDebug('--force-xplane-debug' in xplane_args)
