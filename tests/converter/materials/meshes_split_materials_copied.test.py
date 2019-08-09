@@ -96,7 +96,8 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
                 # How do we know the materials are correct? Other unit tests cover it
                 self.assertEqual(obj.material_slots[0].material, bpy.data.materials[seq + hint_suffix])
 
-    def test_diffuse_specularity_copied(self):
+    def test_diffuse_and_specularity_copied(self):
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         for mat in filter(lambda mat: mat.users, bpy.data.materials):
             if ".25" in mat.name:
                 self.assertAlmostEqual(mat.specular_intensity, 0.25)
@@ -109,7 +110,7 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
                 self.assertAlmostEqual(mat.diffuse_color[1], 0.000)
                 self.assertAlmostEqual(mat.diffuse_color[2], 0.880)
             elif ".9" in mat.name:
-                self.assertAlmostEqual(mat.specular_intensity, 0.990)
+                self.assertAlmostEqual(mat.specular_intensity, 0.90)
                 self.assertAlmostEqual(mat.diffuse_color[0], 0.990)
                 self.assertAlmostEqual(mat.diffuse_color[1], 0.990)
                 self.assertAlmostEqual(mat.diffuse_color[2], 0.0)

@@ -306,8 +306,8 @@ def _convert_material(scene: bpy.types.Scene,
                 ]
             }
 
-    # Will have to make special case later
-    original_material_values.update({attr:getattr(mat, attr) for attr in ["diffuse_color", "specular_intensity"]})
+    # For debugging purposes
+    #original_material_values.update({attr:getattr(mat, attr) for attr in ["diffuse_color", "specular_intensity"]})
     changed_material_values = original_material_values.copy()
 
     logger_info_msgs = [] # type: List[str]
@@ -464,10 +464,7 @@ def _convert_material(scene: bpy.types.Scene,
             new_material = mat.copy()
             new_material.name = new_name
             for prop, value in changed_material_values.items():
-                try:
-                    setattr(new_material.xplane, prop, value)
-                except AttributeError: # diffuse_color and specular_intensity are mat props itself
-                    setattr(new_material, prop, value)
+                setattr(new_material.xplane, prop, value)
 
             print("Created new converted material:", new_material.name)
 
