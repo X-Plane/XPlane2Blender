@@ -286,5 +286,4 @@ def main(argv=None)->int:
     return exit_code
 
 if __name__ == "__main__":
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w')
     sys.exit(main())
