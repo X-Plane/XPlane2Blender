@@ -100,7 +100,7 @@ class XPLANE_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
 
         # goto first frame so everything is in inital state
         bpy.context.scene.frame_set(frame = 1)
-        bpy.context.scene.update()
+        bpy.context.view_layer.update()
 
         xplaneFiles = []
 
@@ -126,7 +126,7 @@ class XPLANE_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
 
         # return to stored frame
         bpy.context.scene.frame_set(frame = currentFrame)
-        bpy.context.scene.update()
+        bpy.context.view_layer.update()
 
         #TODO: enable when log dialog box is working
         #if logger.hasErrors() or logger.hasWarnings():
