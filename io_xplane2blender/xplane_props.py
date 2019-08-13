@@ -1493,15 +1493,6 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
         min = 0
     )
 
-def updateMaterialLitPreview(self, context):
-    texture, textureLit = xplane_helpers.getColorAndLitTextureSlots(context.material)
-
-    if texture and textureLit:
-        factor = context.material.xplane.litFactor
-
-        texture.diffuse_color_factor = 1 - factor
-        textureLit.emit_factor = factor
-
 # Class: XPlaneMaterialSettings
 # Settings for Blender materials.
 #
@@ -1653,6 +1644,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         type = XPlaneCustomAttribute
     )
 
+    #TODO: When we have the updater again, remove this unneeded thing.
+    # This was only for automatically playing with Blender Render which is dead
     litFactor: bpy.props.FloatProperty(
         name = "Day-Night Preview Balance",
         description = "Adjusts 3D View's preview of day vs night texture",
@@ -1660,7 +1653,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         min = 0,
         max = 1,
         step = 0.1,
-        update = updateMaterialLitPreview
+        #update = updateMaterialLitPreview
     )
 
     # v1000

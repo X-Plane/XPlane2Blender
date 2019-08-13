@@ -28,18 +28,6 @@ def floatToStr(n):
 
     return s
 
-def getColorAndLitTextureSlots(mat):
-    texture = None
-    textureLit = None
-
-    for slot in mat.texture_slots:
-        if slot and slot.use and slot.texture and slot.texture.type == 'IMAGE':
-            if slot.use_map_color_diffuse:
-                texture = slot
-            elif slot.use_map_emit:
-                textureLit = slot
-
-    return texture, textureLit
 
 def resolveBlenderPath(path:str)->str:
     blenddir = os.path.dirname(bpy.context.blend_data.filepath)

@@ -12,7 +12,6 @@ from typing import Optional
 
 from .xplane_config import *
 from .xplane_constants import *
-from .xplane_helpers import getColorAndLitTextureSlots
 from .xplane_ops import *
 from .xplane_props import *
 
@@ -681,11 +680,6 @@ def material_layout(layout:UILayout,
             dataref_search_window_layout(box)
 
     ll_box_column.row()
-    if not canPreviewEmit(active_material):
-        ll_box_column.label(text="To enable the Day-Night Preview feature, add an albedo texture (uses Diffuse->Color) and a night texture (uses Shading->Emit)", icon = "INFO")
-    else:
-        ll_box_column.prop(active_material.xplane, "litFactor", slider = True)
-
 
     # instancing effects
     instanced_box = layout.box()
@@ -698,12 +692,6 @@ def material_layout(layout:UILayout,
         instanced_box_column.prop(active_material.xplane, 'tint_emissive')
 
     layout.row().prop(active_material.xplane, "poly_os")
-
-
-def canPreviewEmit(mat):
-    texture, textureLit = getColorAndLitTextureSlots(mat)
-
-    return (texture != None and textureLit != None)
 
 # Function: custom_layout
 # Draws the additional UI layout for custom attributes.
