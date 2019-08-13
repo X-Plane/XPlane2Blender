@@ -199,30 +199,6 @@ class XPlaneFile():
                 # store xplane object under same name as blender object in dict
                 self.objects[blenderObject.name] = xplaneObject
 
-    def _resolveBlenderGroupInstance(self, blenderObject):
-        tempBlenderObjects = []
-        blenderGroupObjects = blenderObject.dupli_group.objects
-        groupOffset = blenderObject.dupli_group.dupli_offset
-
-        for blenderGroupObject in blenderGroupObjects:
-            # create a copy
-            blenderObjectCopy = blenderGroupObject.copy()
-            self._tempBlenderObjects.append(blenderObjectCopy)
-            tempBlenderObjects.append(blenderObjectCopy)
-
-            # make it a child of the parent, to keep hierachy and transforms
-            blenderObjectCopy.parent = blenderObject
-
-            # set same layer as the parent
-            blenderObjectCopy.layers = blenderObject.layers
-
-            # set correct matrix
-            blenderObjectCopy.matrix_world = blenderObject.matrix_world * mathutils.Matrix.Translation(-groupOffset) * blenderGroupObject.matrix_world
-
-        self._resolvedBlenderGroupInstances.append(blenderObject.name)
-
-        return tempBlenderObjects
-
     # collects all child bones for a given parent bone given a list of blender objects
     def collectBonesFromBlenderObjects(self, parentBone, blenderObjects,
                                        needsFilter:bool = True, # Set to true for when it is unsure if blenderObjects only contains
@@ -269,10 +245,9 @@ class XPlaneFile():
                 xplaneObject.collect()
 
             # expand group objects to temporary objects
-            if blenderObject.dupli_type == 'GROUP' and blenderObject.name not in self._resolvedBlenderGroupInstances:
-                tempBlenderObjects = self._resolveBlenderGroupInstance(blenderObject)
-                self.collectBlenderObjects(tempBlenderObjects)
-                self.collectBonesFromBlenderObjects(bone, blenderObject.children, False)
+            # TODO: Blender 2.8 removes groups in favor of collections.
+            # obj.dupli_type == "GROUP" is no more, obj.instance_type == "COLLECTION" seems similar but until we understand fully how
+            # collections and instanced collections work, this feature is removed
 
             # collect armature bones
             elif blenderObject.type == 'ARMATURE':
