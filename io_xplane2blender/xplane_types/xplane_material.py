@@ -106,17 +106,9 @@ class XPlaneMaterial():
                 if mat.xplane.panel == False:
                     self.attributes['ATTR_draw_enable'].setValue(True)
 
-                    # specular
-                    # include texture intensity of specular texture if any
-                    textureSpec = 0
-
-                    for texture in mat.texture_slots:
-                        if texture and texture.use_map_specular:
-                            textureSpec += texture.specular_factor
-
                     #SPECIAL CASE!
                     if self.getEffectiveNormalMetalness() == False:
-                        self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity + textureSpec)
+                        self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity)
 
                     # blend
                     xplane_version = int(bpy.context.scene.xplane.version)
@@ -173,9 +165,6 @@ class XPlaneMaterial():
             if len(self.blenderObject.data.uv_textures) > 0:
                 self.uv_name = self.blenderObject.data.uv_textures.active.name
 
-            # try to detect textures
-            self._detectTextures(mat)
-
             # add custom attributes
             self.collectCustomAttributes(mat)
 
@@ -183,38 +172,6 @@ class XPlaneMaterial():
             logger.error('%s: No Material found.' % self.blenderObject.name)
 
         self.attributes.order()
-
-    def _detectTextures(self, mat):
-        '''
-        Detects the texture by using Blender's texture slot properties:
-        Diffuse->Color, Shading->Emit, Geometry->Normal, and Specular-> Intensity
-        '''
-        for i in range(0, len(mat.texture_slots)):
-            slot = mat.texture_slots[i]
-
-            if slot and slot.use and slot.texture.type == 'IMAGE':
-                if slot.texture.image is not None:
-                    #Props->Texture->Influence->Diffuse->[X] Color
-                    if slot.use_map_color_diffuse and self.texture == None:
-                        self.texture = slot.texture.image.filepath
-                    #Props->Texture->Influence->Shading->[X] Emit
-                    elif slot.use_map_emit and self.textureLit == None:
-                        self.textureLit = slot.texture.image.filepath
-                    #Props->Texture->Influence->Geometry->[X] Normal
-                    elif slot.use_map_normal and self.textureNormal == None:
-                        self.textureNormal = slot.texture.image.filepath
-                    #Props->Texture->Influence->Specular->[X] Intensity
-                    elif slot.use_map_specular and self.textureSpecular == None:
-                        self.textureSpecular = slot.texture.image.filepath
-                else:
-                    logger.error("Texture '{0}' has no image".format(slot.texture.name))
-                    return
-
-        # panel materials have only a color texture
-        if self.options.panel:
-            self.textureLit = None
-            self.textureNormal = None
-            self.textureSpecular = None
 
     def collectCustomAttributes(self, mat):
         xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
@@ -225,7 +182,6 @@ class XPlaneMaterial():
                 if attr.reset:
                     commands.addReseter(attr.name, attr.reset)
                 self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
-
 
     def collectCockpitAttributes(self, mat):
         if mat.xplane.panel:

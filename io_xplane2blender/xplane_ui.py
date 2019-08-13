@@ -341,8 +341,6 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
     tex_box = layout.box()
     tex_box.label(text='Textures')
 
-    tex_box.prop(layerObj, "autodetectTextures")
-
     if not layerObj.autodetectTextures:
         tex_box.prop(layerObj, "texture", text = "Default")
         tex_box.prop(layerObj, "texture_lit", text = "Night")
