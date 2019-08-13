@@ -162,8 +162,8 @@ class XPlaneMaterial():
                 self.attributes['ATTR_no_solid_camera'].setValue(True)
 
             # try to find uv layer
-            if len(self.blenderObject.data.uv_textures) > 0:
-                self.uv_name = self.blenderObject.data.uv_textures.active.name
+            if len(self.blenderObject.data.uv_layers) > 0:
+                self.uv_name = self.blenderObject.data.uv_layers.active.name
 
             # add custom attributes
             self.collectCustomAttributes(mat)
