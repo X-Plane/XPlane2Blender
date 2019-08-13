@@ -776,17 +776,4 @@ _ops = [
     XPLANE_OT_DatarefSearchToggle,
 ]
 
-# Function: addXPlaneOps
-# Registers all Operators.
-def addXPlaneOps():
-    #List all adds, then all removes in alphabetical order.
-    #Insert line breaks between related groups
-    for op in _ops:
-        bpy.utils.register_class(op)
-
-# Function: removeXPlaneOps
-# Unregisters all Operators.
-def removeXPlaneOps():
-    #List all adds, then all removes in alphabetical order.
-    for op in _ops:
-        bpy.utils.unregister_class(op)
+register, unregister = bpy.utils.register_classes_factory(_ops)

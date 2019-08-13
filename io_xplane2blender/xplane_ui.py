@@ -1251,7 +1251,7 @@ class XPLANE_UL_DatarefSearchList(bpy.types.UIList):
 
         return flt_flags, flt_neworder
 
-class XPlaneMessage(bpy.types.Operator):
+class XPLANE_OT_XPlaneMessage(bpy.types.Operator):
     bl_idname = 'xplane.msg'
     bl_label = 'XPlane2Blender message'
     msg_type: bpy.props.StringProperty(default = 'INFO')
@@ -1270,7 +1270,7 @@ class XPlaneMessage(bpy.types.Operator):
         row.label(text=self.msg_type+': '+self.msg_text)
 
 
-class XPlaneError(bpy.types.Operator):
+class XPLANE_OT_XPlaneError(bpy.types.Operator):
     bl_idname = 'xplane.error'
     bl_label = 'XPlane2Blender Error'
     msg_type: bpy.props.StringProperty(default = 'ERROR')
@@ -1299,18 +1299,8 @@ _XPlaneUITypes = (
 
     XPLANE_UL_CommandSearchList,
     XPLANE_UL_DatarefSearchList,
-    XPlaneError,
-    XPlaneMessage
+    XPLANE_OT_XPlaneError,
+    XPLANE_OT_XPlaneMessage
 )
 
-# Function: addXPlaneUI
-# Registers all UI Panels.
-def addXPlaneUI():
-    for t in _XPlaneUITypes:
-        bpy.utils.register_class(t)
-
-# Function: removeXPlaneUI
-# Unregisters all UI Panels.
-def removeXPlaneUI():
-    for t in reversed(_XPlaneUITypes):
-        bpy.utils.unregister_class(t)
+register, unregister = bpy.utils.register_classes_factory(_XPlaneUITypes)

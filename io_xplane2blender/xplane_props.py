@@ -1826,7 +1826,7 @@ _classes = (
 
 # Function: addXPlaneRNA
 # Registers all properties.
-def addXPlaneRNA():
+def register():
     # basic classes
     for c in _classes:
         bpy.utils.register_class(c)
@@ -1860,6 +1860,6 @@ def addXPlaneRNA():
 
 # Function: removeXPlaneRNA
 # Unregisters all properties.
-def removeXPlaneRNA():
+def unregister():
     for c in reversed(_classes):
         bpy.utils.unregister_class(c)

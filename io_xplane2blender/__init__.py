@@ -65,18 +65,18 @@ def menu_func(self, context):
 # Registers the addon with all its classes and the menu function.
 def register():
     xplane_export.register()
-    xplane_props.addXPlaneRNA()
-    xplane_ops.addXPlaneOps()
-    xplane_ui.addXPlaneUI()
+    xplane_props.register()
+    xplane_ops.register()
+    xplane_ui.register()
     bpy.types.TOPBAR_MT_file_export.append(menu_func)
 
 # Function: unregister
 # Unregisters the addon and all its classes and removes the entry from the menu.
 def unregister():
     xplane_export.unregister()
-    xplane_ui.removeXPlaneUI()
-    xplane_ops.removeXPlaneOps()
-    xplane_props.removeXPlaneRNA()
+    xplane_ui.unregister()
+    xplane_ops.unregister()
+    xplane_props.unregister()
     bpy.types.TOPBAR_MT_file_export.remove(menu_func)
 
 if __name__ == "__main__":
