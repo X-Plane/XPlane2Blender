@@ -266,7 +266,7 @@ def scene_dev_layout(self,scene,layout):
             if entry.build_type == xplane_constants.BUILD_TYPE_LEGACY:
                 icon_str = "GHOST_ENABLED"
             if entry.build_type == xplane_constants.BUILD_TYPE_DEV:
-                icon_str = "RADIO"
+                icon_str = "ORPHAN_DATA"
             elif entry.build_type == xplane_constants.BUILD_TYPE_ALPHA or\
                 entry.build_type == xplane_constants.BUILD_TYPE_BETA:
                 icon_str="ERROR"

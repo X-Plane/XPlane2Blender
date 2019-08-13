@@ -59,24 +59,24 @@ else:
 #   self - Instance to something
 #   context - The Blender context object
 def menu_func(self, context):
-    self.layout.operator(xplane_export.ExportXPlane.bl_idname, text = "X-Plane Object (.obj)")
+    self.layout.operator(xplane_export.XPLANE_MT_xplane_export_log.bl_idname, text = "X-Plane Object (.obj)")
 
 # Function: register
 # Registers the addon with all its classes and the menu function.
 def register():
+    xplane_export.register()
     xplane_props.addXPlaneRNA()
     xplane_ops.addXPlaneOps()
     xplane_ui.addXPlaneUI()
-    bpy.utils.register_class(xplane_export.ExportXPlane)
     bpy.types.TOPBAR_MT_file_export.append(menu_func)
 
 # Function: unregister
 # Unregisters the addon and all its classes and removes the entry from the menu.
 def unregister():
+    xplane_export.unregister()
     xplane_ui.removeXPlaneUI()
     xplane_ops.removeXPlaneOps()
     xplane_props.removeXPlaneRNA()
-    bpy.utils.unregister_class(xplane_export.ExportXPlane)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func)
 
 if __name__ == "__main__":

@@ -1,34 +1,34 @@
 # File: xplane_export.py
 # Defines Classes used to create OBJ files out of XPlane data types defined in <xplane_types.py>.
 
-import os.path
-import bpy
-import mathutils
 import os
+import os.path
 import sys
+
+import bpy
+import io_xplane2blender
+import mathutils
+from bpy_extras.io_utils import ExportHelper, ImportHelper
+
+from .xplane_config import getDebug
 from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
-from .xplane_config import getDebug
-from bpy_extras.io_utils import ImportHelper, ExportHelper
-import io_xplane2blender
 
-class ExportLogDialog(bpy.types.Menu):
-    bl_idname = "SCENE_MT_xplane_export_log"
-    bl_label = "XPlane2Blender Export Log"
+
+class XPLANE_MT_xplane_export_log(bpy.types.Menu):
+    bl_label = "XPlane2Blender Export Log Warning"
 
     def draw(self, context):
         row = self.layout.row()
-        row.label('Export produced errors or warnings.')
+        row.label(text='Export produced errors or warnings.')
         row = self.layout.row()
-        row.label('Please take a look into the internal text file XPlane2Blender.log')
+        row.label(text='Please see the internal text file XPlane2Blender.log')
 
 def showLogDialog():
     if not ('-b' in sys.argv or '--background' in sys.argv):
-        bpy.ops.wm.call_menu(name = "SCENE_MT_xplane_export_log")
+        bpy.ops.wm.call_menu(name="XPLANE_MT_xplane_export_log")
 
-# Class: ExportXPlane
-# Main Export class. Brings all parts together and creates the OBJ files.
-class ExportXPlane(bpy.types.Operator, ExportHelper):
+class XPLANE_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
     '''Export to X-Plane Object file format (.obj)'''
     bl_idname = "export.xplane_obj"
     bl_label = 'Export X-Plane Object'
@@ -38,8 +38,6 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         description = "Filepath used for exporting the X-Plane file(s)",
         maxlen= 1024, default= ""
     )
-
-    filename_ext = '.obj'
 
     export_is_relative: bpy.props.BoolProperty(
         name = "Export Is Relative",
@@ -232,3 +230,10 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         wm = context.window_manager
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+classes = (
+        XPLANE_MT_xplane_export_log,
+        XPLANE_OT_ExportXPlane
+    )
+
+register, unregister = bpy.utils.register_classes_factory(classes)
