@@ -24,8 +24,8 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_dataref_decoder,
                                                     xplane_249_helpers)
 from io_xplane2blender.xplane_helpers import logger
-from typing import (Callable, Dict, List, Match, Optional, Set, Tuple, Union,
-                    cast)
+from typing import (Any, Callable, Dict, List, Match, Optional,
+                    Set, Tuple, Union, cast)
 
 # The members, and any collection of dealing with these things,
 # they are in the order that 2.49's interface presents them in.
@@ -261,13 +261,15 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
         return poly_c_info
     except ValueError as ve: #NULL Pointer access
         print("VE:", ve, obj.name)
-        return None
     except KeyError as ke: #That weird 'loopstart' not found in __repr__ call...
         print("KE:", ke, obj.name)
-        return None
+    except SystemError as se: # <class 'zip'> returned a result with an error set
+        print("SE:", se, obj.name)
     except Exception as e:
         print("E:", e, obj.name)
+    finally:
         return None
+
 
 
 def _convert_material(scene: bpy.types.Scene,
@@ -318,11 +320,11 @@ def _convert_material(scene: bpy.types.Scene,
         if tf_modes.ALPHA:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
-                changed_material_values["blendRatio"] = 0.5
+                changed_material_values["blendRatio"] = 0.5 #TODO: This is wrong! We should only be falling back to .5 if needed!
                 logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5".format(mat.name))
             elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
-                changed_material_values["blendRatio"] = 0.5
+                changed_material_values["blendRatio"] = 0.5 #TODO: This is wrong! We should only be falling back to .5 if needed!
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             else:
@@ -330,7 +332,7 @@ def _convert_material(scene: bpy.types.Scene,
         elif tf_modes.CLIP:
             if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
-                changed_material_values["blendRatio"] = 0.5
+                changed_material_values["blendRatio"] = 0.5 #TODO: This is wrong! We should only be falling back to .5 if needed!
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
             elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
@@ -490,7 +492,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 ]
             ) # type: bool
     ISPANEL = ISCOCKPIT # type: bool
-    #scene.render.engine = 'BLENDER_GAME' # Only for testing purposes
 
     # Dictionary of "GLOBAL_attr" to value, to be applied later
     global_mat_props = {} # type: Dict[str, Union[bool, float, Tuple[float, float]]]
@@ -499,26 +500,52 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         global_mat_props["GLOBAL_cockpit_lit"] = True
         global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_CKPIT_LIT
 
+    def check_for_prop(obj_name:str, props:str, prop_name:str, suffix:str, conversion_fn:Callable[[Any],float])->None:
+        """
+        If possible, gets the value of a prop_name from an obj's game properties and converts it to a float, appending the suffix.
+        If not possible, gives a logger warning
+        """
+        nonlocal global_mat_props, global_hint_suffix
+        try:
+            global_mat_props[prop_name] = conversion_fn(props[prop_name.lower()].value)
+            global_hint_suffix += "_" + suffix
+        except ValueError: #fn_if_found couldn't convert value to correct type
+            logger.warn("{}'s '{}' property could not be converted to a float".format(obj_name, prop_name))
+        except KeyError:
+            pass
+
     for obj in filter(lambda obj: obj.game.properties, scene.objects):
-        props = obj.game.properties
-        if "GLOBAL_no_blend" in props:
-            global_mat_props["GLOBAL_no_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
-            global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_NO_BLEND
-        elif "GLOBAL_shadow_blend" in props:
-            global_mat_props["GLOBAL_shadow_blend"] = float(obj.game.properties["GLOBAL_shadow_blend"].value)
-            global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_SHADOW_BLEND
-        elif "GLOBAL_specular" in props:
-            global_mat_props["GLOBAL_specular"] = round(float(obj.game.properties["GLOBAL_specular"].value),2)
-            global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_SPECULAR
-        elif "GLOBAL_tint" in props:
-            #TODO: Issues with split()! Must be two!
-            #TODO: Issues with float conversion, no safety!
-            global_mat_props["GLOBAL_tint"] = tuple(float(v) for v in obj.game.properties["GLOBAL_tint"].value.split())
-            global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_TINT
-        elif "NORMAL_METALNESS" in props:
+        props = {key.casefold():value for key, value in obj.game.properties.items()}
+        # There are two look ups of "GLOBAL_no_blend", the global one and the TexFace dependent version
+        # They are as far as I can see, identical:
+        # - Case insenstive
+        # - Not set unless the prop is known to exist, thereby never falling back to a default value
+        # The rules for when one overrides the other seem to be esoteric/a matter of luck.
+        # If a user is going to mix multiple GLOBAL_(no|shadow) properties, it is at their own risk
+        # what happens, they can read the logger error and decide what to do themselves about their sloppy work
+        # How this bug came to be, I don't know, but the converter is Bug-For-Bug as long as it exported in 2.49! Joy!
+        check_for_prop(obj.name, props, "GLOBAL_no_blend", xplane_249_constants.HINT_GLOBAL_NO_BLEND, float)
+        check_for_prop(obj.name, props, "GLOBAL_shadow_blend", xplane_249_constants.HINT_GLOBAL_SHADOW_BLEND, float)
+        check_for_prop(obj.name, props, "GLOBAL_specular", xplane_249_constants.HINT_GLOBAL_SPECULAR, lambda value: round(float(value),2))
+        try:
+            tint_prop = props["GLOBAL_tint".casefold()]
+            if tint_prop.type != "STRING":
+                logger.warn("{}'s GLOBAL_tint's property value '{}' is not a string".format(obj.name, props["GLOBAL_tint".casefold()]))
+                raise Exception
+            else:
+                global_mat_props["GLOBAL_tint"] = tuple(float(v) for v in props["GLOBAL_tint".casefold()].value.split())
+                global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_TINT
+                #TODO: We need a logger call somehow to tell the user that
+        except AttributeError: # != "STRING", 'non-str' object has no attribute 'split'
+            logger.warn("{}'s GLOBAL_tint's property value '{}' is not a string".format(obj.name, props["GLOBAL_tint".casefold()]))
+        except ValueError: #incorrect number of values to unpack or bad float conversion
+            logger.warn("Could not convert {}'s GLOBAL_tint property could not be parsed to two floats")
+        except (KeyError,Exception):
+            pass
+        if "NORMAL_METALNESS".casefold() in props:
             global_mat_props["NORMAL_METALNESS"] = True
             global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_NORM_MET
-        elif "BLEND_GLASS" in props:
+        elif "BLEND_GLASS".casefold() in props:
             global_mat_props["BLEND_GLASS"] = True
             global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_BLEND_GLASS
 
@@ -570,6 +597,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
         if not search_obj.material_slots:
             search_obj.data.materials.append(test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME))
+            search_obj.data.materials[0].specular_intensity = 0.0
 
         for slot in search_obj.material_slots:
             if not slot.material:
@@ -595,18 +623,18 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 if prop_name == "GLOBAL_cockpit_lit":
                     root_object.xplane.cockpit_lit = True
                 elif prop_name == "GLOBAL_no_blend":
-                    slot.material.xplane.blend_mode = xplane_constants.BLEND_OFF
+                    slot.material.xplane.blend_v1000 = xplane_constants.BLEND_OFF
                     slot.material.xplane.blendRatio = prop_value
                 elif prop_name == "GLOBAL_shadow_blend":
-                    slot.material.xplane.blend_mode = xplane_constants.BLEND_SHADOW
-                    #TODO: We'll have to normalize specularity across all materials?
-                elif prop_name == "GLOBAL_specular":
+                    slot.material.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
+                    slot.material.xplane.blendRatio = prop_value #TODO: Currently, we aren't implmenenting either _shadow_blend correctly, but when we do, we'll be ready
+                elif prop_name == "GLOBAL_specular": #TODO: We'll have to normalize specularity across all materials?
                     #This doesn't really make sense unless you're doing scenery or instanced scenery to mess with everyone's specularity
                     #slot.material.specular_intensity = prop_value
                     pass
                 elif prop_name == "GLOBAL_tint":
-                    #TODO: What if prop_vale isn't a tuple of two floats?
-                    slot.material.xplane.tint_albedo, slot.material.xplane.tint_emission = prop_value
+                    slot.material.xplane.tint = True
+                    slot.material.xplane.tint_albedo, slot.material.xplane.tint_emissive = prop_value
                 elif prop_name == "NORMAL_METALNESS":
                     slot.material.xplane.normal_metalness = prop_value
                 elif prop_name == "BLEND_GLASS":

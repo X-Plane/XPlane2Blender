@@ -1,5 +1,4 @@
 import inspect
-
 from typing import Tuple
 import os
 import sys
@@ -15,46 +14,47 @@ class TestGlobalAttributesApplied(XPlaneTestCase):
     def test_BlendGlass(self):
         """(both cubes get BLEND_GLASS)"""
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
-        self.assertTrue(bpy.scenes["BlendGlass"].objects[0].material_slots[0].xplane.blend_glass)
-        self.assertTrue(bpy.scenes["BlendGlass"].objects[1].material_slots[0].xplane.blend_glass)
-
-    def test_GlobalCockpitLit(self):
-        """(everything gets Cockpit Lit, actually just sets panel_ok)"""
-        self.assertTrue(bpy.scenes["GlobalCockpitLit"].objects[0].material_slots[0].xplane.cockpit_lit)
-        self.assertTrue(bpy.scenes["GlobalCockpitLit"].objects[1].material_slots[0].xplane.cockpit_lit)
+        self.assertTrue(bpy.data.scenes["BlendGlass"].objects["BlendGlass_1"].material_slots[0].material.xplane.blend_glass)
+        self.assertTrue(bpy.data.scenes["BlendGlass"].objects["BlendGlass_2"].material_slots[0].material.xplane.blend_glass)
 
     def test_GlobalNoBlend(self):
-        """(gets .15)"""
-        self.assertEqual(bpy.scenes["GlobalNoBlend"].objects[0].material_slots[0].xplane.blend_v1000, xplane_constants.BLEND_OFF)
-        self.assertEqual(bpy.scenes["GlobalNoBlend"].objects[1].material_slots[0].xplane.blend_v1000, xplane_constants.BLEND_OFF)
-        self.assertEqual(bpy.scenes["GlobalNoBlend"].objects[0].material_slots[0].xplane.blendRatio, 0.15)
-        self.assertEqual(bpy.scenes["GlobalNoBlend"].objects[1].material_slots[0].xplane.blendRatio, 0.15)
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        """(gets 1.0)"""
+        self.assertEqual(bpy.data.scenes["GlobalNoBlend"].objects["GlobalNoBlend_1"].material_slots[0].material.xplane.blend_v1000, xplane_constants.BLEND_OFF)
+        self.assertEqual(bpy.data.scenes["GlobalNoBlend"].objects["GlobalNoBlend_2"].material_slots[0].material.xplane.blend_v1000, xplane_constants.BLEND_OFF)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalNoBlend"].objects["GlobalNoBlend_1"].material_slots[0].material.xplane.blendRatio, 1.0)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalNoBlend"].objects["GlobalNoBlend_2"].material_slots[0].material.xplane.blendRatio, 1.0)
 
     def test_GlobalShadowBlend(self):
         """(gets .25)"""
-        self.assertEqual(bpy.scenes["GlobalShadowBlend"].objects[0].material_slots[0].xplane.blend_v1000, xplane_constants.BLEND_SHADOW)
-        self.assertEqual(bpy.scenes["GlobalShadowBlend"].objects[1].material_slots[0].xplane.blend_v1000, xplane_constants.BLEND_SHADOW)
-        #TODO: Test specularity is normalized by having objects [0,1] have different materials
-        pass
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        self.assertEqual(bpy.data.scenes["GlobalShadowBlend"].objects["GlobalShadowBlend_1"].material_slots[0].material.xplane.blend_v1000, xplane_constants.BLEND_SHADOW)
+        self.assertEqual(bpy.data.scenes["GlobalShadowBlend"].objects["GlobalShadowBlend_2"].material_slots[0].material.xplane.blend_v1000, xplane_constants.BLEND_SHADOW)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalShadowBlend"].objects["GlobalShadowBlend_1"].material_slots[0].material.xplane.blendRatio, 0.25)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalShadowBlend"].objects["GlobalShadowBlend_2"].material_slots[0].material.xplane.blendRatio, 0.25)
 
     def test_GlobalSpecular(self):
         """(gets .35)"""
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        #TODO: Test specularity is normalized by having objects [0,1] have different materials
         pass
 
     def test_GlobalTint(self):
         """(both cubes get Albedo .45, Emissive .55 whatever)"""
-        self.assertTrue(bpy.scenes["GlobalTint"].objects[0].material_slots[0].xplane.tint)
-        self.assertTrue(bpy.scenes["GlobalTint"].objects[1].material_slots[0].xplane.tint)
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        self.assertTrue(bpy.data.scenes["GlobalTint"].objects["GlobalTint_1"].material_slots[0].material.xplane.tint)
+        self.assertTrue(bpy.data.scenes["GlobalTint"].objects["GlobalTint_2"].material_slots[0].material.xplane.tint)
 
-        self.assertEqual(bpy.scenes["GlobalTint"].objects[0].material_slots[0].xplane.tint_albedo, 0.45)
-        self.assertEqual(bpy.scenes["GlobalTint"].objects[0].material_slots[0].xplane.tint_emissive, 0.55)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalTint"].objects["GlobalTint_1"].material_slots[0].material.xplane.tint_albedo, 0.45)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalTint"].objects["GlobalTint_1"].material_slots[0].material.xplane.tint_emissive, 0.55)
 
-        self.assertEqual(bpy.scenes["GlobalTint"].objects[1].material_slots[0].xplane.tint_albedo, 0.45)
-        self.assertEqual(bpy.scenes["GlobalTint"].objects[1].material_slots[0].xplane.tint_emissive, 0.55)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalTint"].objects["GlobalTint_2"].material_slots[0].material.xplane.tint_albedo, 0.45)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalTint"].objects["GlobalTint_2"].material_slots[0].material.xplane.tint_emissive, 0.55)
 
     def test_NormalMetalness(self):
         """(both cubes get NORMAL_METALNESS)"""
-        self.assertTrue(bpy.scenes["NormalMetalness"].objects[0].material_slots[0].xplane.normal_metalness)
-        self.assertTrue(bpy.scenes["NormalMetalness"].objects[1].material_slots[0].xplane.normal_metalness)
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        self.assertTrue(bpy.data.scenes["NormalMetalness"].objects["NormalMetalness_1"].material_slots[0].material.xplane.normal_metalness)
+        self.assertTrue(bpy.data.scenes["NormalMetalness"].objects["NormalMetalness_2"].material_slots[0].material.xplane.normal_metalness)
 
 runTestCases([TestGlobalAttributesApplied])
