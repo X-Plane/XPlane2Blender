@@ -533,12 +533,17 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 logger.warn("{}'s GLOBAL_tint's property value '{}' is not a string".format(obj.name, props["GLOBAL_tint".casefold()]))
                 raise Exception
             else:
-                global_mat_props["GLOBAL_tint"] = tuple(float(v) for v in props["GLOBAL_tint".casefold()].value.split())
+                tints_value  = tuple(float(v) for v in props["GLOBAL_tint".casefold()].value.split())
+                if len(tints_value) != 2:
+                    raise ValueError
+                global_mat_props["GLOBAL_tint"] = tints_value
                 global_hint_suffix += "_" + xplane_249_constants.HINT_GLOBAL_TINT
-                #TODO: We need a logger call somehow to tell the user that
-        except AttributeError: # != "STRING", 'non-str' object has no attribute 'split'
+                #TODO: We need a logger call somehow to tell the user that tint has been set on some material
+                #logger.info("Albedo tint and emissive tint has been set to .2 and .3 on all materials in root object")
+                #etc for others
+        except AttributeError: # 'non-str' object has no attribute 'split'
             logger.warn("{}'s GLOBAL_tint's property value '{}' is not a string".format(obj.name, props["GLOBAL_tint".casefold()]))
-        except ValueError: #incorrect number of values to unpack or bad float conversion
+        except ValueError: # incorrect number of values to unpack or bad float conversion
             logger.warn("Could not convert {}'s GLOBAL_tint property could not be parsed to two floats")
         except (KeyError,Exception):
             pass
