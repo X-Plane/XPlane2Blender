@@ -321,7 +321,8 @@ def object_layer_layout(self, obj):
 #   int layer - <XPlaneLayer> index.
 def layer_layout(self, layout, layerObj, version, context = 'scene'):
     canHaveDraped = version >= 1000 and layerObj.export_type not in ['aircraft', 'cockpit']
-    isInstanced   = version >= 1000 and layerObj.export_type == 'instanced_scenery'
+    isInstanced = version >= 1000 and layerObj.export_type == 'instanced_scenery'
+    canHaveSceneryProps = layerObj.export_type not in ['aircraft', 'cockpit']
 
     #column = layout.column()
     layout.prop(layerObj, "name")
@@ -422,47 +423,48 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         if canHaveDraped:
             lods_box.prop(layerObj, "lod_draped")
 
-    #Scenery Properties Group
-    scenery_props_group_box = layout.box()
-    scenery_props_group_box.label("Scenery Properties")
+    if canHaveSceneryProps:
+        #Scenery Properties Group
+        scenery_props_group_box = layout.box()
+        scenery_props_group_box.label("Scenery Properties")
 
-    layer_group_box = scenery_props_group_box.box()
-    layer_group_box.label("Layer Grouping")
-    layer_group_box.prop(layerObj, "layer_group")
-    layer_group_box.prop(layerObj, "layer_group_offset")
+        layer_group_box = scenery_props_group_box.box()
+        layer_group_box.label("Layer Grouping")
+        layer_group_box.prop(layerObj, "layer_group")
+        layer_group_box.prop(layerObj, "layer_group_offset")
 
-    if canHaveDraped:
-        layer_group_box.prop(layerObj, "layer_group_draped")
-        layer_group_box.prop(layerObj, "layer_group_draped_offset")
+        if canHaveDraped:
+            layer_group_box.prop(layerObj, "layer_group_draped")
+            layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
-    # v1010
-    if version >= 1010 and (layerObj.export_type == EXPORT_TYPE_SCENERY or
-                            layerObj.export_type == EXPORT_TYPE_INSTANCED_SCENERY):
-        
-        #TODO: Shouldn't these be material properties instead?
-        # shadow
-        shadow_box = scenery_props_group_box.box()
-        shadow_box.prop(layerObj, "shadow", "Cast shadows")
-        
-    # v1000
-    if version >= 1000:
-        # slope_limit
-        slope_box = scenery_props_group_box.box()
-        slope_box.label("Slope Properties")
-        slope_box.prop(layerObj, "slope_limit")
+        # v1010
+        if version >= 1010 and (layerObj.export_type == EXPORT_TYPE_SCENERY or
+                                layerObj.export_type == EXPORT_TYPE_INSTANCED_SCENERY):
+            
+            #TODO: Shouldn't these be material properties instead?
+            # shadow
+            shadow_box = scenery_props_group_box.box()
+            shadow_box.prop(layerObj, "shadow", "Cast shadows")
+            
+        # v1000
+        if version >= 1000:
+            # slope_limit
+            slope_box = scenery_props_group_box.box()
+            slope_box.label("Slope Properties")
+            slope_box.prop(layerObj, "slope_limit")
 
-        if layerObj.slope_limit == True:
-            slope_box.row().prop(layerObj, "slope_limit_min_pitch")
-            slope_box.row().prop(layerObj, "slope_limit_max_pitch")
-            slope_box.row().prop(layerObj, "slope_limit_min_roll")
-            slope_box.row().prop(layerObj, "slope_limit_max_roll")
+            if layerObj.slope_limit == True:
+                slope_box.row().prop(layerObj, "slope_limit_min_pitch")
+                slope_box.row().prop(layerObj, "slope_limit_max_pitch")
+                slope_box.row().prop(layerObj, "slope_limit_min_roll")
+                slope_box.row().prop(layerObj, "slope_limit_max_roll")
 
-        # tilted
-        slope_box.prop(layerObj, "tilted")
+            # tilted
+            slope_box.prop(layerObj, "tilted")
 
-        # require surface
-        require_box = scenery_props_group_box.row()
-        require_box.prop(layerObj, "require_surface", "Require surface")
+            # require surface
+            require_box = scenery_props_group_box.row()
+            require_box.prop(layerObj, "require_surface", "Require surface")
 
     # Other Options
     #layout.separator()
