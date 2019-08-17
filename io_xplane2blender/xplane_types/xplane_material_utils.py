@@ -61,6 +61,8 @@ def compareInstanced(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]
                 errors.append('Alpha cutoff must be disabled.')
         elif mat.options.blendRatio != refMat.options.blendRatio:
             errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
+        elif mat.options.shadowBlendRatio != refMat.options.shadowBlendRatio:
+            errors.append('Shadow blend ratio must be %f' % refMat.options.shadowBlendRatio)
         metalness_error = _validateNormalMetalness(refMat,mat)
         if metalness_error:
             errors.append(metalness_error)

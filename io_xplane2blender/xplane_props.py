@@ -1633,6 +1633,17 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         min = 0.0
     )
 
+    shadowBlendRatio = bpy.props.FloatProperty(
+        attr = "shadowBlendRatio",
+        name = "Shadow Blend Ratio",
+        description = "Shadow levels in the texture below this level are rendered as fully transparent",
+        default = 0.5,
+        step = 0.1,
+        precision = 2,
+        max = 1.0,
+        min = 0.0
+    )
+
     panel = bpy.props.BoolProperty(
         attr = "panel",
         name = "Part Of Cockpit Panel",
