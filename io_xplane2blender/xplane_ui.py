@@ -522,7 +522,7 @@ def dataref_search_window_layout(layout):
 def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'scene'):
     layout.separator()
     row = layout.row()
-    row.label("Export Path Directives")
+    row.label("Laminar Library Directives")
     
     if context == 'scene':
         row.operator("scene.add_xplane_export_path_directive").index = layerObj.index
@@ -533,7 +533,7 @@ def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'sce
     
     for i, attr in enumerate(layerObj.export_path_directives):
         row = box.row() 
-        row.prop(attr,"export_path", text= "Export Path " + str(i))
+        row.prop(attr,"export_path", text= "Special library.txt Directive " + str(i))
         
         if context == 'scene':
             row.operator("scene.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = (layerObj.index, i)
