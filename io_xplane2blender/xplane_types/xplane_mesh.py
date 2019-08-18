@@ -29,6 +29,9 @@ class XPlaneMesh():
     # Parameters:
     #   list xplaneObjects - list of <XPlaneObjects>.
     def collectXPlaneObjects(self, xplaneObjects):
+
+        # start = time.perf_counter()
+
         debug = getDebug()
         supports_split_normals = False
 
@@ -66,8 +69,9 @@ class XPlaneMesh():
 
                 # with the new mesh get uvFaces list
                 uvFaces = self.getUVFaces(mesh, xplaneObject.material.uv_name)
-
+                
                 faces = []
+                vertices_dct = {}
 
                 d = {'name': xplaneObject.name,'obj_face': 0,'faces': len(mesh_faces),'quads': 0,'vertices': len(mesh.vertices),'uvs': 0}
 
@@ -108,21 +112,21 @@ class XPlaneMesh():
                             ns = f['norms'][2 - i] if supports_split_normals else v.normal
 
                             if f['original_face'].use_smooth: # use smoothed vertex normal
-                                vert = [
+                                vert = (
                                     co[0], co[2], -co[1],
                                     ns[0], ns[2], -ns[1],
                                     f['uv'][i][0], f['uv'][i][1]
-                                ]
+                                )
                             else: # use flat face normal
-                                vert = [
+                                vert = (
                                     co[0], co[2], -co[1],
                                     f['original_face'].normal[0], f['original_face'].normal[2], -f['original_face'].normal[1],
                                     f['uv'][i][0], f['uv'][i][1]
-                                ]
+                                )
 
                             if bpy.context.scene.xplane.optimize:
                                 #check for duplicates
-                                index = self.getDupliVerticeIndex(vert, first_vertice_of_this_xplaneObject)
+                                index = vertices_dct.get(vert, -1)
                             else:
                                 index = -1
 
@@ -130,6 +134,9 @@ class XPlaneMesh():
                                 index = self.globalindex
                                 self.vertices.append(vert)
                                 self.globalindex += 1
+
+                                if bpy.context.scene.xplane.optimize: 
+                                    vertices_dct[vert] = index 
 
                             # store face information in one struct
                             xplaneFace.vertices[i] = (vert[0], vert[1], vert[2])
@@ -169,35 +176,7 @@ class XPlaneMesh():
 
             logger.info('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
 
-    # Method: getDupliVerticeIndex
-    # Returns the index of a vertice duplicate if any.
-    #
-    # Parameters:
-    #   v - The OBJ vertice.
-    #   int startIndex - (default=0) From which index to start searching for duplicates.
-    #
-    # Returns:
-    #   int - Index of the duplicate or -1 if none was found.
-    def getDupliVerticeIndex(self, v, startIndex = 0):
-        l = len(self.vertices)
-
-        for i in range(startIndex, l):
-            match = True
-            ii = 0
-            vl = len(v)
-
-            while ii < vl:
-                if self.vertices[i][ii] != v[ii]:
-                    match = False
-                    ii = vl
-
-                ii += 1
-
-            if match:
-                return i
-
-        return -1
-
+            # logger.info("End XPlaneMesh  .collectXPlaneObjects: " + str(time.perf_counter()-start))
 
     # Method: getUVFaces
     # Returns Blender the UV faces of a Blender mesh.
