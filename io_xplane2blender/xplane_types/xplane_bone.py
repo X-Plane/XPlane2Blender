@@ -20,7 +20,7 @@ class XPlaneBone():
     #
     # Parameters:
     #   blenderObject - Blender Object associated with this Bone
-    #                     
+    #
     #   xplaneObject - <XPlaneObject>, will be none when XPlaneBone is None
     #   parent - Optional(optional) parent <XPlaneAnimBone>
     def __init__(self,
@@ -31,7 +31,7 @@ class XPlaneBone():
         '''
         self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy
         - It will be None for the root bone (in layers mode)
-        
+
         self.blenderBone is the Blender Bone associated with this XPlaneBone (if the origin during traversal was a bpy.types.Bone)
         Thus, you can tell if something was a Bone by if blenderBone is not None
         '''
@@ -72,7 +72,7 @@ class XPlaneBone():
     # Checks if a dataref's keyframes actually contain meaningful translations, and we should therefore write keyframes out
     def isDataRefAnimatedForTranslation(self):
         if hasattr(self, 'animations') and len(self.animations) > 0:
-           #Check to see if there is at least some difference in the keyframe locations 
+           #Check to see if there is at least some difference in the keyframe locations
             for dataref in self.animations:
                 keyframes = self.animations[dataref]
                 if len(keyframes) > 0:
@@ -83,14 +83,14 @@ class XPlaneBone():
                             return True
                         else:
                             last_keyframe = keyframe
-             
+
         return False
 
     # Method: isAnimatedForRotation
     # Checks if a dataref's keyframes actually contain meaningful rotation, and we should therefore write keyframes out
     def isDataRefAnimatedForRotation(self):
         if hasattr(self, 'animations') and len(self.animations) > 0:
-           #Check to see if there is at least some difference in the keyframe locations 
+           #Check to see if there is at least some difference in the keyframe locations
             for dataref in self.animations:
                 keyframes = self.animations[dataref]
                 if len(keyframes) > 0:
@@ -101,7 +101,7 @@ class XPlaneBone():
                             return True
                         else:
                             last_keyframe = keyframe
-             
+
         return False
 
     # Method: isAnimated
@@ -154,7 +154,7 @@ class XPlaneBone():
                     path_we_want = "bones[\"%s\"]" % bone.name
                     if not fcurve.data_path.startswith(path_we_want):
                         continue
-                
+
                 #if (fcurve.group != None and fcurve.group.name == groupName): # since 2.61 group names are not set so we have to check the datapath
                 if ('xplane.datarefs' in fcurve.data_path):
                     # get dataref name
@@ -208,7 +208,7 @@ class XPlaneBone():
         '''
         Gets the (optionally) indent level, Blender Type, and name.
         Useful for debugging and error message.
-        
+
         Note: Unit tests, like the ones in xplane_file,
         test against the output of this method!
         '''
@@ -230,7 +230,7 @@ class XPlaneBone():
 
         return 'UNKNOWN'
 
-    def getBlenderName(self):
+    def getBlenderName(self)->str:
         if self.blenderBone:
             return self.blenderBone.name
         elif self.blenderObject:
@@ -238,13 +238,13 @@ class XPlaneBone():
 
         return None
 
-    def getIndent(self):
+    def getIndent(self)->str:
         if self.level == 0:
             return  ''
 
         return ''.ljust(self.level - 1, '\t')
 
-    def toString(self, indent = ''):
+    def toString(self, indent = '')->str:
         out = indent + self.getName() + '\n'
 
         for bone in self.children:
@@ -252,7 +252,7 @@ class XPlaneBone():
 
         return out
 
-    def getFirstAnimatedParent(self):
+    def getFirstAnimatedParent(self)->str:
         if self.parent == None:
             return None
 
@@ -261,27 +261,27 @@ class XPlaneBone():
         else:
             return self.parent.getFirstAnimatedParent()
 
-	# Blender World Matrix (Pose)
-	#
-	# This is the absolute final pose of a blender object after _everything_ is taken into account.
-	# If we want to emit a mesh, this is where the mesh lives.  The world matrix might be "more"
-	# transforms than post-animation if there is a static rotation after a dynamic translation.
-	#
-    def getBlenderWorldMatrix(self):
+    # Blender World Matrix (Pose)
+    #
+    # This is the absolute final pose of a blender object after _everything_ is taken into account.
+    # If we want to emit a mesh, this is where the mesh lives.  The world matrix might be "more"
+    # transforms than post-animation if there is a static rotation after a dynamic translation.
+    #
+    def getBlenderWorldMatrix(self)->mathutils.Matrix:
         if self.blenderBone:
             # Blender bones in their current pose (which matches the shape of all data
             # blocks 'right now') are stored as a transform in the pose bone relative
             # to the parent armature.  So it's easy to export them:
             poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
             if poseBone:
-                return self.blenderObject.matrix_world.copy() * poseBone.matrix.copy()
+                return self.blenderObject.matrix_world.copy() @ poseBone.matrix.copy()
             else:
                 # FIXME: is there ever not a pose bone for a bone?  Should this be some kind of assert?
-                return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy()
+                return self.blenderObject.matrix_world.copy() @ self.blenderBone.matrix_local.copy()
         elif self.blenderObject:
             # Data blocks simply know their world-space location post-transform.
             return self.blenderObject.matrix_world.copy()
-		# Root bone gets a special exception: if it has a None blender object, then we are parented to
+        # Root bone gets a special exception: if it has a None blender object, then we are parented to
         # the glboal coordinate system
         elif self.parent == None:
             return mathutils.Matrix.Identity(4)
@@ -290,24 +290,24 @@ class XPlaneBone():
             raise Exception()
 
 
-	#
-	# THE PRE-ANIMATION MATRIX (POSE)
-	#
-	# This matrix represents the world space pose in the rest position of this bone _before_
-	# its animations are applied.  This is the frame of reference in which the animations are
-	# happening.
-	#
-	# It is only legal to ask for this if (1) a bone is animated and (2) it is not the root
-	# bone.
-    def getPreAnimationMatrix(self):
+    #
+    # THE PRE-ANIMATION MATRIX (POSE)
+    #
+    # This matrix represents the world space pose in the rest position of this bone _before_
+    # its animations are applied.  This is the frame of reference in which the animations are
+    # happening.
+    #
+    # It is only legal to ask for this if (1) a bone is animated and (2) it is not the root
+    # bone.
+    def getPreAnimationMatrix(self)->mathutils.Matrix:
         if self.parent == None:
-			# No one should ever need the pre-animation matrix of the root bone -
-			# we only need this to get a bake matrix between two animations.
+            # No one should ever need the pre-animation matrix of the root bone -
+            # we only need this to get a bake matrix between two animations.
             print("Pre-animation requested on root bone - who requested this?")
             raise Exception()
         elif not self.isAnimated():
-			# We should not ask for pre and post animation matrices when there is no
-			# animation - if we did, the code has failed to optimize something out.
+            # We should not ask for pre and post animation matrices when there is no
+            # animation - if we did, the code has failed to optimize something out.
             print(self)
             raise Exception()
         elif self.blenderBone:
@@ -327,54 +327,54 @@ class XPlaneBone():
                 #
                 # So we construct it ourselves.  r2r is the _relative_ transform from the parent bone
                 # to our bone when at rest - in other words, it's the bake matrix from our parent bone to us.
-                r2r = self.blenderBone.parent.matrix_local.inverted_safe() * self.blenderBone.matrix_local
+                r2r = self.blenderBone.parent.matrix_local.inverted_safe() @ self.blenderBone.matrix_local
                 # Now we can formulate that the full transform is:
                 # 1. Armature's world space
                 # 2. Our parent's pose
                 # 3. The bake matrix from our parent's pose to us.
                 # This gets us up to right before our transform.
-                return (self.blenderObject.matrix_world.copy() * poseBone.parent.matrix.copy() * r2r) * static_translation
+                return (self.blenderObject.matrix_world.copy() @ poseBone.parent.matrix.copy() @ r2r) @ static_translation
 
             # This is the unparented bone case (and any fall-throughs from crazy objects):
             # Simply apply our rest position (relative to the armature) to the armature's current world-space
             # position.
-            return self.blenderObject.matrix_world.copy() * self.blenderBone.matrix_local.copy() * static_translation
+            return self.blenderObject.matrix_world.copy() @ self.blenderBone.matrix_local.copy() @ static_translation
 
         elif self.blenderObject:
-            
+
             # Animated objects are affected by "a bunch of stuff" that Blender does - it's hard to predict what it all is.
             # But data block animation is the LAST thing that happens.  So we can basically take our post-animation pose,
             # back out the known animation, and that's our pre-animation pose.
-            
+
             # (In previous versions we used to start with the parent and work forward, but this required simulating the
             # parent-child transformation, which involves a bunch of specal logic fo bones.
             # This is more reliable.
-            
+
             # This is our final post-data block animation pose. (Technically it's MORE than post-animation if we have a dynamic
             # translation and static rotation, for example.)
             my_final = self.getBlenderWorldMatrix()
-            
+
             # This is all of the transformations (rot,loc,scale) that our data block might do.
             my_block = self.blenderObject.matrix_basis
-            
+
             # If we are NOT animated for translation and we are here we MUST be animated for rotation.  In this case, we want
             # to treat ONLY the rotation part as "dynamic" - so nuke the translation components.
             if not self.isDataRefAnimatedForTranslation():
                 my_block = my_block.to_3x3().to_4x4()
-            
+
             # This is the "undo" of the dynamic part of our block transform
             before_my_block = my_block.inverted_safe()
-            
+
             # Final result is our post-animation pose with the dynamic animatons subtracted out.  This will nuke either
             # rotation or rotatio + location.
-            return my_final * before_my_block            
+            return my_final * before_my_block
 
-	#
-	# THE POST-ANIMATION MATRIX (POSE)
-	#
-	# This matrix represents the world space pose of the bone just after all dynamic animation.  EVERY
-	# bone has this, because everything "on" the bone (sub-bones, meshes) is attached to this pose.
-	#
+    #
+    # THE POST-ANIMATION MATRIX (POSE)
+    #
+    # This matrix represents the world space pose of the bone just after all dynamic animation.  EVERY
+    # bone has this, because everything "on" the bone (sub-bones, meshes) is attached to this pose.
+    #
     def getPostAnimationMatrix(self):
         if self.parent == None:
             # WARNING: If the root bone has been scaled then the scale does NOT apply to the OBJ.
@@ -382,11 +382,10 @@ class XPlaneBone():
             # but may astonish users.
             return self.getBlenderWorldMatrix() # correctly returns Identity for root bone
         elif not self.isAnimated():
-			#No one should be asking or post-animation matrices on _non_-animated bones!
+                        #No one should be asking or post-animation matrices on _non_-animated bones!
             print(self)
             raise Exception()
         else:
-        
             # Scaling trickery: we have to BACK OUT the scaling of our post-animation matrix...this
             # pushes it into the next bake, which means eventually the mesh vertices themselves get scaled.
             # If we DONT'T do this then scaling "above" an animation won't scale what's below because the code
@@ -400,16 +399,16 @@ class XPlaneBone():
             # First: get our world matrix without ANY scaling.
             world_matrix = self.getBlenderWorldMatrix()
             loc, rot, scale = world_matrix.decompose()
-            world_matrix_no_scale = mathutils.Matrix.Translation(loc) * rot.to_matrix().to_4x4()
+            world_matrix_no_scale = mathutils.Matrix.Translation(loc) @ rot.to_matrix().to_4x4()
             # If there is no scaling, just take our real matrix, don't decompose and recompose.  This aims to
             # avoid floating point crap accumulation
             if scale == mathutils.Vector((1.0,1.0,1.0)):
                 world_matrix_no_scale = world_matrix
-            
+
             if not self.isDataRefAnimatedForRotation():
-				# No-rotation case: back out ONLY OUR rotation.  Note that our parents rotations and other random
+                # No-rotation case: back out ONLY OUR rotation.  Note that our parents rotations and other random
                 # rotations are kept in!
-            
+
                 if self.blenderBone:
                     poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
                     our_loc, our_rot, our_scale = poseBone.matrix_basis.decompose()
@@ -417,47 +416,47 @@ class XPlaneBone():
                     our_loc, our_rot, our_scale = self.blenderObject.matrix_basis.decompose()
 
                 our_rot_inv = our_rot.to_matrix().to_4x4().inverted_safe()
-                return world_matrix_no_scale * our_rot_inv
+                return world_matrix_no_scale @ our_rot_inv
             else:
                 return world_matrix_no_scale
 
-	#
-	# ANIMATION BAKE MATRIX (DELTA)
-	#
+    #
+    # ANIMATION BAKE MATRIX (DELTA)
+    #
     # A bake matrix is a _delta_ - a transformation from one pose to another that is static in the model, and therefore can
-	# be implemented by "applying" the transform to the child things, instead of writing it as ANIM_ directives.
-	# In other wods, it is a static relative transform that is elligible for 'baking'.
-	#
-	# Baking is important because without it, the exporter would have to output a ton of transform code for 'highly structured'
-	# (but not dynamic) models; with baking, an author can use lots of sub-blocks and relative positioning and still just get
-	# triangles.
-	#
-	# The bake matrix for animations for bone X is the static transform _from X's parent bone to X before its animations.
-	# In other words, once we are in X's parent's coordinate system, we need to do this bake to then apply our animations.
+    # be implemented by "applying" the transform to the child things, instead of writing it as ANIM_ directives.
+    # In other wods, it is a static relative transform that is elligible for 'baking'.
+    #
+    # Baking is important because without it, the exporter would have to output a ton of transform code for 'highly structured'
+    # (but not dynamic) models; with baking, an author can use lots of sub-blocks and relative positioning and still just get
+    # triangles.
+    #
+    # The bake matrix for animations for bone X is the static transform _from X's parent bone to X before its animations.
+    # In other words, once we are in X's parent's coordinate system, we need to do this bake to then apply our animations.
     def getBakeMatrixForMyAnimations(self):
         parent_bone = self.getFirstAnimatedParent()
         if parent_bone == None:
             # If we have no parent bone, our bake matrix goes from global coordinates TO our pre-animation pose.
-			# This would be more formal if it was inverse(identity) * getPreAnimationMatrix() - this has been
-			# simplifiied.
+            # This would be more formal if it was inverse(identity) * getPreAnimationMatrix() - this has been
+            # simplifiied.
             return self.getPreAnimationMatrix()
         else:
-			# This is the parent transform we are going from
+            # This is the parent transform we are going from
             parent_post = self.getFirstAnimatedParent().getPostAnimationMatrix()
-			# This is the child we are going to
+            # This is the child we are going to
             pre = self.getPreAnimationMatrix()
-            return parent_post.inverted_safe() * pre
+            return parent_post.inverted_safe() @ pre
 
 
-	# ATTACHENT BAKE MATRIX (DELTA)
-	#
-	# This bake matrix is the delta from the final bone (post animation) to an actual THING like a mesh or a light.
+    # ATTACHENT BAKE MATRIX (DELTA)
+    #
+    # This bake matrix is the delta from the final bone (post animation) to an actual THING like a mesh or a light.
     #
     # This API gets the bake matrix to be applied to output-able primitives that are attached to -this- bone.
     # In other words, this is a helper for how to bake our lights, meshes, etc.
     #
     def getBakeMatrixForAttached(self):
-		# Our anchor bone is the thing we are attached to - it might be us, or it might be our parent.
+                # Our anchor bone is the thing we are attached to - it might be us, or it might be our parent.
         if self.isAnimated():
             my_anchor_bone = self                           # The anchor bone is the last bone to be animated -
         else:                                               # We are 'in' its post-animation coordinate system
@@ -473,7 +472,7 @@ class XPlaneBone():
             anchor_post_anim = my_anchor_bone.getPostAnimationMatrix()
             my_final_world = self.getBlenderWorldMatrix()
             # Find the relative matrix from the post-animation of our last animated bone to our final post animation transform.
-            return anchor_post_anim.inverted_safe() * my_final_world
+            return anchor_post_anim.inverted_safe() @ my_final_world
 
     def __str__(self):
         return self.toString()
@@ -496,11 +495,11 @@ class XPlaneBone():
                         if poseParent:
                             o += "#  parent matrix local rest\n" + str(self.blenderBone.parent.matrix_local) + "\n"
                             o += "#  parent matrix local pose\n" + str(poseParent.matrix) + "\n"
-                            o += "#  delta r2r\n" + str(self.blenderBone.parent.matrix_local.inverted_safe() * self.blenderBone.matrix_local) + "\n"
-                            o += "#  delta p2p\n" + str(poseParent.matrix.inverted_safe() * poseBone.matrix) + "\n"
+                            o += "#  delta r2r\n" + str(self.blenderBone.parent.matrix_local.inverted_safe() @ self.blenderBone.matrix_local) + "\n"
+                            o += "#  delta p2p\n" + str(poseParent.matrix.inverted_safe() @ poseBone.matrix) + "\n"
                     o += "#   matrix local rest\n" + str(self.blenderBone.matrix_local) + "\n"
                     o += "#   matrix local pose\n" + str(poseBone.matrix) + "\n"
-                    o += "#   pose delta\n" + str(self.blenderBone.matrix_local.inverted_safe() * poseBone.matrix) + "\n"
+                    o += "#   pose delta\n" + str(self.blenderBone.matrix_local.inverted_safe() @ poseBone.matrix) + "\n"
             elif self.blenderObject != None:
                 o += "# Data block\n" + str(self.blenderObject.matrix_world) + "\n"
 
@@ -570,7 +569,7 @@ class XPlaneBone():
 
         return o
 
-    def _writeStaticRotation(self, bakeMatrix):
+    def _writeStaticRotation(self, bakeMatrix:mathutils.Matrix)->str:
         debug = getDebug()
         indent = self.getIndent()
         o = ''
@@ -579,7 +578,7 @@ class XPlaneBone():
         rotation[0] = round(rotation[0],5)
         rotation[1] = round(rotation[1],5)
         rotation[2] = round(rotation[2],5)
-        
+
         # ignore noop rotations
         if rotation[0] == 0 and rotation[1] == 0 and rotation[2] == 0:
             return o
@@ -587,18 +586,18 @@ class XPlaneBone():
         if debug:
             o += indent + '# static rotation\n'
 
-		# Ben says: this is SLIGHTLY counter-intuitive...Blender axes are
-		# globally applied in a Euler, so in our XYZ, X is affected -by- Y
-		# and both are affected by Z.
-		#
-		# Since X-Plane works opposite this, we are going to apply the
-		# animations exactly BACKWARD! ZYX.  The order here must
-		# be opposite the decomposition order above.
-		#
-		# Note that since our axis naming is ALSO different this will
-		# appear in the OBJ file as Y -Z X.
-		#
-		# see also: http://hacksoflife.blogspot.com/2015/11/blender-notepad-eulers.html
+        # Ben says: this is SLIGHTLY counter-intuitive...Blender axes are
+        # globally applied in a Euler, so in our XYZ, X is affected -by- Y
+        # and both are affected by Z.
+        #
+        # Since X-Plane works opposite this, we are going to apply the
+        # animations exactly BACKWARD! ZYX.  The order here must
+        # be opposite the decomposition order above.
+        #
+        # Note that since our axis naming is ALSO different this will
+        # appear in the OBJ file as Y -Z X.
+        #
+        # see also: http://hacksoflife.blogspot.com/2015/11/blender-notepad-eulers.html
 
         axes = (2, 1, 0)
         eulerAxes = [(0.0,0.0,1.0),(0.0,1.0,0.0),(1.0,0.0,0.0)]
@@ -620,9 +619,9 @@ class XPlaneBone():
 
         return o
 
-    def _writeKeyframesLoop(self, dataref):
+    def _writeKeyframesLoop(self, dataref:str)->str:
         o = ''
-        
+
         if dataref in self.datarefs:
             if self.datarefs[dataref].loop > 0:
                 indent = self.getIndent()
@@ -632,18 +631,18 @@ class XPlaneBone():
                 )
         return o
 
-    def _writeTranslationKeyframes(self, dataref):
+    def _writeTranslationKeyframes(self, dataref:str)->str:
         debug = getDebug()
         keyframes = self.animations[dataref]
-        
+
         o = ''
-        
+
         if not self.isDataRefAnimatedForTranslation():
             return o
-        
+
         # Apply scaling to translations
         pre_loc, pre_rot, pre_scale = self.getPreAnimationMatrix().decompose()
-        
+
         totalTrans = 0
         indent = self.getIndent()
 
@@ -657,9 +656,9 @@ class XPlaneBone():
 
             o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
                 indent, floatToStr(keyframe.value),
-                floatToStr(keyframe.location[0] * pre_scale[0]),
-                floatToStr(keyframe.location[2] * pre_scale[2]),
-                floatToStr(-keyframe.location[1] * pre_scale[1])
+                floatToStr(keyframe.location[0] @ pre_scale[0]),
+                floatToStr(keyframe.location[2] @ pre_scale[2]),
+                floatToStr(-keyframe.location[1] @ pre_scale[1])
             )
 
         o += self._writeKeyframesLoop(dataref)
@@ -671,7 +670,7 @@ class XPlaneBone():
 
         return o
 
-    def _writeAxisAngleRotationKeyframes(self, dataref, keyframes):
+    def _writeAxisAngleRotationKeyframes(self, dataref, keyframes)->str:
         o = ''
         indent = self.getIndent()
         totalRot = 0
@@ -713,11 +712,11 @@ class XPlaneBone():
 
         return o
 
-    def _writeQuaternionRotationKeyframes(self, dataref, keyframes):
+    def _writeQuaternionRotationKeyframes(self, dataref, keyframes)->str:
         # Writing axis angle will automatically convert quaternions to AA and write it
         return self._writeAxisAngleRotationKeyframes(dataref, keyframes.asAA())
 
-    def _writeEulerRotationKeyframes(self, dataref, keyframes):
+    def _writeEulerRotationKeyframes(self, dataref, keyframes)->str:
         debug = getDebug()
         o = ''
         indent = self.getIndent()
@@ -761,14 +760,14 @@ class XPlaneBone():
 
         return o
 
-    def _writeRotationKeyframes(self, dataref):
+    def _writeRotationKeyframes(self, dataref)->str:
         debug = getDebug()
         keyframes = self.animations[dataref]
         o = ''
-       
+
         if not self.isDataRefAnimatedForRotation():
             return o
-            
+
         indent = self.getIndent()
 
         if debug:
@@ -785,7 +784,7 @@ class XPlaneBone():
 
         return o
 
-    def _writeAnimAttributes(self):
+    def _writeAnimAttributes(self)->str:
         o = ''
         indent = self.getIndent()
 
@@ -799,7 +798,7 @@ class XPlaneBone():
 
         return o
 
-    def writeAnimationSuffix(self):
+    def writeAnimationSuffix(self)->str:
         o = ''
         indent = self.getIndent()
 
