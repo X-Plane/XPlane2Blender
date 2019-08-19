@@ -28,7 +28,7 @@ def _make_argparse():
             help="Filter test files with a regular expression",
             type=str)#[regex]
     test_selection.add_argument("-s","--start-at",
-            help="Start in list of files to test at frist matching a regular expression",
+            help="Start in list of files to test at first matching a regular expression",
             type=str)#[regex]
     test_selection.add_argument("--exclude",
             help="Exclude test files with a regular expression",
@@ -58,7 +58,7 @@ def _make_argparse():
     blender_options.add_argument("--blender",
             default="blender",# Use the blender in the system path
             type=str,
-            help="Provide alternative path to blender executable")
+            help="Provide alternative path to Blender executable")
     blender_options .add_argument("--force-blender-debug",
             help="Turn on Blender's --debug flag",
             action="store_true")
@@ -78,7 +78,7 @@ def main(argv=None)->int:
     we have a stupid simple solution: Print a special string
     at the end and parse it here.
 
-    Unfortunatly, the REGEX must be duplicated across both files
+    Unfortunately, the REGEX must be duplicated across both files
     due to some problems with importing it from the test module
     """
     TEST_RESULTS_REGEX = re.compile(r"RESULT: After (?P<testsRun>\d+) tests got (?P<errors>\d+) errors, (?P<failures>\d+) failures, and (?P<skipped>\d+) skipped")
