@@ -1,21 +1,18 @@
 import bpy
+import mathutils
+
+from typing import Dict, List, Optional
 from io_xplane2blender.xplane_config import getDebug
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_constants import *
+from io_xplane2blender.xplane_types.xplane_attribute import XPlaneAttribute
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
+from io_xplane2blender.xplane_types import xplane_bone
 
-from .xplane_attribute import XPlaneAttribute
-
-# Class: XPlaneObject
-# A basic object
-#
-# Sublcasses:
-#   <XPlaneBone>
-#   <XPlaneArmature>
-#   <XPlaneLight>
-#   <XPlaneLine>
-#   <XPlanePrimitive>
 class XPlaneObject():
+    '''
+    An object in the XPlane2Blender collection tree. It may or may not be associated with a Blender Object
+
     # Property: blenderObject
     # The blender object this <XPlaneObject> refers to.
 
@@ -23,7 +20,7 @@ class XPlaneObject():
     # string - Name of this object. The same as the <object> name.
 
     # Property: type
-    # string - Type of the object. Mostly the same as the <object> type.
+    # string - Type of the object, a duplicate of blenderObject if it has one. Mostly the same as the <object> type.
 
     # Property: datarefs
     # dict - The keys are the dataref paths and the values are references to <XPlaneDatarefs>.
@@ -31,68 +28,35 @@ class XPlaneObject():
     # Property: bakeMatrix
     # Matrix - The matrix this object was baked with. See <XPlaneMesh.getBakeMatrix> for more information.
 
-    # Property: location
-    # list - [x,y,z] With world location
-
-    # Property: angle
-    # list - [x,y,z] With world angle
-
-    # Property: scale
-    # list - [x,y,z] With world scale
-
-    # Property: locationLocal
-    # list - [x,y,z] With local location
-
-    # Property: angleLocal
-    # list - [x,y,z] With local angle
-
-    # Property: scaleLocal
-    # list - [x,y,z] With local scale
-
-    # Property: vectors
-    # Vector of vectors - (vx,vy,vz) With orientation of each rotational axis.
-
-    # Property: id
-    # int - A unique id
-
     # Property: weight
     # int - (default = 0) The object weight. Higher weight will write the object later in OBJ.
 
     # Property: lod
-    # vector - (False,False,False) with levels of details this object is in
+    # vector - (False, False, False, False) with levels of details this object is in
+    '''
 
     # Constructor: __init__
     #
     # Parameters:
     #   blenderObject - A Blender object
-    def __init__(self, blenderObject:bpy.types.Object):
-        self.type = '' # type: Optional[str]
+    def __init__(self, blenderObject: bpy.types.Object)->None:
         self.blenderObject = blenderObject
 
         #This is assaigned and tied together in in XPlaneBone's constructor
-        self.xplaneBone = None
+        self.xplaneBone = None # type: Optional[xplane_bone.XPlaneBone]
         self.name = blenderObject.name # type: str
+        self.type = self.blenderObject.type # type: str
         self.datarefs = {} # type: Dict[str,str]
-        self.bakeMatrix = None
-        
+        self.bakeMatrix = None # type: Optional[mathutils.Matrix]
+
         self.attributes = XPlaneAttributes()
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
-        self.conditions = []
+        self.conditions = [] # type: List[io_xplane2blender.xplane_props.XPlaneCondition]
 
-        if hasattr(self.blenderObject.xplane, 'lod'):
-            self.lod = self.blenderObject.xplane.lod
-        else:
-            self.lod = (False, False, False, False)
-
-        if hasattr(self.blenderObject, 'type'):
-            self.type = self.blenderObject.type
-        else:
-            self.type = None
-
-        if hasattr(self.blenderObject.xplane, 'datarefs'):
-            for i, dataref in self.blenderObject.xplane.datarefs.items():
-                self.datarefs[dataref.path] = dataref
+        self.lod = self.blenderObject.xplane.lod
+        for i, dataref in self.blenderObject.xplane.datarefs.items():
+            self.datarefs[dataref.path] = dataref
 
         self.getWeight()
 

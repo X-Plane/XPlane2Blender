@@ -1,7 +1,7 @@
 # File: xplane_helpers.py
 # Defines Helpers
 
-from typing import Optional 
+from typing import List, Optional
 import bpy
 import mathutils
 
@@ -48,15 +48,49 @@ def resolveBlenderPath(path:str)->str:
         return os.path.join(blenddir, path[2:])
     else:
         return path
- 
+
+
 def get_plugin_resources_folder()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
+
+
+def get_potential_objects_in_layer(layer_idx: int, scene: bpy.types.Scene)->List[bpy.types.Object]:
+    '''
+    Returns roughly what xplane_file will collect in a Layer Mode
+    export, taking into account only object type and layer, not its visibilty
+    '''
+    assert layer_idx in range(0,20), "Layer must be between 0 and 19"
+
+    return list(
+            filter(
+                lambda obj: obj.layers[layer_idx] and obj.type in {"MESH", "LAMP", "ARMATURE", "EMPTY"},
+                scene.objects))
+
+
+def get_potential_objects_in_root_object(root_object: bpy.types.Object)->List[bpy.types.Object]:
+    assert root_object.xplane.isExportableRoot, "Must be Root Object"
+    def collect_children(obj: bpy.types.Object)->List[bpy.types.Object]:
+        objects = [] # type: List[bpy.types.Object]
+        for child in obj.children:
+            if child.type in {"MESH", "LAMP", "ARMATURE", "EMPTY"}:
+                objects.append(child)
+            objects.extend(collect_children(child))
+        return objects
+    return collect_children(root_object)
+
+
+def get_root_objects_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
+    return [obj for obj in scene.objects if obj.xplane.isExportableRoot]
+
 
 def vec_b_to_x(v):
     return mathutils.Vector((v.x, v.z, -v.y))
 
+
 def vec_x_to_b(v):
     return mathutils.Vector((v.x, -v.z, v.y))
+
+
 # This is a convience struct to help prevent people from having to repeateld copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():
@@ -100,10 +134,10 @@ class VerStruct():
                                                str(self.build_type_version),
                                                str(self.data_model_version),
                                          "'" + str(self.build_number) + "'")
-    
+
     def __str__(self):
         #WARNING! Make sure this is the same as XPlane2BlenderVersion's!!!
-        return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)), 
+        return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)),
                                    self.build_type,
                                    self.build_type_version,
                                    self.data_model_version,
@@ -137,20 +171,20 @@ class VerStruct():
                 elif self.build_type_version <= 0:
                         print("build_type_version must be > 0 when build_type is %s" % self.build_type)
                         return False
-                
+
                 if self.build_type == xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version != 0:
                     print("Invalid build_type,data_model_version combo: legacy and data_model_version is not 0")
                     return False
                 elif self.build_type != xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version <= 0:
                     print("Invalid build_type,data_model_version combo: non-legacy and data_model_version is > 0")
                     return False
-                
+
                 if self.build_number == xplane_constants.BUILD_NUMBER_NONE:
                     return True
                 else:
                     datetime_matches = re.match(r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})", self.build_number)
                     try:
-                        # a timezone aware datetime object preforms the validations on construction. 
+                        # a timezone aware datetime object preforms the validations on construction.
                         dt = datetime.datetime(*[int(group) for group in datetime_matches.groups()],tzinfo=timezone.utc)
                     except Exception as e:
                         print('Exception %s occurred while trying to parse datetime' % e)
@@ -167,7 +201,7 @@ class VerStruct():
     @staticmethod
     def add_to_version_history(version_to_add):
         history = bpy.context.scene.xplane.xplane2blender_ver_history
-         
+
         if len(history) == 0 or history[-1].name != repr(version_to_add):
             new_hist_entry = history.add()
             new_hist_entry.name = repr(version_to_add)
@@ -200,7 +234,7 @@ class VerStruct():
 
     @staticmethod
     def make_new_build_number():
-        #Use the UNIX Timestamp in UTC 
+        #Use the UNIX Timestamp in UTC
         return datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
 
     # Method: parse_version
@@ -214,7 +248,7 @@ class VerStruct():
     # Formats
     # Old version numbers: '3.2.0', '3.2', or '3.3.13'
     # New, moder format: '3.4.0-beta.5+1.20170906154330'
-    @staticmethod    
+    @staticmethod
     def parse_version(version_str:str)->Optional['VerStruct']:
         version_struct = VerStruct()
         #We're dealing with modern
@@ -223,12 +257,12 @@ class VerStruct():
             # Regex matching and data extraction #
             ######################################
             format_str = r"(\d+\.\d+\.\d+)-(alpha|beta|dev|leg|rc)\.(\d+)"
-                
+
             if '+' in version_str:
                 format_str += r"\+(\d+)\.(\w{14})"
-                             
+
             version_matches = re.match(format_str,version_str)
-            
+
             # Part 1: Major.Minor.revision (1)
             # Part 2: '-' and a build type (2), then a literal '.' and build type number (3)
             # (Optional) literal '+'
@@ -238,7 +272,7 @@ class VerStruct():
                 version_struct.addon_version      = tuple([int(comp) for comp in version_matches.group(1).split('.')])
                 version_struct.build_type         = version_matches.group(2)
                 version_struct.build_type_version = int(version_matches.group(3))
-    
+
                 #If we have a build number, we can take this opportunity to validate it
                 if '+' in version_str:
                     version_struct.data_model_version = int(version_matches.group(4))
@@ -280,7 +314,7 @@ class XPlaneLogger():
     def __init__(self):
         self.transports = []
         self.messages = []
-        
+
     def addTransport(self, transport, messageTypes = ['error', 'warning', 'info', 'success']):
         self.transports.append({
             'fn': transport,
@@ -361,7 +395,7 @@ class XPlaneLogger():
 
     def findInfos(self):
         return self.findOfType('info')
-    
+
     @staticmethod
     def messageToString(messageType, message, context = None):
         io_xplane2blender.xplane_helpers.message_to_str_count += 1

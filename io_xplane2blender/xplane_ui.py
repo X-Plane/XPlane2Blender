@@ -2,7 +2,7 @@
 # Creates the User Interface for all X-Plane settings.
 
 import collections
-from typing import Optional 
+from typing import Optional
 
 import bpy
 from io_xplane2blender import xplane_constants
@@ -169,6 +169,18 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
         sub.prop(emp.emitter_props, "index_enabled", text="")
         sub.active = getattr(emp.emitter_props, "index_enabled")
         sub.prop(emp.emitter_props, "index", text="Index")
+    elif emp.special_type == EMPTY_USAGE_MAGNET:
+        box = layout.box()
+        box.label("Magnet Settings")
+        row = box.row()
+        row.prop(emp.magnet_props, "debug_name")
+        row = box.row(align=True)
+        row.label("Magnet Type:")
+        sub_row = row.row(align=True)
+        sub_row.alignment = "RIGHT"
+        sub_row.prop(emp.magnet_props, "magnet_type_is_xpad")
+        sub_row.prop(emp.magnet_props, "magnet_type_is_flashlight")
+
 
 # Function: scene_layout
 # Draws the UI layout for scene tabs. Uses <layer_layout>.
@@ -224,7 +236,7 @@ def scene_layout(self, scene):
         #TODO: Remove profiler entirely?
         #debug_box.prop(scene.xplane, "profile")
         debug_box.prop(scene.xplane, "log")
-    
+
     scene_dev_layout(self,scene,layout)
 
 def scene_dev_layout(self,scene,layout):
@@ -237,7 +249,7 @@ def scene_dev_layout(self,scene,layout):
         dev_box_column.prop(scene.xplane, "dev_enable_breakpoints")
         dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
-        #Exact same operator, more convient place 
+        #Exact same operator, more convient place
         dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
         dev_box_column.operator("scene.dev_layer_names_from_objects")
         updater_row = dev_box_column.row()
@@ -245,7 +257,7 @@ def scene_dev_layout(self,scene,layout):
         updater_row.operator("scene.dev_rerun_updater")
         updater_row = dev_box_column.row()
         updater_row.operator("scene.dev_create_lights_txt_summary")
-        
+
         history_box = dev_box_column.box()
         history_box.label("XPlane2Blender Version History")
         history_list = list(scene.xplane.xplane2blender_ver_history)
@@ -261,7 +273,7 @@ def scene_dev_layout(self,scene,layout):
                 icon_str="ERROR"
             elif entry.build_type == xplane_constants.BUILD_TYPE_RC and entry.build_number != BUILD_NUMBER_NONE:
                 icon_str="FILE_TICK"
-            
+
             history_box.label(text=str(entry), icon=icon_str)
 
 def scene_layer_layout(self, scene, layout, layer):
@@ -435,15 +447,6 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
         layer_group_box.prop(layerObj, "layer_group_draped")
         layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
-    # v1010
-    if version >= 1010 and (layerObj.export_type == EXPORT_TYPE_SCENERY or
-                            layerObj.export_type == EXPORT_TYPE_INSTANCED_SCENERY):
-        
-        #TODO: Shouldn't these be material properties instead?
-        # shadow
-        shadow_box = scenery_props_group_box.box()
-        shadow_box.prop(layerObj, "shadow", "Cast shadows")
-        
     # v1000
     if version >= 1000:
         # slope_limit
@@ -523,18 +526,18 @@ def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'sce
     layout.separator()
     row = layout.row()
     row.label("Export Path Directives")
-    
+
     if context == 'scene':
         row.operator("scene.add_xplane_export_path_directive").index = layerObj.index
     elif context == 'object':
         row.operator("object.add_xplane_export_path_directive")
-        
+
     box = layout.box()
-    
+
     for i, attr in enumerate(layerObj.export_path_directives):
-        row = box.row() 
+        row = box.row()
         row.prop(attr,"export_path", text= "Export Path " + str(i))
-        
+
         if context == 'scene':
             row.operator("scene.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = (layerObj.index, i)
         elif context == 'object':
@@ -628,6 +631,10 @@ def material_layout(layout:UILayout,
 
         if version >= 1100:
             draw_box_column.prop(active_material.xplane, "blend_glass")
+
+        if version >= 1010:
+            draw_box_column.prop(active_material.xplane, "shadow_local")
+
         if version >= 1000:
             blend_prop_enum = active_material.xplane.blend_v1000
         else:
@@ -649,7 +656,7 @@ def material_layout(layout:UILayout,
     surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
     ll_box = layout.box()
     ll_box.label("Light Levels")
-    ll_box_column = ll_box.column() 
+    ll_box_column = ll_box.column()
     ll_box_column.prop(active_material.xplane, "lightLevel")
 
     if active_material.xplane.lightLevel:
@@ -841,20 +848,20 @@ def axis_detent_ranges_layout(self, layout, manip):
     layout.separator()
     row = layout.row()
     row.label("Axis Detent Range")
-    
+
     row.operator("object.add_xplane_axis_detent_range")
-        
+
     box = layout.box()
 
     for i, attr in enumerate(manip.axis_detent_ranges):
-        row = box.row() 
+        row = box.row()
         row.prop(attr,"start")
         row.prop(attr,"end")
         if manip.type == MANIP_DRAG_AXIS_DETENT:
             row.prop(attr,"height", text="Length")
         else:
             row.prop(attr,"height")
-        
+
         row.operator("object.remove_xplane_axis_detent_range", text="", emboss=False, icon="X").index = i
 
 # Function: manipulator_layout
@@ -1045,7 +1052,7 @@ def manipulator_layout(self, obj):
         props['hold_step']   = (lambda manip_type: manip_type in {MANIP_AXIS_KNOB, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None)
         props['wheel_delta'] = (lambda manip_type: manip_type in MANIPULATORS_MOUSE_WHEEL and xplane_version >= 1050, None)
 
-        if manipType in MANIPULATORS_OPT_IN and xplane_version >= 1110: 
+        if manipType in MANIPULATORS_OPT_IN and xplane_version >= 1110:
             box.prop(obj.xplane.manip, 'autodetect_settings_opt_in')
 
         for prop,predicates in props.items():
@@ -1159,14 +1166,14 @@ class UL_CommandSearchList(bpy.types.UIList):
     def filter_items(self, context, data, propname):
         flt_flags = []
         flt_neworder = []
-        
+
         filter_name = self.filter_name
         if filter_name == "":
             return flt_flags,flt_neworder
-        
+
         #Search info:
         # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
-        # A command must match at least one search in all searches, and must partially match each search term        
+        # A command must match at least one search in all searches, and must partially match each search term
         search_info = []
         for search in filter_name.upper().split('|'):
             search_info.append(frozenset(search.split(' ')))
@@ -1225,14 +1232,14 @@ class UL_DatarefSearchList(bpy.types.UIList):
     def filter_items(self, context, data, propname):
         flt_flags = []
         flt_neworder = []
-        
+
         filter_name = self.filter_name
         if filter_name == "":
             return flt_flags,flt_neworder
-        
+
         #Search info:
         # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
-        # A dataref must match at least one search in all searches, and must partially match each search term        
+        # A dataref must match at least one search in all searches, and must partially match each search term
         search_info = []
         for search in filter_name.upper().split('|'):
             search_info.append(frozenset(search.split(' ')))
@@ -1306,7 +1313,7 @@ _XPlaneUITypes = [
     UL_DatarefSearchList,
     XPlaneError,
     XPlaneMessage
-] 
+]
 
 # Function: addXPlaneUI
 # Registers all UI Panels.

@@ -12,10 +12,11 @@ sim/operation/stab_deriv_heading                   Print lateral stability deriv
 sim/operation/recording                            Toggle user interaction recording pane.
 sim/operation/create_snap_marker                   Drop a snapshot marker for replay mode.
 sim/operation/test_data_ref                        Test dataref: Run from 0 to 1 and back.
-sim/operation/show_fps                             Toggle displaying the simulator's frames per second onscreen.
+sim/operation/show_fps                             Toggle on-screen frame-rate display.
 sim/operation/dev_console                          Toggle dev console.
 sim/operation/toggle_full_screen                   Toggle full-screen mode.
-sim/operation/reload_aircraft                      Force reloading the current aircraft.
+sim/operation/reload_aircraft                      Force reloading the current aircraft (including art).
+sim/operation/reload_aircraft_no_art               Force reloading the current aircraft (skip art reload).
 sim/operation/reload_scenery                       Force reloading the current scenery.
 sim/operation/load_real_weather                    Scan real weather files.
 sim/operation/fail_system                          Fail selected in failures screen.
@@ -38,6 +39,7 @@ sim/operation/toggle_key_shortcuts_window          Toggle the Keyboard Shortcuts
 sim/operation/open_weight_and_balance_window       Open the Weight & Balance window.
 sim/operation/open_failures_window                 Open the Failures window.
 sim/operation/toggle_data_output_graph             Toggle display of the data output graph.
+sim/operation/toggle_data_output_cockpit           Toggle display of the cockpit data output.
 sim/operation/toggle_joy_profiles_window           Toggle the keyboard & joystick profiles window.
 sim/operation/toggle_style_guide                   Toggle display of the V11 UI style guide.
 sim/operation/slider_01                            Slider #1 On/Off control.
@@ -380,6 +382,9 @@ sim/flight_controls/landing_gear_emer_off          Landing gear emergency overri
 sim/flight_controls/nwheel_steer_toggle            Nosewheel steer toggle.
 sim/flight_controls/tail_wheel_lock_toggle         Toggle tailwheel lock.
 sim/flight_controls/tail_wheel_lock_engage         Engage tailwheel lock.
+sim/flight_controls/water_rudder_down              Water rudder down (engage).
+sim/flight_controls/water_rudder_up                Water rudder up (disengage).
+sim/flight_controls/water_rudder_toggle            Toggle water ruder.
 sim/flight_controls/left_brake                     Hold brake left.
 sim/flight_controls/right_brake                    Hold brake right.
 sim/flight_controls/brakes_toggle_regular          Toggle brakes regular effort.
@@ -553,6 +558,7 @@ sim/electrical/APU_generator_off                   APU generator off.
 sim/electrical/GPU_on                              GPU on.
 sim/electrical/GPU_off                             GPU off.
 sim/electrical/GPU_toggle                          GPU toggle.
+sim/electrical/recharge                            Re-charge batteries.
 sim/lights/nav_lights_on                           Nav lights on.
 sim/lights/nav_lights_off                          Nav lights off.
 sim/lights/nav_lights_toggle                       Nav lights toggle.
@@ -790,6 +796,12 @@ sim/ice/prop_heat6_tog                             Anti-ice: engine #7 prop heat
 sim/ice/prop_heat7_tog                             Anti-ice: engine #8 prop heat toggle.
 sim/ice/detect_on                                  Anti-ice: ice detection on.
 sim/ice/detect_off                                 Anti-ice: ice detection off.
+sim/oxy/crew_valve_on                              Crew oxygen: master valve open/on.
+sim/oxy/crew_valve_off                             Crew oxygen: master valve closed/off.
+sim/oxy/crew_valve_toggle                          Crew oxygen: master valve toggle
+sim/oxy/crew_regulator_up                          Crew oxygen: demand regulator up.
+sim/oxy/crew_regulator_down                        Crew oxygen: demand regulator down.
+sim/oxy/passenger_o2_on                            Passenger oxygen: drop masks.
 sim/flight_controls/parachute_flares               Deploy parachute flares.
 sim/flight_controls/smoke_toggle                   Toggle smoke puffing.
 sim/flight_controls/water_scoop_toggle             Toggle water scoop.
@@ -860,6 +872,8 @@ sim/flight_controls/engage_cat_shot                Engage catapault.
 sim/flight_controls/glider_tow_left                Tow-plane for gliders: Take me left.
 sim/flight_controls/glider_tow_straight            Tow-plane for gliders: Take me straight.
 sim/flight_controls/glider_tow_right               Tow-plane for gliders: Take me right.
+sim/flight_controls/winch_faster                   Winch faster. (for gliders).
+sim/flight_controls/winch_slower                   Winch slower. (for gliders).
 sim/ground_ops/service_plane                       Service the airplane with ground trucks.
 sim/ground_ops/pushback_left                       Push-back for airliners: Nose 90 left.
 sim/ground_ops/pushback_straight                   Push-back for airliners: Straight back.
@@ -1112,7 +1126,7 @@ sim/autopilot/hsi_select_copilot_nav_1             HSI shows NAV 1, copilot.
 sim/autopilot/hsi_select_copilot_nav_2             HSI shows NAV 2, copilot.
 sim/autopilot/hsi_select_copilot_gps               HSI shows GPS, copilot.
 sim/flight_controls/carrier_ILS                    Set the radios for the carrier ILS.
-sim/autopilot/source_01                            Autopilot pitot static source, 0 or 1
+sim/autopilot/source_01                            Change autopilot instrument source, 0 or 1
 sim/autopilot/fdir_on                              Flight director on.
 sim/autopilot/fdir_toggle                          Flight director toggle.
 sim/autopilot/servos_on                            Servos on.
@@ -1123,14 +1137,34 @@ sim/autopilot/servos_fdir_off                      Disco servos, flt dir.
 sim/autopilot/servos_fdir_yawd_off                 Disco servos, flt dir, yaw damp.
 sim/autopilot/servos_fdir_yawd_trim_off            Disco servos, flt dir, yaw damp, trim.
 sim/autopilot/control_wheel_steer                  Control wheel steering mode.
-sim/autopilot/autothrottle_on                      Autopilot auto-throttle on.
-sim/autopilot/autothrottle_off                     Autopilot auto-throttle off.
-sim/autopilot/autothrottle_toggle                  Autopilot auto-throttle toggle.
+sim/autopilot/fdir2_on                             Flight director 2 on.
+sim/autopilot/fdir2_toggle                         Flight director 2 toggle.
+sim/autopilot/servos2_on                           Servos 2 on.
+sim/autopilot/servos2_toggle                       Servos 2 toggle.
+sim/autopilot/fdir2_servos_down_one                Flight director 2 down (on/FDIR/off).
+sim/autopilot/fdir2_servos_up_one                  Flight director 2 up (off/FDIR/on).
+sim/autopilot/servos_fdir2_off                     Disco servos 2, flt dir 2.
+sim/autopilot/CWSA                                 CWS A - Control wheel steering mode AP A.
+sim/autopilot/CWSB                                 CWS B - Control wheel steering mode AP B.
+sim/autopilot/servos3_on                           Servos 3 on.
+sim/autopilot/servos3_toggle                       Servos 3 toggle.
+sim/autopilot/servos_fdir3_off                     Disco servos 3.
+sim/autopilot/servos_off_any                       Disco servos, which ever side is active.
+sim/autopilot/servos_yawd_off_any                  Disco servos and yaw damp, any side.
+sim/autopilot/servos_yawd_trim_off_any             Disco servos, yaw damp and trim any side.
+sim/autopilot/autothrottle_on                      Autopilot auto-throttle speed-hold on.
+sim/autopilot/autothrottle_off                     Autopilot auto-throttle all modes off.
+sim/autopilot/autothrottle_toggle                  Autopilot auto-throttle speed toggle.
+sim/autopilot/autothrottle_n1epr                   Autopilot auto-throttle EPR/N1 hold on.
+sim/autopilot/autothrottle_n1epr_toggle            Autopilot auto-throttle EPR/N1 hold toggle.
 sim/autopilot/heading                              Autopilot heading-select.
 sim/autopilot/heading_hold                         Autopilot heading-hold.
-sim/autopilot/wing_leveler                         Autopilot wing-level.
+sim/autopilot/wing_leveler                         Autopilot wing-level / roll hold.
+sim/autopilot/rate_hold                            Autopilot wing-level / rate hold.
+sim/autopilot/hdg_nav                              Autopilot heading select and NAV arm.
 sim/autopilot/NAV                                  Autopilot VOR/LOC arm.
 sim/autopilot/vertical_speed                       Autopilot vertical speed, at current VSI.
+sim/autopilot/alt_vs                               Autopilot vertical speed, at current VSI, arm ALT.
 sim/autopilot/vertical_speed_pre_sel               Autopilot vertical speed, at pre-sel VSI.
 sim/autopilot/pitch_sync                           Autopilot pitch-sync.
 sim/autopilot/level_change                         Autopilot level change.
@@ -1203,6 +1237,10 @@ sim/instruments/ah_ref_down                        Horizon reference down a bit.
 sim/instruments/ah_ref_up                          Horizon reference up a bit.
 sim/instruments/ah_ref_copilot_down                Horizon reference down a bit, copilot.
 sim/instruments/ah_ref_copilot_up                  Horizon reference down a bit, copilot.
+sim/instruments/ah_fast_erect                      Attitude vacuum gyro fast erect.
+sim/instruments/ah_cage                            Attitude vacuum gyro cage toggle.
+sim/instruments/ah_fast_erect_copilot              Attitude vacuum gyro fast erect, copilot.
+sim/instruments/ah_cage_copilot                    Attitude vacuum gyro cage toggle, copilot
 sim/instruments/barometer_down                     Baro selection down a bit.
 sim/instruments/barometer_up                       Baro selection up a bit.
 sim/instruments/barometer_copilot_down             Baro selection down a bit, copilot.
@@ -1211,6 +1249,10 @@ sim/instruments/dh_ref_down                        Decision-height reference dow
 sim/instruments/dh_ref_up                          Decision-height reference up.
 sim/instruments/dh_ref_copilot_down                Decision-height reference copilot down.
 sim/instruments/dh_ref_copilot_up                  Decision-height reference copilot up.
+sim/instruments/mda_ref_down                       Minimum descend alt reference down.
+sim/instruments/mda_ref_up                         Minimum descend alt reference up.
+sim/instruments/mda_ref_copilot_down               Minimum descend alt reference copilot down.
+sim/instruments/mda_ref_copilot_up                 Minimum descend alt reference copilot up.
 sim/instruments/panel_bright_down                  Panel brightness down a bit.
 sim/instruments/panel_bright_up                    Panel brightness up a bit.
 sim/instruments/instrument_bright_down             Instrument brightness down a bit.
@@ -1386,7 +1428,11 @@ sim/FMS2/key_clear                                 FMS2: key_clear
 sim/FMS2/CDU_popout                                FMS2: pop out CDU window
 sim/FMS2/CDU_popup                                 FMS2: CDU popup
 sim/annunciator/gear_warning_mute                  Mute gear warning horn.
-sim/annunciator/marker_beacon_mute                 Mute marker beacons.
+sim/annunciator/marker_beacon_mute                 Mute marker beacons until next marker is received.
+sim/annunciator/marker_beacon_mute_or_off          Mute marker beacons until next marker is received or indefinitely if none is received right now.
+sim/annunciator/marker_beacon_sens_hi              Marker beacon receiver hi sens.
+sim/annunciator/marker_beacon_sens_lo              Marker beacon receiver lo sens.
+sim/annunciator/marker_beacon_sens_toggle          Marker beacon receiver sens toggle.
 sim/systems/pre_rotate_toggle                      Toggle pre-rotate.
 sim/flight_controls/pump_flaps                     Pump flaps up/down.
 sim/flight_controls/pump_gear                      Pump gear up/down.
@@ -1470,7 +1516,7 @@ sim/GPS/g1000n1_yd                                 G1000 pilot yaw damper.
 sim/GPS/g1000n1_hdg                                G1000 pilot AP HDG.
 sim/GPS/g1000n1_alt                                G1000 pilot AP ALT.
 sim/GPS/g1000n1_nav                                G1000 pilot AP NAV.
-sim/GPS/g1000n1_vnv                                G1000 pilot AP NVAV.
+sim/GPS/g1000n1_vnv                                G1000 pilot AP VNAV.
 sim/GPS/g1000n1_apr                                G1000 pilot AP approach.
 sim/GPS/g1000n1_bc                                 G1000 pilot AP backcourse.
 sim/GPS/g1000n1_vs                                 G1000 pilot AP vertical speed.
@@ -1685,6 +1731,8 @@ sim/fuel/indicate_aux                              Fuel tanks show auxiliary tan
 sim/autopilot/test_auto_annunciators               Autopilot test annunciators.
 sim/flight_controls/pitch_trim_up                  Pitch trim up.
 sim/flight_controls/pitch_trim_down                Pitch trim down.
+sim/flight_controls/pitch_trim_up_mech             Pitch trim up - Mechanical, not servo.
+sim/flight_controls/pitch_trim_down_mech           Pitch trim down - Mechanical, not servo.
 sim/flight_controls/aileron_trim_left              Roll trim left.
 sim/flight_controls/aileron_trim_right             Roll trim right.
 sim/flight_controls/rudder_trim_left               Yaw trim left.
@@ -1903,6 +1951,7 @@ sim/general/toggle_fadec_win                       Toggle the FADEC constants wi
 sim/general/toggle_control_deflections_win         Toggle the control deflections window.
 sim/general/toggle_weapon_guidance_win             Toggle the weapon guidance window.
 sim/developer/toggle_texture_browser               Toggle the texture browser window.
+sim/developer/toggle_particle_browser              Toggle the particle system browser window.
 sim/general/toggle_projection_win                  Toggle the projection configuration window.
 sim/operation/toggle_sky_colors_win                Toggle the sky colors window.
 sim/VR/xpad/home_button                            Press the Home Button of the VR xPad.

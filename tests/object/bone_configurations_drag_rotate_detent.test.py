@@ -25,7 +25,7 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,T_2_FRAMES_1_X)
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
- 
+
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(0)
@@ -122,8 +122,9 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         set_manipulator_settings(C,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(1)
+        self.assertLoggerErrors(0)
 
+    # Failures
     # Case 7: Wrong order
     def test_drag_rotate_detent_case_07(self):
         #print("def test_drag_rotate_detent_case_07(self):")
@@ -140,7 +141,7 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
-    
+
     # Case 8: Missing T, version 1
     def test_drag_rotate_detent_case_08(self):
         #print("def test_drag_rotate_detent_case_08(self):")
@@ -180,7 +181,7 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_r"))
-        
+
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
 
         set_manipulator_settings(A,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
@@ -227,7 +228,7 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         set_xplane_layer(0,{'export_type':'cockpit'})
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_t"))
-        
+
         set_animation_data(A,T_2_FRAMES_1_X)
 
         set_manipulator_settings(A,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
@@ -277,7 +278,7 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,T_2_FRAMES_1_X)
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
- 
+
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
@@ -295,7 +296,7 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         set_animation_data(A,T_2_FRAMES_1_X)
         set_animation_data(B,T_2_FRAMES_1_X)
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
- 
+
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
@@ -349,9 +350,9 @@ class TestBoneConfigurationsDragRotateDetent(XPlaneTestCase):
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(A,T_2_FRAMES_1_X)
         set_manipulator_settings(A,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
- 
+
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 
-runTestCases([TestBoneConfigurationsDragRotateDetent]) 
+runTestCases([TestBoneConfigurationsDragRotateDetent])

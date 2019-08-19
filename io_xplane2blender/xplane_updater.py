@@ -1,5 +1,10 @@
-# File: xplane_updater.py
-# Automagically updates blend data created with older XPlane2Blender Versions
+'''
+Automagically updates blend data created with older XPlane2Blender Versions
+'''
+import collections
+import enum
+import functools
+from typing import Dict, List, Tuple
 
 import bpy
 from bpy.app.handlers import persistent
@@ -12,12 +17,12 @@ from io_xplane2blender.xplane_helpers import XPlaneLogger
 
 
 '''
- #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  # 
-  #   #   # #    #  #   ##  #  ## #  #  #  #     #  #   ## #  #  #  ## #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  # 
- ##   #   # #   # # #  ##      ###   ###   #    #####   ###   ###   ###     ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    # 
- ##   #  ####   # # #  #  ###  #     # #   #    #  ##   #     # #   #       # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   # 
- #   #   #  #   #  ##  ##  #   # #   # #        #  #    # #   # #   # #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #     
-#####   ##  ## ##  #    ####  ####  ## ## #    ## ###  ####  ## ## ####    ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #  
+ #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  #
+  #   #   # #    #  #   ##  #  ## #  #  #  #     #  #   ## #  #  #  ## #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
+ ##   #   # #   # # #  ##      ###   ###   #    #####   ###   ###   ###     ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
+ ##   #  ####   # # #  #  ###  #     # #   #    #  ##   #     # #   #       # #   #       ##   #  # #   ####  #  ### #    #  # # #    ##   #
+ #   #   #  #   #  ##  ##  #   # #   # #        #  #    # #   # #   # #     # ##  # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #
+#####   ##  ## ##  #    ####  ####  ## ## #    ## ###  ####  ## ## ####    ####  ####    #####   ## ## ##  ##  ####   ###   ##  #   ####  #
 
 BEFORE CHANGING THIS FILE have you:
 1. Fully understood what parts of the data model you are changing?
@@ -32,18 +37,18 @@ BEFORE CHANGING THIS FILE have you:
 Put this in your mind:
     A poor defenseless .blend file, with big watery wobbly eyes is lying on the operating table, eyeing the sharp text editors and esoteric command line commands
     about to be used on the codebase that supports it. It says
-            
+
             Will it hurt to change the update function? Is it necessary?
             Is it deterministic and fulfills the "Only update what's needed, when needed" contract?
             Do you remember the 3.4.0 loc/rot/locrot fiasco of Aug. 2017?
-    
+
     You hold the anesthesia mask in one hand, and a terminal prompt in the other. Are you ready to take responsibility for this data model and
     the artists who depend on it? Are you ready to make a change to this file? Or are you another wanna-be console cowboy who is poking their mouse
     in the wrong part of the codebase again?
     ...
     ...
     ...
-    
+
 You may now proceed to the rest of the file.
 '''
 
@@ -78,7 +83,7 @@ def __updateLocRot(obj,logger):
             old_anim_type = 0 # If anim_type was never set in the first place, it's value is the default, aka 0 for the old anim_type
 
         new_anim_type = convert_old_to_new(old_anim_type)
-        d.anim_type = new_anim_type 
+        d.anim_type = new_anim_type
         logger.info("Updated %s's animation dataref (%s)'s animation type from %s to %s" %
               (obj.name,\
                d.path,\
@@ -142,7 +147,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 # If the default for blend_v1000 ever changes, we'll be covered.
                 blend_v1000 = bpy.types.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
                 enum_items = blend_v1000.enum_items
-                
+
                 if v10 is None:
                     v10_mode = enum_items[enum_items.find(blend_v1000.default)].name
                 else:
@@ -156,6 +161,99 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 # which is not how normal python works
                 del mat.xplane['blend_v1100']
 
+    if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-dev.0+43.20190606030000"):
+        # This helps us conveniently save the Cast shadow value for later after we delete it
+        UsedLayerInfo = collections.namedtuple("UsedLayerInfo", ["options", "cast_shadow", "final_name"])
+        def _update_potential_materials(potential_objects: bpy.types.Material, layer_options:'XPlaneLayer')->None:
+            for mat in potential_materials:
+                # Default for shadow was True. get can't find shadow == no explicit value give
+                val = bool(layer_options.get("shadow", True))
+                mat.xplane.shadow_local = val # Easy case #1
+
+        def _delete_shadow(layer_options: 'XPlaneLayer')->None:
+            try:
+                del layer_options["shadow"]
+            except KeyError:
+                pass
+
+        def _print_error_table(material_uses: Dict[bpy.types.Material, List[UsedLayerInfo]])->None:
+            for mat, layers_used_in in material_uses.items():
+                if (len(layers_used_in) > 1
+                    and any(layers_used_in[0].cast_shadow != l.cast_shadow for l in layers_used_in)): # Checks for mixed use of Cast Shadow (Global)
+                    pad = max([len(final_name) for _, _, final_name in layers_used_in])
+                    logger.error(
+                            "\n".join(
+                                ["Material '{}' is used across OBJs with different 'Cast Shadow (Global)' values:".format(mat.name),
+                                 "Ambiguous OBJs".ljust(pad) + "| Cast Shadow (Global)",
+                                 "-" * pad +                   "|---------------------",
+                                 "\n".join("{}| {}".format(final_name.ljust(pad), "On" if cast_shadow else "Off")
+                                           for options, cast_shadow, final_name in layers_used_in),
+                                 "",
+                                ]
+                            )
+                        )
+            logger.info("'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ")
+
+        # This way we'll be able to map the usage (and shared-ness) of a material
+        material_uses = collections.defaultdict(list) # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
+
+        for scene in bpy.data.scenes:
+            # From this we get the potential objects in an
+            if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_LAYERS:
+                for layer_idx, layer_options in enumerate(scene.xplane.layers):
+                    potential_objects = xplane_helpers.get_potential_objects_in_layer(layer_idx, scene)
+                    # So we don't do all this update code for empty layers
+                    # or Aircraft or Cockpit which should remain True
+                    if not potential_objects:
+                        continue
+                    if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
+                        # Force shadow, in case a user somehow changed "Cast Shadow (Global)"
+                        # to False but has non scenery export type
+
+                        # We don't normally do things this way, but, "Cast Shadow (Global)" is soon to be deleted
+                        layer_options["shadow"] = True
+                    potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
+                    _update_potential_materials(potential_materials, layer_options)
+                    # Save usage of materials in this layer
+                    used_layer_info = UsedLayerInfo(
+                                            options=layer_options,
+                                            cast_shadow=bool(layer_options.get("shadow", True)),
+                                            final_name=layer_options.name if layer_options.name else "layer_{:02}".format(layer_idx)
+                                        )
+
+                    for mat in potential_materials:
+                        material_uses[mat].append(used_layer_info)
+
+                for layer_idx, layer_options in enumerate(scene.xplane.layers):
+                    _delete_shadow(layer_options)
+            elif scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
+                for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
+                    layer_options = root_obj.xplane.layer
+                    if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
+                        layer_options["shadow"] = True
+                    potential_objects = xplane_helpers.get_potential_objects_in_root_object(root_obj)
+                    potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
+                    _update_potential_materials(potential_materials, layer_options)
+                    used_layer_info = UsedLayerInfo(
+                                            options=layer_options,
+                                            cast_shadow=bool(layer_options.get("shadow", True)),
+                                            final_name=layer_options.name if layer_options.name else root_obj.name
+                                        )
+                    for mat in potential_materials:
+                        material_uses[mat].append(used_layer_info)
+            else:
+                assert False, "How did we get here?!"
+
+
+            # Attempt to find shared usage, print out a table displaying issues
+            _print_error_table(material_uses)
+
+        # They might not all be root objects, but all objects have a XPlaneLayer property group!
+        for obj in bpy.data.objects:
+            try:
+                del obj.xplane.layer["shadow"]
+            except KeyError:
+                pass
 
 @persistent
 def load_handler(dummy):
@@ -216,7 +314,7 @@ def load_handler(dummy):
 
     # Get the old_version (end of list, which by now is guaranteed to have something in it)
     last_version = ver_history[-1]
-    
+
     # L:Compare last vs current
     # If the version is out of date
     #     L:Run update

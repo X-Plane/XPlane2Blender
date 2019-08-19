@@ -64,11 +64,11 @@ def compareInstanced(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]
         metalness_error = _validateNormalMetalness(refMat,mat)
         if metalness_error:
             errors.append(metalness_error)
-            
+
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
             errors.append('Texture must be "%s".' % refMat.texture)
-            
+
         if mat.textureLit != refMat.textureLit:
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
@@ -114,7 +114,7 @@ def validate(mat:XPlaneMaterial, exportType:str)->Tuple[List[str],List[str]]:
     if mat.options == None:
         errors.append('Is invalid.')
         return errors,warnings
-    
+
     if (exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY) and mat.options.draped:
         return validateDraped(mat)
     elif exportType == EXPORT_TYPE_SCENERY:
@@ -148,7 +148,7 @@ def validateScenery(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
-    
+
     if mat.getEffectiveBlendGlass():
         errors.append('Blend glass only legal on aircraft and cockpit objects')
 

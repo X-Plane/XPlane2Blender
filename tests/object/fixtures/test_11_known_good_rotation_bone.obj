@@ -928,8 +928,8 @@ IDX	826
 IDX	827
 
 # 0 ROOT
-# 1 Empty: 10_known_good_rotation_bone
-# EMPTY: 10_known_good_rotation_bone	weight: 0
+# 1 Empty: 11_known_good_rotation_bone
+# EMPTY: 11_known_good_rotation_bone	weight: 0
 	# 2 Mesh: trim_wheel.009
 	ANIM_begin
 	# static translation

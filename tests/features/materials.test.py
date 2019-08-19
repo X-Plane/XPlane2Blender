@@ -31,6 +31,8 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_shadow_blend': None,
             'ATTR_no_blend': None,
             'ATTR_draw_enable': True,
+            'ATTR_shadow': True,
+            'ATTR_no_shadow': False,
             'ATTR_draw_disable': None,
             'ATTR_solid_camera': None,
             'ATTR_no_solid_camera': True,
@@ -69,6 +71,8 @@ class TestMaterials(XPlaneTestCase):
         cockpitPanelAttrs['ATTR_shiny_rat'] = None
         cockpitPanelAttrs['ATTR_blend'] = None
         cockpitPanelAttrs['ATTR_draw_enable'] = True
+        cockpitPanelAttrs["ATTR_shadow"] = None
+        cockpitPanelAttrs["ATTR_no_shadow"] = None
         cockpitPanelAttrs['ATTR_solid_camera'] = True
         cockpitPanelAttrs['ATTR_no_solid_camera'] = False
         cockpitPanelCockpitAttrs = defaultCockpitAttrs.copy()
@@ -81,6 +85,8 @@ class TestMaterials(XPlaneTestCase):
         invisibleAttrs['ATTR_blend'] = None
         invisibleAttrs['ATTR_draw_enable'] = None
         invisibleAttrs['ATTR_draw_disable'] = True
+        invisibleAttrs["ATTR_shadow"] = None
+        invisibleAttrs["ATTR_no_shadow"] = None
 
         surfaceAttrs = defaultAttrs.copy()
         surfaceAttrs['ATTR_no_hard'] = None

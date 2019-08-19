@@ -1,12 +1,26 @@
-# File: xplane_file.py
-# Defines X-Plane file data type.
+'''
+This is the entry point for the exporter's collection and where it starts writing, proper.
+There are mirroring methods for Layer and Root Objects mode. The important paths are
+
+createFilesFromBlenderRootObjects
+|___createFileFromBlenderRootObject (Exporter decides what to inspect)
+    |
+    |____collectBlenderObjects (Exporter also decides what to inspect),
+    | |  |___convertBlenderObjects (Where BlenderObjects become XPlaneObjects)
+    | |__collectBonesFromBlenderBones/Objects (tree traversal of collected Blender Objects)
+    |
+ ___createFileBlenderLayerIndex (Exporter decides what to inspect)
+|
+createFilesFromBlenderLayers
+'''
+
 
 import collections
 
 import bpy
 import mathutils
 
-from typing import Union
+from typing import List, Union, Optional
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_types import xplane_empty
 
@@ -30,7 +44,7 @@ from .xplane_primitive import XPlanePrimitive
 #   list - Indices of all active blender layers.
 def getActiveBlenderLayerIndexes():
     layers = []
-    for i in range(0,len(bpy.context.scene.layers)):
+    for i in range(0, len(bpy.context.scene.layers)):
         if bpy.context.scene.layers[i] and bpy.context.scene.xplane.layers[i].export:
             layers.append(i)
 
@@ -111,7 +125,7 @@ def createFilesFromBlenderRootObjects(scene):
 # Class: XPlaneFile
 # X-Plane OBJ file
 class XPlaneFile():
-    def __init__(self, filename:str, options:xplane_props.XPlaneLayer):
+    def __init__(self, filename:str, options:xplane_props.XPlaneLayer)->None:
         self.filename = filename
 
         self.options = options
@@ -125,10 +139,10 @@ class XPlaneFile():
         self.commands = XPlaneCommands(self)
 
         # list of temporary objects that will be removed after export
-        self._tempBlenderObjects = []
+        self._tempBlenderObjects = [] # type: List[bpy.types.Object]
 
         # list of already expanded/resolved blender group instances
-        self._resolvedBlenderGroupInstances = []
+        self._resolvedBlenderGroupInstances = [] # type: List[str]
 
         # dict of xplane objects within the file
         self.objects = collections.OrderedDict() # type: collections.OrderedDict
@@ -160,7 +174,7 @@ class XPlaneFile():
                         blenderObjects.append(blenderObject)
 
         self.collectBlenderObjects(blenderObjects)
-        self.rootBone = XPlaneBone(None,None,None,self)
+        self.rootBone = XPlaneBone(None, None, None, self)
         self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
 
         # restore frame before export
@@ -210,11 +224,11 @@ class XPlaneFile():
         return tempBlenderObjects
 
     # collects all child bones for a given parent bone given a list of blender objects
-    def collectBonesFromBlenderObjects(self,parentBone, blenderObjects,
+    def collectBonesFromBlenderObjects(self, parentBone, blenderObjects,
                                        needsFilter:bool = True, # Set to true for when it is unsure if blenderObjects only contains
                                                                 # things with parentBone as it's parent. Needs to filter collection of blenderObjects to just
-                                                                # find the one whose parent is the root, root bone of an Armature, or parentBone 
-                                       noRealBones:bool = False): #noRealBones is used for 
+                                                                # find the one whose parent is the root, root bone of an Armature, or parentBone
+                                       noRealBones:bool = False): #noRealBones is used for
         '''
         The collectBonesFromBlender(Bones|Objects) walk through Blender's parent-child hierarchy and translate it to our XPlaneBone tree
         - Each XPlaneObject has an XPlaneBone
@@ -290,7 +304,7 @@ class XPlaneFile():
             blenderBones = filter(boneFilter, blenderBones)
 
         for blenderBone in blenderBones:
-            bone = XPlaneBone(blenderArmature, None, parentBone,self)
+            bone = XPlaneBone(blenderArmature, None, parentBone, self)
             bone.blenderBone = blenderBone
             parentBone.children.append(bone)
 
@@ -328,7 +342,7 @@ class XPlaneFile():
         blenderObjects = [blenderRootObject]
 
         def collectChildren(parentObject):
-            for blenderObject in parentObject.children:
+            for blenderObject in filter(lambda child: child.name in bpy.context.scene.objects, parentObject.children):
                 logger.info("scanning %s" % blenderObject.name)
 
                 blenderObjects.append(blenderObject)
@@ -339,7 +353,7 @@ class XPlaneFile():
 
         # setup root bone and root xplane object
         rootXPlaneObject = self.objects[blenderRootObject.name]
-        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject,None,self)
+        self.rootBone = XPlaneBone(blenderRootObject, rootXPlaneObject, None, self)
 
         # need to collect data
         rootXPlaneObject.collect()
@@ -349,19 +363,17 @@ class XPlaneFile():
         # restore frame before export
         bpy.context.scene.frame_set(frame = currentFrame)
 
-    # Method: convertBlenderObject
-    # Converts/wraps blender object into an <XPlaneObject> or subtype
-    #
-    # Returns:
-    #   <XPlaneObject> or None if object type is not supported
-    def convertBlenderObject(self, blenderObject):
-        xplaneObject = None # type: Union[XPlanePrimitive,XPlaneLight,XPlaneObject]
+    def convertBlenderObject(self, blenderObject: bpy.types.Object)->Optional[XPlaneObject]:
+        '''
+        Converts Blender object into an XPlaneObject or subtype and returns it.
+        Returns None if Blender Object isn't supported
+        '''
+        xplaneObject = None # type: Optional[XPlaneObject]
 
         # mesh: let's create a prim out of it
         if blenderObject.type == "MESH":
             logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject = XPlanePrimitive(blenderObject)
-
         # lamp: let's create a XPlaneLight. Those cannot have children (yet).
         elif blenderObject.type == "LAMP":
             logger.info("\t %s: adding to list" % blenderObject.name)
@@ -372,13 +384,14 @@ class XPlaneFile():
         elif blenderObject.type == "EMPTY":
             logger.info("\t %s: adding to list" % blenderObject.name)
             xplaneObject = xplane_empty.XPlaneEmpty(blenderObject)
-            
+
         return xplaneObject
 
-    def getBoneByBlenderName(self, name, parent = None):
-        if not parent:
-            parent = self.rootBone
-
+    def getBoneByBlenderName(self, name: str, parent: XPlaneBone)->Optional[XPlaneBone]:
+        '''
+        Performs a depth first search of the child bones for a bone with matching name.
+        Returns the bone or None if not found
+        '''
         for bone in parent.children:
             if bone.getBlenderName() == name:
                 return bone
@@ -392,18 +405,18 @@ class XPlaneFile():
     # Method: getObjectsList
     # Returns objects as a list
     def getObjectsList(self):
-        objects = []
-        for name in self.objects:
-            objects.append(self.objects[name])
-
-        return objects
+        '''
+        Returns the objects that could be in this .obj.
+        Can only be called after collectBlenderObjects during xplane_file's collection
+        '''
+        return self.objects.values()
 
     def validateMaterials(self):
         objects = self.getObjectsList()
 
         for xplaneObject in objects:
             if xplaneObject.type == 'MESH' and xplaneObject.material.options:
-                errors,warnings = xplaneObject.material.isValid(self.options.export_type)
+                errors, warnings = xplaneObject.material.isValid(self.options.export_type)
 
                 for error in errors:
                     logger.error('Material "%s" in object "%s" %s' % (xplaneObject.material.name, xplaneObject.blenderObject.name, error))
@@ -416,7 +429,12 @@ class XPlaneFile():
 
         return True
 
-    def getMaterials(self):
+    def getMaterials(self)->List[bpy.types.Material]:
+        '''
+        Returns a list of the materials used in the OBJ, or an empty list if none found
+        Must be called after XPlaneFile.collectBlenderObjects
+        '''
+
         materials = []
         objects = self.getObjectsList()
 
@@ -435,7 +453,7 @@ class XPlaneFile():
                     # only compare draped materials agains draped
                     # and non-draped agains non-draped
                     if refMaterial.options.draped == material.options.draped:
-                        errors,warnings = material.isCompatibleTo(refMaterial, self.options.export_type,self.options.autodetectTextures)
+                        errors, warnings = material.isCompatibleTo(refMaterial, self.options.export_type, self.options.autodetectTextures)
                         xplaneObject = material.xplaneObject
                         for error in errors:
                             logger.error('Material "%s" in object "%s" %s' % (material.name, xplaneObject.blenderObject.name, error))
@@ -449,14 +467,7 @@ class XPlaneFile():
         return True
 
     def writeFooter(self):
-        build = 'unknown'
-
-        if hasattr(bpy.app, 'build_hash'):
-            build = bpy.app.build_hash
-        else:
-            build = bpy.app.build_revision
-        
-        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, build, xplane_helpers.VerStruct.current())
+        return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, bpy.app.build_hash, xplane_helpers.VerStruct.current())
 
     # Method: write
     # Returns OBJ file code
@@ -485,10 +496,10 @@ class XPlaneFile():
         # and compare all materials against reference materials
         if self.options.autodetectTextures == False:
             logger.info('Autodetect textures overridden for file %s: not fully checking manually entered textures against Blender-based reference materials\' textures' % (self.filename))
-        
+
         if not self.compareMaterials(self.referenceMaterials):
             return ''
-        
+
         o = ''
         o += self.header.write()
         o += '\n'
