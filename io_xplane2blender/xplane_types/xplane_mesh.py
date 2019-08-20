@@ -1,12 +1,14 @@
 import array
 import time
 import re
+from typing import List, Optional
 
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
 from .xplane_face import XPlaneFace
+from .xplane_object import XPlaneObject
 
 # Class: XPlaneMesh
 # Creates the OBJ meshes.
@@ -14,7 +16,7 @@ class XPlaneMesh():
     # Constructor: __init__
     def __init__(self):
         # list - contains all mesh vertices
-        self.vertices = []
+        self.vertices = [] # type: List[Tuple[float, float, float, float, float, float, float, float]]
         # array - contains all face indices
         self.indices = array.array('i')
         self.faces = []
@@ -28,15 +30,13 @@ class XPlaneMesh():
     #
     # Parameters:
     #   list xplaneObjects - list of <XPlaneObjects>.
-    def collectXPlaneObjects(self, xplaneObjects):
+    def collectXPlaneObjects(self, xplaneObjects: List[XPlaneObject]):
         debug = getDebug()
-        supports_split_normals = False
 
         def getSortKey(xplaneObject):
             return xplaneObject.name
 
         # sort objects by name for consitent vertex and indices table output
-        # this is usefull for unit tests and version control, as file changes are kept at a minimum
         xplaneObjects = sorted(xplaneObjects, key = getSortKey)
 
         for xplaneObject in xplaneObjects:
@@ -45,34 +45,45 @@ class XPlaneMesh():
                 xplaneObject.indices[0] = len(self.indices)
                 first_vertice_of_this_xplaneObject = len(self.vertices)
 
+                # The goal of this section of the code is to get
+                # - the mesh of the object,
+                # - with its modifiers,
+                # - rotated, scaled, and moved by the bake matrix
+                #
+                # After that, the mesh needs to have some of it's data refreshed
+                # - Recalc normals split
+                # - Recalc tessface (now called loop triangles)
+
                 # create a copy of the xplaneObject mesh with modifiers applied and triangulated
-                mesh = xplaneObject.blenderObject.to_mesh(bpy.context.scene, True, "PREVIEW")
+                #mesh = xplaneObject.blenderObject.to_mesh(bpy.context.scene, True)
+                mesh = xplaneObject.blenderObject.data.copy()
 
                 # now get the bake matrix
                 # and bake it to the mesh
                 xplaneObject.bakeMatrix = xplaneObject.xplaneBone.getBakeMatrixForAttached()
                 mesh.transform(xplaneObject.bakeMatrix)
 
-                if hasattr(mesh, 'calc_normals_split'): # split normals
-                    mesh.calc_normals_split()
-                    supports_split_normals = True
-
-                if hasattr(mesh, 'polygons'): # BMesh
-                    mesh.update(calc_tessface = True)
-                    mesh.calc_tessface()
-                    mesh_faces = mesh.tessfaces
-                else:
-                    mesh_faces = mesh.faces
+                mesh.calc_normals_split()
+                mesh.update(calc_tessface=True)
+                mesh_faces = mesh.loop_triangles
 
                 # with the new mesh get uvFaces list
-                uvFaces = self.getUVFaces(mesh, xplaneObject.material.uv_name)
+                try:
+                    uvFaces = mesh.uv_layers[xplaneObject.material.uv_name]
+                except KeyError:
+                    uvFaces = None
 
                 faces = []
 
-                d = {'name': xplaneObject.name,'obj_face': 0,'faces': len(mesh_faces),'quads': 0,'vertices': len(mesh.vertices),'uvs': 0}
+                d = {'name': xplaneObject.name,
+                     'obj_face': 0,
+                     'faces': len(mesh_faces),
+                     'quads': 0,
+                     'vertices': len(mesh.vertices),
+                     'uvs': 0}
 
                 # convert faces to triangles
-                if len(mesh_faces) > 0:
+                if mesh_faces:
                     tempfaces = []
 
                     for i in range(0, len(mesh_faces)):
@@ -105,7 +116,7 @@ class XPlaneMesh():
                             # get the vertice from original mesh
                             v = mesh.vertices[vindex]
                             co = v.co
-                            ns = f['norms'][2 - i] if supports_split_normals else v.normal
+                            ns = f['norms'][2 - i]
 
                             if f['original_face'].use_smooth: # use smoothed vertex normal
                                 vert = [
@@ -146,6 +157,7 @@ class XPlaneMesh():
                     xplaneObject.indices[1] = len(self.indices)
                     self.faces.extend(faces)
 
+                bpy.data.meshes.remove(mesh)
                 d['start_index'] = xplaneObject.indices[0]
                 d['end_index'] = xplaneObject.indices[1]
                 self.debug.append(d)
@@ -198,78 +210,6 @@ class XPlaneMesh():
 
         return -1
 
-
-    # Method: getUVFaces
-    # Returns Blender the UV faces of a Blender mesh.
-    #
-    # Parameters:
-    #   mesh - Blender mesh
-    #   string uv_name - Name of the uv layer to use. If not given the first layer will be used.
-    #
-    # Returns:
-    #   None if no UV faces could be found or the Blender UV Faces.
-    def getUVFaces(self, mesh, uv_name):
-        # get the uv_texture
-        if hasattr(mesh,'polygons'): # BMesh
-            uv_textures = mesh.tessface_uv_textures
-        else:
-            uv_textures = mesh.uv_textures
-
-        if (uv_name != None and len(uv_textures) > 0):
-            uv_layer = None
-
-            if uv_name=="":
-                uv_layer = uv_textures[0]
-            else:
-                i = 0
-
-                while uv_layer == None and i < len(uv_textures):
-                    if uv_textures[i].name == uv_name:
-                        uv_layer = uv_textures[i]
-
-                    i += 1
-
-            if uv_layer != None:
-                return uv_layer.data
-            else:
-                return None
-
-        else:
-            return None
-
-    # Method: getTriangulatedMesh
-    # Returns a triangulated mesh from a given Blender xplaneObjectect.
-    #
-    # Parameters:
-    #   blenderObject - Blender Object
-    #
-    # Returns:
-    #   A Blender mesh
-    #
-    # Todos:
-    #   - Does not remove temporarily created mesh/xplaneObjectect yet.
-    def getTriangulatedMesh(self, blenderObject):
-        me_da = blenderObject.data.copy() #copy data
-        me_ob = blenderObject.copy() #copy xplaneObjectect
-        #note two copy two types else it will use the current data or mesh
-        me_ob.data = me_da
-        bpy.context.scene.objects.link(me_ob) #link the xplaneObjectect to the scene #current xplaneObjectect location
-
-        for i in bpy.context.scene.objects: i.select = False #deselect all xplaneObjectects
-
-        me_ob.select = True
-        bpy.context.scene.objects.active = me_ob #set the mesh xplaneObjectect to current
-        bpy.ops.object.mode_set(mode = 'EDIT') #Operators
-        bpy.ops.mesh.select_all(action = 'SELECT')#select all the face/vertex/edge
-        bpy.ops.mesh.quads_convert_to_tris() #Operators
-        bpy.context.scene.update()
-        bpy.ops.object.mode_set(mode = 'OBJECT') # set it in xplaneObjectect
-
-        mesh = me_ob.to_mesh(bpy.context.scene, True, "PREVIEW")
-
-        bpy.context.scene.objects.unlink(me_ob)
-        return mesh
-
     # Method: faceToTrianglesWithUV
     # Converts a Blender face (3 or 4 sided) into one or two 3-sided faces together with the texture coordinates.
     #
@@ -307,24 +247,6 @@ class XPlaneMesh():
                     "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
 
         return triangles
-
-    # Method: faceValues
-    # Returns the converted vertices of a face.
-    #
-    # Parameters:
-    #   face - A Blender face.
-    #   mesh - A Blender mesh.
-    #   Matrix matrix - The conversion matrix.
-    #
-    # Returns:
-    #   list - List of vertices.
-    def faceValues(self,face, mesh, matrix):
-        fv = []
-
-        for verti in face.vertices_raw:
-            fv.append(matrix * mesh.vertices[verti].co)
-
-        return fv
 
     # Method: writeVertices
     # Returns the OBJ vertex table by iterating <vertices>.
