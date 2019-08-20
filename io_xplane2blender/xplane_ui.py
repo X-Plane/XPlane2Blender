@@ -638,7 +638,7 @@ def material_layout(layout:UILayout,
         elif blend_prop_enum == BLEND_OFF and version >= 1000:
             draw_box_column.prop(active_material.xplane, "blendRatio", slider = True)
         elif blend_prop_enum == BLEND_SHADOW and version >= 1000:
-            draw_box_column.prop(active_material.xplane, "shadowBlendRatio", slider = True)
+            draw_box_column.prop(active_material.xplane, "blendRatio", "Shadow Blend Ratio", slider = True)
 
     surface_behavior_box = layout.box()
     surface_behavior_box.label("Surface Behavior")
