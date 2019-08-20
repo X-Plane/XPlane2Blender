@@ -34,13 +34,13 @@ class TestGlobalAttributesApplied(XPlaneTestCase):
         self.assertAlmostEqual(bpy.data.scenes["GlobalShadowBlend"].objects["GlobalShadowBlend_2"].material_slots[0].material.xplane.blendRatio, 0.25)
 
     def test_GlobalSpecular(self):
-        """(gets .35)"""
+        """(unchanged specular intensity, default material gets prop value"""
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
-        #TODO: Test specularity is normalized by having objects [0,1] have different materials
-        pass
+        self.assertTrue(bpy.data.scenes["GlobalSpecular"].objects["GlobalSpecular_1"].material_slots[0].material.specular_intensity, bpy.data.materials["Material"].specular_intensity)
+        self.assertTrue(bpy.data.scenes["GlobalSpecular"].objects["GlobalSpecular_2"].material_slots[0].material.specular_intensity, .35)
 
     def test_GlobalTint(self):
-        """(both cubes get Albedo .45, Emissive .55 whatever)"""
+        """(both cubes get Albedo .45, Emissive .55)"""
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         self.assertTrue(bpy.data.scenes["GlobalTint"].objects["GlobalTint_1"].material_slots[0].material.xplane.tint)
         self.assertTrue(bpy.data.scenes["GlobalTint"].objects["GlobalTint_2"].material_slots[0].material.xplane.tint)

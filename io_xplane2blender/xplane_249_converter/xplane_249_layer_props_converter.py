@@ -19,15 +19,15 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                                dest_root: bpy.types.Object)->None:
     assert search_objs, "Must have objects to search"
 
-    # We do a lot of "is it" testing...
-    def _isint(s):
+    # We do a lot of "is it convertable to" testing...
+    def _isint(s:Any)->bool:
         try:
             int(s)
             return True
         except (TypeError, ValueError):
             return False
 
-    def _isfloat(s):
+    def _isfloat(s:Any)->bool:
         try:
             float(s)
             return True
@@ -41,11 +41,6 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
     warnings = set()
     layer = dest_root.xplane.layer
     for obj in search_objs:
-        #TODO: Add to unit test
-        global_cockpit_level, prop_source = xplane_249_helpers.find_property_in_parents(obj, "GLOBAL_cockpit_lit")
-        if global_cockpit_level is not None:
-            layer.cockpit_lit_level = True
-
         cockpit_reg_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "COCKPIT_REGION")
         if cockpit_reg_value is not None:
             layer.export_type = xplane_constants.EXPORT_TYPE_COCKPIT
