@@ -16,30 +16,30 @@ class TestObjectAttributesApplied(XPlaneTestCase):
     def assertLitLevel(self, obj:bpy.types.Object, hint_suffix:str, v1:float, v2:float, dref:str)->None:
         lit_level_mat = obj.material_slots[0].material
         self.assertEqual(lit_level_mat.name, xp249c.DEFAULT_MATERIAL_NAME + "_" + hint_suffix)
-        self.assertTrue(lit_level_mat.xplane.lit_level)
-        self.assertAlmostEqual(lit_level_mat.xplane.litLevel_v1, v1)
-        self.assertAlmostEqual(lit_level_mat.xplane.litLevel_v2, v2)
-        self.assertEqual(lit_level_mat.xplane.litLevel_dataref, dref)
+        self.assertTrue(lit_level_mat.xplane.lightLevel)
+        self.assertAlmostEqual(lit_level_mat.xplane.lightLevel_v1, v1)
+        self.assertAlmostEqual(lit_level_mat.xplane.lightLevel_v2, v2)
+        self.assertEqual(lit_level_mat.xplane.lightLevel_dataref, dref)
 
     def test_Scene_cockpit(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
-        objects = bpy.data.scene[inspect.stack()[0].function[5:]].objects
+        objects = bpy.data.scenes[inspect.stack()[0].function[5:]].objects
         self.assertEqual(objects["SOLID_CAM"].material_slots[0].material.name, xp249c.DEFAULT_MATERIAL_NAME + "_" + xp249c.HINT_PROP_SOLID_CAM)
 
     def test_Scene_has_prop(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
-        objects = bpy.data.scene[inspect.stack()[0].function[5:]].objects
+        objects = bpy.data.scenes[inspect.stack()[0].function[5:]].objects
         self.assertEqual(objects["DRAW_DISABLE"].material_slots[0].material.name, xp249c.DEFAULT_MATERIAL_NAME + "_" + xp249c.HINT_PROP_DRAW_DISABLE)
 
     def test_Scene_lit_level(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
-        objects = bpy.data.scene[inspect.stack()[0].function[5:]].objects
+        objects = bpy.data.scenes[inspect.stack()[0].function[5:]].objects
         self.assertLitLevel(objects["ATTR_light_level1prop"], xp249c.HINT_PROP_LIT_LEVEL,          .25, .75, "sim/weapons/x[0]")
         self.assertLitLevel(objects["lit_level"],             xp249c.HINT_PROP_LIT_LEVEL + ".001", .10, .90, "sim/weapons/y[0]")
 
     def test_Scene_lit_level_split(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
-        objects = bpy.data.scene[inspect.stack()[0].function[5:]].objects
+        objects = bpy.data.scenes[inspect.stack()[0].function[5:]].objects
         self.assertEqual(objects["ATTR_light_level_v1"].material_slots[0].material.name, xp249c.DEFAULT_MATERIAL_NAME)
         self.assertEqual(objects["ATTR_light_level_v2"].material_slots[0].material.name, xp249c.DEFAULT_MATERIAL_NAME)
         # Yes, this is the only one that got the attribute. The rest get 249!
