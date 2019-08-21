@@ -20,7 +20,6 @@ __dirname__ = os.path.dirname(__file__)
     #return (isinstance(line[0],str)
              #and ("OBJ_DIRECTIVE" in line[0]
                    #or)
-
 class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
     """
     # New objects will have one material only, made of only grouped faces
@@ -66,7 +65,6 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
     _results["4face_3mat_2tf"] = (xp249c.HINT_TF_TEX, _M25, _M25, xp249c.HINT_TF_SHADOW, _M75, _M90)
     _results["4face_3mat_3tf_1as"] = ("NONE", _MDEF, _MDEF, _MDEF, xp249c.HINT_TF_SHADOW, _M90)
 
-    print(_results)
     def test_no_generated_materials(self):
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         self.assertFalse([mat for mat in bpy.data.materials if re.match(r"Material\.TF\.\d{1,5}", mat.name) and mat.users])

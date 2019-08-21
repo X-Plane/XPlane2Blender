@@ -510,6 +510,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             logger.warn("{}'s '{}' property could not be converted to a float".format(obj_name, prop_name))
         except KeyError:
             pass
+        except Exception:
+            pass
 
     for obj in filter(lambda obj: obj.game.properties, scene.objects):
         props = {key.casefold():value for key, value in obj.game.properties.items()}
@@ -522,7 +524,18 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # How this bug came to be, I don't know, but the converter is Bug-For-Bug as long as it exported in 2.49! Joy!
         check_for_prop(obj.name, props, "GLOBAL_no_blend", xplane_249_constants.HINT_GLOBAL_NO_BLEND, float)
         check_for_prop(obj.name, props, "GLOBAL_shadow_blend", xplane_249_constants.HINT_GLOBAL_SHADOW_BLEND, float)
-        check_for_prop(obj.name, props, "GLOBAL_specular", xplane_249_constants.HINT_GLOBAL_SPECULAR, lambda value: round(float(value),2))
+
+        def specular_check(value:Any)->float:
+            try:
+                v = round(float(value),2)
+            except ValueError:
+                raise
+            else:
+                if v > 0.0:
+                    return v
+                else:
+                    raise Exception
+        check_for_prop(obj.name, props, "GLOBAL_specular", xplane_249_constants.HINT_GLOBAL_SPECULAR, specular_check)
 
         try:
             tint_prop = props["GLOBAL_tint".casefold()]
@@ -596,71 +609,68 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         #print("Before Material Slots Prep (Slots):         ", ",".join([_try(lambda: slot.material.name) for slot in search_obj.material_slots if slot.link == "DATA"]))
         #print("Before Material Slots Prep (All Materials): ", ",".join([_try(lambda: mat.name) for mat in search_obj.data.materials]))
         #print()
+
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
         if not search_obj.material_slots:
-            search_obj.data.materials.append(test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME))
-            search_obj.data.materials[0].specular_intensity = 0.0
+            search_obj.data.materials.append(None)
 
         for slot in search_obj.material_slots:
-            mat = slot.material
-            if not mat:
+            # All slots are filled something or the default so this is easier to reason with.
+            # Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
+            # This still has the werid name and is the same as a DEFAULT_MATERIAL. No point
+            # confusing the user
+            if not slot.material or re.match("Material\.TF\.\d{1,5}", slot.material.name):
                 # We'll need a material in every slot no matter what anyways, why not now and save us trouble
                 # In addition, a face's material_index will never be None or less than 0,
                 # when asking "what faces have a mat index of 0", the answer is automatically "all of them"
-                mat = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
-                mat.specular_intensity = 0.0 # This was the default behavior in XPlane2Blender 2.49
-            # Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
-            # This still has the werid name and is the same as a DEFAULT_MATERIAL. No point.
-            elif re.match("Material\.TF\.\d{1,5}", mat.name):
-                mat = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
-                mat.specular_intensity = 0.0 # This was the default in XPlane2Blender 2.49
+                slot.material = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
+                slot.material.specular_intensity = 0.0 # This was the default behavior in XPlane2Blender 2.49
 
             # After ensuring each slot has a material, we need to apply
             # the global hints to them, re-using existing materials as possible
             if global_mat_props:
                 # GLOBAL_specular will only be applied to default materials,
                 # if we're not about to apply it, we remove it from the hint suffix
-                final_hint_suffix = global_hint_suffix
-                """
-                if ("GLOBAL_specular" in global_mat_props
-                    and (mat.name != xplane_249_constants.DEFAULT_MATERIAL_NAME)):
-                    final_hint_suffix.remove(xplane_249_constants.HINT_GLOBAL_SPECULAR)
-                    """
+                final_hint_suffix = global_hint_suffix.copy()
+                if ("GLOBAL_specular" in global_mat_props):
+                    if (slot.material.name != xplane_249_constants.DEFAULT_MATERIAL_NAME):
+                        final_hint_suffix.remove(xplane_249_constants.HINT_GLOBAL_SPECULAR)
 
-                final_hint_suffix = "_" + "_".join(final_hint_suffix)
-                if (mat.name + final_hint_suffix) not in bpy.data.materials:
-                    oname = mat.name
-                    mat = mat.copy()
-                    mat.name  = oname + final_hint_suffix
-                elif (mat.name + final_hint_suffix) in bpy.data.materials:
-                    mat = bpy.data.materials[(mat.name + final_hint_suffix)]
+                final_hint_suffix = "_" + "_".join(final_hint_suffix) if final_hint_suffix else ""
+                if (slot.material.name + final_hint_suffix) not in bpy.data.materials:
+                    oname = slot.material.name
+                    slot.material = slot.material.copy()
+                    slot.material.name = oname + final_hint_suffix
+                elif (slot.material.name + final_hint_suffix) in bpy.data.materials:
+                    slot.material = bpy.data.materials[slot.material.name + final_hint_suffix]
 
             # Now, finally, we actually apply those values to those properties
             for prop_name, prop_value in global_mat_props.items():
                 if prop_name == "GLOBAL_cockpit_lit":
                     root_object.xplane.cockpit_lit = True
                 elif prop_name == "GLOBAL_no_blend":
-                    mat.xplane.blend_v1000 = xplane_constants.BLEND_OFF
-                    mat.xplane.blendRatio = prop_value
+                    slot.material.xplane.blend_v1000 = xplane_constants.BLEND_OFF
+                    slot.material.xplane.blendRatio = prop_value
                 elif prop_name == "GLOBAL_shadow_blend":
-                    mat.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
+                    slot.material.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
                     #TODO: We'll be ready for when bug #426 is closed and fixed -Ted, 8/20/2019
-                    mat.xplane.blendRatio = prop_value
+                    slot.material.xplane.blendRatio = prop_value
                 # GLOBAL_specular should only be applied to default materials. We use string matching
                 # because that is what the hint_suffix system is all about. Yay...
-                elif (prop_name == "GLOBAL_specular"
-                      and re.match("^249.*_sp", mat.name)):
-                    # Problem on `249_my_special_case`
-                    # if anyone actually reports the issue they can change the name or
-                    # I'll make a better solution
-                    mat.specular_intensity = prop_value
+                elif (prop_name == "GLOBAL_specular"):
+                    if (re.match("^249.*_" + xplane_249_constants.HINT_GLOBAL_SPECULAR, slot.material.name)):
+                        print("Is matching?", True)
+                        # Problem on `249_my_special_case`
+                        # if anyone actually reports the issue they can change the name or
+                        # I'll make a better solution
+                        slot.material.specular_intensity = prop_value
                 elif prop_name == "GLOBAL_tint":
-                    mat.xplane.tint = True
-                    mat.xplane.tint_albedo, mat.xplane.tint_emissive = prop_value
+                    slot.material.xplane.tint = True
+                    slot.material.xplane.tint_albedo, slot.material.xplane.tint_emissive = prop_value
                 elif prop_name == "NORMAL_METALNESS":
-                    mat.xplane.normal_metalness = prop_value
+                    slot.material.xplane.normal_metalness = prop_value
                 elif prop_name == "BLEND_GLASS":
-                    mat.xplane.blend_glass = prop_value
+                    slot.material.xplane.blend_glass = prop_value
 
         #print("After Material Slots Prep (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
         #print("After Material Slots Prep (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))

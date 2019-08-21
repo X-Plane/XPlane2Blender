@@ -26,8 +26,8 @@ class TestGlobalAttributesNotApplied(XPlaneTestCase):
 
         if scene_name.endswith("_not"):
             obj_base_name = scene.name[:-4]
-        elif scene_name.endswith("_args"):
-            obj_base_name = scene.name[:-5]
+        elif scene_name.endswith("_arg"):
+            obj_base_name = scene.name
         elif scene_name.endswith("_not_STRING"):
             obj_base_name = scene.name[:-11]
         self.assertEqual(scene.objects[obj_base_name + "_1"].material_slots[0].name, material_1)
@@ -57,13 +57,19 @@ class TestGlobalAttributesNotApplied(XPlaneTestCase):
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name, "Material_.10", "Material_.80")
 
-    def test_GlobalTint_few_args(self)->None:
+    def test_GlobalSpecular3_not(self)->None:
+        """(notafloat2)"""
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        scene_name = inspect.stack()[0].function[5:]
+        self._compare_objects_to_material(scene_name)
+
+    def test_GlobalTint_few_arg(self)->None:
         """(string value cannot be unpacked)"""
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name)
 
-    def test_GlobalTint_many_args(self)->None:
+    def test_GlobalTint_many_arg(self)->None:
         """(string value cannot be unpacked)"""
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]

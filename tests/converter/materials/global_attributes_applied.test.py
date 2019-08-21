@@ -36,8 +36,8 @@ class TestGlobalAttributesApplied(XPlaneTestCase):
     def test_GlobalSpecular(self):
         """(unchanged specular intensity, default material gets prop value"""
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
-        self.assertTrue(bpy.data.scenes["GlobalSpecular"].objects["GlobalSpecular_1"].material_slots[0].material.specular_intensity, bpy.data.materials["Material"].specular_intensity)
-        self.assertTrue(bpy.data.scenes["GlobalSpecular"].objects["GlobalSpecular_2"].material_slots[0].material.specular_intensity, .35)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalSpecular"].objects["GlobalSpecular_1"].material_slots[0].material.specular_intensity, bpy.data.materials["Material_.75"].specular_intensity)
+        self.assertAlmostEqual(bpy.data.scenes["GlobalSpecular"].objects["GlobalSpecular_2"].material_slots[0].material.specular_intensity, .35)
 
     def test_GlobalTint(self):
         """(both cubes get Albedo .45, Emissive .55)"""
