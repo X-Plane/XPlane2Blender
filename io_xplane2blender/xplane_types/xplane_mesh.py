@@ -2,6 +2,8 @@ import array
 import time
 import re
 
+import cProfile, pstats, io
+
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
@@ -314,30 +316,22 @@ class XPlaneMesh():
         ######################################################################
         # WARNING! This is a hot path! So don't change it without profiling! #
         ######################################################################
-        o = bytearray()
         #print("Begin XPlaneMesh.writeVertices")
         #start = time.perf_counter()
         debug = getDebug()
 
-        vt_array = array.array('f', [round(component,8) for vertice in self.vertices for component in vertice])
-        #Loop through every line, format it's 8 components, use rstrip, if statement for 10.00000000->10.0
-        #52-60 seconds
-        for i,line in enumerate(range(0,len(vt_array),8)):
-            o += b"VT"
-            for component in  vt_array[line:line+8]:
-                sb = bytes("\t%.8f" % component,"utf-8").rstrip(b'0')
-                if sb[-1] == 46:#'.':
-                    o += sb[:-1]
-                else:
-                    o += sb
+        precision = 10**8
 
-            if debug:
-                o += bytes("\t# %d\n" % i,"utf-8")
-            else:
-                o += b"\n"
+        #Loop through every line, format it's 8 components
+        #52-60 seconds
+        if debug:
+            fmt = 'VT\t%.8g\t%.8g\t%.8g\t%.8g\t%.8g\t%.8g\t%.8g\t%.8g\t# %d\n'
+            return ''.join([fmt % (*[(int(component * precision + 0.5) / precision) for component in line],i) for i, line in enumerate(self.vertices)])
+        else:
+            fmt = 'VT\t%.8g\t%.8g\t%.8g\t%.8g\t%.8g\t%.8g\t%.8g\t%.8g\n'
+            return ''.join([fmt % (*[(int(component * precision + 0.5) / precision) for component in line],) for line in self.vertices])
 
         #print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
-        return o.decode("utf-8")
 
     # Method: writeIndices
     # Returns the OBJ indices table by itering <indices>.
@@ -349,18 +343,20 @@ class XPlaneMesh():
         # WARNING! This is a hot path! So don't change it without profiling! #
         ######################################################################
         o=''
-        #print("Begin XPlaneMesh.writeIndices")
-        #start = time.perf_counter()
+        indices = self.indices
+        length = len(indices)
+        # print("Begin XPlaneMesh.writeIndices")
+        # start = time.perf_counter()
 
         s_idx10 = "IDX10\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n"
         s_idx   = "IDX\t%d\n"
-        partition_point = len(self.indices) - (len(self.indices) % 10)
+        partition_point = length - (length % 10)
 
-        if len(self.indices) >= 10:
-            o += ''.join([s_idx10 % (*self.indices[i:i+10],) for i in range(0,partition_point-1,10)])
+        if length >= 10:
+            o += ''.join([s_idx10 % (*indices[i:i+10],) for i in range(0,partition_point-1,10)])
 
-        o += ''.join([s_idx % (self.indices[i]) for i in range(partition_point,len(self.indices))])
-        #print("End XPlaneMesh.writeIndices: " + str(time.perf_counter()-start))
+        o += ''.join([s_idx % (indices[i]) for i in range(partition_point,length)])
+        # print("End XPlaneMesh.writeIndices: " + str(time.perf_counter()-start))
         return o
 
     def write(self):
