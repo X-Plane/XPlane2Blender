@@ -8,6 +8,11 @@ DEFAULT_MATERIAL_NAME = "249"
 # These are used by the material converter when making
 # unique and derivative names during conversion
 # and to "Hint" the user as to what happened
+
+# Unfortunatly, and potentially by necissity to reduce code
+# complexity, we now have a stringified feature where the hints used
+# indicate the features applied to a material.
+# These must be all be unique!
 HINT_GLOBAL_BLEND_GLASS  = "bg"
 HINT_GLOBAL_CKPIT_LIT    = "ck"
 HINT_GLOBAL_NORM_MET     = "nm"
@@ -23,8 +28,14 @@ HINT_TF_INVIS          = "INVIS"
 HINT_PROP_DRAW_DISABLE = "DRAW_DISABLE"
 
 HINT_TF_LIGHT          = "LIGHT"
-HINT_TF_LIT_LEVEL      = "LIT_LEVEL"
+
+#Since LIT_LEVEL can appear multiple times, we prevent
+# overwriting and use + ".001", ".002", etc instead
+HINT_PROP_LIT_LEVEL    = "LIT_LEVEL"
+
 HINT_TF_SHADOW         = "SHADOW"
+
+#TEX is always joined by _ALPHA or _CLIP
 HINT_TF_TEX            = "TEX"
 HINT_TF_TILES          = "TILES"
 

@@ -386,7 +386,7 @@ def _convert_material(scene: bpy.types.Scene,
     #ATTR_light_level could be just the dataref or the v1, v2, dataref
     ATTR_light_level    = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level", default="")[0]).strip()
     ATTR_light_level_v1 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v1", default=0.0)[0])
-    ATTR_light_level_v2 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v2", default=0.0)[0])
+    ATTR_light_level_v2 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v2", default=1.0)[0])
 
     lightLevel_v1, lightLevel_v2, lightLevel_dataref = ("", "", "")
 
