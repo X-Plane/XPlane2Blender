@@ -2,8 +2,6 @@ import array
 import time
 import re
 
-import cProfile, pstats, io
-
 import bpy
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
