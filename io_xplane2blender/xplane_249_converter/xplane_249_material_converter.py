@@ -392,25 +392,35 @@ def _convert_material(scene: bpy.types.Scene,
 
     #Why this complicated logic? It mirrors how 2.49 would allow ATTR_light_level to override lit_level
     if lit_level:
-        #TODO: What if they had "0 1 sim/my/dataref whatever"? or "0 1"?
-        lightLevel_v1, lightLevel_v2, lightLevel_dataref = lit_level.split()
+        try:
+            lightLevel_v1, lightLevel_v2, lightLevel_dataref = lit_level.split()
+        except ValueError: # Too few or too many args
+            logger.warn("Game property `{}`:'{}', had too many or too few arguments".format("lit_level", lit_level))
+
     if len(ATTR_light_level.split()) == 3:
-        lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level.split()
+        try:
+            lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level.split()
+        except ValueError: # Too few or too many args
+            logger.warn("Game property `{}`:'{}', had too many or too few arguments".format("ATTR_light_level", ATTR_light_level))
     elif ATTR_light_level:
         lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level_v1, ATTR_light_level_v2, ATTR_light_level
-    """
-    Tricky, because lightLevel by lit_level
-    elif (lightLevel_v1, lightLevel_v2, lightLevel_dataref) != ("", "", ""):
-        print("v1:", lightLevel_v1,"v2:",  lightLevel_v2, "dref:", lightLevel_dataref)
-        # TODO: Potential edge cases:
-        # - ATTR_light_level: "sim/whatever .5 1.0 oh no too many args!"
-        # - ATTR_light_level: "sim/whatever 0.0" (too few args)
-        assert False, "What do we do now? Log?"
-        """
-    if mat.xplane.lightLevel:
-        mat.xplane.lightLevel_v1 = float(lightLevel_v1)
-        mat.xplane.lightLevel_v2 = float(lightLevel_v2)
-        mat.xplane.lightLevel_dataref = lightLevel_dataref
+
+    if all((lightLevel_v1, lightLevel_v2, lightLevel_dataref)):
+        try:
+            v1 = float(lightLevel_v1)
+        except (ValueError, TypeError):
+            logger.warn("Light Level v1 value could not convert to float: {}".format(lightLevel_v1))
+        else:
+            try:
+                v2 = float(lightLevel_v2)
+            except (ValueError, TypeError):
+                logger.warn("Light Level v2 value could not convert to float: {}".format(lightLevel_v2))
+            else:
+                # Only after all the data is converted and convertable do we actually commit to changing this
+                changed_material_values["lightLevel"] = True
+                changed_material_values["lightLevel_v1"] = v1
+                changed_material_values["lightLevel_v2"] = v2
+                changed_material_values["lightLevel_dataref"] = lightLevel_dataref
     #-----------------------------------------------------------------
 
     #TODO: Deck
@@ -430,6 +440,22 @@ def _convert_material(scene: bpy.types.Scene,
         cmp_cv_ov = lambda key: cv[key] != ov[key]
         xp249c = xplane_249_constants
         # Join a list of only the relavent hint suffixes
+        def get_lit_level_hint(cv):
+            return (xp249c.HINT_PROP_LIT_LEVEL
+                    + hex(
+                        abs(
+                            hash(
+                                tuple(
+                                        (
+                                        cv["lightLevel_v1"],
+                                        cv["lightLevel_v2"],
+                                        cv["lightLevel_dataref"]
+                                        )
+                                    )
+                                )
+                            )
+                        )[2:7]
+                    )
         hint_suffix = "_" + "_".join(filter(None, (
                 ("%s_%s" % (xplane_249_constants.HINT_TF_TEX, {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]])
                     if cmp_cv_ov("blend_v1000") else ""),
@@ -445,7 +471,7 @@ def _convert_material(scene: bpy.types.Scene,
 
                 (xp249c.HINT_TF_SHADOW     if cmp_cv_ov("shadow_local") else ""),
 
-                (xp249c.HINT_TF_LIT_LEVEL  if cmp_cv_ov("lightLevel") else ""),
+                (get_lit_level_hint(cv) if cmp_cv_ov("lightLevel") else ""),
 
                 # Debugging only. Since we don't combine materials with the same diffuse or specularity,
                 # we don't need to make it part of the lookup key
@@ -659,7 +685,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 # because that is what the hint_suffix system is all about. Yay...
                 elif (prop_name == "GLOBAL_specular"):
                     if (re.match("^249.*_" + xplane_249_constants.HINT_GLOBAL_SPECULAR, slot.material.name)):
-                        print("Is matching?", True)
                         # Problem on `249_my_special_case`
                         # if anyone actually reports the issue they can change the name or
                         # I'll make a better solution
