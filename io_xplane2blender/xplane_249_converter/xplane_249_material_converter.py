@@ -617,10 +617,12 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         ############################################
         # We do this at the top to limit anything that could affect the C data
         # "Pragmatic paranioa is a programmer's pal" - Somebody's abandoned programming blog
+        #print("before tf split")
         tf_modes_and_their_faces = _get_tf_modes_from_ctypes(search_obj) # type: TFModeAndFaceIndexes
         if not tf_modes_and_their_faces:
             tf_modes_and_their_faces = collections.defaultdict(set)
             tf_modes_and_their_faces[DEFAULT_TF_MODES] = {face.index for face in search_obj.data.polygons}
+        #print("after tf split")
         #----------------------------------------------------------------------
 
         #--- Prepare the Object's Material Slots ------------------------------
@@ -718,8 +720,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     yield from flatten(el)
                 else:
                     yield el
-        assert sorted(flatten(all_tf_faceids)) == sorted(flatten(all_material_faceids)), "TF Face Ids and Material Face Ids must cover the same faces!"
-        assert len(list(flatten(all_tf_faceids))) == len(list(flatten(all_material_faceids))) == len(search_obj.data.polygons), "TF FaceIds, Material FaceIds must cover all of object's faces!"
+        #assert sorted(flatten(all_tf_faceids)) == sorted(flatten(all_material_faceids)), "TF Face Ids and Material Face Ids must cover the same faces!"
+        #assert len(list(flatten(all_tf_faceids))) == len(list(flatten(all_material_faceids))) == len(search_obj.data.polygons), "TF FaceIds, Material FaceIds must cover all of object's faces!"
                #len(itertools.chain([faces for tf_modes, face_ids in tf_modes_and_their_faces.items()]), "dicts should cover the same range of faces"
         #----------------------------------------------------------------------
         print()
@@ -748,10 +750,10 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 else:
                     print("No cross over for ", tf_modes, "and", material.name)
 
-        print("After Splitting (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
-        print("After Splitting (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
-        print()
-        print("Split Groups", {mat.name:faces for mat, faces in split_groups.items()})
+        #print("After Splitting (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
+        #print("After Splitting (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
+        #print()
+        #print("Split Groups", {mat.name:faces for mat, faces in split_groups.items()})
 
         new_objs = []
         if len(split_groups): #TODO: Dumb, split_groups will always be at least 1 because of DEF_MAT in place of no slot
@@ -776,16 +778,16 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 for i, (material, face_ids) in enumerate(split_groups.items()):
                     new_obj = copy_obj(search_obj, search_obj.name + "_%d" % i)
                     new_objs.append(new_obj)
-                    print("New Obj: ", new_obj.name)
-                    print("New Mesh:", new_obj.data.name)
-                    print("Group:" , material.name)
+                    #print("New Obj: ", new_obj.name)
+                    #print("New Mesh:", new_obj.data.name)
+                    #print("Group:" , material.name)
                     # Remove faces
                     bm = bmesh.new()
                     bm.from_mesh(new_obj.data)
                     faces_to_keep   = [face for face in bm.faces if face.index in face_ids]
                     faces_to_remove = [face for face in bm.faces if face.index not in face_ids]
-                    print("Faces To Keep:  ", [f.index for f in faces_to_keep])
-                    print("Faces To Remove:", [f.index for f in faces_to_remove])
+                    #print("Faces To Keep:  ", [f.index for f in faces_to_keep])
+                    #print("Faces To Remove:", [f.index for f in faces_to_remove])
                     bmesh.ops.delete(bm, geom=faces_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
                     bm.to_mesh(new_obj.data)
                     bm.free()
