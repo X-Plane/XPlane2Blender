@@ -24,7 +24,7 @@ class TestObjectAttributesApplied(XPlaneTestCase):
     def test_Scene_cockpit(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         objects = bpy.data.scenes[inspect.stack()[0].function[5:]].objects
-        self.assertEqual(objects["SOLID_CAM"].material_slots[0].material.name, xp249c.DEFAULT_MATERIAL_NAME + "_" + xp249c.HINT_PROP_SOLID_CAM)
+        self.assertEqual(objects["SOLID_CAM"].material_slots[0].material.name, "{}_{}_{}".format(xp249c.DEFAULT_MATERIAL_NAME, xp249c.HINT_PROP_DRAW_DISABLE, xp249c.HINT_PROP_SOLID_CAM))
 
     def test_Scene_has_prop(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
@@ -34,8 +34,8 @@ class TestObjectAttributesApplied(XPlaneTestCase):
     def test_Scene_lit_level(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         objects = bpy.data.scenes[inspect.stack()[0].function[5:]].objects
-        self.assertLitLevel(objects["ATTR_light_level1prop"], xp249c.HINT_PROP_LIT_LEVEL,          .25, .75, "sim/weapons/x[0]")
-        self.assertLitLevel(objects["lit_level"],             xp249c.HINT_PROP_LIT_LEVEL + ".001", .10, .90, "sim/weapons/y[0]")
+        self.assertLitLevel(objects["ATTR_light_level1prop"], xp249c.HINT_PROP_LIT_LEVEL,       .25, .75, "sim/weapons/x[0]")
+        self.assertLitLevel(objects["lit_level"],             xp249c.HINT_PROP_LIT_LEVEL + "1", .10, .90, "sim/weapons/y[0]")
 
     def test_Scene_lit_level_split(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
@@ -43,9 +43,9 @@ class TestObjectAttributesApplied(XPlaneTestCase):
         self.assertEqual(objects["ATTR_light_level_v1"].material_slots[0].material.name, xp249c.DEFAULT_MATERIAL_NAME)
         self.assertEqual(objects["ATTR_light_level_v2"].material_slots[0].material.name, xp249c.DEFAULT_MATERIAL_NAME)
         # Yes, this is the only one that got the attribute. The rest get 249!
-        self.assertLitLevel(objects["ATTR_light_level"], xp249c.HINT_PROP_LIT_LEVEL + ".002", 3, 6, "sim/weapons/z[0]")
-        self.assertLitLevel(objects["ensures_v1_default"], xp249c.HINT_PROP_LIT_LEVEL + ".003", 0.0, .6, "test/dref1")
-        self.assertLitLevel(objects["ensures_v2_default"], xp249c.HINT_PROP_LIT_LEVEL + ".004", .4, 1.0, "test/dref2")
+        self.assertLitLevel(objects["ATTR_light_level"],   xp249c.HINT_PROP_LIT_LEVEL + "2", 3, 6, "sim/weapons/z[0]")
+        self.assertLitLevel(objects["ensures_v1_default"], xp249c.HINT_PROP_LIT_LEVEL + "3", 0.0, .6, "test/dref1")
+        self.assertLitLevel(objects["ensures_v2_default"], xp249c.HINT_PROP_LIT_LEVEL + "4", .4, 1.0, "test/dref2")
 
 
 runTestCases([TestObjectAttributesApplied])

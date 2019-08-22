@@ -9,10 +9,13 @@ DEFAULT_MATERIAL_NAME = "249"
 # unique and derivative names during conversion
 # and to "Hint" the user as to what happened
 
-# Unfortunatly, and potentially by necissity to reduce code
-# complexity, we now have a stringified feature where the hints used
-# indicate the features applied to a material.
-# These must be all be unique!
+# Since all materials must have a different name,
+# our algorithm's record keeping must eventually become a unique name.
+#
+# While it would have been great to develop some kind of global dictionary of
+# converted materials and make the names at the end, we slid into
+# stringification and testing for "_" + HINT_* in material names
+# Therefore these must all be unique!
 HINT_GLOBAL_BLEND_GLASS  = "bg"
 HINT_GLOBAL_CKPIT_LIT    = "ck"
 HINT_GLOBAL_NORM_MET     = "nm"
@@ -29,8 +32,12 @@ HINT_PROP_DRAW_DISABLE = "DRAW_DISABLE"
 
 HINT_TF_LIGHT          = "LIGHT"
 
-#Since LIT_LEVEL can appear multiple times, we prevent
-# overwriting and use + ".001", ".002", etc instead
+# Since LIT_LEVEL is not bool or enumeration
+# we need to create seperate names for each unique material
+# to prevent overwriting
+# LIT_LEVEL may have an int immediately afterwards, starting at 1
+# Ex: 249_COLL_LIT_LEVEL, 249_COLL_LIT_LEVEL1, 249_COLL_LIT_LEVEL2
+# A .blend file has 3 materials with Solid Camera and 3 unique LIT_LEVEL values
 HINT_PROP_LIT_LEVEL    = "LIT_LEVEL"
 
 HINT_TF_SHADOW         = "SHADOW"

@@ -440,22 +440,6 @@ def _convert_material(scene: bpy.types.Scene,
         cmp_cv_ov = lambda key: cv[key] != ov[key]
         xp249c = xplane_249_constants
         # Join a list of only the relavent hint suffixes
-        def get_lit_level_hint(cv):
-            return (xp249c.HINT_PROP_LIT_LEVEL
-                    + hex(
-                        abs(
-                            hash(
-                                tuple(
-                                        (
-                                        cv["lightLevel_v1"],
-                                        cv["lightLevel_v2"],
-                                        cv["lightLevel_dataref"]
-                                        )
-                                    )
-                                )
-                            )
-                        )[2:7]
-                    )
         hint_suffix = "_" + "_".join(filter(None, (
                 ("%s_%s" % (xplane_249_constants.HINT_TF_TEX, {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]])
                     if cmp_cv_ov("blend_v1000") else ""),
@@ -471,7 +455,7 @@ def _convert_material(scene: bpy.types.Scene,
 
                 (xp249c.HINT_TF_SHADOW     if cmp_cv_ov("shadow_local") else ""),
 
-                (get_lit_level_hint(cv) if cmp_cv_ov("lightLevel") else ""),
+                (xp249c.HINT_PROP_LIT_LEVEL if cmp_cv_ov("lightLevel") else ""),
 
                 # Debugging only. Since we don't combine materials with the same diffuse or specularity,
                 # we don't need to make it part of the lookup key
@@ -486,6 +470,20 @@ def _convert_material(scene: bpy.types.Scene,
         #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
         new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
         try:
+            if cmp_cv_ov("lightLevel"):
+                # bpy.data.materials is sorted alphabetically,
+                # so by searching in reverse, we'll find the last match
+                for mat in reversed(bpy.data.materials):
+                    # One day if we have something after _LIT_LEVEL, we're going to need
+                    # to test the later part of the string. Or maybe we'll make some sort of
+                    # class to deal with this because it is getting crazy!
+                    m = re.match("(.*LIT_LEVEL)(\d*)", mat.name)
+                    if m and m.group(1) == new_name:
+                        mat_ll = (mat.xplane.lightLevel_v1, mat.xplane.lightLevel_v2, mat.xplane.lightLevel_dataref,)
+                        cv_ll = (cv["lightLevel_v1"], cv["lightLevel_v2"], cv["lightLevel_dataref"])
+                        if mat_ll and cv_ll:
+                            #After giving this a new unique name, we know we're going to fail the lookup
+                            new_name += "1" if m.group(2) == "" else str(int(m.group(2))+1)
             new_material = bpy.data.materials[new_name]
         except KeyError:
             new_material = mat.copy()
