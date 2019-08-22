@@ -258,7 +258,6 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
                         )
 
             poly_c_info[tf_modes].add(idx)
-        return poly_c_info
     except ValueError as ve: #NULL Pointer access
         print("VE:", ve, obj.name)
     except KeyError as ke: #That weird 'loopstart' not found in __repr__ call...
@@ -267,9 +266,10 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
         print("SE:", se, obj.name)
     except Exception as e:
         print("E:", e, obj.name)
-    finally:
-        return None
+    else:
+        return poly_c_info
 
+    return None
 
 def _convert_material(scene: bpy.types.Scene,
                       root_object: bpy.types.Object,
