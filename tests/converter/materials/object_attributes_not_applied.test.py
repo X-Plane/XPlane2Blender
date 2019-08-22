@@ -22,9 +22,9 @@ class TestObjectAttributesNotApplied(XPlaneTestCase):
         self.assertEqual(lit_level_mat.xplane.lightLevel_dataref, dref)
 
     def test_not_applied_common_cases(self):
-        scene = bpy.data.scenes[0]
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
         # We aren't checking for errors, we just want to let people move on with their conversion
-        for obj in bpy.data.objects:
+        for obj in filter(lambda obj: obj.type == "MESH", bpy.data.objects):
             if obj.name == "litlevel_overwrite":
                 self.assertLitLevel(obj, xp249c.HINT_PROP_LIT_LEVEL, 3, 4, "test/chose/overwrite")
             else:
