@@ -93,7 +93,7 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
         current_props = self._get_mat_values_for_test_props(mat)
         # Then compare that the relavent changed props have been changed
         for item_current, item_changed in zip(sorted(current_props.items()), sorted(changed_props.items())):
-            self.assertEqual(item_current[1], item_changed[1],
+            self.assertAlmostEqual(item_current[1], item_changed[1],
                     msg="Current and required values for prop '{}' on material '{}' don't match: '{}', '{}'"
                     .format(item_current[0], mat.name, item_current[1], item_changed[1]))
 
@@ -107,14 +107,14 @@ class TestMatAllTypesSingleFace(XPlaneTestCase):
     def _shadow_test(self, name):
         changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
         changed_props["blend_v1000"] = xplane_constants.BLEND_SHADOW
-        changed_props["blendRatio"] = 0.5
+        changed_props["blendRatio"] = 0.3
         self._test_prop_values_still_default(bpy.data.objects[name], ["blend_v1000", "blendRatio"])
         self._test_prop_values_have_changes(bpy.data.objects[name], changed_props)
 
     def _clip_test(self, name):
         changed_props = TestMatAllTypesSingleFace._get_default_values_for_test_props()
         changed_props["blend_v1000"] = xplane_constants.BLEND_OFF
-        changed_props["blendRatio"] = 0.5
+        changed_props["blendRatio"] = 0.4
         self._test_prop_values_still_default(bpy.data.objects[name], ["blend_v1000", "blendRatio"])
         self._test_prop_values_have_changes(bpy.data.objects[name], changed_props)
 

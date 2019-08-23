@@ -316,26 +316,43 @@ def _convert_material(scene: bpy.types.Scene,
     # This section roughly mirrors the order in which 2.49 deals with these face buttons
     #---TEX----------------------------------------------------------
     if tf_modes.TEX:
+        def attempt_conversion_to_float(prop_name:str)->Tuple[Any,Any]:
+            prop_value, prop_source = xplane_249_helpers.find_property_in_parents(search_obj, prop_name)
+            try:
+                prop_value = float(prop_value)
+            except (TypeError, ValueError):
+                # Slightly pedantic, but only a bad float or None found on a real found object
+                # shows we have a real problem
+                if prop_source:
+                    logger.warn("{} found, but could not convert '{}' to a float".format(prop_name, prop_value))
+                return (None, None)
+            else:
+                return (prop_value, prop_source)
+
         if tf_modes.ALPHA:
-            if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
+            attr_shadow_blend = attempt_conversion_to_float("ATTR_shadow_blend")
+            global_shadow_blend = attempt_conversion_to_float("GLOBAL_shadow_blend")
+            if attr_shadow_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
-                changed_material_values["blendRatio"] = 0.5 #TODO: This is wrong! We should only be falling back to .5 if needed!
-                logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5".format(mat.name))
-            elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
+                changed_material_values["blendRatio"] = round(attr_shadow_blend[0],2)
+                logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio={}".format(mat.name, attr_shadow_blend[0]))
+            elif global_shadow_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
-                changed_material_values["blendRatio"] = 0.5 #TODO: This is wrong! We should only be falling back to .5 if needed!
+                changed_material_values["blendRatio"] = round(global_shadow_blend[0],2)
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             else:
                 logger_warn_msgs.append("'Tex' and 'Alpha' buttons pressed, but no 'ATTR_/GLOBAL_shadow_blend' game property given. Did you forget something?")
         elif tf_modes.CLIP:
-            if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
+            attr_no_blend = attempt_conversion_to_float("ATTR_no_blend")
+            global_no_blend = attempt_conversion_to_float("GLOBAL_no_blend")
+            if attr_no_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
-                changed_material_values["blendRatio"] = 0.5 #TODO: This is wrong! We should only be falling back to .5 if needed!
+                changed_material_values["blendRatio"] = round(attr_no_blend[0], 2)
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
-            elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
+            elif global_no_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
-                changed_material_values["blendRatio"] = 0.5
+                changed_material_values["blendRatio"] = round(global_no_blend[0], 2)
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             else:
