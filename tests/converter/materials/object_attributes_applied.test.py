@@ -47,5 +47,13 @@ class TestObjectAttributesApplied(XPlaneTestCase):
         self.assertLitLevel(objects["ensures_v1_default"], xp249c.HINT_PROP_LIT_LEVEL + "3", 0.0, .6, "test/dref1")
         self.assertLitLevel(objects["ensures_v2_default"], xp249c.HINT_PROP_LIT_LEVEL + "4", .4, 1.0, "test/dref2")
 
+    def test_Scene_many_lit_level(self)->None:
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        for i, obj in enumerate(
+                filter(lambda o: o.type == "MESH" and "013" not in o.name,
+                    bpy.data.scenes[inspect.stack()[0].function[5:]].objects)):
+            self.assertLitLevel(obj, xp249c.HINT_PROP_SOLID_CAM + "_" + xp249c.HINT_PROP_LIT_LEVEL + (str(i) if i else ""), 0, i+1, "test/dref")
+
+        self.assertLitLevel(bpy.data.objects["Cube.013"], xp249c.HINT_PROP_SOLID_CAM + "_" + xp249c.HINT_PROP_LIT_LEVEL + "4", 0, 5, "test/dref")
 
 runTestCases([TestObjectAttributesApplied])

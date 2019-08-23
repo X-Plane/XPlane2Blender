@@ -259,13 +259,17 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
 
             poly_c_info[tf_modes].add(idx)
     except ValueError as ve: #NULL Pointer access
-        print("VE:", ve, obj.name)
+        pass
+        #print("VE:", ve, obj.name)
     except KeyError as ke: #That weird 'loopstart' not found in __repr__ call...
-        print("KE:", ke, obj.name)
+        pass
+        #print("KE:", ke, obj.name)
     except SystemError as se: # <class 'zip'> returned a result with an error set
-        print("SE:", se, obj.name)
+        pass
+        #print("SE:", se, obj.name)
     except Exception as e:
-        print("E:", e, obj.name)
+        pass
+        #print("E:", e, obj.name)
     else:
         return poly_c_info
 
@@ -402,6 +406,7 @@ def _convert_material(scene: bpy.types.Scene,
     lit_level = str(xplane_249_helpers.find_property_in_parents(search_obj, "lit_level", default="")[0]).strip()
     #ATTR_light_level could be just the dataref or the v1, v2, dataref
     ATTR_light_level    = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level", default="")[0]).strip()
+    # TODO: beware - this could be semantically wrong - if ATTR_light_level_v1/2 was not found in 249, it didn't get a value! Right?
     ATTR_light_level_v1 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v1", default=0.0)[0])
     ATTR_light_level_v2 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v2", default=1.0)[0])
 
@@ -486,23 +491,42 @@ def _convert_material(scene: bpy.types.Scene,
 
         #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
         new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
-        try:
-            if cmp_cv_ov("lightLevel"):
-                # bpy.data.materials is sorted alphabetically,
-                # so by searching in reverse, we'll find the last match
-                for mat in reversed(bpy.data.materials):
-                    # One day if we have something after _LIT_LEVEL, we're going to need
-                    # to test the later part of the string. Or maybe we'll make some sort of
-                    # class to deal with this because it is getting crazy!
-                    m = re.match("(.*LIT_LEVEL)(\d*)", mat.name)
-                    if m and m.group(1) == new_name:
-                        mat_ll = (mat.xplane.lightLevel_v1, mat.xplane.lightLevel_v2, mat.xplane.lightLevel_dataref,)
-                        cv_ll = (cv["lightLevel_v1"], cv["lightLevel_v2"], cv["lightLevel_dataref"])
-                        if mat_ll and cv_ll:
-                            #After giving this a new unique name, we know we're going to fail the lookup
-                            new_name += "1" if m.group(2) == "" else str(int(m.group(2))+1)
+
+        if cmp_cv_ov("lightLevel"):
+            # This is a "don't be too clever" moment
+            # Assumptions:
+            # - We will always make _LIT_LEVEL materials in the following sequence:
+            # _LIT_LEVEL, _LIT_LEVEL1, _LIT_LEVEL2, ...
+            # - LIT_LEVEL will always be last. If we get another like this, we'll have to get serious
+            # about string munging
+            cv_ll = (cv["lightLevel_v1"], cv["lightLevel_v2"], cv["lightLevel_dataref"])
+
+            def get_ll_index(m:bpy.types.Material):
+                """m is guaranteed to start with '249.*LIT_LEVEL'"""
+                try:
+                    return int(re.match("249.*" + xp249c.HINT_PROP_LIT_LEVEL + "(\d*)", m.name).group(1))
+                except ValueError:
+                    return 0
+
+            i = 0
+            sorted_ll_mats = sorted(filter(lambda m:m.name.startswith(new_name), bpy.data.materials), key=get_ll_index)
+            for i, ll_mat in enumerate(sorted_ll_mats):
+                # Re-use an existing material whenever possible
+                if cv_ll == (ll_mat.xplane.lightLevel_v1, ll_mat.xplane.lightLevel_v2, ll_mat.xplane.lightLevel_dataref):
+                    new_name = ll_mat.name
+                    break
+            else: #nobreak
+                # If we if we have ll_mats
+                if sorted_ll_mats:
+                    # With a new name, we make a new derivative
+                    new_name += str(i+1)
+                else:
+                    # This is our first ll_material, so don't add anything
+                    pass
+
+        if new_name in bpy.data.materials:
             new_material = bpy.data.materials[new_name]
-        except KeyError:
+        else:
             new_material = mat.copy()
             new_material.name = new_name
             for prop, value in changed_material_values.items():
