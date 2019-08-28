@@ -22,6 +22,7 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_light_converter,
                                                     xplane_249_manip_decoder,
                                                     xplane_249_material_converter,
+                                                    xplane_249_texture_converter,
                                                     xplane_249_workflow_converter)
 
 _converted_objects = set() # type: Set[bpy.types.Object]
@@ -43,6 +44,7 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
     logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
 
     for i, scene in enumerate(bpy.data.scenes, start=1):
+        #if scene.name != "C90B_cockpi2":
         logger.info("Converting scene '{}' using a {} workflow"
                     .format(scene.name, workflow_type.name))
         bpy.context.window.screen.scene = scene
@@ -94,6 +96,7 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
             #ALSO! This breaks if there are no new roots becaues of SKIP. SKIP should only affect workflow
             xplane_249_light_converter.convert_lights(scene, workflow_type, root)
             xplane_249_material_converter.convert_materials(scene, workflow_type, root)
+            xplane_249_texture_converter.convert_textures(scene, workflow_type, root)
 
 
         logger.info("", "raw")
