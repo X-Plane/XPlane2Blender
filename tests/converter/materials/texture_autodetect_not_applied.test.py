@@ -13,6 +13,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestTextureAutodetectNotApplied(XPlaneTestCase):
     def test_all_roots_have_no_autodetect(self)->None:
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         for root in filter(lambda o: o.xplane.isExportableRoot, bpy.data.objects):
             self.assertTrue(root.xplane.layer.autodetectTextures)
             self.assertEqual(root.xplane.layer.texture, "")
