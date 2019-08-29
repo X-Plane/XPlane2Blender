@@ -12,17 +12,6 @@ from io_xplane2blender.xplane_249_converter.xplane_249_constants import Workflow
 __dirname__ = os.path.dirname(__file__)
 
 class TestTextureAutodetectApplied(XPlaneTestCase):
-    #TODO Move case
-    def test_OBJCustomLightTexSkip(self)->None:
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
-        root_object = bpy.data.objects[inspect.stack()[0].function[5:]]
-        self.assertTrue(root_object.xplane.layer.autodetectTextures)
-        self.assertEqual(root_object.xplane.layer.texture,"")
-        self.assertEqual(root_object.xplane.layer.texture_lit,"")
-        self.assertEqual(root_object.xplane.layer.texture_normal,"")
-        self.assertEqual(root_object.xplane.layer.texture_draped,"")
-        self.assertEqual(root_object.xplane.layer.texture_draped_normal,"")
-
     def test_OBJFakeTextureWritten(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         root_object = bpy.data.objects[inspect.stack()[0].function[5:]]
