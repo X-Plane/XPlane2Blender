@@ -45,6 +45,10 @@ def convert_textures(scene: bpy.types.Scene, workflow_type: xplane_249_constants
                 img_filepaths.update(obj_filepaths)
         except AttributeError: #active_uv_textures or data or image is None
             pass
+        except UnicodeDecodeError:
+            logger.warn("Due to an unknown bug in 2.79, an image datablock used in '{}''s UV Map '{}' could crash Blender!"
+                         " Rename or retype it as soon as possible, preferably in 2.49"
+                         .format(obj.name, active_uv_textures.name))
 
     def get_core_texture(filepaths:Set[str])->Tuple[str,str]:
         if not filepaths:
