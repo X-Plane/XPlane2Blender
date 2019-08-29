@@ -60,31 +60,26 @@ def convert_textures(scene: bpy.types.Scene, workflow_type: xplane_249_constants
             logger.warn("Found multiple textures paths for " + root_object.name + ": " + ''.join(set_of_paths))
             raise Exception
 
-    try:
-        img_filepath, ext = get_single_path(img_filepaths)
-    except Exception:
-        pass
-    else:
-        if ext.lower() not in {".png", ".dds"}:
-            logger.warn(ext + " is not a supported file type, skipping")
+    def apply_texture_paths(filepaths:Set[str], is_draped:bool)->None:
+        try:
+            filepath, ext = get_single_path(filepaths)
+        except Exception:
+            pass
         else:
-            root_object.xplane.layer.autodetectTextures = False
-            root_object.xplane.layer.texture = img_filepath + ext
-            if os.path.exists(bpy.path.abspath(img_filepath + "_NML" + ext)):
-                root_object.xplane.layer.texture_normal = img_filepath + "_NML" + ext
-            if os.path.exists(bpy.path.abspath(img_filepath + "_LIT" + ext)):
-                root_object.xplane.layer.texture_lit = img_filepath + "_LIT" + ext
+            if ext.lower() not in {".png", ".dds"} and False:
+                logger.warn(ext + " is not a supported file type, skipping")
+            elif not is_draped:
+                root_object.xplane.layer.autodetectTextures = False
+                root_object.xplane.layer.texture = filepath + ext
+                if os.path.exists(bpy.path.abspath(filepath + "_NML" + ext)):
+                    root_object.xplane.layer.texture_normal = filepath + "_NML" + ext
+                if os.path.exists(bpy.path.abspath(filepath + "_LIT" + ext)):
+                    root_object.xplane.layer.texture_lit = filepath + "_LIT" + ext
+            else:
+                root_object.xplane.layer.autodetectTextures = False
+                root_object.xplane.layer.texture_draped = filepath + ext
+                if os.path.exists(bpy.path.abspath(filepath + "_NML" + ext)):
+                    root_object.xplane.layer.texture_draped_normal = filepath + "_NML" + ext
 
-    try:
-        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_7.2.1.201904261721\pysrc')
-        draped_img_filepath, draped_ext = get_single_path(draped_img_filepaths)
-    except Exception:
-        pass
-    else:
-        if ext.lower() not in {".png", ".dds"}:
-            logger.warn(ext + " is not a supported file type, skipping")
-        else:
-            root_object.xplane.layer.autodetectTextures = False
-            root_object.xplane.layer.texture_draped = draped_img_filepath + ext
-            if os.path.exists(bpy.path.abspath(draped_img_filepath + "_NML" + ext)):
-                root_object.xplane.layer.texture_draped_normal = draped_img_filepath + "_NML" + ext
+    apply_texture_paths(img_filepaths, False)
+    apply_texture_paths(draped_img_filepaths, True)
