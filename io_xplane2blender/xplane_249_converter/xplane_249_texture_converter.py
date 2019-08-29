@@ -33,40 +33,40 @@ def convert_textures(scene: bpy.types.Scene, workflow_type: xplane_249_constants
         assert False, "Unknown workflow type"
 
     img_filepaths = set()
-    draped_img_filepaths = set()
+    img_draped_filepaths = set()
     for obj in filter(lambda o: o.type == "MESH", search_objs):
         try:
             active_uv_textures = obj.data.uv_textures.active # type: Optional[bpy.types.MeshTexturePolyLayer]
             obj_filepaths = {meshtexpoly.image.filepath for meshtexpoly in active_uv_textures.data if "panel." not in meshtexpoly.image.name.lower()}
             # We can this assumption about material slots thanks to the material converter
             if obj.material_slots[0].material.xplane.draped:
-                draped_img_filepaths.update(obj_filepaths)
+                img_draped_filepaths.update(obj_filepaths)
             else:
                 img_filepaths.update(obj_filepaths)
-        except AttributeError: #uv_textures is None
+        except AttributeError: #active_uv_textures or data or image is None
             pass
 
-    def get_single_path(set_of_paths:Set[str])->Tuple[str,str]:
-        if not set_of_paths:
+    def get_core_texture(filepaths:Set[str])->Tuple[str,str]:
+        if not filepaths:
             raise Exception
-        elif len(set_of_paths) == 1:
-            if " " in os.path.split(bpy.path.abspath(list(img_filepaths)[0]))[1]:
+        elif len(filepaths) == 1:
+            if " " in os.path.split(bpy.path.abspath(list(filepaths)[0]))[1]:
                 logger.warn("texture name has spaces in path")
                 raise Exception
             else:
-                filepath, dot, ext = list(set_of_paths)[0].rpartition(".")
+                filepath, dot, ext = list(filepaths)[0].rpartition(".")
                 return (filepath, dot + ext)
         else:
-            logger.warn("Found multiple textures paths for " + root_object.name + ": " + ''.join(set_of_paths))
+            logger.warn("Found multiple textures paths for " + root_object.name + ": " + ''.join(filepaths))
             raise Exception
 
-    def apply_texture_paths(filepaths:Set[str], is_draped:bool)->None:
+    def apply_texture_paths(filepaths:Set[str], is_draped:bool)->bool:
         try:
-            filepath, ext = get_single_path(filepaths)
+            filepath, ext = get_core_texture(filepaths)
         except Exception:
             pass
         else:
-            if ext.lower() not in {".png", ".dds"} and False:
+            if ext.lower() not in {".png", ".dds"}:
                 logger.warn(ext + " is not a supported file type, skipping")
             elif not is_draped:
                 root_object.xplane.layer.autodetectTextures = False
@@ -75,11 +75,17 @@ def convert_textures(scene: bpy.types.Scene, workflow_type: xplane_249_constants
                     root_object.xplane.layer.texture_normal = filepath + "_NML" + ext
                 if os.path.exists(bpy.path.abspath(filepath + "_LIT" + ext)):
                     root_object.xplane.layer.texture_lit = filepath + "_LIT" + ext
+                return True
             else:
                 root_object.xplane.layer.autodetectTextures = False
                 root_object.xplane.layer.texture_draped = filepath + ext
                 if os.path.exists(bpy.path.abspath(filepath + "_NML" + ext)):
                     root_object.xplane.layer.texture_draped_normal = filepath + "_NML" + ext
+                return True
+        return False
 
-    apply_texture_paths(img_filepaths, False)
-    apply_texture_paths(draped_img_filepaths, True)
+    applied_img_filepaths = apply_texture_paths(img_filepaths, False)
+    applied_img_draped_filepaths = apply_texture_paths(img_draped_filepaths, True)
+
+    if applied_img_filepaths or applied_img_draped_filepaths:
+        logger.info("NEXT STEPS: Check the Texture Paths in the Root Object OBJ Settings for " + root_object.name)
