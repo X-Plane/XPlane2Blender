@@ -27,7 +27,10 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
 
 _converted_objects = set() # type: Set[bpy.types.Object]
 _runs = 0
-def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_constants.WorkflowType):
+def do_249_conversion(
+        context: bpy.types.Context,
+        project_type: xplane_249_constants.ProjectType,
+        workflow_type: xplane_249_constants.WorkflowType):
     # TODO: Create log, similar to updater log
 
     #TODO: When we integrate with the updater, (adding 2.49 as a legacy version)
@@ -52,8 +55,7 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
         scene.xplane.debug = True
 
         #--- Making New Roots-------------------------------------------------
-        new_roots = xplane_249_workflow_converter.convert_workflow(scene, workflow_type)
-
+        new_roots = xplane_249_workflow_converter.convert_workflow(scene, project_type, workflow_type)
         if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
             new_roots[0].name += "_{:02d}".format(i)
         #---------------------------------------------------------------------
@@ -86,8 +88,16 @@ def do_249_conversion(context: bpy.types.Context, workflow_type: xplane_249_cons
                     "--------------------------------------------------".format(scene.name))
         for obj in scene.objects:
             converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
-            #if converted_manipulator:
-                #print("root hint: COCKPIT")
+            if converted_manipulator:
+                try:
+                    #TODO: Slow! It would be better to do this at the end, starting from the
+                    # top down, searching so we don't waste time on things without a root object!
+                    root_object = xplane_249_helpers.find_parent_root_object(obj)
+                except Exception as e:
+                    #print(e)
+                    pass
+                else:
+                    root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_COCKPIT
 
         logger.info("", "raw")
         logger.info("Converting Any Lights In Scene '{}'\n"

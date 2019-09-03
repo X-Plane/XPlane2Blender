@@ -5,7 +5,7 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config, xplane_constants
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -16,7 +16,7 @@ def filterLines(line):
 
 class TestConvertLightsCustom(XPlaneTestCase):
     def test_DatarefCustom(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -26,7 +26,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
             )
 
     def test_DatarefError(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -36,7 +36,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
             )
 
     def test_DatarefKnown(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -46,7 +46,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
             )
 
     def test_DatarefNone(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -56,7 +56,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
             )
 
     def test_MultiVert(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -66,7 +66,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
             )
 
     def test_RGBAFromMat(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -76,7 +76,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
             )
 
     def test_RGBAFromMixed(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -86,7 +86,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
             )
 
     def test_RGBAFromProps(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -96,7 +96,7 @@ class TestConvertLightsCustom(XPlaneTestCase):
             )
 
     def test_TexGivesUV(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(

@@ -46,11 +46,21 @@ HINT_TF_SHADOW         = "SHADOW"
 HINT_TF_TEX            = "TEX"
 HINT_TF_TILES          = "TILES"
 
+class ProjectType(enum.Enum):
+    """
+    What type of project this is, which sets the default
+    export type in each root object.
+
+    We don't support mixed Aircraft/Scenery project (if they ever existed)
+    """
+    AIRCRAFT = 0
+    SCENERY = 1
+
 class WorkflowType(enum.Enum):
-    '''
+    """
     What type of script or process was used to
     export the 2.49 file
-    '''
+    """
     SKIP = 0
     REGULAR = 1
     BULK = 2

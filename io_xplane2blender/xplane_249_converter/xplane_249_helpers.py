@@ -78,3 +78,15 @@ def find_property_in_parents(obj: bpy.types.Object,
         else:
             #print("Not found, using {}".format(default))
             return default, None
+
+def find_parent_root_object(obj:bpy.types.Object)->bpy.types.Object:
+    """
+    Finds root object that obj is a child of, if possible.
+    Raises Exception if not found
+    """
+    if obj.xplane.isExportableRoot:
+        return obj
+    elif obj.parent:
+        return find_parent_root_object(obj.parent)
+    else:
+        raise Exception("No root object found")

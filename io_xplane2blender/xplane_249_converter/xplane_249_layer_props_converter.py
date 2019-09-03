@@ -186,9 +186,6 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
     else: #nobreak
         is_additive = workflow_type == xplane_249_constants.WorkflowType.BULK
 
-    if is_additive:
-        dest_root.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
-
     lod_props_249 = [0, 1000, 4000, 10000]
     # In 2.49, if 2 or more layers were used, the defaults were always applied
     found_lod_props = 0

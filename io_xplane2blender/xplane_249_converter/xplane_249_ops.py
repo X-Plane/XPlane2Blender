@@ -9,6 +9,10 @@ class SCENE_OT_249_do_conversion(bpy.types.Operator):
     bl_idname = 'xplane.do_249_conversion'
     bl_description = "Convert a file's 2.49 property format to 2.7x. WARNING: Running multiple times may have disastrous consequences"
 
+    project_type = bpy.props.StringProperty(
+            name = "Project Type",
+            description="The type of project contain in the blend file, one of " + ", ".join([attr.name for attr in xplane_249_constants.ProjectType])
+            )
     workflow_type = bpy.props.StringProperty(
         name="Workflow Type",
         description="The workflow used in 2.49, one of " + ", ".join([attr.name for attr in xplane_249_constants.WorkflowType]),
@@ -19,6 +23,7 @@ class SCENE_OT_249_do_conversion(bpy.types.Operator):
                 "{} is not a known WorkflowType".format(self.workflow_type)
         xplane_249_convert.do_249_conversion(
             context,
+            project_type=xplane_249_constants.ProjectType[self.project_type],
             workflow_type=xplane_249_constants.WorkflowType[self.workflow_type]
             )
         return {'FINISHED'}

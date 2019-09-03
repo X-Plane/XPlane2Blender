@@ -14,7 +14,9 @@ from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_249_converter import xplane_249_constants
 
 
-def convert_workflow(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType)->List[bpy.types.Object]:
+def convert_workflow(scene: bpy.types.Scene,
+        project_type: xplane_249_constants.ProjectType,
+        workflow_type: xplane_249_constants.WorkflowType)->List[bpy.types.Object]:
     """
     Converts 2.49 workflow to 2.7x workflow, automatically filling in XPlaneLayer data.
 
@@ -36,6 +38,7 @@ def convert_workflow(scene: bpy.types.Scene, workflow_type: xplane_249_constants
             test_creation_helpers.DatablockInfo("EMPTY",
                                                 xplane_249_constants.WORKFLOW_DEFAULT_ROOT_NAME)
         )
+        new_root.xplane.layer.export_type = project_type.name.lower()
         if len(bpy.data.scenes) == 1:
             new_root.xplane.layer.name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
         else:
@@ -60,6 +63,7 @@ def convert_workflow(scene: bpy.types.Scene, workflow_type: xplane_249_constants
                 layer_name = ob.game.properties["path"].value + "/" + layer_name
             except KeyError:
                 pass
+            ob.xplane.layer.export_type = project_type.name.lower()
             ob.xplane.layer.name = layer_name
 
         return new_roots

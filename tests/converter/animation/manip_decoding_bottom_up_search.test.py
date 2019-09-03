@@ -5,7 +5,7 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config, xplane_constants
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -19,7 +19,7 @@ def filterLines(line):
 
 class TestManipDecodingBottomUpSearch(XPlaneTestCase):
     def test_manip_decoding_bottom_up_search_br(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.SKIP.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.SKIP.name)
         bpy.context.scene.xplane.layers[0].export_type = xplane_constants.EXPORT_TYPE_COCKPIT
         filename = inspect.stack()[0][3].replace("test_", "")
 
@@ -30,7 +30,7 @@ class TestManipDecodingBottomUpSearch(XPlaneTestCase):
         )
 
     def test_manip_decoding_bottom_up_search_ondrej(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.SKIP.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.SKIP.name)
         bpy.context.scene.xplane.layers[1].export_type = xplane_constants.EXPORT_TYPE_COCKPIT
         filename = inspect.stack()[0][3].replace("test_", "")
 
