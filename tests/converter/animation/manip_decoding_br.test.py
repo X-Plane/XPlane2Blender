@@ -5,7 +5,7 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config, xplane_constants
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -19,7 +19,7 @@ def filterLines(line):
 
 class TestManipDecodingBR(XPlaneTestCase):
     def test_manip_decoding_br_one_of_everything(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.SKIP.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.SKIP.name)
         bpy.context.scene.xplane.layers[0].export_type = xplane_constants.EXPORT_TYPE_COCKPIT
         filename = inspect.stack()[0][3].replace("test_", "")
 
@@ -32,7 +32,7 @@ class TestManipDecodingBR(XPlaneTestCase):
     def test_manip_decoding_br_br_chosen_first(self):
         # This is okay, after it runs once it won't run again
         # TestRunner doesn't always run these in order
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.SKIP.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.SKIP.name)
         bpy.context.scene.xplane.layers[1].export_type = xplane_constants.EXPORT_TYPE_COCKPIT
         filename = inspect.stack()[0][3].replace("test_", "")
         bpy.context.scene.xplane.layers[0].name = filename

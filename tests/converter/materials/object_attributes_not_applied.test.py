@@ -8,7 +8,7 @@ import bpy
 from io_xplane2blender import xplane_config
 from io_xplane2blender.tests import *
 from io_xplane2blender.xplane_249_converter import xplane_249_constants as xp249c
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -22,7 +22,7 @@ class TestObjectAttributesNotApplied(XPlaneTestCase):
         self.assertEqual(lit_level_mat.xplane.lightLevel_dataref, dref)
 
     def test_not_applied_common_cases(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         # We aren't checking for errors, we just want to let people move on with their conversion
         for obj in filter(lambda obj: obj.type == "MESH", bpy.data.objects):
             if obj.name == "litlevel_overwrite":

@@ -5,14 +5,14 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType, WORKFLOW_DEFAULT_ROOT_NAME
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType, WORKFLOW_DEFAULT_ROOT_NAME
 
 
 __dirname__ = os.path.dirname(__file__)
 
 class TestWorkflowConversionRegularExport(XPlaneTestCase):
     def test_regular_conversion(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         objects = bpy.context.scene.objects
         new_root = objects[WORKFLOW_DEFAULT_ROOT_NAME + "_01"]
         self.assertEqual(new_root.xplane.layer.name, os.path.splitext(os.path.basename(bpy.data.filepath))[0])

@@ -5,7 +5,7 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -18,7 +18,7 @@ def filterLines(line):
 
 class TestDatarefDecodingShowHideCases(XPlaneTestCase):
     def test_dataref_decoding_show_hide_cases(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.SKIP.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.SKIP.name)
         filename = inspect.stack()[0][3]
         filename = filename.replace("test_","")
 

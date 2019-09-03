@@ -11,7 +11,7 @@ import bpy
 from io_xplane2blender import xplane_config
 from io_xplane2blender.xplane_249_converter import xplane_249_constants as xp249c
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -66,7 +66,7 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
     _results["4face_3mat_3tf_1as"] = ("NONE", _MDEF, _MDEF, _MDEF, xp249c.HINT_TF_SHADOW, _M90)
 
     def test_no_generated_materials(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         self.assertFalse([mat for mat in bpy.data.materials if re.match(r"Material\.TF\.\d{1,5}", mat.name) and mat.users])
 
     def test_split_groups_carry(self):
@@ -95,7 +95,7 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
                 self.assertEqual(obj.material_slots[0].material, bpy.data.materials[seq + hint_suffix])
 
     def test_diffuse_and_specularity_copied(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         for mat in filter(lambda mat: mat.users, bpy.data.materials):
             if ".25" in mat.name:
                 self.assertAlmostEqual(mat.specular_intensity, 0.25)
@@ -114,7 +114,7 @@ class TestMeshesSplitMaterialsCopied(XPlaneTestCase):
                 self.assertAlmostEqual(mat.diffuse_color[2], 0.0)
 
     def test_fewest_materials_made(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         self.assertEqual(len([mat for mat in bpy.data.materials if mat.users]), 11)
 
 runTestCases([TestMeshesSplitMaterialsCopied])

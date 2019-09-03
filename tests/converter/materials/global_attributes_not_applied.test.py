@@ -8,7 +8,7 @@ import bpy
 from io_xplane2blender import xplane_config
 from io_xplane2blender.tests import *
 from io_xplane2blender.xplane_249_converter import xplane_249_constants
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -35,49 +35,49 @@ class TestGlobalAttributesNotApplied(XPlaneTestCase):
 
     def test_GlobalNoBlend_not(self)->None:
         """(1.2notafloatafterall)"""
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name)
 
     def test_GlobalShadowBlend_not(self)->None:
         """(notafloat)"""
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name)
 
     def test_GlobalSpecular1_not(self)->None:
         """(notafloat2)"""
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name)
 
     def test_GlobalSpecular2_not(self)->None:
         """(Global Specular value (".6") not used, cubes have Materials instead)"""
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name, "Material_.10", "Material_.80")
 
     def test_GlobalSpecular3_not(self)->None:
         """(notafloat2)"""
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name)
 
     def test_GlobalTint_few_arg(self)->None:
         """(string value cannot be unpacked)"""
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name)
 
     def test_GlobalTint_many_arg(self)->None:
         """(string value cannot be unpacked)"""
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name)
 
     def test_GlobalTint_not_STRING(self)->None:
         """(Cubes get nothing, Global Tint wasn't a string)"""
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.REGULAR.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.REGULAR.name)
         scene_name = inspect.stack()[0].function[5:]
         self._compare_objects_to_material(scene_name)
 
