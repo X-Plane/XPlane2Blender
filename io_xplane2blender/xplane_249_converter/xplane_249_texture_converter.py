@@ -75,10 +75,15 @@ def convert_textures(scene: bpy.types.Scene, workflow_type: xplane_249_constants
             elif not is_draped:
                 root_object.xplane.layer.autodetectTextures = False
                 root_object.xplane.layer.texture = filepath + ext
-                if os.path.exists(bpy.path.abspath(filepath + "_NML" + ext)):
-                    root_object.xplane.layer.texture_normal = filepath + "_NML" + ext
-                if os.path.exists(bpy.path.abspath(filepath + "_LIT" + ext)):
-                    root_object.xplane.layer.texture_lit = filepath + "_LIT" + ext
+
+                if os.path.exists(bpy.path.abspath(filepath + "_NML.png")):
+                    root_object.xplane.layer.texture_normal = filepath + "_NML.png"
+                elif os.path.exists(bpy.path.abspath(filepath + "_NML.dds")):
+                    root_object.xplane.layer.texture_normal = filepath + "_NML.dds"
+                if os.path.exists(bpy.path.abspath(filepath + "_LIT.png")):
+                    root_object.xplane.layer.texture_lit = filepath + "_LIT.png"
+                elif os.path.exists(bpy.path.abspath(filepath + "_LIT.dds")):
+                    root_object.xplane.layer.texture_lit = filepath + "_LIT.dds"
                 return True
             else:
                 root_object.xplane.layer.autodetectTextures = False

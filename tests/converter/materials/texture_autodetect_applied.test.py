@@ -56,6 +56,18 @@ class TestTextureAutodetectApplied(XPlaneTestCase):
         self.assertEqual(root_object.xplane.layer.texture_draped,        tex_used_draped + ".png")
         self.assertEqual(root_object.xplane.layer.texture_draped_normal, tex_used_draped + "_NML.png")
 
+    def test_OBJMixedHeader(self)->None:
+        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        root_object = bpy.data.objects[inspect.stack()[0].function[5:]]
+        self.assertFalse(root_object.xplane.layer.autodetectTextures)
+        tex_used = r"//tex\textureC"
+        self.assertEqual(root_object.xplane.layer.texture,        tex_used + ".dds")
+        self.assertEqual(root_object.xplane.layer.texture_normal, tex_used + "_NML.png")
+        self.assertEqual(root_object.xplane.layer.texture_lit,    tex_used + "_LIT.png")
+
+        self.assertEqual(root_object.xplane.layer.texture_draped,        "")
+        self.assertEqual(root_object.xplane.layer.texture_draped_normal, "")
+
     def test_OBJNoPanelTexture(self)->None:
         bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
         root_object = bpy.data.objects[inspect.stack()[0].function[5:]]
