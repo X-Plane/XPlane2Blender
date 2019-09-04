@@ -216,31 +216,31 @@ def main(argv=None)->int:
             if not (argv.quiet or argv.print_fails):
                 print(out)
 
-            # TestResults from the current test
             testsRun, errors, failures, skipped = (0,) * 4
-            try:
-                results = re.search(TEST_RESULTS_REGEX, out)
-            except:
-                # Oh goodie, more string matching!
-                # I'm sure this won't ever come back to bite us!
-                # If we're ever using assertRaises,
-                # hopefully we'll figure out something better! -Ted, 8/14/18
-                assert results is not None or "Traceback" in out, \
-                        "Test runner must print correct results string at end or have suffered an unrecoverable error"
+            # Oh goodie, more string matching!
+            # I'm sure this won't ever come back to bite us!
+            # If we're ever using assertRaises,
+            # hopefully we'll figure out something better! -Ted, 8/14/18
+            if "Traceback" in out:
+                print("An uncaught exception occurred in test '{}'".format(pyFile))
                 total_errors += 1
                 errors = 1
-            else:
+            try:
+                results = re.search(TEST_RESULTS_REGEX, out)
                 testsRun, errors, failures, skipped = (
                     int(results.group('testsRun')),
                     int(results.group('errors')),
                     int(results.group('failures')),
                     int(results.group('skipped'))
                 )
-
                 total_testsCompleted += testsRun
                 total_errors         += errors
                 total_failures       += failures
                 total_skipped        += skipped
+            except AttributeError: #results was None
+                print("Test runner did not print TEST_RESULTS_REGEX correctly at end of test or suffered an unrecoverable error")
+                total_errors += 1
+                errors = 1
             finally:
                 if errors or failures:
                     if argv.print_fails:

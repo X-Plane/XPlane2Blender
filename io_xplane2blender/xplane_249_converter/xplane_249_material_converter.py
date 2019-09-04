@@ -13,7 +13,6 @@ import functools
 import itertools
 import re
 import sys
-from typing import Callable, Dict, List, Match, Optional, Set, Tuple, Union, cast
 
 import bmesh
 import bpy
@@ -25,6 +24,8 @@ from io_xplane2blender.xplane_249_converter import (xplane_249_constants,
                                                     xplane_249_dataref_decoder,
                                                     xplane_249_helpers)
 from io_xplane2blender.xplane_helpers import logger
+from typing import (Any, Callable, Dict, List, Match, Optional,
+                    Set, Tuple, Union, cast)
 
 # The members, and any collection of dealing with these things,
 # they are in the order that 2.49's interface presents them in.
@@ -257,17 +258,22 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
                         )
 
             poly_c_info[tf_modes].add(idx)
-        return poly_c_info
     except ValueError as ve: #NULL Pointer access
-        print("VE:", ve, obj.name)
-        return None
+        pass
+        #print("VE:", ve, obj.name)
     except KeyError as ke: #That weird 'loopstart' not found in __repr__ call...
-        print("KE:", ke, obj.name)
-        return None
+        pass
+        #print("KE:", ke, obj.name)
+    except SystemError as se: # <class 'zip'> returned a result with an error set
+        pass
+        #print("SE:", se, obj.name)
     except Exception as e:
-        print("E:", e, obj.name)
-        return None
+        pass
+        #print("E:", e, obj.name)
+    else:
+        return poly_c_info
 
+    return None
 
 def _convert_material(scene: bpy.types.Scene,
                       root_object: bpy.types.Object,
@@ -305,8 +311,8 @@ def _convert_material(scene: bpy.types.Scene,
                 ]
             }
 
-    # Will have to make special case later
-    original_material_values.update({attr:getattr(mat, attr) for attr in ["diffuse_color", "specular_intensity"]})
+    # For debugging purposes
+    #original_material_values.update({attr:getattr(mat, attr) for attr in ["diffuse_color", "specular_intensity"]})
     changed_material_values = original_material_values.copy()
 
     logger_info_msgs = [] # type: List[str]
@@ -314,22 +320,43 @@ def _convert_material(scene: bpy.types.Scene,
     # This section roughly mirrors the order in which 2.49 deals with these face buttons
     #---TEX----------------------------------------------------------
     if tf_modes.TEX:
+        def attempt_conversion_to_float(prop_name:str)->Tuple[Any,Any]:
+            prop_value, prop_source = xplane_249_helpers.find_property_in_parents(search_obj, prop_name)
+            try:
+                prop_value = float(prop_value)
+            except (TypeError, ValueError):
+                # Slightly pedantic, but only a bad float or None found on a real found object
+                # shows we have a real problem
+                if prop_source:
+                    logger.warn("{} found, but could not convert '{}' to a float".format(prop_name, prop_value))
+                return (None, None)
+            else:
+                return (prop_value, prop_source)
+
         if tf_modes.ALPHA:
-            if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_shadow_blend")[1]):
+            attr_shadow_blend = attempt_conversion_to_float("ATTR_shadow_blend")
+            global_shadow_blend = attempt_conversion_to_float("GLOBAL_shadow_blend")
+            if attr_shadow_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
-                logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5".format(mat.name))
-            elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_shadow_blend")[1]):
+                changed_material_values["blendRatio"] = round(attr_shadow_blend[0],2)
+                logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio={}".format(mat.name, attr_shadow_blend[0]))
+            elif global_shadow_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
+                changed_material_values["blendRatio"] = round(global_shadow_blend[0],2)
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             else:
                 logger_warn_msgs.append("'Tex' and 'Alpha' buttons pressed, but no 'ATTR_/GLOBAL_shadow_blend' game property given. Did you forget something?")
         elif tf_modes.CLIP:
-            if (xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_no_blend")[1]):
+            attr_no_blend = attempt_conversion_to_float("ATTR_no_blend")
+            global_no_blend = attempt_conversion_to_float("GLOBAL_no_blend")
+            if attr_no_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
+                changed_material_values["blendRatio"] = round(attr_no_blend[0], 2)
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
-            elif (xplane_249_helpers.find_property_in_parents(search_obj, "GLOBAL_no_blend")[1]):
+            elif global_no_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
+                changed_material_values["blendRatio"] = round(global_no_blend[0], 2)
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
             else:
@@ -356,12 +383,9 @@ def _convert_material(scene: bpy.types.Scene,
     #-----------------------------------------------------------------
 
     #---DYNAMIC-------------------------------------------------------
-    solid_cam_by_texface = not tf_modes.INVISIBLE
+    solid_cam_by_texface = not any((tf_modes.INVISIBLE, is_cockpit, tf_modes.DYNAMIC))
     solid_cam_by_prop = bool(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_solid_camera")[1])
-    if ((not tf_modes.INVISIBLE
-        and not is_cockpit
-        and not tf_modes.DYNAMIC)
-        or solid_cam_by_prop): # TODO: Prop version seems to override INVISIBLE button, confirm with test case
+    if (solid_cam_by_texface or solid_cam_by_prop):
         changed_material_values["solid_camera"] = True
         logger_info_msgs.append("{}: Solid Camera={}".format(mat.name, changed_material_values["solid_camera"]))
     #-----------------------------------------------------------------
@@ -382,32 +406,43 @@ def _convert_material(scene: bpy.types.Scene,
     lit_level = str(xplane_249_helpers.find_property_in_parents(search_obj, "lit_level", default="")[0]).strip()
     #ATTR_light_level could be just the dataref or the v1, v2, dataref
     ATTR_light_level    = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level", default="")[0]).strip()
+    # TODO: beware - this could be semantically wrong - if ATTR_light_level_v1/2 was not found in 249, it didn't get a value! Right?
     ATTR_light_level_v1 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v1", default=0.0)[0])
-    ATTR_light_level_v2 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v2", default=0.0)[0])
+    ATTR_light_level_v2 = str(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_light_level_v2", default=1.0)[0])
 
     lightLevel_v1, lightLevel_v2, lightLevel_dataref = ("", "", "")
 
     #Why this complicated logic? It mirrors how 2.49 would allow ATTR_light_level to override lit_level
     if lit_level:
-        #TODO: What if they had "0 1 sim/my/dataref whatever"? or "0 1"?
-        lightLevel_v1, lightLevel_v2, lightLevel_dataref = lit_level.split()
+        try:
+            lightLevel_v1, lightLevel_v2, lightLevel_dataref = lit_level.split()
+        except ValueError: # Too few or too many args
+            logger.warn("Game property `{}`:'{}', had too many or too few arguments".format("lit_level", lit_level))
+
     if len(ATTR_light_level.split()) == 3:
-        lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level.split()
+        try:
+            lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level.split()
+        except ValueError: # Too few or too many args
+            logger.warn("Game property `{}`:'{}', had too many or too few arguments".format("ATTR_light_level", ATTR_light_level))
     elif ATTR_light_level:
         lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level_v1, ATTR_light_level_v2, ATTR_light_level
-    """
-    Tricky, because lightLevel by lit_level
-    elif (lightLevel_v1, lightLevel_v2, lightLevel_dataref) != ("", "", ""):
-        print("v1:", lightLevel_v1,"v2:",  lightLevel_v2, "dref:", lightLevel_dataref)
-        # TODO: Potential edge cases:
-        # - ATTR_light_level: "sim/whatever .5 1.0 oh no too many args!"
-        # - ATTR_light_level: "sim/whatever 0.0" (too few args)
-        assert False, "What do we do now? Log?"
-        """
-    if mat.xplane.lightLevel:
-        mat.xplane.lightLevel_v1 = float(lightLevel_v1)
-        mat.xplane.lightLevel_v2 = float(lightLevel_v2)
-        mat.xplane.lightLevel_dataref = lightLevel_dataref
+
+    if all((lightLevel_v1, lightLevel_v2, lightLevel_dataref)):
+        try:
+            v1 = float(lightLevel_v1)
+        except (ValueError, TypeError):
+            logger.warn("Light Level v1 value could not convert to float: {}".format(lightLevel_v1))
+        else:
+            try:
+                v2 = float(lightLevel_v2)
+            except (ValueError, TypeError):
+                logger.warn("Light Level v2 value could not convert to float: {}".format(lightLevel_v2))
+            else:
+                # Only after all the data is converted and convertable do we actually commit to changing this
+                changed_material_values["lightLevel"] = True
+                changed_material_values["lightLevel_v1"] = v1
+                changed_material_values["lightLevel_v2"] = v2
+                changed_material_values["lightLevel_dataref"] = lightLevel_dataref
     #-----------------------------------------------------------------
 
     #TODO: Deck
@@ -425,51 +460,77 @@ def _convert_material(scene: bpy.types.Scene,
         cv = changed_material_values
         #round_tuple = lambda t, ndigits=3: tuple(round(n, ndigits) for n in t)
         cmp_cv_ov = lambda key: cv[key] != ov[key]
-        hint_suffix = "".join((
-                ("_TEX_" + {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]] if cmp_cv_ov("blend_v1000") else ""),
+        xp249c = xplane_249_constants
+        # Join a list of only the relavent hint suffixes
+        hint_suffix = "_" + "_".join(filter(None, (
+                ("%s_%s" % (xplane_249_constants.HINT_TF_TEX, {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]])
+                    if cmp_cv_ov("blend_v1000") else ""),
 
-                ("_TILES"  if tf_modes.TILES and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
-                ("_LIGHT"  if tf_modes.LIGHT and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
+                (xp249c.HINT_TF_TILES if tf_modes.TILES and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
+                (xp249c.HINT_TF_LIGHT if tf_modes.LIGHT and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
 
-                ("_INVIS"             if draw_disable_by_texface and cmp_cv_ov("draw") else ""),
-                ("_DRAW_DISABLE_PROP" if draw_disable_by_prop    and cmp_cv_ov("draw") else ""),
+                (xp249c.HINT_TF_INVIS          if draw_disable_by_texface and cmp_cv_ov("draw") else ""),
+                (xp249c.HINT_PROP_DRAW_DISABLE if draw_disable_by_prop    and cmp_cv_ov("draw") else ""),
 
-                ("_COLL"           if solid_cam_by_texface and cmp_cv_ov("solid_camera") else ""),
-                ("_SOLID_CAM_PROP" if solid_cam_by_prop    and cmp_cv_ov("solid_camera") else ""),
+                (xp249c.HINT_TF_COLL        if solid_cam_by_texface and cmp_cv_ov("solid_camera") else ""),
+                (xp249c.HINT_PROP_SOLID_CAM if solid_cam_by_prop    and cmp_cv_ov("solid_camera") else ""),
 
-                ("_SHADOW" if cmp_cv_ov("shadow_local") else ""),
+                (xp249c.HINT_TF_SHADOW     if cmp_cv_ov("shadow_local") else ""),
 
-                ("_LIT_LEVEL" if cmp_cv_ov("lightLevel") else ""),
+                (xp249c.HINT_PROP_LIT_LEVEL if cmp_cv_ov("lightLevel") else ""),
 
                 # Debugging only. Since we don't combine materials with the same diffuse or specularity,
                 # we don't need to make it part of the lookup key
                 #(",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
                 #(str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
-            ))
+            )))
 
-        #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
         #2.49's max name length is 21, so we have 42 characters to work with
         if len(mat.name + hint_suffix) > 63:
             print(mat.name + hint_suffix, "is about to get truncated, potentially messing up a lot of stuff! Should should highly consider renaming them to be shorter and check if your TexFace buttons are correct")
 
-        # _NO_CHANGE semantically means "a material that doesn't have anything to convert, but didn't fail"
-        # It is impossible to get the same mat.name + "_NO_CHANGE" twice:
-        # - Any duplicate TF groups would already be grouped
-        # - Blender doesn't let datablocks share a name,
-        # - and no two different TF groupings, with convertible changes or not, can make the same hint string
-        # this is a coincidence  of how the TF groups were used. Otherwise, we'd probably need some guard for this edge case.
-        # Tricky tricky tricky...
+        #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
         new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
-        try:
+
+        if cmp_cv_ov("lightLevel"):
+            # This is a "don't be too clever" moment
+            # Assumptions:
+            # - We will always make _LIT_LEVEL materials in the following sequence:
+            # _LIT_LEVEL, _LIT_LEVEL1, _LIT_LEVEL2, ...
+            # - LIT_LEVEL will always be last. If we get another like this, we'll have to get serious
+            # about string munging
+            cv_ll = (cv["lightLevel_v1"], cv["lightLevel_v2"], cv["lightLevel_dataref"])
+
+            def get_ll_index(m:bpy.types.Material):
+                """m is guaranteed to start with '249.*LIT_LEVEL'"""
+                try:
+                    return int(re.match("249.*" + xp249c.HINT_PROP_LIT_LEVEL + "(\d*)", m.name).group(1))
+                except ValueError:
+                    return 0
+
+            i = 0
+            sorted_ll_mats = sorted(filter(lambda m:m.name.startswith(new_name), bpy.data.materials), key=get_ll_index)
+            for i, ll_mat in enumerate(sorted_ll_mats):
+                # Re-use an existing material whenever possible
+                if cv_ll == (ll_mat.xplane.lightLevel_v1, ll_mat.xplane.lightLevel_v2, ll_mat.xplane.lightLevel_dataref):
+                    new_name = ll_mat.name
+                    break
+            else: #nobreak
+                # If we if we have ll_mats
+                if sorted_ll_mats:
+                    # With a new name, we make a new derivative
+                    new_name += str(i+1)
+                else:
+                    # This is our first ll_material, so don't add anything
+                    pass
+
+        if new_name in bpy.data.materials:
             new_material = bpy.data.materials[new_name]
-        except KeyError:
+        else:
             new_material = mat.copy()
             new_material.name = new_name
             for prop, value in changed_material_values.items():
-                try:
-                    setattr(new_material.xplane, prop, value)
-                except AttributeError: # diffuse_color and specular_intensity are mat props itself
-                    setattr(new_material, prop, value)
+                setattr(new_material.xplane, prop, value)
 
             print("Created new converted material:", new_material.name)
 
@@ -477,6 +538,7 @@ def _convert_material(scene: bpy.types.Scene,
     else:
         print("Material '{}' had nothing to convert".format(mat.name))
         return None
+
 
 def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
     if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
@@ -495,55 +557,78 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 ]
             ) # type: bool
     ISPANEL = ISCOCKPIT # type: bool
-    #scene.render.engine = 'BLENDER_GAME' # Only for testing purposes
 
     # Dictionary of "GLOBAL_attr" to value, to be applied later
     global_mat_props = {} # type: Dict[str, Union[bool, float, Tuple[float, float]]]
-    global_hint_suffix = collections.OrderedDict()
-    for obj in filter(lambda obj: obj.game.properties, scene.objects):
-        props = obj.game.properties
-        me = obj.data
+    global_hint_suffix = [] # type: List[str]
+
+    def check_for_prop(obj_name:str, props:str, prop_name:str, suffix:str, conversion_fn:Callable[[Any],float])->None:
+        """
+        If possible, gets the value of a prop_name from an obj's game properties and converts it to a float, appending the suffix.
+        If not possible, gives a logger warning
+        """
+        nonlocal global_mat_props, global_hint_suffix
         try:
-            if me.uv_textures:
-                for face in me.uv_textures.active.data:
-                    #Gotta double check "panel."
-                    if face.image.name != me.uv_textures.active.data[0].image.name and "panel." not in face.image.name.lower():
-                        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_7.2.1.201904261721\pysrc')
-                        #import pydevd;pydevd.settrace()
-                        x = 1
-                #assert all(), obj.name + " You had different textures per face. This wasn't allowed!"
-                #TODO: also need to be checking for TEX in face
-                if "panel_ok" in props or (ISPANEL and "panel." in obj.data.uv_textures.active.data[0].image.name.lower()):
-                    global_mat_props["panel_ok"] = True
-                    global_hint_suffix["pn"] = True
-        except AttributeError:
+            global_mat_props[prop_name] = conversion_fn(props[prop_name.lower()].value)
+            global_hint_suffix.append(suffix)
+        except ValueError: #fn_if_found couldn't convert value to correct type
+            logger.warn("{}'s '{}' property could not be converted to a float".format(obj_name, prop_name))
+        except KeyError:
+            pass
+        except Exception:
             pass
 
-        if "GLOBAL_cockpit_lit" in props: # Move this to xplane_convert_layer_props
-            global_mat_props["GLOBAL_cockpit_lit"] = True
-            global_hint_suffix["ck"] = True
-        elif "GLOBAL_no_blend" in props:
-            global_mat_props["GLOBAL_no_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
-            global_hint_suffix["nb"] = True
-        elif "GLOBAL_shadow_blend" in props:
-            global_mat_props["GLOBAL_shadow_blend"] = float(obj.game.properties["GLOBAL_no_blend"].value)
-            global_hint_suffix["sb"] = True
-        elif "GLOBAL_specular" in props:
-            global_mat_props["GLOBAL_specular"] = round(float(obj.game.properties["GLOBAL_specular"].value),2)
-            global_hint_suffix["sp"] = True
-        elif "GLOBAL_tint" in props:
-            #TODO: Issues with split()! Must be two!
-            #TODO: Issues with float conversion, no safety!
-            global_mat_props["GLOBAL_tint"] = tuple(float(v) for v in obj.game.properties["GLOBAL_tint"].value.split())
-            global_hint_suffix["tn"] = True
-        elif "NORMAL_METALNESS" in props:
-            global_mat_props["NORMAL_METALNESS"] = True
-            global_hint_suffix["nm"] = True
-        elif "BLEND_GLASS" in props:
-            global_mat_props["BLEND_GLASS"] = True
-            global_hint_suffix["bg"] = True
+    for obj in filter(lambda obj: obj.game.properties, scene.objects):
+        props = {key.casefold():value for key, value in obj.game.properties.items()}
+        # There are two look ups of "GLOBAL_no_blend", the global one and the TexFace dependent version
+        # They are as far as I can see, identical:
+        # - Case insenstive
+        # - Not set unless the prop is known to exist, thereby never falling back to a default value
+        # The rules for when one overrides the other seem to be esoteric/a matter of luck.
+        # If a user is going to mix multiple GLOBAL_(no|shadow) properties, it is at their own risk
+        # How this bug came to be, I don't know, but the converter is Bug-For-Bug as long as it exported in 2.49! Joy!
+        check_for_prop(obj.name, props, "GLOBAL_no_blend", xplane_249_constants.HINT_GLOBAL_NO_BLEND, float)
+        check_for_prop(obj.name, props, "GLOBAL_shadow_blend", xplane_249_constants.HINT_GLOBAL_SHADOW_BLEND, float)
 
-    global_hint_suffix = "".join(global_hint_suffix)
+        def specular_check(value:Any)->float:
+            try:
+                v = round(float(value),2)
+            except ValueError:
+                raise
+            else:
+                if v > 0.0:
+                    return v
+                else:
+                    raise Exception
+        check_for_prop(obj.name, props, "GLOBAL_specular", xplane_249_constants.HINT_GLOBAL_SPECULAR, specular_check)
+
+        try:
+            tint_prop = props["GLOBAL_tint".casefold()]
+            if tint_prop.type != "STRING":
+                logger.warn("{}'s GLOBAL_tint's property value '{}' is not a string".format(obj.name, props["GLOBAL_tint".casefold()].value))
+                raise Exception
+            else:
+                tints_value = tuple(float(v) for v in props["GLOBAL_tint".casefold()].value.split())
+                if len(tints_value) != 2:
+                    raise ValueError
+                global_mat_props["GLOBAL_tint"] = tints_value
+                global_hint_suffix.append(xplane_249_constants.HINT_GLOBAL_TINT)
+                #TODO: We need a logger call somehow to tell the user that tint has been set on some material
+                #logger.info("Albedo tint and emissive tint has been set to .2 and .3 on all materials in root object")
+                #etc for others
+        except AttributeError: # 'non-str' object has no attribute 'split'
+            logger.warn("{}'s GLOBAL_tint's property value '{}' is not a string".format(obj.name, props["GLOBAL_tint".casefold()]))
+        except ValueError: # incorrect number of values to unpack or bad float conversion
+            logger.warn("Could not convert {}'s GLOBAL_tint property could not be parsed to two floats")
+        except (KeyError,Exception):
+            pass
+        if "NORMAL_METALNESS".casefold() in props:
+            global_mat_props["NORMAL_METALNESS"] = True
+            global_hint_suffix.append(xplane_249_constants.HINT_GLOBAL_NORM_MET)
+        elif "BLEND_GLASS".casefold() in props:
+            global_mat_props["BLEND_GLASS"] = True
+            global_hint_suffix.append(xplane_249_constants.HINT_GLOBAL_BLEND_GLASS)
+
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
         """
         This tests that:
@@ -573,10 +658,12 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         ############################################
         # We do this at the top to limit anything that could affect the C data
         # "Pragmatic paranioa is a programmer's pal" - Somebody's abandoned programming blog
+        #print("before tf split")
         tf_modes_and_their_faces = _get_tf_modes_from_ctypes(search_obj) # type: TFModeAndFaceIndexes
         if not tf_modes_and_their_faces:
             tf_modes_and_their_faces = collections.defaultdict(set)
             tf_modes_and_their_faces[DEFAULT_TF_MODES] = {face.index for face in search_obj.data.polygons}
+        #print("after tf split")
         #----------------------------------------------------------------------
 
         #--- Prepare the Object's Material Slots ------------------------------
@@ -586,60 +673,77 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             except:
                 return ""
 
-        print("Before Material Slots Prep (Slots):         ", ",".join([_try(lambda: slot.material.name) for slot in search_obj.material_slots if slot.link == "DATA"]))
-        print("Before Material Slots Prep (All Materials): ", ",".join([_try(lambda: mat.name) for mat in search_obj.data.materials]))
-        print()
+        #print("Before Material Slots Prep (Slots):         ", ",".join([_try(lambda: slot.material.name) for slot in search_obj.material_slots if slot.link == "DATA"]))
+        #print("Before Material Slots Prep (All Materials): ", ",".join([_try(lambda: mat.name) for mat in search_obj.data.materials]))
+        #print()
+
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
         if not search_obj.material_slots:
-            search_obj.data.materials.append(test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME))
+            search_obj.data.materials.append(None)
 
         for slot in search_obj.material_slots:
-            if not slot.material:
+            # All slots are filled something or the default so this is easier to reason with.
+            # Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
+            # This still has the werid name and is the same as a DEFAULT_MATERIAL. No point
+            # confusing the user
+            if not slot.material or re.match("Material\.TF\.\d{1,5}", slot.material.name):
                 # We'll need a material in every slot no matter what anyways, why not now and save us trouble
                 # In addition, a face's material_index will never be None or less than 0,
                 # when asking "what faces have a mat index of 0", the answer is automatically "all of them"
                 slot.material = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
                 slot.material.specular_intensity = 0.0 # This was the default behavior in XPlane2Blender 2.49
 
-            # TODO: Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
-            # This still has the werid name and is the same as a DEFAULT_MATERIAL. No point.
-            if re.match("Material\.TF\.\d{1,5}", slot.material.name):
-                # Auto generated from blenloader need  to correct their default specularity to XPlane2Blender 2.49's default behavior
-                slot.material = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
-                slot.material.specular_intensity = 0.0 # This was the default in 2.49
 
+            # After ensuring each slot has a material, we need to apply
+            # the global hints to them, re-using existing materials as possible
             if global_mat_props:
-                if (slot.material.name + global_hint_suffix) not in bpy.data.materials:
+                # GLOBAL_specular will only be applied to default materials,
+                # if we're not about to apply it, we remove it from the hint suffix
+                final_hint_suffix = global_hint_suffix.copy()
+                if ("GLOBAL_specular" in global_mat_props):
+                    if (slot.material.name != xplane_249_constants.DEFAULT_MATERIAL_NAME):
+                        final_hint_suffix.remove(xplane_249_constants.HINT_GLOBAL_SPECULAR)
+
+                final_hint_suffix = "_" + "_".join(final_hint_suffix) if final_hint_suffix else ""
+                if (slot.material.name + final_hint_suffix) not in bpy.data.materials:
                     oname = slot.material.name
                     slot.material = slot.material.copy()
-                    slot.material.name  = oname + global_hint_suffix
-                elif (slot.material.name + global_hint_suffix) in bpy.data.materials:
-                    slot.material = bpy.data.materials[(slot.material.name + global_hint_suffix)]
+                    slot.material.name = oname + final_hint_suffix
+                elif (slot.material.name + final_hint_suffix) in bpy.data.materials:
+                    slot.material = bpy.data.materials[slot.material.name + final_hint_suffix]
+
+            # Now, finally, we actually apply those values to those properties
             for prop_name, prop_value in global_mat_props.items():
                 if prop_name == "panel_ok":
                     slot.material.xplane.panel = True
                 elif prop_name == "GLOBAL_cockpit_lit":
                     root_object.xplane.cockpit_lit = True
                 elif prop_name == "GLOBAL_no_blend":
-                    slot.material.xplane.blend_mode = xplane_constants.BLEND_OFF
+                    slot.material.xplane.blend_v1000 = xplane_constants.BLEND_OFF
                     slot.material.xplane.blendRatio = prop_value
                 elif prop_name == "GLOBAL_shadow_blend":
-                    slot.material.xplane.blend_mode = xplane_constants.BLEND_SHADOW
-                    #slot.material.xplane.blendRatio = prop_value #TODO: 2.79 ATTR_shadow_blend/GLOBAL_ doesn't appear to use blendRatio. Is this okay?
-                elif prop_name == "GLOBAL_specular":
-                    #This doesn't really make sense unless you're doing scenery or instanced scenery to mess with everyone's specularity
-                    #slot.material.specular_intensity = prop_value
-                    pass
+                    slot.material.xplane.blend_v1000 = xplane_constants.BLEND_SHADOW
+                    #TODO: We'll be ready for when bug #426 is closed and fixed -Ted, 8/20/2019
+                    slot.material.xplane.blendRatio = prop_value
+                # GLOBAL_specular should only be applied to default materials. We use string matching
+                # because that is what the hint_suffix system is all about. Yay...
+                elif (prop_name == "GLOBAL_specular"):
+                    if (re.match("^249.*_" + xplane_249_constants.HINT_GLOBAL_SPECULAR, slot.material.name)):
+                        # Problem on `249_my_special_case`
+                        # if anyone actually reports the issue they can change the name or
+                        # I'll make a better solution
+                        slot.material.specular_intensity = prop_value
                 elif prop_name == "GLOBAL_tint":
-                    slot.material.xplane.tint_albedo, slot.material.xplane.tint_emission = prop_value
+                    slot.material.xplane.tint = True
+                    slot.material.xplane.tint_albedo, slot.material.xplane.tint_emissive = prop_value
                 elif prop_name == "NORMAL_METALNESS":
                     slot.material.xplane.normal_metalness = prop_value
                 elif prop_name == "BLEND_GLASS":
                     slot.material.xplane.blend_glass = prop_value
 
-        print("After Material Slots Prep (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
-        print("After Material Slots Prep (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
-        print()
+        #print("After Material Slots Prep (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
+        #print("After Material Slots Prep (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
+        #print()
         #----------------------------------------------------------------------
 
         # Unused materials aren't deleted (#19)
@@ -651,8 +755,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
         all_tf_faceids =       list(itertools.chain([face_ids for tf_modes, face_ids in tf_modes_and_their_faces.items()]))
         all_material_faceids = list(itertools.chain([face_ids for tf_modes, face_ids in materials_and_their_faces.items()]))
-        print(all_tf_faceids)
-        print(all_material_faceids)
+        #print(all_tf_faceids)
+        #print(all_material_faceids)
         # Thanks to https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists/48569551#48569551
         def flatten(l):
             for el in l:
@@ -660,8 +764,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     yield from flatten(el)
                 else:
                     yield el
-        assert sorted(flatten(all_tf_faceids)) == sorted(flatten(all_material_faceids)), "TF Face Ids and Material Face Ids must cover the same faces!"
-        assert len(list(flatten(all_tf_faceids))) == len(list(flatten(all_material_faceids))) == len(search_obj.data.polygons), "TF FaceIds, Material FaceIds must cover all of object's faces!"
+        #assert sorted(flatten(all_tf_faceids)) == sorted(flatten(all_material_faceids)), "TF Face Ids and Material Face Ids must cover the same faces!"
+        #assert len(list(flatten(all_tf_faceids))) == len(list(flatten(all_material_faceids))) == len(search_obj.data.polygons), "TF FaceIds, Material FaceIds must cover all of object's faces!"
                #len(itertools.chain([faces for tf_modes, face_ids in tf_modes_and_their_faces.items()]), "dicts should cover the same range of faces"
         #----------------------------------------------------------------------
         print()
@@ -677,6 +781,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 if cross_over_faces:
                     converted = _convert_material(scene, root_object, search_obj, ISCOCKPIT, tf_modes, material)
                     if not converted:
+                        print("Didn't convert anything")
                         # Why extend on None?
                         # (TEX Pressed, MaterialA) and (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
                         # represent different semantic groups of FaceIds. What we really have is
@@ -689,10 +794,10 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 else:
                     print("No cross over for ", tf_modes, "and", material.name)
 
-        print("After Splitting (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
-        print("After Splitting (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
-        print()
-        print("Split Groups", {mat.name:faces for mat, faces in split_groups.items()})
+        #print("After Splitting (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
+        #print("After Splitting (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
+        #print()
+        #print("Split Groups", {mat.name:faces for mat, faces in split_groups.items()})
 
         new_objs = []
         if len(split_groups): #TODO: Dumb, split_groups will always be at least 1 because of DEF_MAT in place of no slot
@@ -717,16 +822,16 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 for i, (material, face_ids) in enumerate(split_groups.items()):
                     new_obj = copy_obj(search_obj, search_obj.name + "_%d" % i)
                     new_objs.append(new_obj)
-                    print("New Obj: ", new_obj.name)
-                    print("New Mesh:", new_obj.data.name)
-                    print("Group:" , material.name)
+                    #print("New Obj: ", new_obj.name)
+                    #print("New Mesh:", new_obj.data.name)
+                    #print("Group:" , material.name)
                     # Remove faces
                     bm = bmesh.new()
                     bm.from_mesh(new_obj.data)
                     faces_to_keep   = [face for face in bm.faces if face.index in face_ids]
                     faces_to_remove = [face for face in bm.faces if face.index not in face_ids]
-                    print("Faces To Keep:  ", [f.index for f in faces_to_keep])
-                    print("Faces To Remove:", [f.index for f in faces_to_remove])
+                    #print("Faces To Keep:  ", [f.index for f in faces_to_keep])
+                    #print("Faces To Remove:", [f.index for f in faces_to_remove])
                     bmesh.ops.delete(bm, geom=faces_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
                     bm.to_mesh(new_obj.data)
                     bm.free()
@@ -747,8 +852,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 bpy.data.objects.remove(search_obj, do_unlink=True) # What about other work ahead of us to convert?
             else:
                 # Case 1: Split group has a DEF_MAT, wasting time to assign, but its fine
-                # Case 2: Split group has a _NO_CHANGE, may or may not be different than DEF_MAT, its fine
-                # Case 3: Split group has a converted_material, gotta have it!
+                # Case 2: Split group has a converted_material, gotta have it!
                 search_obj.material_slots[0].material = list(split_groups.keys())[0]
             #--End of Split Operation----------------------
 
@@ -757,5 +861,3 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     "Object count (%d) should match pre_count -1 + # split groups (%d)" % (len(scene.objects), intended_count)
         else:
             new_objs = [search_obj.name]
-
-

@@ -190,8 +190,12 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
 def scene_layout(self, scene):
     layout = self.layout
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
-    layout.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Bulk)").workflow_type = "BULK"
-    layout.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Regular)").workflow_type = "REGULAR"
+    bulk_op = layout.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Aircraft, Bulk)")
+    bulk_op.project_type = "AIRCRAFT"
+    bulk_op.workflow_type = "BULK"
+    reg_op=layout.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Aircraft, Regular)")
+    reg_op.project_type = "AIRCRAFT"
+    reg_op.workflow_type = "REGULAR"
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")

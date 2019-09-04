@@ -5,7 +5,7 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config, xplane_constants
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -16,7 +16,7 @@ def filterLines(line):
 
 class TestConvertLights(XPlaneTestCase):
     def test_dep_rgb_ignore(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -26,7 +26,7 @@ class TestConvertLights(XPlaneTestCase):
             )
 
     def test_dep_rgb_used(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -36,7 +36,7 @@ class TestConvertLights(XPlaneTestCase):
             )
 
     def test_ignored_cases(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
 
         sun_autospot_real_name_ignored = bpy.data.objects["airplane_taxi_sp"]
         self.assertEqual(sun_autospot_real_name_ignored.data.type, "SUN")
@@ -58,7 +58,7 @@ class TestConvertLights(XPlaneTestCase):
         self.assertEqual(smoke_white.data.xplane.type, xplane_constants.LIGHT_NON_EXPORTING)
 
     def test_magnet_cases(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         def test_magnet(ob:bpy.types.Object, is_xpad:bool, is_flashlight:bool):
             self.assertEqual(ob.type, "EMPTY")
             self.assertEqual(ob.xplane.special_empty_props.magnet_props.debug_name, ob.name)
@@ -73,7 +73,7 @@ class TestConvertLights(XPlaneTestCase):
         self.assertEqual(bpy.data.objects["not_a_magnet"].type, "LAMP")
 
     def test_named_cases(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -83,7 +83,7 @@ class TestConvertLights(XPlaneTestCase):
             )
 
     def test_param_cases(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
@@ -93,7 +93,7 @@ class TestConvertLights(XPlaneTestCase):
             )
 
     def test_could_auto_spot_cases(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         # One day we'll be able to check specific info messages in the log
         pass
 

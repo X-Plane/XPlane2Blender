@@ -5,14 +5,14 @@ import sys
 import bpy
 from io_xplane2blender import xplane_constants, xplane_config
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_249_converter.xplane_249_constants import WorkflowType
+from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
 
 class TestGlobalProperties(XPlaneTestCase):
     def test_cockpit_region(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         scene = bpy.context.scene
         root = scene.objects["OBJCockpitRegionKnown"]
         self.assertTrue(root.xplane.layer.export_type == xplane_constants.EXPORT_TYPE_COCKPIT)
@@ -22,7 +22,7 @@ class TestGlobalProperties(XPlaneTestCase):
         self.assertTrue((cockpit_region.left, cockpit_region.top, 2 ** cockpit_region.width, 2 ** cockpit_region.height) == (0, 0, 32, 32))
 
     def test_global_properties(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         scene = bpy.context.scene
         root = scene.objects["OBJGlobalProperties"]
         layer = root.xplane.layer
@@ -42,7 +42,7 @@ class TestGlobalProperties(XPlaneTestCase):
         self.assertTrue((cockpit_region.left, cockpit_region.top, 2 ** cockpit_region.width, 2 ** cockpit_region.height) == (0, 0, 2, 2))
 
     def test_lod_draped(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         scene = bpy.context.scene
         root = scene.objects["OBJLODDraped"]
         self.assertTrue(root.xplane.layer.export_type == xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY)
@@ -51,7 +51,7 @@ class TestGlobalProperties(XPlaneTestCase):
         self.assertTrue(root.xplane.layer.layer_group_draped_offset == 5)
 
     def test_requires_wet(self):
-        bpy.ops.xplane.do_249_conversion(workflow_type=WorkflowType.BULK.name)
+        bpy.ops.xplane.do_249_conversion(project_type=ProjectType.AIRCRAFT.name, workflow_type=WorkflowType.BULK.name)
         scene = bpy.context.scene
         root = scene.objects["OBJRequiresWet"]
         self.assertTrue(root.xplane.layer.export_type == xplane_constants.EXPORT_TYPE_SCENERY)
