@@ -775,7 +775,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 try:
                     active_data = search_obj.data.uv_textures.active.data
                 except AttributeError: # No active uv_textures, none active
-                    panel_tex_faces[False] = [face.index for face in search_obj.data.polygons]
+                    panel_tex_faces[False] = set(face.index for face in search_obj.data.polygons)
                 else:
                     for i, mtexpolylayer in enumerate(active_data):
                         if (mtexpolylayer.image and "panel." in mtexpolylayer.image.filepath
@@ -784,10 +784,9 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                         else:
                             panel_tex_faces[False].add(i)
             else:
-                panel_tex_faces[False] = [face.index for face in search_obj.data.polygons]
+                panel_tex_faces[False] = set(face.index for face in search_obj.data.polygons)
 
             assert (len(panel_tex_faces[True]) + len(panel_tex_faces[False])) == len(search_obj.data.polygons)
-            # assert the two lists
             return panel_tex_faces
 
         panel_states_and_their_faces = get_panel_tex_faces(search_obj)
