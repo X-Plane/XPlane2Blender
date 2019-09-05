@@ -558,9 +558,11 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             ) # type: bool
     ISPANEL = ISCOCKPIT # type: bool
 
+    #--- Attempt to find all GLOBAL material attributes ----------------------
     # Dictionary of "GLOBAL_attr" to value, to be applied later
     global_mat_props = {} # type: Dict[str, Union[bool, float, Tuple[float, float]]]
-    global_hint_suffix = [] # type: List[str]
+    # I needed an OrderedSet with no external dependencies, so, here we are. Only the keys are used
+    global_hint_suffix = collections.OrderedDict() # type: Dict[str,None]
 
     def check_for_prop(obj_name:str, props:str, prop_name:str, suffix:str, conversion_fn:Callable[[Any],float])->None:
         """
@@ -570,7 +572,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         nonlocal global_mat_props, global_hint_suffix
         try:
             global_mat_props[prop_name] = conversion_fn(props[prop_name.lower()].value)
-            global_hint_suffix.append(suffix)
+            global_hint_suffix[suffix] = None
         except ValueError: #fn_if_found couldn't convert value to correct type
             logger.warn("{}'s '{}' property could not be converted to a float".format(obj_name, prop_name))
         except KeyError:
@@ -612,7 +614,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 if len(tints_value) != 2:
                     raise ValueError
                 global_mat_props["GLOBAL_tint"] = tints_value
-                global_hint_suffix.append(xplane_249_constants.HINT_GLOBAL_TINT)
+                global_hint_suffix[xplane_249_constants.HINT_GLOBAL_TINT] = None
                 #TODO: We need a logger call somehow to tell the user that tint has been set on some material
                 #logger.info("Albedo tint and emissive tint has been set to .2 and .3 on all materials in root object")
                 #etc for others
@@ -622,13 +624,18 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             logger.warn("Could not convert {}'s GLOBAL_tint property could not be parsed to two floats")
         except (KeyError,Exception):
             pass
+        if "panel_ok".casefold() in props:
+            global_mat_props["panel_ok"] = True
+            global_hint_suffix[xplane_249_constants.HINT_GLOBAL_PANEL_OK] = None
         if "NORMAL_METALNESS".casefold() in props:
             global_mat_props["NORMAL_METALNESS"] = True
-            global_hint_suffix.append(xplane_249_constants.HINT_GLOBAL_NORM_MET)
+            global_hint_suffix[xplane_249_constants.HINT_GLOBAL_NORM_MET] = None
         elif "BLEND_GLASS".casefold() in props:
             global_mat_props["BLEND_GLASS"] = True
-            global_hint_suffix.append(xplane_249_constants.HINT_GLOBAL_BLEND_GLASS)
-
+            global_hint_suffix[xplane_249_constants.HINT_GLOBAL_BLEND_GLASS] = None
+    # Switch back to a tuple and no one realizes the dumb hack that was used
+    global_hint_suffix = tuple(global_hint_suffix.keys())
+    #-------------------------------------------------------------------------
     for search_obj in sorted(list(filter(lambda obj: obj.type == "MESH", search_objs)), key=lambda x: x.name):
         """
         This tests that:
@@ -658,12 +665,12 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         ############################################
         # We do this at the top to limit anything that could affect the C data
         # "Pragmatic paranioa is a programmer's pal" - Somebody's abandoned programming blog
-        #print("before tf split")
+        #print("Before get TF modes")
         tf_modes_and_their_faces = _get_tf_modes_from_ctypes(search_obj) # type: TFModeAndFaceIndexes
         if not tf_modes_and_their_faces:
             tf_modes_and_their_faces = collections.defaultdict(set)
             tf_modes_and_their_faces[DEFAULT_TF_MODES] = {face.index for face in search_obj.data.polygons}
-        #print("after tf split")
+        #print("After get TF modes")
         #----------------------------------------------------------------------
 
         #--- Prepare the Object's Material Slots ------------------------------
@@ -699,7 +706,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             if global_mat_props:
                 # GLOBAL_specular will only be applied to default materials,
                 # if we're not about to apply it, we remove it from the hint suffix
-                final_hint_suffix = global_hint_suffix.copy()
+                final_hint_suffix = list(global_hint_suffix)
                 if ("GLOBAL_specular" in global_mat_props):
                     if (slot.material.name != xplane_249_constants.DEFAULT_MATERIAL_NAME):
                         final_hint_suffix.remove(xplane_249_constants.HINT_GLOBAL_SPECULAR)
