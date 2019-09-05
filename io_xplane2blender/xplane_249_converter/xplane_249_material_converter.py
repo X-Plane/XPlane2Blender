@@ -463,31 +463,32 @@ def _convert_material(scene: bpy.types.Scene,
         xp249c = xplane_249_constants
         # Join a list of only the relavent hint suffixes
         hint_suffix = "_" + "_".join(filter(None, (
-                ("%s_%s" % (xplane_249_constants.HINT_TF_TEX, {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]])
-                    if cmp_cv_ov("blend_v1000") else ""),
+            ("%s_%s" % (xplane_249_constants.HINT_TF_TEX, {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]])
+                if cmp_cv_ov("blend_v1000") else ""),
 
-                (xp249c.HINT_TF_TILES if tf_modes.TILES and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
-                (xp249c.HINT_TF_LIGHT if tf_modes.LIGHT and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
+            (xp249c.HINT_TF_TILES if tf_modes.TILES and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
+            (xp249c.HINT_TF_LIGHT if tf_modes.LIGHT and (cmp_cv_ov("draped") or cmp_cv_ov("poly_os")) else ""),
 
-                (xp249c.HINT_TF_INVIS          if draw_disable_by_texface and cmp_cv_ov("draw") else ""),
-                (xp249c.HINT_PROP_DRAW_DISABLE if draw_disable_by_prop    and cmp_cv_ov("draw") else ""),
+            (xp249c.HINT_TF_INVIS          if draw_disable_by_texface and cmp_cv_ov("draw") else ""),
+            (xp249c.HINT_PROP_DRAW_DISABLE if draw_disable_by_prop    and cmp_cv_ov("draw") else ""),
 
-                (xp249c.HINT_TF_COLL        if solid_cam_by_texface and cmp_cv_ov("solid_camera") else ""),
-                (xp249c.HINT_PROP_SOLID_CAM if solid_cam_by_prop    and cmp_cv_ov("solid_camera") else ""),
+            (xp249c.HINT_TF_COLL        if solid_cam_by_texface and cmp_cv_ov("solid_camera") else ""),
+            (xp249c.HINT_PROP_SOLID_CAM if solid_cam_by_prop    and cmp_cv_ov("solid_camera") else ""),
 
-                (xp249c.HINT_TF_SHADOW     if cmp_cv_ov("shadow_local") else ""),
+            (xp249c.HINT_TF_SHADOW     if cmp_cv_ov("shadow_local") else ""),
 
-                (xp249c.HINT_PROP_LIT_LEVEL if cmp_cv_ov("lightLevel") else ""),
+            (xp249c.HINT_PROP_LIT_LEVEL if cmp_cv_ov("lightLevel") else ""),
 
-                # Debugging only. Since we don't combine materials with the same diffuse or specularity,
-                # we don't need to make it part of the lookup key
-                #(",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
-                #(str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
-            )))
+            # Debugging only. Since we don't combine materials with the same diffuse or specularity,
+            # we don't need to make it part of the lookup key
+            #(",".join(str(n) for n in round_tuple(cv["diffuse_color"], ndigits=2)) if cv["diffuse_color"] != (0.8, 0.8, 0.8) else ""), # Don't add the default
+            #(str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
+        )))
 
         #2.49's max name length is 21, so we have 42 characters to work with
         if len(mat.name + hint_suffix) > 63:
-            print(mat.name + hint_suffix, "is about to get truncated, potentially messing up a lot of stuff! Should should highly consider renaming them to be shorter and check if your TexFace buttons are correct")
+            logger.error(mat.name + hint_suffix, "is about to get truncated, potentially messing up a lot of stuff! Should should highly consider renaming them to be shorter and check if your TexFace buttons are correct")
+            assert False
 
         #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
         new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
@@ -723,8 +724,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             for prop_name, prop_value in global_mat_props.items():
                 if prop_name == "panel_ok":
                     slot.material.xplane.panel = True
-                elif prop_name == "GLOBAL_cockpit_lit":
-                    root_object.xplane.cockpit_lit = True
                 elif prop_name == "GLOBAL_no_blend":
                     slot.material.xplane.blend_v1000 = xplane_constants.BLEND_OFF
                     slot.material.xplane.blendRatio = prop_value
@@ -756,24 +755,57 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # Unused materials aren't deleted (#19)
 
         #--- Get old materials and the faces that use them---------------------
-        materials_and_their_faces = collections.defaultdict(set) # type: Dict[bpy.types.MaterialSlot, Set[FaceId]]
-        for face in search_obj.data.polygons:
-            materials_and_their_faces[search_obj.material_slots[face.material_index].material].add(face.index)
+        def get_materials_and_their_faces(search_obj: bpy.types.Object)->Dict[bpy.types.MaterialSlot, Set[FaceId]]:
+            materials_and_their_faces = collections.defaultdict(set) # type: Dict[bpy.types.MaterialSlot, Set[FaceId]]
+            for face in search_obj.data.polygons:
+                materials_and_their_faces[search_obj.material_slots[face.material_index].material].add(face.index)
+            return materials_and_their_faces
 
-        all_tf_faceids =       list(itertools.chain([face_ids for tf_modes, face_ids in tf_modes_and_their_faces.items()]))
-        all_material_faceids = list(itertools.chain([face_ids for tf_modes, face_ids in materials_and_their_faces.items()]))
-        #print(all_tf_faceids)
-        #print(all_material_faceids)
+        materials_and_their_faces = get_materials_and_their_faces(search_obj)
+
+        def get_panel_tex_faces(search_obj: bpy.types.Object)->Set[FaceId]:
+            try:
+                return {i for i, mtexpolylayer in enumerate(search_obj.data.uv_textures.active.data)
+                        if mtexpolylayer.image and "panel." in mtexpolylayer.image.filepath}
+            except AttributeError: # No active uv_textures, none active
+                return set()
+
+        panel_tex_and_their_faces = get_panel_tex_faces(search_obj)
+
+        #--- Print FaceId related data structures for debugging ----------------
+        #all_tf_faceids =       list(itertools.chain([face_ids for tf_modes, face_ids in tf_modes_and_their_faces.items()]))
+        #all_material_faceids = list(itertools.chain([face_ids for tf_modes, face_ids in materials_and_their_faces.items()]))
+        #print("TF FaceIds:", all_tf_faceids)
+        #print("Material FaceIds:", all_material_faceids)
+        # The debug version prints the file name and its face ids
+        #def debug_get_panel_tex_faces(search_obj: bpy.types.Object)->Dict[str, FaceId]:
+            #import os
+            #panel_texs_and_their_faces = collections.defaultdict(set)
+            #try:
+                #active_data = search_obj.data.uv_textures.active.data
+            #except AttributeError: # No active uv_textures, none active
+                #return panel_texs_and_their_faces
+            #else:
+                #for i, mtexpolylayer in enumerate(active_data):
+                    #if mtexpolylayer.image and "panel." in mtexpolylayer.image.filepath:
+                       #panel_texs_and_their_faces[mtexpolylayer.image.filepath].add(i)
+
+            #return panel_texs_and_their_faces
+
+        #if debug_get_panel_tex_faces(search_obj):
+            ## While debugging, we'll probably always have the first face have an image, right?
+            #print("Panel Texs and FaceIds:", debug_get_panel_tex_faces(search_obj))
         # Thanks to https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists/48569551#48569551
-        def flatten(l):
-            for el in l:
-                if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
-                    yield from flatten(el)
-                else:
-                    yield el
+        #def flatten(l):
+        #    for el in l:
+        #        if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
+        #            yield from flatten(el)
+        #        else:
+        #            yield el
         #assert sorted(flatten(all_tf_faceids)) == sorted(flatten(all_material_faceids)), "TF Face Ids and Material Face Ids must cover the same faces!"
         #assert len(list(flatten(all_tf_faceids))) == len(list(flatten(all_material_faceids))) == len(search_obj.data.polygons), "TF FaceIds, Material FaceIds must cover all of object's faces!"
                #len(itertools.chain([faces for tf_modes, face_ids in tf_modes_and_their_faces.items()]), "dicts should cover the same range of faces"
+        #----------------------------------------------------------------------
         #----------------------------------------------------------------------
         print()
 

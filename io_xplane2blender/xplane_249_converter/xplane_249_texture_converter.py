@@ -1,10 +1,14 @@
 """
 This contains the texture autodetect algorithm that mimics 2.49's
 texture autodetection algorithm. There are some slight differences:
-everything is a warning, not an error, and we don't look at custom
-light's material's texture slot's image's path because it is bugged
-and too few people (we know of) use that feature to make it worth
-while
+- Everything is a warning, not an error
+- We don't look at custom light's material's texture slot's
+image's path because it is buggy in 2.49 and too few people
+(we know of) use that feature to make it worth while.
+- We don't check if TEX was on a face because of the
+difficulty of preserving that information, and in 2.79 the lack of
+TEX button means that UV Texture will always be shown anyways -
+the author will have to change it anyway.
 
 It depends on all materials being converted before hand so we can
 detect if Draped Textures should be taken
