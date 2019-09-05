@@ -672,12 +672,14 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # DO NOT CHANGE THE MESH BEFORE THIS LINE! #
         ############################################
         # We do this at the top to limit anything that could affect the C data
-        # "Pragmatic paranioa is a programmer's pal" - Somebody's abandoned programming blog
+        # "Pragmatic paranoia is a programmer's pal" - Somebody's abandoned programming blog
         #print("Before get TF modes")
         tf_modes_and_their_faces = _get_tf_modes_from_ctypes(search_obj) # type: TFModeAndFaceIndexes
         if not tf_modes_and_their_faces:
             tf_modes_and_their_faces = collections.defaultdict(set)
             tf_modes_and_their_faces[DEFAULT_TF_MODES] = {face.index for face in search_obj.data.polygons}
+        faces_and_their_tf_modes = {face_id:modes for modes, face_ids in tf_modes_and_their_faces.items() for face_id in face_ids} # type: Dict[FaceID, _TexFaceModes]
+        print("faces_and_their_modes", faces_and_their_tf_modes)
         #print("After get TF modes")
         #----------------------------------------------------------------------
 
@@ -768,13 +770,27 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         materials_and_their_faces = get_materials_and_their_faces(search_obj)
 
         def get_panel_tex_faces(search_obj: bpy.types.Object)->Set[FaceId]:
-            try:
-                return {i for i, mtexpolylayer in enumerate(search_obj.data.uv_textures.active.data)
-                        if mtexpolylayer.image and "panel." in mtexpolylayer.image.filepath}
-            except AttributeError: # No active uv_textures, none active
-                return set()
+            panel_tex_faces = {True:set(), False:set()}
+            if ISPANEL:
+                try:
+                    active_data = search_obj.data.uv_textures.active.data
+                except AttributeError: # No active uv_textures, none active
+                    panel_tex_faces[False] = [face.index for face in search_obj.data.polygons]
+                else:
+                    for i, mtexpolylayer in enumerate(active_data):
+                        if (mtexpolylayer.image and "panel." in mtexpolylayer.image.filepath
+                            and faces_and_their_tf_modes[i].TEX):
+                            panel_tex_faces[True].add(i)
+                        else:
+                            panel_tex_faces[False].add(i)
+            else:
+                panel_tex_faces[False] = [face.index for face in search_obj.data.polygons]
 
-        panel_tex_and_their_faces = get_panel_tex_faces(search_obj)
+            assert (len(panel_tex_faces[True]) + len(panel_tex_faces[False])) == len(search_obj.data.polygons)
+            # assert the two lists
+            return panel_tex_faces
+
+        panel_states_and_their_faces = get_panel_tex_faces(search_obj)
 
         #--- Print FaceId related data structures for debugging ----------------
         #all_tf_faceids =       list(itertools.chain([face_ids for tf_modes, face_ids in tf_modes_and_their_faces.items()]))
@@ -782,23 +798,23 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         #print("TF FaceIds:", all_tf_faceids)
         #print("Material FaceIds:", all_material_faceids)
         # The debug version prints the file name and its face ids
-        #def debug_get_panel_tex_faces(search_obj: bpy.types.Object)->Dict[str, FaceId]:
-            #import os
-            #panel_texs_and_their_faces = collections.defaultdict(set)
-            #try:
-                #active_data = search_obj.data.uv_textures.active.data
-            #except AttributeError: # No active uv_textures, none active
-                #return panel_texs_and_their_faces
-            #else:
-                #for i, mtexpolylayer in enumerate(active_data):
-                    #if mtexpolylayer.image and "panel." in mtexpolylayer.image.filepath:
-                       #panel_texs_and_their_faces[mtexpolylayer.image.filepath].add(i)
+        def debug_get_panel_tex_faces(search_obj: bpy.types.Object)->Dict[str, FaceId]:
+            import os
+            panel_texs_and_their_faces = collections.defaultdict(set)
+            try:
+                active_data = search_obj.data.uv_textures.active.data
+            except AttributeError: # No active uv_textures, none active
+                return panel_texs_and_their_faces
+            else:
+                for i, mtexpolylayer in enumerate(active_data):
+                    if mtexpolylayer.image and "panel." in mtexpolylayer.image.filepath:
+                       panel_texs_and_their_faces[mtexpolylayer.image.filepath].add(i)
 
-            #return panel_texs_and_their_faces
+            return panel_texs_and_their_faces
 
-        #if debug_get_panel_tex_faces(search_obj):
-            ## While debugging, we'll probably always have the first face have an image, right?
-            #print("Panel Texs and FaceIds:", debug_get_panel_tex_faces(search_obj))
+        if debug_get_panel_tex_faces(search_obj):
+            # While debugging, we'll probably always have the first face have an image, right?
+            print("Panel Texs and FaceIds:", debug_get_panel_tex_faces(search_obj))
         # Thanks to https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists/48569551#48569551
         #def flatten(l):
         #    for el in l:
@@ -820,33 +836,34 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         split_groups = collections.defaultdict(set) # type: Dict[bpy.types.Material, List[FaceId]]
         for tf_modes, t_face_ids in tf_modes_and_their_faces.items():
             for material, m_face_ids in materials_and_their_faces.items():
-                cross_over_faces = t_face_ids & m_face_ids
-                if cross_over_faces:
-                    converted = _convert_material(scene,
+                for panel_state, p_face_ids in panel_states_and_their_faces.items():
+                    cross_over_faces = t_face_ids & m_face_ids & p_face_ids
+                    if cross_over_faces:
+                        converted = _convert_material(scene,
                             root_object,
                             search_obj,
                             ISCOCKPIT,
-                            ISPANEL and bool((cross_over_faces & panel_tex_and_their_faces)) and tf_modes.TEX,
+                            panel_state, # At this point we know if we have panel_tex_faces, they're good to use
                             tf_modes,
                             material)
-                    if not converted:
-                        print("Didn't convert anything")
-                        # Why extend on None?
-                        # (TEX Pressed, MaterialA) and (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
-                        # represent different semantic groups of FaceIds. What we really have is
-                        # - (All combinations of meaningless buttons, MaterialA)
-                        # - (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
-                        # so for every combination of meaningless buttons, we combine their FaceIds
-                        split_groups[material].update(cross_over_faces)
+                        if not converted:
+                            print("Didn't convert anything")
+                            # Why extend on None?
+                            # (TEX Pressed, MaterialA) and (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
+                            # represent different semantic groups of FaceIds. What we really have is
+                            # - (All combinations of meaningless buttons, MaterialA)
+                            # - (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
+                            # so for every combination of meaningless buttons, we combine their FaceIds
+                            split_groups[material].update(cross_over_faces)
+                        else:
+                            split_groups[converted] = cross_over_faces
                     else:
-                        split_groups[converted] = cross_over_faces
-                else:
-                    print("No cross over for ", tf_modes, "and", material.name)
+                        print("No cross over for ", tf_modes, "and", material.name, "and maybe texfaces", panel_state)
 
         #print("After Splitting (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
         #print("After Splitting (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
         #print()
-        #print("Split Groups", {mat.name:faces for mat, faces in split_groups.items()})
+        print("Split Groups", {mat.name:faces for mat, faces in split_groups.items()})
 
         new_objs = []
         if len(split_groups): #TODO: Dumb, split_groups will always be at least 1 because of DEF_MAT in place of no slot
