@@ -46,6 +46,9 @@ HINT_TF_SHADOW         = "SHADOW"
 HINT_TF_TEX            = "TEX"
 HINT_TF_TILES          = "TILES"
 
+# Used to enable splitting by ".panel"
+HINT_UV_PANEL          = "pn"
+
 class ProjectType(enum.Enum):
     """
     What type of project this is, which sets the default

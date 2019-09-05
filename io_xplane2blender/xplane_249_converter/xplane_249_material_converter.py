@@ -279,6 +279,7 @@ def _convert_material(scene: bpy.types.Scene,
                       root_object: bpy.types.Object,
                       search_obj: bpy.types.Object,
                       is_cockpit: bool,
+                      is_panel: bool,
                       tf_modes: _TexFaceModes,
                       mat: bpy.types.Material)->Optional[bpy.types.Material]:
     """
@@ -305,6 +306,7 @@ def _convert_material(scene: bpy.types.Scene,
                 "lightLevel_v1",
                 "lightLevel_v2",
                 "lightLevel_dataref",
+                "panel",
                 "poly_os",
                 "solid_camera", #TexFace and Game Prop
                 "shadow_local",
@@ -314,7 +316,7 @@ def _convert_material(scene: bpy.types.Scene,
     # For debugging purposes
     #original_material_values.update({attr:getattr(mat, attr) for attr in ["diffuse_color", "specular_intensity"]})
     changed_material_values = original_material_values.copy()
-
+    changed_material_values["panel"] = is_panel
     logger_info_msgs = [] # type: List[str]
     logger_warn_msgs = [] # type: List[str]
     # This section roughly mirrors the order in which 2.49 deals with these face buttons
@@ -463,6 +465,7 @@ def _convert_material(scene: bpy.types.Scene,
         xp249c = xplane_249_constants
         # Join a list of only the relavent hint suffixes
         hint_suffix = "_" + "_".join(filter(None, (
+            (xp249c.HINT_UV_PANEL if is_panel else ""),
             ("%s_%s" % (xplane_249_constants.HINT_TF_TEX, {"off":"CLIP", "shadow":"ALPHA"}[cv["blend_v1000"]])
                 if cmp_cv_ov("blend_v1000") else ""),
 
@@ -557,7 +560,9 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                      "_cockpit_out.obj"]
                 ]
             ) # type: bool
-    ISPANEL = ISCOCKPIT # type: bool
+    # Note: ISPANEL is not entirely dependent on ISCOCKPIT because of "panel_ok"
+    # Its value is considered constant after the attempt to find "panel_ok"
+    ISPANEL = ISCOCKPIT
 
     #--- Attempt to find all GLOBAL material attributes ----------------------
     # Dictionary of "GLOBAL_attr" to value, to be applied later
@@ -626,8 +631,10 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         except (KeyError,Exception):
             pass
         if "panel_ok".casefold() in props:
-            global_mat_props["panel_ok"] = True
-            global_hint_suffix[xplane_249_constants.HINT_GLOBAL_PANEL_OK] = None
+            # We don't know at this point what materials should
+            # be affected because we haven't examined faces,
+            # so we simply mark to inspect that later on
+            ISPANEL = True
         if "NORMAL_METALNESS".casefold() in props:
             global_mat_props["NORMAL_METALNESS"] = True
             global_hint_suffix[xplane_249_constants.HINT_GLOBAL_NORM_MET] = None
@@ -686,13 +693,13 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         #print()
 
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
+        # All slots are filled something or the default so this is easier to reason with.
         if not search_obj.material_slots:
             search_obj.data.materials.append(None)
 
         for slot in search_obj.material_slots:
-            # All slots are filled something or the default so this is easier to reason with.
             # Auto-generated materials are replaced with Material_249_converter_default (#2, 12)
-            # This still has the werid name and is the same as a DEFAULT_MATERIAL. No point
+            # This still has the weird name and is the same as a DEFAULT_MATERIAL. No point
             # confusing the user
             if not slot.material or re.match("Material\.TF\.\d{1,5}", slot.material.name):
                 # We'll need a material in every slot no matter what anyways, why not now and save us trouble
@@ -700,7 +707,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 # when asking "what faces have a mat index of 0", the answer is automatically "all of them"
                 slot.material = test_creation_helpers.get_material(xplane_249_constants.DEFAULT_MATERIAL_NAME)
                 slot.material.specular_intensity = 0.0 # This was the default behavior in XPlane2Blender 2.49
-
 
             # After ensuring each slot has a material, we need to apply
             # the global hints to them, re-using existing materials as possible
@@ -722,9 +728,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
             # Now, finally, we actually apply those values to those properties
             for prop_name, prop_value in global_mat_props.items():
-                if prop_name == "panel_ok":
-                    slot.material.xplane.panel = True
-                elif prop_name == "GLOBAL_no_blend":
+                if prop_name == "GLOBAL_no_blend":
                     slot.material.xplane.blend_v1000 = xplane_constants.BLEND_OFF
                     slot.material.xplane.blendRatio = prop_value
                 elif prop_name == "GLOBAL_shadow_blend":
@@ -818,7 +822,13 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             for material, m_face_ids in materials_and_their_faces.items():
                 cross_over_faces = t_face_ids & m_face_ids
                 if cross_over_faces:
-                    converted = _convert_material(scene, root_object, search_obj, ISCOCKPIT, tf_modes, material)
+                    converted = _convert_material(scene,
+                            root_object,
+                            search_obj,
+                            ISCOCKPIT,
+                            ISPANEL and bool((cross_over_faces & panel_tex_and_their_faces)) and tf_modes.TEX,
+                            tf_modes,
+                            material)
                     if not converted:
                         print("Didn't convert anything")
                         # Why extend on None?
