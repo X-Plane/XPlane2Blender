@@ -47,7 +47,6 @@ def do_249_conversion(
     logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
 
     for i, scene in enumerate(bpy.data.scenes, start=1):
-        #if scene.name != "C90B_cockpi2":
         logger.info("Converting scene '{}' using a {} workflow"
                     .format(scene.name, workflow_type.name))
         bpy.context.window.screen.scene = scene
