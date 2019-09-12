@@ -46,6 +46,14 @@ def do_249_conversion(
     logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Converter Log'), xplane_constants.LOGGER_LEVELS_ALL)
     logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
 
+    for fix_script in ["FixDroppedActions.py"]:
+        try:
+            text_block = bpy.data.texts[fix_script]
+        except KeyError:
+            continue
+        else:
+            exec("\n".join([line.body for line in text_block.lines]))
+
     for i, scene in enumerate(bpy.data.scenes, start=1):
         logger.info("Converting scene '{}' using a {} workflow"
                     .format(scene.name, workflow_type.name))
