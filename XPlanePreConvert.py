@@ -68,13 +68,17 @@ def make_dropped_actions_script():
             if action:
                 actions_and_users[action.getName()].append(obj.getName())
 
+    actions_and_users = dict([(action, users) for action, users in actions_and_users.items() if len(users) > 1])
+
     if not actions_and_users:
         return
     else:
         script = (
             "#Must contain a non-empty Python Dict"
             " where Key=Action name, Value=List[Object name which use said Action]\n"
-            + str(dict(actions_and_users))
+            + "{\n"
+                + ",\n".join("    '%s':%s"%(action, str(users)) for action, users in actions_and_users.items())
+            + "\n}"
         )
 
         dropped_actions_script_name = "FixDroppedActions.py"
