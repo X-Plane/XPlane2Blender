@@ -5,6 +5,8 @@ import enum
 WORKFLOW_DEFAULT_ROOT_NAME = "249_ROOT"
 DEFAULT_MATERIAL_NAME = "249"
 
+FIX_SCRIPT = "X-Plane Pre-Conversion Fixes"
+FIX_SCRIPT_DROPPED_ACTIONS = "FixDroppedActions.py"
 # These are used by the material converter when making
 # unique and derivative names during conversion
 # and to "Hint" the user as to what happened
