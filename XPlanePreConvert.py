@@ -3,20 +3,21 @@
 Name: 'X-Plane Pre-Conversion Fixes'
 Blender: 249
 Group: 'Misc'
-Tooltip: 'Export to X-Plane v8 or v9 format object (.obj)'
+Tooltip: 'Generate scripts that allow the 2.49 converter to fix certain forward compatibility bugs'
 """
 __author__ = 'Theodore "Ted" Greene'
 __email__ = "<ted at x-plane dot com>"
 __url__ = "XPlane2Blender, https://github.com/X-Plane/XPlane2Blender"
 __version__ = "1.0"
 __bpydoc__ = """\
-Makes internal Python scripts in Blender 2.49 to be
-run by the 2.49 converter later after loading in
-Blender 2.79. It does not change 2.49 on run.
+Generates scripts for the 2.49 converter to use
+after loading the .blend file in Blender 2.79.
+
+This script only creates text files, not the actual changes
 
 Creates the following scripts
 
-- 249ConverterPostFix_DroppedActions.py
+- FixDroppedActions.py
 
 Generated scripts can be edited before put through the converter
 and can be deleted after conversion.
