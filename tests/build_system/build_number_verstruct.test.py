@@ -12,7 +12,7 @@ __dirname__ = os.path.dirname(__file__)
 class TestBuildNumberVerStruct(XPlaneTestCase):
     current = xplane_helpers.VerStruct.current()
     history = bpy.context.scene.xplane.xplane2blender_ver_history
-    
+
     def test_constructor_defaults_correct(self):
         ver_s = VerStruct()
 
@@ -24,7 +24,7 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
 
     def test_repr_makes_struct_in_eval(self):
         ver_s = VerStruct.current()
-        
+
         try:
             VerStruct(*eval(repr(ver_s)))
         except:
@@ -33,13 +33,13 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
     def test_xplane2blender_str(self):
         parsed_str = str(VerStruct.parse_version('3.4.0'))
         self.assertEqual("3.4.0-leg.0+0.NO_BUILD_NUMBR", parsed_str, "VerStruct.__str__ does not format string into proper form %s" % parsed_str)
- 
+
     def test_invalid_ver_addition(self):
         orig_history_len = len(self.history)
         new_entry = VerStruct.add_to_version_history(VerStruct((-1,-1,-1),"INVALID",-1,-1,"INVALID"))
         self.assertTrue(new_entry is None, "Invalid entry was allowed into version history")
         self.assertTrue(orig_history_len == len(self.history), "History was not returned to original length after invalid addition")
-        
+
     def test_valid_ver_addition(self):
         orig_history_len = len(self.history)
         new_entry = VerStruct.add_to_version_history(self.current)
@@ -50,7 +50,7 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
         ver_s = VerStruct.current()
         ver_s.build_number = VerStruct.make_new_build_number()
         self.assertTrue(ver_s.is_valid(), "VerStruct.make_new_build_number does not generate vaild build numbers")
-        
+
     def test_parse_version(self):
         incorrect_versions_legacy = [
             "random_letters qwerasdfzxcv",
@@ -60,13 +60,13 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
             "(3.4.0)",
             "3_20_20",
             ]
-        
+
         for test_v in incorrect_versions_legacy:
             try:
                 self.assertFalse(VerStruct.parse_version(test_v) != None, "VerStruct.parse_version allowed bad legacy style version %s through" % test_v)
             except Exception as e:
                 pass
-        
+
         incorrect_versions_modern = [
             "3.4.0.beta.1", #Bad separator
             "3.4.0-alpha.-1", #Int, but not < 0
@@ -75,37 +75,39 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
             "3.4.0-rc.1+1.YYYYMMDDHHMMSS", #Parsing the description, not the contents
             "3.4.0-rc.1+1.2017" #Build string is numbers, but not long enough
             ]
-        
+
         for test_v in incorrect_versions_modern:
             try:
                 self.assertFalse(VerStruct.parse_version(test_v) != None, "VerStruct.parse_version allowed bad modern style version %s through" % test_v)
             except Exception as e:
                 pass
-        
+
         correct_versions_legacy = [
-            ("3.2.0", VerStruct(addon_version=(3,2,0), build_type=xplane_constants.BUILD_TYPE_LEGACY)),
-            ("3.20.0",VerStruct(addon_version=(3,20,0), build_type=xplane_constants.BUILD_TYPE_LEGACY)), #Keep 20->2 in xplane_updater.py
-            ("3.3.13",VerStruct(addon_version=(3,3,13),build_type=xplane_constants.BUILD_TYPE_LEGACY))
+            ("2.49.2", VerStruct(addon_version=(2,49,2), build_type=xplane_constants.BUILD_TYPE_LEGACY)),
+            ("3.2.0",  VerStruct(addon_version=(3,2,0),  build_type=xplane_constants.BUILD_TYPE_LEGACY)),
+            ("3.20.0", VerStruct(addon_version=(3,20,0), build_type=xplane_constants.BUILD_TYPE_LEGACY)), #Keep 20->2 in xplane_updater.py
+            ("3.3.13", VerStruct(addon_version=(3,3,13), build_type=xplane_constants.BUILD_TYPE_LEGACY))
             ]
-        
+
         for test_v, test_v_res in correct_versions_legacy:
             v_res = VerStruct.parse_version(test_v)
             self.assertTrue(v_res is not None, "VerStruct.parse_version did not allow valid legacy style version %s through" % test_v)
             self.assertTrue(test_v_res == v_res, "Test string %s did not parse to expected data %s" % (test_v,str(v_res)))
-            
+
         correct_versions_modern = [
             ("3.4.0-rc.5+1.20170914160830",VerStruct(addon_version=(3,4,0),build_type=xplane_constants.BUILD_TYPE_RC,  build_type_version=5,
                                                        data_model_version=1,build_number="20170914160830"))
             ]
-             
+
         for test_v, test_v_res in correct_versions_modern:
             v_res = VerStruct.parse_version(test_v)
             self.assertTrue(v_res is not None, "VerStruct.parse_version did not allow valid modern style version %s through" % test_v)
             self.assertTrue(test_v_res == v_res, "Test string %s did not parse to expected data %s" % (test_v,str(v_res)))
-        
+
     def test_rich_compare(self):
         #The following are made up and may not represent reality or the history
         # of XPlane2Blender's development
+        converted = VerStruct.parse_version('2.49.2')
         legacy = VerStruct.parse_version('3.3.12')
         beta_4 = VerStruct.parse_version('3.4.0')
         beta_5 = VerStruct.parse_version('3.4.0-beta.5+1.NO_BUILD_NUMBR')
@@ -117,11 +119,14 @@ class TestBuildNumberVerStruct(XPlaneTestCase):
 
         ver_future_dev = VerStruct.parse_version('3.4.1-dev.0+3.NO_BUILD_NUMBR')
         ver_future_alpha = VerStruct.parse_version('3.4.1-alpha.1+3.20170925121212')
-        
-        self.assertTrue(legacy < beta_4 < beta_5 < rc_1_rebuild_1 <= rc_1_rebuild_2 <= rc_1 < rc_2 <= rc_2_rebuild < ver_future_dev < ver_future_alpha,
+
+        self.assertTrue(converted < legacy < beta_4 < beta_5 < rc_1_rebuild_1 <= rc_1_rebuild_2 <= rc_1 < rc_2 <= rc_2_rebuild < ver_future_dev < ver_future_alpha,
                          "VerStruct.__lt__ not implemented correctly")
-        self.assertTrue(ver_future_alpha > ver_future_dev > rc_2_rebuild >= rc_2 > rc_1 >= rc_1_rebuild_2 >= rc_1_rebuild_1 > beta_5 > beta_4 > legacy,
+        self.assertTrue(ver_future_alpha > ver_future_dev > rc_2_rebuild >= rc_2 > rc_1 >= rc_1_rebuild_2 >= rc_1_rebuild_1 > beta_5 > beta_4 > legacy > converted,
                          "VerStruct.__gt__ not implemented correctly")
+
+        converted_copy = VerStruct.parse_version('2.49.2')
+        self.assertTrue(converted == converted_copy, "VerStruct.__eq__ not implemented correctly")
 
         legacy_copy = VerStruct.parse_version('3.3.12')
         self.assertTrue(legacy == legacy_copy, "VerStruct.__eq__ not implemented correctly")

@@ -91,7 +91,7 @@ def vec_x_to_b(v):
     return mathutils.Vector((v.x, -v.z, v.y))
 
 
-# This is a convience struct to help prevent people from having to repeateld copy and paste
+# This is a convience struct to help prevent people from having to repeat copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():
     def __init__(self,addon_version=None,build_type=None,build_type_version=None,data_model_version=None,build_number=None):
@@ -157,11 +157,12 @@ class VerStruct():
                         isinstance(self.build_number,str)
 
         if not types_correct:
-            raise Exception("Incorrect types passed into VerStruct")
+            raise TypeError("Incorrect types passed into VerStruct")
 
-        if self.addon_version[0]  >= 3 and \
-            self.addon_version[1] >= 0 and \
-            self.addon_version[2] >= 0:
+        if (self.addon_version[0]  >= 3
+            and self.addon_version[1] >= 0
+            and self.addon_version[2] >= 0
+            or self.addon_version == (2, 49, 2)):
             if xplane_constants.BUILD_TYPES.index(self.build_type) != -1:
                 if self.build_type == xplane_constants.BUILD_TYPE_DEV or \
                     self.build_type == xplane_constants.BUILD_TYPE_LEGACY:

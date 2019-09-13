@@ -266,9 +266,13 @@ def scene_dev_layout(self,scene,layout):
         history_list.reverse()
         for entry in history_list:
             icon_str = "NONE"
-            if entry.build_type == xplane_constants.BUILD_TYPE_LEGACY:
+
+            if (entry.addon_version[:] == (2,49,2)
+                and entry.build_type == xplane_constants.BUILD_TYPE_LEGACY):
+                icon_str = "MOD_EXPLODE"
+            elif entry.build_type == xplane_constants.BUILD_TYPE_LEGACY:
                 icon_str = "GHOST_ENABLED"
-            if entry.build_type == xplane_constants.BUILD_TYPE_DEV:
+            elif entry.build_type == xplane_constants.BUILD_TYPE_DEV:
                 icon_str = "RADIO"
             elif entry.build_type == xplane_constants.BUILD_TYPE_ALPHA or\
                 entry.build_type == xplane_constants.BUILD_TYPE_BETA:

@@ -290,6 +290,14 @@ def load_handler(dummy):
     logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Updater Log'), xplane_constants.LOGGER_LEVELS_ALL)
     logger.addTransport(XPlaneLogger.ConsoleTransport())
 
+    if bpy.data.version <= (2, 49, 2):
+        if bpy.data.version < (2, 49, 2):
+            logger.warn("File was not saved with 2.49b2. Converter may produce incorrect results!")
+        xplane_helpers.VerStruct.add_to_version_history(xplane_helpers.VerStruct(addon_version=(2,49,2), build_type=xplane_constants.BUILD_TYPE_LEGACY))
+        logger.info("Added %s to version history" % str(ver_history[-1]))
+        xplane_helpers.VerStruct.add_to_version_history(current_version)
+        logger.info("Added %s to version history" % str(ver_history[-1]))
+        return
     # Test if we're coming from a legacy build
     # Caveats:
     #    - New "modern" files don't touch this
