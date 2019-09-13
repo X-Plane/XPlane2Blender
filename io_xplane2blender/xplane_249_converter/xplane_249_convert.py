@@ -32,14 +32,24 @@ def do_249_conversion(
         context: bpy.types.Context,
         project_type: xplane_249_constants.ProjectType,
         workflow_type: xplane_249_constants.WorkflowType):
-    # TODO: Create log, similar to updater log
-
-    #TODO: When we integrate with the updater, (adding 2.49 as a legacy version)
-    # We can use that. Until then, we have this hack to keep unit testing going
-    # Also, we should put it in the operator call instead so we can force it
-    # rather than in the API itself
+    # Since the updater adds the version on load (because
+    # we want to save that vital information ASAP,
+    # possible - the potential level of bugs makes it immediatly
+    # we can't use it here.
+    #
+    # Instead we check if the file hasn't been saved
+    # and re-opened in 2.79.0 yet, and prevent it from
+    # re-running multiple times after it is open.
+    #
+    # - If you never save it, you'll have to convert again.
+    # - If you save it without converting it, you've destroyed the ability to
+    # convert it.
+    # - If you converter it and try to run it again, even in the same session, it'll fail
+    # (except by changing _runs or the source code - and only those smart enough
+    # to know what danger their in will do that. Right, dear reader?)
     global _runs
-    if _runs > 0:
+    if bpy.data.version == (2, 49, 2) and _runs:
+        print("File already converted, will not convert twice")
         return
     _runs += 1
 

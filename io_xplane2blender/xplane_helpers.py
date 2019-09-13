@@ -159,10 +159,8 @@ class VerStruct():
         if not types_correct:
             raise TypeError("Incorrect types passed into VerStruct")
 
-        if (self.addon_version[0]  >= 3
-            and self.addon_version[1] >= 0
-            and self.addon_version[2] >= 0
-            or self.addon_version == (2, 49, 2)):
+        if (self.addon_version[:] >= (3, 0, 0)
+            or self.addon_version[:] == (2, 49, 2)):
             if xplane_constants.BUILD_TYPES.index(self.build_type) != -1:
                 if self.build_type == xplane_constants.BUILD_TYPE_DEV or \
                     self.build_type == xplane_constants.BUILD_TYPE_LEGACY:
