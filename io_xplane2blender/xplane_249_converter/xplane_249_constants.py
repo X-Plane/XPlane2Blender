@@ -1,12 +1,16 @@
 '''Contains constants that the converter uses'''
 import enum
 
-# Per Scene, a "_01", "_02", "_03" gets appended
-WORKFLOW_DEFAULT_ROOT_NAME = "249_ROOT"
 DEFAULT_MATERIAL_NAME = "249"
 
 FIX_SCRIPT = "X-Plane Pre-Conversion Fixes"
 FIX_SCRIPT_DROPPED_ACTIONS = "FixDroppedActions.py"
+
+LOG_NAME = "Converter Log"
+
+# Per Scene, a "_01", "_02", "_03" gets appended
+WORKFLOW_DEFAULT_ROOT_NAME = "249_ROOT"
+
 # These are used by the material converter when making
 # unique and derivative names during conversion
 # and to "Hint" the user as to what happened
