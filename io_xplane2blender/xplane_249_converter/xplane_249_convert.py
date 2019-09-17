@@ -63,8 +63,9 @@ def do_249_conversion(
             )
         logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
         #--- FixDroppedActions -----------------------------------------------
+        logger.info("", "raw")
         logger.info(
-                "\nFix Dropped Actions\n"
+                "Fix Dropped Actions\n"
                 "--------------------------------------------------",
                 context="raw")
         try:

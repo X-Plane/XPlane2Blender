@@ -74,8 +74,8 @@ def make_dropped_actions_script():
         return
     else:
         script = (
-            "#Must contain a non-empty Python Dict"
-            " where Key=Action name, Value=List[Object name which use said Action]\n"
+            "# Must contain a non-empty Python Dict"
+            " where Key=Action name, Value=List[Name of Object that uses said Action]\n"
             + "{\n"
                 + ",\n".join("    '%s':%s"%(action, str(users)) for action, users in actions_and_users.items())
             + "\n}"
