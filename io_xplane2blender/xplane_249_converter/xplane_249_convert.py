@@ -57,46 +57,62 @@ def do_249_conversion(
     logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Converter Log'), xplane_constants.LOGGER_LEVELS_ALL)
     logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
 
-    try:
-        text_block = bpy.data.texts["FixDroppedActions.py"]
-    except KeyError:
-        pass
-    else:
-        logger.info("Fixing Dropped Actions recorded in FixDroppedActions.py")
 
-        script = "".join([
-                line.body
-                for line in filter(lambda l: not l.body.startswith("#"), text_block.lines)
-                ])
-
+    def run_pre_convert_fixes()->None:
+        logger.clear()
+        logger.addTransport(
+            xplane_helpers.XPlaneLogger.InternalTextTransport(
+                xplane_249_constants.LOG_NAME +", Pre-Convert Fixes"),
+                xplane_constants.LOGGER_LEVELS_ALL
+            )
+        logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
+        #--- FixDroppedActions -----------------------------------------------
+        logger.info(
+                "Fix Dropped Actions\n"
+                "--------------------------------------------------",
+                context="raw")
         try:
-            actions_and_users = ast.literal_eval(script)
-        except (IndexError, SyntaxError, ValueError) as e:
-            logger.warn("Contents of {} improperly formatted.".format(xplane_249_constants.FIX_SCRIPT_DROPPED_ACTIONS)
-                        + "Run 'X-Plane Pre-Conversion Fixes' again and be careful if editing")
+            text_block = bpy.data.texts["FixDroppedActions.py"]
+        except KeyError:
+            logger.info("No FixDroppedActions.py text block found, no fixes applied")
+            return
         else:
-            actions_will_fix = {
-                    action_name: users
-                    for action_name, users in actions_and_users.items()
-                    if action_name in bpy.data.actions
-                }
-            unknown_actions = actions_and_users.keys() - actions_will_fix.keys()
-            if unknown_actions:
-                logger.warn("Found unknown Actions '{}', re-run {}".format(unknown_actions, xplane_249_constants.FIX_SCRIPT))
-            else:
-                for action_name, users in actions_will_fix.items():
-                    action = bpy.data.actions[action_name]
-                    users_will_fix = {name for name in users if name in bpy.data.objects}
-                    unknown_users = set(users) - users_will_fix
-                    if unknown_users:
-                        logger.warn("Found unknown Users '{}', re-run {}".format(unknown_users, xplane_249_constants.FIX_SCRIPT))
-                        continue
-                    for user in users_will_fix:
-                        user_obj = bpy.data.objects[user]
-                        if not user_obj.animation_data:
-                            user_obj.animation_data_create()
-                        user_obj.animation_data.action = action
+            logger.info("Fixing Dropped Actions recorded in FixDroppedActions.py")
 
+            script = "".join([
+                    line.body
+                    for line in filter(lambda l: not l.body.startswith("#"), text_block.lines)
+                    ])
+
+            try:
+                actions_and_users = ast.literal_eval(script)
+            except (IndexError, SyntaxError, ValueError) as e:
+                logger.warn("Contents of {} improperly formatted.".format(xplane_249_constants.FIX_SCRIPT_DROPPED_ACTIONS)
+                            + "Run 'X-Plane Pre-Conversion Fixes' again and be careful if editing")
+            else:
+                actions_will_fix = {
+                        action_name: users
+                        for action_name, users in actions_and_users.items()
+                        if action_name in bpy.data.actions
+                    }
+                unknown_actions = actions_and_users.keys() - actions_will_fix.keys()
+                if unknown_actions:
+                    logger.warn("Found unknown Actions '{}', re-run {}".format(unknown_actions, xplane_249_constants.FIX_SCRIPT))
+                else:
+                    for action_name, users in actions_will_fix.items():
+                        action = bpy.data.actions[action_name]
+                        users_will_fix = {name for name in users if name in bpy.data.objects}
+                        unknown_users = set(users) - users_will_fix
+                        if unknown_users:
+                            logger.warn("Found unknown Users '{}', re-run {}".format(unknown_users, xplane_249_constants.FIX_SCRIPT))
+                            continue
+                        for user in users_will_fix:
+                            user_obj = bpy.data.objects[user]
+                            if not user_obj.animation_data:
+                                user_obj.animation_data_create()
+                            user_obj.animation_data.action = action
+        #----------------------------------------------------------------------
+    run_pre_convert_fixes()
 
     for i, scene in enumerate(bpy.data.scenes, start=1):
         logger.info("Converting scene '{}' using a {} workflow"
