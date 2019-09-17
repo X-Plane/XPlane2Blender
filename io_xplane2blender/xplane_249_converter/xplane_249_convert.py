@@ -53,10 +53,6 @@ def do_249_conversion(
         return
     _runs += 1
 
-    logger.clear()
-    logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Converter Log'), xplane_constants.LOGGER_LEVELS_ALL)
-    logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
-
 
     def run_pre_convert_fixes()->None:
         logger.clear()
@@ -115,8 +111,13 @@ def do_249_conversion(
     run_pre_convert_fixes()
 
     for i, scene in enumerate(bpy.data.scenes, start=1):
+        logger.clear()
+        logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport(xplane_249_constants.LOG_NAME +", " + scene.name), xplane_constants.LOGGER_LEVELS_ALL)
+        logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
         logger.info("Converting scene '{}' using a {} workflow"
                     .format(scene.name, workflow_type.name))
+        # This line will NOT WORK when the GUI is open,
+        # TODO: I sure as hell hope it works on Mac/Linux too!
         bpy.context.window.screen.scene = scene
         # Global settings
         scene.xplane.debug = True
@@ -125,6 +126,11 @@ def do_249_conversion(
         new_roots = xplane_249_workflow_converter.convert_workflow(scene, project_type, workflow_type)
         if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
             new_roots[0].name += "_{:02d}".format(i)
+        if new_roots:
+            logger.info("New Root Object{}: {}"
+                    .format(
+                        "s" if len(new_roots) > 1 else "",
+                        ", ".join(root.name for root in sorted(new_roots, key=lambda r: r.name))))
         #---------------------------------------------------------------------
 
         #--- Layer Properties (LODs, Layer Groups, Requires Wet/Dry, etc) -----
