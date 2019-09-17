@@ -64,7 +64,7 @@ def do_249_conversion(
         logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
         #--- FixDroppedActions -----------------------------------------------
         logger.info(
-                "Fix Dropped Actions\n"
+                "\nFix Dropped Actions\n"
                 "--------------------------------------------------",
                 context="raw")
         try:
@@ -112,8 +112,9 @@ def do_249_conversion(
 
     for i, scene in enumerate(bpy.data.scenes, start=1):
         logger.clear()
-        logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport(xplane_249_constants.LOG_NAME +", " + scene.name), xplane_constants.LOGGER_LEVELS_ALL)
+        logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport(xplane_249_constants.LOG_NAME + ", " + scene.name), xplane_constants.LOGGER_LEVELS_ALL)
         logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
+        logger.info("", context="raw")
         logger.info("Converting scene '{}' using a {} workflow"
                     .format(scene.name, workflow_type.name))
         # This line will NOT WORK when the GUI is open,

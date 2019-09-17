@@ -54,13 +54,14 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                       and [v.isdigit() for v in cockpit_reg_value.split()]):
                     reg = layer.cockpit_region[0]
                     reg.left, reg.top, reg.width, reg.height = [math.log2(int(v)) if int(v) else 0 for v in cockpit_reg_value.split()]
+                    infos.add("COCKPIT_REGION value '{}' applied to {}".format((reg.left, reg.top, reg.width, reg.height), dest_root.name))
                 else:
                     warnings.add("COCKPIT_REGION value '{}' on {} couldn't be parsed into 4 integers\n"
-                                 "NEXT STEP: Set Cockpit Region manually"
+                                 "NEXT STEP: Set Cockpit Region manually\n"
                                  .format(cockpit_reg_value, prop_source.name))
             else:
                 warnings.add("COCKPIT_REGION value '{}' on {} couldn't be parsed into 4 integers\n"
-                             "NEXT STEP: Set Cockpit Region manually"
+                             "NEXT STEP: Set Cockpit Region manually\n"
                              .format(cockpit_reg_value, prop_source.name))
 
         #---------------------------------------------------------------------
@@ -75,15 +76,19 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                 layer.slope_limit_max_pitch, \
                 layer.slope_limit_min_roll, \
                 layer.slope_limit_max_roll = [float(v) for v in slope_limit_value.split()]
+                infos.add("{}'s Slope Limit is '{}'".format(
+                    dest_root.name,
+                    (layer.slope_limit_min_pitch, layer.slope_limit_max_pitch, layer.slope_limit_min_roll, layer.slope_limit_max_roll,)
+                    ))
             else:
                 warnings.add("SLOPE_LIMIT value '{}' on {} couldn't be converted\n"
-                             "NEXT STEP: Set your Slope Limits manually"
+                             "NEXT STEP: Set your Slope Limits manually\n"
                              .format(slope_limit_value, prop_source.name))
-
 
         tilted_value, _ = xplane_249_helpers.find_property_in_parents(obj, "TILTED")
         if tilted_value is not None:
             layer.tilted = True
+            infos.add("{}'s Tilted is true".format(dest_root.name))
 
         layer_group_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "ATTR_layer_group", prop_types={"STRING"})
         if layer_group_value is not None:
@@ -91,30 +96,38 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                 layer_group_type, layer_group_offset = layer_group_value.split()
                 if layer_group_type.lower() in xplane_constants.LAYER_GROUPS_ALL:
                     layer.layer_group = layer_group_type.lower()
+                    infos.add("{}'s Layer Group is '{}'".format(dest_root.name, layer.layer_group.title()))
                 else:
-                    warnings.add("Layer Group Type '{}' on {} doesn't exist in modern XPlane2Blender\n"
-                                 "NEXT STEP: Set your Layer Group manually".format(layer_group_type, prop_source.name))
+                    warnings.add("Layer Group '{}' on {} doesn't exist in modern XPlane2Blender\n"
+                                 "NEXT STEP: Set your Layer Group manually\n".format(layer_group_type, prop_source.name))
             except ValueError: #split has too many or two few values to unpack (expected 2)
                 warnings.add("ATTR_layer_group value '{}' on {} wasn't in the right format, must be <layer type> <offset>\n"
-                             "NEXT STEP: Set your Layer Group and Layer Group Offset manually"
+                             "NEXT STEP: Set your Layer Group and Layer Group Offset manually\n"
                              .format(layer_group_value, prop_source.name))
             else:
                 if _isint(layer_group_offset) and -5 <= int(layer_group_offset) <= 5:
                     layer_group_offset = int(layer_group_offset)
                     layer.layer_group_offset = layer_group_offset
+                    infos.add("{}'s Layer Group Offset is '{}'".format(dest_root.name, layer.layer_group_offset))
                 else:
                     warnings.add("ATTR_layer_group offset on {} must be between and including -5 and 5, is '{}'\n"
-                                 "NEXT STEP: Set Layer Group Offset manually"
+                                 "NEXT STEP: Set Layer Group Offset manually\n"
                                  .format(prop_source.name, layer_group_offset))
                     break
 
-        dry_value, _ = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_DRY", prop_types={"STRING"})
-        if dry_value == "":
+        dry_value, _ = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_DRY")
+        if dry_value is not None:
             layer.require_surface = xplane_constants.REQUIRE_SURFACE_DRY
+            infos.add("{} will require dry surfaces".format(dest_root.name))
 
         wet_value, _ = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_WET", prop_types={"STRING"})
-        if wet_value == "":
+        if wet_value is not None:
             layer.require_surface = xplane_constants.REQUIRE_SURFACE_WET
+            infos.add("{} will require wet surfaces".format(dest_root.name))
+
+        if dry_value is not None and wet_value is not None:
+            warnings.add("{} cannot require dry and wet surfaces at the same time.\n"
+                         "NEXT STEP: Set Require Surface manually\n".format(dest_root.name))
 
         #---------------------------------------------------------------------
         # Draped Scenery Only Properties, export type hint: Instanced
@@ -124,12 +137,13 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
             if _isfloat(LOD_draped_value):
                 if float(LOD_draped_value) >= 0.0:
                     layer.lod_draped = float(LOD_draped_value)
+                    infos.add("{}'s Maximum Draped LOD is '{}'".format(dest_root.name, layer.lod_draped))
                 else:
                     warnings.add("ATTR_LOD_draped's value '{}' on {} must be >= 0\n"
-                                 "NEXT STEP: Set LOD Draped manually".format(LOD_draped_value, prop_source.name))
+                                 "NEXT STEP: Set LOD Draped manually\n".format(LOD_draped_value, prop_source.name))
             else:
                 warnings.add("ATTR_LOD_draped's value '{}' on {} is not a float\n"
-                             "NEXT STEP: Set LOD Draped manually".format(LOD_draped_value, prop_source.name))
+                             "NEXT STEP: Set LOD Draped manually\n".format(LOD_draped_value, prop_source.name))
 
         layer_group_draped_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "ATTR_layer_group_draped", prop_types={"STRING"})
         if layer_group_draped_value is not None:
@@ -138,21 +152,22 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                 #print(layer_group_draped_type, layer_group_draped_offset)
             except ValueError: # Too many or too few to unpack
                 warnings.add("ATTR_layer_group_draped's value '{}' on {} is not in the right format, must be <layer type> <offset>\n"
-                             "NEXT STEP: Manually set Layer Group Draped and Layer Group Draped Offset".format(layer_group_draped_value, prop_source.name))
+                             "NEXT STEP: Manually set Layer Group Draped and Layer Group Draped Offset\n".format(layer_group_draped_value, prop_source.name))
             else:
                 if layer_group_draped_type in xplane_constants.LAYER_GROUPS_ALL:
                     layer.layer_group_draped = layer_group_draped_type
+                    infos.add("{}'s Draped Layer Group is '{}'".format(dest_root.name, layer.layer_group_draped.title()))
                     if _isint(layer_group_draped_offset) and -5 <= int(layer_group_draped_offset) <= 5:
                         layer.layer_group_draped_offset = int(layer_group_draped_offset)
+                        infos.add("{}'s Draped Layer Group Offset is '{}'".format(dest_root.name, layer.layer_group_draped_offset))
                     else:
                         warnings.add("ATTR_layer_group offset on {} must be between and including -5 and 5, is '{}'\n"
-                                     "NEXT STEP: Set Layer Group Draped's Offset manually"
+                                     "NEXT STEP: Set Layer Group Draped's Offset manually\n"
                                      .format(prop_source.name, layer_group_draped_offset))
                 else:
                     warnings.add("ATTR_layer_group_draped's type '{}' is not a known Layer Group\n"
-                                 "NEXT STEP: Set Layer Group Draped and Layer Group Draped Offset Manually"
+                                 "NEXT STEP: Set Layer Group Draped and Layer Group Draped Offset Manually\n"
                                  .format(layer_group_draped_type))
-
 
         # Apply export type hints, from least specific to most specific
         if any([p is not None for p in [slope_limit_value, tilted_value, layer_group_value, dry_value, wet_value]]):
@@ -161,7 +176,10 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
         if any([p is not None for p in [LOD_draped_value, layer_group_draped_value]]):
             layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
 
-    for warning in warnings:
+    for info in sorted(infos):
+        logger.info(info)
+
+    for warning in sorted(warnings):
         logger.warn(warning)
 
 
