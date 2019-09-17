@@ -194,7 +194,7 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
 
     logger.info("", "raw")
     logger.info("Converting Any LOD Properties for Root Object '{}'\n"
-                "--------------------------------------------------".format(dest_root.name),
+                "--------------------------------------------------".format(dest_root.name, context="raw"),
                 context="raw")
     for obj in search_objs:
         additive_lod, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "additive_lod")
@@ -234,6 +234,8 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
             logger.warn(warning)
         return 0
 
+    #TODO: This seems wrong. If we know that we found 2 LOD props, and which ones they were,
+    # surely we can decide LODs. Was this a (literal) fix-it-in-post hack?
     dest_root.xplane.layer.lods = "3"
     if is_additive:
         for i, breakpoint in enumerate(lod_props_249[1:]):
@@ -244,12 +246,12 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
             l = dest_root.xplane.layer.lod[i]
             l.near, l.far = int(near), int(far)
 
-    final_logger_msg = ("{} now has {} for LODs: {}\n"
+    final_logger_msg = ("{} now has {} LOD buckets: {}\n"
                         "NEXT STEP: Check if these LODs are necessary and correct")
     if any(filter(lambda lod: lod.far in {1000, 4000, 10000}, dest_root.xplane.layer.lod[1:])):
-        final_logger_msg += ", especially some your new values are the 2.49 defaults"
+        final_logger_msg += ", especially because some equal the 2.49 defaults"
 
-    warnings.add(final_logger_msg.format(
+    warnings.add((final_logger_msg + "\n").format(
         dest_root.name,
         dest_root.xplane.layer.lods,
         [(l.near, l.far) for l in dest_root.xplane.layer.lod])
