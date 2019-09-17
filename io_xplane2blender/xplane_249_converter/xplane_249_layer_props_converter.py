@@ -36,8 +36,10 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
 
     logger.info("", "raw")
     logger.info("Converting Any Global OBJ Properties for Root Object '{}'\n"
-                "--------------------------------------------------".format(dest_root.name))
-    info = set()
+                "--------------------------------------------------".format(dest_root.name), context="raw")
+    # Since a property could be found in a parent twice, we use sets
+    # to reduce the chance of a duplicate message
+    infos = set()
     warnings = set()
     layer = dest_root.xplane.layer
     for obj in search_objs:
@@ -174,7 +176,8 @@ def _convert_lod_properties(search_objs: List[bpy.types.Object],
 
     logger.info("", "raw")
     logger.info("Converting Any LOD Properties for Root Object '{}'\n"
-                "--------------------------------------------------".format(dest_root.name))
+                "--------------------------------------------------".format(dest_root.name),
+                context="raw")
     for obj in search_objs:
         additive_lod, has_prop_obj = xplane_249_helpers.find_property_in_parents(obj, "additive_lod")
         if additive_lod is not None:

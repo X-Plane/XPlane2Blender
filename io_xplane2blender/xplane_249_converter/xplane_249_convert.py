@@ -146,7 +146,8 @@ def do_249_conversion(
 
         logger.info("", "raw")
         logger.info("Converting Any Animations In Scene '{}'\n"
-                    "--------------------------------------------------".format(scene.name))
+                    "--------------------------------------------------".format(scene.name),
+                    context="raw")
         # Make the default material for new objects to be assaigned
         for armature in filter(lambda obj: obj not in _converted_objects and obj.type == "ARMATURE", scene.objects):
             _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
@@ -158,7 +159,9 @@ def do_249_conversion(
 
         logger.info("", "raw")
         logger.info("Converting Any Manipulators In Scene '{}'\n"
-                    "--------------------------------------------------".format(scene.name))
+                    "--------------------------------------------------".format(scene.name),
+                    context="raw")
+
         for obj in scene.objects:
             converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
             if converted_manipulator:
@@ -174,7 +177,8 @@ def do_249_conversion(
 
         logger.info("", "raw")
         logger.info("Converting Any Lights In Scene '{}'\n"
-                    "--------------------------------------------------".format(scene.name))
+                    "--------------------------------------------------".format(scene.name),
+                    context="raw")
         for root in new_roots:
             #ALSO! This breaks if there are no new roots becaues of SKIP. SKIP should only affect workflow
             xplane_249_light_converter.convert_lights(scene, workflow_type, root)
