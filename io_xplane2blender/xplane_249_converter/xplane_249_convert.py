@@ -54,7 +54,10 @@ def do_249_conversion(
     _runs += 1
 
 
-    def run_pre_convert_fixes()->None:
+    def run_pre_convert_fixes()->bool:
+        """
+        Returns True if fixes were run, regardless of any actual effect
+        """
         logger.clear()
         logger.addTransport(
             xplane_helpers.XPlaneLogger.InternalTextTransport(
@@ -72,7 +75,7 @@ def do_249_conversion(
             text_block = bpy.data.texts["FixDroppedActions.py"]
         except KeyError:
             logger.info("No FixDroppedActions.py text block found, no fixes applied")
-            return
+            return False
         else:
             logger.info("Fixing Dropped Actions recorded in FixDroppedActions.py")
 
@@ -108,8 +111,12 @@ def do_249_conversion(
                             if not user_obj.animation_data:
                                 user_obj.animation_data_create()
                             user_obj.animation_data.action = action
+            # TODO: If we ever get more fix scripts,
+            # we'll change this to a set of script names ran
+            # - Ted 9/18/2019
+            return True
         #----------------------------------------------------------------------
-    run_pre_convert_fixes()
+    ran_fixes = run_pre_convert_fixes()
 
     for i, scene in enumerate(bpy.data.scenes, start=1):
         logger.clear()
@@ -154,16 +161,14 @@ def do_249_conversion(
         for armature in filter(lambda obj: obj not in _converted_objects and obj.type == "ARMATURE", scene.objects):
             _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
 
-        if _converted_objects:
-            logger.info("\nNEXT STEP: Check for missing or incorrect animations. See XPlaneDuplicateActionDatablocks.py for more")
+        logger.info(
+            "NEXT STEPS: Check for missing or incorrect animations"
+            + "" if ran_fixes else ", especially since FixDroppedActions.py was not run."
+            + "\n"
+            + "If many are missing, check that io_xplane2blender/resources/DataRefs.txt is the same as what was used with this file in Blender 2.49")
         #print("Converted objects", _converted_objects)
 
-
-        logger.info("", "raw")
-        logger.info("Converting Any Manipulators In Scene '{}'\n"
-                    "--------------------------------------------------".format(scene.name),
-                    context="raw")
-
+        #print("Converting Any Manipulators In Scene '{}'".format(scene.name))
         for obj in scene.objects:
             converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
             if converted_manipulator:
@@ -182,7 +187,7 @@ def do_249_conversion(
                     "--------------------------------------------------".format(scene.name),
                     context="raw")
         for root in new_roots:
-            #ALSO! This breaks if there are no new roots becaues of SKIP. SKIP should only affect workflow
+            #TODO: ALSO! This breaks if there are no new roots becaues of SKIP. SKIP should only affect workflow
             xplane_249_light_converter.convert_lights(scene, workflow_type, root)
             xplane_249_material_converter.convert_materials(scene, workflow_type, root)
             xplane_249_texture_converter.convert_textures(scene, workflow_type, root)

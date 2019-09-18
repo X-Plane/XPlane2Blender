@@ -437,7 +437,7 @@ def convert_manipulators(scene: bpy.types.Scene, obj: bpy.types.Object)->bool:
     try:
         #print("Decoding manipulator for '{}'".format(obj.name))
         manip_info_source, parsed_manip_info = _decode(obj)
-        logger.info("A {} manipulator was found and converted on {}".format(parsed_manip_info.type.title(), manip_info_source.name))
+        #print("A {} manipulator was found and converted on {}".format(parsed_manip_info.type.title(), manip_info_source.name))
     except TypeError: # NoneType is not iterable, incase _decode returns None and can't expand
         #print("Could not decode manipulator info for '{}'".format(obj.name))
         return False
