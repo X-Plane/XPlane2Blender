@@ -652,7 +652,7 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
                 pass
 
         for bone in armature.pose.bones:
-            print("armature.name", armature.name)
+            #print("armature.name", armature.name)
             # 2.49 slices and trims bone names before look up
             bone_name = bone.name.split('.')[0].strip() # type: BoneName
             bone_name_no_idx = no_idx(bone_name) # type: Union[SName,TailName]
@@ -660,34 +660,38 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
             if "wind_direction_degt" in bone_name:
                 lookup_result = LookupResult(("sim/weather/" + bone_name, 1), True, True)
             else:
-                print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
+                #print("\nLooking up dataref from '{}' and '{}'".format(bone_name, bone_name_no_idx))
                 lookup_result = lookup_dataref(bone_name, bone_name_no_idx)
 
-            print("Lookup Results: %s" % lookup_result)
+            #print("Lookup Results: %s" % lookup_result)
             if lookup_result.record:
                 all_arm_drefs[lookup_result.record[0]] = (bone, [])
             else:
-                # Catches known but ambiguous and unknown datarefs. Needs disambiguating
+                # Catches known but ambiguous and unknown datarefs
+                # Attempt to find disambiguating prop #1
                 if bone_name in game_properties:
                     disambiguating_prop = game_properties[bone_name]
+                # Attempt to find disambiguating prop #2
                 elif bone_name_no_idx in game_properties:
                     disambiguating_prop = game_properties[bone_name_no_idx]
-                elif any(bone_name.startswith(easy_default) for easy_default in {"none", "no_ref", "Bone"}) or bone_name == "":
-                    # Only print the interesting bones that got ignored. Obviously "none
-                    logger.warn("Ignoring Bone '{}' of {}: could not be matched to a full dataref".format(bone_name, armature.name))
-                    continue
+                else:
+                    # TODO: I would really love to just ignore this, but another assert "couldn't match prop_root to anything"
+                    # proves again the converter's (old?) motto "Only good data".
+                    # Now that I hear more Mac users say it is impossible to use, this will probably turn into a
+                    # warning, and the strict requirements lessened. Until then, it stays in for the alpha
+                    #
+                    # - Ted, 9/18/2019
+                    assert False, ("Would like to ignore bone '{}' in {}: cannot disambiguate bone name and continue conversion".format(bone_name, armature.name))
 
-                #TODO: This needs some kind of check "2.79 and 2.49 DataRefs.txt file don't match
-                # disambiguating prop is not found, but also, no record found. A fall through here
-                # is terrible
                 # Checking for a value catches when people have to use "none:''" or "no_ref:''"
+                # TODO: .value is allowed to be "", but it seems unlikely. We need coverage and unit tests
                 if disambiguating_prop.type == "STRING" and disambiguating_prop.value:
                     disambiguating_key = "{}/{}".format(disambiguating_prop.value.strip(" /"), bone_name)
                     #print("Disambiguating Key: " + disambiguating_key)
                     all_arm_drefs[disambiguating_key] = (bone, [])
                 else:
                     #print("Probable disambiguating prop ({}:{}) has wrong value type {}".format( disambiguating_prop.name, disambiguating_prop.value, disambiguating_prop.type))
-                    logger.warn("Ignoring Bone '{}' of {}: could not be matched to a full dataref".format(bone_name, armature.name))
+                    logger.warn("Ignoring Bone '{}' of {}: Disambiguating property '({}: {})' could not make a full dataref".format(bone_name, armature.name, disambiguating_prop.name, disambiguating_prop.value))
                     continue
 
         #print("Final Known Datarefs: {}".format(all_arm_drefs.keys()))
@@ -712,8 +716,9 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
             else:
                 all_arm_drefs[decoded_animval.path][1].append(decoded_animval)
         else:
-            #TODO: Error code goes here? How do we do these?
-            #TODO: What about disambiguating keys returning none from decode_game_animvalue?
+            # Since we can't know whether it failed decoding because it
+            # was a bad animval game prop or simply not related, we skip it
+            # and can't give a good reason why
             #print("Could not decode {}".format(game_prop.name))
             continue
 
@@ -763,7 +768,7 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
 
     # Finally, the creation step!
     for path, (bone, parsed_props) in all_arm_drefs.items():
-        logger.info("Converted Animation of Bone '{}' from {} using dataref '{}'".format(bone.name, armature.name, path))
+        #print("Converted Animation of Bone '{}' from {} using dataref '{}'".format(bone.name, armature.name, path))
         for parsed_prop in parsed_props:
             if parsed_prop.value is not None:
                 test_creation_helpers.set_animation_data(
