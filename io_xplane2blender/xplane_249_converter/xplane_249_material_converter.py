@@ -237,8 +237,8 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
         mesh = Mesh.from_address(obj.data.as_pointer())
         mpolys  = mesh.mpoly[:mesh.totpoly]
         mtpolys = mesh.mtpoly[:mesh.totpoly]
-        #print(mpolys)
-        #print(mtpolys)
+        #print("mpolys", mpolys)
+        #print("mtpolys, mtpolys)
         for idx, (mpoly_current, mtpoly_current) in enumerate(zip(mpolys, mtpolys)):
             mtpoly_mode = mtpoly_current.mode
             mtpoly_transp = int.from_bytes(mtpoly_current.transp, sys.byteorder)
@@ -295,7 +295,7 @@ def _convert_material(scene: bpy.types.Scene,
 
     Returns None if there was nothing to convert
     """
-    print("Attempting to convert", mat.name)
+    #print("Attempting to convert", mat.name)
 
     original_material_values = {
             attr:getattr(mat.xplane, attr) for attr in [
@@ -536,11 +536,11 @@ def _convert_material(scene: bpy.types.Scene,
             for prop, value in changed_material_values.items():
                 setattr(new_material.xplane, prop, value)
 
-            print("Created new converted material:", new_material.name)
+            #print("Created new converted material:", new_material.name)
 
         return new_material
     else:
-        print("Material '{}' had nothing to convert".format(mat.name))
+        #print("Material '{}' had nothing to convert".format(mat.name))
         return None
 
 
@@ -621,13 +621,11 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     raise ValueError
                 global_mat_props["GLOBAL_tint"] = tints_value
                 global_hint_suffix[xplane_249_constants.HINT_GLOBAL_TINT] = None
-                #TODO: We need a logger call somehow to tell the user that tint has been set on some material
-                #logger.info("Albedo tint and emissive tint has been set to .2 and .3 on all materials in root object")
                 #etc for others
         except AttributeError: # 'non-str' object has no attribute 'split'
-            logger.warn("{}'s GLOBAL_tint's property value '{}' is not a string".format(obj.name, props["GLOBAL_tint".casefold()]))
+            logger.warn("{}'s GLOBAL_tint's property value not converted: '{}' is not a string".format(obj.name, tint_prop.value))
         except ValueError: # incorrect number of values to unpack or bad float conversion
-            logger.warn("Could not convert {}'s GLOBAL_tint property could not be parsed to two floats")
+            logger.warn("{}'s GLOBAL_tint property value not converted: '{}' could not be parsed to two floats".format(obj.name, tint_prop.value))
         except (KeyError,Exception):
             pass
         if "panel_ok".casefold() in props:
@@ -662,7 +660,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         # Spec implications for algorithm
         In more detail this results in:
         """
-        print("Converting materials for", search_obj.name)
+        #print("Converting materials for", search_obj.name)
 
         # Rules:
         # Every face is going to have a TexFace mode (even if we have to force it to be default)
@@ -673,14 +671,11 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
         ############################################
         # We do this at the top to limit anything that could affect the C data
         # "Pragmatic paranoia is a programmer's pal" - Somebody's abandoned programming blog
-        #print("Before get TF modes")
         tf_modes_and_their_faces = _get_tf_modes_from_ctypes(search_obj) # type: TFModeAndFaceIndexes
         if not tf_modes_and_their_faces:
             tf_modes_and_their_faces = collections.defaultdict(set)
             tf_modes_and_their_faces[DEFAULT_TF_MODES] = {face.index for face in search_obj.data.polygons}
         faces_and_their_tf_modes = {face_id:modes for modes, face_ids in tf_modes_and_their_faces.items() for face_id in face_ids} # type: Dict[FaceID, _TexFaceModes]
-        #print("faces_and_their_modes", faces_and_their_tf_modes)
-        #print("After get TF modes")
         #----------------------------------------------------------------------
 
         #--- Prepare the Object's Material Slots ------------------------------
@@ -689,10 +684,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 return fn()
             except:
                 return ""
-
-        #print("Before Material Slots Prep (Slots):         ", ",".join([_try(lambda: slot.material.name) for slot in search_obj.material_slots if slot.link == "DATA"]))
-        #print("Before Material Slots Prep (All Materials): ", ",".join([_try(lambda: mat.name) for mat in search_obj.data.materials]))
-        #print()
 
         # Faces without a 2.49 material are given a default (#1, 2, 10, 12, 21)
         # All slots are filled something or the default so this is easier to reason with.
@@ -752,10 +743,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                     slot.material.xplane.normal_metalness = prop_value
                 elif prop_name == "BLEND_GLASS":
                     slot.material.xplane.blend_glass = prop_value
-
-        #print("After Material Slots Prep (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
-        #print("After Material Slots Prep (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
-        #print()
         #----------------------------------------------------------------------
 
         # Unused materials aren't deleted (#19)
@@ -792,46 +779,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
 
         panel_states_and_their_faces = get_panel_tex_faces(search_obj)
 
-        #--- Print FaceId related data structures for debugging ----------------
-        #all_tf_faceids =       list(itertools.chain([face_ids for tf_modes, face_ids in tf_modes_and_their_faces.items()]))
-        #all_material_faceids = list(itertools.chain([face_ids for tf_modes, face_ids in materials_and_their_faces.items()]))
-        #print("TF FaceIds:", all_tf_faceids)
-        #print("Material FaceIds:", all_material_faceids)
-        # The debug version prints the file name and its face ids
-        #def debug_get_panel_tex_faces(search_obj: bpy.types.Object)->Dict[str, FaceId]:
-            #import os
-            #panel_texs_and_their_faces = collections.defaultdict(set)
-            #try:
-                #active_data = search_obj.data.uv_textures.active.data
-            #except AttributeError: # No active uv_textures, none active
-                #return panel_texs_and_their_faces
-            #else:
-                #for i, mtexpolylayer in enumerate(active_data):
-                    #if (mtexpolylayer.image and "panel." in mtexpolylayer.image.name.lower()):
-                       #panel_texs_and_their_faces[mtexpolylayer.image.filepath].add(str(i) + " TEX? " + str(faces_and_their_tf_modes[i].TEX))
-
-            #return panel_texs_and_their_faces
-
-        #if debug_get_panel_tex_faces(search_obj):
-            ## While debugging, we'll probably always have the first face have an image, right?
-            #print("Panel Texs and FaceIds:", debug_get_panel_tex_faces(search_obj))
-        #else:
-            #print("No  Panel Texs and Faces")
-
-        # Thanks to https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists/48569551#48569551
-        #def flatten(l):
-        #    for el in l:
-        #        if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
-        #            yield from flatten(el)
-        #        else:
-        #            yield el
-        #assert sorted(flatten(all_tf_faceids)) == sorted(flatten(all_material_faceids)), "TF Face Ids and Material Face Ids must cover the same faces!"
-        #assert len(list(flatten(all_tf_faceids))) == len(list(flatten(all_material_faceids))) == len(search_obj.data.polygons), "TF FaceIds, Material FaceIds must cover all of object's faces!"
-               #len(itertools.chain([faces for tf_modes, face_ids in tf_modes_and_their_faces.items()]), "dicts should cover the same range of faces"
-        #----------------------------------------------------------------------
-        #----------------------------------------------------------------------
-        print()
-
         # Split Groups Guarantees:
         # - List[FaceId], will never be Empty
         # - split_groups will eventually contain every FaceId, once
@@ -850,7 +797,6 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                             tf_modes,
                             material)
                         if not converted:
-                            print("Didn't convert anything")
                             # Why extend on None?
                             # (TEX Pressed, MaterialA) and (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
                             # represent different semantic groups of FaceIds. What we really have is
@@ -861,12 +807,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                         else:
                             split_groups[converted] = cross_over_faces
                     else:
-                        print("No cross over for", tf_modes, "and", material.name, "and maybe texfaces", panel_state)
-
-        #print("After Splitting (Slots):         ", "".join([slot.material.name for slot in search_obj.material_slots if slot.link == "DATA"]))
-        #print("After Splitting (All Materials): ", "".join([mat.name for mat in search_obj.data.materials]))
-        #print()
-        #print("Split Groups", {mat.name:faces for mat, faces in split_groups.items()})
+                        pass
 
         new_objs = []
         if len(split_groups): #TODO: Dumb, split_groups will always be at least 1 because of DEF_MAT in place of no slot
@@ -891,16 +832,11 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 for i, (material, face_ids) in enumerate(split_groups.items()):
                     new_obj = copy_obj(search_obj, search_obj.name + "_%d" % i)
                     new_objs.append(new_obj)
-                    #print("New Obj: ", new_obj.name)
-                    #print("New Mesh:", new_obj.data.name)
-                    #print("Group:" , material.name)
                     # Remove faces
                     bm = bmesh.new()
                     bm.from_mesh(new_obj.data)
                     faces_to_keep   = [face for face in bm.faces if face.index in face_ids]
                     faces_to_remove = [face for face in bm.faces if face.index not in face_ids]
-                    #print("Faces To Keep:  ", [f.index for f in faces_to_keep])
-                    #print("Faces To Remove:", [f.index for f in faces_to_remove])
                     bmesh.ops.delete(bm, geom=faces_to_remove, context=5) #AKA DEL_ONLYFACES from bmesh_operator_api.h
                     bm.to_mesh(new_obj.data)
                     bm.free()
@@ -915,10 +851,10 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 else:
                     scene.objects.active = search_obj
                     new_obj = search_obj # TODO: Bad name
-                logger.info("Split '{}' into {} groups".format(search_obj.name, len(split_groups)))
-                print("Deleting " + search_obj.name)
                 bpy.data.meshes.remove(search_obj.data, do_unlink=True)
-                bpy.data.objects.remove(search_obj, do_unlink=True) # What about other work ahead of us to convert?
+                # TODO: Can we be sure that deleting this won't interfere with other conversion
+                # functions?
+                bpy.data.objects.remove(search_obj, do_unlink=True)
             else:
                 # Case 1: Split group has a DEF_MAT, wasting time to assign, but its fine
                 # Case 2: Split group has a converted_material, gotta have it!
