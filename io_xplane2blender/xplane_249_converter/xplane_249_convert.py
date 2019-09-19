@@ -196,4 +196,7 @@ def do_249_conversion(
 
 
         logger.info("", "raw")
-        logger.warn("NEXT-STEPS: Check the Export Type of {}".format(", ".join([root.name for root in new_roots])))
+        logger.info("# Attempting to Find Texture Paths From UV Maps\n", context="raw")
+        for root in new_roots:
+            xplane_249_texture_converter.convert_textures(scene, workflow_type, root)
+        logger.info("NEXT STEPS: Check the texture paths in the Root Object settings")

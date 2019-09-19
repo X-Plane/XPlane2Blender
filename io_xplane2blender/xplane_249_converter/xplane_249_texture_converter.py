@@ -59,13 +59,13 @@ def convert_textures(scene: bpy.types.Scene, workflow_type: xplane_249_constants
             raise Exception
         elif len(filepaths) == 1:
             if " " in os.path.split(bpy.path.abspath(list(filepaths)[0]))[1]:
-                logger.warn("texture name has spaces in path")
+                logger.warn("Texture name '{}' has spaces in path".format(bpy.path.abspath(list(filepaths)[0])))
                 raise Exception
             else:
                 filepath, dot, ext = list(filepaths)[0].rpartition(".")
                 return (filepath, dot + ext)
         else:
-            logger.warn("Found multiple textures paths for " + root_object.name + ": " + ''.join(filepaths))
+            logger.warn("Found multiple texture paths for {}: '{}'".format(root_object.name, ", ".join(map(bpy.path.abspath,filepaths))))
             raise Exception
 
     def apply_texture_paths(filepaths:Set[str], is_draped:bool)->bool:
@@ -75,7 +75,7 @@ def convert_textures(scene: bpy.types.Scene, workflow_type: xplane_249_constants
             pass
         else:
             if ext.lower() not in {".png", ".dds"}:
-                logger.warn(ext + " is not a supported file type, skipping")
+                logger.warn("'{}' is not a supported file type, skipping".format(filepath + ext))
             elif not is_draped:
                 root_object.xplane.layer.autodetectTextures = False
                 root_object.xplane.layer.texture = filepath + ext
@@ -101,4 +101,5 @@ def convert_textures(scene: bpy.types.Scene, workflow_type: xplane_249_constants
     applied_img_draped_filepaths = apply_texture_paths(img_draped_filepaths, True)
 
     if applied_img_filepaths or applied_img_draped_filepaths:
-        logger.info("NEXT STEPS: Check the Texture Paths in the Root Object OBJ Settings for " + root_object.name)
+        #logger.info("NEXT STEPS: Check the Texture Paths in the Root Object OBJ Settings for " + root_object.name)
+        pass
