@@ -162,10 +162,12 @@ def do_249_conversion(
             _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
 
         logger.info(
-            "NEXT STEPS: Check for missing or incorrect animations"
-            + "" if ran_fixes else ", especially since FixDroppedActions.py was not run."
-            + "\n"
-            + "If many are missing, check that io_xplane2blender/resources/DataRefs.txt is the same as what was used with this file in Blender 2.49")
+                ''.join(
+                    ("NEXT STEPS: Check for missing or incorrect animations",
+                    "" if ran_fixes else ", especially since FixDroppedActions.py was not run.",
+                    "\n",
+                    "If many are missing, check that io_xplane2blender/resources/DataRefs.txt is the same as what was used with this file in Blender 2.49")),
+                context="raw")
         #print("Converted objects", _converted_objects)
 
         #print("Converting Any Manipulators In Scene '{}'".format(scene.name))
