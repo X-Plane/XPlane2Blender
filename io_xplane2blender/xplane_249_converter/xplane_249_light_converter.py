@@ -142,12 +142,12 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
 
     def add_converted_light(converted_obj: bpy.types.Object):
         assert converted_obj.type == "LAMP"
-        l_type = converted_obj.data.xplane.type
-        msg = "Converted {}".format(converted_obj.name)
-        msg += ", Type: {}".format("Non-Exporting" if l_type == xplane_constants.LIGHT_NON_EXPORTING else l_type.title())
-        msg += ", Light Name: '{}'".format(converted_obj.data.xplane.name) if converted_obj.data.xplane.name else ""
-        msg += ", Light Params: '{}'".format(converted_obj.data.xplane.params) if converted_obj.data.xplane.params else ""
-        logger.info(msg)
+        #l_type = converted_obj.data.xplane.type
+        #msg = "Converted {}".format(converted_obj.name)
+        #msg += ", Type: {}".format("Non-Exporting" if l_type == xplane_constants.LIGHT_NON_EXPORTING else l_type.title())
+        #msg += ", Light Name: '{}'".format(converted_obj.data.xplane.name) if converted_obj.data.xplane.name else ""
+        #msg += ", Light Params: '{}'".format(converted_obj.data.xplane.params) if converted_obj.data.xplane.params else ""
+        #print(msg)
 
         converted_objects.append(converted_obj)
 
