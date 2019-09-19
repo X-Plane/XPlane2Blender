@@ -54,7 +54,7 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                       and [v.isdigit() for v in cockpit_reg_value.split()]):
                     reg = layer.cockpit_region[0]
                     reg.left, reg.top, reg.width, reg.height = [math.log2(int(v)) if int(v) else 0 for v in cockpit_reg_value.split()]
-                    infos.add("COCKPIT_REGION value '{}' applied to {}".format((reg.left, reg.top, reg.width, reg.height), dest_root.name))
+                    #infos.add("COCKPIT_REGION value '{}' applied to {}".format((reg.left, reg.top, reg.width, reg.height), dest_root.name))
                 else:
                     warnings.add("COCKPIT_REGION value '{}' on {} couldn't be parsed into 4 integers\n"
                                  "NEXT STEPS: Set Cockpit Region manually\n"
@@ -76,10 +76,10 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                 layer.slope_limit_max_pitch, \
                 layer.slope_limit_min_roll, \
                 layer.slope_limit_max_roll = [float(v) for v in slope_limit_value.split()]
-                infos.add("{}'s Slope Limit is '{}'".format(
-                    dest_root.name,
-                    (layer.slope_limit_min_pitch, layer.slope_limit_max_pitch, layer.slope_limit_min_roll, layer.slope_limit_max_roll,)
-                    ))
+                #infos.add("{}'s Slope Limit is '{}'".format(
+                #    dest_root.name,
+                #    (layer.slope_limit_min_pitch, layer.slope_limit_max_pitch, layer.slope_limit_min_roll, layer.slope_limit_max_roll,)
+                #    ))
             else:
                 warnings.add("SLOPE_LIMIT value '{}' on {} couldn't be converted\n"
                              "NEXT STEPS: Set your Slope Limits manually\n"
@@ -88,7 +88,7 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
         tilted_value, _ = xplane_249_helpers.find_property_in_parents(obj, "TILTED")
         if tilted_value is not None:
             layer.tilted = True
-            infos.add("{}'s Tilted is true".format(dest_root.name))
+            #infos.add("{}'s Tilted is true".format(dest_root.name))
 
         layer_group_value, prop_source = xplane_249_helpers.find_property_in_parents(obj, "ATTR_layer_group", prop_types={"STRING"})
         if layer_group_value is not None:
@@ -96,7 +96,7 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                 layer_group_type, layer_group_offset = layer_group_value.split()
                 if layer_group_type.lower() in xplane_constants.LAYER_GROUPS_ALL:
                     layer.layer_group = layer_group_type.lower()
-                    infos.add("{}'s Layer Group is '{}'".format(dest_root.name, layer.layer_group.title()))
+                    #infos.add("{}'s Layer Group is '{}'".format(dest_root.name, layer.layer_group.title()))
                 else:
                     warnings.add("Layer Group '{}' on {} doesn't exist in modern XPlane2Blender\n"
                                  "NEXT STEPS: Set your Layer Group manually\n".format(layer_group_type, prop_source.name))
@@ -108,7 +108,7 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
                 if _isint(layer_group_offset) and -5 <= int(layer_group_offset) <= 5:
                     layer_group_offset = int(layer_group_offset)
                     layer.layer_group_offset = layer_group_offset
-                    infos.add("{}'s Layer Group Offset is '{}'".format(dest_root.name, layer.layer_group_offset))
+                    #infos.add("{}'s Layer Group Offset is '{}'".format(dest_root.name, layer.layer_group_offset))
                 else:
                     warnings.add("ATTR_layer_group offset on {} must be between and including -5 and 5, is '{}'\n"
                                  "NEXT STEPS: Set Layer Group Offset manually\n"
@@ -118,12 +118,12 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
         dry_value, _ = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_DRY")
         if dry_value is not None:
             layer.require_surface = xplane_constants.REQUIRE_SURFACE_DRY
-            infos.add("{} will require dry surfaces".format(dest_root.name))
+            #infos.add("{} will require dry surfaces".format(dest_root.name))
 
         wet_value, _ = xplane_249_helpers.find_property_in_parents(obj, "REQUIRE_WET", prop_types={"STRING"})
         if wet_value is not None:
             layer.require_surface = xplane_constants.REQUIRE_SURFACE_WET
-            infos.add("{} will require wet surfaces".format(dest_root.name))
+            #infos.add("{} will require wet surfaces".format(dest_root.name))
 
         if dry_value is not None and wet_value is not None:
             warnings.add("{} cannot require dry and wet surfaces at the same time.\n"
@@ -137,7 +137,7 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
             if _isfloat(LOD_draped_value):
                 if float(LOD_draped_value) >= 0.0:
                     layer.lod_draped = float(LOD_draped_value)
-                    infos.add("{}'s Maximum Draped LOD is '{}'".format(dest_root.name, layer.lod_draped))
+                    #infos.add("{}'s Maximum Draped LOD is '{}'".format(dest_root.name, layer.lod_draped))
                 else:
                     warnings.add("ATTR_LOD_draped's value '{}' on {} must be >= 0\n"
                                  "NEXT STEPS: Set LOD Draped manually\n".format(LOD_draped_value, prop_source.name))
@@ -156,10 +156,10 @@ def _convert_global_properties(search_objs: List[bpy.types.Object],
             else:
                 if layer_group_draped_type in xplane_constants.LAYER_GROUPS_ALL:
                     layer.layer_group_draped = layer_group_draped_type
-                    infos.add("{}'s Draped Layer Group is '{}'".format(dest_root.name, layer.layer_group_draped.title()))
+                    #infos.add("{}'s Draped Layer Group is '{}'".format(dest_root.name, layer.layer_group_draped.title()))
                     if _isint(layer_group_draped_offset) and -5 <= int(layer_group_draped_offset) <= 5:
                         layer.layer_group_draped_offset = int(layer_group_draped_offset)
-                        infos.add("{}'s Draped Layer Group Offset is '{}'".format(dest_root.name, layer.layer_group_draped_offset))
+                        #infos.add("{}'s Draped Layer Group Offset is '{}'".format(dest_root.name, layer.layer_group_draped_offset))
                     else:
                         warnings.add("ATTR_layer_group offset on {} must be between and including -5 and 5, is '{}'\n"
                                      "NEXT STEPS: Set Layer Group Draped's Offset manually\n"
