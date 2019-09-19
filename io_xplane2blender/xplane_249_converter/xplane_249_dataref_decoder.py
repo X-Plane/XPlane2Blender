@@ -593,7 +593,7 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
 
     def find_all_datarefs_in_armature(armature: bpy.types.Object)->Dict[DatarefFull,Tuple[bpy.types.PoseBone,List[ParsedGameAnimValueProp]]]:
         '''
-        Returns a dictionary all datarefs mentioned in the bone names and game props,
+        Returns a dictionary of all datarefs mentioned in the bone names and game props,
         paired with the Bone the data was taken from an a list for
         future parsed game properties.
 
@@ -675,13 +675,8 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
                 elif bone_name_no_idx in game_properties:
                     disambiguating_prop = game_properties[bone_name_no_idx]
                 else:
-                    # TODO: I would really love to just ignore this, but another assert "couldn't match prop_root to anything"
-                    # proves again the converter's (old?) motto "Only good data".
-                    # Now that I hear more Mac users say it is impossible to use, this will probably turn into a
-                    # warning, and the strict requirements lessened. Until then, it stays in for the alpha
-                    #
-                    # - Ted, 9/18/2019
-                    assert False, ("Would like to ignore bone '{}' in {}: cannot disambiguate bone name and continue conversion".format(bone_name, armature.name))
+                    #print("Ignoring bone '{}' in {}: cannot disambiguate bone name and continue conversion".format(bone_name, armature.name))
+                    continue
 
                 # Checking for a value catches when people have to use "none:''" or "no_ref:''"
                 # TODO: .value is allowed to be "", but it seems unlikely. We need coverage and unit tests
