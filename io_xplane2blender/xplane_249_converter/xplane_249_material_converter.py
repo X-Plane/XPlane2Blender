@@ -281,10 +281,12 @@ def _convert_material(scene: bpy.types.Scene,
                       is_cockpit: bool,
                       is_panel: bool,
                       tf_modes: _TexFaceModes,
-                      mat: bpy.types.Material)->Optional[bpy.types.Material]:
+                      mat: bpy.types.Material)->Tuple[Optional[bpy.types.Material], Set[str], Set[str]]:
     """
-    Attempts to convert TexFace, game prop, and material data
-    to produce or return an existing unique derivative.
+    Attempts to create or return an existing derivative material
+    based on TexFace Button, Material, and Panel UV Texture Data.
+
+    Returns the derivative material or None, and info and warning messages
 
     scene - The current scene TODO: remove unused paramater
     root_object - Changes Export Type hint
@@ -317,8 +319,8 @@ def _convert_material(scene: bpy.types.Scene,
     #original_material_values.update({attr:getattr(mat, attr) for attr in ["diffuse_color", "specular_intensity"]})
     changed_material_values = original_material_values.copy()
     changed_material_values["panel"] = is_panel
-    logger_info_msgs = [] # type: List[str]
-    logger_warn_msgs = [] # type: List[str]
+    logger_info_msgs = set() # type: Set[str]
+    logger_warn_msgs = set() # type: Set[str]
     # This section roughly mirrors the order in which 2.49 deals with these face buttons
     #---TEX----------------------------------------------------------
     if tf_modes.TEX:
@@ -330,7 +332,7 @@ def _convert_material(scene: bpy.types.Scene,
                 # Slightly pedantic, but only a bad float or None found on a real found object
                 # shows we have a real problem
                 if prop_source:
-                    logger.warn("{} found, but could not convert '{}' to a float".format(prop_name, prop_value))
+                    logger_warn_msgs.add("Could not convert {}'s property ({}:{}) to a float".format(search_obj.name, prop_name, prop_value))
                 return (None, None)
             else:
                 return (prop_value, prop_source)
@@ -341,28 +343,28 @@ def _convert_material(scene: bpy.types.Scene,
             if attr_shadow_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
                 changed_material_values["blendRatio"] = round(attr_shadow_blend[0],2)
-                logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio={}".format(mat.name, attr_shadow_blend[0]))
+                #logger_info_msgs.add("{}: Blend Mode='Shadow' and Blend Ratio='{}'".format(mat.name, attr_shadow_blend[0]))
             elif global_shadow_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_SHADOW
                 changed_material_values["blendRatio"] = round(global_shadow_blend[0],2)
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
-                logger_info_msgs.append("{}: Blend Mode='Shadow' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
+                #logger_info_msgs.add("{}: Blend Mode='Shadow' and Blend Ratio='{}'".format(mat.name, changed_material_values["blendRatio"]))
             else:
-                logger_warn_msgs.append("'Tex' and 'Alpha' buttons pressed, but no 'ATTR_/GLOBAL_shadow_blend' game property given. Did you forget something?")
+                logger_warn_msgs.add("On {}, 'Tex' and 'Alpha' buttons pressed, but no 'ATTR_/GLOBAL_shadow_blend' game property given. Did you forget something?".format(search_obj.name))
         elif tf_modes.CLIP:
             attr_no_blend = attempt_conversion_to_float("ATTR_no_blend")
             global_no_blend = attempt_conversion_to_float("GLOBAL_no_blend")
             if attr_no_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
                 changed_material_values["blendRatio"] = round(attr_no_blend[0], 2)
-                logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5".format(mat.name))
+                #logger_info_msgs.add("{}: Blend Mode='Off' and Blend Ratio='{}'".format(mat.name, changed_material_values["blendRatio"]))
             elif global_no_blend[1]:
                 changed_material_values["blend_v1000"] = xplane_constants.BLEND_OFF
                 changed_material_values["blendRatio"] = round(global_no_blend[0], 2)
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
-                logger_info_msgs.append("{}: Blend Mode='Off' and Blend Ratio=0.5, now Instanced Scenery".format(mat.name))
+                #logger_info_msgs.add("{}: Blend Mode='Off' and Blend Ratio='{}'".format(mat.name, changed_material_values["blendRatio"]))
             else:
-                logger_warn_msgs.append("'Tex' and 'Clip' buttons pressed, but no 'ATTR_/GLOBAL_no_blend' game property given. Did you forget something?")
+                logger_warn_msgs.add("On {}, 'Tex' and 'Clip' buttons pressed, but no 'ATTR_/GLOBAL_no_blend' game property given. Did you forget something?".format(search_obj.name))
     #-----------------------------------------------------------------
 
     #---TILES/LIGHT---------------------------------------------------
@@ -370,10 +372,10 @@ def _convert_material(scene: bpy.types.Scene,
     if not is_cockpit and (tf_modes.TILES or tf_modes.LIGHT):
         if xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draped")[1]:
             changed_material_values["draped"] = True
-            logger_info_msgs.append("{}: Draped={}".format(mat.name, changed_material_values["draped"]))
+            #logger_info_msgs.add("{}: Draped='{}'".format(mat.name, changed_material_values["draped"]))
         else:
             changed_material_values["poly_os"] = 2
-            logger_info_msgs.append("{}: Poly Offset={}".format(mat.name, changed_material_values["poly_os"]))
+            #logger_info_msgs.add("{}: Poly Offset='{}'".format(mat.name, changed_material_values["poly_os"]))
     #-----------------------------------------------------------------
 
     #---INVISIBLE-----------------------------------------------------
@@ -381,7 +383,7 @@ def _convert_material(scene: bpy.types.Scene,
     draw_disable_by_prop = bool(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_draw_disable")[1])
     if draw_disable_by_texface or draw_disable_by_prop:
         changed_material_values["draw"] = False
-        logger_info_msgs.append("{}: Draw Objects With This Material={}".format(mat.name, changed_material_values["draw"]))
+        #logger_info_msgs.add("{}: Draw Objects With This Material={}".format(mat.name, changed_material_values["draw"]))
     #-----------------------------------------------------------------
 
     #---DYNAMIC-------------------------------------------------------
@@ -389,18 +391,20 @@ def _convert_material(scene: bpy.types.Scene,
     solid_cam_by_prop = bool(xplane_249_helpers.find_property_in_parents(search_obj, "ATTR_solid_camera")[1])
     if (solid_cam_by_texface or solid_cam_by_prop):
         changed_material_values["solid_camera"] = True
-        logger_info_msgs.append("{}: Solid Camera={}".format(mat.name, changed_material_values["solid_camera"]))
+        #logger_info_msgs.add("{}: Solid Camera='{}'".format(mat.name, changed_material_values["solid_camera"]))
     #-----------------------------------------------------------------
 
     #---TWOSIDE-------------------------------------------------------
     if tf_modes.TWOSIDE:
-        logger_warn_msgs.append("{}: Two Sided is deprecated, skipping".format(mat.name))
+        #logger_warn_msgs.add("{}: Two Sided is deprecated, skipping".format(mat.name))
+        pass
     #-----------------------------------------------------------------
 
     #---SHADOW--------------------------------------------------------
     changed_material_values["shadow_local"] = not tf_modes.SHADOW
     if not changed_material_values["shadow_local"]:
-        logger_info_msgs.append("{}: Cast Shadow (Local)={}".format(mat.name, changed_material_values["shadow_local"]))
+        #logger_info_msgs.add("{}: Cast Shadow (Local)='{}'".format(mat.name, changed_material_values["shadow_local"]))
+        pass
     #-----------------------------------------------------------------
 
     #---Lit Level-----------------------------------------------------
@@ -419,13 +423,13 @@ def _convert_material(scene: bpy.types.Scene,
         try:
             lightLevel_v1, lightLevel_v2, lightLevel_dataref = lit_level.split()
         except ValueError: # Too few or too many args
-            logger.warn("Game property `{}`:'{}', had too many or too few arguments".format("lit_level", lit_level))
+            logger_warn_msgs.add("On {}, property ({}:{}), had too many or too few arguments".format(search_obj.name, "lit_level", lit_level))
 
     if len(ATTR_light_level.split()) == 3:
         try:
             lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level.split()
         except ValueError: # Too few or too many args
-            logger.warn("Game property `{}`:'{}', had too many or too few arguments".format("ATTR_light_level", ATTR_light_level))
+            logger_warn_msgs.add("On {}, property ({}:{}), had too many or too few arguments".format(search_obj.name, "ATTR_light_level", ATTR_light_level))
     elif ATTR_light_level:
         lightLevel_v1, lightLevel_v2, lightLevel_dataref = ATTR_light_level_v1, ATTR_light_level_v2, ATTR_light_level
 
@@ -433,12 +437,12 @@ def _convert_material(scene: bpy.types.Scene,
         try:
             v1 = float(lightLevel_v1)
         except (ValueError, TypeError):
-            logger.warn("Light Level v1 value could not convert to float: {}".format(lightLevel_v1))
+            logger_warn_msgs.add("On {}, value for Light Level could not convert to float: {}".format(search_obj.name, lightLevel_v1))
         else:
             try:
                 v2 = float(lightLevel_v2)
             except (ValueError, TypeError):
-                logger.warn("Light Level v2 value could not convert to float: {}".format(lightLevel_v2))
+                logger_warn_msgs.add("On {}, value for Light Level v2 could not convert to float: {}".format(search_obj.name, lightLevel_v2))
             else:
                 # Only after all the data is converted and convertable do we actually commit to changing this
                 changed_material_values["lightLevel"] = True
@@ -450,10 +454,6 @@ def _convert_material(scene: bpy.types.Scene,
     #TODO: Deck
     #deck = bool(xplane_249_helpers.find_property_in_parents(search_obj, "deck", default=0)[0]) and surfaceType != NONE #TODO That is how it works in 2.78, maybe different
     if changed_material_values != original_material_values:
-        for msg in logger_info_msgs:
-            logger.info(msg)
-        for msg in logger_warn_msgs:
-            logger.warn(msg)
         # Here we ask "What Face Buttons really did end up mattering?" and make
         # a short name to hint the user as to what happened.
         # !!! THIS IS NOT JUST FOR READABILITY!!!
@@ -490,8 +490,7 @@ def _convert_material(scene: bpy.types.Scene,
 
         #2.49's max name length is 21, so we have 42 characters to work with
         if len(mat.name + hint_suffix) > 63:
-            logger.error(mat.name + hint_suffix, "is about to get truncated, potentially messing up a lot of stuff! Should should highly consider renaming them to be shorter and check if your TexFace buttons are correct")
-            assert False
+            assert False, mat.name + hint_suffix + "is about to get truncated, potentially messing up a lot of stuff! Should should highly consider renaming them to be shorter and check if your TexFace buttons are correct"
 
         #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
         new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
@@ -537,11 +536,10 @@ def _convert_material(scene: bpy.types.Scene,
                 setattr(new_material.xplane, prop, value)
 
             #print("Created new converted material:", new_material.name)
-
-        return new_material
+        return new_material, (logger_info_msgs, logger_warn_msgs)
     else:
         #print("Material '{}' had nothing to convert".format(mat.name))
-        return None
+        return None, (logger_info_msgs, logger_warn_msgs)
 
 
 def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constants.WorkflowType, root_object: bpy.types.Object)->List[bpy.types.Object]:
@@ -778,7 +776,8 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
             return panel_tex_faces
 
         panel_states_and_their_faces = get_panel_tex_faces(search_obj)
-
+        logger_info_msgs = set()
+        logger_warn_msgs = set()
         # Split Groups Guarantees:
         # - List[FaceId], will never be Empty
         # - split_groups will eventually contain every FaceId, once
@@ -789,13 +788,15 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                 for panel_state, p_face_ids in panel_states_and_their_faces.items():
                     cross_over_faces = t_face_ids & m_face_ids & p_face_ids
                     if cross_over_faces:
-                        converted = _convert_material(scene,
+                        converted, (infos, warns) = _convert_material(scene,
                             root_object,
                             search_obj,
                             ISCOCKPIT,
                             panel_state, # At this point we know if we have panel_tex_faces, they're good to use
                             tf_modes,
                             material)
+                        logger_info_msgs.update(infos)
+                        logger_warn_msgs.update(warns)
                         if not converted:
                             # Why extend on None?
                             # (TEX Pressed, MaterialA) and (TEX, ALPHA, and has "ATTR_shadow_blend", MaterialA)
@@ -808,6 +809,11 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                             split_groups[converted] = cross_over_faces
                     else:
                         pass
+        for msg in logger_info_msgs:
+            print(msg)
+            logger.info(msg)
+        for msg in logger_warn_msgs:
+            logger.warn(msg)
 
         new_objs = []
         if len(split_groups): #TODO: Dumb, split_groups will always be at least 1 because of DEF_MAT in place of no slot
