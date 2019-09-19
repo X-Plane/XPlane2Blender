@@ -526,7 +526,9 @@ def decode_game_animvalue_prop(game_prop: bpy.types.GameProperty,
         if path:
             break
     else: #nobreak
-        assert False, "Couldn't match prop_root {} to anything, which isn't how you're developing right now!".format(roots_to_test)
+        #TODO: This change also needs a unit test!
+        #print("Couldn't match prop_root {} to anything, which isn't how you're developing right now!".format(roots_to_test))
+        return None
 
     #print("Final Path: " + path)
     #------------------------------------------------------------------
