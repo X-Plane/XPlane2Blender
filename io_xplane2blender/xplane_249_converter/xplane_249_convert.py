@@ -59,6 +59,7 @@ def do_249_conversion(
         """
         #--- FixDroppedActions -----------------------------------------------
         logger.clear()
+        #TODO: This needs much more unit testing unfortunatly
         logger.addTransport(
             xplane_helpers.XPlaneLogger.InternalTextTransport(
                 xplane_249_constants.LOG_NAME +", Pre-Convert Fixes"),
@@ -154,13 +155,10 @@ def do_249_conversion(
         for armature in filter(lambda obj: obj not in _converted_objects and obj.type == "ARMATURE", scene.objects):
             _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
 
-        logger.info(
-                ''.join(
-                    ("NEXT STEPS: Check for missing or incorrect animations",
-                    "" if ran_fixes else ", especially since FixDroppedActions.py was not run.",
-                    "\n",
-                    "If many are missing, check that io_xplane2blender/resources/DataRefs.txt is the same as what was used with this file in Blender 2.49")),
-                context="raw")
+        if not ran_fixes and project_type == xplane_249_constants.ProjectType.AIRCRAFT:
+            logger.info("NEXT STEPS: Since FixDroppedActions.py found nothing or wasn't run, double check for missing animations\n"
+                        "If many are missing, check that io_xplane2blender/resources/DataRefs.txt is the same as what was used with this file in Blender 2.49",
+                        context="raw")
         #print("Converted objects", _converted_objects)
 
         #logger.info("", context="raw")
@@ -193,4 +191,3 @@ def do_249_conversion(
         logger.info("# Attempting to Find Texture Paths From UV Maps\n", context="raw")
         for root in new_roots:
             xplane_249_texture_converter.convert_textures(scene, workflow_type, root)
-        logger.info("NEXT STEPS: Check the texture paths in the Root Object settings")
