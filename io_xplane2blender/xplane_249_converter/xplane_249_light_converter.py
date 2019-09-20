@@ -127,7 +127,7 @@ def _convert_custom_lights(search_obj: bpy.types.Object)->List[bpy.types.Object]
             #TODO: Maybe we should just do it and if they didn't like it, they can turn it back.
             # How many cases are there where a light ending in "spill" or "_sp" wouldn't be a spot light?
             logger.info("{} may be able to use the Lamp's rotation for aiming\n"
-                        "NEXT STEP: Consider changing {}'s type to 'Spot' to enable light aiming via Lamp rotation\n".format(clight_obj.name, clight_obj.name))
+                        "NEXT STEPS: Consider changing {}'s type to 'Spot' to enable light aiming via Lamp rotation\n".format(clight_obj.name, clight_obj.name))
 
     test_creation_helpers.delete_datablock(search_obj)
     return clights
@@ -270,7 +270,7 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                     add_converted_light(lamp_obj)
                     if _could_autospot(lamp_obj):
                         logger.info("{} may be able to use the Lamp's rotation for aiming\n"
-                                    "NEXT STEP: Consider changing {}'s type to 'Spot' to enable light aiming via Lamp rotation\n".format(lamp_obj.name, lamp_obj.name))
+                                    "NEXT STEPS: Consider changing {}'s type to 'Spot' to enable light aiming via Lamp rotation\n".format(lamp_obj.name, lamp_obj.name))
 
                 #--- End Named/Param Lights -----------------------------------
             #--- End Named/Param/Magent Lights --------------------------------
