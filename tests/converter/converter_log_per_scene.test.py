@@ -30,7 +30,7 @@ class TestConvertLogPerScene(XPlaneTestCase):
         self.assertGreater(len(scene_cockpit_txt.lines), 15) # 15 is arbitrary, > 1 seemed prone to False Positives
         # TODO: Come up with something better or better hueristics. Obviously the content is going to change so much
         # we can't check literal files
-        self.assertGreater(len(scene_pre_convert_txt.lines), 3) # Given that this is just going to say "We don't have any fixes", I'll probably be short
+        self.assertGreater(len(scene_pre_convert_txt.lines), 1) # Given that this is just going to say "We don't have any fixes", I'll probably be short
 
 
 runTestCases([TestConvertLogPerScene])

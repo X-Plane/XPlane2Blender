@@ -53,11 +53,11 @@ def do_249_conversion(
         return
     _runs += 1
 
-
     def run_pre_convert_fixes()->bool:
         """
         Returns True if fixes were run, regardless of any actual effect
         """
+        #--- FixDroppedActions -----------------------------------------------
         logger.clear()
         logger.addTransport(
             xplane_helpers.XPlaneLogger.InternalTextTransport(
@@ -65,19 +65,12 @@ def do_249_conversion(
                 xplane_constants.LOGGER_LEVELS_ALL
             )
         logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
-        #--- FixDroppedActions -----------------------------------------------
-        logger.info("", "raw")
-        logger.info(
-                "Fix Dropped Actions\n"
-                "--------------------------------------------------",
-                context="raw")
         try:
             text_block = bpy.data.texts["FixDroppedActions.py"]
         except KeyError:
-            logger.info("No FixDroppedActions.py text block found, no fixes applied")
+            logger.warn("FixDroppedActions.py not found, this may greatly impact animation conversion!")
             return False
         else:
-            logger.info("Fixing Dropped Actions recorded in FixDroppedActions.py")
 
             script = "".join([
                     line.body
@@ -99,6 +92,7 @@ def do_249_conversion(
                 if unknown_actions:
                     logger.warn("Found unknown Actions '{}', re-run {}".format(unknown_actions, xplane_249_constants.FIX_SCRIPT))
                 else:
+                    logger.info( "# Fixing Any Dropped Actions Found In FixDroppedActions.py\n", context="raw")
                     for action_name, users in actions_will_fix.items():
                         action = bpy.data.actions[action_name]
                         users_will_fix = {name for name in users if name in bpy.data.objects}
@@ -122,9 +116,9 @@ def do_249_conversion(
         logger.clear()
         logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport(xplane_249_constants.LOG_NAME + ", " + scene.name), xplane_constants.LOGGER_LEVELS_ALL)
         logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
-        logger.info("", context="raw")
-        logger.info("Converting scene '{}' using a {} workflow"
-                    .format(scene.name, workflow_type.name))
+        logger.info("# Converting scene '{}' using a {} workflow\n"
+                    .format(scene.name, workflow_type.name.title()),
+                    context="raw")
         # This line will NOT WORK when the GUI is open,
         # TODO: I sure as hell hope it works on Mac/Linux too!
         bpy.context.window.screen.scene = scene
@@ -136,10 +130,11 @@ def do_249_conversion(
         if workflow_type == xplane_249_constants.WorkflowType.REGULAR:
             new_roots[0].name += "_{:02d}".format(i)
         if new_roots:
-            logger.info("New Root Object{}: {}"
-                    .format(
-                        "s" if len(new_roots) > 1 else "",
-                        ", ".join(root.name for root in sorted(new_roots, key=lambda r: r.name))))
+            #logger.info("New Root Object{}: {}"
+                    #.format(
+                        #"s" if len(new_roots) > 1 else "",
+                        #", ".join(root.name for root in sorted(new_roots, key=lambda r: r.name))))
+            pass
         #---------------------------------------------------------------------
 
         #--- Layer Properties (LODs, Layer Groups, Requires Wet/Dry, etc) -----
