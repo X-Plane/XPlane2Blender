@@ -190,12 +190,6 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
 def scene_layout(self, scene):
     layout = self.layout
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
-    bulk_op = layout.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Aircraft, Bulk)")
-    bulk_op.project_type = "AIRCRAFT"
-    bulk_op.workflow_type = "BULK"
-    reg_op=layout.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Aircraft, Regular)")
-    reg_op.project_type = "AIRCRAFT"
-    reg_op.workflow_type = "REGULAR"
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
@@ -254,11 +248,21 @@ def scene_dev_layout(self,scene,layout):
         dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
         dev_box_column.operator("scene.dev_layer_names_from_objects")
         dev_box_column.operator("scene.dev_root_names_from_objects")
+
         updater_row = dev_box_column.row()
         updater_row.prop(scene.xplane,"dev_fake_xplane2blender_version")
         updater_row.operator("scene.dev_rerun_updater")
+
         updater_row = dev_box_column.row()
         updater_row.operator("scene.dev_create_lights_txt_summary")
+
+        bulk_op = dev_box_column.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Aircraft, Bulk)")
+        bulk_op.project_type = "AIRCRAFT"
+        bulk_op.workflow_type = "BULK"
+
+        reg_op=dev_box_column.row().operator("xplane.do_249_conversion", text="Perform 2.49 Conversion (Aircraft, Regular)")
+        reg_op.project_type = "AIRCRAFT"
+        reg_op.workflow_type = "REGULAR"
 
         history_box = dev_box_column.box()
         history_box.label("XPlane2Blender Version History")
