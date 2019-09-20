@@ -149,9 +149,7 @@ def do_249_conversion(
         #----------------------------------------------------------------------
 
         logger.info("", "raw")
-        logger.info("Converting Any Animations In Scene '{}'\n"
-                    "--------------------------------------------------".format(scene.name),
-                    context="raw")
+        logger.info("# Converting Any Animations\n", context="raw")
         # Make the default material for new objects to be assaigned
         for armature in filter(lambda obj: obj not in _converted_objects and obj.type == "ARMATURE", scene.objects):
             _converted_objects.update(xplane_249_dataref_decoder.convert_armature_animations(scene, armature))
@@ -165,7 +163,8 @@ def do_249_conversion(
                 context="raw")
         #print("Converted objects", _converted_objects)
 
-        #print("Converting Any Manipulators In Scene '{}'".format(scene.name))
+        #logger.info("", context="raw")
+        #logger.info("# Converting Any Manipulators In Scene '{}'".format(scene.name))
         for obj in scene.objects:
             converted_manipulator = xplane_249_manip_decoder.convert_manipulators(scene, obj)
             if converted_manipulator:
@@ -180,15 +179,15 @@ def do_249_conversion(
                     root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_COCKPIT
 
         logger.info("", "raw")
-        logger.info("Converting Any Lights In Scene '{}'\n"
-                    "--------------------------------------------------".format(scene.name),
-                    context="raw")
+        logger.info("# Converting Any Lights\n", context="raw")
         for root in new_roots:
             #TODO: ALSO! This breaks if there are no new roots becaues of SKIP. SKIP should only affect workflow
             xplane_249_light_converter.convert_lights(scene, workflow_type, root)
-            xplane_249_material_converter.convert_materials(scene, workflow_type, root)
-            xplane_249_texture_converter.convert_textures(scene, workflow_type, root)
 
+        logger.info("", "raw")
+        logger.info("# Converting Any Materials\n", context="raw")
+        for root in new_roots:
+            xplane_249_material_converter.convert_materials(scene, workflow_type, root)
 
         logger.info("", "raw")
         logger.info("# Attempting to Find Texture Paths From UV Maps\n", context="raw")
