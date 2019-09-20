@@ -677,7 +677,8 @@ def convert_armature_animations(scene: bpy.types.Scene, armature:bpy.types.Objec
                 elif bone_name_no_idx in game_properties:
                     disambiguating_prop = game_properties[bone_name_no_idx]
                 else:
-                    #print("Ignoring bone '{}' in {}: cannot disambiguate bone name and continue conversion".format(bone_name, armature.name))
+                    if bone_name.casefold() not in map(str.casefold, {"none", "no_arm", "no_ref", "Bone",}):
+                        logger.warn("Ignoring bone '{}' in {}: bone name is ambiguous".format(bone_name, armature.name))
                     continue
 
                 # Checking for a value catches when people have to use "none:''" or "no_ref:''"

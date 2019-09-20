@@ -350,7 +350,8 @@ def _convert_material(scene: bpy.types.Scene,
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 #logger_info_msgs.add("{}: Blend Mode='Shadow' and Blend Ratio='{}'".format(mat.name, changed_material_values["blendRatio"]))
             else:
-                logger_warn_msgs.add("On {}, 'Tex' and 'Alpha' buttons pressed, but no 'ATTR_/GLOBAL_shadow_blend' game property given. Did you forget something?".format(search_obj.name))
+                #logger_warn_msgs.add("On {}, 'Tex' and 'Alpha' are pressed, but no 'ATTR_/GLOBAL_shadow_blend' property found".format(search_obj.name))
+                pass
         elif tf_modes.CLIP:
             attr_no_blend = attempt_conversion_to_float("ATTR_no_blend")
             global_no_blend = attempt_conversion_to_float("GLOBAL_no_blend")
@@ -364,7 +365,8 @@ def _convert_material(scene: bpy.types.Scene,
                 root_object.xplane.layer.export_type = xplane_constants.EXPORT_TYPE_INSTANCED_SCENERY
                 #logger_info_msgs.add("{}: Blend Mode='Off' and Blend Ratio='{}'".format(mat.name, changed_material_values["blendRatio"]))
             else:
-                logger_warn_msgs.add("On {}, 'Tex' and 'Clip' buttons pressed, but no 'ATTR_/GLOBAL_no_blend' game property given. Did you forget something?".format(search_obj.name))
+                #logger_warn_msgs.add("On {}, 'Tex' and 'Clip' are pressed, but no 'ATTR_/GLOBAL_no_blend' property found".format(search_obj.name))
+                pass
     #-----------------------------------------------------------------
 
     #---TILES/LIGHT---------------------------------------------------

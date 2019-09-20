@@ -62,8 +62,7 @@ def do_249_conversion(
         #TODO: This needs much more unit testing unfortunatly
         logger.addTransport(
             xplane_helpers.XPlaneLogger.InternalTextTransport(
-                xplane_249_constants.LOG_NAME +", Pre-Convert Fixes"),
-                xplane_constants.LOGGER_LEVELS_ALL
+                xplane_249_constants.LOG_NAME +", Pre-Convert Fixes")
             )
         logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
         try:
@@ -115,7 +114,7 @@ def do_249_conversion(
 
     for i, scene in enumerate(bpy.data.scenes, start=1):
         logger.clear()
-        logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport(xplane_249_constants.LOG_NAME + ", " + scene.name), xplane_constants.LOGGER_LEVELS_ALL)
+        logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport(xplane_249_constants.LOG_NAME + ", " + scene.name))
         logger.addTransport(xplane_helpers.XPlaneLogger.ConsoleTransport())
         logger.info("# Converting scene '{}' using a {} workflow\n"
                     .format(scene.name, workflow_type.name.title()),
