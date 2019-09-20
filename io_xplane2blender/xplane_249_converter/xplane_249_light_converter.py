@@ -268,9 +268,9 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                         lamp_obj.data.xplane.type = xplane_constants.LIGHT_NAMED
 
                     add_converted_light(lamp_obj)
-                    if _could_autospot(lamp_obj):
-                        logger.info("{} may be able to use the Lamp's rotation for aiming\n"
-                                    "NEXT STEPS: Consider changing {}'s type to 'Spot' to enable light aiming via Lamp rotation\n".format(lamp_obj.name, lamp_obj.name))
+                    #if _could_autospot(lamp_obj):
+                        #logger.info("{} may be able to use the Lamp's rotation for aiming\n"
+                        #            "NEXT STEPS: Consider changing {}'s type to 'Spot' to enable light aiming via Lamp rotation\n".format(lamp_obj.name, lamp_obj.name))
 
                 #--- End Named/Param Lights -----------------------------------
             #--- End Named/Param/Magent Lights --------------------------------
