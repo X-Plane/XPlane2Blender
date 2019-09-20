@@ -300,7 +300,7 @@ class XPlaneLogger():
 
     def addTransport(self, transport: Callable[[str, str, Any], None], messageTypes: Optional[List[str]]=None)->None:
         if messageTypes is None:
-            messageTypes = ['error', 'warning', 'info', 'success']
+            messageTypes = xplane_constants.LOGGER_LEVELS_ALL
         self.transports.append({
             'fn': transport,
             'types': messageTypes
