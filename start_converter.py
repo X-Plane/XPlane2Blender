@@ -8,7 +8,7 @@ import bpy
 def _make_argparser():
     parser = argparse.ArgumentParser(
         description="Launches the XPlane2Blender Converter before the GUI loads",
-        epilog="Invoke as blender my_file.blend -P start_convert.py -- --workflow-type {BULK or REGULAR} --project-type {AIRCRAFT or SCENERY}"
+        epilog="Invoke as blender my_file.blend -P start_converter.py -- --workflow-type {BULK or REGULAR} --project-type {AIRCRAFT or SCENERY}"
     )
 
     parser.add_argument(
