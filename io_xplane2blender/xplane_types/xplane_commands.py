@@ -131,17 +131,23 @@ class XPlaneCommands():
         numLods = int(self.xplaneFile.options.lods)
 
         if xplaneObject:
-            lods = []
+            lods = [False] * len(bpy.data.collections)
 
-            if exportMode == EXPORT_MODE_LAYERS:
-                lods = xplaneObject.lod
-            elif exportMode == EXPORT_MODE_ROOT_OBJECTS:
-                lods = xplaneObject.blenderObject.layers
+            if exportMode == EXPORT_MODE_ROOT_OBJECTS:
+                for i, collection in enumerate(bpy.data.collections):
+                    try:
+                        if(xplaneObject.blenderObj in collection):
+                            lods[i] = True
+                            break
+                    except:
+                        pass
+            else:
+                assert False, exportMode
 
             isInLod = False
 
             for lodIndex in range(0, MAX_LODS):
-                if len(lods) > lodIndex and lods[lodIndex] == True:
+                if lodIndex < len(lods) and lods[lodIndex] == True:
                     isInLod = True
                     break
 

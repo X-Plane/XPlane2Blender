@@ -55,8 +55,10 @@ class XPlaneMesh():
                 # - Recalc tessface (now called loop triangles)
 
                 # create a copy of the xplaneObject mesh with modifiers applied and triangulated
-                #mesh = xplaneObject.blenderObject.to_mesh(bpy.context.scene, True)
-                mesh = xplaneObject.blenderObject.data.copy()
+                dg = bpy.context.evaluated_depsgraph_get()
+                evaluated_obj = xplaneObject.blenderObject.evaluated_get(dg)
+                mesh = evaluated_obj.to_mesh(preserve_all_data_layers=True, depsgraph=dg)
+                #mesh = xplaneObject.blenderObject.data.copy()
 
                 # now get the bake matrix
                 # and bake it to the mesh
@@ -64,13 +66,14 @@ class XPlaneMesh():
                 mesh.transform(xplaneObject.bakeMatrix)
 
                 mesh.calc_normals_split()
-                mesh.update(calc_tessface=True)
+                mesh.calc_loop_triangles()
                 mesh_faces = mesh.loop_triangles
+                print("2.80: len", len(mesh_faces[:]))
 
                 # with the new mesh get uvFaces list
                 try:
                     uvFaces = mesh.uv_layers[xplaneObject.material.uv_name]
-                except KeyError:
+                except (KeyError, TypeError):
                     uvFaces = None
 
                 faces = []
@@ -157,7 +160,7 @@ class XPlaneMesh():
                     xplaneObject.indices[1] = len(self.indices)
                     self.faces.extend(faces)
 
-                bpy.data.meshes.remove(mesh)
+                evaluated_obj.to_mesh_clear()
                 d['start_index'] = xplaneObject.indices[0]
                 d['end_index'] = xplaneObject.indices[1]
                 self.debug.append(d)
