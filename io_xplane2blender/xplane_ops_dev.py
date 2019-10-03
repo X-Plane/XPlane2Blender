@@ -125,3 +125,12 @@ class SCENE_OT_dev_rerun_updater(bpy.types.Operator):
         fake_version_str = bpy.context.scene.xplane.dev_fake_xplane2blender_version
         io_xplane2blender.xplane_updater.update(xplane_helpers.VerStruct.parse_version(fake_version_str),logger)
         return { 'FINISHED' }
+
+_ops_dev = (
+    SCENE_OT_dev_create_lights_txt_summary,
+    SCENE_OT_dev_layer_names_from_objects,
+    SCENE_OT_dev_root_names_from_objects,
+    SCENE_OT_dev_rerun_updater,
+)
+
+register, unregister = bpy.utils.register_classes_factory(_ops_dev)

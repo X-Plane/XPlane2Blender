@@ -216,14 +216,6 @@ def scene_layout(self, scene):
     if needs_warning is True:
         layout.row().label(text="     Make backups or switch to a more stable release!")
 
-    if scene.xplane.exportMode == 'layers':
-        if len(scene.xplane.layers) != 0:
-            for i in range(0, len(scene.layers)):
-                row = layout.row()
-                scene_layer_layout(self, scene, row, i)
-        else:
-            layout.row().operator('scene.add_xplane_layers')
-
     advanced_box = layout.box()
     advanced_box.label(text="Advanced Settings")
     advanced_column = advanced_box.column()
@@ -275,27 +267,6 @@ def scene_dev_layout(self,scene,layout):
 
             history_box.label(text=str(entry), icon=icon_str)
 
-def scene_layer_layout(self, scene, layout, layer):
-    version = int(scene.xplane.version)
-    li = str(layer + 1)
-    layerObj = scene.xplane.layers[layer]
-    box = layout.box()
-    li = str(layer + 1)
-
-    if layerObj.expanded:
-        expandIcon = "TRIA_DOWN"
-        expanded = True
-    else:
-        expandIcon = "TRIA_RIGHT"
-        expanded = False
-
-    box.prop(layerObj, "expanded", text = "Layer " + li, expand = True, emboss = False, icon = expandIcon)
-
-    if expanded:
-        layer_layout(self, box, layerObj, version)
-        export_path_dir_layer_layout(self, box, layerObj, version)
-        custom_layer_layout(self, box, layerObj, version)
-
 def object_layer_layout(self, obj):
     if bpy.context.scene.xplane.exportMode == 'root_objects':
         version = int(bpy.context.scene.xplane.version)
@@ -318,9 +289,9 @@ def object_layer_layout(self, obj):
             box.prop(layerObj, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
 
             if expanded:
-                layer_layout(self, box, layerObj, version, 'object')
-                export_path_dir_layer_layout(self, box, layerObj, version, 'object')
-                custom_layer_layout(self, box, layerObj, version, 'object')
+                layer_layout(self, box, layerObj, version, "object")
+                export_path_dir_layer_layout(self, box, layerObj, version, "object")
+                custom_layer_layout(self, box, layerObj, version, "object")
 
 # Function: layer_layout
 # Draws the UI layout for <XPlaneLayers>. Uses <custom_layer_layout>.
@@ -330,7 +301,7 @@ def object_layer_layout(self, obj):
 #   scene - Blender scene
 #   UILayout layout - Instance of sublayout to use.
 #   int layer - <XPlaneLayer> index.
-def layer_layout(self, layout, layerObj, version, context = 'scene'):
+def layer_layout(self, layout, layerObj, version, context):
     canHaveDraped = version >= 1000 and layerObj.export_type not in ['aircraft', 'cockpit']
     isInstanced   = version >= 1000 and layerObj.export_type == 'instanced_scenery'
 
@@ -362,9 +333,7 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
             if len(layerObj.cockpit_region) < num_regions:
                 region_box = cockpit_box.box()
 
-                if context == 'scene':
-                    region_box.operator("scene.add_xplane_layer_cockpit_regions").index = layerObj.index
-                elif context == 'object':
+                if context == 'object':
                     region_box.operator("object.add_xplane_layer_cockpit_regions")
             else:
                 for i in range(0, num_regions):
@@ -406,11 +375,8 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
             if len(layerObj.lod) < num_lods:
                 lod_box = lods_box.box()
 
-                if context == 'scene':
-                    lod_box.operator("scene.add_xplane_layer_lods").index = layerObj.index
-                elif context == 'object':
+                if context == 'object':
                     lod_box.operator("object.add_xplane_layer_lods")
-
             else:
                 for i in range(0, num_lods):
                     if len(layerObj.lod)>i:
@@ -482,15 +448,13 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 #   UILayout self - Instance of current UILayout.
 #   UILayout layout - Instance of sublayout to use.
 #   layerObj - <XPlaneLayer> .
-def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
+def custom_layer_layout(self, layout, layerObj, version, context):
     layout.separator()
     row = layout.row()
     row.label(text="Custom Properties")
 
-    if context == 'scene':
-        row.operator("scene.add_xplane_layer_attribute").index = layerObj.index
-    elif context == 'object':
-        row.operator("object.add_xplane_layer_attribute")
+    if context == 'object':
+        row.operator('object.add_xplane_layer_attribute')
 
     box = layout.box()
 
@@ -500,9 +464,7 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
         subrow.prop(attr, "name")
         subrow.prop(attr, "value")
 
-        if context == 'scene':
-            subrow.operator("scene.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = (layerObj.index, i)
-        elif context == 'object':
+        if context == 'object':
             subrow.operator("object.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = i
 
         if type in ("MATERIAL", "MESH"):
@@ -519,14 +481,12 @@ def dataref_search_window_layout(layout):
     row = layout.row()
     row.template_list("XPLANE_UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
 
-def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'scene'):
+def export_path_dir_layer_layout(self, layout, layerObj, version, context):
     layout.separator()
     row = layout.row()
     row.label(text="Export Path Directives")
 
-    if context == 'scene':
-        row.operator("scene.add_xplane_export_path_directive").index = layerObj.index
-    elif context == 'object':
+    if context == 'object':
         row.operator("object.add_xplane_export_path_directive")
 
     box = layout.box()
@@ -535,9 +495,7 @@ def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'sce
         row = box.row()
         row.prop(attr,"export_path", text= "Export Path " + str(i))
 
-        if context == 'scene':
-            row.operator("scene.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = (layerObj.index, i)
-        elif context == 'object':
+        if context == 'object':
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
 # Function: mesh_layout

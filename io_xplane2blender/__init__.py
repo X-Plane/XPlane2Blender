@@ -40,6 +40,7 @@ if "bpy" in locals():
     imp.reload(xplane_props)
     imp.reload(xplane_export)
     imp.reload(xplane_ops)
+    imp.reload(xplane_ops_dev)
     imp.reload(xplane_config)
     imp.reload(xplane_updater)
 else:
@@ -48,6 +49,7 @@ else:
     from . import xplane_props
     from . import xplane_export
     from . import xplane_ops
+    from . import xplane_ops_dev
     from . import xplane_config
     from . import xplane_updater
 
@@ -67,6 +69,7 @@ def register():
     xplane_export.register()
     xplane_props.register()
     xplane_ops.register()
+    xplane_ops_dev.register()
     xplane_ui.register()
     bpy.types.TOPBAR_MT_file_export.append(menu_func)
 
@@ -76,6 +79,7 @@ def unregister():
     xplane_export.unregister()
     xplane_ui.unregister()
     xplane_ops.unregister()
+    xplane_ops_dev.unregister()
     xplane_props.unregister()
     bpy.types.TOPBAR_MT_file_export.remove(menu_func)
 

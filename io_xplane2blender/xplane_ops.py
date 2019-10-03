@@ -117,52 +117,6 @@ class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
         obj.xplane.manip.axis_detent_ranges.remove(self.index)
         return {'FINISHED'}
 
-# Class: SCENE_OT_add_xplane_layers
-# Initially creates xplane relevant data for <XPlaneLayers> in the current Blender scene.
-class SCENE_OT_add_xplane_layers(bpy.types.Operator):
-    bl_label = 'Add X-Plane layers'
-    bl_idname = 'scene.add_xplane_layers'
-    bl_description = 'Add X-Plane export layers'
-
-    def execute(self, context):
-        scene = context.scene
-
-        i = 0
-        while len(scene.xplane.layers)<len(scene.layers):
-            scene.xplane.layers.add()
-
-            # add all lods
-            for ii in range(0, MAX_LODS-1):
-                scene.xplane.layers[i].lod.add()
-
-            # add cockpit regions
-            for ii in range(0, 4):
-                scene.xplane.layers[i].cockpit_region.add()
-
-            i+=1
-
-        # re-add hidden data that user cannot change
-        for i in range(0, len(scene.xplane.layers)):
-            scene.xplane.layers[i].index = i
-        return {'FINISHED'}
-
-class SCENE_OT_add_xplane_layer_lods(bpy.types.Operator):
-    bl_label = 'Add levels of detail'
-    bl_idname = 'scene.add_xplane_layer_lods'
-    bl_description = 'Add X-Plane layer LODs'
-
-    index: bpy.props.IntProperty()
-
-    def execute(self, context):
-        scene = context.scene
-
-        num_lods = int(scene.xplane.layers[self.index].lods)
-
-        while len(scene.xplane.layers[self.index].lod) < MAX_LODS:
-            scene.xplane.layers[self.index].lod.add()
-
-        return {'FINISHED'}
-
 class OBJECT_OT_add_xplane_layer_lods(bpy.types.Operator):
     bl_label = 'Add levels of detail'
     bl_idname = 'object.add_xplane_layer_lods'
@@ -175,23 +129,6 @@ class OBJECT_OT_add_xplane_layer_lods(bpy.types.Operator):
 
         while len(obj.xplane.layer.lod) < MAX_LODS:
             obj.xplane.layer.lod.add()
-
-        return {'FINISHED'}
-
-class SCENE_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
-    bl_label = 'Add cockpit regions'
-    bl_idname = 'scene.add_xplane_layer_cockpit_regions'
-    bl_description = 'Add X-Plane layer Cockpit Regions'
-
-    index: bpy.props.IntProperty()
-
-    def execute(self, context):
-        scene = context.scene
-
-        num_regions = int(scene.xplane.layers[self.index].cockpit_regions)
-
-        while len(scene.xplane.layers[self.index].cockpit_region) < 4:
-            scene.xplane.layers[self.index].cockpit_region.add()
 
         return {'FINISHED'}
 
@@ -208,34 +145,6 @@ class OBJECT_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
         while len(obj.xplane.layer.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
             obj.xplane.layer.cockpit_region.add()
 
-        return {'FINISHED'}
-
-# Class: SCENE_OT_add_xplane_layer_attribute
-# Adds a custom attribute to a <XPlaneLayer>.
-class SCENE_OT_add_xplane_layer_attribute(bpy.types.Operator):
-    bl_label = 'Add Layer Property'
-    bl_idname = 'scene.add_xplane_layer_attribute'
-    bl_description = 'Add a custom X-Plane Layer Property'
-
-    index: bpy.props.IntProperty()
-
-    def execute(self, context):
-        scene = context.scene
-        scene.xplane.layers[self.index].customAttributes.add()
-        return {'FINISHED'}
-
-# Class: SCENE_OT_remove_xplane_layer_attribute
-# Removes a custom attribute from a <XPlaneLayer>.
-class SCENE_OT_remove_xplane_layer_attribute(bpy.types.Operator):
-    bl_label = 'Remove Layer Property'
-    bl_idname = 'scene.remove_xplane_layer_attribute'
-    bl_description = 'Remove the custom X-Plane Layer Property'
-
-    index: bpy.props.IntVectorProperty(size=2)
-
-    def execute(self, context):
-        scene = context.scene
-        scene.xplane.layers[self.index[0]].customAttributes.remove(self.index[1])
         return {'FINISHED'}
 
 # Class: OBJECT_OT_add_xplane_layer_attribute
@@ -471,31 +380,6 @@ class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
         obj.xplane.layer.export_path_directives.remove(self.index)
         return {'FINISHED'}
 
-class SCENE_OT_add_xplane_export_path_directive(bpy.types.Operator):
-    bl_label = 'Add Export Path Directive'
-    bl_idname = 'scene.add_xplane_export_path_directive'
-    bl_description = 'Add Export Path Directive'
-
-    # Index represents which xplane layer's export_path_directives list should
-    # be appended
-    index: bpy.props.IntProperty()
-
-    def execute(self, context):
-        scene = context.scene
-        scene.xplane.layers[self.index].export_path_directives.add()
-        return {'FINISHED'}
-
-class SCENE_OT_remove_xplane_export_path_directive(bpy.types.Operator):
-    bl_label = 'Remove Export Path Directive'
-    bl_idname = 'scene.remove_xplane_export_path_directive'
-    bl_description = 'Remove export path directive'
-
-    index: bpy.props.IntVectorProperty(size=2)
-
-    def execute(self, context):
-        scene = context.scene
-        scene.xplane.layers[self.index[0]].export_path_directives.remove(self.index[1])
-        return {'FINISHED'}
 
 # Class: BONE_OT_add_xplane_dataref
 # Adds a <XPlaneDataref> to a Blender bone.
@@ -733,47 +617,38 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
 
         return {'FINISHED'}
 
-_ops = [
-    BONE_OT_add_xplane_dataref,
-    BONE_OT_add_xplane_dataref_keyframe,
-    BONE_OT_remove_xplane_dataref,
-    BONE_OT_remove_xplane_dataref_keyframe,
-
+_ops = (
+    OBJECT_OT_add_xplane_axis_detent_range,
+    OBJECT_OT_remove_xplane_axis_detent_range,
+    OBJECT_OT_add_xplane_layer_lods,
+    OBJECT_OT_add_xplane_layer_cockpit_regions,
+    OBJECT_OT_add_xplane_layer_attribute,
+    OBJECT_OT_remove_xplane_layer_attribute,
+    OBJECT_OT_add_xplane_object_attribute,
+    OBJECT_OT_remove_xplane_object_attribute,
+    OBJECT_OT_add_xplane_object_anim_attribute,
+    OBJECT_OT_remove_xplane_object_anim_attribute,
+    OBJECT_OT_add_xplane_material_attribute,
+    OBJECT_OT_remove_xplane_material_attribute,
+    OBJECT_OT_add_xplane_light_attribute,
+    OBJECT_OT_remove_xplane_light_attribute,
     OBJECT_OT_add_xplane_dataref,
-    OBJECT_OT_add_xplane_dataref_keyframe,
     OBJECT_OT_remove_xplane_dataref,
+    OBJECT_OT_add_xplane_dataref_keyframe,
     OBJECT_OT_remove_xplane_dataref_keyframe,
-
     OBJECT_OT_add_xplane_export_path_directive,
     OBJECT_OT_remove_xplane_export_path_directive,
-
-    OBJECT_OT_add_xplane_light_attribute,
-    OBJECT_OT_add_xplane_material_attribute,
-    OBJECT_OT_add_xplane_object_attribute,
-    OBJECT_OT_add_xplane_object_anim_attribute,
-    OBJECT_OT_remove_xplane_light_attribute,
-    OBJECT_OT_remove_xplane_material_attribute,
-    OBJECT_OT_remove_xplane_object_attribute,
-    OBJECT_OT_remove_xplane_object_anim_attribute,
-
-    SCENE_OT_add_xplane_layer_attribute,
-    SCENE_OT_add_xplane_layers,
-    SCENE_OT_remove_xplane_layer_attribute,
-
+    BONE_OT_add_xplane_dataref,
+    BONE_OT_remove_xplane_dataref,
+    BONE_OT_add_xplane_dataref_keyframe,
+    BONE_OT_remove_xplane_dataref_keyframe,
     OBJECT_OT_add_xplane_object_condition,
     OBJECT_OT_remove_xplane_object_condition,
     OBJECT_OT_add_xplane_material_condition,
     OBJECT_OT_remove_xplane_material_condition,
-
     SCENE_OT_export_to_relative_dir,
-
-    SCENE_OT_dev_layer_names_from_objects,
-    SCENE_OT_dev_root_names_from_objects,
-    SCENE_OT_dev_rerun_updater,
-    SCENE_OT_dev_create_lights_txt_summary,
-
     XPLANE_OT_CommandSearchToggle,
     XPLANE_OT_DatarefSearchToggle,
-]
+)
 
 register, unregister = bpy.utils.register_classes_factory(_ops)
