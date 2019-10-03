@@ -250,7 +250,7 @@ class XPlaneFile():
             # collections and instanced collections work, this feature is removed
 
             # collect armature bones
-            elif blenderObject.type == 'ARMATURE':
+            if blenderObject.type == 'ARMATURE':
                 self.collectBonesFromBlenderBones(bone, blenderObject, blenderObject.data.bones)
                 # Collect direct data-block children - some authors parent data blocks directly to the
                 # armature, then pose the armature via data block key framing.  The second 'true' here
