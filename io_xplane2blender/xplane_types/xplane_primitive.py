@@ -31,14 +31,8 @@ class XPlanePrimitive(XPlaneObject):
     # Property: material
     # XPlaneMaterial - A <XPlaneMaterial>
 
-    # Property: faces
-    # XPlaneFaces - Instance of <XPlaneFaces> with all face of this mesh. Currently not in use. This should be used when commands will work on a per face basis.
-
     # Property: attributes
     # dict - Object attributes that will be turned into commands with <XPlaneCommands>.
-
-    # Property: cockpitAttributes
-    # dict - Object attributes for cockpit settings, that will be turned into commands with <XPlaneCommands>.
 
     # Constructor: __init__
     # Defines basic <attributes> and <cockpitAttributes>, Creates <material>, runs <getManipulatorAttributes>, <getLightLevelAttributes>, <XPlaneObject.getCoordinates> and <XPlaneObject.getAnimations>.
@@ -51,10 +45,6 @@ class XPlanePrimitive(XPlaneObject):
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
         self.manipulator = XPlaneManipulator(self)
-
-        #TODO: If it is currently unused, then maybe we shouldn't have it!
-        # To qoute: "You aren't going to need it!
-        self.faces = None 
 
         self.getWeight()
 

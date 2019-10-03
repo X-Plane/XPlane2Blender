@@ -72,11 +72,11 @@ def get_root_objects_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
 
 
 def vec_b_to_x(v):
-    return mathutils.Vector((v.x, v.z, -v.y))
+    return mathutils.Vector((v[0], v[2], -v[1]))
 
 
 def vec_x_to_b(v):
-    return mathutils.Vector((v.x, -v.z, v.y))
+    return mathutils.Vector((v[0], -v[2], v[1]))
 
 
 # This is a convience struct to help prevent people from having to repeateld copy and paste

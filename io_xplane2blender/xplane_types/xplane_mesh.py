@@ -1,9 +1,12 @@
 import array
+import collections
 import time
 import re
 from typing import List, Optional
 
 import bpy
+import mathutils
+from io_xplane2blender import xplane_helpers
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
@@ -11,15 +14,13 @@ from .xplane_face import XPlaneFace
 from .xplane_object import XPlaneObject
 
 # Class: XPlaneMesh
-# Creates the OBJ meshes.
+# Stores the data for the OBJ's mesh - its VT and IDX tables
 class XPlaneMesh():
-    # Constructor: __init__
     def __init__(self):
-        # list - contains all mesh vertices
+        # Contains all OBJ VT directives, data in the order as specified by the OBJ8 spec
         self.vertices = [] # type: List[Tuple[float, float, float, float, float, float, float, float]]
         # array - contains all face indices
-        self.indices = array.array('i')
-        self.faces = []
+        self.indices = array.array('i') # type: List[int]
         # int - Stores the current global vertex index.
         self.globalindex = 0
         self.debug = []
@@ -56,200 +57,90 @@ class XPlaneMesh():
 
                 # create a copy of the xplaneObject mesh with modifiers applied and triangulated
                 dg = bpy.context.evaluated_depsgraph_get()
+                print("2.80 blenderObject.name", xplaneObject.blenderObject.name)
+                print("2.80 original location", xplaneObject.blenderObject.location)
                 evaluated_obj = xplaneObject.blenderObject.evaluated_get(dg)
+                print("2.80 evaluated location", xplaneObject.blenderObject.location)
+                assert xplaneObject.blenderObject.location == evaluated_obj.location, "ob.location !=  eval.location, " + str(xplaneObject.blenderObject.location) + "," + str(evaluated_obj.location)
                 mesh = evaluated_obj.to_mesh(preserve_all_data_layers=True, depsgraph=dg)
                 #mesh = xplaneObject.blenderObject.data.copy()
 
                 # now get the bake matrix
                 # and bake it to the mesh
+                print("2.80 1st polygon center", xplaneObject.blenderObject.data.polygons[5].center)
                 xplaneObject.bakeMatrix = xplaneObject.xplaneBone.getBakeMatrixForAttached()
                 mesh.transform(xplaneObject.bakeMatrix)
+                print("2.80 1st polygon center after transform", xplaneObject.blenderObject.data.polygons[5].center)
 
                 mesh.calc_normals_split()
                 mesh.calc_loop_triangles()
-                mesh_faces = mesh.loop_triangles
-                print("2.80: len", len(mesh_faces[:]))
-
-                # with the new mesh get uvFaces list
+                loop_triangles = mesh.loop_triangles
+                print("2.80: len mesh_faces (loop_triangles)", len(loop_triangles[:]))
                 try:
-                    uvFaces = mesh.uv_layers[xplaneObject.material.uv_name]
+                    uv_layer = mesh.uv_layers[xplaneObject.material.uv_name]
                 except (KeyError, TypeError):
-                    uvFaces = None
+                    uv_layer = None
 
-                faces = []
+                TempFace = collections.namedtuple(
+                        "TempFace",
+                        field_names=[
+                            "original_face", # type: bpy.types.MeshLoopTriangle
+                            "indices", # type: Tuple[float, float, float]
+                            "normal", # type: Tuple[float, float, float]
+                            "split_normals", # type: Tuple[Tuple[float, float, float], Tuple[float, float, float], Tuple[float, float, float]]
+                            "uvs", # type: Tuple[mathutils.Vector, mathutils.Vector, mathutils.Vector]
+                        ]
+                    )
+                tmp_faces = [] # type: List[TempFace]
+                for tri in mesh.loop_triangles:
+                    tmp_face = TempFace(
+                            original_face=tri,
+                            # BAD NAME ALERT!
+                            # mesh.vertices is the actual vertex table,
+                            # tri.vertices is indices in that vertex table
+                            indices=tri.vertices,
+                            normal=tri.normal,
+                            split_normals=tri.split_normals,
+                            uvs=tuple(uv_layer.data[loop_index].uv for loop_index in tri.loops) if uv_layer else (mathutils.Vector((0.0, 0.0)),) * 3
+                        )
+                    tmp_faces.append(tmp_face)
 
-                d = {'name': xplaneObject.name,
-                     'obj_face': 0,
-                     'faces': len(mesh_faces),
-                     'quads': 0,
-                     'vertices': len(mesh.vertices),
-                     'uvs': 0}
+                vertices_dct = {}
+                for tmp_face in tmp_faces:
+                    # To reverse the winding order for X-Plane from CCW to CW,
+                    # we iterate backwards through the mesh data structures
+                    for i in reversed(range(0, 3)):
+                        index = tmp_face.indices[i]
+                        vertex = xplane_helpers.vec_b_to_x(mesh.vertices[index].co)
+                        normal = xplane_helpers.vec_b_to_x(tmp_face.split_normals[i] if tmp_face.original_face.use_smooth else tmp_face.normal)
+                        uv = tmp_face.uvs[i]
+                        #TODO: We could probably move the rounding step from writeVertexes to here so we're not iterating over this stuff twice
+                        vt_entry = tuple(vertex[:] + normal[:] + uv[:])
 
-                # convert faces to triangles
-                if mesh_faces:
-                    tempfaces = []
-
-                    for i in range(0, len(mesh_faces)):
-                        if uvFaces != None:
-                            f = self.faceToTrianglesWithUV(mesh_faces[i], uvFaces[i])
-                            tempfaces.extend(f)
-
-                            d['uvs'] += 1
-
-                            if len(f) > 1:
-                                d['quads'] += 1
-
+                        # Optimization Algorithm:
+                        # Try to find a matching vt_entry's index in the mesh's index table
+                        # If found, skip adding to global vertices list
+                        # If not found (-1), append the new vert, save its vertex
+                        if bpy.context.scene.xplane.optimize:
+                            vindex = vertices_dct.get(vt_entry, default=-1)
                         else:
-                            f = self.faceToTrianglesWithUV(mesh_faces[i], None)
-                            tempfaces.extend(f)
+                            vindex = -1
 
-                            if len(f) > 1:
-                                d['quads']+=1
+                        if vindex == -1:
+                            vindex = self.globalindex
+                            self.vertices.append(vt_entry)
+                            self.globalindex += 1
 
-                    d['obj_faces'] = len(tempfaces)
+                        if bpy.context.scene.xplane.optimize:
+                            vertices_dct[vt_entry] = vindex
 
-                    for f in tempfaces:
-                        xplaneFace = XPlaneFace()
-                        l = len(f['indices'])
-
-                        for i in range(0, l):
-                            # get the original index but reverse order, as this is reversing normals
-                            vindex = f['indices'][2 - i]
-
-                            # get the vertice from original mesh
-                            v = mesh.vertices[vindex]
-                            co = v.co
-                            ns = f['norms'][2 - i]
-
-                            if f['original_face'].use_smooth: # use smoothed vertex normal
-                                vert = [
-                                    co[0], co[2], -co[1],
-                                    ns[0], ns[2], -ns[1],
-                                    f['uv'][i][0], f['uv'][i][1]
-                                ]
-                            else: # use flat face normal
-                                vert = [
-                                    co[0], co[2], -co[1],
-                                    f['original_face'].normal[0], f['original_face'].normal[2], -f['original_face'].normal[1],
-                                    f['uv'][i][0], f['uv'][i][1]
-                                ]
-
-                            if bpy.context.scene.xplane.optimize:
-                                #check for duplicates
-                                index = self.getDupliVerticeIndex(vert, first_vertice_of_this_xplaneObject)
-                            else:
-                                index = -1
-
-                            if index == -1:
-                                index = self.globalindex
-                                self.vertices.append(vert)
-                                self.globalindex += 1
-
-                            # store face information in one struct
-                            xplaneFace.vertices[i] = (vert[0], vert[1], vert[2])
-                            xplaneFace.normals[i] = (vert[3], vert[4], vert[5])
-                            xplaneFace.uvs[i] = (vert[6], vert[7])
-                            xplaneFace.indices[i] = index
-
-                            self.indices.append(index)
-
-                        faces.append(xplaneFace)
+                        self.indices.append(vindex)
 
                     # store the faces in the prim
-                    xplaneObject.faces = faces
                     xplaneObject.indices[1] = len(self.indices)
-                    self.faces.extend(faces)
 
                 evaluated_obj.to_mesh_clear()
-                d['start_index'] = xplaneObject.indices[0]
-                d['end_index'] = xplaneObject.indices[1]
-                self.debug.append(d)
 
-        if debug:
-            try:
-                self.debug.sort(key=lambda k: k['obj_faces'],reverse=True)
-            except:
-                pass
-
-            for d in self.debug:
-                tris_to_quads = 1.0
-
-                if not 'obj_faces' in d:
-                    d['obj_faces'] = 0
-
-                if d['faces'] > 0:
-                    tris_to_quads = d['obj_faces'] / d['faces']
-
-                logger.info('%s: faces %d | xplaneObject-faces %d | tris-to-quads ratio %6.2f | indices %d | vertices %d' % (d['name'],d['faces'],d['obj_faces'],tris_to_quads,d['end_index']-d['start_index'],d['vertices']))
-
-            logger.info('POINT COUNTS: faces %d - vertices %d - indices %d' % (len(self.faces),len(self.vertices),len(self.indices)))
-
-    # Method: getDupliVerticeIndex
-    # Returns the index of a vertice duplicate if any.
-    #
-    # Parameters:
-    #   v - The OBJ vertice.
-    #   int startIndex - (default=0) From which index to start searching for duplicates.
-    #
-    # Returns:
-    #   int - Index of the duplicate or -1 if none was found.
-    def getDupliVerticeIndex(self, v, startIndex = 0):
-        l = len(self.vertices)
-
-        for i in range(startIndex, l):
-            match = True
-            ii = 0
-            vl = len(v)
-
-            while ii < vl:
-                if self.vertices[i][ii] != v[ii]:
-                    match = False
-                    ii = vl
-
-                ii += 1
-
-            if match:
-                return i
-
-        return -1
-
-    # Method: faceToTrianglesWithUV
-    # Converts a Blender face (3 or 4 sided) into one or two 3-sided faces together with the texture coordinates.
-    #
-    # Parameters:
-    #   face - A Blender face.
-    #   uv - UV coordiantes of a Blender UV face.
-    #
-    # Returns:
-    #   list - [{'uv':[[u1,v1],[u2,v2],[u3,v3]],'indices':[i1,i2,i3]},..] In length 1 or 2.
-    def faceToTrianglesWithUV(self,face,uv):
-        triangles = []
-        #inverse uv's as we are inversing face indices later
-        i0 = face.vertices[0]
-        i1 = face.vertices[1]
-        i2 = face.vertices[2]
-        if len(face.vertices) == 4: #quad
-            i3 = face.vertices[3]
-            if uv != None:
-                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv1[0], uv.uv1[1]]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]],'original_face':face,
-                    "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
-                triangles.append( {"uv":[[uv.uv1[0], uv.uv1[1]], [uv.uv4[0], uv.uv4[1]], [uv.uv3[0], uv.uv3[1]]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]],'original_face':face,
-                    "norms":[face.split_normals[2], face.split_normals[3], face.split_normals[0]]})
-            else:
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[0], face.vertices[1], face.vertices[2]],'original_face':face,
-                    "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":[face.vertices[2], face.vertices[3], face.vertices[0]],'original_face':face,
-                    "norms":[face.split_normals[2], face.split_normals[3], face.split_normals[0]]})
-
-        else:
-            if uv != None:
-                triangles.append( {"uv":[[uv.uv3[0], uv.uv3[1]], [uv.uv2[0], uv.uv2[1]], [uv.uv1[0], uv.uv1[1]]], "indices":face.vertices,'original_face':face,
-                    "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
-            else:
-                triangles.append( {"uv":[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]], "indices":face.vertices,'original_face':face,
-                    "norms":[face.split_normals[0], face.split_normals[1], face.split_normals[2]]})
-
-        return triangles
 
     # Method: writeVertices
     # Returns the OBJ vertex table by iterating <vertices>.
