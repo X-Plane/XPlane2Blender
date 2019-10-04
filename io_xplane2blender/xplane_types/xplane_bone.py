@@ -656,9 +656,9 @@ class XPlaneBone():
 
             o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
                 indent, floatToStr(keyframe.value),
-                floatToStr(keyframe.location[0] @ pre_scale[0]),
-                floatToStr(keyframe.location[2] @ pre_scale[2]),
-                floatToStr(-keyframe.location[1] @ pre_scale[1])
+                floatToStr(keyframe.location[0] * pre_scale[0]),
+                floatToStr(keyframe.location[2] * pre_scale[2]),
+                floatToStr(-keyframe.location[1] * pre_scale[1])
             )
 
         o += self._writeKeyframesLoop(dataref)
