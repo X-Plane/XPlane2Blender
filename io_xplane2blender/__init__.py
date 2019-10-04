@@ -24,7 +24,7 @@
 bl_info = {
     "name": "Export: X-Plane (.obj)",
     "description": "Import and Export X-Plane objects/planes (.obj format)",
-    "author": "Ted Greene",
+    "author": "Ted Greene, Ben Supnik",
     "version": (4, 0, 0),
     "blender": (2, 80, 0),
     "location": "File > Import/Export > X-Plane",
@@ -61,7 +61,7 @@ else:
 #   self - Instance to something
 #   context - The Blender context object
 def menu_func(self, context):
-    self.layout.operator(xplane_export.XPLANE_MT_xplane_export_log.bl_idname, text = "X-Plane Object (.obj)")
+    self.layout.operator(xplane_export.EXPORT_OT_ExportXPlane.bl_idname, text = "X-Plane Object (.obj)")
 
 # Function: register
 # Registers the addon with all its classes and the menu function.

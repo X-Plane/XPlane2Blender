@@ -352,10 +352,10 @@ def layer_layout(self, layout, layerObj, version, context):
                         if cockpit_region.expanded:
                             region_box.prop(cockpit_region, "left")
                             region_box.prop(cockpit_region, "top")
-                            region_split = region_box.split(percentage = 0.5)
+                            region_split = region_box.split(factor = 0.5)
                             region_split.prop(cockpit_region, "width")
                             region_split.label(text="= %d" % (2 ** cockpit_region.width))
-                            region_split = region_box.split(percentage = 0.5)
+                            region_split = region_box.split(factor = 0.5)
                             region_split.prop(cockpit_region, "height")
                             region_split.label(text="= %d" % (2 ** cockpit_region.height))
 
@@ -852,7 +852,7 @@ def manipulator_layout(self, obj):
         def show_dataref_search_window_pairing(box, dataref_prop_name:str, prop_text:Optional[str]=None)->None:
             row = box.row()
             if prop_text:
-                row.prop(obj.xplane.manip, dataref_prop_name, prop_text)
+                row.prop(obj.xplane.manip, dataref_prop_name, text=prop_text)
             else:
                 row.prop(obj.xplane.manip, dataref_prop_name)
 

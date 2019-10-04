@@ -15,7 +15,10 @@ from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
 
 
+#TODO: These class names and registrations are weird. I don't get
+# what Blender expects for bl_idname and class name to match up?
 class XPLANE_MT_xplane_export_log(bpy.types.Menu):
+    bl_idname = "XPLANE_MT_xplane_export_log"
     bl_label = "XPlane2Blender Export Log Warning"
 
     def draw(self, context):
@@ -28,10 +31,12 @@ def showLogDialog():
     if not ('-b' in sys.argv or '--background' in sys.argv):
         bpy.ops.wm.call_menu(name="XPLANE_MT_xplane_export_log")
 
-class XPLANE_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
+class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
     '''Export to X-Plane Object file format (.obj)'''
     bl_idname = "export.xplane_obj"
     bl_label = 'Export X-Plane Object'
+
+    filename_ext = ".obj"
 
     filepath: bpy.props.StringProperty(
         name = "File Path",
@@ -231,9 +236,9 @@ class XPLANE_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
-classes = (
+_classes = (
         XPLANE_MT_xplane_export_log,
-        XPLANE_OT_ExportXPlane
+        EXPORT_OT_ExportXPlane
     )
 
-register, unregister = bpy.utils.register_classes_factory(classes)
+register, unregister = bpy.utils.register_classes_factory(_classes)
