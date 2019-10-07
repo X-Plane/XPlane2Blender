@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/der-On/XPlane2Blender.svg?branch=v3-3)](https://travis-ci.org/der-On/XPlane2Blender)
+[![Build Status](https://travis-ci.org/X-Plane/XPlane2Blender.svg?branch=v3-3)](https://travis-ci.org/X-Plane/XPlane2Blender)
 
 # Introduction
 This addon for Blender 2.78 and up makes it possible to export models made in Blender to the X-Plane object format (.obj). **Despite the name "XPlane2Blender", there is no import feature.**
