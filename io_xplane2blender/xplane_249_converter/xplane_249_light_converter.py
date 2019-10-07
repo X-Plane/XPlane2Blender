@@ -243,7 +243,7 @@ def convert_lights(scene: bpy.types.Scene, workflow_type: xplane_249_constants.W
                     magnet_props = empty.xplane.special_empty_props.magnet_props
                     # We want them to start exporting quickly, even with "magnet" as a debug name
                     magnet_props.debug_name = empty.name
-                    logger.info("NEXT STEPS: Consider choosing a new Magnet Debug Name for {}\n".format(empty.name))
+                    #print("NEXT STEPS: Consider choosing a new Magnet Debug Name for {}\n".format(empty.name))
 
                     match = re.match(r"(?P<magnet_type>xpad/flashlight|xpad|flashlight)", params)
                     try:
