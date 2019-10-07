@@ -367,7 +367,7 @@ class XPlaneBone():
 
             # Final result is our post-animation pose with the dynamic animatons subtracted out.  This will nuke either
             # rotation or rotatio + location.
-            return my_final * before_my_block
+            return my_final @ before_my_block
 
     #
     # THE POST-ANIMATION MATRIX (POSE)
@@ -437,7 +437,7 @@ class XPlaneBone():
         parent_bone = self.getFirstAnimatedParent()
         if parent_bone == None:
             # If we have no parent bone, our bake matrix goes from global coordinates TO our pre-animation pose.
-            # This would be more formal if it was inverse(identity) * getPreAnimationMatrix() - this has been
+            # This would be more formal if it was inverse(identity) @ getPreAnimationMatrix() - this has been
             # simplifiied.
             return self.getPreAnimationMatrix()
         else:
