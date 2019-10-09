@@ -11,7 +11,7 @@ import bpy
 
 from io_xplane2blender import xplane_constants
 from io_xplane2blender.tests import test_creation_helpers
-from io_xplane2blender.xplane_249_converter import xplane_249_constants
+from io_xplane2blender.xplane_249_converter import xplane_249_constants, xplane_249_helpers
 
 
 def convert_workflow(scene: bpy.types.Scene,
@@ -49,20 +49,31 @@ def convert_workflow(scene: bpy.types.Scene,
             ob.parent = new_root
         return [new_root]
     elif workflow_type == xplane_249_constants.WorkflowType.BULK:
-        new_roots = list(filter(lambda ob: ob.parent is None
-                                           and ob.type == "EMPTY"
-                                           and ob.name.startswith("OBJ"),
-                                scene.objects))
+        def _find_roots(obj: bpy.types.Object):
+            roots = []
+            for child in filter(lambda c: c.type == "EMPTY", obj.children):
+                prefix = child.name.lower()
+                if prefix[:3] in {"obj", "bgn", "vrt", "end"}:
+                    roots.append(child)
+                elif prefix[:3] == "grp":
+                    roots.extend(_find_roots(child))
+            return roots
+
+        new_roots = []
+        for child in filter(lambda c: c.parent is None and c.type == "EMPTY", scene.objects):
+            new_roots.extend(_find_roots(child))
+
         for ob in new_roots:
             ob.xplane.isExportableRoot = True
-            try:
-                layer_name  = ob.game.properties["rname"].value
-            except KeyError:
-                layer_name = ob.name[3:]
-            try:
-                layer_name = ob.game.properties["path"].value + "/" + layer_name
-            except KeyError:
-                pass
+            layer_name, _ = xplane_249_helpers.find_property_in_parents(ob, "path", prop_types="STRING", default="")
+            if layer_name and layer_name[-1] not in {"/", "\\"}:
+                layer_name += "/"
+            rname, _ = xplane_249_helpers.find_property_in_parents(ob, "rname", prop_types="STRING", default="")
+            if not rname:
+                layer_name += ob.name[3:]
+            else:
+                layer_name += rname
+
             ob.xplane.layer.export_type = project_type.name.lower()
             ob.xplane.layer.name = layer_name
 

@@ -30,7 +30,7 @@ def find_property_in_parents(obj: bpy.types.Object,
                              prop_name: str,
                              *,
                              ignore_case: bool = True,
-                             prop_types: Set[str] = {"BOOL", "FLOAT", "INT", "STRING", "TIMER"},
+                             prop_types: Union[str, Set[str]] = {"BOOL", "FLOAT", "INT", "STRING", "TIMER"},
                              max_parents: Optional[int] = None,
                              default: Optional[PropDataType] = None)\
                              ->Tuple[Optional[PropDataType], Optional[bpy.types.Object]]:
@@ -40,7 +40,8 @@ def find_property_in_parents(obj: bpy.types.Object,
 
     This function can give the same information as 2.49's get_prop and has_prop at the same time
     """
-    assert prop_types <= {"BOOL", "FLOAT", "INT", "STRING", "TIMER"}, \
+    assert prop_types in {"BOOL", "FLOAT", "INT", "STRING", "TIMER"}\
+            or prop_types <= {"BOOL", "FLOAT", "INT", "STRING", "TIMER"}, \
             "Target prop_types {} is not a recognized property type"
     """
     print(
