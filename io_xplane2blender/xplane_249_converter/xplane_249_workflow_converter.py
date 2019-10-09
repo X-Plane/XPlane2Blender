@@ -75,6 +75,14 @@ def convert_workflow(scene: bpy.types.Scene,
             ob.xplane.layer.export_type = project_type.name.lower()
             ob.xplane.layer.name = layer_name
 
+            vname, _ = xplane_249_helpers.find_property_in_parents(ob, "vname")
+            vname1, _ = xplane_249_helpers.find_property_in_parents(ob, "vname1")
+            vname2, _ = xplane_249_helpers.find_property_in_parents(ob, "vname2")
+
+            for value in filter(None, (vname, vname1, vname2)):
+                ob.xplane.layer.export_path_directives.add()
+                ob.xplane.layer.export_path_directives[-1].export_path = value
+
         return new_roots
     else:
         assert False, workflow_type.name + "Not implemented yet"

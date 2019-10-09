@@ -34,37 +34,6 @@ class XPlaneHeader():
         self.obj_version = obj_version
         self.xplaneFile = xplaneFile
 
-        # A list of tuples in the form of (lib path, physical path)
-        # for example, if the path in the box is 'lib/g10/cars/car.obj'
-        # and the file is getting exported to '/code/x-plane/Custom Scenery/Kansas City/cars/honda.obj'
-        # you would have ('lib/g10/cars/car.obj','cars/honda.obj')
-        self.export_path_dirs = [] # type: List[str,str]
-
-        for export_path_directive in self.xplaneFile.options.export_path_directives:
-            export_path_directive.export_path = export_path_directive.export_path.lstrip()
-            if len(export_path_directive.export_path) == 0:
-                continue
-
-            cleaned_path = bpy.data.filepath.replace('\\', '/')
-            #              everything before
-            #               |         scenery directory
-            #               |               |        one directory afterward
-            #               |               |                   |    optional directories and path to .blend file
-            #               |               |                   |        |
-            #               v               v                   v        v
-            regex_str = r"(.*(Custom Scenery|default_scenery)(/[^/]+/)(.*))"
-            potential_match = re.match(regex_str, cleaned_path)
-
-            if potential_match is None:
-                logger.error('Export path %s is not properly formed. Ensure it contains the words "Custom Scenery" or "default_scenery" followed by a directory')
-                return #TODO: Returning early in an __init__!
-            else:
-                last_folder = os.path.dirname(potential_match.group(4)).split('/')[-1:][0]
-
-                if len(last_folder) > 0:
-                    last_folder += '/' #Re-append slash
-
-                self.export_path_dirs.append((export_path_directive.export_path, last_folder + xplaneFile.filename + ".obj"))
 
         self.attributes = XPlaneAttributes()
 
@@ -116,6 +85,37 @@ class XPlaneHeader():
         # previously labeled object attributes, it must be the last thing
         self.attributes.add(XPlaneAttribute("POINT_COUNTS", None))
 
+        # A list of tuples in the form of (lib path, physical path)
+        # for example, if the path in the box is 'lib/g10/cars/car.obj'
+        # and the file is getting exported to '/code/x-plane/Custom Scenery/Kansas City/cars/honda.obj'
+        # you would have ('lib/g10/cars/car.obj','cars/honda.obj')
+        self.export_path_dirs = [] # type: List[str,str]
+
+        for export_path_directive in self.xplaneFile.options.export_path_directives:
+            export_path_directive.export_path = export_path_directive.export_path.lstrip()
+            if len(export_path_directive.export_path) == 0:
+                continue
+
+            cleaned_path = bpy.data.filepath.replace('\\', '/')
+            #              everything before
+            #               |         scenery directory
+            #               |               |        one directory afterward
+            #               |               |                   |    optional directories and path to .blend file
+            #               |               |                   |        |
+            #               v               v                   v        v
+            regex_str = r"(.*(Custom Scenery|default_scenery)(/[^/]+/)(.*))"
+            potential_match = re.match(regex_str, cleaned_path)
+
+            if potential_match is None:
+                logger.error('Export path {} is not properly formed. Ensure it contains the words "Custom Scenery" or "default_scenery" followed by a directory'.format(export_path_directive.export_path))
+                return #TODO: Returning early in an __init__!
+            else:
+                last_folder = os.path.dirname(potential_match.group(4)).split('/')[-1:][0]
+
+                if len(last_folder) > 0:
+                    last_folder += '/' #Re-append slash
+
+                self.export_path_dirs.append((export_path_directive.export_path, last_folder + xplaneFile.filename + ".obj"))
 
     # TODO: Shouldn't this just be inside XPlaneHeader.write if it is only called once and only here?
     # If not should it be called collect?
