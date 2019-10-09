@@ -11,7 +11,7 @@ from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectT
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestGRPRespected(XPlaneTestCase):
+class TestRootAndGRPPrefixesFollowed(XPlaneTestCase):
     def test_root_object_prefixes(self)->None:
         bpy.ops.xplane.do_249_conversion(project_type=ProjectType.SCENERY.name, workflow_type=WorkflowType.BULK.name)
         for name in ["OBJ_OBJLevel1", "OBJ_OBJLevel2", "OBJ_OBJLevel3", "BGN_BGNLevel2", "VRT_VRTLevel2", "END_ENDLevel2"]:
@@ -38,4 +38,4 @@ class TestGRPRespected(XPlaneTestCase):
         self.assertFalse(bpy.data.objects["OBJRealRoot"].xplane.isExportableRoot)
 
 
-runTestCases([TestGRPRespected])
+runTestCases([TestRootAndGRPPrefixesFollowed])
