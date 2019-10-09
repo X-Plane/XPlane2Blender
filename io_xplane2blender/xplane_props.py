@@ -932,12 +932,6 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
         max = 11
     )
 
-# Class: XPlaneLOD
-# Defines settings for a level of detail.
-#
-# Properties:
-#   int near - near distance
-#   int far - far distance
 class XPlaneLOD(bpy.types.PropertyGroup):
     expanded: bpy.props.BoolProperty(
         name = "Expanded",
@@ -1247,6 +1241,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = True
     )
 
+class XPlaneCollectionSettings(bpy.types.PropertyGroup):
+    layer: bpy.props.PointerProperty(
+        name = "X-Plane OBJ File Settings",
+        description = "X-Plane OBJ File Settings",
+        type = XPlaneLayer
+    )
 
 # Class: XPlaneSceneSettings
 # Settings for Blender scenes.
@@ -1452,7 +1452,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
 
     layer: bpy.props.PointerProperty(
         name = "X-Plane Layer",
-        description = "X-Plane Layer/File Settings",
+        description = "X-Plane OBJ File Settings",
         type = XPlaneLayer
     )
 
@@ -1817,6 +1817,7 @@ _classes = (
 
     # complex classes, depending on basic classes
     XPlaneLayer,
+    XPlaneCollectionSettings,
     XPlaneObjectSettings,
     XPlaneBoneSettings,
     XPlaneMaterialSettings,
@@ -1830,6 +1831,12 @@ def register():
     # basic classes
     for c in _classes:
         bpy.utils.register_class(c)
+
+    bpy.types.Collection.xplane = bpy.props.PointerProperty(
+        type = XPlaneCollectionSettings,
+        name = "X-Plane Collection Settings",
+        description = "X-Plane Collection Settings",
+    )
 
     bpy.types.Scene.xplane = bpy.props.PointerProperty(
         type = XPlaneSceneSettings,
