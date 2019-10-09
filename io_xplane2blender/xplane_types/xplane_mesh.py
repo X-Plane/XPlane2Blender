@@ -122,7 +122,7 @@ class XPlaneMesh():
                         # If found, skip adding to global vertices list
                         # If not found (-1), append the new vert, save its vertex
                         if bpy.context.scene.xplane.optimize:
-                            vindex = vertices_dct.get(vt_entry, default=-1)
+                            vindex = vertices_dct.get(vt_entry, -1)
                         else:
                             vindex = -1
 
