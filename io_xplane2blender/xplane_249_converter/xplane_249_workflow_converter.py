@@ -49,19 +49,17 @@ def convert_workflow(scene: bpy.types.Scene,
             ob.parent = new_root
         return [new_root]
     elif workflow_type == xplane_249_constants.WorkflowType.BULK:
-        def _find_roots(obj: bpy.types.Object):
+        def _find_roots(children: bpy.types.Object):
             roots = []
-            for child in filter(lambda c: c.type == "EMPTY", obj.children):
+            for child in children:
                 prefix = child.name.lower()
                 if prefix[:3] in {"obj", "bgn", "vrt", "end"}:
                     roots.append(child)
                 elif prefix[:3] == "grp":
-                    roots.extend(_find_roots(child))
+                    roots.extend(_find_roots(filter(lambda c: c.type == "EMPTY", child.children)))
             return roots
 
-        new_roots = []
-        for child in filter(lambda c: c.parent is None and c.type == "EMPTY", scene.objects):
-            new_roots.extend(_find_roots(child))
+        new_roots = _find_roots(obj for obj in scene.objects if obj.parent is None and obj.type == "EMPTY")
 
         for ob in new_roots:
             ob.xplane.isExportableRoot = True
