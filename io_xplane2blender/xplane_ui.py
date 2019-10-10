@@ -8,7 +8,7 @@ import bpy
 from io_xplane2blender import xplane_constants, xplane_props
 from bpy.types import Object, UILayout
 from io_xplane2blender.xplane_constants import MANIPULATORS_OPT_IN
-from typing import Optional
+from typing import Optional, Union
 
 from .xplane_config import *
 from .xplane_constants import *
@@ -30,8 +30,8 @@ class DATA_PT_xplane(bpy.types.Panel):
         version = int(bpy.context.scene.xplane.version)
 
         if obj.type == "LIGHT":
-            light_layout(self, obj.data)
-            custom_layout(self, obj.data, "LIGHT")
+            light_layout(self.layout, obj.data)
+            custom_layout(self.layout, obj.data, "LIGHT")
         if obj.type == "EMPTY" and version >= 1130:
             empty_layout(self.layout, obj)
 
@@ -57,11 +57,11 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
         if(obj.type == "MESH"):
             material_layout(self.layout, obj.active_material)
             self.layout.separator()
-            cockpit_layout(self, obj.active_material)
-            custom_layout(self, obj.active_material, "MATERIAL")
+            cockpit_layout(self.layout, obj.active_material)
+            custom_layout(self.layout, obj.active_material)
 
             if version >= 1000:
-                conditions_layout(self, obj.active_material, "MATERIAL")
+                conditions_layout(self.layout, obj.active_material)
 
 
 # Class: SCENE_PT_xplane
@@ -79,7 +79,7 @@ class SCENE_PT_xplane(bpy.types.Panel):
 
     def draw(self, context):
         scene = context.scene
-        scene_layout(self, scene)
+        scene_layout(self.layout, scene)
 
 # Class: OBJECT_PT_xplane
 # Adds X-Plane settings to the object tab. Uses <mesh_layout>, <cockpit_layout>, <manipulator_layout> and <custom_layout>.
@@ -104,22 +104,20 @@ class OBJECT_PT_xplane(bpy.types.Panel):
         version = int(context.scene.xplane.version)
 
         if obj.type in ("MESH", "EMPTY", "ARMATURE", "LIGHT"):
-            object_layer_layout(self, obj)
+            object_layer_layout(self.layout, obj)
 
-            animation_layout(self, obj)
+            animation_layout(self.layout, obj)
             if obj.type == "MESH":
-                mesh_layout(self, obj)
-                manipulator_layout(self, obj)
-            objType = obj.type
-            if objType == "LIGHT":
-                objType = "OBJECT"
-            lod_layout(self, obj)
-            weight_layout(self, obj)
-            custom_layout(self, obj, objType)
+                mesh_layout(self.layout, obj)
+                manipulator_layout(self.layout, obj)
+            lod_layout(self.layout, obj)
+            weight_layout(self.layout, obj)
+            if obj.type != "EMPTY":
+                custom_layout(self.layout, obj)
 
             # v1000
             if version >= 1000:
-                conditions_layout(self, obj, "OBJECT")
+                conditions_layout(self.layout, obj)
 
 
 # Class: BONE_PT_xplane
@@ -143,8 +141,8 @@ class BONE_PT_xplane(bpy.types.Panel):
     def draw(self, context):
         bone = context.bone
         obj = context.object
-        weight_layout(self, bone)
-        animation_layout(self, bone, True)
+        weight_layout(self.layout, bone)
+        animation_layout(self.layout, bone, True)
 
 def empty_layout(layout:bpy.types.UILayout, empty_obj:bpy.types.Object):
     assert empty_obj.type == 'EMPTY'
@@ -180,14 +178,7 @@ def empty_layout(layout:bpy.types.UILayout, empty_obj:bpy.types.Object):
         sub_row.prop(emp.magnet_props, "magnet_type_is_flashlight")
 
 
-# Function: scene_layout
-# Draws the UI layout for scene tabs. Uses <layer_layout>.
-#
-# Parameters:
-#   self - Instance of current panel class.
-#   scene - Blender scene.
-def scene_layout(self, scene):
-    layout = self.layout
+def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "exportMode")
@@ -239,9 +230,9 @@ def scene_layout(self, scene):
         #debug_box.prop(scene.xplane, "profile")
         debug_box.prop(scene.xplane, "log")
 
-    scene_dev_layout(self,scene,layout)
+    scene_dev_layout(layout, scene)
 
-def scene_dev_layout(self,scene,layout):
+def scene_dev_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
     dev_box = layout.box()
     dev_box_row = dev_box.column_flow(columns=2, align=True)
     dev_box_row.prop(scene.xplane, "plugin_development")
@@ -286,14 +277,12 @@ def collection_layer_layout(layout: bpy.types.UILayout, collection: bpy.types.Co
 
     if layer_props.expanded:
         expandIcon = "TRIA_DOWN"
-        expanded = True
     else:
         expandIcon = "TRIA_RIGHT"
-        expanded = False
 
     box.prop(layer_props, "expanded", text = collection.name, expand = True, emboss = False, icon = expandIcon)
 
-    if expanded:
+    if layer_props.expanded:
         layer_layout(box, layer_props, version, "object")
         export_path_dir_layer_layout(box, layer_props, version, "object")
         custom_layer_layout(box, layer_props, version, "object")
@@ -302,12 +291,12 @@ def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
     if bpy.context.scene.xplane.exportMode == 'root_objects':
         version = int(bpy.context.scene.xplane.version)
         layer_props = obj.xplane.layer
-        row = layout.layout.row()
+        row = layout.row()
 
         row.prop(obj.xplane, 'isExportableRoot')
 
         if obj.xplane.isExportableRoot:
-            row = layout.layout.row()
+            row = layout.row()
             box = row.box()
 
             if layer_props.expanded:
@@ -320,9 +309,9 @@ def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
             box.prop(layer_props, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
 
             if expanded:
-                layer_layout(layout, box, layer_props, version, "object")
-                export_path_dir_layer_layout(layout, box, layer_props, version, "object")
-                custom_layer_layout(layout, box, layer_props, version, "object")
+                layer_layout(box, layer_props, version, "object")
+                export_path_dir_layer_layout(box, layer_props, version, "object")
+                custom_layer_layout(box, layer_props, version, "object")
 
 def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLayer, version:int, context:str):
     """Draws OBJ File Settings and advanced options"""
@@ -521,15 +510,8 @@ def export_path_dir_layer_layout(layout:bpy.types.UILayout, layer_props:xplane_p
         if context == 'object':
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
-# Function: mesh_layout
-# Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def mesh_layout(self, obj):
-    layout = self.layout
-
+def mesh_layout(layout:bpy.types.UILayout, obj):
+    """Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling."""
     if bpy.context.scene.xplane.exportMode == 'layers':
         row = layout.row()
         row.prop(obj.xplane, "export_mesh", text = "Export Animation In Layers")
@@ -665,58 +647,52 @@ def material_layout(layout:UILayout,
 
     layout.row().prop(active_material.xplane, "poly_os")
 
-# Function: custom_layout
-# Draws the additional UI layout for custom attributes.
-#
-# Parameters:
-#   obj - Blender object.
-#   string type - Type of object. ("MESH", "MATERIAL", "LIGHT")
-def custom_layout(layout:bpy.types.UILayout, obj:bpy.types.Object, object_type:str):
-    if object_type in ("MESH", "ARMATURE", "OBJECT"):
-        oType = 'object'
-    elif object_type == "MATERIAL":
-        oType = 'material'
-    elif object_type == "LIGHT":
-        oType = 'light'
+def custom_layout(
+        layout:bpy.types.UILayout,
+        has_custom_props:[bpy.types.Armature, bpy.types.Light, bpy.types.Material, bpy.types.Object]):
+    if isinstance(has_custom_props, bpy.types.Material):
+        op_type = "material"
+    elif has_custom_props.type == "LIGHT":
+        op_type = "light"
+    elif has_custom_props.type in {"ARMATURE", "MESH"}:
+        op_type = "object"
     else:
-        oType = None
+        assert False, has_custom_props.name + " does not have custom_props"
 
     layout.separator()
 
-    if oType:
-        # regular attributes
+    # regular attributes
+    row = layout.row()
+    row.label(text="Custom Properties")
+    row.operator("object.add_xplane_"+op_type+"_attribute")
+    box = layout.box()
+    for i, attr in enumerate(has_custom_props.xplane.customAttributes):
+        subbox = box.box()
+        subrow = subbox.row()
+        subrow.prop(attr, "name")
+        subrow.operator("object.remove_xplane_"+op_type+"_attribute", text = "", emboss = False, icon = "X").index = i
+        subrow = subbox.row()
+        subrow.prop(attr, "value")
+        subrow = subbox.row()
+        subrow.prop(attr, "reset")
+        subrow = subbox.row()
+        subrow.prop(attr, "weight")
+
+    # animation attributes
+    if op_type != "material":
         row = layout.row()
-        row.label(text="Custom Properties")
-        row.operator("object.add_xplane_"+oType+"_attribute")
+        row.label(text="Custom Animation Properties")
+        row.operator("object.add_xplane_object_anim_attribute")
         box = layout.box()
-        for i, attr in enumerate(obj.xplane.customAttributes):
+        for i, attr in enumerate(has_custom_props.xplane.customAnimAttributes):
             subbox = box.box()
             subrow = subbox.row()
             subrow.prop(attr, "name")
-            subrow.operator("object.remove_xplane_"+oType+"_attribute", text = "", emboss = False, icon = "X").index = i
+            subrow.operator("object.remove_xplane_object_anim_attribute", text = "", emboss = False, icon = "X").index = i
             subrow = subbox.row()
             subrow.prop(attr, "value")
-            if object_type in ("MATERIAL", "MESH", "LIGHT", "ARMATURE"):
-                subrow = subbox.row()
-                subrow.prop(attr, "reset")
-                subrow = subbox.row()
-                subrow.prop(attr, "weight")
-
-        # animation attributes
-        if object_type in ("MESH", "ARMATURE", "OBJECT"):
-            row = layout.row()
-            row.label(text="Custom Animation Properties")
-            row.operator("object.add_xplane_object_anim_attribute")
-            box = layout.box()
-            for i, attr in enumerate(obj.xplane.customAnimAttributes):
-                subbox = box.box()
-                subrow = subbox.row()
-                subrow.prop(attr, "name")
-                subrow.operator("object.remove_xplane_object_anim_attribute", text = "", emboss = False, icon = "X").index = i
-                subrow = subbox.row()
-                subrow.prop(attr, "value")
-                subrow = subbox.row()
-                subrow.prop(attr, "weight")
+            subrow = subbox.row()
+            subrow.prop(attr, "weight")
 
 # Function: animation_layout
 def animation_layout(layout:bpy.types.UILayout, obj:bpy.types.Object, is_bone:bool = False):
@@ -785,7 +761,6 @@ def animation_layout(layout:bpy.types.UILayout, obj:bpy.types.Object, is_bone:bo
 
 def cockpit_layout(layout: bpy.types.UILayout, active_material:bpy.types.Material):
     """Draws UI for cockpit and panel regions"""
-    layout = self.layout
     cockpit_box = layout.box()
     cockpit_box.label(text="Cockpit Panel")
     cockpit_box_column = cockpit_box.column()
@@ -814,14 +789,7 @@ def axis_detent_ranges_layout(layout:bpy.types.UILayout, manip:xplane_props.XPla
 
         row.operator("object.remove_xplane_axis_detent_range", text="", emboss=False, icon="X").index = i
 
-# Function: manipulator_layout
-# Draws the UI layout for manipulator settings.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def manipulator_layout(self, obj):
-    layout = self.layout
+def manipulator_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     row = layout.row()
     row.prop(obj.xplane.manip, 'enabled')
 
@@ -1033,53 +1001,31 @@ def manipulator_layout(self, obj):
 
         if  manipType == MANIP_DRAG_AXIS_DETENT or\
             manipType == MANIP_DRAG_ROTATE_DETENT:
-            axis_detent_ranges_layout(self, box, obj.xplane.manip)
+            axis_detent_ranges_layout(box, obj.xplane.manip)
 
-# Function: conditions_layout
-# Draws the UI layout for conditions.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-#   obgType - object type
-def conditions_layout(self, obj, obgType):
-    layout = self.layout
-
-    obgType = obgType.lower()
+def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy.types.Material, bpy.types.Object]):
+    assert isinstance(could_have_conditions, bpy.types.Material) or isinstance(could_have_conditions, bpy.types.Object)
+    op_type = "material" if isinstance(could_have_conditions, bpy.types.Material) else "object"
 
     # regular attributes
     row = layout.row()
     row.label(text="Conditions")
-    row.operator('object.add_xplane_' + obgType + '_condition', text = "Add Condition")
+    row.operator('object.add_xplane_' + op_type + '_condition', text = "Add Condition")
     box = layout.box()
-    for i, attr in enumerate(obj.xplane.conditions):
+    for i, attr in enumerate(could_have_conditions.xplane.conditions):
         subbox = box.box()
         subrow = subbox.row()
         subrow.prop(attr, "variable")
-        subrow.operator('object.remove_xplane_' + obgType + '_condition', text = "", emboss = False, icon = "X").index = i
+        subrow.operator('object.remove_xplane_' + op_type + '_condition', text = "", emboss = False, icon = "X").index = i
         subrow = subbox.row()
         subrow.prop(attr, "value")
 
-# Function: lod_layout
-# Draws the UI for Levels of detail
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def lod_layout(self, obj):
+def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     if bpy.context.scene.xplane.exportMode == 'layers':
-        layout = self.layout
         row = layout.row()
         row.prop(obj.xplane, "lod", text = "LOD")
 
-# Function: weight_layout
-# Draws the UI for Object weight
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def weight_layout(self, obj):
-    layout = self.layout
+def weight_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     row = layout.row()
     row.prop(obj.xplane, 'override_weight')
     if obj.xplane.override_weight:
