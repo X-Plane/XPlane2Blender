@@ -346,7 +346,7 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
                 region_box = cockpit_box.box()
 
                 if context == 'object':
-                    region_box.operator("object.add_xplane_layer_cockpit_regions")
+                    region_box.operator("xplane.add_xplane_layer_cockpit_regions").layer_props = layer_props
             else:
                 for i in range(0, num_regions):
                     # get cockpit region or create it if not present
@@ -384,27 +384,21 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
         num_lods = int(layer_props.lods)
 
         if num_lods > 0:
-            if len(layer_props.lod) < num_lods:
-                lod_box = lods_box.box()
+            for i in range(0, num_lods):
+                if len(layer_props.lod)>i:
+                    lod = layer_props.lod[i]
 
-                if context == 'object':
-                    lod_box.operator("object.add_xplane_layer_lods")
-            else:
-                for i in range(0, num_lods):
-                    if len(layer_props.lod)>i:
-                        lod = layer_props.lod[i]
+                    if lod.expanded:
+                        expandIcon = "TRIA_DOWN"
+                    else:
+                        expandIcon = "TRIA_RIGHT"
 
-                        if lod.expanded:
-                            expandIcon = "TRIA_DOWN"
-                        else:
-                            expandIcon = "TRIA_RIGHT"
+                    lod_box = lods_box.box()
+                    lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
 
-                        lod_box = lods_box.box()
-                        lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
-
-                        if lod.expanded:
-                            lod_box.prop(lod, "near")
-                            lod_box.prop(lod, "far")
+                    if lod.expanded:
+                        lod_box.prop(lod, "near")
+                        lod_box.prop(lod, "far")
 
         if canHaveDraped:
             lods_box.prop(layer_props, "lod_draped")

@@ -1,13 +1,15 @@
 # File: xplane_ops.py
 # Defines Operators
 import pathlib
+from typing import Optional
 
 import bpy
+from io_xplane2blender import xplane_props
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_constants import MAX_COCKPIT_REGIONS, MAX_LODS
 from io_xplane2blender.xplane_ops_dev import *
-from io_xplane2blender.xplane_utils import xplane_commands_txt_parser, \
-                                           xplane_datarefs_txt_parser
+from io_xplane2blender.xplane_utils import (xplane_commands_txt_parser,
+                                           xplane_datarefs_txt_parser)
 
 # Function: findFCurveByPath
 # Helper function to find an FCurve by an data-path.
@@ -59,7 +61,13 @@ def makeKeyframesLinear(obj, path):
 #
 # Returns:
 #   string - data path
-def getDatarefValuePath(index, bone = None):
+def getDatarefValuePath(index:int, bone:Optional[bpy.types.Bone]=None)->str:
+    """
+    Returns the keyframe data path for an XPlaneDataref value on a bone or object"
+
+    index is tied with the remove_xplane_dataref operator.
+    """
+
     if bone:
         return 'bones["%s"].xplane.datarefs[%d].value' % (bone.name, index)
     else:
@@ -117,18 +125,17 @@ class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
         obj.xplane.manip.axis_detent_ranges.remove(self.index)
         return {'FINISHED'}
 
-class OBJECT_OT_add_xplane_layer_lods(bpy.types.Operator):
-    bl_label = 'Add levels of detail'
-    bl_idname = 'object.add_xplane_layer_lods'
-    bl_description = 'Add X-Plane layer LODs'
+class XPLANE_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
+    bl_label = 'Add cockpit regions'
+    bl_idname = 'xplane.add_xplane_layer_cockpit_regions'
+    bl_description = 'Add X-Plane layer Cockpit Regions'
 
+    layer_props: bpy.props.PointerProperty(type=xplane_props.XPlaneLayer)
     def execute(self, context):
-        obj = context.object
+        num_regions = int(self.layer_props.cockpit_regions)
 
-        num_lods = int(obj.xplane.layer.lods)
-
-        while len(obj.xplane.layer.lod) < MAX_LODS:
-            obj.xplane.layer.lod.add()
+        while len(self.layer_props.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
+            self.layer_props.cockpit_region.add()
 
         return {'FINISHED'}
 
@@ -147,8 +154,6 @@ class OBJECT_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
 
         return {'FINISHED'}
 
-# Class: OBJECT_OT_add_xplane_layer_attribute
-# Adds a custom attribute to a <XPlaneLayer>.
 class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
     bl_label = 'Add Layer Property'
     bl_idname = 'object.add_xplane_layer_attribute'
@@ -620,8 +625,7 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
 _ops = (
     OBJECT_OT_add_xplane_axis_detent_range,
     OBJECT_OT_remove_xplane_axis_detent_range,
-    OBJECT_OT_add_xplane_layer_lods,
-    OBJECT_OT_add_xplane_layer_cockpit_regions,
+    XPLANE_OT_add_xplane_layer_cockpit_regions,
     OBJECT_OT_add_xplane_layer_attribute,
     OBJECT_OT_remove_xplane_layer_attribute,
     OBJECT_OT_add_xplane_object_attribute,

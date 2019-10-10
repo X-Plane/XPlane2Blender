@@ -959,20 +959,22 @@ def make_lods_array():
         lods_arr.append((str(i),str(i),str(i)))
     return lods_arr
 
-# Class: XPlaneLayer
-# Defines settings for a OBJ file. Is "parented" to a Blender layer.
-#
-# Properties:
-#   int index - index of this layer.
-#   bool expanded - True if the settings of this layer are expanded in the UI.
-#   string name - Name of the OBJ file to export from this layer.
-#   bool cockpit - True if this layer serves as a cockpit OBJ.
-#   float slungLoadWeight - Slung Load weight
-#   string texture - Texture file to use for this OBJ.
-#   string texture_lit - Night Texture to use for this OBJ.
-#   string texture_normal - Normal/Specular Texture to use for this OBJ.
-#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane header attributes.
+
+#TODO: Maybe we should change all this "X-Plane Layer" stuff
+# to XPLaneOBJSettings or something
 class XPlaneLayer(bpy.types.PropertyGroup):
+    """
+    Defines settings for an OBJ file. Is was formerly tied to
+    Blender 3D-View Layers, but now it is only used for Root Objects
+    """
+    def update_lods(self, context):
+        #MAX_LODS also counts "None"
+        while len(self.lod) < xplane_constants.MAX_LODS - 1:
+            self.lod.add()
+
+        return None
+
+
     index: bpy.props.IntProperty(
         name = "Index",
         description = "The blender layer index",
@@ -1102,13 +1104,14 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Levels of Detail",
         description = "Levels of detail",
         default = "0",
-        items = make_lods_array()
+        items = make_lods_array(),
+        update = update_lods
     )
 
     lod: bpy.props.CollectionProperty(
         name = "LOD",
         type = XPlaneLOD,
-        description = "Level of detail"
+        description = "Level of detail",
     )
 
     # v1000
