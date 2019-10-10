@@ -342,34 +342,28 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
         num_regions = int(layer_props.cockpit_regions)
 
         if num_regions > 0:
-            if len(layer_props.cockpit_region) < num_regions:
-                region_box = cockpit_box.box()
+            for i in range(0, num_regions):
+                # get cockpit region or create it if not present
+                if len(layer_props.cockpit_region)>i:
+                    cockpit_region = layer_props.cockpit_region[i]
 
-                if context == 'object':
-                    region_box.operator("xplane.add_xplane_layer_cockpit_regions").layer_props = layer_props
-            else:
-                for i in range(0, num_regions):
-                    # get cockpit region or create it if not present
-                    if len(layer_props.cockpit_region)>i:
-                        cockpit_region = layer_props.cockpit_region[i]
+                    if cockpit_region.expanded:
+                        expandIcon = "TRIA_DOWN"
+                    else:
+                        expandIcon = "TRIA_RIGHT"
 
-                        if cockpit_region.expanded:
-                            expandIcon = "TRIA_DOWN"
-                        else:
-                            expandIcon = "TRIA_RIGHT"
+                    region_box = cockpit_box.box()
+                    region_box.prop(cockpit_region, "expanded", text = "Cockpit region %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
 
-                        region_box = cockpit_box.box()
-                        region_box.prop(cockpit_region, "expanded", text = "Cockpit region %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
-
-                        if cockpit_region.expanded:
-                            region_box.prop(cockpit_region, "left")
-                            region_box.prop(cockpit_region, "top")
-                            region_split = region_box.split(factor = 0.5)
-                            region_split.prop(cockpit_region, "width")
-                            region_split.label(text="= %d" % (2 ** cockpit_region.width))
-                            region_split = region_box.split(factor = 0.5)
-                            region_split.prop(cockpit_region, "height")
-                            region_split.label(text="= %d" % (2 ** cockpit_region.height))
+                    if cockpit_region.expanded:
+                        region_box.prop(cockpit_region, "left")
+                        region_box.prop(cockpit_region, "top")
+                        region_split = region_box.split(factor = 0.5)
+                        region_split.prop(cockpit_region, "width")
+                        region_split.label(text="= %d" % (2 ** cockpit_region.width))
+                        region_split = region_box.split(factor = 0.5)
+                        region_split.prop(cockpit_region, "height")
+                        region_split.label(text="= %d" % (2 ** cockpit_region.height))
 
         # v1010
         if version < 1100:

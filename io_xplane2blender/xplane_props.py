@@ -967,8 +967,13 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     Defines settings for an OBJ file. Is was formerly tied to
     Blender 3D-View Layers, but now it is only used for Root Objects
     """
+    def update_cockpit_regions(self, context)->None:
+        while len(self.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
+            self.cockpit_region.add()
+        return None
+
     def update_lods(self, context):
-        #MAX_LODS also counts "None"
+        #MAX_LODS also counts "None", so we have to subtract by 1
         while len(self.lod) < xplane_constants.MAX_LODS - 1:
             self.lod.add()
 
@@ -1091,7 +1096,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
             ("2", "2", "2"),
             ("3", "3", "3"),
             ("4", "4", "4")
-        ]
+        ],
+        update=update_cockpit_regions
     )
 
     cockpit_region: bpy.props.CollectionProperty(

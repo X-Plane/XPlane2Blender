@@ -260,9 +260,12 @@ def load_handler(dummy):
     filepath = bpy.context.blend_data.filepath
 
     #TODO: Unit test, limit to what we call an
+    #TODO: thing? really?
     for layer_props in [thing.xplane.layer for thing in bpy.data.objects[:] + bpy.data.collections[:]]:
         while len(layer_props.lod) < xplane_constants.MAX_LODS - 1:
             layer_props.lod.add()
+        while len(layer_props.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
+            layer_props.cockpit_region.add()
 
     # do not update newly created files
     if not filepath:

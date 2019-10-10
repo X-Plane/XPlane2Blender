@@ -125,20 +125,6 @@ class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
         obj.xplane.manip.axis_detent_ranges.remove(self.index)
         return {'FINISHED'}
 
-class XPLANE_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
-    bl_label = 'Add cockpit regions'
-    bl_idname = 'xplane.add_xplane_layer_cockpit_regions'
-    bl_description = 'Add X-Plane layer Cockpit Regions'
-
-    layer_props: bpy.props.PointerProperty(type=xplane_props.XPlaneLayer)
-    def execute(self, context):
-        num_regions = int(self.layer_props.cockpit_regions)
-
-        while len(self.layer_props.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
-            self.layer_props.cockpit_region.add()
-
-        return {'FINISHED'}
-
 class OBJECT_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
     bl_label = 'Add cockpit regions'
     bl_idname = 'object.add_xplane_layer_cockpit_regions'
@@ -625,7 +611,6 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
 _ops = (
     OBJECT_OT_add_xplane_axis_detent_range,
     OBJECT_OT_remove_xplane_axis_detent_range,
-    XPLANE_OT_add_xplane_layer_cockpit_regions,
     OBJECT_OT_add_xplane_layer_attribute,
     OBJECT_OT_remove_xplane_layer_attribute,
     OBJECT_OT_add_xplane_object_attribute,
