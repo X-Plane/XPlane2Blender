@@ -259,9 +259,9 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
 def load_handler(dummy):
     filepath = bpy.context.blend_data.filepath
 
-    #TODO: Unit test, limit to what we call an
-    #TODO: thing? really?
-    for layer_props in [thing.xplane.layer for thing in bpy.data.objects[:] + bpy.data.collections[:]]:
+    for layer_props in [has_layer_props.xplane.layer for has_layer_props in bpy.data.objects[:] + bpy.data.collections[:]]:
+        # Since someone could add lods/cockpit_regions just before export, export needs to be the one
+        # to validate the size of the collection
         while len(layer_props.lod) < xplane_constants.MAX_LODS - 1:
             layer_props.lod.add()
         while len(layer_props.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:

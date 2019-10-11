@@ -967,6 +967,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     Defines settings for an OBJ file. Is was formerly tied to
     Blender 3D-View Layers, but now it is only used for Root Objects
     """
+
+    """
+    In case something removes lods or cockpit regions in Blender
+    via Python after load, we need to make sure users can, even accidentally,
+    make it come back. We solve this with an update function on the props.
+
+    Either they change lods or cockpits trying to figure out what happened
+    or they'll reload the file and the problem will be (hopefully solved)
+    """
     def update_cockpit_regions(self, context)->None:
         while len(self.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
             self.cockpit_region.add()

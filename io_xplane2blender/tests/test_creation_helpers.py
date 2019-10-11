@@ -1,6 +1,7 @@
 import math
 import os.path
 import typing
+import shutil
 from collections import namedtuple
 from typing import *
 
@@ -609,6 +610,26 @@ def set_xplane_layer(layer:Union[int,io_xplane2blender.xplane_props.XPlaneLayer]
 
     for prop,value in layer_props.items():
         setattr(layer,prop,value)
+
+class TemporaryStartFile():
+    def __init__(self, temporary_startup_path:str):
+        self.temporary_startup_path = temporary_startup_path
+
+    def __enter__(self)->None:
+        real_startup_filepath = os.path.join(bpy.utils.user_resource("CONFIG"), "startup.blend")
+        try:
+            os.replace(real_startup_filepath, real_startup_filepath + ".bak")
+        except FileNotFoundError:
+            pass
+        else:
+            shutil.copyfile(self.temporary_startup_path, real_startup_filepath)
+        bpy.ops.wm.read_homefile()
+
+    def __exit__(self, type, value, traceback)->None:
+        real_startup_filepath = os.path.join(bpy.utils.user_resource("CONFIG"), "startup.blend")
+        os.replace(real_startup_filepath + ".bak", real_startup_filepath)
+        return False
+
 
 def create_initial_test_setup():
     bpy.ops.wm.read_homefile()
