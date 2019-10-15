@@ -42,19 +42,6 @@ def get_plugin_resources_folder()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
 
 
-def get_potential_objects_in_layer(layer_idx: int, scene: bpy.types.Scene)->List[bpy.types.Object]:
-    '''
-    Returns roughly what xplane_file will collect in a Layer Mode
-    export, taking into account only object type and layer, not its visibilty
-    '''
-    assert layer_idx in range(0,20), "Layer must be between 0 and 19"
-
-    return list(
-            filter(
-                lambda obj: obj.layers[layer_idx] and obj.type in {"MESH", "LIGHT", "ARMATURE", "EMPTY"},
-                scene.objects))
-
-
 def get_potential_objects_in_root_object(root_object: bpy.types.Object)->List[bpy.types.Object]:
     assert root_object.xplane.isExportableRoot, "Must be Root Object"
     def collect_children(obj: bpy.types.Object)->List[bpy.types.Object]:

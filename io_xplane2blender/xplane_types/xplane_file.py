@@ -21,7 +21,7 @@ import bpy
 import mathutils
 
 from typing import List, Union, Optional
-from io_xplane2blender import xplane_helpers
+from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_types import xplane_empty
 
 from ..xplane_helpers import floatToStr, logger
@@ -37,33 +37,6 @@ from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 
 #TODO: Delete all traces of XPlaneLine from .xplane_line import XPlaneLine
-# Function: getActiveLayers
-# Returns indices of all active Blender layers.
-#
-# Returns:
-#   list - Indices of all active blender layers.
-def getActiveBlenderLayerIndexes():
-    layers = []
-    for i in range(0, len(bpy.context.scene.layers)):
-        if bpy.context.scene.layers[i] and bpy.context.scene.xplane.layers[i].export:
-            layers.append(i)
-
-    return layers
-
-def getXPlaneLayerForBlenderLayerIndex(layerIndex):
-    if len(bpy.context.scene.xplane.layers) > 0:
-        return bpy.context.scene.xplane.layers[layerIndex]
-    else:
-        return None
-
-def getFilenameFromXPlaneLayer(xplaneLayer):
-    if xplaneLayer.name == "":
-        filename = "layer_%s" % (str(xplaneLayer.index+1).zfill(2))
-    else:
-        filename = xplaneLayer.name
-
-    return filename
-
 def getFileNameFromBlenderObject(blenderObject, xplaneLayer):
     if xplaneLayer.name == "":
         filename = blenderObject.name
@@ -71,30 +44,6 @@ def getFileNameFromBlenderObject(blenderObject, xplaneLayer):
         filename = xplaneLayer.name
 
     return filename
-
-def createFilesFromBlenderLayers():
-    xplaneFiles = []
-
-    for layerIndex in getActiveBlenderLayerIndexes():
-        xplaneFile = createFileFromBlenderLayerIndex(layerIndex)
-
-        if xplaneFile:
-            xplaneFiles.append(xplaneFile)
-
-    return xplaneFiles
-
-def createFileFromBlenderLayerIndex(layerIndex):
-    xplaneFile = None
-    xplaneLayer = getXPlaneLayerForBlenderLayerIndex(layerIndex)
-
-    if xplaneLayer:
-        xplaneFile = XPlaneFile(getFilenameFromXPlaneLayer(xplaneLayer), xplaneLayer)
-
-        if xplaneFile:
-            xplaneFile.exportMode = bpy.context.scene.xplane.exportMode
-            xplaneFile.collectFromBlenderLayerIndex(layerIndex)
-
-    return xplaneFile
 
 def createFileFromBlenderRootObject(blenderObject):
     xplaneFile = None
@@ -147,7 +96,9 @@ class XPlaneFile():
         # dict of xplane objects within the file
         self.objects = collections.OrderedDict() # type: collections.OrderedDict
 
-        self.exportMode = 'layers'
+        #TODO: There is no export mode anymore, there is only root objects
+        # But, I'd rather not deal with removing it all right now
+        self.exportMode = xplane_constants.EXPORT_MODE_ROOT_OBJECTS
 
         # the root bone: origin for all animations/objects
         self.rootBone = None

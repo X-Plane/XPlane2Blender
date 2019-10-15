@@ -91,15 +91,6 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
 
         exportMode = bpy.context.scene.xplane.exportMode
 
-        if exportMode == 'layers':
-            # check if X-Plane layers have been created
-            # TODO: only check if user selected the export from layers option, instead the export from root objects
-            if len(bpy.context.scene.xplane.layers) == 0:
-                logger.error('You must create X-Plane layers first.')
-                self._endLogging()
-                showLogDialog()
-                return {'CANCELLED'}
-
         # store current frame as we will go back to it
         currentFrame = bpy.context.scene.frame_current
 
@@ -109,10 +100,7 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
 
         xplaneFiles = []
 
-        if exportMode == 'layers':
-            xplaneFiles = xplane_file.createFilesFromBlenderLayers()
-
-        elif exportMode == 'root_objects':
+        if exportMode == 'root_objects':
             xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
 
         for xplaneFile in xplaneFiles:

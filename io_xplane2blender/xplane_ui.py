@@ -499,12 +499,19 @@ def export_path_dir_layer_layout(layout:bpy.types.UILayout, layer_props:xplane_p
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
 def mesh_layout(layout:bpy.types.UILayout, obj):
-    """Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling."""
+    """
+    Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling.
+    A no-op until issue #409 is decided on
+    """
+    pass
+    """
     if bpy.context.scene.xplane.exportMode == 'layers':
         row = layout.row()
         row.prop(obj.xplane, "export_mesh", text = "Export Animation In Layers")
 
     row = layout.row()
+    """
+
 
 def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Light):
     row = layout.row()
@@ -1009,9 +1016,13 @@ def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy
         subrow.prop(attr, "value")
 
 def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
-    if bpy.context.scene.xplane.exportMode == 'layers':
-        row = layout.row()
-        row.prop(obj.xplane, "lod", text = "LOD")
+    pass
+    """
+    # A no-op until issue #451 is closed
+    #TODO: We need this for LOD support
+    row = layout.row()
+    row.prop(obj.xplane, "lod", text = "LOD")
+    """
 
 def weight_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     row = layout.row()

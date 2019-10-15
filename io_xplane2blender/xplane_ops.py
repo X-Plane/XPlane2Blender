@@ -125,20 +125,6 @@ class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
         obj.xplane.manip.axis_detent_ranges.remove(self.index)
         return {'FINISHED'}
 
-class OBJECT_OT_add_xplane_layer_cockpit_regions(bpy.types.Operator):
-    bl_label = 'Add cockpit regions'
-    bl_idname = 'object.add_xplane_layer_cockpit_regions'
-    bl_description = 'Add X-Plane layer Cockpit Regions'
-
-    def execute(self, context):
-        obj = context.object
-
-        num_regions = int(obj.xplane.layer.cockpit_regions)
-
-        while len(obj.xplane.layer.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
-            obj.xplane.layer.cockpit_region.add()
-
-        return {'FINISHED'}
 
 class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
     bl_label = 'Add Layer Property'

@@ -57,6 +57,7 @@ EMPTY_USAGE_EMITTER_PARTICLE = "emitter_particle"
 EMPTY_USAGE_EMITTER_SOUND = "emitter_sound"
 EMPTY_USAGE_MAGNET = "magnet"
 
+# Kept for historical reasons for the updater
 EXPORT_MODE_LAYERS = "layers"
 EXPORT_MODE_ROOT_OBJECTS = "root_objects"
 

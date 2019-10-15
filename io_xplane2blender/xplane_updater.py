@@ -199,34 +199,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
 
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
-            if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_LAYERS:
-                for layer_idx, layer_options in enumerate(scene.xplane.layers):
-                    potential_objects = xplane_helpers.get_potential_objects_in_layer(layer_idx, scene)
-                    # So we don't do all this update code for empty layers
-                    # or Aircraft or Cockpit which should remain True
-                    if not potential_objects:
-                        continue
-                    if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
-                        # Force shadow, in case a user somehow changed "Cast Shadow (Global)"
-                        # to False but has non scenery export type
-
-                        # We don't normally do things this way, but, "Cast Shadow (Global)" is soon to be deleted
-                        layer_options["shadow"] = True
-                    potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
-                    _update_potential_materials(potential_materials, layer_options)
-                    # Save usage of materials in this layer
-                    used_layer_info = UsedLayerInfo(
-                                            options=layer_options,
-                                            cast_shadow=bool(layer_options.get("shadow", True)),
-                                            final_name=layer_options.name if layer_options.name else "layer_{:02}".format(layer_idx)
-                                        )
-
-                    for mat in potential_materials:
-                        material_uses[mat].append(used_layer_info)
-
-                for layer_idx, layer_options in enumerate(scene.xplane.layers):
-                    _delete_shadow(layer_options)
-            elif scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
+            if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
                 for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
                     layer_options = root_obj.xplane.layer
                     if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
@@ -254,6 +227,12 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 del obj.xplane.layer["shadow"]
             except KeyError:
                 pass
+
+    #TODO: Unit test
+    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0-dev.0"):
+        for scene in bpy.data.scenes:
+            for layer_props in [obj.xplane.layer for obj in scene.objects]:
+                layer_props.autodetectTextures = False
 
 @persistent
 def load_handler(dummy):

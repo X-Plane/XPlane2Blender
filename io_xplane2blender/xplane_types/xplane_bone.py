@@ -29,8 +29,7 @@ class XPlaneBone():
                  parent:Optional['XPlaneBone']=None,
                  xplaneFile:Optional['XPlaneFile']=None):
         '''
-        self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy
-        - It will be None for the root bone (in layers mode)
+        self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy)
 
         self.blenderBone is the Blender Bone associated with this XPlaneBone (if the origin during traversal was a bpy.types.Bone)
         Thus, you can tell if something was a Bone by if blenderBone is not None
