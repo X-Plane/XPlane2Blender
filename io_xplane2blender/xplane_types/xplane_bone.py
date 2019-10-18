@@ -9,6 +9,13 @@ However, where as the Blender Outliner is focused on Collections and Objects and
 connections between them, the XPlane2Blender hierarchy is focused on a tree
 structure of XPlaneBones with XPlaneObjects associated with them.
 
+In the Blender hierarchy, every "tree node" is a real Blender Datablock, which
+may have children.
+
+In the XPlane2Blender hierarchy, every XPlaneBone is real and may have children, and may have an XPlaneObject.
+In addition, XPlaneBones exist for Convertable and Unconvertable Datablocks, Collections, and Bones themselves
+
+XPlaneBone is a bit poorly named, it does not represent a connection or an edge. It should really be called XPlaneNode
 """
 
 import math
@@ -22,37 +29,38 @@ from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
 from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
 #from xplane_object import XPlaneObject
 
-# Class: XPlaneBone
-# Animation/Hierarchy primitive
 class XPlaneBone():
     def __init__(self,
-                 blender_obj:bpy.types.Object,
                  xplane_file:'XPlaneFile',
+                 blender_obj:bpy.types.Object,
+                 blender_bone:Optional[bpy.types.Bone]=None,
                  xplane_obj:Optional['XPlaneObject']=None,
-                 parent_bone:Optional['XPlaneBone']=None):
+                 parent_xplane_bone:Optional['XPlaneBone']=None):
         """
         self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy)
 
         self.blenderBone is the Blender Bone associated with this XPlaneBone (if the origin during traversal was a bpy.types.Bone)
         Thus, you can tell if something was a Bone by if blenderBone is not None
+
+        XPlaneBone is responsible for tieing the xplane_obj (if any) with this XPlaneBone, and adding
+        the us to the parent_xplane_bone's children. This way it is all kept in one place and can't be forgotten
         """
         self.xplaneObject = xplane_obj
         self.blenderObject = blender_obj
         if self.xplaneObject:
             assert self.xplaneObject.blenderObject == self.blenderObject, f"XPlaneBone ({self.blenderObject.name}) and XPlaneObject's blenderObject do not match ({self.blenderObject.name}, {self.xplaneObject.name})"
-        self.blenderBone = None
-        self.parent = parent_bone
+        self.blenderBone = blender_bone
+        self.parent = parent_xplane_bone
         self.xplaneFile = xplane_file
         self.children = []
 
         if self.xplaneObject:
             self.xplaneObject.xplaneBone = self
+        if self.parent:
+            self.parent.children.append(self)
 
         # nesting level of this bone (used for intendation)
-        self.level = 0
-
-        if self.parent:
-            self.level = self.parent.level + 1
+        self.level = self.parent.level + 1 if self.parent else 0
 
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
         self.animations = {} # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
@@ -61,6 +69,7 @@ class XPlaneBone():
         # IMPORTANT NOTE: Show/Hide Datarefs and datarefs without 2 keyframes will not be included and
         # must be accessed via blenderObject.xplane.datarefs!
         self.datarefs = {} # type: Dict[bpy.types.StringProperty,XPlaneDataref]
+        self.collectAnimations()
 
     def sortChildren(self):
         def getWeight(xplaneBone):
@@ -107,17 +116,16 @@ class XPlaneBone():
 
         return False
 
-    # Method: isAnimated
-    # Checks if the object is animated.
-    #
-    # Returns:
-    #   bool - True if bone is animated, False if not.
-    def isAnimated(self):
+    def isAnimated(self)->bool:
+        """Uses isDataRefAnimated functions to check if the object is animated"""
         return self.isDataRefAnimatedForTranslation() or self.isDataRefAnimatedForRotation()
 
-    # Method: collectAnimations
-    # Stores all animations in <animations>.
-    def collectAnimations(self):
+    def collectAnimations(self)->None:
+        """
+        Collects animation_data from blenderObject, and pairs it with xplane datarefs
+        """
+        #TODO: Why is this a thing?
+        # Obviously we don't use self.parent in here so it must be semantics of the animation system
         if not self.parent:
             return None
 
@@ -158,7 +166,6 @@ class XPlaneBone():
                     if not fcurve.data_path.startswith(path_we_want):
                         continue
 
-                #if (fcurve.group != None and fcurve.group.name == groupName): # since 2.61 group names are not set so we have to check the datapath
                 if ('xplane.datarefs' in fcurve.data_path):
                     # get dataref name
                     pos = fcurve.data_path.find('xplane.datarefs[')
