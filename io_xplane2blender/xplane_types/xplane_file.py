@@ -20,9 +20,11 @@ import collections
 import bpy
 import mathutils
 
+import operator
 from typing import List, Union, Optional
 from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_types import xplane_empty
+from io_xplane2blender.tests import test_creation_helpers
 
 from ..xplane_helpers import floatToStr, logger
 from .xplane_bone import XPlaneBone
@@ -36,44 +38,64 @@ from io_xplane2blender import xplane_props
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 
-#TODO: Delete all traces of XPlaneLine from .xplane_line import XPlaneLine
-def getFileNameFromBlenderObject(blenderObject, xplaneLayer):
-    if xplaneLayer.name == "":
-        filename = blenderObject.name
-    else:
-        filename = xplaneLayer.name
 
-    return filename
+"""
+Given the difficulty in keeping all these words straight, these
+types have been created. Use these to keep yourself from
+running in circles
+"""
 
-def createFileFromBlenderRootObject(blenderObject):
-    xplaneFile = None
-    xplaneLayer = blenderObject.xplane.layer
+"""An Object with an XPlaneLayer property"""
+PotentialOBJRoot = Union[bpy.types.Collection, bpy.types.Object]
 
-    if xplaneLayer:
-        xplaneFile = XPlaneFile(getFileNameFromBlenderObject(blenderObject, xplaneLayer), xplaneLayer)
+"""
+An Object with an XPlaneLayer property that also meets all other requirements.
+It doesn't mean the contents will not have any warnings or errors
+"""
+ExportableOBJRoot = Union[bpy.types.Collection, bpy.types.Object]
 
-        #TODO: This will never be None, so why have the check?
-        if xplaneFile:
-            xplaneFile.exportMode = bpy.context.scene.xplane.exportMode
-            xplaneFile.collectFromBlenderRootObject(blenderObject)
+"""
+The heirarchy allows these as parents, but Collections can't be real children
+"""
+BlenderParentType = Union[bpy.types.Collection, bpy.types.Object]
+BlenderObject = bpy.types.Object
+BlenderCollection = bpy.types.Collection
 
-    return xplaneFile
+def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]:
+    xplane_files = [] # type: List["XPlaneFile"]
+    for root_object in filter(lambda o: xplane_helpers.is_root_object(o), scene.objects[:] + xplane_helpers.get_all_collections_in_scene(scene)[1:]):
+        if root_object.xplane.layer.export:
+            xplane_file = createFileFromBlenderRootObject(root_object)
+            xplane_files.append(xplane_file)
 
-def createFilesFromBlenderRootObjects(scene):
-    xplaneFiles = []
+    return xplane_files
 
-    for blenderObject in scene.objects:
-        if blenderObject.xplane.isExportableRoot and blenderObject.xplane.layer.export:
-            xplaneFile = createFileFromBlenderRootObject(blenderObject)
 
-            if xplaneFile:
-                xplaneFiles.append(xplaneFile)
+def createFileFromBlenderRootObject(exportable_root:ExportableOBJRoot)->"XPlaneFile":
+    layer_props = exportable_root.xplane.layer
+    filename = layer_props.name if layer_props.name else exportable_root.name
+    xplane_file = XPlaneFile(filename, layer_props)
+    if isinstance(exportable_root, bpy.types.Collection):
+        fake_empty = test_creation_helpers.create_datablock_empty(
+                test_creation_helpers.DatablockInfo(name=exportable_root.name)
+                )
+    try:
+        xplane_file.create_xplane_bone_hiearchy(exportable_root)
+    except:
+        raise
+    finally:
+        #bpy.data.objects.remove(fake_empty, do_unlink=True)
+        pass
 
-    return xplaneFiles
+    print("Final Bones")
+    print(xplane_file.rootBone)
+    return xplane_file
 
-# Class: XPlaneFile
-# X-Plane OBJ file
 class XPlaneFile():
+    """
+    Represents the total contents of a .obj file and
+    the settings affecting the output
+    """
     def __init__(self, filename:str, options:xplane_props.XPlaneLayer)->None:
         self.filename = filename
 
@@ -86,12 +108,6 @@ class XPlaneFile():
         self.header = XPlaneHeader(self, 8)
 
         self.commands = XPlaneCommands(self)
-
-        # list of temporary objects that will be removed after export
-        self._tempBlenderObjects = [] # type: List[bpy.types.Object]
-
-        # list of already expanded/resolved blender group instances
-        self._resolvedBlenderGroupInstances = [] # type: List[str]
 
         # dict of xplane objects within the file
         self.objects = collections.OrderedDict() # type: collections.OrderedDict
@@ -106,49 +122,101 @@ class XPlaneFile():
         # materials representing the reference for export
         self.referenceMaterials = None
 
-    # Method: collectFromBlenderLayerIndex
-    # collects all objects in a given blender layer
-    #
-    # Parameters:
-    #   layerIndex - int
-    def collectFromBlenderLayerIndex(self, layerIndex):
-        currentFrame = bpy.context.scene.frame_current
+    def create_xplane_bone_hiearchy(self, root_object:ExportableOBJRoot)->Optional[XPlaneObject]:
+        def _convert_to_blender_obj(blender_obj:bpy.types.Object)->Optional[XPlaneObject]:
+            assert isinstance(blender_obj, bpy.types.Object), "Can only convert bpy.types.Object to XPlaneObject"
+            converted_xplane_obj = None
+            if blender_obj.type == "MESH":
+                converted_xplane_obj = XPlanePrimitive(blender_obj)
+            elif blender_obj.type == "LIGHT":
+                converted_xplane_obj  = XPlaneLight(blender_obj)
+            elif blender_obj.type == "ARMATURE":
+                converted_xplane_obj = XPlaneObject(blender_obj)
+            elif blender_obj.type == "EMPTY":
+                converted_xplane_obj = xplane_empty.XPlaneEmpty(blender_obj)
+            else:
+                assert False, blender_obj.type + " is an unknown Type"
 
-        blenderObjects = []
+            #print("\t %s: adding to list" % blender_obj.name)
+            return converted_xplane_obj
 
-        for blenderObject in bpy.context.scene.objects:
-            logger.info("scanning %s" % blenderObject.name)
+        def _get_child_blender_objects(parent: BlenderParentType):
+            pass
 
-            for i in range(len(blenderObject.layers)):
-                if blenderObject.layers[i] == True and i == layerIndex and blenderObject.hide == False:
-                    if not hasattr(blenderObject.xplane, 'export_mesh') or blenderObject.xplane.export_mesh[layerIndex] == True:
-                        blenderObjects.append(blenderObject)
+        def _recurse(parent: BlenderParentType, parent_bone: XPlaneBone, parent_blender_objects:BlenderObject, is_root:bool=False)->XPlaneBone:
+            print(
+                f"Parent: {parent.name}",
+                f"Parent Bone: {parent_bone}",
+                f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
+                sep="\n"
+            )
+            """
+            Main function for recursing down tree. blender_objects will not equal parent.children, when a parent is a collection
+            """
+            #if (parent != self.rootBone.blenderObject
+            #    and (parent.xplane.layer.get("isExportableRoot")
+            #        or parent.xplane.layer.get("isExportableCollection"))):
+            #    logger.error("Cannot have nested root objects!")
+            import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_7.2.1.201904261721\pysrc')
+            #import pydevd;pydevd.settrace()
+            #if isinstance(parent, bpy.types.Collection) and parent.children:
+                #last_mode = "collection"
+                # Recurse to the bottom of all the collections
+                #for child_col in parent.children:
+                    #_recurse(last_mode, child_col, child_collection.objects) #TODO: These are unsorted! WTF!
+                #return
 
-        self.collectBlenderObjects(blenderObjects)
-        self.rootBone = XPlaneBone(None, None, None, self)
-        self.collectBonesFromBlenderObjects(self.rootBone, blenderObjects)
+            assert not isinstance(parent, bpy.types.Collection), "After recursing to {parent.name}, top-level objects should have been used"
+            """
+            for top_level in sorted(
+                    parent_blender_objects,
+                    # collection version, gotta fix that filter(lambda o: o.parent not in parent.objects or o.parent is None, blender_objects),
+                    #filter(lambda o: o.parent not in parent.children or o.parent is None, blender_objects),
+                    key=lambda o: o.name):
+                print(f"TopLevel {top_level.name}")
 
-        # restore frame before export
-        bpy.context.scene.frame_set(frame = currentFrame)
+            """
+            # Create XPlaneObject/XPlaneBone
+            # Set up bone relationships
+            # Collect from bones and XPlane
+            new_xplane_obj = _convert_to_blender_obj(parent)
+            new_xplane_bone = XPlaneBone(blender_obj=parent, xplane_file=self, xplane_obj=new_xplane_obj, parent_bone=parent_bone)
+            if not is_root:
+                parent_bone.children.append(new_xplane_bone)
 
-        # go through blender objects and warn user if there is no xplaneBone for it
-        for name in self.objects:
-            xplaneObject = self.objects[name]
+            new_xplane_bone.collectAnimations()
+            if new_xplane_obj:
+                print(f"New XPlaneObject: {new_xplane_obj.name}")
+                # This is different than asking the blender Object its type!
+                # this is refering to the old style default light
+                if isinstance(new_xplane_obj, XPlaneLight):
+                    self.lights.append(new_xplane_obj)
+                new_xplane_obj.collect()
+            else:
+                print(f"Blender Object: {top_level.name}, didn't convert")
+            print(f"New XPlaneBone", new_xplane_bone)
 
-            if not xplaneObject.xplaneBone:
-                logger.warn('Object "%s" will not be exported as it has parent(s) in another layer. Move it\'s parent(s) into layer %d.' % (name, layerIndex + 1))
+            if is_root:
+                self.rootBone = new_xplane_bone
 
-    def collectBlenderObjects(self, blenderObjects):
-        for blenderObject in blenderObjects:
-            xplaneObject = self.convertBlenderObject(blenderObject)
+            for child_obj in parent.children:
+                print("trying child", child_obj.name)
+                _recurse(child_obj, new_xplane_bone, child_obj.children)
 
-            if xplaneObject:
-                if isinstance(xplaneObject, XPlaneLight):
-                    # attach xplane light to lights list
-                    self.lights.append(xplaneObject)
+        print("RootBone", self.rootBone)
+        _recurse(parent=root_object, parent_bone=None, parent_blender_objects=root_object.children, is_root=True)
 
-                # store xplane object under same name as blender object in dict
-                self.objects[blenderObject.name] = xplaneObject
+    #def collectBlenderObjects(self, blenderObjects):
+        #for blenderObject in blenderObjects:
+            #xplaneObject = self.convertBlenderObject(blenderObject)
+
+            #if xplaneObject:
+                #if isinstance(xplaneObject, XPlaneLight):
+                    ## attach xplane light to lights list
+                    #self.lights.append(xplaneObject)
+
+                ## store xplane object under same name as blender object in dict
+                #self.objects[blenderObject.name] = xplaneObject
 
     # collects all child bones for a given parent bone given a list of blender objects
     def collectBonesFromBlenderObjects(self, parentBone, blenderObjects,
@@ -257,12 +325,12 @@ class XPlaneFile():
 
         return blenderObjects
 
-    # Method: collectFromBlenderRootObject
-    # collects all objects in a given blender root object
-    #
-    # Parameters:
-    #   rootObject - blender object
-    def collectFromBlenderRootObject(self, blenderRootObject):
+    def collectFromBlenderRootObject(self, blenderRootObject:PotentialOBJRoot)->None:
+        """
+        Collects all objects in a Root Object, recursing down the
+        Blender heirarchy by Collection, Object's child, and Armature's Child by Bone
+        """
+
         currentFrame = bpy.context.scene.frame_current
 
         blenderObjects = [blenderRootObject]
@@ -499,10 +567,3 @@ class XPlaneFile():
             o += self.commands.write()
 
         return o
-
-    # Method: cleanup
-    # Removes temporary blender data
-    def cleanup(self):
-        while(len(self._tempBlenderObjects) > 0):
-            tempBlenderObject = self._tempBlenderObjects.pop()
-            bpy.data.objects.remove(tempBlenderObject)

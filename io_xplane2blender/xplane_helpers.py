@@ -58,6 +58,11 @@ def get_root_objects_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
     return [obj for obj in scene.objects if obj.xplane.isExportableRoot]
 
 
+def is_root_object(obj_or_collection: Union[bpy.types.Collection, bpy.types.Object])->bool:
+    return (obj_or_collection.xplane.get("isExportableRoot")
+            or obj_or_collection.xplane.get("is_exportable_collection"))
+
+
 def vec_b_to_x(v):
     return mathutils.Vector((v[0], v[2], -v[1]))
 
@@ -66,7 +71,7 @@ def vec_x_to_b(v):
     return mathutils.Vector((v[0], -v[2], v[1]))
 
 
-# This is a convience struct to help prevent people from having to repeateld copy and paste
+# This is a convenience struct to help prevent people from having to repeatedly copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():
     def __init__(self,addon_version=None,build_type=None,build_type_version=None,data_model_version=None,build_number=None):
@@ -281,7 +286,7 @@ class VerStruct():
 #Rather than a "did_print_once"
 #
 #This is yet another reminder about how relying on strings printed to a console
-#To tell how your unit test went is a bad idea, epsecially when you can't seem to control
+#To tell how your unit test went is a bad idea, especially when you can't seem to control
 #What gets output when.
 message_to_str_count = 0
 

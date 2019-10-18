@@ -1,3 +1,16 @@
+"""
+About the XPlaneBone/XPlaneObject API
+=====================================
+
+XPlane2Blender makes it's own copy of the Blender hiearchy, which,
+under basic circumstances, looks almost identical to the Blender hierarchy in the outliner.
+
+However, where as the Blender Outliner is focused on Collections and Objects and the parent-child
+connections between them, the XPlane2Blender hierarchy is focused on a tree
+structure of XPlaneBones with XPlaneObjects associated with them.
+
+"""
+
 import math
 from typing import Optional
 
@@ -12,33 +25,24 @@ from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyf
 # Class: XPlaneBone
 # Animation/Hierarchy primitive
 class XPlaneBone():
-    '''
-    Property: animations
-    Dictionary<DataRefPath,List<XPlaneKeyframeCollection>>
-    '''
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   blenderObject - Blender Object associated with this Bone
-    #
-    #   xplaneObject - <XPlaneObject>, will be none when XPlaneBone is None
-    #   parent - Optional(optional) parent <XPlaneAnimBone>
     def __init__(self,
-                 blenderObject:Optional[bpy.types.Object]=None,
-                 xplaneObject:Optional['XPlaneObject']=None,
-                 parent:Optional['XPlaneBone']=None,
-                 xplaneFile:Optional['XPlaneFile']=None):
-        '''
+                 blender_obj:bpy.types.Object,
+                 xplane_file:'XPlaneFile',
+                 xplane_obj:Optional['XPlaneObject']=None,
+                 parent_bone:Optional['XPlaneBone']=None):
+        """
         self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy)
 
         self.blenderBone is the Blender Bone associated with this XPlaneBone (if the origin during traversal was a bpy.types.Bone)
         Thus, you can tell if something was a Bone by if blenderBone is not None
-        '''
-        self.xplaneObject = xplaneObject
-        self.blenderObject = blenderObject
+        """
+        self.xplaneObject = xplane_obj
+        self.blenderObject = blender_obj
+        if self.xplaneObject:
+            assert self.xplaneObject.blenderObject == self.blenderObject, f"XPlaneBone ({self.blenderObject.name}) and XPlaneObject's blenderObject do not match ({self.blenderObject.name}, {self.xplaneObject.name})"
         self.blenderBone = None
-        self.parent = parent
-        self.xplaneFile = xplaneFile
+        self.parent = parent_bone
+        self.xplaneFile = xplane_file
         self.children = []
 
         if self.xplaneObject:
@@ -129,9 +133,9 @@ class XPlaneBone():
 
         #check for animation
         if bone:
-            logger.info("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
+            print("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
         else:
-            logger.info("\t\t checking animations of %s" % blenderObject.name)
+            print("\t\t checking animations of %s" % blenderObject.name)
 
         animationData = blenderObject.animation_data
 
@@ -243,13 +247,6 @@ class XPlaneBone():
 
         return ''.ljust(self.level - 1, '\t')
 
-    def toString(self, indent = '')->str:
-        out = indent + self.getName() + '\n'
-
-        for bone in self.children:
-            out += bone.toString(indent + '\t')
-
-        return out
 
     def getFirstAnimatedParent(self)->str:
         if self.parent == None:
@@ -474,7 +471,14 @@ class XPlaneBone():
             return anchor_post_anim.inverted_safe() @ my_final_world
 
     def __str__(self):
-        return self.toString()
+        def toString(bone: "XPlaneBone", indent:str = '')->str:
+            out = indent + bone.getName() + '\n'
+
+            for bone in bone.children:
+                out += toString(bone, indent + '\t')
+
+            return out
+        return toString(self)
 
 
     def writeAnimationPrefix(self):

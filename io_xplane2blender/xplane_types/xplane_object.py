@@ -10,35 +10,10 @@ from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 from io_xplane2blender.xplane_types import xplane_bone
 
 class XPlaneObject():
-    '''
-    An object in the XPlane2Blender collection tree. It may or may not be associated with a Blender Object
-
-    # Property: blenderObject
-    # The blender object this <XPlaneObject> refers to.
-
-    # Property: name
-    # string - Name of this object. The same as the <object> name.
-
-    # Property: type
-    # string - Type of the object, a duplicate of blenderObject if it has one. Mostly the same as the <object> type.
-
-    # Property: datarefs
-    # dict - The keys are the dataref paths and the values are references to <XPlaneDatarefs>.
-
-    # Property: bakeMatrix
-    # Matrix - The matrix this object was baked with. See <XPlaneMesh.getBakeMatrix> for more information.
-
-    # Property: weight
-    # int - (default = 0) The object weight. Higher weight will write the object later in OBJ.
-
-    # Property: lod
-    # vector - (False, False, False, False) with levels of details this object is in
-    '''
-
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   blenderObject - A Blender object
+    """
+    An object in the XPlane2Blender collection tree,
+    tied with the Blender Object it is based off.
+    """
     def __init__(self, blenderObject: bpy.types.Object)->None:
         self.blenderObject = blenderObject
 
