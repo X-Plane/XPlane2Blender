@@ -133,10 +133,8 @@ class XPlaneFile():
                 converted_xplane_obj = XPlaneObject(blender_obj)
             elif blender_obj.type == "EMPTY":
                 converted_xplane_obj = xplane_empty.XPlaneEmpty(blender_obj)
-            else:
-                assert False, blender_obj.type + " is an unknown Type"
 
-            #print("\t %s: adding to list" % blender_obj.name)
+            #print("\t %s: converted" % blender_obj.name)
             return converted_xplane_obj
 
         def _get_child_blender_objects(parent: BlenderParentType):
@@ -180,24 +178,24 @@ class XPlaneFile():
             # Set up bone relationships
             # Collect from bones and XPlane
             new_xplane_obj = _convert_to_xplane_object(parent)
-            if new_xplane_obj:
-                print(f"New XPlaneObject: {new_xplane_obj.name}")
-                # This is different than asking the blender Object its type!
-                # this is refering to the old style default light
-                if isinstance(new_xplane_obj, XPlaneLight):
-                    self.lights.append(new_xplane_obj)
-            else:
-                print(f"Blender Object: {parent.name}, didn't convert")
-
             new_xplane_bone = XPlaneBone(
                     xplane_file=self,
                     blender_obj=parent,
                     blender_bone=None,
                     xplane_obj=new_xplane_obj,
                     parent_xplane_bone=parent_bone)
-            new_xplane_obj.collect()
-
             print(f"Current XPlaneBone", new_xplane_bone)
+
+            if new_xplane_obj:
+                print(f"New XPlaneObject: {new_xplane_obj.name}")
+                # This is different than asking the blender Object its type!
+                # this is refering to the old style default light
+                if isinstance(new_xplane_obj, XPlaneLight):
+                    self.lights.append(new_xplane_obj)
+                new_xplane_obj.collect()
+            else:
+                print(f"Blender Object: {parent.name}, didn't convert")
+                pass
 
             if is_root:
                 self.rootBone = new_xplane_bone
@@ -245,10 +243,6 @@ class XPlaneFile():
                                  child_obj.children,
                                  is_root=False,
                                  )
-                    if child_obj.name == "CubeParentByDatablock":
-                        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_7.2.1.201904261721\pysrc')
-                        import pydevd;pydevd.settrace()
-                        pass
                 else:
                     _recurse(child_obj,
                              new_xplane_bone,
@@ -259,18 +253,6 @@ class XPlaneFile():
 
         print("RootBone", self.rootBone)
         _recurse(parent=root_object, parent_bone=None, parent_blender_objects=root_object.children, is_root=True, needs_new_bone=True)
-
-    #def collectBlenderObjects(self, blenderObjects):
-    #for blenderObject in blenderObjects:
-    #xplaneObject = self.convertBlenderObject(blenderObject)
-
-    #if xplaneObject:
-    #if isinstance(xplaneObject, XPlaneLight):
-    ## attach xplane light to lights list
-    #self.lights.append(xplaneObject)
-
-    ## store xplane object under same name as blender object in dict
-    #self.objects[blenderObject.name] = xplaneObject
 
     # collects all child bones for a given parent bone given a list of blender objects
     def collectBonesFromBlenderObjects(self, parentBone, blenderObjects,
@@ -411,30 +393,6 @@ class XPlaneFile():
         # restore frame before export
         bpy.context.scene.frame_set(frame = currentFrame)
 
-    def convertBlenderObject(self, blenderObject: bpy.types.Object)->Optional[XPlaneObject]:
-        '''
-        Converts Blender object into an XPlaneObject or subtype and returns it.
-        Returns None if Blender Object isn't supported
-        '''
-        xplaneObject = None # type: Optional[XPlaneObject]
-
-        # mesh: let's create a prim out of it
-        if blenderObject.type == "MESH":
-            logger.info("\t %s: adding to list" % blenderObject.name)
-            xplaneObject = XPlanePrimitive(blenderObject)
-        # light: let's create a XPlaneLight. Those cannot have children (yet).
-        elif blenderObject.type == "LIGHT":
-            logger.info("\t %s: adding to list" % blenderObject.name)
-            xplaneObject  = XPlaneLight(blenderObject)
-        elif blenderObject.type == "ARMATURE":
-            logger.info("\t %s: adding to list" % blenderObject.name)
-            xplaneObject = XPlaneObject(blenderObject)
-        elif blenderObject.type == "EMPTY":
-            logger.info("\t %s: adding to list" % blenderObject.name)
-            xplaneObject = xplane_empty.XPlaneEmpty(blenderObject)
-
-        return xplaneObject
-
     def getBoneByBlenderName(self, name: str, parent: XPlaneBone)->Optional[XPlaneBone]:
         '''
         Performs a depth first search of the child bones for a bone with matching name.
@@ -449,15 +407,6 @@ class XPlaneFile():
                     return _bone
 
         return None
-
-    # Method: getObjectsList
-    # Returns objects as a list
-    def getObjectsList(self)->List[XPlaneObject]:
-        '''
-        Returns the objects that could be in this .obj.
-        Can only be called after collectBlenderObjects during xplane_file's collection
-        '''
-        return self.objects.values()
 
     def validateMaterials(self):
         objects = self.getObjectsList()
