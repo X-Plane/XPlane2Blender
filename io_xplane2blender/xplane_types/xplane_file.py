@@ -22,7 +22,7 @@ import bpy
 import mathutils
 
 import operator
-from typing import List, Union, Optional
+from typing import Dict, List, Union, Optional
 from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_types import xplane_empty
 from io_xplane2blender.tests import test_creation_helpers
@@ -179,39 +179,38 @@ class XPlaneFile():
             # Create XPlaneObject/XPlaneBone
             # Set up bone relationships
             # Collect from bones and XPlane
-            if needs_new_bone:
-                new_xplane_obj = _convert_to_xplane_object(parent)
-                if new_xplane_obj:
-                    print(f"New XPlaneObject: {new_xplane_obj.name}")
-                    # This is different than asking the blender Object its type!
-                    # this is refering to the old style default light
-                    if isinstance(new_xplane_obj, XPlaneLight):
-                        self.lights.append(new_xplane_obj)
-                else:
-                    print(f"Blender Object: {parent.name}, didn't convert")
-
-                new_xplane_bone = XPlaneBone(
-                        xplane_file=self,
-                        blender_obj=parent,
-                        blender_bone=None,
-                        xplane_obj=new_xplane_obj,
-                        parent_xplane_bone=parent_bone)
-                new_xplane_obj.collect()
+            new_xplane_obj = _convert_to_xplane_object(parent)
+            if new_xplane_obj:
+                print(f"New XPlaneObject: {new_xplane_obj.name}")
+                # This is different than asking the blender Object its type!
+                # this is refering to the old style default light
+                if isinstance(new_xplane_obj, XPlaneLight):
+                    self.lights.append(new_xplane_obj)
             else:
-                new_xplane_obj = parent_bone.xplaneObject
-                new_xplane_bone = parent_bone
+                print(f"Blender Object: {parent.name}, didn't convert")
+
+            new_xplane_bone = XPlaneBone(
+                    xplane_file=self,
+                    blender_obj=parent,
+                    blender_bone=None,
+                    xplane_obj=new_xplane_obj,
+                    parent_xplane_bone=parent_bone)
+            new_xplane_obj.collect()
 
             print(f"Current XPlaneBone", new_xplane_bone)
 
             if is_root:
                 self.rootBone = new_xplane_bone
 
-            def make_bones_for_armature_bones(arm_obj:bpy.types.Object):
-                #TODO Needs a way to make by object and by datablock work
+            def make_bones_for_armature_bones(arm_obj:bpy.types.Object)->Dict[str, XPlaneBone]:
+                """
+                Makes XPlaneBones for all bones in an armature, returns a map betweeen
+                Blender Bone Names and the XPlaneBones that are associated with them.
+
+                These are used later to pair XPlaneObjects with their correct parent bones
+                """
                 assert arm_obj.type == "ARMATURE", arm_obj.name + " must be armature"
-                bones_to_objects = {bone.name: [blender_obj for blender_obj in arm_obj.children if blender_obj.parent_bone == bone.name] for bone in arm_obj.data.bones}
-                print("Bones To Objects")
-                pprint.pprint(bones_to_objects)
+                blender_bones_to_xplane_bones = {}
                 def _recurse_bone(bl_bone:bpy.types.Bone, parent_xp_bone:XPlaneBone):
                     """
                     Recurses down an armature's bone tree, making XPlaneBones for each Blender Bone
@@ -219,52 +218,43 @@ class XPlaneFile():
                     # For every 'Bone' we make an XPlaneBone all to itself, it becomes the new parent instead of the
                     # bone the armature is connected to
                     parent_xp_bone = XPlaneBone(xplane_file=self, blender_obj=arm_obj, blender_bone=bl_bone, xplane_obj=None, parent_xplane_bone=parent_xp_bone)
-                    if bones_to_objects[bl_bone.name]:
-                        print(f"{bl_bone.name} had objects assaign to it{bones_to_objects[bl_bone.name]}")
-                        for blender_object in bones_to_objects[bl_bone.name]:
-                            print("attempting to convert", blender_object)
-                            new_xplane_obj = _convert_to_xplane_object(blender_object)
-                            if new_xplane_obj:
-                                print("Converted to xplaneobject")
-                            else:
-                                print("didn't convert to xplane_object")
-                            if isinstance(new_xplane_obj, XPlaneLight):
-                                self.lights.append(new_xplane_obj)
-                            XPlaneBone(xplane_file=self, blender_obj=blender_object, blender_bone=None, xplane_obj=new_xplane_obj, parent_xplane_bone=parent_xp_bone)
-                            new_xplane_obj.collect()
-                    else:
-                        # A bone without objects that has it as its parent just represents an empty link
-                        print("No objects associated, just a link")
-                        #parent_xp_bone = XPlaneBone(xplane_file=self, blender_obj=arm_obj, blender_bone=bl_bone, xplane_obj=None, parent_xplane_bone=parent_xp_bone)
-
+                    blender_bones_to_xplane_bones[bl_bone.name] = parent_xp_bone
                     for child in bl_bone.children:
-                        print("attempting", child.name)
                         _recurse_bone(child, parent_xp_bone)
 
                 # Run recurse for the top level bones
                 for top_level_bone in filter(lambda b: not b.parent, arm_obj.data.bones):
                     _recurse_bone(top_level_bone , new_xplane_bone)
+                return blender_bones_to_xplane_bones
             # If this is an armature, first build up the bones by tracking recursively down, then continue on
             #  but skipping making the conversion again
 
             if parent.type == "ARMATURE":
                 print(f"Recursing down {parent.name}'s bone tree")
-                make_bones_for_armature_bones(parent)
+                real_bone_parents = make_bones_for_armature_bones(parent)
 
             for child_obj in parent.children:
-                print("trying child", child_obj.name)
-                try:
-                    #TODO: We're still adding BADBONE cases
-                    needs_new_bone = child_obj.parent_bone not in parent.data.bones
-                except AttributeError:
-                    needs_new_bone = True
-                    pass
-
-                _recurse(child_obj,
-                         new_xplane_bone,
-                         child_obj.children,
-                         is_root=False,
-                         needs_new_bone=needs_new_bone) # # Armature takes care of itself
+                print("Testing child's name", child_obj.name)
+                if parent.type == "ARMATURE" and child_obj.parent_type == "BONE":
+                    if child_obj.parent_bone not in parent.data.bones:
+                        # Ignored cases don't get their children examined
+                        continue
+                    else:
+                        _recurse(child_obj,
+                                 real_bone_parents[child_obj.parent_bone],
+                                 child_obj.children,
+                                 is_root=False,
+                                 )
+                    if child_obj.name == "CubeParentByDatablock":
+                        import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_7.2.1.201904261721\pysrc')
+                        import pydevd;pydevd.settrace()
+                        pass
+                else:
+                    _recurse(child_obj,
+                             new_xplane_bone,
+                             child_obj.children,
+                             is_root=False,
+                             )
         #--- end _recurse function -------------------------------------------
 
         print("RootBone", self.rootBone)
