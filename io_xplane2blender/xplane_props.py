@@ -9,7 +9,7 @@ from typing import List
 
 from .xplane_constants import *
 
-'''
+"""
  #####     ##   ##  ##   ####  ####  ####  #
   #   #   # #    #  #   ##  #  ## #  #  #  #
  ##   #   # #   # # #  ##      ###   ###   #
@@ -41,9 +41,6 @@ is a great way to RUIN EVERYTHING. Re-arranging the items list requires great ca
 - Main documentation: https://docs.blender.org/api/current/bpy.props.html?highlight=bpy%20props%20prop#module-bpy.props
 
 - Make sure to increment the CURRENT_DATA_MODEL_VERSION number in xplane_config
-
-- The attr member does not appear to be necessary or have an effect on the program. Future props should not use it. Otherwise, I'd like to
-see them culled over time
 
 - This file contains 99% of the properties. xplane2blender is set in xplane_updater.py and now we're stuck with it there
 
@@ -84,7 +81,7 @@ undebatable alphabetical listing.
 - Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
 
 - Tip: If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
-'''
+"""
 
 # Class: XPlane2Blender
 #
@@ -988,7 +985,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
         return None
 
-
+    #TODO: We can delete this now that layers aren't a thing anymore
     index: bpy.props.IntProperty(
         name = "Index",
         description = "The blender layer index",
@@ -1002,8 +999,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     export: bpy.props.BoolProperty(
-        name = "Export",
-        description = "If checked, this layer will be exported if visible",
+        name = "Include In Export",
+        description = "If checked, OBJ will exported (assuming all other requirements and validations are met)",
         default = True
     )
 
@@ -1020,8 +1017,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     debug: bpy.props.BoolProperty(
-        name = "Debug",
-        description = "If checked, this OBJ file will put diagnostics in Plane's log.txt",
+        name = "Debug This OBJ",
+        description = "If this and Scene > Advanced Settings > Debug are checked, debug information for this OBJ will be written to the export log and the OBJ",
         default = True
     )
 
