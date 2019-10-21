@@ -229,7 +229,7 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                 pass
 
     #TODO: Unit test
-    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0-dev.0"):
+    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0"):
         for scene in bpy.data.scenes:
             for layer_props in [obj.xplane.layer for obj in scene.objects]:
                 layer_props.autodetectTextures = False

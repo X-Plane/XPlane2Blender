@@ -208,7 +208,7 @@ def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
 
     def get_collections_w_objs(collection):
         col_w_objs = []
-        if collection.objects:
+        if collection.objects and collection.name != "Master Collection":
             col_w_objs.append(collection)
         for child in collection.children:
             col_w_objs.extend(get_collections_w_objs(child))
@@ -279,8 +279,9 @@ def collection_layer_layout(layout: bpy.types.UILayout, collection: bpy.types.Co
         expandIcon = "TRIA_DOWN"
     else:
         expandIcon = "TRIA_RIGHT"
-
-    box.prop(layer_props, "expanded", text = collection.name, expand = True, emboss = False, icon = expandIcon)
+    column = box.column_flow(columns=2, align=True)
+    column.prop(layer_props, "expanded", text = collection.name, expand = True, emboss = False, icon = expandIcon)
+    column.prop(collection.xplane, "is_exportable_collection")#, text = "Export)
 
     if layer_props.expanded:
         layer_layout(box, layer_props, version, "object")

@@ -1260,6 +1260,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
 class XPlaneCollectionSettings(bpy.types.PropertyGroup):
+    is_exportable_collection: bpy.props.BoolProperty(
+        name = "Exportable Collection",
+        description = "Activate to export all this collection's children as an .obj file",
+        default = False
+    )
+
     layer: bpy.props.PointerProperty(
         name = "X-Plane OBJ File Settings",
         description = "X-Plane OBJ File Settings",
@@ -1283,6 +1289,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             description = "An internally important property that keeps track of the state of the dataref search window",
             type = XPlaneDatarefSearchWindow
             )
+
     debug: bpy.props.BoolProperty(
         name = "Print Debug Info To Output, OBJ",
         description = "If checked debug information will be printed to the console and into OBJ files",
