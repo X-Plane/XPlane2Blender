@@ -1,7 +1,7 @@
 """
 About the XPlaneBone/XPlaneObject API
 =====================================
-
+TODO: Rewrite this introdcution, this is terrible
 XPlane2Blender makes it's own copy of the Blender hiearchy, which,
 under basic circumstances, looks almost identical to the Blender hierarchy in the outliner.
 
@@ -16,6 +16,10 @@ In the XPlane2Blender hierarchy, every XPlaneBone is real and may have children,
 In addition, XPlaneBones exist for Convertable and Unconvertable Datablocks, Collections, and Bones themselves
 
 XPlaneBone is a bit poorly named, it does not represent a connection or an edge. It should really be called XPlaneNode
+
+Every XPlaneBone has to have a real Blender Object associated with it. For collections we make a temporary fake
+empty and use that. This is because the animation model requires every bone to be able to compare with a real
+location/rotation matrix above it
 """
 
 import math
@@ -57,7 +61,33 @@ class XPlaneBone():
         if self.xplaneObject:
             self.xplaneObject.xplaneBone = self
         if self.parent:
+            #TODO: It seems to me that in the bone structure is getting reversed
+            # Is this because of how collectBonesFromBlenderObjects/Bones gets called swapped back
+            # and forth or is this because we haven't implemented sortChildren yet? (Hint, probably the former)
+            """
+Final Root Bone (2.79)
+0 Empty: RootObject
+        1 Armature: Armature
+                ...
+                2 Bone: Bone2
+                        3 Mesh: CubeParentByBone2
+                        3 Bone: Bone3
+                                ...
+                2 Mesh: CubeParentByArmatureObject
+                2 Mesh: CubeParentByDatablock
+
+Final Root Bone (2.80)
+0 Empty: RootObject
+        1 Armature: Armature
+                ...
+                2 Bone: Bone2
+                        3 Bone: Bone3
+                                ....
+                        3 Mesh: CubeParentByBone2
+                2 Mesh: CubeParentByArmatureObject
+                """
             self.parent.children.append(self)
+
 
         # nesting level of this bone (used for intendation)
         self.level = self.parent.level + 1 if self.parent else 0
@@ -255,7 +285,7 @@ class XPlaneBone():
         return ''.ljust(self.level - 1, '\t')
 
 
-    def getFirstAnimatedParent(self)->str:
+    def getFirstAnimatedParent(self)->Optional[str]:
         if self.parent == None:
             return None
 

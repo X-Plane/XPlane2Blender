@@ -1,7 +1,7 @@
 # File: xplane_helpers.py
 # Defines Helpers
 
-from typing import List, Optional
+from typing import List, Optional, Union
 import bpy
 import mathutils
 
@@ -36,6 +36,21 @@ def resolveBlenderPath(path:str)->str:
         return os.path.join(blenddir, path[2:])
     else:
         return path
+
+
+def get_all_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
+    """
+    First entry in list is always the scene's 'Master Collection'
+    """
+    def _get_collections_from_collection(collection:bpy.types.Collection)->List[bpy.types.Collection]:
+        collections = []
+        for child in collection.children:
+            collections.append(child)
+            collections.extend(child.children)
+
+        return collections
+
+    return [scene.collection] + _get_collections_from_collection(scene.collection)
 
 
 def get_plugin_resources_folder()->str:

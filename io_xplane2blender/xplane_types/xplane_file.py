@@ -77,14 +77,14 @@ def createFileFromBlenderRootObject(exportable_root:ExportableOBJRoot)->"XPlaneF
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
     if isinstance(exportable_root, bpy.types.Collection):
-        fake_empty = test_creation_helpers.create_datablock_empty(test_creation_helpers.DatablockInfo("EMPTY", name=exportable_root.name))
+        fake_empty = test_creation_helpers.create_datablock_empty(test_creation_helpers.DatablockInfo("EMPTY", name=exportable_root.name+"_FAKE"))
     try:
         xplane_file.create_xplane_bone_hiearchy(exportable_root)
     except:
         raise
     finally:
-        #bpy.data.objects.remove(fake_empty, do_unlink=True)
-        pass
+        if isinstance(exportable_root, bpy.types.Collection):
+            bpy.data.objects.remove(fake_empty, do_unlink=True)
 
     print("Final Root Bone (2.80)")
     print(xplane_file.rootBone)
@@ -108,9 +108,6 @@ class XPlaneFile():
 
         self.commands = XPlaneCommands(self)
 
-        # dict of xplane objects within the file
-        self.objects = collections.OrderedDict() # type: collections.OrderedDict
-
         #TODO: There is no export mode anymore, there is only root objects
         # But, I'd rather not deal with removing it all right now
         self.exportMode = xplane_constants.EXPORT_MODE_ROOT_OBJECTS
@@ -122,7 +119,7 @@ class XPlaneFile():
         self.referenceMaterials = None
 
     def create_xplane_bone_hiearchy(self, root_object:ExportableOBJRoot)->Optional[XPlaneObject]:
-        def _convert_to_xplane_object(blender_obj:bpy.types.Object)->Optional[XPlaneObject]:
+        def convert_to_xplane_object(blender_obj:bpy.types.Object)->Optional[XPlaneObject]:
             assert isinstance(blender_obj, bpy.types.Object), "Can only convert bpy.types.Object to XPlaneObject"
             converted_xplane_obj = None
             if blender_obj.type == "MESH":
@@ -134,53 +131,41 @@ class XPlaneFile():
             elif blender_obj.type == "EMPTY":
                 converted_xplane_obj = xplane_empty.XPlaneEmpty(blender_obj)
 
-            #print("\t %s: converted" % blender_obj.name)
+            #print(f"\t{blender_obj.name} was converted")
             return converted_xplane_obj
 
-        def _get_child_blender_objects(parent: BlenderParentType):
-            pass
-
-        def _recurse(parent: BlenderParentType, parent_bone: XPlaneBone, parent_blender_objects:BlenderObject, is_root:bool=False, needs_new_bone:bool=True)->None:
+        def get_child_blender_objects(parent: BlenderParentType)->List[bpy.types.Object]:
             """
-            Main function for recursing down tree. blender_objects will not equal parent.children, when a parent is a collection
+            Gets the top level children to recurse to. Important for anytime you could be working with
+            collections or objects, because a collection's children is more collections, and a collections objects
+            are not just the top level
+            """
+            if isinstance(parent, bpy.types.Object):
+                return parent.children
+            elif isinstance(parent, bpy.types.Collection):
+                return list(filter(lambda o: o.parent is None or o.parent not in parent.objects, parent.objects))
+
+        def _recurse(parent: BlenderParentType, parent_bone: XPlaneBone, parent_blender_objects:BlenderObject, is_root:bool=False)->None:
+            """
+            Main function for recursing down tree. parent_blender_objects will be different from blender_objects will not equal parent.children, when a parent is a collection
             """
             print(
                 f"Parent: {parent.name}",
                 f"Parent Bone: {parent_bone}",
                 f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
                 f"is_root: {is_root}",
-                f"needs_new_bone: {needs_new_bone}",
                 sep="\n"
             )
-            #if (parent != self.rootBone.blenderObject
-            #    and (parent.xplane.layer.get("isExportableRoot")
-            #        or parent.xplane.layer.get("isExportableCollection"))):
-            #    logger.error("Cannot have nested root objects!")
 
-            #if isinstance(parent, bpy.types.Collection) and parent.children:
-            #last_mode = "collection"
-            # Recurse to the bottom of all the collections
-            #for child_col in parent.children:
-            #_recurse(last_mode, child_col, child_collection.objects) #TODO: These are unsorted! WTF!
-            #return
+            if is_root and isinstance(parent, bpy.types.Collection):
+                blender_obj = bpy.data.objects[parent.name + "_FAKE"],
+            else:
+                blender_obj = parent
 
-            assert not isinstance(parent, bpy.types.Collection), "After recursing to {parent.name}, top-level objects should have been used"
-            """
-            for top_level in sorted(
-                    parent_blender_objects,
-                    # collection version, gotta fix that filter(lambda o: o.parent not in parent.objects or o.parent is None, blender_objects),
-                    #filter(lambda o: o.parent not in parent.children or o.parent is None, blender_objects),
-                    key=lambda o: o.name):
-                print(f"TopLevel {top_level.name}")
-
-            """
-            # Create XPlaneObject/XPlaneBone
-            # Set up bone relationships
-            # Collect from bones and XPlane
-            new_xplane_obj = _convert_to_xplane_object(parent)
+            new_xplane_obj = convert_to_xplane_object(parent)
             new_xplane_bone = XPlaneBone(
                     xplane_file=self,
-                    blender_obj=parent,
+                    blender_obj=blender_obj,
                     blender_bone=None,
                     xplane_obj=new_xplane_obj,
                     parent_xplane_bone=parent_bone)
@@ -199,6 +184,10 @@ class XPlaneFile():
 
             if is_root:
                 self.rootBone = new_xplane_bone
+            if (parent != self.rootBone.blenderObject
+                and (parent.xplane.layer.get("isExportableRoot")
+                    or parent.xplane.layer.get("isExportableCollection"))):
+                logger.error(f"{parent.name} is marked as an exportable root. Nested Root Objects are not allowed")
 
             def make_bones_for_armature_bones(arm_obj:bpy.types.Object)->Dict[str, XPlaneBone]:
                 """
@@ -231,7 +220,7 @@ class XPlaneFile():
                 print(f"Recursing down {parent.name}'s bone tree")
                 real_bone_parents = make_bones_for_armature_bones(parent)
 
-            for child_obj in parent.children:
+            for child_obj in get_child_blender_objects(parent):
                 print("Testing child's name", child_obj.name)
                 if parent.type == "ARMATURE" and child_obj.parent_type == "BONE":
                     if child_obj.parent_bone not in parent.data.bones:
@@ -249,22 +238,33 @@ class XPlaneFile():
                              child_obj.children,
                              is_root=False,
                              )
+            if isinstance(parent, bpy.types.Collection):
+                for child_col in parent.children:
+                    _recurse(child_col, new_xplane_bone, get_child_blender_objects(parent))
         #--- end _recurse function -------------------------------------------
 
         print("RootBone", self.rootBone)
-        _recurse(parent=root_object, parent_bone=None, parent_blender_objects=root_object.children, is_root=True, needs_new_bone=True)
+        _recurse(parent=root_object, parent_bone=None, parent_blender_objects=get_child_blender_objects(root_object), is_root=True)
 
+    #TODO: Test this, needs code coverage
+    def get_xplane_objects(self)->List["XPlaneObjects"]:
         """
-        Collects all objects in a Root Object, recursing down the
-        Blender heirarchy by Collection, Object's child, and Armature's Child by Bone
+        Returns a list of all XPlaneObjects collected by recursing down the
+        completed XPlaneBone tree
         """
+        assert self.rootBone, "Must be called after collection is finished"
 
-        currentFrame = bpy.context.scene.frame_current
+        def get_xplane_objects_from_bone_tree(bone:"XPlaneBone")->List["XPlaneObjects"]:
+            xp_objects = []
+            for child_bone in bone.children:
+                if child_bone.xplaneObject:
+                    xp_objects.append(child_bone.xplaneObject)
+                xp_objects.extend(get_xplane_objects_from_bone_tree(child_bone))
+            return xp_objects
+        return get_xplane_objects_from_bone_tree(self.rootBone)
 
-        blenderObjects = [blenderRootObject]
-
-    def validateMaterials(self):
-        objects = self.getObjectsList()
+    def validateMaterials(self)->bool:
+        objects = self.get_xplane_objects()
 
         for xplaneObject in objects:
             if xplaneObject.type == 'MESH' and xplaneObject.material.options:
@@ -288,7 +288,7 @@ class XPlaneFile():
         '''
 
         materials = []
-        objects = self.getObjectsList()
+        objects = self.get_xplane_objects()
 
         for xplaneObject in objects:
             if xplaneObject.type == 'MESH' and xplaneObject.material and xplaneObject.material.options:
@@ -321,10 +321,13 @@ class XPlaneFile():
     def writeFooter(self):
         return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, bpy.app.build_hash, xplane_helpers.VerStruct.current())
 
-    # Method: write
-    # Returns OBJ file code
-    def write(self):
-        self.mesh.collectXPlaneObjects(self.getObjectsList())
+
+    def write(self)->str:
+        """
+        Writes the contents of the file to one giant string with \n's,
+        to be written to a file or compared in a unit test
+        """
+        self.mesh.collectXPlaneObjects(self.get_xplane_objects())
 
         # validate materials
         if not self.validateMaterials():
@@ -377,8 +380,6 @@ class XPlaneFile():
             o += '\n'
 
         o += self.writeFooter()
-
-        self.cleanup()
 
         return o
 

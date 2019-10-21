@@ -167,7 +167,7 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         debug = getDebug()
 
         # only write layers that contain objects
-        if len(xplaneFile.objects) == 0:
+        if not xplaneFile.get_xplane_objects():
             return
 
         if xplaneFile.filename.find('//') == 0:
