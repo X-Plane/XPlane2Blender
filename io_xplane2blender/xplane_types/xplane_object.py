@@ -17,8 +17,8 @@ class XPlaneObject():
     def __init__(self, blenderObject: bpy.types.Object)->None:
         self.blenderObject = blenderObject
 
-        #This is assaigned and tied together in in XPlaneBone's constructor
-        self.xplaneBone = None # type: Optional[xplane_bone.XPlaneBone]
+        #This is assigned and tied together in in XPlaneBone's constructor
+        self.xplaneBone = None # type: xplane_bone.XPlaneBone
         self.name = blenderObject.name # type: str
         self.type = self.blenderObject.type # type: str
         self.datarefs = {} # type: Dict[str,str]

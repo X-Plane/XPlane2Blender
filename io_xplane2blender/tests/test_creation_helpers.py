@@ -72,8 +72,8 @@ class DatablockInfo():
     def __init__(self,
             datablock_type:str,
             name:Optional[str]=None,
-            layers:Tuple[int]=tuple([True] + [False] * 19),
             parent_info:'ParentInfo'=None,
+            collection:Optional[Union[str, bpy.types.Collection]]=None,
             location:Vector=Vector((0,0,0)),
             rotation_mode:str="XYZ",
             rotation:Optional[Union[bpy.types.bpy_prop_array,Euler,Quaternion]]=None,
@@ -84,7 +84,10 @@ class DatablockInfo():
         '''
         self.datablock_type = datablock_type
         self.name = name
-        self.layers = layers
+        if collection is None:
+            self.collection = bpy.context.scene.collection
+        else:
+            self.collection = collection if isinstance(collection, bpy.types.Collection) else bpy.data.collections[collection]
         self.parent_info = parent_info
         self.location = location
         self.rotation_mode = rotation_mode
@@ -261,10 +264,10 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
     '''
     assert info.datablock_type == "ARMATURE"
     bpy.ops.object.armature_add(
-        enter_editmode=False,
-        location=info.location,
-        rotation=info.rotation,
-        layers=info.layers)
+            enter_editmode=False,
+            location=info.location,
+            rotation=info.rotation
+        )
     arm = bpy.context.object
     arm.name = info.name if info.name is not None else arm.name
     arm.rotation_mode = info.rotation_mode
@@ -300,13 +303,11 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
 
 def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
     assert info.datablock_type == "EMPTY"
-    #TODO: Needs to check if empty already exists
     bpy.ops.object.empty_add(
         type='PLAIN_AXES',
         location=info.location,
         rotation=info.rotation,
-        layers=info.layers
-        )
+    )
     ob = bpy.context.object
     ob.name = info.name if info.name is not None else ob.name
     ob.rotation_mode = info.rotation_mode
@@ -327,13 +328,12 @@ def create_datablock_mesh(info:DatablockInfo,
             enter_editmode=False,
             location=info.location,
             rotation=info.rotation,
-            layers=info.layers)
+            )
     elif primitive_shape == "cylinder":
         bpy.ops.mesh.primitive_cylinder_add(
             enter_editmode=False,
             location=info.location,
-            rotation=info.rotation,
-            layers=info.layers)
+            rotation=info.rotation,)
 
     ob = bpy.context.object
     ob.name = info.name if info.name is not None else ob.name
@@ -454,15 +454,15 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
 
     if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_SHOW or\
        keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_HIDE:
-       value = keyframe_infos[0].dataref_value
-       value_1 = keyframe_infos[0].dataref_show_hide_v1
-       value_2 = keyframe_infos[0].dataref_show_hide_v2
-       assert value is None and value_1 is not None and value_2 is not None
+        value = keyframe_infos[0].dataref_value
+        value_1 = keyframe_infos[0].dataref_show_hide_v1
+        value_2 = keyframe_infos[0].dataref_show_hide_v2
+        assert value is None and value_1 is not None and value_2 is not None
     if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_TRANSFORM:
-       value = keyframe_infos[0].dataref_value
-       value_1 = keyframe_infos[0].dataref_show_hide_v1
-       value_2 = keyframe_infos[0].dataref_show_hide_v2
-       assert value is not None and value_1 is None and value_2 is None
+        value = keyframe_infos[0].dataref_value
+        value_1 = keyframe_infos[0].dataref_show_hide_v1
+        value_2 = keyframe_infos[0].dataref_show_hide_v2
+        assert value is not None and value_1 is None and value_2 is None
 
     struct_is_bone = False
     if isinstance(blender_struct, bpy.types.Bone) or isinstance(blender_struct, bpy.types.PoseBone):
@@ -530,13 +530,6 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
             bpy.context.scene.objects.active = blender_struct
             bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
 
-#def set_layer_visibility(layer_visibility_settings:Iterable[Tuple[int,bool]]):
-    #assert len(layer_visibility_settings) == 0
-    #assert any([setting[1] for setting in layer_visibility_settings])
-#
-    #for idx in layers:
-        #bpy.context.scene.layers[idx] = visible
-
 def set_manipulator_settings(object_datablock:bpy.types.Object,
         manip_type:str,
         manip_enabled:bool=True,
@@ -590,6 +583,15 @@ def set_material(blender_object:bpy.types.Object,
         for prop,value in material_props.items():
             setattr(mat.xplane.manip,prop,value)
 
+def set_collection(blender_object:bpy.types.Object, collection:Union[bpy.types.Collection, str])->None:
+    assert isinstance(blender_object,(bpy.types.Collection, bpy.types.Object)), "collection was of type " + str(type(blender_object))
+
+    if isinstance(collection, str):
+        collection = bpy.data.collections[collection.name]
+
+    collection.link(blender_object)
+
+
 def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
     assert isinstance(blender_object,bpy.types.Object)
 
@@ -602,14 +604,6 @@ def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
 
         blender_object.parent_bone = parent_info.parent_bone
 
-def set_xplane_layer(layer:Union[int,io_xplane2blender.xplane_props.XPlaneLayer],layer_props:Dict[str,Any]):
-    assert isinstance(layer,int) or isinstance(layer, io_xplane2blender.xplane_props.XPlaneLayer)
-
-    if isinstance(layer,int):
-       layer = bpy.context.scene.xplane.layers[layer]
-
-    for prop,value in layer_props.items():
-        setattr(layer,prop,value)
 
 class TemporaryStartFile():
     def __init__(self, temporary_startup_path:str):
@@ -651,4 +645,3 @@ def create_initial_test_setup():
     unit_test_overview.write(header_str + '\n\n')
 
     #bpy.ops.console.insert(text="bpy.ops.export.xplane_obj()")
-

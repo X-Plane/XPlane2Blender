@@ -20,6 +20,12 @@ XPlaneBone is a bit poorly named, it does not represent a connection or an edge.
 Every XPlaneBone has to have a real Blender Object associated with it. For collections we make a temporary fake
 empty and use that. This is because the animation model requires every bone to be able to compare with a real
 location/rotation matrix above it
+
+No bones will share a Blender Object
+
+XPlaneBone parent does not necissarily match Blender Object Parent (incase collections were used)
+
+blender_obj could be none and we just say for animations keep searching up until you find a bone with one?
 """
 
 import math
