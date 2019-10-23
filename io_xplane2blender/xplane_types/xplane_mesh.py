@@ -57,25 +57,18 @@ class XPlaneMesh():
 
                 # create a copy of the xplaneObject mesh with modifiers applied and triangulated
                 dg = bpy.context.evaluated_depsgraph_get()
-                print("2.80 blenderObject.name", xplaneObject.blenderObject.name)
-                print("2.80 original location", xplaneObject.blenderObject.location)
                 evaluated_obj = xplaneObject.blenderObject.evaluated_get(dg)
-                print("2.80 evaluated location", xplaneObject.blenderObject.location)
                 assert xplaneObject.blenderObject.location == evaluated_obj.location, "ob.location !=  eval.location, " + str(xplaneObject.blenderObject.location) + "," + str(evaluated_obj.location)
                 mesh = evaluated_obj.to_mesh(preserve_all_data_layers=True, depsgraph=dg)
-                #mesh = xplaneObject.blenderObject.data.copy()
 
                 # now get the bake matrix
                 # and bake it to the mesh
-                print("2.80 1st polygon center", xplaneObject.blenderObject.data.polygons[5].center)
                 xplaneObject.bakeMatrix = xplaneObject.xplaneBone.getBakeMatrixForAttached()
                 mesh.transform(xplaneObject.bakeMatrix)
-                print("2.80 1st polygon center after transform", xplaneObject.blenderObject.data.polygons[5].center)
 
                 mesh.calc_normals_split()
                 mesh.calc_loop_triangles()
                 loop_triangles = mesh.loop_triangles
-                print("2.80: len mesh_faces (loop_triangles)", len(loop_triangles[:]))
                 try:
                     uv_layer = mesh.uv_layers[xplaneObject.material.uv_name]
                 except (KeyError, TypeError):
