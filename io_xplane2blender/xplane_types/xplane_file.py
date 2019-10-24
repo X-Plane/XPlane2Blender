@@ -263,9 +263,9 @@ class XPlaneFile():
 
         def get_xplane_objects_from_bone_tree(bone:"XPlaneBone")->List["XPlaneObjects"]:
             xp_objects = []
+            if bone.xplaneObject:
+                xp_objects.append(bone.xplaneObject)
             for child_bone in bone.children:
-                if child_bone.xplaneObject:
-                    xp_objects.append(child_bone.xplaneObject)
                 xp_objects.extend(get_xplane_objects_from_bone_tree(child_bone))
             return xp_objects
         return get_xplane_objects_from_bone_tree(self.rootBone)
