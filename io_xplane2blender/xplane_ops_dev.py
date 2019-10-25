@@ -6,9 +6,27 @@ import re
 
 import bpy
 import io_xplane2blender
+from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_types import xplane_lights_txt_parser
 from collections import OrderedDict
+
+class SCENE_OT_dev_apply_default_material_to_all(bpy.types.Operator):
+    bl_label = "Apply the 'Material' datablock to all objects"
+    bl_idname = "scene.dev_apply_default_material_to_all"
+    bl_description = "Applies the 'Material' datablock to all without a material. If 'Material' does not exist, it will be created"
+
+    def execute(self, context):
+        mat = test_creation_helpers.create_material_default()
+        for obj in bpy.data.objects:
+            try:
+                if not obj.data.materials:
+                    obj.data.materials.append(mat)
+                elif not obj.material_slots[0].material:
+                    obj.material_slots[0].material = mat
+            except:
+                pass
+        return {"FINISHED"}
 
 class SCENE_OT_dev_create_lights_txt_summary(bpy.types.Operator):
     bl_label = "Create lights.txt Summary"
@@ -127,6 +145,7 @@ class SCENE_OT_dev_rerun_updater(bpy.types.Operator):
         return { 'FINISHED' }
 
 _ops_dev = (
+    SCENE_OT_dev_apply_default_material_to_all,
     SCENE_OT_dev_create_lights_txt_summary,
     SCENE_OT_dev_layer_names_from_objects,
     SCENE_OT_dev_root_names_from_objects,
