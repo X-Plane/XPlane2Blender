@@ -1,5 +1,6 @@
-# File: xplane_ui.py
-# Creates the User Interface for all X-Plane settings.
+"""
+Creates the User Interface for all X-Plane properties.
+"""
 
 import collections
 from typing import Optional
@@ -31,7 +32,7 @@ class DATA_PT_xplane(bpy.types.Panel):
 
         if obj.type == "LIGHT":
             light_layout(self.layout, obj.data)
-            custom_layout(self.layout, obj.data, "LIGHT")
+            custom_layout(self.layout, "LIGHT")
         if obj.type == "EMPTY" and version >= 1130:
             empty_layout(self.layout, obj)
 
@@ -208,7 +209,7 @@ def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
 
     def get_collections_w_objs(collection):
         col_w_objs = []
-        if collection.objects and collection.name != "Master Collection":
+        if collection.name != "Master Collection":
             col_w_objs.append(collection)
         for child in collection.children:
             col_w_objs.extend(get_collections_w_objs(child))

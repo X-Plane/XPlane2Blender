@@ -1,31 +1,29 @@
 """
 About the XPlaneBone/XPlaneObject API
 =====================================
-TODO: Rewrite this introdcution, this is terrible
-XPlane2Blender makes it's own copy of the Blender hiearchy, which,
-under basic circumstances, looks almost identical to the Blender hierarchy in the outliner.
+XPlane2Blender makes it's own hierarchy of Blender objects,
+which under most circumstances looks nearly identical
+to the Blender hierarchy in the outliner.
 
 However, where as the Blender Outliner is focused on Collections and Objects and the parent-child
 connections between them, the XPlane2Blender hierarchy is focused on a tree
-structure of XPlaneBones with XPlaneObjects associated with them.
+structure of XPlaneBones with XPlaneObjects optionally associated with them.
 
-In the Blender hierarchy, every "tree node" is a real Blender Datablock, which
-may have children.
+XPlane2Blender primarily uses this tree to make animations
 
-In the XPlane2Blender hierarchy, every XPlaneBone is real and may have children, and may have an XPlaneObject.
-In addition, XPlaneBones exist for Convertable and Unconvertable Datablocks, Collections, and Bones themselves
+Rules:
+- XPlaneBones are made for the Root Collection and every Object and Armature Bone encountered
+- XPlaneBones will not have an XPlaneObject if the Blender Object is unconvertible (such as the root collection, camera, and sound emitters)
+- Every XPlaneBone (except the Root Bone under collections) must have a Blender Object associated with it
+- Every Blender Object appears in the XPlaneBone Tree exactly once
 
-XPlaneBone is a bit poorly named, it does not represent a connection or an edge. It should really be called XPlaneNode
+Special Collection Rules:
+- The root bone will have no Blender Object or XPlaneObject associated with it
 
-Every XPlaneBone has to have a real Blender Object associated with it. For collections we make a temporary fake
-empty and use that. This is because the animation model requires every bone to be able to compare with a real
-location/rotation matrix above it
+Because XPlaneBones represent different relationships than Blender's parent-child
+relationships, it cannot be assumed that the XPlaneBone Tree and Blender Hierarchy are the same.
 
-No bones will share a Blender Object
-
-XPlaneBone parent does not necissarily match Blender Object Parent (incase collections were used)
-
-blender_obj could be none and we just say for animations keep searching up until you find a bone with one?
+**Therefore, all APIs should use the XPlaneBone tree's version of parent and child lookups instead of the Blender's!**
 """
 
 import math
@@ -91,6 +89,7 @@ Final Root Bone (2.80)
                                 ....
                         3 Mesh: CubeParentByBone2
                 2 Mesh: CubeParentByArmatureObject
+                2 Mesh: CubeParentByDatablock
                 """
             self.parent.children.append(self)
 
@@ -160,8 +159,6 @@ Final Root Bone (2.80)
         """
         Collects animation_data from blenderObject, and pairs it with xplane datarefs
         """
-        #TODO: Why is this a thing?
-        # Obviously we don't use self.parent in here so it must be semantics of the animation system
         if not self.parent:
             return None
 

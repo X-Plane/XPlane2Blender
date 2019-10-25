@@ -76,8 +76,6 @@ def createFileFromBlenderRootObject(exportable_root:ExportableOBJRoot)->"XPlaneF
     layer_props = exportable_root.xplane.layer
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
-    import sys;sys.path.append(r'C:\Users\Ted\.p2\pool\plugins\org.python.pydev.core_7.2.1.201904261721\pysrc')
-    import pydevd;pydevd.settrace()
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
     print("Final Root Bone (2.80)")
     print(xplane_file.rootBone)
@@ -113,6 +111,7 @@ class XPlaneFile():
 
     def create_xplane_bone_hiearchy(self, root_object:ExportableOBJRoot)->Optional[XPlaneObject]:
         def convert_to_xplane_object(blender_obj:bpy.types.Object)->Optional[XPlaneObject]:
+            assert blender_obj, "blender_obj in convert_to_xplane_object must not be None"
             converted_xplane_obj = None
             if blender_obj.type == "MESH":
                 converted_xplane_obj = XPlanePrimitive(blender_obj)
