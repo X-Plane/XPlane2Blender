@@ -38,19 +38,6 @@ def resolveBlenderPath(path:str)->str:
         return path
 
 
-def get_all_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
-    """
-    First entry in list is always the scene's 'Master Collection'
-    """
-    def _get_collections_from_collection(collection:bpy.types.Collection)->List[bpy.types.Collection]:
-        collections = []
-        for child in collection.children:
-            collections.append(child)
-            collections.extend(child.children)
-
-        return collections
-
-    return [scene.collection] + _get_collections_from_collection(scene.collection)
 
 
 def get_plugin_resources_folder()->str:
@@ -69,11 +56,26 @@ def get_potential_objects_in_root_object(root_object: bpy.types.Object)->List[bp
     return collect_children(root_object)
 
 
+def get_exportable_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
+    """
+    First entry in list is always the scene's 'Master Collection'
+    """
+    def get_collections_from_collection(collection:bpy.types.Collection)->List[bpy.types.Collection]:
+        collections = []
+        for child in collection.children:
+            collections.append(child)
+            collections.extend(get_collections_from_collection(child))
+
+        return collections
+
+    return [scene.collection] + get_collections_from_collection(scene.collection)
+
 def get_root_objects_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
     return [obj for obj in scene.objects if obj.xplane.isExportableRoot]
 
 
-def is_root_object(obj_or_collection: Union[bpy.types.Collection, bpy.types.Object])->bool:
+
+def is_exportable_root(obj_or_collection: Union[bpy.types.Collection, bpy.types.Object])->bool:
     return (obj_or_collection.xplane.get("isExportableRoot")
             or obj_or_collection.xplane.get("is_exportable_collection"))
 

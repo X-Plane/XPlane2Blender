@@ -35,6 +35,14 @@ class XPlaneObject():
 
         self.getWeight()
 
+    def __str__(self):
+        return "\n".join((
+            f"Name: {self.name}",
+            f"Type: {self.type}",
+            f"Datarefs: {len(self.datarefs)}",
+            f"Lod: {self.lod[:]}",
+            f"Weight: {self.weight}"))
+
     def collect(self):
         assert self.xplaneBone is not None, "xplaneBone must not be None!"
 

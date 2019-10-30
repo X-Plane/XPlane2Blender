@@ -54,6 +54,7 @@ class XPlaneTestCase(unittest.TestCase):
     # Utility method to check if objects are contained in file
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
         for name in objectNames:
+            # TODO:  Remove/change
             self.assertIsNotNone(xplaneFile.objects[name])
             self.assertTrue(isinstance(xplaneFile.objects[name],xplane_primitive.XPlanePrimitive))
             self.assertEquals(xplaneFile.objects[name].blenderObject, bpy.data.objects[name])
@@ -152,7 +153,7 @@ class XPlaneTestCase(unittest.TestCase):
             #print("lineA:%s lineB:%s" %(lineA,lineB))
             # ensure same number of line segments
             self.assertEquals(len(lineA), len(lineB))
-            
+
 
             for linePos in range(0, len(lineA)):
                 segmentA = lineA[linePos]
@@ -190,24 +191,23 @@ class XPlaneTestCase(unittest.TestCase):
         tmpFile = open(tmpPath, 'r')
         tmpOutput = tmpFile.read()
         tmpFile.close()
-        
-        return self.assertFileOutputEqualsFixture(tmpOutput, fixturePath, filterCallback, floatTolerance)
-    
 
-    # Method: assertLoggerErrors
-    #
-    # expected_logger_errors - The number of errors you expected to have happen
-    # asserts the number of errors and clears the logger of all messages
-    def assertLoggerErrors(self, expected_logger_errors):
+        return self.assertFileOutputEqualsFixture(tmpOutput, fixturePath, filterCallback, floatTolerance)
+
+    def assertLoggerErrors(self, expected_logger_errors:int)->None:
+        """
+        Asserts the logger has some number of errors, then clears the logger
+        of all messages
+        """
         self.assertEqual(len(logger.findErrors()), expected_logger_errors)
         logger.clearMessages()
-    
+
     #TODO: Must filter warnings to have this be useful
     # Method: assertLoggerWarnings
     #
     # expected_logger_warnings - The number of warnings you expected to have happen
     # asserts the number of warnings and clears the logger of all messages
-    #def assertLoggerWarnings(self, expected_logger_warnings):    
+    #def assertLoggerWarnings(self, expected_logger_warnings):
     #    self.assertEqual(len(logger.findWarnings()), expected_logger_warnings)
     #    logger.clearMessages()
     def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
@@ -217,7 +217,7 @@ class XPlaneTestCase(unittest.TestCase):
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     def assertRootObjectExportEqualsFixture(self,
-            root_object:Union[bpy.types.Object, str],
+            root_object:Union[bpy.types.Collection, bpy.types.Object, str],
             fixturePath: str = None,
             tmpFilename: Optional[str] = None,
             filterCallback: Callable[[List[Union[float, str]]], bool] = None,
@@ -260,15 +260,24 @@ class XPlaneTestCase(unittest.TestCase):
 
         return out
 
-    def exportRootObject(self, root_object:Union[bpy.types.Object,str], dest:str = None)->str:
-        '''
+    def exportRootObject(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
+        """
         Returns the result of calling xplaneFile.write(),
         where xplaneFile came from a root object (by name or Blender data).
 
         The output can also simultaniously written to a destination
-        '''
-        if isinstance(root_object,str):
-            root_object = bpy.data.objects[root_object]
+
+        If root_object is an str, matching collections are looked up first.
+        If you don't want an ambiguity of root objects, don't use the name twice
+        """
+        if isinstance(root_object, str):
+            try:
+                root_object = bpy.data.collections[root_object]
+            except:
+                try:
+                    root_object = bpy.data.objects[root_object]
+                except:
+                    pass
 
         xplaneFile = xplane_file.createFileFromBlenderRootObject(root_object)
         out = xplaneFile.write()
@@ -344,11 +353,7 @@ def runTestCases(testCases):
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(testCases[0])
     test_result = unittest.TextTestRunner().run(suite)
 
-    #See XPlane2Blender/tests.py for documentation. The strings must be kept in sync!
-    return_string = "RESULT: After {testsRun} tests got {errors} errors, {failures} failures, and {skipped} skipped"\
-        .format(testsRun=test_result.testsRun,
-                errors=len(test_result.errors),
-                failures=len(test_result.failures),
-                skipped=len(test_result.skipped))
-    print(return_string)
+    # See XPlane2Blender/tests.py for documentation. The strings must be kept in sync!
+    # This is not an optional debug print statement! The test runner needs this print statement to function
+    print(f"RESULT: After {(test_result.testsRun)} tests got {len(test_result.errors)} errors, {len(test_result.failures)} failures, and {len(test_result.skipped)} skipped")
 

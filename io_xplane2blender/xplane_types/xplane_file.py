@@ -1,31 +1,27 @@
-'''
+"""
 This is the entry point for the exporter's collection and where it starts writing, proper.
-There are mirroring methods for Layer and Root Objects mode. The important paths are
+The important paths are
 
-createFilesFromBlenderRootObjects
-|___createFileFromBlenderRootObject (Exporter decides what to inspect)
-    |
-    |____collectBlenderObjects (Exporter also decides what to inspect),
-    | |  |___convertBlenderObjects (Where BlenderObjects become XPlaneObjects)
-    | |__collectBonesFromBlenderBones/Objects (tree traversal of collected Blender Objects)
-    |
- ___createFileBlenderLayerIndex (Exporter decides what to inspect)
-|
-createFilesFromBlenderLayers
-'''
+createFilesFromBlenderRootObjects # Iterates through objects and collections to find
+|_createFileFromBlenderRootObject
+    |_xplane_file.create_xplane_bone_hierarchy # Exporter begins and runs the recursion down the Blender hierarchy
+        |_ _recurse # The heart of the collection process, which turns Blender Objects into XPlaneObjects
+
+Later, the write process starts with xplane_file.write, and uses the collected data including
+the header and XPlaneBone tree contents to a string
+"""
 
 
 import collections
+import operator
 import pprint
+from typing import Dict, List, Optional, Set, Union
 
 import bpy
 import mathutils
-
-import operator
-from typing import Dict, List, Union, Optional
-from io_xplane2blender import xplane_constants, xplane_helpers
-from io_xplane2blender.xplane_types import xplane_empty
+from io_xplane2blender import xplane_constants, xplane_helpers, xplane_props
 from io_xplane2blender.tests import test_creation_helpers
+from io_xplane2blender.xplane_types import xplane_empty, xplane_material_utils
 
 from ..xplane_helpers import floatToStr, logger
 from .xplane_bone import XPlaneBone
@@ -33,12 +29,9 @@ from .xplane_commands import XPlaneCommands
 from .xplane_header import XPlaneHeader
 from .xplane_light import XPlaneLight
 from .xplane_lights import XPlaneLights
-from io_xplane2blender.xplane_types import xplane_material_utils
 from .xplane_mesh import XPlaneMesh
-from io_xplane2blender import xplane_props
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
-
 
 """
 Given the difficulty in keeping all these words straight, these
@@ -47,13 +40,13 @@ running in circles
 """
 
 """An Object with an XPlaneLayer property"""
-PotentialOBJRoot = Union[bpy.types.Collection, bpy.types.Object]
+PotentialRoot = Union[bpy.types.Collection, bpy.types.Object]
 
 """
 An Object with an XPlaneLayer property that also meets all other requirements.
 It doesn't mean the contents will not have any warnings or errors
 """
-ExportableOBJRoot = Union[bpy.types.Collection, bpy.types.Object]
+ExportableRoot = Union[bpy.types.Collection, bpy.types.Object]
 
 """
 The heirarchy allows these as parents, but Collections can't be real children
@@ -63,16 +56,27 @@ BlenderObject = bpy.types.Object
 BlenderCollection = bpy.types.Collection
 
 def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]:
-    xplane_files = [] # type: List["XPlaneFile"]
-    for root_object in filter(lambda o: xplane_helpers.is_root_object(o), scene.objects[:] + xplane_helpers.get_all_collections_in_scene(scene)[1:]):
-        if root_object.xplane.layer.export:
-            xplane_file = createFileFromBlenderRootObject(root_object)
+    xplane_files: List["XPlaneFile"] = []
+    for exportable_root in filter(lambda o: xplane_helpers.is_exportable_root(o), scene.objects[:] + xplane_helpers.get_exportable_collections_in_scene(scene)[1:]):
+        if exportable_root.xplane.layer.export:
+            xplane_file = createFileFromBlenderRootObject(exportable_root)
             xplane_files.append(xplane_file)
 
     return xplane_files
 
+def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->"XPlaneFile":
+    nested_errors: Set[str] = set()
+    def log_nested_roots(exportable_roots: List[PotentialRoot]):
+        for child in exportable_roots:
+            if xplane_helpers.is_exportable_root(child):
+                nested_errors.add(f"Exportable Roots cannot be nested, unmark {child.name} as a Root or change its parentage")
+            log_nested_roots(child.children)
 
-def createFileFromBlenderRootObject(exportable_root:ExportableOBJRoot)->"XPlaneFile":
+    log_nested_roots(exportable_root.children)
+    for error in sorted(nested_errors):
+        logger.error(error)
+
+    log_nested_roots(exportable_root.children)
     layer_props = exportable_root.xplane.layer
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
@@ -109,7 +113,7 @@ class XPlaneFile():
         # materials representing the reference for export
         self.referenceMaterials = None
 
-    def create_xplane_bone_hiearchy(self, root_object:ExportableOBJRoot)->Optional[XPlaneObject]:
+    def create_xplane_bone_hiearchy(self, root_object:ExportableRoot)->Optional[XPlaneObject]:
         def convert_to_xplane_object(blender_obj:bpy.types.Object)->Optional[XPlaneObject]:
             assert blender_obj, "blender_obj in convert_to_xplane_object must not be None"
             converted_xplane_obj = None
@@ -124,7 +128,7 @@ class XPlaneFile():
 
             return converted_xplane_obj
 
-        def _recurse(parent: BlenderParentType, parent_bone: XPlaneBone, parent_blender_objects:BlenderObject)->None:
+        def _recurse(parent: BlenderParentType, parent_bone: Optional[XPlaneBone], parent_blender_objects:BlenderObject)->None:
             """
             Main function for recursing down tree. parent_blender_objects will be different from blender_objects will not equal parent.children, when a parent is a collection
             """
@@ -141,6 +145,7 @@ class XPlaneFile():
                 new_xplane_obj = convert_to_xplane_object(blender_obj)
             else:
                 new_xplane_obj = None
+            print(f"new_xplane_obj:\n{new_xplane_obj}")
 
             if parent_bone:
                 new_xplane_bone = XPlaneBone(
@@ -150,25 +155,27 @@ class XPlaneFile():
                         xplane_obj=new_xplane_obj,
                         parent_xplane_bone=parent_bone)
             else:
-                # We're in root, so,
-                new_xplane_bone = self.rootBone
-            #print(f"Current XPlaneBone", new_xplane_bone)
+                # We have to do the manual work
+                new_xplane_bone = XPlaneBone(self,
+                                             blender_obj=blender_obj,
+                                             blender_bone=None,
+                                             xplane_obj=new_xplane_obj,
+                                             parent_xplane_bone=None)
+
+                self.rootBone = new_xplane_bone
+                #new_xplane_bone.xplaneObject = new_xplane_obj
+                #new_xplane_bone.xplaneObject.xplaneBone = new_xplane_bone
 
             if new_xplane_obj:
-                print(f"New XPlaneObject: {new_xplane_obj.name}")
+                print("about to collect")
                 # This is different than asking the blender Object its type!
                 # this is refering to the old style default light
                 if isinstance(new_xplane_obj, XPlaneLight):
                     self.lights.append(new_xplane_obj)
                 new_xplane_obj.collect()
-            else:
-                try:
-                    print(f"Blender Object: {blender_object.name}, didn't convert")
-                except:
-                    pass
-
-            if blender_obj != self.rootBone.blenderObject and blender_obj.xplane.layer.get("isExportableRoot"):
-                logger.error(f"{parent.name} is marked as an exportable root. Nested Exportable Roots are not allowed")
+            elif blender_obj:
+                print(f"Blender Object: {blender_obj.name}, didn't convert")
+                pass
 
             def make_bones_for_armature_bones(arm_obj:bpy.types.Object)->Dict[str, XPlaneBone]:
                 """
@@ -194,15 +201,13 @@ class XPlaneFile():
                 for top_level_bone in filter(lambda b: not b.parent, arm_obj.data.bones):
                     _recurse_bone(top_level_bone, new_xplane_bone)
                 return blender_bones_to_xplane_bones
-            # If this is an armature, first build up the bones by tracking recursively down, then continue on
-            #  but skipping making the conversion again
 
+            # If this is an armature, first build up the bones by tracking recursively down, then continue on
+            # but skipping making the conversion again
             if blender_obj and blender_obj.type == "ARMATURE":
-                print(f"Recursing down {blender_obj.name}'s bone tree")
                 real_bone_parents = make_bones_for_armature_bones(blender_obj)
 
             for child_obj in parent_blender_objects:
-                print("Testing child's name", child_obj.name)
                 if (blender_obj
                     and blender_obj.type == "ARMATURE"
                     and child_obj.parent_type == "BONE"):
@@ -219,17 +224,27 @@ class XPlaneFile():
                              new_xplane_bone,
                              child_obj.children,
                              )
+            new_xplane_bone.sortChildren()
         #--- end _recurse function -------------------------------------------
-        print("RootBone", self.rootBone)
         if isinstance(root_object, bpy.types.Collection):
-            self.rootBone = XPlaneBone(self, None, None, None)
-            _recurse(parent=None, parent_bone=None, parent_blender_objects=list(filter(lambda o: o.parent is None or o.parent.name not in root_object.all_objects, root_object.all_objects)))
+            _recurse(parent=None,
+                     parent_bone=None,
+                     parent_blender_objects=list(
+                         filter(
+                             lambda o: o.parent is None or o.parent.name not in
+                             root_object.all_objects,
+                             root_object.all_objects)))
         elif isinstance(root_object, bpy.types.Object):
-            self.rootBone = XPlaneBone(self, root_object, None, convert_to_xplane_object(root_object))
-            _recurse(parent=root_object, parent_bone=None, parent_blender_objects=root_object.children)
+            self.rootBone = XPlaneBone(self,
+                                       blender_obj=root_object,
+                                       blender_bone=None,
+                                       xplane_obj=None,
+                                       parent_xplane_bone=None)
+            _recurse(parent=root_object,
+                     parent_bone=None,
+                     parent_blender_objects=root_object.children)
         else:
             assert False, f"Unsupported root_object type {type(root_object)}"
-
 
     #TODO: Test this, needs code coverage
     def get_xplane_objects(self)->List["XPlaneObjects"]:
