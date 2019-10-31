@@ -64,7 +64,7 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]
 
     return xplane_files
 
-def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->"XPlaneFile":
+def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XPlaneFile"]:
     nested_errors: Set[str] = set()
     def log_nested_roots(exportable_roots: List[PotentialRoot]):
         for child in exportable_roots:
@@ -76,7 +76,6 @@ def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->"XPlaneFile"
     for error in sorted(nested_errors):
         logger.error(error)
 
-    log_nested_roots(exportable_root.children)
     layer_props = exportable_root.xplane.layer
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
@@ -224,6 +223,10 @@ class XPlaneFile():
                              new_xplane_bone,
                              child_obj.children,
                              )
+
+            if new_xplane_bone.blenderObject.type == "ARMATURE":
+                for xp_bone in real_bone_parents.values():
+                    xp_bone.sortChildren()
             new_xplane_bone.sortChildren()
         #--- end _recurse function -------------------------------------------
         if isinstance(root_object, bpy.types.Collection):

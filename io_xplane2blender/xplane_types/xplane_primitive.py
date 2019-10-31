@@ -61,7 +61,7 @@ class XPlanePrimitive(XPlaneObject):
             self.weight += mat_weight
 
     def collect(self)->None:
-        super(XPlanePrimitive, self).collect()
+        super().collect()
 
         # add manipulator attributes
         self.manipulator.collect()
