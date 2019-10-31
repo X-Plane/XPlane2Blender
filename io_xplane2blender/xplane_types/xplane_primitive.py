@@ -39,17 +39,17 @@ class XPlanePrimitive(XPlaneObject):
     #
     # Parameters:
     #   blenderObject - A Blender object
-    def __init__(self, blenderObject):
+    def __init__(self, blenderObject:bpy.types.Object):
         assert blenderObject.type == 'MESH'
         super(XPlanePrimitive, self).__init__(blenderObject)
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
         self.manipulator = XPlaneManipulator(self)
 
-        self.getWeight()
+        self.setWeight()
 
-    def getWeight(self, defaultWeight = 0):
-        super(XPlanePrimitive, self).getWeight(defaultWeight)
+    def setWeight(self, defaultWeight = 0)->None:
+        super().setWeight(defaultWeight)
 
         if not hasattr(self.blenderObject.xplane, 'override_weight') or not self.blenderObject.xplane.override_weight:
             mat_weight = 0
@@ -60,7 +60,7 @@ class XPlanePrimitive(XPlaneObject):
 
             self.weight += mat_weight
 
-    def collect(self):
+    def collect(self)->None:
         super(XPlanePrimitive, self).collect()
 
         # add manipulator attributes
@@ -72,133 +72,7 @@ class XPlanePrimitive(XPlaneObject):
         if self.material:
             self.material.collect()
 
-    # Method: collectManipulatorAttributes
-    # Defines Manipulator attributes in <cockpitAttributes> based on settings in <XPlaneManipulator>.
-    def collectManipulatorAttributes(self):
-        attr = 'ATTR_manip_'
-
-        value = None # type: Tuple[Any]
-        if self.blenderObject.xplane.manip.enabled:
-            manip = self.blenderObject.xplane.manip
-            xplane_version = int(bpy.context.scene.xplane.version)
-            manipType = manip.type
-
-            attr += manipType
-
-            if manipType == MANIP_DRAG_XY:
-                value = (
-                    manip.cursor,
-                    manip.dx,
-                    manip.dy,
-                    manip.v1_min,
-                    manip.v1_max,
-                    manip.v2_min,
-                    manip.v2_max,
-                    manip.dataref1,
-                    manip.dataref2,
-                    manip.tooltip
-                )
-            elif manipType == MANIP_DRAG_AXIS:
-                value = (
-                    manip.cursor,
-                    manip.dx,
-                    manip.dy,
-                    manip.dz,
-                    manip.v1,
-                    manip.v2,
-                    manip.dataref1,
-                    manip.tooltip
-                )
-            elif manipType == MANIP_DRAG_AXIS_PIX:
-                value = (
-                    manip.cursor,
-                    manip.dx,
-                    manip.step,
-                    manip.exp,
-                    manip.v1,
-                    manip.v2,
-                    manip.dataref1,
-                    manip.tooltip
-                )
-            elif manipType == MANIP_COMMAND:
-                value = (manip.cursor, manip.command, manip.tooltip)
-            elif manipType == MANIP_COMMAND_AXIS:
-                value = (
-                    manip.cursor,
-                    manip.dx,
-                    manip.dy,
-                    manip.dz,
-                    manip.positive_command,
-                    manip.negative_command,
-                    manip.tooltip
-                )
-            elif manipType in (MANIP_COMMAND_KNOB, MANIP_COMMAND_SWITCH_UP_DOWN, MANIP_COMMAND_SWITCH_LEFT_RIGHT):
-                value = (
-                    manip.cursor,
-                    manip.positive_command,
-                    manip.negative_command,
-                    manip.tooltip
-                )
-            elif manipType == MANIP_PUSH:
-                value = (
-                    manip.cursor,
-                    manip.v_down,
-                    manip.v_up,
-                    manip.dataref1,
-                    manip.tooltip
-                )
-            elif manipType == MANIP_RADIO:
-                value = (
-                    manip.cursor,
-                    manip.v_down,
-                    manip.dataref1,
-                    manip.tooltip
-                )
-            elif manipType == MANIP_TOGGLE:
-                value = (
-                    manip.cursor,
-                    manip.v_on,
-                    manip.v_off,
-                    manip.dataref1,
-                    manip.tooltip
-                )
-            elif manipType in (MANIP_DELTA, MANIP_WRAP):
-                value = (
-                    manip.cursor,
-                    manip.v_down,
-                    manip.v_hold,
-                    manip.v1_min,
-                    manip.v1_max,
-                    manip.dataref1,
-                    manip.tooltip
-                )
-            elif manipType in (MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT):
-                value = (
-                    manip.cursor,
-                    manip.v1,
-                    manip.v2,
-                    manip.click_step,
-                    manip.hold_step,
-                    manip.dataref1,
-                    manip.tooltip
-                )
-            elif manipType == MANIP_NOOP:
-                value = (
-                    manip.dataref1,
-                    manip.tooltip
-                )
-
-        else:
-            attr = None
-
-        if attr is not None:
-            self.cockpitAttributes.add(XPlaneAttribute(attr, value))
-
-            # add mouse wheel delta
-            if manipType in MOUSE_WHEEL_MANIPULATORS and bpy.context.scene.xplane.version >= VERSION_1050 and manip.wheel_delta != 0:
-                self.cockpitAttributes.add(XPlaneAttribute('ATTR_manip_wheel', manip.wheel_delta))
-
-    def write(self):
+    def write(self)->None:
         debug = getDebug()
         indent = self.xplaneBone.getIndent()
         o = ''

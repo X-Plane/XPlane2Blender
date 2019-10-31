@@ -33,7 +33,7 @@ class XPlaneObject():
         for i, dataref in self.blenderObject.xplane.datarefs.items():
             self.datarefs[dataref.path] = dataref
 
-        self.getWeight()
+        self.setWeight()
 
     def __str__(self):
         return "\n".join((
@@ -95,15 +95,11 @@ class XPlaneObject():
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
 
-    #TODO: This needs to be renamed!!! This is just terrible. This doesn't actually get anything, it sets self.weight!
-    # Method: getWeight
-    #
-    # Parameters:
-    #   defaultWeight - (default = 0)
-    #
-    # Returns:
-    #   int - The weight of this object.
-    def getWeight(self, defaultWeight:int = 0):
+    def setWeight(self, defaultWeight:int = 0):
+        """
+        Sets the weight of the object, if overriden, based
+        its weight and the weight of its attributes
+        """
         weight = defaultWeight
 
         if hasattr(self.blenderObject.xplane, 'override_weight') and self.blenderObject.xplane.override_weight:
