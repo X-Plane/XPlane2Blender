@@ -211,6 +211,12 @@ class XPlaneFile():
                     and blender_obj.type == "ARMATURE"
                     and child_obj.parent_type == "BONE"):
                     if child_obj.parent_bone not in blender_obj.data.bones:
+                        logger.warn("".join((
+                            f"{child_obj.name}",
+                            " and its children" if child_obj.children else "",
+                            " will not export,",
+                            f" it's parent bone '{child_obj.parent_bone}' is",
+                            f" not a real bone in {blender_obj.name}" if child_obj.parent_bone else " empty")))
                         # Ignored cases don't get their children examined
                         continue
                     else:
@@ -224,9 +230,12 @@ class XPlaneFile():
                              child_obj.children,
                              )
 
-            if new_xplane_bone.blenderObject.type == "ARMATURE":
-                for xp_bone in real_bone_parents.values():
-                    xp_bone.sortChildren()
+            try:
+                if new_xplane_bone.blenderObject.type == "ARMATURE":
+                    for xp_bone in real_bone_parents.values():
+                        xp_bone.sortChildren()
+            except AttributeError: # Collection won't have a blenderObject
+                pass
             new_xplane_bone.sortChildren()
         #--- end _recurse function -------------------------------------------
         if isinstance(root_object, bpy.types.Collection):
