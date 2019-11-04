@@ -1,6 +1,7 @@
 import math
 import os.path
 import typing
+import shutil
 from collections import namedtuple
 from typing import *
 
@@ -68,30 +69,57 @@ class BoneInfo():
         self.parent = parent
 
 class DatablockInfo():
+    """
+    The POD struct used for creating datablocks.
+    If None is given as a parameter, sensible defaults are used:
+
+    parent_info - When None no parent is assigned
+    collection - When None, current scene's 'Master Collection' is used
+    rotation - When None, the default for rotation_mode is used
+
+    Values for datablock_type must be 'MESH', 'ARMATURE', 'EMPTY', or "LIGHT"
+    """
     def __init__(self,
             datablock_type:str,
-            name:Optional[str]=None,
-            layers:Tuple[int]=tuple([True] + [False] * 19),
+            name:str,
             parent_info:'ParentInfo'=None,
+            collection:Optional[Union[str, bpy.types.Collection]]=None,
             location:Vector=Vector((0,0,0)),
             rotation_mode:str="XYZ",
             rotation:Optional[Union[bpy.types.bpy_prop_array,Euler,Quaternion]]=None,
             scale:Vector=Vector((1,1,1))):
-        '''
-        datablock_type: Must be 'MESH', 'ARMATURE', 'EMPTY', or "LIGHT"
-        default for layers will be layer 1
-        '''
         self.datablock_type = datablock_type
         self.name = name
-        self.layers = layers
+        if collection is None:
+            self.collection = bpy.context.scene.collection
+        else:
+            self.collection = collection if isinstance(collection, bpy.types.Collection) else bpy.data.collections[collection]
         self.parent_info = parent_info
         self.location = location
         self.rotation_mode = rotation_mode
         if rotation is None:
-            if set(self.rotation_mode) == {'X','Y','Z'}:
+            if self.rotation_mode == "AXIS_ANGLE":
+                self.rotation = (0.0, Vector((0,0,0,0)))
+            elif self.rotation_mode == "QUATERNION":
+                self.rotation = Quaternion()
+            elif set(self.rotation_mode) == {'X','Y','Z'}:
                 self.rotation = Vector()
-            elif self.rotation_mode == "AXIS_ANGLE":
-                self.rotation = (0.0,Vector((0,0,0,0)))
+            else:
+                assert False, "Unsupported rotation mode: " + self.rotation_mode
+        else:
+            if self.rotation_mode == "AXIS_ANGLE":
+                assert len(self.rotation[1]) == 3
+                self.rotation_axis_angle = rotation
+            elif self.rotation_mode == "QUATERNION":
+                assert len(self.rotation) == 4
+                self.rotation_quaternion = rotation
+            elif set(self.rotation_mode) == {"x", "y", "z"}:
+                assert len(self.rotation) == 3
+                self.rotation_euler = rotation
+            else:
+                assert False, "Unsupported rotation mode: " + self.rotation_mode
+
+            self.rotation = rotation
         self.scale = scale
 
 class KeyframeInfo():
@@ -260,10 +288,10 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
     '''
     assert info.datablock_type == "ARMATURE"
     bpy.ops.object.armature_add(
-        enter_editmode=False,
-        location=info.location,
-        rotation=info.rotation,
-        layers=info.layers)
+            enter_editmode=False,
+            location=info.location,
+            rotation=info.rotation
+        )
     arm = bpy.context.object
     arm.name = info.name if info.name is not None else arm.name
     arm.rotation_mode = info.rotation_mode
@@ -297,18 +325,21 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
 
     return arm
 
-def create_datablock_empty(info:DatablockInfo)->bpy.types.Object:
+def create_datablock_empty(info:DatablockInfo, scene:Optional[bpy.types.Scene]=None)->bpy.types.Object:
+    """
+    Creates a datablock empty and links it to a specific scene's master collection, or
+    if not given, the current context's scene
+    """
     assert info.datablock_type == "EMPTY"
-    #TODO: Needs to check if empty already exists
-    bpy.ops.object.empty_add(
-        type='PLAIN_AXES',
-        location=info.location,
-        rotation=info.rotation,
-        layers=info.layers
-        )
-    ob = bpy.context.object
-    ob.name = info.name if info.name is not None else ob.name
+    ob = bpy.data.objects.new(info.name, object_data=None)
+    if scene:
+        scene.collection.objects.link(ob)
+    else:
+        bpy.context.scene.collection.objects.link(ob)
+    ob.empty_display_type = 'PLAIN_AXES'
+    ob.location = info.location
     ob.rotation_mode = info.rotation_mode
+    set_rotation(ob, info.rotation, info.rotation_mode)
     ob.scale = info.scale
 
     if info.parent_info:
@@ -326,13 +357,12 @@ def create_datablock_mesh(info:DatablockInfo,
             enter_editmode=False,
             location=info.location,
             rotation=info.rotation,
-            layers=info.layers)
+            )
     elif primitive_shape == "cylinder":
         bpy.ops.mesh.primitive_cylinder_add(
             enter_editmode=False,
             location=info.location,
-            rotation=info.rotation,
-            layers=info.layers)
+            rotation=info.rotation,)
 
     ob = bpy.context.object
     ob.name = info.name if info.name is not None else ob.name
@@ -453,15 +483,15 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
 
     if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_SHOW or\
        keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_HIDE:
-       value = keyframe_infos[0].dataref_value
-       value_1 = keyframe_infos[0].dataref_show_hide_v1
-       value_2 = keyframe_infos[0].dataref_show_hide_v2
-       assert value is None and value_1 is not None and value_2 is not None
+        value = keyframe_infos[0].dataref_value
+        value_1 = keyframe_infos[0].dataref_show_hide_v1
+        value_2 = keyframe_infos[0].dataref_show_hide_v2
+        assert value is None and value_1 is not None and value_2 is not None
     if keyframe_infos[0].dataref_anim_type == xplane_constants.ANIM_TYPE_TRANSFORM:
-       value = keyframe_infos[0].dataref_value
-       value_1 = keyframe_infos[0].dataref_show_hide_v1
-       value_2 = keyframe_infos[0].dataref_show_hide_v2
-       assert value is not None and value_1 is None and value_2 is None
+        value = keyframe_infos[0].dataref_value
+        value_1 = keyframe_infos[0].dataref_show_hide_v1
+        value_2 = keyframe_infos[0].dataref_show_hide_v2
+        assert value is not None and value_1 is None and value_2 is None
 
     struct_is_bone = False
     if isinstance(blender_struct, bpy.types.Bone) or isinstance(blender_struct, bpy.types.PoseBone):
@@ -510,7 +540,7 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
             blender_struct.keyframe_insert(data_path="location",group=blender_struct.name if struct_is_bone else "Location")
         if kf_info.rotation:
             blender_struct.rotation_mode = kf_info.rotation_mode
-            data_path ='rotation_{}'.format(kf_info.rotation_mode.lower())
+            data_path = 'rotation_{}'.format(kf_info.rotation_mode.lower())
 
             if kf_info.rotation_mode == "AXIS_ANGLE":
                 blender_struct.rotation_axis_angle = (kf_info.rotation[0],*kf_info.rotation[1])
@@ -529,12 +559,15 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
             bpy.context.scene.objects.active = blender_struct
             bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
 
-#def set_layer_visibility(layer_visibility_settings:Iterable[Tuple[int,bool]]):
-    #assert len(layer_visibility_settings) == 0
-    #assert any([setting[1] for setting in layer_visibility_settings])
-#
-    #for idx in layers:
-        #bpy.context.scene.layers[idx] = visible
+
+def set_collection(blender_object:bpy.types.Object, collection:Union[bpy.types.Collection, str])->None:
+    assert isinstance(blender_object,(bpy.types.Collection, bpy.types.Object)), "collection was of type " + str(type(blender_object))
+
+    if isinstance(collection, str):
+        collection = bpy.data.collections[collection.name]
+
+    collection.link(blender_object)
+
 
 def set_manipulator_settings(object_datablock:bpy.types.Object,
         manip_type:str,
@@ -574,20 +607,26 @@ def set_manipulator_settings(object_datablock:bpy.types.Object,
         else:
             setattr(object_datablock.xplane.manip,prop_name,value)
 
+
 def set_material(blender_object:bpy.types.Object,
                  material_name:str="Material",
                  material_props:Optional[Dict[str,Any]]=None,
                  create_missing:bool=True):
 
-    if len(blender_object.material_slots) == 0:
-        bpy.ops.object.mode_set(mode='OBJECT')
-        blender_object.data.materials.append(None)
-    mat = create_material(material_name)
-    blender_object.material_slots[0].material = mat
+    try:
+        if len(blender_object.material_slots) == 0:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            blender_object.data.materials.append(None)
+    except:
+        return
+    finally:
+        mat = create_material(material_name)
+        blender_object.material_slots[0].material = mat
 
-    if material_props:
-        for prop,value in material_props.items():
-            setattr(mat.xplane.manip,prop,value)
+        if material_props:
+            for prop,value in material_props.items():
+                setattr(mat.xplane.manip,prop,value)
+
 
 def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
     assert isinstance(blender_object,bpy.types.Object)
@@ -601,14 +640,42 @@ def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
 
         blender_object.parent_bone = parent_info.parent_bone
 
-def set_xplane_layer(layer:Union[int,io_xplane2blender.xplane_props.XPlaneLayer],layer_props:Dict[str,Any]):
-    assert isinstance(layer,int) or isinstance(layer, io_xplane2blender.xplane_props.XPlaneLayer)
+def set_rotation(blender_object:bpy.types.Object, rotation:Any, rotation_mode:str)->None:
+    """
+    Sets the rotation of a Blender Object and takes care of picking which
+    rotation type to give the value to
+    """
+    if rotation_mode == "AXIS_ANGLE":
+        assert len(rotation[1]) == 3
+        blender_object.rotation_axis_angle = rotation
+    elif rotation_mode == "QUATERNION":
+        assert len(rotation) == 4
+        blender_object.rotation_quaternion = rotation
+    elif set(rotation_mode) == {"X", "Y", "Z"}:
+        assert len(rotation) == 3
+        blender_object.rotation_euler = rotation
+    else:
+        assert False, "Unsupported rotation mode: " + blender_object.rotation_mode
 
-    if isinstance(layer,int):
-       layer = bpy.context.scene.xplane.layers[layer]
+class TemporaryStartFile():
+    def __init__(self, temporary_startup_path:str):
+        self.temporary_startup_path = temporary_startup_path
 
-    for prop,value in layer_props.items():
-        setattr(layer,prop,value)
+    def __enter__(self)->None:
+        real_startup_filepath = os.path.join(bpy.utils.user_resource("CONFIG"), "startup.blend")
+        try:
+            os.replace(real_startup_filepath, real_startup_filepath + ".bak")
+        except FileNotFoundError:
+            pass
+        else:
+            shutil.copyfile(self.temporary_startup_path, real_startup_filepath)
+        bpy.ops.wm.read_homefile()
+
+    def __exit__(self, type, value, traceback)->None:
+        real_startup_filepath = os.path.join(bpy.utils.user_resource("CONFIG"), "startup.blend")
+        os.replace(real_startup_filepath + ".bak", real_startup_filepath)
+        return False
+
 
 def create_initial_test_setup():
     bpy.ops.wm.read_homefile()
@@ -630,4 +697,3 @@ def create_initial_test_setup():
     unit_test_overview.write(header_str + '\n\n')
 
     #bpy.ops.console.insert(text="bpy.ops.export.xplane_obj()")
-

@@ -10,40 +10,15 @@ from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 from io_xplane2blender.xplane_types import xplane_bone
 
 class XPlaneObject():
-    '''
-    An object in the XPlane2Blender collection tree. It may or may not be associated with a Blender Object
-
-    # Property: blenderObject
-    # The blender object this <XPlaneObject> refers to.
-
-    # Property: name
-    # string - Name of this object. The same as the <object> name.
-
-    # Property: type
-    # string - Type of the object, a duplicate of blenderObject if it has one. Mostly the same as the <object> type.
-
-    # Property: datarefs
-    # dict - The keys are the dataref paths and the values are references to <XPlaneDatarefs>.
-
-    # Property: bakeMatrix
-    # Matrix - The matrix this object was baked with. See <XPlaneMesh.getBakeMatrix> for more information.
-
-    # Property: weight
-    # int - (default = 0) The object weight. Higher weight will write the object later in OBJ.
-
-    # Property: lod
-    # vector - (False, False, False, False) with levels of details this object is in
-    '''
-
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   blenderObject - A Blender object
+    """
+    An object in the XPlane2Blender collection tree,
+    tied with the Blender Object it is based off.
+    """
     def __init__(self, blenderObject: bpy.types.Object)->None:
         self.blenderObject = blenderObject
 
-        #This is assaigned and tied together in in XPlaneBone's constructor
-        self.xplaneBone = None # type: Optional[xplane_bone.XPlaneBone]
+        #This is assigned and tied together in in XPlaneBone's constructor
+        self.xplaneBone = None # type: xplane_bone.XPlaneBone
         self.name = blenderObject.name # type: str
         self.type = self.blenderObject.type # type: str
         self.datarefs = {} # type: Dict[str,str]
@@ -58,7 +33,15 @@ class XPlaneObject():
         for i, dataref in self.blenderObject.xplane.datarefs.items():
             self.datarefs[dataref.path] = dataref
 
-        self.getWeight()
+        self.setWeight()
+
+    def __str__(self):
+        return "\n".join((
+            f"Name: {self.name}",
+            f"Type: {self.type}",
+            f"Datarefs: {len(self.datarefs)}",
+            f"Lod: {self.lod[:]}",
+            f"Weight: {self.weight}"))
 
     def collect(self):
         assert self.xplaneBone is not None, "xplaneBone must not be None!"
@@ -112,15 +95,11 @@ class XPlaneObject():
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
 
-    #TODO: This needs to be renamed!!! This is just terrible. This doesn't actually get anything, it sets self.weight!
-    # Method: getWeight
-    #
-    # Parameters:
-    #   defaultWeight - (default = 0)
-    #
-    # Returns:
-    #   int - The weight of this object.
-    def getWeight(self, defaultWeight:int = 0):
+    def setWeight(self, defaultWeight:int = 0):
+        """
+        Sets the weight of the object, if overriden, based
+        its weight and the weight of its attributes
+        """
         weight = defaultWeight
 
         if hasattr(self.blenderObject.xplane, 'override_weight') and self.blenderObject.xplane.override_weight:

@@ -9,7 +9,7 @@ from typing import List
 
 from .xplane_constants import *
 
-'''
+"""
  #####     ##   ##  ##   ####  ####  ####  #
   #   #   # #    #  #   ##  #  ## #  #  #  #
  ##   #   # #   # # #  ##      ###   ###   #
@@ -41,9 +41,6 @@ is a great way to RUIN EVERYTHING. Re-arranging the items list requires great ca
 - Main documentation: https://docs.blender.org/api/current/bpy.props.html?highlight=bpy%20props%20prop#module-bpy.props
 
 - Make sure to increment the CURRENT_DATA_MODEL_VERSION number in xplane_config
-
-- The attr member does not appear to be necessary or have an effect on the program. Future props should not use it. Otherwise, I'd like to
-see them culled over time
 
 - This file contains 99% of the properties. xplane2blender is set in xplane_updater.py and now we're stuck with it there
 
@@ -84,7 +81,7 @@ undebatable alphabetical listing.
 - Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
 
 - Tip: If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
-'''
+"""
 
 # Class: XPlane2Blender
 #
@@ -932,12 +929,6 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
         max = 11
     )
 
-# Class: XPlaneLOD
-# Defines settings for a level of detail.
-#
-# Properties:
-#   int near - near distance
-#   int far - far distance
 class XPlaneLOD(bpy.types.PropertyGroup):
     expanded: bpy.props.BoolProperty(
         name = "Expanded",
@@ -965,20 +956,36 @@ def make_lods_array():
         lods_arr.append((str(i),str(i),str(i)))
     return lods_arr
 
-# Class: XPlaneLayer
-# Defines settings for a OBJ file. Is "parented" to a Blender layer.
-#
-# Properties:
-#   int index - index of this layer.
-#   bool expanded - True if the settings of this layer are expanded in the UI.
-#   string name - Name of the OBJ file to export from this layer.
-#   bool cockpit - True if this layer serves as a cockpit OBJ.
-#   float slungLoadWeight - Slung Load weight
-#   string texture - Texture file to use for this OBJ.
-#   string texture_lit - Night Texture to use for this OBJ.
-#   string texture_normal - Normal/Specular Texture to use for this OBJ.
-#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane header attributes.
+
+#TODO: Maybe we should change all this "X-Plane Layer" stuff
+# to XPLaneOBJSettings or something
 class XPlaneLayer(bpy.types.PropertyGroup):
+    """
+    Defines settings for an OBJ file. Is was formerly tied to
+    Blender 3D-View Layers, but now it is only used for Root Objects
+    """
+
+    """
+    In case something removes lods or cockpit regions in Blender
+    via Python after load, we need to make sure users can, even accidentally,
+    make it come back. We solve this with an update function on the props.
+
+    Either they change lods or cockpits trying to figure out what happened
+    or they'll reload the file and the problem will be (hopefully solved)
+    """
+    def update_cockpit_regions(self, context)->None:
+        while len(self.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
+            self.cockpit_region.add()
+        return None
+
+    def update_lods(self, context):
+        #MAX_LODS also counts "None", so we have to subtract by 1
+        while len(self.lod) < xplane_constants.MAX_LODS - 1:
+            self.lod.add()
+
+        return None
+
+    #TODO: We can delete this now that layers aren't a thing anymore
     index: bpy.props.IntProperty(
         name = "Index",
         description = "The blender layer index",
@@ -992,8 +999,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     export: bpy.props.BoolProperty(
-        name = "Export",
-        description = "If checked, this layer will be exported if visible",
+        name = "Include In Export",
+        description = "If checked, OBJ will exported (assuming all other requirements and validations are met)",
         default = True
     )
 
@@ -1010,8 +1017,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     debug: bpy.props.BoolProperty(
-        name = "Debug",
-        description = "If checked, this OBJ file will put diagnostics in Plane's log.txt",
+        name = "Debug This OBJ",
+        description = "If this and Scene > Advanced Settings > Debug are checked, debug information for this OBJ will be written to the export log and the OBJ",
         default = True
     )
 
@@ -1095,7 +1102,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
             ("2", "2", "2"),
             ("3", "3", "3"),
             ("4", "4", "4")
-        ]
+        ],
+        update=update_cockpit_regions
     )
 
     cockpit_region: bpy.props.CollectionProperty(
@@ -1108,13 +1116,14 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Levels of Detail",
         description = "Levels of detail",
         default = "0",
-        items = make_lods_array()
+        items = make_lods_array(),
+        update = update_lods
     )
 
     lod: bpy.props.CollectionProperty(
         name = "LOD",
         type = XPlaneLOD,
-        description = "Level of detail"
+        description = "Level of detail",
     )
 
     # v1000
@@ -1247,6 +1256,18 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = True
     )
 
+class XPlaneCollectionSettings(bpy.types.PropertyGroup):
+    is_exportable_collection: bpy.props.BoolProperty(
+        name = "Exportable Collection",
+        description = "Activate to export all this collection's children as an .obj file",
+        default = False
+    )
+
+    layer: bpy.props.PointerProperty(
+        name = "X-Plane OBJ File Settings",
+        description = "X-Plane OBJ File Settings",
+        type = XPlaneLayer
+    )
 
 # Class: XPlaneSceneSettings
 # Settings for Blender scenes.
@@ -1265,6 +1286,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             description = "An internally important property that keeps track of the state of the dataref search window",
             type = XPlaneDatarefSearchWindow
             )
+
     debug: bpy.props.BoolProperty(
         name = "Print Debug Info To Output, OBJ",
         description = "If checked debug information will be printed to the console and into OBJ files",
@@ -1452,7 +1474,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
 
     layer: bpy.props.PointerProperty(
         name = "X-Plane Layer",
-        description = "X-Plane Layer/File Settings",
+        description = "X-Plane OBJ File Settings",
         type = XPlaneLayer
     )
 
@@ -1817,6 +1839,7 @@ _classes = (
 
     # complex classes, depending on basic classes
     XPlaneLayer,
+    XPlaneCollectionSettings,
     XPlaneObjectSettings,
     XPlaneBoneSettings,
     XPlaneMaterialSettings,
@@ -1830,6 +1853,12 @@ def register():
     # basic classes
     for c in _classes:
         bpy.utils.register_class(c)
+
+    bpy.types.Collection.xplane = bpy.props.PointerProperty(
+        type = XPlaneCollectionSettings,
+        name = "X-Plane Collection Settings",
+        description = "X-Plane Collection Settings",
+    )
 
     bpy.types.Scene.xplane = bpy.props.PointerProperty(
         type = XPlaneSceneSettings,

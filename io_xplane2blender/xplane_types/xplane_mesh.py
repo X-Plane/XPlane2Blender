@@ -60,7 +60,6 @@ class XPlaneMesh():
                 evaluated_obj = xplaneObject.blenderObject.evaluated_get(dg)
                 assert xplaneObject.blenderObject.location == evaluated_obj.location, "ob.location !=  eval.location, " + str(xplaneObject.blenderObject.location) + "," + str(evaluated_obj.location)
                 mesh = evaluated_obj.to_mesh(preserve_all_data_layers=True, depsgraph=dg)
-                #mesh = xplaneObject.blenderObject.data.copy()
 
                 # now get the bake matrix
                 # and bake it to the mesh

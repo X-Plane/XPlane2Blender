@@ -87,7 +87,7 @@ class XPlaneLight(XPlaneObject):
             self.color[1] = 9.7
             self.color[2] = 9.7
 
-        self.getWeight(10000)
+        self.setWeight(10000)
 
     def collect(self):
         super().collect()
