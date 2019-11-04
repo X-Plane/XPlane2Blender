@@ -228,6 +228,7 @@ class XPlaneTestCase(unittest.TestCase):
         out = self.exportLayer(layer, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
+    #TODO: Rename assertExportableRootExportEqualsFixture
     def assertRootObjectExportEqualsFixture(self,
             root_object:Union[bpy.types.Collection, bpy.types.Object, str],
             fixturePath: str = None,
@@ -272,6 +273,7 @@ class XPlaneTestCase(unittest.TestCase):
 
         return out
 
+    #TODO: Rename exportExportableRoot
     def exportRootObject(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
         """
         Returns the result of calling xplaneFile.write(),

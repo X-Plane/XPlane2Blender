@@ -112,7 +112,7 @@ class XPlaneFile():
         # materials representing the reference for export
         self.referenceMaterials = None
 
-    def create_xplane_bone_hiearchy(self, root_object:ExportableRoot)->Optional[XPlaneObject]:
+    def create_xplane_bone_hiearchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
         def convert_to_xplane_object(blender_obj:bpy.types.Object)->Optional[XPlaneObject]:
             assert blender_obj, "blender_obj in convert_to_xplane_object must not be None"
             converted_xplane_obj = None
@@ -132,7 +132,7 @@ class XPlaneFile():
             Main function for recursing down tree. parent_blender_objects will be different from blender_objects will not equal parent.children, when a parent is a collection
             """
             print(
-                f"Parent: {parent.name}" if parent else f"Root: {root_object.name}",
+                f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
                 #f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
                 f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
                 sep="\n"
@@ -225,10 +225,24 @@ class XPlaneFile():
                                  child_obj.children,
                                  )
                 else:
+                    if (isinstance(exportable_root, bpy.types.Collection)
+                        and child_obj.name not in exportable_root.all_objects):
+                        logger.error(
+                            f"{child_obj.name} is outside the current exportable collection. It and any children cannot be collected"
+                        )
+                        continue
+
+                    if child_obj.name not in bpy.context.scene.objects:
+                        # This will only ever trigger for Exportable Objects,
+                        # not Exportable Collections
+                        logger.error(
+                            f"{child_obj.name} is outside the current scene. It and any children cannot be collected"
+                        )
+                        continue
+
                     _recurse(child_obj,
                              new_xplane_bone,
-                             child_obj.children,
-                             )
+                             child_obj.children)
 
             try:
                 if new_xplane_bone.blenderObject.type == "ARMATURE":
@@ -238,25 +252,25 @@ class XPlaneFile():
                 pass
             new_xplane_bone.sortChildren()
         #--- end _recurse function -------------------------------------------
-        if isinstance(root_object, bpy.types.Collection):
+        if isinstance(exportable_root, bpy.types.Collection):
             _recurse(parent=None,
                      parent_bone=None,
                      parent_blender_objects=list(
                          filter(
                              lambda o: o.parent is None or o.parent.name not in
-                             root_object.all_objects,
-                             root_object.all_objects)))
-        elif isinstance(root_object, bpy.types.Object):
+                             exportable_root.all_objects,
+                             exportable_root.all_objects)))
+        elif isinstance(exportable_root, bpy.types.Object):
             self.rootBone = XPlaneBone(self,
-                                       blender_obj=root_object,
+                                       blender_obj=exportable_root,
                                        blender_bone=None,
                                        xplane_obj=None,
                                        parent_xplane_bone=None)
-            _recurse(parent=root_object,
+            _recurse(parent=exportable_root,
                      parent_bone=None,
-                     parent_blender_objects=root_object.children)
+                     parent_blender_objects=exportable_root.children)
         else:
-            assert False, f"Unsupported root_object type {type(root_object)}"
+            assert False, f"Unsupported root_object type {type(exportable_root)}"
 
     #TODO: Test this, needs code coverage
     def get_xplane_objects(self)->List["XPlaneObjects"]:
