@@ -80,8 +80,8 @@ def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XP
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
-    print("Final Root Bone (2.80)")
-    print(xplane_file.rootBone)
+    #print("Final Root Bone (2.80)")
+    #print(xplane_file.rootBone)
     return xplane_file
 
 class XPlaneFile():
@@ -131,20 +131,20 @@ class XPlaneFile():
             """
             Main function for recursing down tree. parent_blender_objects will be different from blender_objects will not equal parent.children, when a parent is a collection
             """
-            print(
-                f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
-                #f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
-                f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
-                sep="\n"
-            )
-            print("===========================================================")
+            #print(
+            #    f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
+            #    #f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
+            #    f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
+            #    sep="\n"
+            #)
+            #print("===========================================================")
 
             blender_obj = parent
             if blender_obj:
                 new_xplane_obj = convert_to_xplane_object(blender_obj)
             else:
                 new_xplane_obj = None
-            print(f"new_xplane_obj:\n{new_xplane_obj}")
+            #print(f"new_xplane_obj:\n{new_xplane_obj}")
 
             if parent_bone:
                 new_xplane_bone = XPlaneBone(
@@ -166,7 +166,6 @@ class XPlaneFile():
                 #new_xplane_bone.xplaneObject.xplaneBone = new_xplane_bone
 
             if new_xplane_obj:
-                print("about to collect")
                 # This is different than asking the blender Object its type!
                 # this is refering to the old style default light
                 if isinstance(new_xplane_obj, XPlaneLight):

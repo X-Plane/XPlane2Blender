@@ -222,10 +222,17 @@ class XPlaneTestCase(unittest.TestCase):
     #def assertLoggerWarnings(self, expected_logger_warnings):
     #    self.assertEqual(len(logger.findWarnings()), expected_logger_warnings)
     #    logger.clearMessages()
-    def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
+
+    def assertLayerExportEqualsFixture(self,
+            layer:int,
+            fixturePath:str,
+            tmpFilename:str = None,
+            filterCallback:Callable[[List[Union[float, str]]], bool] = None,
+            floatTolerance = None)->None:
         if not ('-q' in sys.argv or '--quiet' in sys.argv):
             print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
-        out = self.exportLayer(layer, tmpFilename)
+
+        out = self.exportRootObject(bpy.data.collections[f"Layer {layer + 1}"], tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     #TODO: Rename assertExportableRootExportEqualsFixture
@@ -262,16 +269,8 @@ class XPlaneTestCase(unittest.TestCase):
             else:
                 self.assertEquals(expectedValue, value, 'Attribute "%s" is not equal' % name)
 
-    def exportLayer(self, layer, dest = None):
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
-
-        out = xplaneFile.write()
-
-        if dest:
-            with open(os.path.join(TMP_DIR, dest + '.obj'), 'w') as tmp_file:
-                tmp_file.write(out)
-
-        return out
+    def exportLayer(self, layer:int, dest:str = None)->str:
+        return self.exportRootObject(bpy.data.collections[f"Layer {layer + 1}"], dest)
 
     #TODO: Rename exportExportableRoot
     def exportRootObject(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
@@ -327,9 +326,9 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             outFile = os.path.join(dest, os.path.basename(mappings[name][layer]))
             print('Exporting to "%s"' % outFile)
 
-            xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+            xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"])
 
-            self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))
+            self.assertIsNotNone(xplaneFile, f"Unable to create XPlaneFile for {name} from Layer {layer + 1}")
 
             out = xplaneFile.write()
 
@@ -347,7 +346,7 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
         for layer in mappings[name]:
             print('Testing animations against fixture "%s"' % mappings[name][layer])
 
-            xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+            xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"])
 
             self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))
 

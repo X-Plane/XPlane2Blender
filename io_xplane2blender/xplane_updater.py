@@ -1,22 +1,4 @@
-'''
-Automagically updates blend data created with older XPlane2Blender Versions
-'''
-import collections
-import enum
-import functools
-from typing import Dict, List, Tuple
-
-import bpy
-from bpy.app.handlers import persistent
-
-import io_xplane2blender
-from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
-from io_xplane2blender.xplane_constants import LOGGER_LEVEL_ERROR,\
-    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS, BLEND_GLASS
-from io_xplane2blender.xplane_helpers import XPlaneLogger
-
-
-'''
+"""
  #####     ##   ##  ##   ####  ####  ####  #    ### ##  ####  ####  ####    ####  ####    #####   ####    ##    ####   ###   ##  ##   ###  #
   #   #   # #    #  #   ##  #  ## #  #  #  #     #  #   ## #  #  #  ## #    #  #  ## #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
  ##   #   # #   # # #  ##      ###   ###   #    #####   ###   ###   ###     ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
@@ -50,7 +32,22 @@ Put this in your mind:
     ...
 
 You may now proceed to the rest of the file.
-'''
+"""
+import collections
+import enum
+import functools
+import pprint
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
+import bpy
+from bpy.app.handlers import persistent
+
+import io_xplane2blender
+from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
+from io_xplane2blender.xplane_constants import LOGGER_LEVEL_ERROR,\
+    LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS, BLEND_GLASS
+from io_xplane2blender.xplane_helpers import XPlaneLogger
+
 
 def __updateLocRot(obj,logger):
 
@@ -92,16 +89,37 @@ def __updateLocRot(obj,logger):
                )
               )
 
-# Function: update
-# Updates parts of the data model to ensure forward
-# compatability between versions of XPlane2Blender.
-#
-# Important: Running the updater on an already updated file
-# should result in no changes to it
-#
-# Parameters:
-#     fromVersion - The old version of the blender file
-def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLogger):
+# This is basically a copy of
+_EnumItem = collections.namedtuple("EnumItem", ["identifier", "name", "description"])
+def _get_enum_item(prop_group: bpy.types.PropertyGroup, prop:bpy.types.Property)->_EnumItem:
+    """
+    Inspects a property group's enum property and return's
+    throws KeyNotFound and typeError
+
+    prop.type must be and ENUM found in prop_group
+    """
+    assert prop.identifier in prop_group.bl_rna.properties, f"{prop.identifier} is not a member of {prop_group.rna_type.name}'s properties"
+    assert prop.type == "ENUM", f"{prop.identifier} is not an ENUM and cannot be used in this function"
+    # We need get instead of getattr because only get
+    # gives us the real unfiltered value including
+    # "never changed" aka None
+    prop_value: Optional[int] = prop_group.get(prop.identifier)
+    if prop_value is None:
+        enum_key:str = prop.default
+    else:
+        enum_key:str = prop.enum_items.keys()[prop_value]
+    item:bpy.types.EnumPropertyItem = prop.enum_items[enum_key]
+    return _EnumItem(item.identifier, item.name, item.description)
+
+
+def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLogger)->None:
+    """
+    Entry point for the updater, which may change or delete XPlane2Blender
+    properties of this .blend file to match the data model of this version of XPlane2Blender.
+    Adding new properties to the data model is done elsewhere.
+
+    Re-running the updater should result in no changes
+    """
     if last_version < xplane_helpers.VerStruct.parse_version('3.3.0'):
         for scene in bpy.data.scenes:
             # set compositeTextures to False
@@ -192,7 +210,10 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                                 ]
                             )
                         )
-            logger.info("'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'. The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)' is manually made uniform again, which could involve making duplicate materials for each OBJ")
+            logger.info("'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'."
+                        " The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)'"
+                        " is manually made uniform again, which could involve making"
+                        " duplicate materials for each OBJ")
 
         # This way we'll be able to map the usage (and shared-ness) of a material
         material_uses = collections.defaultdict(list) # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
@@ -214,9 +235,6 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
                                         )
                     for mat in potential_materials:
                         material_uses[mat].append(used_layer_info)
-            else:
-                assert False, "How did we get here?!"
-
 
             # Attempt to find shared usage, print out a table displaying issues
             _print_error_table(material_uses)
@@ -228,11 +246,103 @@ def update(last_version:xplane_helpers.VerStruct,logger:xplane_helpers.XPlaneLog
             except KeyError:
                 pass
 
-    #TODO: Unit test
     if last_version < xplane_helpers.VerStruct.parse_version("4.0.0"):
+        def check_property_group_has_non_default(prop_group:bpy.types.PropertyGroup, props_to_ignore={"index", "expanded"})->Dict[str, Union[bool, float, int, str]]:
+            """
+            Recursively searches a property group for any members of it that have different values than the default.
+            Returns a dictionary of property names to values. Currently does not inspect PointerPropertys
+            """
+            def check_recursive(real_prop_group:bpy.types.PropertyGroup):
+                nondefault_props = {}
+                for prop in filter(lambda p: p.identifier not in (props_to_ignore | {"rna_type"}), real_prop_group.bl_rna.properties):
+                    if prop.type == "POINTER":
+                        #TODO: This can be followed, but for now we need to press on to other bugs
+                        # and we don't have a test case that uses this
+                        #check_recursive(prop_group)
+                        continue
+                    elif prop.type == "COLLECTION":
+                        nondefaults = list(
+                            filter(None,
+                                   [check_recursive(m) for m in getattr(real_prop_group, prop.identifier)]
+                               )
+                            )
+                        if nondefaults:
+                            nondefault_props[prop.identifier] = nondefaults
+                    else:
+                        if prop.type == "ENUM":
+                            # This is the enum's identifier, what getattr and get when unchanged
+                            # or missing
+                            real_value = _get_enum_item(real_prop_group, prop).identifier
+                        else:
+                            real_value = real_prop_group.get(prop.identifier, prop.default)
+                        if real_value != prop.default:
+                            nondefault_props[prop.identifier] = real_value
+                return nondefault_props
+
+            return check_recursive(prop_group)
+
+        def copy_property_group(source_prop_group:bpy.types.PropertyGroup, dest_prop_group:bpy.types.PropertyGroup, props_to_ignore: Set[str]=None)->None:
+            props_to_ignore = props_to_ignore if props_to_ignore else set()
+            def copy_recursive(source_prop_group:bpy.types.PropertyGroup, dest_prop_group:bpy.types.PropertyGroup):
+                assert source_prop_group.rna_type == dest_prop_group.rna_type
+                for prop in filter(lambda p: p.identifier not in (props_to_ignore | {"rna_type"}), source_prop_group.bl_rna.properties):
+                    # And what about when bl_rna.properties['name'] comes about?
+                    # Then we copy the default Fortunatly their name and our name are the same in identifier and default
+                    if prop.description == "Unique name used in the code and scripting":
+                        pass
+                    if prop.type == "POINTER":
+                        #TODO: When we have a case with an POINTER to worry about
+                        # we'll fill this in
+                        continue
+                    elif prop.type == "COLLECTION":
+                        source_members = getattr(source_prop_group, prop.identifier)
+                        dest_members =   getattr(dest_prop_group, prop.identifier)
+                        for source_member, dest_member in zip(source_members, dest_members):
+                            copy_recursive(source_member, dest_member)
+                    else:
+                        source_value = source_prop_group.get(prop.identifier, prop.default)
+                        if prop.type == "ENUM":
+                            setattr(dest_prop_group, prop.identifier, _get_enum_item(source_prop_group, prop).identifier)
+                        else:
+                            setattr(dest_prop_group, prop.identifier, source_value)
+            copy_recursive(source_prop_group, dest_prop_group)
+
         for scene in bpy.data.scenes:
             for layer_props in [obj.xplane.layer for obj in scene.objects]:
                 layer_props.autodetectTextures = False
+
+            # Match Layers with Collections
+            # Rename everything from Collection or Collection 2...
+            # to Layer 1, Layer 2
+            try:
+                bpy.data.collections["Collection"].name = "Collection 1"
+            except KeyError:
+                pass
+
+            for layer in scene.xplane.layers:
+                assert layer.index != -1, f"XPlaneLayer f{layer.name} was never actually initialized in 2.79"
+                collection_name = f"Layer {layer.index + 1}"
+                try:
+                    coll = bpy.data.collections[f"Collection {layer.index + 1}"]
+                except KeyError:
+                    nondefaults = check_property_group_has_non_default(layer)
+                    if nondefaults:
+                        coll = bpy.data.collections.new(collection_name)
+                        scene.collection.children.link(coll)
+                    else:
+                        continue
+                else:
+                    coll.name = collection_name
+                    coll.xplane.is_exportable_collection = not coll.hide_render
+
+                copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
+
+            try:
+               # del layer_options["index"]
+               pass
+            except KeyError:
+                pass
+
 
 @persistent
 def load_handler(dummy):

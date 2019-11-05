@@ -1005,7 +1005,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     export_path_directives: bpy.props.CollectionProperty(
-        name = "Export Directives for Layer",
+        name = "Export Directives for OBJ",
         description = "A collection of export paths intended for an OBJ's EXPORT directives",
         type = XPlaneExportPathDirective
     )
