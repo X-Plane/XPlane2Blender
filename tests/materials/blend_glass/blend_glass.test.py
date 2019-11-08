@@ -20,7 +20,7 @@ class TestBlendGlass(XPlaneTestCase):
             filterLines
         )
 
-    
+
     def test_air_glass_on_expect_dir(self):
         filename = 'test_air_glass_on_expect_dir'
         self.assertLayerExportEqualsFixture(
@@ -29,7 +29,7 @@ class TestBlendGlass(XPlaneTestCase):
             filterLines
         )
 
-    
+
     def test_ckpt_glass_off_expect_no_dir(self):
         filename = 'test_ckpt_glass_off_expect_no_dir'
         self.assertLayerExportEqualsFixture(
@@ -38,7 +38,7 @@ class TestBlendGlass(XPlaneTestCase):
             filterLines
         )
 
-    
+
     def test_ckpt_glass_on_expect_dir(self):
         filename = 'test_ckpt_glass_on_expect_dir'
         self.assertLayerExportEqualsFixture(
@@ -47,7 +47,7 @@ class TestBlendGlass(XPlaneTestCase):
             filterLines
         )
 
-    
+
     def test_panel_glass_off_expect_no_dir(self):
         filename = 'test_panel_glass_off_expect_no_dir'
         self.assertLayerExportEqualsFixture(
@@ -55,7 +55,7 @@ class TestBlendGlass(XPlaneTestCase):
             filename,
             filterLines
         )
-        
+
     def test_panel_glass_on_expect_dir(self):
         filename = 'test_panel_glass_on_expect_dir'
         self.assertLayerExportEqualsFixture(
@@ -63,32 +63,26 @@ class TestBlendGlass(XPlaneTestCase):
             filename,
             filterLines
         )
-        
+
     def test_instanced_glass_illegal(self):
         filename = 'test_instanced_glass_illegal'
 
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(6)
-        out = xplaneFile.write()
-
+        out = self.exportLayer(6)
         self.assertEqual(len(logger.findErrors()), 1)
         logger.clearMessages()
-    
-    
+
+
     def test_scenery_glass_illegal(self):
         filename = 'test_scenery_glass_illegal'
 
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(7)
-        out = xplaneFile.write()
+        out = self.exportLayer(7)
+        self.assertEqual(len(logger.findErrors()), 1)
+        logger.clearMessages()
 
-        self.assertEqual(len(logger.findErrors()), 1)
-        logger.clearMessages()
-        
-    
+
     def test_glass_2_mats_conflict(self):
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(8)
-        out = xplaneFile.write()
-        
+        out = self.exportLayer(8)
         self.assertEqual(len(logger.findErrors()), 1)
         logger.clearMessages()
-        
+
 runTestCases([TestBlendGlass])

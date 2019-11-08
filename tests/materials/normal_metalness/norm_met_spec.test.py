@@ -38,7 +38,7 @@ def create_partial_test_env(self):
         layers_array[layer_index] = True
         D.objects[cube].layers = layers_array
         layer_index += 1
-        
+
     #bpy.ops.scene.dev_layer_names_to_current_dir()
 
 #create_partial_test_env()
@@ -74,9 +74,7 @@ class TestNormMetSpec(XPlaneTestCase):
         )
 
     def test_none_2_mat_inst(self):
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(2)
-        out = xplaneFile.write()
-
+        out = self.exportLayer(2)
         self.assertEqual(len(logger.findErrors()), 1)
         logger.clearMessages()
 
@@ -119,5 +117,5 @@ class TestNormMetSpec(XPlaneTestCase):
             filename,
             filterLines
         )
-        
+
 runTestCases([TestNormMetSpec])

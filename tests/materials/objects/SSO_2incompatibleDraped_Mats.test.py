@@ -10,11 +10,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestSSO_2incompatibleDrapedMats(XPlaneTestCase):
     def test_export(self):
-        filename = 'test_SSO_2incompatibleDraped_Mats'
-
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
-        out = xplaneFile.write()
-
+        out = self.exportLayer(0)
         self.assertLoggerErrors(2)
 
 runTestCases([TestSSO_2incompatibleDrapedMats])

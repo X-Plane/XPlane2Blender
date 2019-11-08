@@ -269,8 +269,14 @@ class XPlaneTestCase(unittest.TestCase):
             else:
                 self.assertEquals(expectedValue, value, 'Attribute "%s" is not equal' % name)
 
-    def exportLayer(self, layer:int, dest:str = None)->str:
-        return self.exportRootObject(bpy.data.collections[f"Layer {layer + 1}"], dest)
+    def exportLayer(self, layer_number:int, dest:str = None)->str:
+        """
+        DEPRECATED: New unit tests should not use this!
+
+        - layer_number starts at 0, as it used to access the scene.layers collection
+        - dest is a filepath without the file extension .obj, written to the TMP_DIR if not None
+        """
+        return self.exportRootObject(bpy.data.collections[f"Layer {layer_number + 1}"], dest)
 
     #TODO: Rename exportExportableRoot
     def exportRootObject(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
@@ -278,7 +284,7 @@ class XPlaneTestCase(unittest.TestCase):
         Returns the result of calling xplaneFile.write(),
         where xplaneFile came from a root object (by name or Blender data).
 
-        The output can also simultaniously written to a destination
+        - dest is a filepath without the file extension .obj, written to the TMP_DIR if not None
 
         If root_object is an str, matching collections are looked up first.
         If you don't want an ambiguity of root objects, don't use the name twice
