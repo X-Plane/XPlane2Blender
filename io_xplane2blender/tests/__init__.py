@@ -292,11 +292,11 @@ class XPlaneTestCase(unittest.TestCase):
         if isinstance(root_object, str):
             try:
                 root_object = bpy.data.collections[root_object]
-            except:
+            except KeyError:
                 try:
                     root_object = bpy.data.objects[root_object]
-                except:
-                    pass
+                except KeyError:
+                    assert False, f"{root_object} must be in bpy.data.collections|objects"
 
         xplaneFile = xplane_file.createFileFromBlenderRootObject(root_object)
         out = xplaneFile.write()
