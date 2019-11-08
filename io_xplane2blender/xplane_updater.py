@@ -89,7 +89,7 @@ def __updateLocRot(obj,logger):
                )
               )
 
-# This is basically a copy of
+# This is basically a copy of EnumPropertyItem, with only the parts we care about
 _EnumItem = collections.namedtuple("EnumItem", ["identifier", "name", "description"])
 def _get_enum_item(prop_group: bpy.types.PropertyGroup, prop:bpy.types.Property)->_EnumItem:
     """
@@ -163,7 +163,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                 # This bit of code reachs around Blender's magic EnumProperty
                 # stuff and get at the RNA behind it, all to find the name.
                 # If the default for blend_v1000 ever changes, we'll be covered.
-                blend_v1000 = bpy.types.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
+                blend_v1000 = xplane_props.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
                 enum_items = blend_v1000.enum_items
 
                 if v10 is None:

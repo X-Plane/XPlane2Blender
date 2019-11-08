@@ -870,7 +870,7 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         '''
         The description returned will the same as in the UI
         '''
-        items = bpy.types.XPlaneManipulatorSettings.bl_rna.properties['type'].enum_items
+        items = xplane_props.XPlaneManipulatorSettings.bl_rna.properties['type'].enum_items
         return next(filter(lambda item: item[0] == self.type, items))[2]#.description
 
 
