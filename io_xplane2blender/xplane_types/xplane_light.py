@@ -194,7 +194,7 @@ class XPlaneLight(XPlaneObject):
                 dir_vec_p_norm_b = vec_x_to_b(Vector((dx,dy,dz)).normalized())
 
                 # Multiple bake matrix by Vector to get the direction of the Blender object
-                dir_vec_b_norm = bakeMatrix.to_3x3() * Vector((0,0,-1))
+                dir_vec_b_norm = bakeMatrix.to_3x3() @ Vector((0,0,-1))
 
                 # P is start rotation, and B is stop. As such, we have our axis of rotation.
                 # "We take the X-Plane light and turn it until it matches what the artist wanted"
@@ -234,7 +234,7 @@ class XPlaneLight(XPlaneObject):
                     o += anim_rotate_dir
 
                     rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec3)
-                    translation = rot_matrix.inverted() * translation
+                    translation = rot_matrix.inverted() @ translation
                     has_anim = True
 
         if self.lightType == LIGHT_NAMED:
