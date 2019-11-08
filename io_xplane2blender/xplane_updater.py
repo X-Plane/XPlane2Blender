@@ -282,14 +282,31 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
             return check_recursive(prop_group)
 
         def copy_property_group(source_prop_group:bpy.types.PropertyGroup, dest_prop_group:bpy.types.PropertyGroup, props_to_ignore: Set[str]=None)->None:
+            """
+            Recursively copies values from one PropertyGroup to another, using setattr.
+
+            Note:
+            If your PropertyGroup has a "name" property with a non-empty str default, you must copy those
+            yourself.
+
+            To iterate, we use bl_rna.properties, whose "name" member actually refers to the partent type
+            (bpy.types.PropertyGroup)'s "name" property which is
+
+                (identifier="name",
+                 name="Name",
+                 description="Unique name used in the code and scripting",
+                 default="")
+
+            If your "name" property's default matches the parent's "name", then everything lines up by co-incidence.
+            There does not appear to be a way to get around this.
+
+            bl_rna.properties["rna_type"] is always ignored since that is Blender defined.
+            """
+
             props_to_ignore = props_to_ignore if props_to_ignore else set()
             def copy_recursive(source_prop_group:bpy.types.PropertyGroup, dest_prop_group:bpy.types.PropertyGroup):
                 assert source_prop_group.rna_type == dest_prop_group.rna_type
                 for prop in filter(lambda p: p.identifier not in (props_to_ignore | {"rna_type"}), source_prop_group.bl_rna.properties):
-                    # And what about when bl_rna.properties['name'] comes about?
-                    # Then we copy the default Fortunatly their name and our name are the same in identifier and default
-                    if prop.description == "Unique name used in the code and scripting":
-                        pass
                     if prop.type == "POINTER":
                         #TODO: When we have a case with an POINTER to worry about
                         # we'll fill this in
@@ -336,12 +353,6 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                     coll.xplane.is_exportable_collection = not coll.hide_render
 
                 copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
-
-            try:
-               # del layer_options["index"]
-               pass
-            except KeyError:
-                pass
 
 
 @persistent

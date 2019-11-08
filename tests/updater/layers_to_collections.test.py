@@ -12,6 +12,7 @@ from io_xplane2blender.tests import *
 
 __dirname__ = os.path.dirname(__file__)
 
+
 class TestLayersToCollections(XPlaneTestCase):
     def assertXPlaneLayerEqual(self, xplane_layer:XPlaneLayer, correct_values:Dict[str,Any]):
         """
@@ -61,15 +62,10 @@ class TestLayersToCollections(XPlaneTestCase):
         # Also tests that collections 'Layer 1', 'Layer 3-8' are the only collections in the .blend file
         self.assertListEqual([c.name for c in bpy.data.collections], [f"Layer {i}" for i in itertools.chain([1], range(3,9))])
 
-    def test_is_exportable_matches_hide_render(self)->None:
+    def test_is_exportable_is_not_hide_render(self)->None:
         self.assertTrue(bpy.data.collections["Layer 1"].xplane.is_exportable_collection)
         for i in range(3, 9):
             self.assertFalse(bpy.data.collections[f"Layer {i}"].xplane.is_exportable_collection)
-    """
-    def test_collections_visible(self)->None:
-        for collection in bpy.data.collections:
-            self.assertFalse(collection.hide_renderer)
-    """
 
     def test_layer_4_properties_copied(self)->None:
         layer = bpy.data.collections["Layer 4"].xplane.layer
