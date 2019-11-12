@@ -22,41 +22,37 @@ def filterLines(line):
 #Tests Normal Metalness Draped Specularity cases for Scenery type exports
 class TestNormMetDrapedSpecScenery(XPlaneTestCase):
     def test_norm_met_off_one_drap_inst(self):
-        out = xplane_file.createFileFromBlenderLayerIndex(0).write()
+        out = self.exportLayer(0)
         self.assertFileOutputEqualsFixture(out,make_fixture_path(__dirname__, "test_norm_met_off_one_drap_inst",sub_dir="draped_spec_scenery"),filterLines)
 
     def test_norm_met_off_one_drap_scen(self):
-        out = xplane_file.createFileFromBlenderLayerIndex(1).write()
+        out = self.exportLayer(1)
         self.assertFileOutputEqualsFixture(out,make_fixture_path(__dirname__, "test_norm_met_off_one_drap_scen",sub_dir="draped_spec_scenery"),filterLines)
 
     def test_norm_met_off_two_drap_inst(self):
         expected_logger_errors = 1
-                                                                       #"test_norm_met_off_two_drap_inst"
-        out = xplane_file.createFileFromBlenderLayerIndex(2).write()
-        self.assertEqual(len(logger.findErrors()), expected_logger_errors)
-        logger.clearMessages()
+        out = self.exportLayer(2)
+        self.assertLoggerErrors(expected_logger_errors)
 
     def test_norm_met_off_two_drap_scen(self):
         expected_logger_errors = 1
-                                                                       #"test_norm_met_off_two_drap_scen"
-        out = xplane_file.createFileFromBlenderLayerIndex(3).write()
-        self.assertEqual(len(logger.findErrors()), expected_logger_errors)
-        logger.clearMessages()
+        out = self.exportLayer(3)
+        self.assertLoggerErrors(expected_logger_errors)
 
     def test_norm_met_on_one_drap_inst(self):
-        out = xplane_file.createFileFromBlenderLayerIndex(4).write()
+        out = self.exportLayer(4)
         self.assertFileOutputEqualsFixture(out,make_fixture_path(__dirname__, "test_norm_met_on_one_drap_inst",sub_dir="draped_spec_scenery"),filterLines)
 
     def test_norm_met_on_one_drap_scen(self):
-        out = xplane_file.createFileFromBlenderLayerIndex(5).write()
+        out = self.exportLayer(5)
         self.assertFileOutputEqualsFixture(out,make_fixture_path(__dirname__, "test_norm_met_on_one_drap_scen",sub_dir="draped_spec_scenery"),filterLines)
 
     def test_norm_met_on_two_drap_inst(self):
-         out = xplane_file.createFileFromBlenderLayerIndex(6).write()
+         out = self.exportLayer(6)
          self.assertFileOutputEqualsFixture(out,make_fixture_path(__dirname__, "test_norm_met_on_two_drap_inst",sub_dir="draped_spec_scenery"),filterLines)
 
     def test_norm_met_on_two_drap_scen(self):
-         out = xplane_file.createFileFromBlenderLayerIndex(7).write()
+         out = self.exportLayer(7)
          self.assertFileOutputEqualsFixture(out,make_fixture_path(__dirname__, "test_norm_met_on_two_drap_scen",sub_dir="draped_spec_scenery"),filterLines)
 
 runTestCases([TestNormMetDrapedSpecScenery])

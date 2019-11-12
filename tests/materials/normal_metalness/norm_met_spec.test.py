@@ -75,8 +75,7 @@ class TestNormMetSpec(XPlaneTestCase):
 
     def test_none_2_mat_inst(self):
         out = self.exportLayer(2)
-        self.assertEqual(len(logger.findErrors()), 1)
-        logger.clearMessages()
+        self.assertLoggerErrors(1)
 
     def test_none_2_mat_scen(self):
         filename = "test_none_2_mat_scen"
