@@ -182,7 +182,6 @@ def empty_layout(layout:bpy.types.UILayout, empty_obj:bpy.types.Object):
 def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
     layout.row().prop(scene.xplane, "version")
-    layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
 
     xp2b_ver = xplane_helpers.VerStruct.current()
@@ -291,30 +290,29 @@ def collection_layer_layout(layout: bpy.types.UILayout, collection: bpy.types.Co
         custom_layer_layout(box, layer_props, version, "object")
 
 def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
-    if bpy.context.scene.xplane.exportMode == 'root_objects':
-        version = int(bpy.context.scene.xplane.version)
-        layer_props = obj.xplane.layer
+    version = int(bpy.context.scene.xplane.version)
+    layer_props = obj.xplane.layer
+    row = layout.row()
+
+    row.prop(obj.xplane, 'isExportableRoot')
+
+    if obj.xplane.isExportableRoot:
         row = layout.row()
+        box = row.box()
 
-        row.prop(obj.xplane, 'isExportableRoot')
+        if layer_props.expanded:
+            expandIcon = "TRIA_DOWN"
+            expanded = True
+        else:
+            expandIcon = "TRIA_RIGHT"
+            expanded = False
 
-        if obj.xplane.isExportableRoot:
-            row = layout.row()
-            box = row.box()
+        box.prop(layer_props, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
 
-            if layer_props.expanded:
-                expandIcon = "TRIA_DOWN"
-                expanded = True
-            else:
-                expandIcon = "TRIA_RIGHT"
-                expanded = False
-
-            box.prop(layer_props, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
-
-            if expanded:
-                layer_layout(box, layer_props, version, "object")
-                export_path_dir_layer_layout(box, layer_props, version, "object")
-                custom_layer_layout(box, layer_props, version, "object")
+        if expanded:
+            layer_layout(box, layer_props, version, "object")
+            export_path_dir_layer_layout(box, layer_props, version, "object")
+            custom_layer_layout(box, layer_props, version, "object")
 
 def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLayer, version:int, context:str):
     """Draws OBJ File Settings and advanced options"""

@@ -29,9 +29,6 @@ class TestExportXPlaneFiles(XPlaneTestCase):
         self.assertTrue(os.path.exists(tmpFile))
 
     def test_export_root_objects_from_fresh_blend_file(self):
-        # set export mode
-        bpy.context.scene.xplane.exportMode = 'root_objects'
-
         filename = 'test_export_root_object'
 
         # initially create a root object

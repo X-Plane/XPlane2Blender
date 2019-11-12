@@ -127,22 +127,18 @@ class XPlaneCommands():
         o += xplaneBone.writeAnimationPrefix()
         xplaneObject = xplaneBone.xplaneObject
         xplaneObjectWritten = False
-        exportMode = self.xplaneFile.exportMode
         numLods = int(self.xplaneFile.options.lods)
 
         if xplaneObject:
             lods = [False] * len(bpy.data.collections)
 
-            if exportMode == EXPORT_MODE_ROOT_OBJECTS:
-                for i, collection in enumerate(bpy.data.collections):
-                    try:
-                        if(xplaneObject.blenderObj in collection):
-                            lods[i] = True
-                            break
-                    except:
-                        pass
-            else:
-                assert False, exportMode
+            for i, collection in enumerate(bpy.data.collections):
+                try:
+                    if(xplaneObject.blenderObj in collection):
+                        lods[i] = True
+                        break
+                except:
+                    pass
 
             isInLod = False
 
@@ -153,7 +149,7 @@ class XPlaneCommands():
 
             if lod == -1:
                 # only write objects that are in no lod
-                if not isInLod or (exportMode == EXPORT_MODE_ROOT_OBJECTS and numLods <= 0):
+                if not isInLod or numLods <= 0:
                     o += self._writeXPlaneObjectPrefix(xplaneObject)
                     xplaneObjectWritten = True
 

@@ -220,21 +220,20 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
 
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
-            if scene.xplane.exportMode == xplane_constants.EXPORT_MODE_ROOT_OBJECTS:
-                for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
-                    layer_options = root_obj.xplane.layer
-                    if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
-                        layer_options["shadow"] = True
-                    potential_objects = xplane_helpers.get_potential_objects_in_root_object(root_obj)
-                    potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
-                    _update_potential_materials(potential_materials, layer_options)
-                    used_layer_info = UsedLayerInfo(
-                                            options=layer_options,
-                                            cast_shadow=bool(layer_options.get("shadow", True)),
-                                            final_name=layer_options.name if layer_options.name else root_obj.name
-                                        )
-                    for mat in potential_materials:
-                        material_uses[mat].append(used_layer_info)
+            for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
+                layer_options = root_obj.xplane.layer
+                if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
+                    layer_options["shadow"] = True
+                potential_objects = xplane_helpers.get_potential_objects_in_root_object(root_obj)
+                potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
+                _update_potential_materials(potential_materials, layer_options)
+                used_layer_info = UsedLayerInfo(
+                                        options=layer_options,
+                                        cast_shadow=bool(layer_options.get("shadow", True)),
+                                        final_name=layer_options.name if layer_options.name else root_obj.name
+                                    )
+                for mat in potential_materials:
+                    material_uses[mat].append(used_layer_info)
 
             # Attempt to find shared usage, print out a table displaying issues
             _print_error_table(material_uses)
@@ -247,6 +246,20 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                 pass
 
     if last_version < xplane_helpers.VerStruct.parse_version("4.0.0"):
+        #--- Delete "exportMode" ----------------------------------------------
+        for scene in bpy.data.scenes:
+            #TODO: Unit test for this
+            #del scene.xplane["exportMode"]
+            pass
+        #----------------------------------------------------------------------
+
+        #--- Disable Autodetect Textures --------------------------------------
+        for scene in bpy.data.scenes:
+            #TODO: Unit test for this. Default should be changed so new collections
+            # automatically have it
+            for layer_props in [obj.xplane.layer for obj in scene.objects]:
+                layer_props.autodetectTextures = False
+        #----------------------------------------------------------------------
         def check_property_group_has_non_default(prop_group:bpy.types.PropertyGroup, props_to_ignore={"index", "expanded"})->Dict[str, Union[bool, float, int, str]]:
             """
             Recursively searches a property group for any members of it that have different values than the default.
@@ -324,10 +337,8 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                             setattr(dest_prop_group, prop.identifier, source_value)
             copy_recursive(source_prop_group, dest_prop_group)
 
+        #--- Copy Layers to Collections ---------------------------------------
         for scene in bpy.data.scenes:
-            for layer_props in [obj.xplane.layer for obj in scene.objects]:
-                layer_props.autodetectTextures = False
-
             # Match Layers with Collections
             # Rename everything from Collection or Collection 2...
             # to Layer 1, Layer 2
@@ -353,6 +364,8 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                     coll.xplane.is_exportable_collection = not coll.hide_render
 
                 copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
+        #----------------------------------------------------------------------
+
 
 
 @persistent

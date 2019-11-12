@@ -1355,15 +1355,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    exportMode: bpy.props.EnumProperty(
-        name = "Export Mode",
-        default = "layers",
-        items = [
-            (EXPORT_MODE_LAYERS, "Layers", "Allows to export an .obj file for each layer"),
-            (EXPORT_MODE_ROOT_OBJECTS, "Root Objects", "Allows to export all objects below a root object into a single .obj file")
-        ]
-    )
-
     compositeTextures: bpy.props.BoolProperty(
         name = "Compile Normal-Textures",
         description = "Will automatically create and use corrected normal textures",

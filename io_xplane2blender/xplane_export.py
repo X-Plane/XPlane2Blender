@@ -89,8 +89,6 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
             except:
                 logger.info("Pydevd could not be imported, breakpoints not enabled. Ensure PyDev is installed and configured properly")
 
-        exportMode = bpy.context.scene.xplane.exportMode
-
         # store current frame as we will go back to it
         currentFrame = bpy.context.scene.frame_current
 
@@ -99,10 +97,7 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.view_layer.update()
 
         xplaneFiles = []
-
-        if exportMode == 'root_objects':
-            xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
-
+        xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
         for xplaneFile in xplaneFiles:
             if self._writeXPlaneFile(xplaneFile, export_directory) == False:
                 if logger.hasErrors():

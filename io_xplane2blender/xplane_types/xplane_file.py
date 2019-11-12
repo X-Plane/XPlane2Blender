@@ -102,10 +102,6 @@ class XPlaneFile():
 
         self.commands = XPlaneCommands(self)
 
-        #TODO: There is no export mode anymore, there is only root objects
-        # But, I'd rather not deal with removing it all right now
-        self.exportMode = xplane_constants.EXPORT_MODE_ROOT_OBJECTS
-
         # the root bone: origin for all animations/objects
         self.rootBone = None
 
