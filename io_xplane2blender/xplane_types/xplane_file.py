@@ -57,7 +57,7 @@ BlenderCollection = bpy.types.Collection
 
 def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]:
     xplane_files: List["XPlaneFile"] = []
-    for exportable_root in filter(lambda o: xplane_helpers.is_exportable_root(o), scene.objects[:] + xplane_helpers.get_exportable_collections_in_scene(scene)[1:]):
+    for exportable_root in filter(lambda o: xplane_helpers.is_exportable_root(o), scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]):
         if exportable_root.xplane.layer.export:
             xplane_file = createFileFromBlenderRootObject(exportable_root)
             xplane_files.append(xplane_file)
@@ -80,8 +80,8 @@ def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XP
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
-    #print("Final Root Bone (2.80)")
-    #print(xplane_file.rootBone)
+    print("Final Root Bone (2.80)")
+    print(xplane_file.rootBone)
     return xplane_file
 
 class XPlaneFile():

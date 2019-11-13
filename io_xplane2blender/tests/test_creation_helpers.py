@@ -1,3 +1,17 @@
+"""
+test_creation_tools
+
+These allow the quick automated setup of test cases
+
+- get_ get's a Blender datablock or piece of data or None
+- set_ set's some data, possibly creating data as needed.
+- create_ creates and returns exist Blender data, or returns existing data with the same name
+- delete_ deletes all of a certain type from the scene
+
+This also is a wrapper around Blender's more confusing aspects of it's API and datamodel.
+https://blender.stackexchange.com/questions/6101/poll-failed-context-incorrect-example-bpy-ops-view3d-background-image-add
+"""
+
 import math
 import os.path
 import typing
@@ -13,19 +27,6 @@ from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
 from mathutils import Vector, Euler, Quaternion
 from io_xplane2blender.xplane_constants import ANIM_TYPE_SHOW,ANIM_TYPE_HIDE
 import io_xplane2blender
-'''
-test_creation_tools
-
-These allow the quick automated setup of test cases
-
-- get_ get's a Blender datablock or piece of data or None
-- set_ set's some data, possibly creating data as needed.
-- create_ creates and returns exist Blender data, or returns existing data with the same name
-- delete_ deletes all of a certain type from the scene
-
-This also is a wrapper around Blender's more confusing aspects of it's API and datamodel.
-https://blender.stackexchange.com/questions/6101/poll-failed-context-incorrect-example-bpy-ops-view3d-background-image-add
-'''
 
 # Most used commands:
 #
@@ -93,7 +94,8 @@ class DatablockInfo():
         if collection is None:
             self.collection = bpy.context.scene.collection
         else:
-            self.collection = collection if isinstance(collection, bpy.types.Collection) else bpy.data.collections[collection]
+            self.collection = collection if isinstance(collection, bpy.types.Collection) else create_datablock_collection(collection)
+
         self.parent_info = parent_info
         self.location = location
         self.rotation_mode = rotation_mode
@@ -243,7 +245,7 @@ def create_bone(armature:bpy.types.Object,bone_info:BoneInfo)->str:
     new_bone.name
     '''
     assert armature.type =="ARMATURE"
-    bpy.context.scene.objects.active = armature
+    bpy.context.view_layer.objects.active = armature
     bpy.ops.object.mode_set(mode="EDIT", toggle=False)
     edit_bones = armature.data.edit_bones
     new_bone = edit_bones.new(bone_info.name)
@@ -261,6 +263,31 @@ def create_bone(armature:bpy.types.Object,bone_info:BoneInfo)->str:
     bpy.ops.object.mode_set(mode='OBJECT')
 
     return final_name
+
+
+def create_datablock_collection(name:str, scene:Optional[Union[str, bpy.types.Scene]]=None)->bpy.types.Collection:
+    """
+    If not already existing, creates a collection with the name 'name',
+    linked to a specific scene, or the current scene if not provided.
+
+    Returns said collection.
+
+    If collection already exists, no new collection is created.
+    """
+    try:
+        coll = bpy.data.collections[name]
+    except KeyError:
+        coll = bpy.data.collections.new(name)
+    try:
+        scene = bpy.data.scenes[scene]
+    except (KeyError, TypeError):
+        if not scene:
+            scene = bpy.context.scene
+
+    if coll.name not in scene.collection.children:
+        scene.collection.children.link(coll)
+
+    return coll
 
 
 def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List[BoneInfo],int]]=None,bone_direction:Optional[Vector]=None)->bpy.types.Object:
@@ -325,17 +352,19 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
 
     return arm
 
-def create_datablock_empty(info:DatablockInfo, scene:Optional[bpy.types.Scene]=None)->bpy.types.Object:
+
+def create_datablock_empty(
+        info: DatablockInfo,
+        scene: Optional[Union[bpy.types.Scene, str]] = None
+    ) -> bpy.types.Object:
     """
-    Creates a datablock empty and links it to a specific scene's master collection, or
-    if not given, the current context's scene
+    Creates a datablock empty and links it to a scene and collection.
+    If scene is None, the current context's scene is used.
     """
     assert info.datablock_type == "EMPTY"
     ob = bpy.data.objects.new(info.name, object_data=None)
-    if scene:
-        scene.collection.objects.link(ob)
-    else:
-        bpy.context.scene.collection.objects.link(ob)
+    set_collection(ob, info.collection)
+
     ob.empty_display_type = 'PLAIN_AXES'
     ob.location = info.location
     ob.rotation_mode = info.rotation_mode
@@ -348,31 +377,48 @@ def create_datablock_empty(info:DatablockInfo, scene:Optional[bpy.types.Scene]=N
     return ob
 
 def create_datablock_mesh(info:DatablockInfo,
-                primitive_shape="cube", #Must be "cube" or "cylinder"
-                material_name:str="Material")->bpy.types.Object:
+                primitive_shape:str="cube",
+                material_name:Union[bpy.types.Material, str]="Material",
+                scene:Optional[Union[bpy.types.Scene, str]]=None,
+                )->bpy.types.Object:
+    """
+    Uses the bpy.ops.mesh.primitive_*_add ops to create an Object with given
+    mesh. Location and Rotation given by info.
+
+    primitive_shape must match an existing mesh op
+    """
 
     assert info.datablock_type == "MESH"
-    if primitive_shape == "cube":
-        bpy.ops.mesh.primitive_cube_add(
-            enter_editmode=False,
-            location=info.location,
-            rotation=info.rotation,
-            )
-    elif primitive_shape == "cylinder":
-        bpy.ops.mesh.primitive_cylinder_add(
-            enter_editmode=False,
-            location=info.location,
-            rotation=info.rotation,)
+    assert primitive_shape in {"circle", "cone", "cube", "cylinder", "grid", "ico_sphere", "monkey", "plane", "torus", "uv_sphere"}
+
+    primitive_ops: Dict[str, bpy.types.Operator] = {
+        "circle": bpy.ops.mesh.primitive_circle_add,
+        "cone": bpy.ops.mesh.primitive_cone_add,
+        "cube": bpy.ops.mesh.primitive_cube_add,
+        "cylinder": bpy.ops.mesh.primitive_cylinder_add,
+        "grid": bpy.ops.mesh.primitive_grid_add,
+        "ico_sphere": bpy.ops.mesh.primitive_ico_sphere_add,
+        "monkey": bpy.ops.mesh.primitive_monkey_add,
+        "plane": bpy.ops.mesh.primitive_plane_add,
+        "torus": bpy.ops.mesh.primitive_torus_add,
+        "uv_sphere": bpy.ops.mesh.primitive_uv_sphere_add,
+        }
+
+    try:
+        op = primitive_ops[primitive_shape]
+    except KeyError:
+        assert False, f"{primitive_shape} is not a known primitive op"
+    else:
+        op(enter_editmode=False, location=info.location, rotation=info.rotation)
 
     ob = bpy.context.object
+    set_collection(ob, info.collection)
     ob.name = info.name if info.name is not None else ob.name
     if info.parent_info:
         set_parent(ob,info.parent_info)
-    set_material(ob,material_name)
+    set_material(ob, material_name)
 
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.uv.smart_project()
-    bpy.ops.object.mode_set(mode='OBJECT')
+    ob.data.uv_layers.new()
 
     return ob
 
@@ -421,6 +467,10 @@ def get_material_default()->bpy.types.Material:
     else:
         return create_material_default()
 
+def delete_all_collections():
+    for coll in bpy.data.collections:
+        bpy.data.collections.remove(coll)
+
 def delete_all_images():
     for image in bpy.data.images:
         image.user_clear()
@@ -459,6 +509,7 @@ def delete_everything():
     delete_all_materials()
     delete_all_objects()
     delete_all_text_files()
+    delete_all_collections()
     delete_all_other_scenes()
 
 
@@ -552,11 +603,11 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
             blender_struct.keyframe_insert(data_path=data_path,group=blender_bone.name if struct_is_bone else "Rotation")
 
         if struct_is_bone:
-            bpy.context.scene.objects.active = parent_armature
-            bpy.context.scene.objects.active.data.bones.active = blender_bone
+            bpy.context.view_layer.objects.active = parent_armature
+            bpy.context.view_layer.objects.active.data.bones.active = blender_bone
             bpy.ops.bone.add_xplane_dataref_keyframe(index=dataref_index)
         else:
-            bpy.context.scene.objects.active = blender_struct
+            bpy.context.view_layer.objects.active = blender_struct
             bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
 
 
@@ -564,9 +615,10 @@ def set_collection(blender_object:bpy.types.Object, collection:Union[bpy.types.C
     assert isinstance(blender_object,(bpy.types.Collection, bpy.types.Object)), "collection was of type " + str(type(blender_object))
 
     if isinstance(collection, str):
-        collection = bpy.data.collections[collection.name]
+        collection = bpy.data.collections[collection]
 
-    collection.link(blender_object)
+    if blender_object.name not in collection.objects:
+        collection.objects.link(blender_object)
 
 
 def set_manipulator_settings(object_datablock:bpy.types.Object,
@@ -640,6 +692,7 @@ def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
 
         blender_object.parent_bone = parent_info.parent_bone
 
+
 def set_rotation(blender_object:bpy.types.Object, rotation:Any, rotation_mode:str)->None:
     """
     Sets the rotation of a Blender Object and takes care of picking which
@@ -656,6 +709,16 @@ def set_rotation(blender_object:bpy.types.Object, rotation:Any, rotation_mode:st
         blender_object.rotation_euler = rotation
     else:
         assert False, "Unsupported rotation mode: " + blender_object.rotation_mode
+
+def set_xplane_layer(layer:Union[int, io_xplane2blender.xplane_props.XPlaneLayer], layer_props:Dict[str,Any]):
+    assert isinstance(layer, int) or isinstance(layer, io_xplane2blender.xplane_props.XPlaneLayer)
+
+    if isinstance(layer, int):
+        layer = create_datablock_collection(f"Layer {layer + 1}").xplane.layer
+
+    for prop, value in layer_props.items():
+        setattr(layer, prop, value)
+
 
 class TemporaryStartFile():
     def __init__(self, temporary_startup_path:str):
@@ -680,11 +743,6 @@ class TemporaryStartFile():
 def create_initial_test_setup():
     bpy.ops.wm.read_homefile()
     delete_everything()
-    bpy.context.scene.layers[0] = True
-    for i in range(1,20):
-        bpy.context.scene.layers[i] = False
-
-    bpy.ops.scene.add_xplane_layers()
     create_material_default()
 
     # Create text file

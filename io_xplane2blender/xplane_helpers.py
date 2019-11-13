@@ -1,7 +1,7 @@
 # File: xplane_helpers.py
 # Defines Helpers
 
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 import bpy
 import mathutils
 
@@ -38,8 +38,6 @@ def resolveBlenderPath(path:str)->str:
         return path
 
 
-
-
 def get_plugin_resources_folder()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
 
@@ -56,7 +54,7 @@ def get_potential_objects_in_root_object(root_object: bpy.types.Object)->List[bp
     return collect_children(root_object)
 
 
-def get_exportable_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
+def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
     """
     First entry in list is always the scene's 'Master Collection'
     """
@@ -72,7 +70,6 @@ def get_exportable_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.C
 
 def get_root_objects_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
     return [obj for obj in scene.objects if obj.xplane.isExportableRoot]
-
 
 
 def is_exportable_root(obj_or_collection: Union[bpy.types.Collection, bpy.types.Object])->bool:
@@ -91,7 +88,12 @@ def vec_x_to_b(v):
 # This is a convenience struct to help prevent people from having to repeatedly copy and paste
 # a tuple of all the members of XPlane2BlenderVersion. It is only a data transport struct!
 class VerStruct():
-    def __init__(self,addon_version=None,build_type=None,build_type_version=None,data_model_version=None,build_number=None):
+    def __init__(self,
+                 addon_version: Tuple[int, int, int] = None,
+                 build_type: str = None,
+                 build_type_version: int = None,
+                 data_model_version: int = None,
+                 build_number=None):
         self.addon_version      = tuple(addon_version) if addon_version      is not None else (0,0,0)
         self.build_type         = build_type           if build_type         is not None else xplane_constants.BUILD_TYPE_DEV
         self.build_type_version = build_type_version   if build_type_version is not None else 0
@@ -166,8 +168,8 @@ class VerStruct():
                         print("build_type_version must be 0 when build_type is %s" % self.build_type)
                         return False
                 elif self.build_type_version <= 0:
-                        print("build_type_version must be > 0 when build_type is %s" % self.build_type)
-                        return False
+                    print("build_type_version must be > 0 when build_type is %s" % self.build_type)
+                    return False
 
                 if self.build_type == xplane_constants.BUILD_TYPE_LEGACY and self.data_model_version != 0:
                     print("Invalid build_type,data_model_version combo: legacy and data_model_version is not 0")
@@ -263,8 +265,8 @@ class VerStruct():
             # Part 1: Major.Minor.revision (1)
             # Part 2: '-' and a build type (2), then a literal '.' and build type number (3)
             # (Optional) literal '+'
-                # Part 3: 1 or more digits for data model number (4), a literal '.',
-                # then a YYYYMMDDHHMMSS (5)
+            # Part 3: 1 or more digits for data model number (4), a literal '.',
+            # then a YYYYMMDDHHMMSS (5)
             if version_matches:
                 version_struct.addon_version      = tuple([int(comp) for comp in version_matches.group(1).split('.')])
                 version_struct.build_type         = version_matches.group(2)
@@ -430,4 +432,3 @@ class XPlaneLogger():
 
 
 logger = XPlaneLogger()
-
