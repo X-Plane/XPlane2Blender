@@ -123,6 +123,40 @@ class XPlaneFile():
 
             return converted_xplane_obj
 
+        def walk_upward(walk_start_bone:XPlaneBone)->XPlaneBone:
+            """
+            Walks upwards the parent-child tree.
+
+            start-bone must
+            """
+            assert walk_start_bone.blenderObject
+
+            tmp_bone_head = walk_start_bone
+            o_bone_parent = walk_start_bone.parent
+            def walk_upward_recursive(current_bone: XPlaneBone):
+                nonlocal tmp_bone_head
+                # If we haven't reached the top yet, make a bone for parent and move the head
+                if current_bone.blenderObject.parent:
+                    new_parent_bone = XPlaneBone(
+                        xplane_file=self,
+                        blender_obj=current_bone.blenderObject.parent,
+                        blender_bone=None,
+                        xplane_obj=convert_to_xplane_object(current_bone.blenderObject.parent),
+                        parent_xplane_bone=None)
+                    new_parent_bone.children.append(current_bone)
+                    current_bone.parent = new_parent_bone
+                    tmp_bone_head = new_parent_bone
+                    walk_upward_recursive(new_parent_bone)
+
+            walk_upward_recursive(tmp_bone_head)
+            index = o_bone_parent.children.index(walk_start_bone)
+            o_bone_parent.children.remove(walk_start_bone)
+            o_bone_parent.children.append(tmp_bone_head)
+            tmp_bone_head.parent = o_bone_parent
+
+            return tmp_bone_head
+
+
         def _recurse(parent: BlenderParentType, parent_bone: Optional[XPlaneBone], parent_blender_objects:BlenderObject)->None:
             """
             Main function for recursing down tree. parent_blender_objects will be different from blender_objects will not equal parent.children, when a parent is a collection
@@ -160,6 +194,13 @@ class XPlaneFile():
                 self.rootBone = new_xplane_bone
                 #new_xplane_bone.xplaneObject = new_xplane_obj
                 #new_xplane_bone.xplaneObject.xplaneBone = new_xplane_bone
+            try:
+                if blender_obj.parent and blender_obj.parent.name not in exportable_root.all_objects:
+                    branch_head = walk_upward(new_xplane_bone)
+                    print("HERE", blender_obj.name)
+            except AttributeError:
+                print(blender_obj)
+                pass
 
             if new_xplane_obj:
                 # This is different than asking the blender Object its type!

@@ -27,7 +27,7 @@ relationships, it cannot be assumed that the XPlaneBone Tree and Blender Hierarc
 """
 
 import math
-from typing import Optional
+from typing import List, Optional
 
 import bpy
 import mathutils
@@ -60,7 +60,7 @@ class XPlaneBone():
         self.blenderBone = blender_bone
         self.parent = parent_xplane_bone
         self.xplaneFile = xplane_file
-        self.children = []
+        self.children:List["XPlaneBone"] = []
 
         if self.xplaneObject:
             self.xplaneObject.xplaneBone = self
