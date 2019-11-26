@@ -15,6 +15,9 @@ class XPlaneObject():
     tied with the Blender Object it is based off.
     """
     def __init__(self, blenderObject: bpy.types.Object)->None:
+        self.export_animation_only = False # Includes Blender and X-Plane
+                                           # keyframes and custom animation properties.
+                                           # Only set to true for split parent cases
         self.blenderObject = blenderObject
 
         #This is assigned and tied together in in XPlaneBone's constructor
@@ -43,8 +46,12 @@ class XPlaneObject():
             f"Lod: {self.lod[:]}",
             f"Weight: {self.weight}"))
 
-    def collect(self):
+    def collect(self)->None:
         assert self.xplaneBone is not None, "xplaneBone must not be None!"
+        if self.export_animation_only:
+            # add anim attributes from datarefs and custom anim attributes
+            self.collectAnimAttributes()
+            return
 
         # add custom attributes
         self.collectCustomAttributes()

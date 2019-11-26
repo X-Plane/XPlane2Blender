@@ -139,16 +139,23 @@ class XPlaneFile():
 
             tmp_bone_head = walk_start_bone
             o_bone_parent = walk_start_bone.parent
+            new_bones: List[XPlaneBone] = []
             def walk_upward_recursive(current_bone: XPlaneBone):
                 nonlocal tmp_bone_head
                 # If we haven't reached the top yet, make a bone for parent and move the head
                 if current_bone.blenderObject.parent:
+                    new_parent_xplane_obj = convert_to_xplane_object(current_bone.blenderObject.parent)
+                    if new_parent_xplane_obj:
+                        new_parent_xplane_obj.export_animation_only = True
                     new_parent_bone = XPlaneBone(
                         xplane_file=self,
                         blender_obj=current_bone.blenderObject.parent,
                         blender_bone=None,
-                        xplane_obj=convert_to_xplane_object(current_bone.blenderObject.parent),
+                        xplane_obj=new_parent_xplane_obj,
                         parent_xplane_bone=None)
+                    new_bones.append(new_parent_bone)
+                    if new_parent_xplane_obj:
+                        new_parent_xplane_obj.collect()
                     new_parent_bone.children.append(current_bone)
                     current_bone.parent = new_parent_bone
                     tmp_bone_head = new_parent_bone
@@ -160,8 +167,10 @@ class XPlaneFile():
             o_bone_parent.children.append(tmp_bone_head)
             tmp_bone_head.parent = o_bone_parent
 
-            return tmp_bone_head
+            # This time we will have a parent!
+            [bone.collectAnimations() for bone in new_bones]
 
+            return tmp_bone_head
 
         def _recurse(parent: BlenderParentType, parent_bone: Optional[XPlaneBone], parent_blender_objects:BlenderObject)->None:
             """
@@ -182,35 +191,30 @@ class XPlaneFile():
                 new_xplane_obj = None
             #print(f"new_xplane_obj:\n{new_xplane_obj}")
 
-            if parent_bone:
-                new_xplane_bone = XPlaneBone(
-                        xplane_file=self,
-                        blender_obj=blender_obj,
-                        blender_bone=None,
-                        xplane_obj=new_xplane_obj,
-                        parent_xplane_bone=parent_bone)
+            is_root_bone = not parent_bone
+            if (is_root_bone
+                and isinstance(exportable_root, bpy.types.Collection)):
+                new_xplane_bone = XPlaneBone(self, blender_obj=None)
             else:
-                # We have to do the manual work
-                new_xplane_bone = XPlaneBone(self,
-                                             blender_obj=blender_obj,
-                                             blender_bone=None,
-                                             xplane_obj=new_xplane_obj,
-                                             parent_xplane_bone=None)
+                new_xplane_bone = XPlaneBone(
+                    xplane_file=self,
+                    blender_obj=blender_obj,
+                    blender_bone=None,
+                    xplane_obj=new_xplane_obj,
+                    parent_xplane_bone=parent_bone)
 
+            if is_root_bone:
                 assert not self.rootBone, "_recurse should never be assigning self.rootBone twice"
                 self.rootBone = new_xplane_bone
             try:
-                if blender_obj.parent and blender_obj.parent.name not in exportable_root.all_objects:
+                if blender_obj.parent.name not in exportable_root.all_objects:
                     branch_head = walk_upward(new_xplane_bone)
-                    print("HERE", blender_obj.name)
-            except AttributeError:
-            except AttributeError: # exportable_root was and Object, had no all_objects
-                print(blender_obj)
+            except AttributeError: # For whatever of many reasons, we didn't walk up
                 pass
 
             if new_xplane_obj:
-                # This is different than asking the blender Object its type!
-                # this is refering to the old style default light
+                # This is different than asking the Blender Light its type!
+                # This is refering to the old style default light
                 if isinstance(new_xplane_obj, XPlaneLight):
                     self.lights.append(new_xplane_obj)
                 new_xplane_obj.collect()
@@ -262,8 +266,10 @@ class XPlaneFile():
                         # Ignored cases don't get their children examined
                         continue
                     else:
+                        parent_bone = real_bone_parents[child_obj.parent_bone]
+                        assert parent_bone, "Must have parent bone for further recursion"
                         _recurse(child_obj,
-                                 real_bone_parents[child_obj.parent_bone],
+                                 parent_bone,
                                  child_obj.children,
                                  )
                 else:
@@ -277,8 +283,10 @@ class XPlaneFile():
                         )
                         continue
 
+                    parent_bone = new_xplane_bone
+                    assert parent_bone, "Must have parent bone for further recursion"
                     _recurse(child_obj,
-                             new_xplane_bone,
+                             parent_bone,
                              child_obj.children)
 
             try:
@@ -298,11 +306,6 @@ class XPlaneFile():
                              exportable_root.all_objects,
                              exportable_root.all_objects)))
         elif isinstance(exportable_root, bpy.types.Object):
-            self.rootBone = XPlaneBone(self,
-                                       blender_obj=exportable_root,
-                                       blender_bone=None,
-                                       xplane_obj=None,
-                                       parent_xplane_bone=None)
             _recurse(parent=exportable_root,
                      parent_bone=None,
                      parent_blender_objects=exportable_root.children)
