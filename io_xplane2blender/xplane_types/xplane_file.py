@@ -83,6 +83,7 @@ def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XP
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
+    assert xplane_file.rootBone, "Root Bone was not assaigned during __init__ function"
     print("Final Root Bone (2.80)")
     print(xplane_file.rootBone)
     return xplane_file
@@ -106,7 +107,9 @@ class XPlaneFile():
         self.commands = XPlaneCommands(self)
 
         # the root bone: origin for all animations/objects
-        self.rootBone = None
+        # This isn't really a None type, it is created immediately
+        # after in create_xplane_bone_hierarchy
+        self.rootBone:XPlaneBone = None
 
         # materials representing the reference for export
         self.referenceMaterials = None
@@ -194,14 +197,14 @@ class XPlaneFile():
                                              xplane_obj=new_xplane_obj,
                                              parent_xplane_bone=None)
 
+                assert not self.rootBone, "_recurse should never be assigning self.rootBone twice"
                 self.rootBone = new_xplane_bone
-                #new_xplane_bone.xplaneObject = new_xplane_obj
-                #new_xplane_bone.xplaneObject.xplaneBone = new_xplane_bone
             try:
                 if blender_obj.parent and blender_obj.parent.name not in exportable_root.all_objects:
                     branch_head = walk_upward(new_xplane_bone)
                     print("HERE", blender_obj.name)
             except AttributeError:
+            except AttributeError: # exportable_root was and Object, had no all_objects
                 print(blender_obj)
                 pass
 
@@ -404,12 +407,8 @@ class XPlaneFile():
             self.options.export_type
         )
 
-        refMatNames = []
-        for refMat in self.referenceMaterials:
-            if refMat:
-                refMatNames.append(refMat.name)
-
-        logger.info('Using the following reference materials: %s' % ', '.join(refMatNames))
+        refMatNames = [refMat.name for refMat in self.referenceMaterials if refMat]
+        logger.info("Using the following reference materials: %s" % ", ".join(refMatNames))
 
         # validation was successful
         # retrieve reference materials

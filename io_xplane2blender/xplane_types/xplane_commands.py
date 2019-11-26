@@ -2,7 +2,7 @@ import re
 
 import bpy
 
-from io_xplane2blender.xplane_types import xplane_attribute
+from io_xplane2blender.xplane_types import xplane_attribute, xplane_file
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 
 from ..xplane_config import getDebug
@@ -48,9 +48,9 @@ from ..xplane_helpers import floatToStr, logger
 #
 # From this table, we can determine two things:
 # 1. For any given attribute, what previously written attribute is no longer valid.  For example, if
-#	 We write ATTR_no_hard, any past ATTR_hard or ATTR_hard_deck is no longer in effect.
+#    We write ATTR_no_hard, any past ATTR_hard or ATTR_hard_deck is no longer in effect.
 # 2. If we need to write a new object that is missing a previously written setter, what is the resetter
-#	 to issue to get to default state.
+#    to issue to get to default state.
 #
 # For customization, the "addReseter" can be called to register the resetter for a custom attribute that
 # will need to be undone later by another part of the code.
@@ -70,11 +70,7 @@ from ..xplane_helpers import floatToStr, logger
 # Class: XPlaneCommands
 # Creates the OBJ commands table.
 class XPlaneCommands():
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   dict file - A file dict coming from <XPlaneData>
-    def __init__(self, xplaneFile):
+    def __init__(self, xplaneFile)->None:
         self.xplaneFile = xplaneFile
 
         self.reseters = {
@@ -108,15 +104,10 @@ class XPlaneCommands():
         }
 
 
-    # Method: write
-    # Returns the OBJ commands table.
-    #
-    # Params:
-    #   int lod - (default -1) Level of detail randing from 0..2, if -1 no level of detail will be used
-    #
-    # Returns:
-    #   string - The OBJ commands table.
-    def write(self, lod = -1):
+    def write(self, lod:int = -1)->str:
+        """
+        Writes OBJ commands to a string. If lod is -1, no LODs will be used
+        """
         o = ''
         o += self.writeXPlaneBone(self.xplaneFile.rootBone, lod)
 
@@ -178,9 +169,7 @@ class XPlaneCommands():
 
         # open object conditions
         o += self._writeConditions(xplaneObject.conditions, xplaneObject)
-
         o += xplaneObject.write()
-
         return o
 
     def _writeXPlaneObjectSuffix(self, xplaneObject):

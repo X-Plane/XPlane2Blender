@@ -40,12 +40,13 @@ from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyf
 class XPlaneBone():
     def __init__(self,
                  xplane_file:'XPlaneFile',
-                 blender_obj:bpy.types.Object,
+                 blender_obj:Optional[bpy.types.Object],
                  blender_bone:Optional[bpy.types.Bone]=None,
                  xplane_obj:Optional['XPlaneObject']=None,
                  parent_xplane_bone:Optional['XPlaneBone']=None):
         """
-        self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy)
+        self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy).
+        It is only None for the root XPlaneBone of an Exportable Collection
 
         self.blenderBone is the Blender Bone associated with this XPlaneBone (if the origin during traversal was a bpy.types.Bone)
         Thus, you can tell if something was a Bone by if blenderBone is not None
@@ -53,21 +54,19 @@ class XPlaneBone():
         XPlaneBone is responsible for tieing the xplane_obj (if any) with this XPlaneBone, and adding
         the us to the parent_xplane_bone's children. This way it is all kept in one place and can't be forgotten
         """
-        self.xplaneObject = xplane_obj
+        self.xplaneFile = xplane_file
         self.blenderObject = blender_obj
+        self.blenderBone = blender_bone
+        self.xplaneObject = xplane_obj
         if self.xplaneObject:
             assert self.xplaneObject.blenderObject == self.blenderObject, f"XPlaneBone ({self.blenderObject.name}) and XPlaneObject's blenderObject do not match ({self.blenderObject.name}, {self.xplaneObject.name})"
-        self.blenderBone = blender_bone
+            self.xplaneObject.xplaneBone = self
         self.parent = parent_xplane_bone
-        self.xplaneFile = xplane_file
         self.children:List["XPlaneBone"] = []
 
-        if self.xplaneObject:
-            self.xplaneObject.xplaneBone = self
         if self.parent:
             #TODO: It seems to me that in the bone structure is getting reversed
             # Is this because of how collectBonesFromBlenderObjects/Bones gets called swapped back
-            # and forth or is this because we haven't implemented sortChildren yet? (Hint, probably the former)
             """
 Final Root Bone (2.79)
 0 Empty: RootObject
@@ -92,10 +91,6 @@ Final Root Bone (2.80)
                 2 Mesh: CubeParentByDatablock
                 """
             self.parent.children.append(self)
-
-
-        # nesting level of this bone (used for intendation)
-        self.level = self.parent.level + 1 if self.parent else 0
 
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
         self.animations = {} # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
@@ -247,46 +242,37 @@ Final Root Bone (2.80)
                         keyframesSorted = sorted(keyframes, key = lambda keyframe: keyframe.index)
                         self.animations[dataref] = XPlaneKeyframeCollection(keyframesSorted)
 
-    def getName(self,ignore_indent_level:bool=False)->str:
-        '''
+    def getName(self, ignore_indent_level:bool=False)->str:
+        """
         Gets the (optionally) indent level, Blender Type, and name.
         Useful for debugging and error message.
 
         Note: Unit tests, like the ones in xplane_file,
         test against the output of this method!
-        '''
-        if self.blenderBone:
-            if ignore_indent_level:
-                return 'Bone: %s' % (self.blenderBone.name)
-            else:
-                return '%d Bone: %s' % (self.level, self.blenderBone.name)
-        elif self.blenderObject:
-            if ignore_indent_level:
-                return '%s: %s' % (self.blenderObject.type.title(), self.blenderObject.name)
-            else:
-                return '%d %s: %s' % (self.level, self.blenderObject.type.title(), self.blenderObject.name)
-        elif self.parent == None:
-            if ignore_indent_level:
-                return 'ROOT'
-            else:
-                return '%d ROOT' % self.level
+        """
+        count_parents = lambda bone: 1 + count_parents(bone.parent) if bone.parent else 0
+        prefix = "" if ignore_indent_level else f"{count_parents(self)} "
 
-        return 'UNKNOWN'
+        if self.blenderBone:
+            return f"{prefix}Bone: {self.blenderBone.name}"
+        elif self.blenderObject:
+            return f"{prefix}{self.blenderObject.type.title()}: {self.blenderObject.name}"
+        elif self.parent == None:
+            return f"{prefix}ROOT"
+        else:
+            assert False, "XPlaneBone has no Blender Data, but also is not the root. How did we did we get here?"
 
     def getBlenderName(self)->str:
         if self.blenderBone:
             return self.blenderBone.name
         elif self.blenderObject:
             return self.blenderObject.name
-
-        return None
+        else:
+            assert False, "Cannot call getBlenderName on a root bone"
 
     def getIndent(self)->str:
-        if self.level == 0:
-            return  ''
-
-        return ''.ljust(self.level - 1, '\t')
-
+        count_parents = lambda bone: 1 + count_parents(bone.parent) if bone.parent else 0
+        return "\t" * count_parents(self)
 
     def getFirstAnimatedParent(self)->Optional[str]:
         if self.parent == None:
@@ -518,8 +504,8 @@ Final Root Bone (2.80)
                 out += toString(bone, indent + '\t')
 
             return out
-        return toString(self)
-
+        out = toString(self)
+        return out
 
     def writeAnimationPrefix(self):
         debug = getDebug()
@@ -811,10 +797,8 @@ Final Root Bone (2.80)
         if not self.isDataRefAnimatedForRotation():
             return o
 
-        indent = self.getIndent()
-
         if debug:
-            o += indent + '# rotation keyframes\n'
+            o += self.getIndent() + '# rotation keyframes\n'
 
         rotationMode = keyframes[0].rotationMode
 
@@ -829,7 +813,6 @@ Final Root Bone (2.80)
 
     def _writeAnimAttributes(self)->str:
         o = ''
-        indent = self.getIndent()
 
         if self.xplaneObject == None:
             return o
@@ -837,14 +820,12 @@ Final Root Bone (2.80)
         for name in self.xplaneObject.animAttributes:
             attr = self.xplaneObject.animAttributes[name]
             for i in range(len(attr.value)):
-                o += indent + '%s\t%s\n' % (attr.name, attr.getValueAsString(i=i))
+                o += self.getIndent() + '%s\t%s\n' % (attr.name, attr.getValueAsString(i=i))
 
         return o
 
     def writeAnimationSuffix(self)->str:
         o = ''
-        indent = self.getIndent()
-
         isAnimated = self.isAnimated()
         hasAnimationAttributes = (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
 
@@ -853,6 +834,6 @@ Final Root Bone (2.80)
 
         if (isAnimated) or \
             hasAnimationAttributes:
-            o += indent + 'ANIM_end\n'
+            o += self.getIndent() + 'ANIM_end\n'
 
         return o
