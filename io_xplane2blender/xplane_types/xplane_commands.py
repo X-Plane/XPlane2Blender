@@ -2,7 +2,7 @@ import re
 
 import bpy
 
-from io_xplane2blender.xplane_types import xplane_attribute, xplane_file
+from io_xplane2blender.xplane_types import xplane_attribute, xplane_file, xplane_object
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 
 from ..xplane_config import getDebug
@@ -195,7 +195,12 @@ class XPlaneCommands():
     #
     # Returns:
     #   string or None if the command must not be written.
-    def writeAttribute(self, attr, xplaneObject):
+    def writeAttribute(self,
+                       attr: xplane_attribute.XPlaneAttribute,
+                       xplaneObject: xplane_object.XPlaneObject)->str:
+        """
+        Writes attribute to string if possible and necissary to a string
+        """
         o = ''
         for i in range(len(attr.value)):
             value = attr.getValue(i)
@@ -222,7 +227,6 @@ class XPlaneCommands():
                     # store this in the written attributes
                     self.written[name] = value
                     value = attr.getValueAsString(i)
-                    value = self.parseAttributeValue(value, xplaneObject.blenderObject)
                     o += indent + '%s\t%s\n' % (name, value)
 
                     # check if this thing has a reseter and remove counterpart if any
@@ -232,25 +236,6 @@ class XPlaneCommands():
                         if counterpart in self.written:
                             del self.written[counterpart]
         return o
-
-    # Method: parseAttributeValue
-    # Returns a string with the parsed attribute value (replacing insert tags)
-    #
-    # Parameters:
-    #   string value - The attribute value.
-    #   blenderObject - A blender object.
-    #
-    # Returns:
-    #   string - The value with replaced insert tags.
-    def parseAttributeValue(self, value, blenderObject):
-        if str(value).find('{{xyz}}') != -1:
-            return str(value).replace('{{xyz}}', '%6.8f\t%6.8f\t%6.8f' % (
-                xplane_helpers.floatToStr(blenderObject.location[0]),
-                xplane_helpers.floatToStr(blenderObject.location[2]),
-                xplane_helpers.floatToStr(-blenderObject.location[1])
-            ))
-
-        return value
 
     # Method: canWriteAttribute
     # Determines if an attribute must/can be written.

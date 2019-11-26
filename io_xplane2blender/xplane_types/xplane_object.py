@@ -1,3 +1,5 @@
+import itertools
+
 import bpy
 import mathutils
 
@@ -66,14 +68,6 @@ class XPlaneObject():
         self.animAttributes.order()
         self.cockpitAttributes.order()
 
-    # Method: hasAnimAttributes
-    # Checks if the object has animation attributes.
-    #
-    # Returns:
-    #   bool - True if object has animtaion attributes, False if not.
-    def hasAnimAttributes(self):
-        return (hasattr(self, 'animAttributes') and len(self.animAttributes) > 0)
-
     def collectCustomAttributes(self):
         xplaneFile = self.xplaneBone.xplaneFile
         commands =  xplaneFile.commands
@@ -112,18 +106,10 @@ class XPlaneObject():
         if hasattr(self.blenderObject.xplane, 'override_weight') and self.blenderObject.xplane.override_weight:
             weight = self.blenderObject.xplane.weight
         else:
-            # add max weight of attributes
-            max_attr_weight = 0
-
-            for attr in self.attributes:
-                if self.attributes[attr].weight > max_attr_weight:
-                    max_attr_weight = self.attributes[attr].weight
-
-            for attr in self.cockpitAttributes:
-                if self.cockpitAttributes[attr].weight > max_attr_weight:
-                    max_attr_weight = self.cockpitAttributes[attr].weight
-
-            weight += max_attr_weight
+            try:
+                weight += max([attr.weight for attr in itertools.chain(self.attributes.values(), self.cockpitAttributes.values())])
+            except ValueError:
+                pass
 
         self.weight = weight
 
@@ -132,16 +118,19 @@ class XPlaneObject():
             self.conditions = self.blenderObject.xplane.conditions
 
     # Returns OBJ code for this object
-    def write(self):
+    def write(self)->str:
+        if self.export_animation_only:
+            return ""
+
         debug = getDebug()
-        indent = self.xplaneBone.getIndent()
-        o = ''
+        o = ""
 
         xplaneFile = self.xplaneBone.xplaneFile
         commands =  xplaneFile.commands
 
         if debug:
-            o += "%s# %s: %s\tweight: %d\n" % (indent, self.type, self.name, self.weight)
+            indent = self.xplaneBone.getIndent()
+            o += f"{indent}# {self.type}: {self.name}\tweight: {self.weight}\n"
 
         o += commands.writeReseters(self)
 
