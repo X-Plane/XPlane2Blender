@@ -269,14 +269,9 @@ class XPlaneFile():
                 else:
                     if (isinstance(exportable_root, bpy.types.Collection)
                         and child_obj.name not in exportable_root.all_objects):
-                        logger.error(
-                            f"{child_obj.name} is outside the current exportable collection. It and any children cannot be collected"
-                        )
                         continue
 
                     if child_obj.name not in bpy.context.scene.objects:
-                        # This will only ever trigger for Exportable Objects,
-                        # not Exportable Collections
                         logger.error(
                             f"{child_obj.name} is outside the current scene. It and any children cannot be collected"
                         )

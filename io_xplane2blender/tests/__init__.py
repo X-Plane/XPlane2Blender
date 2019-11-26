@@ -192,10 +192,9 @@ class XPlaneTestCase(unittest.TestCase):
                 else:
                     self.assertEquals(segmentA, segmentB)
 
-    def assertFileOutputEqualsFixture(self, fileOutput, fixturePath, filterCallback = None, floatTolerance = None):
-        fixtureFile = open(fixturePath, 'r')
-        fixtureOutput = fixtureFile.read()
-        fixtureFile.close()
+    def assertFileOutputEqualsFixture(self, fileOutput:str, fixturePath:str, filterCallback = None, floatTolerance:int = None)->None:
+        with open(fixturePath, "r") as fixtureFile:
+            fixtureOutput = fixtureFile.read()
 
         return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
 
