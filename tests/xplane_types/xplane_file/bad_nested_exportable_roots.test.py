@@ -13,19 +13,16 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestBadNestedExportableRoots(XPlaneTestCase):
     def test_nested_exportable_roots_caught(self)->None:
-        for i in range(1, 4):
+        for i in range(2, -1, -1):
             out = self.exportRootObject(bpy.data.collections[f"exportable_collection_{i}"])
-            print(f"out len {len(out)}")
-            print("---------------------")
-            # collection_1 has (3-2) nested roots, collection_2 has (3-1) nested roots
-            self.assertLoggerErrors(3-i)
+            self.assertLoggerErrors(i)
 
-        for i in range(1, 4):
+        out = self.exportRootObject(bpy.data.collections["exportable_collection_has_nested_exportable_object"])
+        self.assertLoggerErrors(3)
+
+        for i in range(2, -1, -1):
             out = self.exportRootObject(bpy.data.objects[f"exportable_object_{i}"])
-            print(f"out len {len(out)}")
-            print("---------------------")
-            # object_1 has (3-2) nested roots, object_2 has (3-1) nested roots
-            self.assertLoggerErrors(3-i)
+            self.assertLoggerErrors(i)
 
 
 runTestCases([TestBadNestedExportableRoots])

@@ -67,9 +67,12 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]
 def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XPlaneFile"]:
     nested_errors: Set[str] = set()
     def log_nested_roots(exportable_roots: List[PotentialRoot]):
+        err = "Exportable Roots cannot be nested, unmark {} as a Root or change its parentage"
+        if isinstance(exportable_root, bpy.types.Collection):
+            nested_errors.update(err.format(obj.name) for obj in filter(xplane_helpers.is_exportable_root, exportable_root.all_objects))
         for child in exportable_roots:
             if xplane_helpers.is_exportable_root(child):
-                nested_errors.add(f"Exportable Roots cannot be nested, unmark {child.name} as a Root or change its parentage")
+                nested_errors.add(err.format(child.name))
             log_nested_roots(child.children)
 
     log_nested_roots(exportable_root.children)
