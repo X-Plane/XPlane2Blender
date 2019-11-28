@@ -144,13 +144,15 @@ class XPlaneFile():
                 nonlocal tmp_bone_head
                 # If we haven't reached the top yet, make a bone for parent and move the head
                 if current_bone.blenderObject.parent:
+                    #--- This is all the manual work
+                    # the __init__ of XPlaneBone and XPlaneObject, and _recurse normally does for us
                     new_parent_xplane_obj = convert_to_xplane_object(current_bone.blenderObject.parent)
                     if new_parent_xplane_obj:
                         new_parent_xplane_obj.export_animation_only = True
                     new_parent_bone = XPlaneBone(
                         xplane_file=self,
                         blender_obj=current_bone.blenderObject.parent,
-                        blender_bone=None,
+                        blender_bone=None, #TODO: What if the parent is by bone?
                         xplane_obj=new_parent_xplane_obj,
                         parent_xplane_bone=None)
                     new_bones.append(new_parent_bone)
@@ -164,6 +166,7 @@ class XPlaneFile():
             walk_upward_recursive(tmp_bone_head)
             index = o_bone_parent.children.index(walk_start_bone)
             o_bone_parent.children.remove(walk_start_bone)
+            #TODO: You aren't using index and insert
             o_bone_parent.children.append(tmp_bone_head)
             tmp_bone_head.parent = o_bone_parent
 
@@ -272,22 +275,24 @@ class XPlaneFile():
                                  parent_bone,
                                  child_obj.children,
                                  )
-                else:
-                    if (isinstance(exportable_root, bpy.types.Collection)
-                        and child_obj.name not in exportable_root.all_objects):
-                        continue
-
-                    if child_obj.name not in bpy.context.scene.objects:
-                        logger.error(
-                            f"{child_obj.name} is outside the current scene. It and any children cannot be collected"
-                        )
-                        continue
-
+                else: # no parent by armature-bone
                     parent_bone = new_xplane_bone
-                    assert parent_bone, "Must have parent bone for further recursion"
-                    _recurse(child_obj,
-                             parent_bone,
-                             child_obj.children)
+
+                #TODO: This needs to apply to by bone recursion as well
+                if (isinstance(exportable_root, bpy.types.Collection)
+                    and child_obj.name not in exportable_root.all_objects):
+                    continue
+
+                if child_obj.name not in bpy.context.scene.objects:
+                    logger.error(
+                        f"{child_obj.name} is outside the current scene. It and any children cannot be collected"
+                    )
+                    continue
+
+                assert parent_bone, "Must have parent bone for further recursion"
+                _recurse(child_obj,
+                         parent_bone,
+                         child_obj.children)
 
             try:
                 if new_xplane_bone.blenderObject.type == "ARMATURE":
