@@ -13,7 +13,6 @@ from io_xplane2blender.tests import *
 __dirname__ = os.path.dirname(__file__)
 
 
-
 class TestRecursiveCollectionEdgeCases(XPlaneTestCase):
     def test_Exportable_no_convert_makes_bones(self)->None:
         obs = bpy.data.objects
@@ -34,7 +33,6 @@ class TestRecursiveCollectionEdgeCases(XPlaneTestCase):
                      "VT" in line[0] or\
                      "TRIS" in line[0])
         out = self.exportRootObject(bpy.data.collections["Exportable_out_of_collection_no_error"])
-        #TODO: Test that ConeOutOfCollection is not in the output or XPlaneBoneTree or whatever
         self.assertLoggerErrors(0)
         filename = inspect.stack()[0].function
         self.assertFileOutputEqualsFixture(

@@ -256,6 +256,9 @@ class XPlaneFile():
                 real_bone_parents = make_bones_for_armature_bones(blender_obj)
 
             for child_obj in parent_blender_objects:
+                if (isinstance(exportable_root, bpy.types.Collection)
+                    and child_obj.name not in exportable_root.all_objects):
+                    continue
                 if (blender_obj
                     and blender_obj.type == "ARMATURE"
                     and child_obj.parent_type == "BONE"):
@@ -277,11 +280,6 @@ class XPlaneFile():
                                  )
                 else: # no parent by armature-bone
                     parent_bone = new_xplane_bone
-
-                #TODO: This needs to apply to by bone recursion as well
-                if (isinstance(exportable_root, bpy.types.Collection)
-                    and child_obj.name not in exportable_root.all_objects):
-                    continue
 
                 if child_obj.name not in bpy.context.scene.objects:
                     logger.error(
