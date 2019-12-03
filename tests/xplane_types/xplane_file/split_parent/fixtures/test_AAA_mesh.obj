@@ -1,0 +1,59 @@
+I
+800
+OBJ
+
+POINT_COUNTS	6	0	0	6
+
+VT	1	0.00000018	-0.99999893	0	1	-0	1	1	# 0
+VT	1	0.00000018	1.00000048	0	1	-0	1	0	# 1
+VT	-1	0.00000018	1.00000036	0	1	-0	0	0	# 2
+VT	-1	0.00000018	-0.99999928	0	1	-0	0	1	# 3
+VT	1	0.00000018	-0.99999893	0	1	-0	1	1	# 4
+VT	-1	0.00000018	1.00000036	0	1	-0	0	0	# 5
+
+IDX	0
+IDX	1
+IDX	2
+IDX	3
+IDX	4
+IDX	5
+
+# 0 ROOT
+	# 1 Mesh: Sphere_A3
+	ANIM_begin
+	# translation keyframes
+	ANIM_trans_begin	Sphere_A3_AAA_dref
+	ANIM_trans_key	0	0	1	0
+	ANIM_trans_key	1	0	2	0
+	ANIM_trans_end
+	# MESH: Sphere_A3	weight: 0
+		# 2 Mesh: Sphere_A2
+		ANIM_begin
+		# static translation
+		ANIM_trans	4	0	0	4	0	0
+		# rotation keyframes
+		ANIM_rotate_begin	0	1	0	Sphere_A2_AAA_dref
+		ANIM_rotate_key	0	24.99986694
+		ANIM_rotate_key	1	78.99999651
+		ANIM_rotate_end
+		# MESH: Sphere_A2	weight: 0
+			# 3 Mesh: Sphere_A1
+			ANIM_begin
+			# static translation
+			ANIM_trans	4	0	0	4	0	0
+			# rotation keyframes
+			ANIM_rotate_begin	0	0	-1	Sphere_A1_AAA_dref
+			ANIM_rotate_key	0	30.00006914
+			ANIM_rotate_key	1	53.40023918
+			ANIM_rotate_end
+			# MESH: Sphere_A1	weight: 0
+				# 4 Mesh: Plane_AAA
+				# MESH: Plane_AAA	weight: 0
+				# MATERIAL: Material
+				ATTR_shiny_rat	0.5
+				TRIS	0 6
+			ANIM_end
+		ANIM_end
+	ANIM_end
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+57.NO_BUILD_NUMBR
