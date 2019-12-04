@@ -23,17 +23,18 @@ types have been created. Use these to keep yourself from
 running in circles
 """
 
-"""An Object with an XPlaneLayer property"""
+"""Something with an XPlaneLayer property"""
 PotentialRoot = Union[bpy.types.Collection, bpy.types.Object]
 
 """
-An Object with an XPlaneLayer property that also meets all other requirements.
-It doesn't mean the contents will not have any warnings or errors
+Something with an XPlaneLayer property that also meets all other requirements.
+It does not garuntee an error or warning free export, however
 """
 ExportableRoot = Union[bpy.types.Collection, bpy.types.Object]
 
 """
-The heirarchy allows these as parents, but Collections can't be real children
+Something that has a .children property. A collection and object's
+children are not compatible
 """
 BlenderParentType = Union[bpy.types.Collection, bpy.types.Object]
 

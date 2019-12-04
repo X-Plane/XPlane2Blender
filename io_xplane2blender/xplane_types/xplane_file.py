@@ -177,21 +177,21 @@ class XPlaneFile():
 
             return tmp_bone_head
 
-        def recurse(parent: BlenderParentType, parent_bone: Optional[XPlaneBone], parent_blender_objects:BlenderObject)->None:
+        def recurse(parent: Optional[bpy.types.Object], parent_bone: Optional[XPlaneBone], parent_blender_objects:bpy.types.Object)->None:
             """
-            Main function for recursing down tree. parent_blender_objects != parent.objects when
-            parent is a collection (coll.all_objects)
+            Main function for recursing down tree.
 
-            Always use allowed_children instead of parent.children.
+            When parent is None
+            - recurse is dealing with the first call of an exportable collection
+            - parent_blender_objects = filtered coll.all_objects
 
-            parent.children will not equal parent_blender_objects
-            when a parent is an exportable collection
+            parent_blender_object should always be filtered by allowed_children
             """
             #print(
-                #f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
-                #f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
-                #f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
-                #sep="\n"
+            #f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
+            #f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
+            #f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
+            #sep="\n"
             #)
             #print("===========================================================")
 
@@ -215,7 +215,7 @@ class XPlaneFile():
                     parent_xplane_bone=parent_bone)
 
             if is_root_bone:
-                assert not self.rootBone, "_recurse should never be assigning self.rootBone twice"
+                assert not self.rootBone, "recurse should never be assigning self.rootBone twice"
                 self.rootBone = new_xplane_bone
             try:
                 if blender_obj.parent.name not in exportable_root.all_objects:
@@ -306,13 +306,13 @@ class XPlaneFile():
         #--- end _recurse function -------------------------------------------
         if isinstance(exportable_root, bpy.types.Collection):
             all_allowed_objects = allowed_children(exportable_root)
+            all_allowed_names = [o.name for o in all_allowed_objects]
             recurse(parent=None,
-                     parent_bone=None,
-                     parent_blender_objects=list(
-                         filter(
-                             lambda o: o.parent is None or o.parent.name not in
-                             all_allowed_objects,
-                             all_allowed_objects)))
+                    parent_bone=None,
+                    parent_blender_objects=[
+                        o for o in all_allowed_objects if o.parent is None
+                        or o.parent.name not in all_allowed_names
+                    ])
         elif isinstance(exportable_root, bpy.types.Object):
             recurse(parent=exportable_root,
                      parent_bone=None,

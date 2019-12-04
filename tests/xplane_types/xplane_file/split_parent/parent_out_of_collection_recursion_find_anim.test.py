@@ -7,7 +7,6 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config, xplane_helpers
 from io_xplane2blender.tests import *
-#from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -18,15 +17,42 @@ def filterLines(line:Tuple[str])->bool:
 
 
 class TestParentOutOfCollectionFindAnim(XPlaneTestCase):
-    def test_ExpCollection_not_really_animated(self)->None:
-        filename = inspect.stack()[0].function
-
+    def _runAssert(self)->None:
+        filename = inspect.stack()[1].function
         self.assertRootObjectExportEqualsFixture(
-            bpy.data.objects[filename[5:]],
-            os.path.join(__dirname__, "fixtures", filename + ".obj"),
-            filename,
+            bpy.data.collections[filename[5:] + "_animation"],
+            os.path.join(__dirname__, "fixtures", filename + "_animation" + ".obj"),
+            filename + "_animation",
             filterLines
         )
+        self.assertRootObjectExportEqualsFixture(
+            bpy.data.collections[filename[5:] + "_mesh"],
+            os.path.join(__dirname__, "fixtures", filename + "_mesh" + ".obj"),
+            filename + "_mesh",
+            filterLines
+        )
+
+    def test_AAA(self)->None:
+        self._runAssert()
+
+    def test_AAn(self)->None:
+        self._runAssert()
+
+    def test_AnA(self)->None:
+        self._runAssert()
+
+    def test_Ann(self)->None:
+        self._runAssert()
+
+    def test_nAA(self)->None:
+        self._runAssert()
+
+    def test_nAn(self)->None:
+        self._runAssert()
+
+    def test_nnA(self)->None:
+        self._runAssert()
+
 
 #TI Same class name above, we only support one TestCase in runTestCases
 runTestCases([TestParentOutOfCollectionFindAnim])
