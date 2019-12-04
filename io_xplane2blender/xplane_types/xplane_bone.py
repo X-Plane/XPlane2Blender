@@ -168,10 +168,10 @@ Final Root Bone (2.80)
         #     groupName = "XPlane Datarefs"
 
         #check for animation
-        if bone:
-            print("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
-        else:
-            print("\t\t checking animations of %s" % blenderObject.name)
+        #if bone:
+            #print("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
+        #else:
+            #print("\t\t checking animations of %s" % blenderObject.name)
 
         animationData = blenderObject.animation_data
 
@@ -180,10 +180,10 @@ Final Root Bone (2.80)
             animationData = blenderObject.data.animation_data
 
         if (animationData != None and animationData.action != None and len(animationData.action.fcurves) > 0):
-            logger.info("\t\t animation found")
+            #print("\t\t animation found")
             #check for dataref animation by getting fcurves with the dataref group
             for fcurve in animationData.action.fcurves:
-                logger.info("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
+                #print("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
 
                 # Ben says: I'm not sure if this is the right way to do this -- when we iterate the fcurve data for this
                 # armature, EVERY bone is included in a big pile.  So we parse the data_path and if it's clearly (1) for a bone and
@@ -221,7 +221,7 @@ Final Root Bone (2.80)
                         else:
                             return
 
-                    logger.info("\t\t adding dataref animation: %s" % dataref)
+                    #print("\t\t adding dataref animation: %s" % dataref)
 
                     if len(fcurve.keyframe_points) > 1:
                         # time to add dataref to animations
@@ -235,7 +235,7 @@ Final Root Bone (2.80)
                         keyframes = []
 
                         for i,keyframe in enumerate(fcurve.keyframe_points):
-                            logger.info("\t\t adding keyframe: %6.3f" % keyframe.co[0])
+                            #print("\t\t adding keyframe: %6.3f" % keyframe.co[0])
                             keyframes.append(XPlaneKeyframe(keyframe,i,dataref,self))
 
                         # sort keyframes by frame number
