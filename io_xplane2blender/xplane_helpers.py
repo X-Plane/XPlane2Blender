@@ -1,6 +1,7 @@
 # File: xplane_helpers.py
 # Defines Helpers
 
+import itertools
 from typing import List, Optional, Tuple, Union
 import bpy
 import mathutils
@@ -15,6 +16,27 @@ from io_xplane2blender import xplane_config
 from io_xplane2blender import xplane_constants
 
 FLOAT_PRECISION = 8
+
+"""
+Given the difficulty in keeping all these words straight, these
+types have been created. Use these to keep yourself from
+running in circles
+"""
+
+"""An Object with an XPlaneLayer property"""
+PotentialRoot = Union[bpy.types.Collection, bpy.types.Object]
+
+"""
+An Object with an XPlaneLayer property that also meets all other requirements.
+It doesn't mean the contents will not have any warnings or errors
+"""
+ExportableRoot = Union[bpy.types.Collection, bpy.types.Object]
+
+"""
+The heirarchy allows these as parents, but Collections can't be real children
+"""
+BlenderParentType = Union[bpy.types.Collection, bpy.types.Object]
+
 
 def floatToStr(n):
     s = '0'
@@ -68,8 +90,9 @@ def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
 
     return [scene.collection] + get_collections_from_collection(scene.collection)
 
-def get_root_objects_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
-    return [obj for obj in scene.objects if obj.xplane.isExportableRoot]
+
+def get_exportable_roots_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
+    return [root for root in filter(is_exportable_root, itertools.chain(scene.collection.children, scene.objects))]
 
 
 def is_exportable_root(obj_or_collection: Union[bpy.types.Collection, bpy.types.Object])->bool:

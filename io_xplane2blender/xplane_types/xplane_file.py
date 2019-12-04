@@ -23,7 +23,8 @@ from io_xplane2blender import xplane_constants, xplane_helpers, xplane_props
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_types import xplane_empty, xplane_material_utils
 
-from ..xplane_helpers import floatToStr, logger
+from ..xplane_helpers import (BlenderParentType, ExportableRoot, PotentialRoot,
+                              floatToStr, logger)
 from .xplane_bone import XPlaneBone
 from .xplane_commands import XPlaneCommands
 from .xplane_header import XPlaneHeader
@@ -33,27 +34,6 @@ from .xplane_mesh import XPlaneMesh
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 
-"""
-Given the difficulty in keeping all these words straight, these
-types have been created. Use these to keep yourself from
-running in circles
-"""
-
-"""An Object with an XPlaneLayer property"""
-PotentialRoot = Union[bpy.types.Collection, bpy.types.Object]
-
-"""
-An Object with an XPlaneLayer property that also meets all other requirements.
-It doesn't mean the contents will not have any warnings or errors
-"""
-ExportableRoot = Union[bpy.types.Collection, bpy.types.Object]
-
-"""
-The heirarchy allows these as parents, but Collections can't be real children
-"""
-BlenderParentType = Union[bpy.types.Collection, bpy.types.Object]
-BlenderObject = bpy.types.Object
-BlenderCollection = bpy.types.Collection
 
 def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]:
     xplane_files: List["XPlaneFile"] = []
@@ -204,7 +184,8 @@ class XPlaneFile():
 
             Always use allowed_children instead of parent.children.
 
-            different from parent.children will not equal parent.children, when a parent is a collection
+            parent.children will not equal parent_blender_objects
+            when a parent is an exportable collection
             """
             #print(
                 #f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
