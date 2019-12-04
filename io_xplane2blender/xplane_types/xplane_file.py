@@ -115,6 +115,27 @@ class XPlaneFile():
         self.referenceMaterials = None
 
     def create_xplane_bone_hiearchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
+        def allowed_children(parent_like:Union[bpy.types.Collection, bpy.types.Object])->List[bpy.types.Object]:
+            """
+            Returns only the objects the recurse function is allowed to use.
+            If a problematic object is found, errors and warnings may be
+            emitted
+            """
+            try:
+                children = parent_like.all_objects
+            except AttributeError:
+                children = parent_like.children
+
+            allowed_children = []
+            for child_obj in children:
+                if child_obj.name not in bpy.context.scene.objects:
+                    logger.warn(
+                        f"{child_obj.name} is outside the current scene. It and any children cannot be collected"
+                    )
+                else:
+                    allowed_children.append(child_obj)
+            return allowed_children
+
         def convert_to_xplane_object(blender_obj:bpy.types.Object)->Optional[XPlaneObject]:
             assert blender_obj, "blender_obj in convert_to_xplane_object must not be None"
             converted_xplane_obj = None
@@ -155,6 +176,7 @@ class XPlaneFile():
                         blender_bone=None, #TODO: What if the parent is by bone?
                         xplane_obj=new_parent_xplane_obj,
                         parent_xplane_bone=None)
+                    #TODO: What if the parent is out of scene?
                     new_bones.append(new_parent_bone)
                     if new_parent_xplane_obj:
                         new_parent_xplane_obj.collect()
@@ -175,15 +197,20 @@ class XPlaneFile():
 
             return tmp_bone_head
 
-        def _recurse(parent: BlenderParentType, parent_bone: Optional[XPlaneBone], parent_blender_objects:BlenderObject)->None:
+        def recurse(parent: BlenderParentType, parent_bone: Optional[XPlaneBone], parent_blender_objects:BlenderObject)->None:
             """
-            Main function for recursing down tree. parent_blender_objects will be different from blender_objects will not equal parent.children, when a parent is a collection
+            Main function for recursing down tree. parent_blender_objects != parent.objects when
+            parent is a collection (coll.all_objects)
+
+            Always use allowed_children instead of parent.children.
+
+            different from parent.children will not equal parent.children, when a parent is a collection
             """
             #print(
-            #    f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
-            #    #f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
-            #    f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
-            #    sep="\n"
+                #f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
+                #f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
+                #f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
+                #sep="\n"
             #)
             #print("===========================================================")
 
@@ -242,7 +269,7 @@ class XPlaneFile():
                     # bone the armature is connected to
                     parent_xp_bone = XPlaneBone(xplane_file=self, blender_obj=arm_obj, blender_bone=bl_bone, xplane_obj=None, parent_xplane_bone=parent_xp_bone)
                     blender_bones_to_xplane_bones[bl_bone.name] = parent_xp_bone
-                    for child in bl_bone.children:
+                    for child in allowed_children(bl_bone):
                         _recurse_bone(child, parent_xp_bone)
 
                 # Run recurse for the top level bones
@@ -274,23 +301,19 @@ class XPlaneFile():
                     else:
                         parent_bone = real_bone_parents[child_obj.parent_bone]
                         assert parent_bone, "Must have parent bone for further recursion"
-                        _recurse(child_obj,
+                        recurse(child_obj,
                                  parent_bone,
-                                 child_obj.children,
+                                 allowed_children(child_obj)
                                  )
                 else: # no parent by armature-bone
                     parent_bone = new_xplane_bone
 
-                if child_obj.name not in bpy.context.scene.objects:
-                    logger.error(
-                        f"{child_obj.name} is outside the current scene. It and any children cannot be collected"
-                    )
-                    continue
 
                 assert parent_bone, "Must have parent bone for further recursion"
-                _recurse(child_obj,
+                recurse(child_obj,
                          parent_bone,
-                         child_obj.children)
+                         allowed_children(child_obj)
+                        )
 
             try:
                 if new_xplane_bone.blenderObject.type == "ARMATURE":
@@ -301,17 +324,18 @@ class XPlaneFile():
             new_xplane_bone.sortChildren()
         #--- end _recurse function -------------------------------------------
         if isinstance(exportable_root, bpy.types.Collection):
-            _recurse(parent=None,
+            all_allowed_objects = allowed_children(exportable_root)
+            recurse(parent=None,
                      parent_bone=None,
                      parent_blender_objects=list(
                          filter(
                              lambda o: o.parent is None or o.parent.name not in
-                             exportable_root.all_objects,
-                             exportable_root.all_objects)))
+                             all_allowed_objects,
+                             all_allowed_objects)))
         elif isinstance(exportable_root, bpy.types.Object):
-            _recurse(parent=exportable_root,
+            recurse(parent=exportable_root,
                      parent_bone=None,
-                     parent_blender_objects=exportable_root.children)
+                     parent_blender_objects=allowed_children(exportable_root))
         else:
             assert False, f"Unsupported root_object type {type(exportable_root)}"
 
