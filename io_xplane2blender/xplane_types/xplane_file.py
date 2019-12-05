@@ -156,7 +156,6 @@ class XPlaneFile():
                         blender_bone=None, #TODO: What if the parent is by bone?
                         xplane_obj=new_parent_xplane_obj,
                         parent_xplane_bone=None)
-                    #TODO: What if the parent is out of scene?
                     new_bones.append(new_parent_bone)
                     if new_parent_xplane_obj:
                         new_parent_xplane_obj.collect()
@@ -218,9 +217,13 @@ class XPlaneFile():
                 assert not self.rootBone, "recurse should never be assigning self.rootBone twice"
                 self.rootBone = new_xplane_bone
             try:
-                if (blender_obj.parent.name not in exportable_root.all_objects
-                    and blender_obj.parent.name in bpy.context.scene.objects):
-                    branch_head = walk_upward(new_xplane_bone)
+                if (blender_obj.parent.name not in exportable_root.all_objects):
+                    if (blender_obj.parent.name in bpy.context.scene.objects):
+                        branch_head = walk_upward(new_xplane_bone)
+                    else:
+                        logger.warn(
+                            f"'{blender_obj.name}' parent is not in the same collection and is in a different scene. "
+                            f"'{blender_obj.parent.name}' and any it's parents will not be searched for split animations")
             except AttributeError: # For whatever of many reasons, we didn't walk up
                 pass
 
