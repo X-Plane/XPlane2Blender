@@ -218,7 +218,8 @@ class XPlaneFile():
                 assert not self.rootBone, "recurse should never be assigning self.rootBone twice"
                 self.rootBone = new_xplane_bone
             try:
-                if blender_obj.parent.name not in exportable_root.all_objects:
+                if (blender_obj.parent.name not in exportable_root.all_objects
+                    and blender_obj.parent.name in bpy.context.scene.objects):
                     branch_head = walk_upward(new_xplane_bone)
             except AttributeError: # For whatever of many reasons, we didn't walk up
                 pass

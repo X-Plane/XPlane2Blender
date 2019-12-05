@@ -56,7 +56,7 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
             filterLines
         )
 
-    def test_ParentOutOfCollection(self)->None:
+    def test_ParentOutOfScene(self)->None:
         filename = inspect.stack()[0].function
 
         self.assertRootObjectExportEqualsFixture(
