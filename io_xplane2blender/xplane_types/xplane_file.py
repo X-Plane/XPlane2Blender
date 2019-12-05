@@ -289,13 +289,11 @@ class XPlaneFile():
                 else: # no parent by armature-bone
                     parent_bone = new_xplane_bone
 
-
                 assert parent_bone, "Must have parent bone for further recursion"
                 recurse(child_obj,
                          parent_bone,
                          allowed_children(child_obj)
                         )
-
             try:
                 if new_xplane_bone.blenderObject.type == "ARMATURE":
                     for xp_bone in real_bone_parents.values():

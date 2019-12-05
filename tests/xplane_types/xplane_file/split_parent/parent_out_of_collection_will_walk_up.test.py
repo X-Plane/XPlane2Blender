@@ -49,7 +49,16 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
     def test_ExpCollWalkToRoot(self)->None:
         filename = inspect.stack()[0].function
 
-        print([c.name for c in bpy.data.collections])
+        self.assertRootObjectExportEqualsFixture(
+            bpy.data.collections[filename[5:]],
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
+
+    def test_ParentOutOfCollection(self)->None:
+        filename = inspect.stack()[0].function
+
         self.assertRootObjectExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
