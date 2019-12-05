@@ -8,9 +8,6 @@ from io_xplane2blender import xplane_config
 __dirname__ = os.path.dirname(__file__)
 
 class TestCreateFromRootObjects(XPlaneTestCase):
-    def setUp(self):
-        super(TestCreateFromRootObjects, self).setUp()
-
     def test_create_files_from_root_objects(self):
         tmpDir = os.path.realpath(os.path.join(__dirname__, '../../tmp'))
 
@@ -26,7 +23,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
         self.assertEqual(xplaneFile.filename, 'root_1')
 
         # should contain 3 cubes
-        self.assertEqual(len(xplaneFile.objects), 4)
+        self.assertEqual(len(xplaneFile._bl_obj_name_to_bone), 4)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile, [
@@ -61,7 +58,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
         self.assertEqual(xplaneFile2.filename, 'custom_name')
 
         # should contain 1 cube
-        self.assertEqual(len(xplaneFile2.objects), 1)
+        self.assertEqual(len(xplaneFile2._bl_obj_name_to_bone), 1)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile2, [

@@ -38,7 +38,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
 
 
     def test_01_global_off_layers(self):
-        bpy.context.window.screen.scene = bpy.data.scenes["Scene_layers_mode"]
+        bpy.context.window.scene = bpy.data.scenes["Scene_layers_mode"]
         filename = inspect.stack()[0].function
         self.assertLayerExportEqualsFixture(
             0,
@@ -48,7 +48,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
         )
 
     def test_02_global_on_layers(self):
-        bpy.context.window.screen.scene = bpy.data.scenes["Scene_layers_mode"]
+        bpy.context.window.scene = bpy.data.scenes["Scene_layers_mode"]
         filename = inspect.stack()[0].function
         self.assertLayerExportEqualsFixture(
             1,
@@ -78,7 +78,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
     """
 
     def test_01_global_off_root_objects(self):
-        bpy.context.window.screen.scene = bpy.data.scenes["Scene_root_objects_mode"]
+        bpy.context.window.scene = bpy.data.scenes["Scene_root_objects_mode"]
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
                 bpy.data.objects["01_global_off.001"],
@@ -88,7 +88,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
             )
 
     def test_02_global_on_root_objects(self):
-        bpy.context.window.screen.scene = bpy.data.scenes["Scene_root_objects_mode"]
+        bpy.context.window.scene = bpy.data.scenes["Scene_root_objects_mode"]
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
                 bpy.data.objects["02_global_on.001"],

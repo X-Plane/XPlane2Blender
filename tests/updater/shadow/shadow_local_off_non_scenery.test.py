@@ -23,8 +23,8 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
                     bpy.data.materials["Material_shadow_should_be_on_2_shared"],]:
             self.assertTrue(mat.xplane.shadow_local)
 
-        for layer_idx in range(20):
-            self.assertIsNone(bpy.data.scenes["Scene_layers"].xplane.layers[layer_idx].get("shadow"))
+        for coll in bpy.data.collections:
+            self.assertIsNone(coll.xplane.get("shadow"))
 
         self.assertIsNone(bpy.data.objects["01_aircraft_force_global_shadows_root"].get("shadow"))
         self.assertIsNone(bpy.data.objects["02_cockpit_force_global_shadows_root"].get("shadow"))

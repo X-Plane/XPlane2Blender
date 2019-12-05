@@ -6,25 +6,13 @@ from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender import xplane_config
 
 class TestCreateFromLayers(XPlaneTestCase):
-    def setUp(self):
-        super(TestCreateFromLayers, self).setUp()
-
-        # initially create xplane layers
-        bpy.ops.scene.add_xplane_layers()
-
-    def test_getActiveBlenderLayerIndexes(self):
-        # blender by default only activates first layer
-        layers = xplane_file.getActiveBlenderLayerIndexes()
-        self.assertEqual(len(layers), 1)
-        self.assertEqual(layers[0], 0)
-
     def test_create_files_from_single_layer(self):
         tmpDir = os.path.realpath(os.path.join(__file__, '../../tmp'))
 
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
+        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
 
         # should contain 4 cubes
-        self.assertEqual(len(xplaneFile.objects), 4)
+        self.assertEqual(len(xplaneFile._bl_obj_name_to_bone), 4)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile, [
@@ -43,10 +31,11 @@ class TestCreateFromLayers(XPlaneTestCase):
                             '4 Mesh: Cube.003'
         ])
 
-        xplaneFile2 = xplane_file.createFileFromBlenderLayerIndex(1)
+
+        xplaneFile2 = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 2"])
 
         # should contain 2 cubes
-        self.assertEqual(len(xplaneFile2.objects), 2)
+        self.assertEqual(len(xplaneFile2._bl_obj_name_to_bone), 2)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile2, [
@@ -61,10 +50,10 @@ class TestCreateFromLayers(XPlaneTestCase):
                 '1 Mesh: Cube.004'
         ])
 
-        xplaneFile3 = xplane_file.createFileFromBlenderLayerIndex(2)
+        xplaneFile3 = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 3"])
 
         # should contain 4 cubes
-        self.assertEqual(len(xplaneFile3.objects), 5)
+        self.assertEqual(len(xplaneFile3._bl_obj_name_to_bone), 5)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile3, [
