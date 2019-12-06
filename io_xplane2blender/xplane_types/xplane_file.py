@@ -101,6 +101,8 @@ class XPlaneFile():
             If a problematic object is found, errors and warnings may be
             emitted
             """
+            # bones also have a .children attribute
+            assert isinstance(parent_like, (bpy.types.Collection, bpy.types.Object)), "Only Collections and Objects are allowed"
             try:
                 children = parent_like.all_objects
             except AttributeError:
@@ -254,7 +256,7 @@ class XPlaneFile():
                     # bone the armature is connected to
                     parent_xp_bone = XPlaneBone(xplane_file=self, blender_obj=arm_obj, blender_bone=bl_bone, xplane_obj=None, parent_xplane_bone=parent_xp_bone)
                     blender_bones_to_xplane_bones[bl_bone.name] = parent_xp_bone
-                    for child in allowed_children(bl_bone):
+                    for child in bl_bone.children:
                         _recurse_bone(child, parent_xp_bone)
 
                 # Run recurse for the top level bones
