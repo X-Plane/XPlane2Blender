@@ -49,7 +49,8 @@ def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XP
     def log_nested_roots(exportable_roots: List[PotentialRoot]):
         err = "Exportable Roots cannot be nested, unmark {} as a Root or change its parentage"
         if isinstance(exportable_root, bpy.types.Collection):
-            nested_errors.update(err.format(obj.name) for obj in filter(xplane_helpers.is_exportable_root, exportable_root.all_objects))
+            get_name = lambda r: r.name
+            nested_errors.update(err.format(obj.name) for obj in filter(xplane_helpers.is_exportable_root, sorted(exportable_root.all_objects, key=get_name)))
         for child in exportable_roots:
             if xplane_helpers.is_exportable_root(child):
                 nested_errors.add(err.format(child.name))
@@ -104,7 +105,7 @@ class XPlaneFile():
             # bones also have a .children attribute
             assert isinstance(parent_like, (bpy.types.Collection, bpy.types.Object)), "Only Collections and Objects are allowed"
             try:
-                children = parent_like.all_objects
+                children = sorted(parent_like.all_objects, key=lambda r: r.name)
             except AttributeError:
                 children = parent_like.children
 
@@ -146,16 +147,28 @@ class XPlaneFile():
             def walk_upward_recursive(current_bone: XPlaneBone):
                 nonlocal tmp_bone_head
                 # If we haven't reached the top yet, make a bone for parent and move the head
-                if current_bone.blenderObject.parent:
+                blender_obj = current_bone.blenderObject
+                parent_obj = blender_obj.parent
+                if parent_obj:
                     #--- This is all the manual work
                     # the __init__ of XPlaneBone and XPlaneObject, and _recurse normally does for us
-                    new_parent_xplane_obj = convert_to_xplane_object(current_bone.blenderObject.parent)
+                    #----------------------------------------------------------
+                    new_parent_xplane_obj = convert_to_xplane_object(parent_obj)
                     if new_parent_xplane_obj:
                         new_parent_xplane_obj.export_animation_only = True
+                    try:
+                        if parent_obj.type == "ARMATURE" and blender_obj.parent_type == "BONE":
+                            parent_bl_bone = parent_obj.data.bones[blender_obj.parent_bone]
+                        else:
+                            parent_bl_bone = None
+                    except KeyError as e:
+                        parent_bl_bone = None
+
                     new_parent_bone = XPlaneBone(
                         xplane_file=self,
-                        blender_obj=current_bone.blenderObject.parent,
-                        blender_bone=None, #TODO: What if the parent is by bone?
+                        blender_obj=parent_obj,
+                        #TODO: What if the parent is a nested bone? (bug #501)
+                        blender_bone=parent_bl_bone,
                         xplane_obj=new_parent_xplane_obj,
                         parent_xplane_bone=None)
                     new_bones.append(new_parent_bone)
@@ -169,7 +182,7 @@ class XPlaneFile():
             walk_upward_recursive(tmp_bone_head)
             index = o_bone_parent.children.index(walk_start_bone)
             o_bone_parent.children.remove(walk_start_bone)
-            #TODO: You aren't using index and insert
+            #TODO: You aren't using index and insert (#503)
             o_bone_parent.children.append(tmp_bone_head)
             tmp_bone_head.parent = o_bone_parent
 
