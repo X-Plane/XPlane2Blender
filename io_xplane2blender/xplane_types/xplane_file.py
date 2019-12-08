@@ -21,7 +21,7 @@ import bpy
 import mathutils
 from io_xplane2blender import xplane_constants, xplane_helpers, xplane_props
 from io_xplane2blender.tests import test_creation_helpers
-from io_xplane2blender.xplane_types import xplane_empty, xplane_material_utils
+from io_xplane2blender.xplane_types import xplane_empty, xplane_material_utils, xplane_material
 
 from ..xplane_helpers import (BlenderParentType, ExportableRoot, PotentialRoot,
                               floatToStr, logger)
@@ -75,25 +75,27 @@ class XPlaneFile():
     the settings affecting the output
     """
     def __init__(self, filename:str, options:xplane_props.XPlaneLayer)->None:
+        # A mapping of Blender Object names and the XPlaneBones they were turned into
+        # these are garunteed to be under the root bone
+        self.commands = XPlaneCommands(self)
         self.filename = filename
-
         self.options = options
 
-        self.mesh = XPlaneMesh()
-
         self.lights = XPlaneLights()
+        self.mesh = XPlaneMesh()
+        self._bl_obj_name_to_bone:Dict[str, XPlaneBone] = {}
 
-        self.header = XPlaneHeader(self, 8)
-
-        self.commands = XPlaneCommands(self)
+        # materials representing the reference for export
+        self.referenceMaterials:List[xplane_material.XPlaneMaterial] = None
 
         # the root bone: origin for all animations/objects
         # This isn't really a None type, it is created immediately
         # after in create_xplane_bone_hierarchy
         self.rootBone:XPlaneBone = None
 
-        # materials representing the reference for export
-        self.referenceMaterials = None
+        # Header assumes that its xplaneFile is completely formed
+        self.header = XPlaneHeader(self, 8)
+
 
     def create_xplane_bone_hiearchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
         def allowed_children(parent_like:Union[bpy.types.Collection, bpy.types.Object])->List[bpy.types.Object]:
@@ -133,23 +135,29 @@ class XPlaneFile():
 
             return converted_xplane_obj
 
-        def walk_upward(walk_start_bone:XPlaneBone)->XPlaneBone:
+        def walk_upward(walk_start_bone:XPlaneBone):
             """
-            Walks upwards the parent-child tree.
-
-            start-bone must
+            Re-oganizes the XPlaneBone tree to include
+            a Blender Object's out of collection parents
             """
-            assert walk_start_bone.blenderObject
+            assert walk_start_bone.blenderObject.parent, "Walk up must have at least one parent to travel to"
 
-            tmp_bone_head = walk_start_bone
-            o_bone_parent = walk_start_bone.parent
             new_bones: List[XPlaneBone] = []
-            def walk_upward_recursive(current_bone: XPlaneBone):
-                nonlocal tmp_bone_head
+            def walk_upward_recursive(current_bone: XPlaneBone)->XPlaneBone:
+                """
+                Recurse up by parent until you find a reuse opportutiny
+                or nothing. Returns the top of the branch which must be
+                reconnected
+                """
                 # If we haven't reached the top yet, make a bone for parent and move the head
                 blender_obj = current_bone.blenderObject
                 parent_obj = blender_obj.parent
-                if parent_obj:
+                #--- Check for a reuse opportunity ------------------------
+                if parent_obj and parent_obj.name in self._bl_obj_name_to_bone:
+                    #existing_parent_bone = self._bl_obj_name_to_bone[parent_obj.name]
+                    #existing_parent_bone.
+                    return current_bone
+                elif parent_obj:
                     #--- This is all the manual work
                     # the __init__ of XPlaneBone and XPlaneObject, and _recurse normally does for us
                     #----------------------------------------------------------
@@ -171,25 +179,34 @@ class XPlaneFile():
                         blender_bone=parent_bl_bone,
                         xplane_obj=new_parent_xplane_obj,
                         parent_xplane_bone=None)
+
                     new_bones.append(new_parent_bone)
                     if new_parent_xplane_obj:
                         new_parent_xplane_obj.collect()
                     new_parent_bone.children.append(current_bone)
                     current_bone.parent = new_parent_bone
-                    tmp_bone_head = new_parent_bone
-                    walk_upward_recursive(new_parent_bone)
+                    return walk_upward_recursive(new_parent_bone)
+                else:
+                    return current_bone
 
-            walk_upward_recursive(tmp_bone_head)
-            index = o_bone_parent.children.index(walk_start_bone)
-            o_bone_parent.children.remove(walk_start_bone)
-            #TODO: You aren't using index and insert (#503)
-            o_bone_parent.children.append(tmp_bone_head)
-            tmp_bone_head.parent = o_bone_parent
+            top_of_branch = walk_upward_recursive(walk_start_bone)
+            # 2 Types of reconnection
+            # - Type A
+            #   New branch needs re-connection to the root
+            # - Type B
+            #   Re-use of a previously walked to Blender Object out of collection
+            if not top_of_branch.blenderObject.parent:
+                reconnect_bone = self.rootBone
+            else:
+                reconnect_bone = self._bl_obj_name_to_bone[top_of_branch.blenderObject.parent.name]
+
+            self.rootBone.children.remove(walk_start_bone)
+            reconnect_bone.children.append(top_of_branch)
+            top_of_branch.parent = self.rootBone
 
             # This time we will have a parent!
             [bone.collectAnimations() for bone in new_bones]
-
-            return tmp_bone_head
+            self._bl_obj_name_to_bone.update({bone.blenderObject.name:bone for bone in new_bones})
 
         def recurse(parent: Optional[bpy.types.Object], parent_bone: Optional[XPlaneBone], parent_blender_objects:bpy.types.Object)->None:
             """
@@ -216,7 +233,7 @@ class XPlaneFile():
                 new_xplane_obj = None
             #print(f"new_xplane_obj:\n{new_xplane_obj}")
 
-            is_root_bone = not parent_bone
+            is_root_bone = not parent_bone # True for Exportable Collection and Object
             if (is_root_bone
                 and isinstance(exportable_root, bpy.types.Collection)):
                 new_xplane_bone = XPlaneBone(self, blender_obj=None)
@@ -227,6 +244,7 @@ class XPlaneFile():
                     blender_bone=None,
                     xplane_obj=new_xplane_obj,
                     parent_xplane_bone=parent_bone)
+                self._bl_obj_name_to_bone[blender_obj.name] = new_xplane_bone
 
             if is_root_bone:
                 assert not self.rootBone, "recurse should never be assigning self.rootBone twice"
@@ -234,7 +252,7 @@ class XPlaneFile():
             try:
                 if (blender_obj.parent.name not in exportable_root.all_objects):
                     if (blender_obj.parent.name in bpy.context.scene.objects):
-                        branch_head = walk_upward(new_xplane_bone)
+                        walk_upward(new_xplane_bone)
                     else:
                         logger.warn(
                             f"'{blender_obj.name}' parent is not in the same collection and is in a different scene. "
@@ -345,7 +363,7 @@ class XPlaneFile():
         """
         assert self.rootBone, "Must be called after collection is finished"
 
-        def get_xplane_objects_from_bone_tree(bone:"XPlaneBone")->List["XPlaneObjects"]:
+        def get_xplane_objects_from_bone_tree(bone:XPlaneBone)->List["XPlaneObjects"]:
             xp_objects = []
             if bone.xplaneObject:
                 xp_objects.append(bone.xplaneObject)

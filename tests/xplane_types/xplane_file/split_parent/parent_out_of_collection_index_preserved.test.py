@@ -56,4 +56,35 @@ class TestParentOutOfCollectionIndexPreserved(XPlaneTestCase):
             filterLines
         )
 
+    def test_1_reuse_of_parent(self)->None:
+        filename = inspect.stack()[0].function
+
+        self.assertRootObjectExportEqualsFixture(
+            bpy.data.collections[filename[5:]],
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
+
+    def test_1_reuse_of_parent_out_of_order(self)->None:
+        filename = inspect.stack()[0].function
+
+        self.assertRootObjectExportEqualsFixture(
+            bpy.data.collections[filename[5:]],
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
+
+    def test_2_reuse_of_parent(self)->None:
+        filename = inspect.stack()[0].function
+
+        self.assertRootObjectExportEqualsFixture(
+            bpy.data.collections[filename[5:]],
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
+
+
 runTestCases([TestParentOutOfCollectionIndexPreserved])
