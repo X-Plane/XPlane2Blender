@@ -124,13 +124,11 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
         for scene in bpy.data.scenes:
             # set compositeTextures to False
             scene.xplane.compositeTextures = False
-            logger.info('Set "Composite Textures" to False')
 
             if scene.xplane and scene.xplane.layers and len(scene.xplane.layers) > 0:
                 for layer in scene.xplane.layers:
                     # set autodetectTextures to False
                     layer.autodetectTextures = False
-                    logger.info('Turned layer "%s"\'s Autodetect Textures property to off' % layer.name)
 
                     # set export mode to cockpit, if cockpit was previously enabled
                     # TODO: Have users actually exported scenery objects before?
@@ -138,10 +136,12 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                     prev_export_type = layer.export_type
                     if layer.cockpit:
                         layer.export_type = 'cockpit'
+                        logger.info('Changed layer "%s"\'s Export Type from "%s" to "%s"' % (layer.name, prev_export_type, layer.export_type))
                     else:
                         layer.export_type = 'aircraft'
 
-                    logger.info('Changed layer "%s"\'s Export Type from "%s" to "%s"' % (layer.name, prev_export_type, layer.export_type))
+        logger.info("Unless otherwise noted, changed every layer's Export Type to 'Aircraft'")
+        logger.info("For all layers, in all scenes, set 'Composite Textures' and 'Autodetect Textures' to false")
 
     if last_version < xplane_helpers.VerStruct.parse_version('3.4.0'):
         for arm in bpy.data.armatures:
@@ -195,6 +195,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                 pass
 
         def _print_error_table(material_uses: Dict[bpy.types.Material, List[UsedLayerInfo]])->None:
+            error_count = len(logger.findErrors())
             for mat, layers_used_in in material_uses.items():
                 if (len(layers_used_in) > 1
                     and any(layers_used_in[0].cast_shadow != l.cast_shadow for l in layers_used_in)): # Checks for mixed use of Cast Shadow (Global)
@@ -210,17 +211,19 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                                 ]
                             )
                         )
-            logger.info("'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'."
-                        " The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)'"
-                        " is manually made uniform again, which could involve making"
-                        " duplicate materials for each OBJ")
+            if len(logger.findErrors()) > error_count:
+                logger.info("'Cast shadows' has been replaced by the Material's 'Cast Shadows (Local)'."
+                            " The above OBJs may have incorrect shadows unless 'Cast Shadows (Local)'"
+                            " is manually made uniform again, which could involve making"
+                            " duplicate materials for each OBJ")
 
         # This way we'll be able to map the usage (and shared-ness) of a material
         material_uses = collections.defaultdict(list) # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
 
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
-            for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
+            #TODO: This change needs a very careful check!
+            for root_obj in scene.collection.children[:] + [obj for obj in scene.objects if obj.xplane.isExportableRoot]:
                 layer_options = root_obj.xplane.layer
                 if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
                     layer_options["shadow"] = True
@@ -235,8 +238,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                 for mat in potential_materials:
                     material_uses[mat].append(used_layer_info)
 
-            # Attempt to find shared usage, print out a table displaying issues
-            _print_error_table(material_uses)
+        _print_error_table(material_uses)
 
         # They might not all be root objects, but all objects have a XPlaneLayer property group!
         for obj in bpy.data.objects:

@@ -1,6 +1,7 @@
 # File: xplane_helpers.py
 # Defines Helpers
 
+import itertools
 from typing import List, Optional, Tuple, Union
 import bpy
 import mathutils
@@ -15,6 +16,28 @@ from io_xplane2blender import xplane_config
 from io_xplane2blender import xplane_constants
 
 FLOAT_PRECISION = 8
+
+"""
+Given the difficulty in keeping all these words straight, these
+types have been created. Use these to keep yourself from
+running in circles
+"""
+
+"""Something with an XPlaneLayer property"""
+PotentialRoot = Union[bpy.types.Collection, bpy.types.Object]
+
+"""
+Something with an XPlaneLayer property that also meets all other requirements.
+It does not garuntee an error or warning free export, however
+"""
+ExportableRoot = Union[bpy.types.Collection, bpy.types.Object]
+
+"""
+Something that has a .children property. A collection and object's
+children are not compatible
+"""
+BlenderParentType = Union[bpy.types.Collection, bpy.types.Object]
+
 
 def floatToStr(n):
     s = '0'
@@ -42,16 +65,22 @@ def get_plugin_resources_folder()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
 
 
-def get_potential_objects_in_root_object(root_object: bpy.types.Object)->List[bpy.types.Object]:
-    assert root_object.xplane.isExportableRoot, "Must be Root Object"
+def get_potential_objects_in_root_object(root: PotentialRoot)->List[bpy.types.Object]:
+    def is_potential_child(obj: bpy.types.Object)->bool:
+        return obj.type in {"MESH", "LIGHT", "ARMATURE", "EMPTY"}
+
     def collect_children(obj: bpy.types.Object)->List[bpy.types.Object]:
         objects = [] # type: List[bpy.types.Object]
         for child in obj.children:
-            if child.type in {"MESH", "LIGHT", "ARMATURE", "EMPTY"}:
+            if is_potential_child(child):
                 objects.append(child)
             objects.extend(collect_children(child))
         return objects
-    return collect_children(root_object)
+
+    if isinstance(root, bpy.types.Object):
+        return collect_children(root)
+    else:
+        return [obj for obj in root.all_objects if is_potential_child(obj)]
 
 
 def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
@@ -68,8 +97,9 @@ def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
 
     return [scene.collection] + get_collections_from_collection(scene.collection)
 
-def get_root_objects_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
-    return [obj for obj in scene.objects if obj.xplane.isExportableRoot]
+
+def get_exportable_roots_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
+    return [root for root in filter(is_exportable_root, itertools.chain(scene.collection.children, scene.objects))]
 
 
 def is_exportable_root(obj_or_collection: Union[bpy.types.Collection, bpy.types.Object])->bool:

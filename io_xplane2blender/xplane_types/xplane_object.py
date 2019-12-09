@@ -1,3 +1,5 @@
+import itertools
+
 import bpy
 import mathutils
 
@@ -15,6 +17,9 @@ class XPlaneObject():
     tied with the Blender Object it is based off.
     """
     def __init__(self, blenderObject: bpy.types.Object)->None:
+        self.export_animation_only = False # Includes Blender and X-Plane
+                                           # keyframes and custom animation properties.
+                                           # Only set to true for split parent cases
         self.blenderObject = blenderObject
 
         #This is assigned and tied together in in XPlaneBone's constructor
@@ -43,8 +48,12 @@ class XPlaneObject():
             f"Lod: {self.lod[:]}",
             f"Weight: {self.weight}"))
 
-    def collect(self):
+    def collect(self)->None:
         assert self.xplaneBone is not None, "xplaneBone must not be None!"
+        if self.export_animation_only:
+            # add anim attributes from datarefs and custom anim attributes
+            self.collectAnimAttributes()
+            return
 
         # add custom attributes
         self.collectCustomAttributes()
@@ -58,14 +67,6 @@ class XPlaneObject():
         self.attributes.order()
         self.animAttributes.order()
         self.cockpitAttributes.order()
-
-    # Method: hasAnimAttributes
-    # Checks if the object has animation attributes.
-    #
-    # Returns:
-    #   bool - True if object has animtaion attributes, False if not.
-    def hasAnimAttributes(self):
-        return (hasattr(self, 'animAttributes') and len(self.animAttributes) > 0)
 
     def collectCustomAttributes(self):
         xplaneFile = self.xplaneBone.xplaneFile
@@ -105,18 +106,10 @@ class XPlaneObject():
         if hasattr(self.blenderObject.xplane, 'override_weight') and self.blenderObject.xplane.override_weight:
             weight = self.blenderObject.xplane.weight
         else:
-            # add max weight of attributes
-            max_attr_weight = 0
-
-            for attr in self.attributes:
-                if self.attributes[attr].weight > max_attr_weight:
-                    max_attr_weight = self.attributes[attr].weight
-
-            for attr in self.cockpitAttributes:
-                if self.cockpitAttributes[attr].weight > max_attr_weight:
-                    max_attr_weight = self.cockpitAttributes[attr].weight
-
-            weight += max_attr_weight
+            try:
+                weight += max([attr.weight for attr in itertools.chain(self.attributes.values(), self.cockpitAttributes.values())])
+            except ValueError:
+                pass
 
         self.weight = weight
 
@@ -125,16 +118,19 @@ class XPlaneObject():
             self.conditions = self.blenderObject.xplane.conditions
 
     # Returns OBJ code for this object
-    def write(self):
+    def write(self)->str:
+        if self.export_animation_only:
+            return ""
+
         debug = getDebug()
-        indent = self.xplaneBone.getIndent()
-        o = ''
+        o = ""
 
         xplaneFile = self.xplaneBone.xplaneFile
         commands =  xplaneFile.commands
 
         if debug:
-            o += "%s# %s: %s\tweight: %d\n" % (indent, self.type, self.name, self.weight)
+            indent = self.xplaneBone.getIndent()
+            o += f"{indent}# {self.type}: {self.name}\tweight: {self.weight}\n"
 
         o += commands.writeReseters(self)
 
