@@ -65,16 +65,22 @@ def get_plugin_resources_folder()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
 
 
-def get_potential_objects_in_root_object(root_object: bpy.types.Object)->List[bpy.types.Object]:
-    assert root_object.xplane.isExportableRoot, "Must be Root Object"
+def get_potential_objects_in_root_object(root: PotentialRoot)->List[bpy.types.Object]:
+    def is_potential_child(obj: bpy.types.Object)->bool:
+        return obj.type in {"MESH", "LIGHT", "ARMATURE", "EMPTY"}
+
     def collect_children(obj: bpy.types.Object)->List[bpy.types.Object]:
         objects = [] # type: List[bpy.types.Object]
         for child in obj.children:
-            if child.type in {"MESH", "LIGHT", "ARMATURE", "EMPTY"}:
+            if is_potential_child(child):
                 objects.append(child)
             objects.extend(collect_children(child))
         return objects
-    return collect_children(root_object)
+
+    if isinstance(root, bpy.types.Object):
+        return collect_children(root)
+    else:
+        return [obj for obj in root.all_objects if is_potential_child(obj)]
 
 
 def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:

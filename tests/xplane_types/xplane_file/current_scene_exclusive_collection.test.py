@@ -10,9 +10,7 @@ __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
     return isinstance(line[0],str) and\
-            ("POINT_COUNTS" in line[0] or\
-             "VT" in line[0] or\
-             "TRIS" in line[0])
+            ("POINT_COUNTS" in line[0])
 
 class TestCurrentSceneExclusiveCollection(XPlaneTestCase):
     def test_current_scene_exclusive_collection(self):

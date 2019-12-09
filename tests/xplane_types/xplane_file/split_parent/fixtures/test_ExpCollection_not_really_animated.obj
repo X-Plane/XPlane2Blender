@@ -39,13 +39,13 @@ IDX	17
 	# MATERIAL: Material
 	ATTR_shiny_rat	0.5
 	TRIS	0 6
-	# 1 Mesh: Plane_xplane_keyframes
-	# MESH: Plane_xplane_keyframes	weight: 0
-	# MATERIAL: Material
-	TRIS	12 6
 	# 1 Mesh: Plane_no_keyframes
 	# MESH: Plane_no_keyframes	weight: 0
 	# MATERIAL: Material
 	TRIS	6 6
+	# 1 Mesh: Plane_xplane_keyframes
+	# MESH: Plane_xplane_keyframes	weight: 0
+	# MATERIAL: Material
+	TRIS	12 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+57.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+58.NO_BUILD_NUMBR

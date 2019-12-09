@@ -222,7 +222,8 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
 
         for scene in bpy.data.scenes:
             # From this we get the potential objects in an
-            for root_obj in xplane_helpers.get_root_objects_in_scene(scene):
+            #TODO: This change needs a very careful check!
+            for root_obj in scene.collection.children[:] + [obj for obj in scene.objects if obj.xplane.isExportableRoot]:
                 layer_options = root_obj.xplane.layer
                 if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
                     layer_options["shadow"] = True

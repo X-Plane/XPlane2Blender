@@ -41,14 +41,17 @@ class TestRecursiveCollectionEdgeCases(XPlaneTestCase):
             filterLines
         )
 
-    def test_Exportable_out_of_scene_error(self):
-        out = self.exportRootObject(bpy.data.objects["Exportable_child_out_of_scene_error"])
-        self.assertLoggerErrors(1)
-
-    def test_NoDuplicates(self):
-        pass
-
-
+    def test_Exportable_child_out_of_scene_warn_and_ignore(self):
+        filename = inspect.stack()[0].function
+        def filterLines(line):
+            return isinstance(line[0],str) and\
+                    ("TRIS" in line[0])
+        self.assertRootObjectExportEqualsFixture(
+            bpy.data.objects[filename[5:]],
+            os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filename,
+            filterLines
+        )
 
 
 runTestCases([TestRecursiveCollectionEdgeCases])

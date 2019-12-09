@@ -3,7 +3,7 @@ import shutil
 import sys
 import unittest
 
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
 
@@ -25,6 +25,8 @@ FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
 TMP_DIR = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
+
+FilterLinesCallback = Callable[[List[Union[float, str]]], bool]
 
 class XPlaneTestCase(unittest.TestCase):
     def setUp(self, useLogger = True):
@@ -129,7 +131,11 @@ class XPlaneTestCase(unittest.TestCase):
 
         return lines
 
-    def assertFilesEqual(self, a:str, b:str, filterCallback = None, floatTolerance = None):
+    def assertFilesEqual(self,
+                         a: str,
+                         b: str,
+                         filterCallback:Optional[FilterLinesCallback] = None,
+                         floatTolerance:float = None):
         '''
         a and b should be the contents of files a and b as returned
         from open(file).read()
@@ -192,13 +198,29 @@ class XPlaneTestCase(unittest.TestCase):
                 else:
                     self.assertEquals(segmentA, segmentB)
 
-    def assertFileOutputEqualsFixture(self, fileOutput:str, fixturePath:str, filterCallback = None, floatTolerance:int = None)->None:
+    def assertFileOutputEqualsFixture(
+            self,
+            fileOutput:str,
+            fixturePath:str,
+            filterCallback:Optional[FilterLinesCallback] = None,
+            floatTolerance:Optional[float] = None) -> None:
+        """
+        Compares the output of XPlaneFile.write (a \n separated str) to a fixture on disk.
+
+        A filterCallback ensures only matching lines are compared.
+        Highly recommended, with as simple a function as possible to prevent fixture fragility.
+        """
         with open(fixturePath, "r") as fixtureFile:
             fixtureOutput = fixtureFile.read()
 
         return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
 
-    def assertFileTmpEqualsFixture(self,tmpPath,fixturePath,filterCallback=None, floatTolerance=None):
+    def assertFileTmpEqualsFixture(
+            self,
+            tmpPath:str,
+            fixturePath:str,
+            filterCallback: Optional[FilterLinesCallback] = None,
+            floatTolerance: Optional[float] = None):
         tmpFile = open(tmpPath, 'r')
         tmpOutput = tmpFile.read()
         tmpFile.close()
@@ -225,9 +247,9 @@ class XPlaneTestCase(unittest.TestCase):
     def assertLayerExportEqualsFixture(self,
             layer:int,
             fixturePath:str,
-            tmpFilename:str = None,
-            filterCallback:Callable[[List[Union[float, str]]], bool] = None,
-            floatTolerance = None)->None:
+            tmpFilename:Optional[str] = None,
+            filterCallback:Optional[FilterLinesCallback] = None,
+            floatTolerance:Optional[float] = None)->None:
         if not ('-q' in sys.argv or '--quiet' in sys.argv):
             print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
 
@@ -239,13 +261,23 @@ class XPlaneTestCase(unittest.TestCase):
             root_object:Union[bpy.types.Collection, bpy.types.Object, str],
             fixturePath: str = None,
             tmpFilename: Optional[str] = None,
-            filterCallback: Callable[[List[Union[float, str]]], bool] = None,
+            filterCallback:Optional[FilterLinesCallback] = None,
             floatTolerance: Optional[float] = None):
+        """
+        Exports only a specific exportable root and compares the output
+        to a fixutre.
+
+        If filterCallback is None, no filter (besides stripping comments)
+        will be used.
+        """
         out = self.exportRootObject(root_object, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     # asserts that an attributes object equals a dict
-    def assertAttributesEqualDict(self, attrs, d, floatTolerance = None):
+    def assertAttributesEqualDict(self,
+                                  attrs:List[str],
+                                  d:Dict[str, Any],
+                                  floatTolerance:Optional[float] = None):
         self.assertEquals(len(d), len(attrs), 'Attribute lists have different length')
 
         for name in attrs:
