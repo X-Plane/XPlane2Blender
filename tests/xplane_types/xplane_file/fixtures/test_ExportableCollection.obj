@@ -14989,47 +14989,47 @@ IDX10	13600	13601	13602	13603	13604	13605	13606	13607	13608	13609
 IDX10	13610	13611	13612	13613	13614	13615	13616	13617	13618	13619
 
 # 0 ROOT
-# 1 Mesh: Torus_reduce_folders
-# MESH: Torus_reduce_folders	weight: 0
-# MATERIAL: Material
-ATTR_shiny_rat	0.5
-TRIS	10164 3456
-# 1 Empty: regular_cases
-# EMPTY: regular_cases	weight: 0
-	# 2 Armature: Armature_cases
-	# ARMATURE: Armature_cases	weight: 0
-		# 3 Bone: Bone
-			# 4 Mesh: Sphere_by_bone
-			# MESH: Sphere_by_bone	weight: 0
-			# MATERIAL: Material
-			TRIS	1524 2880
-		# 3 Mesh: Sphere_by_datablock
-		# MESH: Sphere_by_datablock	weight: 0
-		# MATERIAL: Material
-		TRIS	4404 2880
-		# 3 Mesh: Sphere_by_object
-		# MESH: Sphere_by_object	weight: 0
-		# MATERIAL: Material
-		TRIS	7284 2880
-	# 2 Mesh: Cylinder_by_object_cases
-	# MESH: Cylinder_by_object_cases	weight: 0
+	# 1 Mesh: Cube_reduce_folders
+	# MESH: Cube_reduce_folders	weight: 0
 	# MATERIAL: Material
-	TRIS	780 372
-		# 3 Mesh: Cylinder_by_object.001
-		# MESH: Cylinder_by_object.001	weight: 0
+	ATTR_shiny_rat	0.5
+	TRIS	0 36
+	# 1 Mesh: Cylinder_reduce_folders
+	# MESH: Cylinder_reduce_folders	weight: 0
+	# MATERIAL: Material
+	TRIS	1152 372
+	# 1 Mesh: Torus_reduce_folders
+	# MESH: Torus_reduce_folders	weight: 0
+	# MATERIAL: Material
+	TRIS	10164 3456
+	# 1 Empty: regular_cases
+	# EMPTY: regular_cases	weight: 0
+		# 2 Armature: Armature_cases
+		# ARMATURE: Armature_cases	weight: 0
+			# 3 Bone: Bone
+				# 4 Mesh: Sphere_by_bone
+				# MESH: Sphere_by_bone	weight: 0
+				# MATERIAL: Material
+				TRIS	1524 2880
+			# 3 Mesh: Sphere_by_datablock
+			# MESH: Sphere_by_datablock	weight: 0
+			# MATERIAL: Material
+			TRIS	4404 2880
+			# 3 Mesh: Sphere_by_object
+			# MESH: Sphere_by_object	weight: 0
+			# MATERIAL: Material
+			TRIS	7284 2880
+		# 2 Mesh: Cylinder_by_object_cases
+		# MESH: Cylinder_by_object_cases	weight: 0
 		# MATERIAL: Material
-		TRIS	36 372
-		# 3 Mesh: Cylinder_by_object.002
-		# MESH: Cylinder_by_object.002	weight: 0
-		# MATERIAL: Material
-		TRIS	408 372
-# 1 Mesh: Cube_reduce_folders
-# MESH: Cube_reduce_folders	weight: 0
-# MATERIAL: Material
-TRIS	0 36
-# 1 Mesh: Cylinder_reduce_folders
-# MESH: Cylinder_reduce_folders	weight: 0
-# MATERIAL: Material
-TRIS	1152 372
+		TRIS	780 372
+			# 3 Mesh: Cylinder_by_object.001
+			# MESH: Cylinder_by_object.001	weight: 0
+			# MATERIAL: Material
+			TRIS	36 372
+			# 3 Mesh: Cylinder_by_object.002
+			# MESH: Cylinder_by_object.002	weight: 0
+			# MATERIAL: Material
+			TRIS	408 372
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+54.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+58.NO_BUILD_NUMBR

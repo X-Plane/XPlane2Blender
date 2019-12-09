@@ -41,8 +41,9 @@ class XPlaneMesh():
         xplaneObjects = sorted(xplaneObjects, key = getSortKey)
 
         for xplaneObject in xplaneObjects:
-            # skip non-mesh objects and objects that do not have a xplane bone
-            if xplaneObject.type == 'MESH' and xplaneObject.xplaneBone:
+            if (xplaneObject.type == 'MESH'
+                and xplaneObject.xplaneBone
+                and not xplaneObject.export_animation_only):
                 xplaneObject.indices[0] = len(self.indices)
                 first_vertice_of_this_xplaneObject = len(self.vertices)
 

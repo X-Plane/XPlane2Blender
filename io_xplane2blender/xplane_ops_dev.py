@@ -77,55 +77,16 @@ class SCENE_OT_dev_create_lights_txt_summary(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class SCENE_OT_dev_layer_names_from_objects(bpy.types.Operator):
-    bl_label = 'Create Layer Names from Objects'
-    bl_idname = 'scene.dev_layer_names_from_objects'
-    bl_description = 'Create layer names from objects, stripping Cube_ and Empty_ and prepending "test_" to them'
-
-    name_prefix = "test_"
-    clean_data_block_string = True
-
-    def execute(self,context):
-        for layer in bpy.context.scene.xplane.layers:
-            layer.name = ""
-
-        objects = bpy.context.scene.objects
-        xplane_layers = bpy.context.scene.xplane.layers
-        for object in sorted(objects.keys()):
-            if objects[object].parent != None:
-                continue
-
-            cleaned_name = objects[object].name
-            if self.clean_data_block_string:
-                m = re.match("(Cube_|Empty_)(.*)", objects[object].name)
-                if m != None:
-                    cleaned_name = m.group(2)
-
-            #Find first true
-            idx = 0
-            for obj_layer_idx in objects[object].layers:
-                print(idx)
-                if obj_layer_idx == True:
-                    break
-                idx += 1
-
-            xplane_layers[idx].name = self.name_prefix + cleaned_name
-        return {'FINISHED'}
-
-
 class SCENE_OT_dev_root_names_from_objects(bpy.types.Operator):
-    bl_label = "Create Layer Names"
+    bl_label = "Create Fixture Names From Roots"
     bl_idname = "scene.dev_root_names_from_objects"
-    bl_description = "Creates root object names from root objects, prepending 'test_'"
+    bl_description = "Changes each exportable root's Name property to 'test_' + root.name"
 
     name_prefix = "test_"
 
     def execute(self, context):
-        for ob in context.scene.objects:
-            if not ob.xplane.isExportableRoot:
-                continue
-            else:
-                ob.xplane.layer.name = self.name_prefix + ob.name
+        for root in xplane_helpers.get_exportable_roots_in_scene(context.scene):
+            root.xplane.layer.name = self.name_prefix + root.name
         return {'FINISHED'}
 
 
@@ -142,12 +103,11 @@ class SCENE_OT_dev_rerun_updater(bpy.types.Operator):
 
         fake_version_str = bpy.context.scene.xplane.dev_fake_xplane2blender_version
         io_xplane2blender.xplane_updater.update(xplane_helpers.VerStruct.parse_version(fake_version_str),logger)
-        return { 'FINISHED' }
+        return {'FINISHED'}
 
 _ops_dev = (
     SCENE_OT_dev_apply_default_material_to_all,
     SCENE_OT_dev_create_lights_txt_summary,
-    SCENE_OT_dev_layer_names_from_objects,
     SCENE_OT_dev_root_names_from_objects,
     SCENE_OT_dev_rerun_updater,
 )
