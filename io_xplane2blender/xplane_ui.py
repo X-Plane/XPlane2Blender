@@ -214,7 +214,7 @@ def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
             col_w_objs.extend(get_collections_w_objs(child))
         return col_w_objs
 
-    layout.label(text="Collections w/ Objects")
+    layout.label(text="Collections")
     for collection in list(dict.fromkeys(get_collections_w_objs(scene.collection))):
         collection_layer_layout(layout, collection)
 
