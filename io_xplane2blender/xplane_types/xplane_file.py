@@ -202,7 +202,7 @@ class XPlaneFile():
 
             self.rootBone.children.remove(walk_start_bone)
             reconnect_bone.children.append(top_of_branch)
-            top_of_branch.parent = self.rootBone
+            top_of_branch.parent = reconnect_bone
 
             # This time we will have a parent!
             [bone.collectAnimations() for bone in new_bones]
