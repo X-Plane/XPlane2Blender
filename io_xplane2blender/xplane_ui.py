@@ -307,7 +307,7 @@ def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
             expandIcon = "TRIA_RIGHT"
             expanded = False
 
-        box.prop(layer_props, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
+        box.prop(layer_props, "expanded", text = "Exportable Object", expand = True, emboss = False, icon = expandIcon)
 
         if expanded:
             layer_layout(box, layer_props, version, "object")
