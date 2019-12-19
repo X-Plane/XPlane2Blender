@@ -253,7 +253,7 @@ class XPlaneTestCase(unittest.TestCase):
         if not ('-q' in sys.argv or '--quiet' in sys.argv):
             print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
 
-        out = self.exportRootObject(bpy.data.collections[f"Layer {layer + 1}"], tmpFilename)
+        out = self.exportExportableRoot(bpy.data.collections[f"Layer {layer + 1}"], tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     #TODO: Rename assertExportableRootExportEqualsFixture
@@ -270,7 +270,7 @@ class XPlaneTestCase(unittest.TestCase):
         If filterCallback is None, no filter (besides stripping comments)
         will be used.
         """
-        out = self.exportRootObject(root_object, tmpFilename)
+        out = self.exportExportableRoot(root_object, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     # asserts that an attributes object equals a dict
@@ -307,10 +307,9 @@ class XPlaneTestCase(unittest.TestCase):
         - layer_number starts at 0, as it used to access the scene.layers collection
         - dest is a filepath without the file extension .obj, written to the TMP_DIR if not None
         """
-        return self.exportRootObject(bpy.data.collections[f"Layer {layer_number + 1}"], dest)
+        return self.exportExportableRoot(bpy.data.collections[f"Layer {layer_number + 1}"], dest)
 
-    #TODO: Rename exportExportableRoot
-    def exportRootObject(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
+    def exportExportableRoot(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
         """
         Returns the result of calling xplaneFile.write(),
         where xplaneFile came from a root object (by name or Blender data).

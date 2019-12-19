@@ -14,14 +14,14 @@ __dirname__ = os.path.dirname(__file__)
 class TestBadNestedExportableRoots(XPlaneTestCase):
     def test_nested_exportable_roots_caught(self)->None:
         for i in range(2, -1, -1):
-            out = self.exportRootObject(bpy.data.collections[f"exportable_collection_{i}"])
+            out = self.exportExportableRoot(bpy.data.collections[f"exportable_collection_{i}"])
             self.assertLoggerErrors(i)
 
-        out = self.exportRootObject(bpy.data.collections["exportable_collection_has_nested_exportable_object"])
+        out = self.exportExportableRoot(bpy.data.collections["exportable_collection_has_nested_exportable_object"])
         self.assertLoggerErrors(3)
 
         for i in range(2, -1, -1):
-            out = self.exportRootObject(bpy.data.objects[f"exportable_object_{i}"])
+            out = self.exportExportableRoot(bpy.data.objects[f"exportable_object_{i}"])
             self.assertLoggerErrors(i)
 
 

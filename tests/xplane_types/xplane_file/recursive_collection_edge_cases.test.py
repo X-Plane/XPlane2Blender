@@ -32,7 +32,7 @@ class TestRecursiveCollectionEdgeCases(XPlaneTestCase):
                     ("POINT_COUNTS" in line[0] or\
                      "VT" in line[0] or\
                      "TRIS" in line[0])
-        out = self.exportRootObject(bpy.data.collections["Exportable_out_of_collection_no_error"])
+        out = self.exportExportableRoot(bpy.data.collections["Exportable_out_of_collection_no_error"])
         self.assertLoggerErrors(0)
         filename = inspect.stack()[0].function
         self.assertFileOutputEqualsFixture(
