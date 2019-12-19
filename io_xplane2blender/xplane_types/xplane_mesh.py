@@ -59,8 +59,7 @@ class XPlaneMesh():
                 # create a copy of the xplaneObject mesh with modifiers applied and triangulated
                 dg = bpy.context.evaluated_depsgraph_get()
                 evaluated_obj = xplaneObject.blenderObject.evaluated_get(dg)
-                assert xplaneObject.blenderObject.location == evaluated_obj.location, "ob.location !=  eval.location, " + str(xplaneObject.blenderObject.location) + "," + str(evaluated_obj.location)
-                mesh = evaluated_obj.to_mesh(preserve_all_data_layers=True, depsgraph=dg)
+                mesh = evaluated_obj.to_mesh(preserve_all_data_layers=False, depsgraph=dg)
 
                 # now get the bake matrix
                 # and bake it to the mesh
