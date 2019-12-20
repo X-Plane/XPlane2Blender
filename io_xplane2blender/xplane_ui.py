@@ -286,7 +286,7 @@ def collection_layer_layout(layout: bpy.types.UILayout, collection: bpy.types.Co
 
     if layer_props.expanded:
         layer_layout(box, layer_props, version, "object")
-        export_path_dir_layer_layout(box, layer_props, version, "object")
+        export_path_dir_layer_layout(box, collection, version)
         custom_layer_layout(box, layer_props, version, "object")
 
 def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
@@ -311,7 +311,7 @@ def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
 
         if expanded:
             layer_layout(box, layer_props, version, "object")
-            export_path_dir_layer_layout(box, layer_props, version, "object")
+            export_path_dir_layer_layout(box, obj, version)
             custom_layer_layout(box, layer_props, version, "object")
 
 
@@ -485,21 +485,32 @@ def dataref_search_window_layout(layout):
     row = layout.row()
     row.template_list("XPLANE_UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
 
-def export_path_dir_layer_layout(layout:bpy.types.UILayout, layer_props:xplane_props.XPlaneLayer, version:int, context:str):
+def export_path_dir_layer_layout(
+        layout:bpy.types.UILayout,
+        has_layer_props:Union[bpy.types.Collection, bpy.types.Object],
+        version:int):
     layout.separator()
     row = layout.row()
     row.label(text="Laminar Library Directives")
 
-    if context == 'object':
+    if isinstance(has_layer_props,bpy.types.Collection):
+        row.operator("collection.add_xplane_export_path_directive").collection_name = has_layer_props.name
+    elif isinstance(has_layer_props, bpy.types.Object):
         row.operator("object.add_xplane_export_path_directive")
+    else:
+        assert False, f"has_layer_prop is an unknown type {type(has_layer_props)}"
 
     box = layout.box()
 
-    for i, attr in enumerate(layer_props.export_path_directives):
+    for i, attr in enumerate(has_layer_props.xplane.layer.export_path_directives):
         row = box.row()
         row.prop(attr,"export_path", text= "Special library.txt Directive " + str(i))
 
-        if context == 'object':
+        if isinstance(has_layer_props, bpy.types.Collection):
+            remove_op = row.operator("collection.remove_xplane_export_path_directive", text="", emboss=False, icon="X")
+            remove_op.collection_name = has_layer_props.name
+            remove_op.index = i
+        elif isinstance(has_layer_props, bpy.types.Object):
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
 def mesh_layout(layout:bpy.types.UILayout, obj):

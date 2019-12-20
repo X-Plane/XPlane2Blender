@@ -56,7 +56,7 @@ class XPlaneHeader():
             potential_match = re.match(regex_str, cleaned_path)
 
             if potential_match is None:
-                logger.error('Export path %s is not properly formed. Ensure it contains the words "Custom Scenery" or "default_scenery" followed by a directory')
+                logger.error(f'Export path {export_path_directive.export_path} is not properly formed. Ensure it contains the words "Custom Scenery" or "default_scenery" followed by a directory')
                 return #TODO: Returning early in an __init__!
             else:
                 last_folder = os.path.dirname(potential_match.group(4)).split('/')[-1:][0]
