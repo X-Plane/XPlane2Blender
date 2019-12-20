@@ -13,9 +13,13 @@ from ..xplane_constants import *
 from .xplane_face import XPlaneFace
 from .xplane_object import XPlaneObject
 
-# Class: XPlaneMesh
-# Stores the data for the OBJ's mesh - its VT and IDX tables
 class XPlaneMesh():
+    """
+    Stores the data for the OBJ's mesh - its VT and IDX tables.
+
+    Despite the name, there is only one XPlaneMesh per XPlaneFile,
+    unlike there the many XPlaneObjects per file
+    """
     def __init__(self):
         # Contains all OBJ VT directives, data in the order as specified by the OBJ8 spec
         self.vertices = [] # type: List[Tuple[float, float, float, float, float, float, float, float]]
@@ -31,7 +35,7 @@ class XPlaneMesh():
     #
     # Parameters:
     #   list xplaneObjects - list of <XPlaneObjects>.
-    def collectXPlaneObjects(self, xplaneObjects: List[XPlaneObject]):
+    def collectXPlaneObjects(self, xplaneObjects: List[XPlaneObject])->None:
         debug = getDebug()
 
         def getSortKey(xplaneObject):
@@ -40,6 +44,7 @@ class XPlaneMesh():
         # sort objects by name for consitent vertex and indices table output
         xplaneObjects = sorted(xplaneObjects, key = getSortKey)
 
+        dg = bpy.context.evaluated_depsgraph_get()
         for xplaneObject in xplaneObjects:
             if (xplaneObject.type == 'MESH'
                 and xplaneObject.xplaneBone
@@ -47,22 +52,18 @@ class XPlaneMesh():
                 xplaneObject.indices[0] = len(self.indices)
                 first_vertice_of_this_xplaneObject = len(self.vertices)
 
-                # The goal of this section of the code is to get
-                # - the mesh of the object,
-                # - with its modifiers,
-                # - rotated, scaled, and moved by the bake matrix
+                # This is the heart of the exporter turning object into VT/IDX table:
+                # - Get the mesh of the object with its modifiers
+                # and transformations applied, rotated and moved by the bake matrix
                 #
                 # After that, the mesh needs to have some of it's data refreshed
                 # - Recalc normals split
                 # - Recalc tessface (now called loop triangles)
 
                 # create a copy of the xplaneObject mesh with modifiers applied and triangulated
-                dg = bpy.context.evaluated_depsgraph_get()
                 evaluated_obj = xplaneObject.blenderObject.evaluated_get(dg)
                 mesh = evaluated_obj.to_mesh(preserve_all_data_layers=False, depsgraph=dg)
 
-                # now get the bake matrix
-                # and bake it to the mesh
                 xplaneObject.bakeMatrix = xplaneObject.xplaneBone.getBakeMatrixForAttached()
                 mesh.transform(xplaneObject.bakeMatrix)
 
@@ -71,7 +72,7 @@ class XPlaneMesh():
                 loop_triangles = mesh.loop_triangles
                 try:
                     uv_layer = mesh.uv_layers[xplaneObject.material.uv_name]
-                except (KeyError, TypeError):
+                except (KeyError, TypeError) as e:
                     uv_layer = None
 
                 TempFace = collections.namedtuple(
@@ -134,13 +135,10 @@ class XPlaneMesh():
 
                 evaluated_obj.to_mesh_clear()
 
-
-    # Method: writeVertices
-    # Returns the OBJ vertex table by iterating <vertices>.
-    #
-    # Returns:
-    #   string - The OBJ vertex table.
-    def writeVertices(self):
+    def writeVertices(self)->str:
+        """
+        Turns the collected vertices into the OBJ's VT table
+        """
         ######################################################################
         # WARNING! This is a hot path! So don't change it without profiling! #
         ######################################################################
@@ -169,12 +167,10 @@ class XPlaneMesh():
         #print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
         return o.decode("utf-8")
 
-    # Method: writeIndices
-    # Returns the OBJ indices table by itering <indices>.
-    #
-    # Returns:
-    #   string - The OBJ indices table.
-    def writeIndices(self):
+    def writeIndices(self)->str:
+        """
+        Turns the collected vertices into the OBJ's IDX table
+        """
         ######################################################################
         # WARNING! This is a hot path! So don't change it without profiling! #
         ######################################################################
