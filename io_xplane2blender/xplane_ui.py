@@ -319,7 +319,7 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
     """Draws OBJ File Settings and advanced options"""
     canHaveDraped = version >= 1000 and layer_props.export_type not in ['aircraft', 'cockpit']
     isInstanced   = version >= 1000 and layer_props.export_type == 'instanced_scenery'
-    canHaveSceneryProps = layerObj.export_type not in ['aircraft', 'cockpit']
+    canHaveSceneryProps = layer_props.export_type not in ['aircraft', 'cockpit']
 
 
     #column = layout.column()
@@ -404,40 +404,38 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
     if canHaveSceneryProps:
         #Scenery Properties Group
         scenery_props_group_box = layout.box()
-        scenery_props_group_box.label("Scenery Properties")
+        scenery_props_group_box.label(text="Scenery Properties")
 
         layer_group_box = scenery_props_group_box.box()
-        layer_group_box.label("Layer Grouping")
-        layer_group_box.prop(layerObj, "layer_group")
-        layer_group_box.prop(layerObj, "layer_group_offset")
+        layer_group_box.label(text="Layer Grouping")
+        layer_group_box.prop(layer_props, "layer_group")
+        layer_group_box.prop(layer_props, "layer_group_offset")
 
         if canHaveDraped:
-            layer_group_box.prop(layerObj, "layer_group_draped")
-            layer_group_box.prop(layerObj, "layer_group_draped_offset")
+            layer_group_box.prop(layer_props, "layer_group_draped")
+            layer_group_box.prop(layer_props, "layer_group_draped_offset")
 
         # v1000
         if version >= 1000:
             # slope_limit
             slope_box = scenery_props_group_box.box()
             slope_box.label(text="Slope Properties")
-            slope_box.prop(layerObj, "slope_limit")
+            slope_box.prop(layer_props, "slope_limit")
 
-            if layerObj.slope_limit == True:
-                slope_box.row().prop(layerObj, "slope_limit_min_pitch")
-                slope_box.row().prop(layerObj, "slope_limit_max_pitch")
-                slope_box.row().prop(layerObj, "slope_limit_min_roll")
-                slope_box.row().prop(layerObj, "slope_limit_max_roll")
+            if layer_props.slope_limit == True:
+                slope_box.row().prop(layer_props, "slope_limit_min_pitch")
+                slope_box.row().prop(layer_props, "slope_limit_max_pitch")
+                slope_box.row().prop(layer_props, "slope_limit_min_roll")
+                slope_box.row().prop(layer_props, "slope_limit_max_roll")
 
             # tilted
-            slope_box.prop(layerObj, "tilted")
+            slope_box.prop(layer_props, "tilted")
 
             # require surface
             require_box = scenery_props_group_box.row()
             require_box.prop(layer_props, "require_surface", text="Require surface")
 
-
-    # Other Options
-    #layout.separator()
+    # Advanced Options
     advanced_box = layout.box()
     advanced_box.label(text="Advanced Options")
     if version >= 1130:
