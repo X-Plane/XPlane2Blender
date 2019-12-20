@@ -314,10 +314,13 @@ def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
             export_path_dir_layer_layout(box, layer_props, version, "object")
             custom_layer_layout(box, layer_props, version, "object")
 
+
 def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLayer, version:int, context:str):
     """Draws OBJ File Settings and advanced options"""
     canHaveDraped = version >= 1000 and layer_props.export_type not in ['aircraft', 'cockpit']
     isInstanced   = version >= 1000 and layer_props.export_type == 'instanced_scenery'
+    canHaveSceneryProps = layerObj.export_type not in ['aircraft', 'cockpit']
+
 
     #column = layout.column()
     layout.prop(layer_props, "name")
@@ -398,38 +401,40 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
         if canHaveDraped:
             lods_box.prop(layer_props, "lod_draped")
 
-    #Scenery Properties Group
-    scenery_props_group_box = layout.box()
-    scenery_props_group_box.label(text="Scenery Properties")
+    if canHaveSceneryProps:
+        #Scenery Properties Group
+        scenery_props_group_box = layout.box()
+        scenery_props_group_box.label("Scenery Properties")
 
-    layer_group_box = scenery_props_group_box.box()
-    layer_group_box.label(text="Layer Grouping")
-    layer_group_box.prop(layer_props, "layer_group")
-    layer_group_box.prop(layer_props, "layer_group_offset")
+        layer_group_box = scenery_props_group_box.box()
+        layer_group_box.label("Layer Grouping")
+        layer_group_box.prop(layerObj, "layer_group")
+        layer_group_box.prop(layerObj, "layer_group_offset")
 
-    if canHaveDraped:
-        layer_group_box.prop(layer_props, "layer_group_draped")
-        layer_group_box.prop(layer_props, "layer_group_draped_offset")
+        if canHaveDraped:
+            layer_group_box.prop(layerObj, "layer_group_draped")
+            layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
-    # v1000
-    if version >= 1000:
-        # slope_limit
-        slope_box = scenery_props_group_box.box()
-        slope_box.label(text="Slope Properties")
-        slope_box.prop(layer_props, "slope_limit")
+        # v1000
+        if version >= 1000:
+            # slope_limit
+            slope_box = scenery_props_group_box.box()
+            slope_box.label(text="Slope Properties")
+            slope_box.prop(layerObj, "slope_limit")
 
-        if layer_props.slope_limit == True:
-            slope_box.row().prop(layer_props, "slope_limit_min_pitch")
-            slope_box.row().prop(layer_props, "slope_limit_max_pitch")
-            slope_box.row().prop(layer_props, "slope_limit_min_roll")
-            slope_box.row().prop(layer_props, "slope_limit_max_roll")
+            if layerObj.slope_limit == True:
+                slope_box.row().prop(layerObj, "slope_limit_min_pitch")
+                slope_box.row().prop(layerObj, "slope_limit_max_pitch")
+                slope_box.row().prop(layerObj, "slope_limit_min_roll")
+                slope_box.row().prop(layerObj, "slope_limit_max_roll")
 
-        # tilted
-        slope_box.prop(layer_props, "tilted")
+            # tilted
+            slope_box.prop(layerObj, "tilted")
 
-        # require surface
-        require_box = scenery_props_group_box.row()
-        require_box.prop(layer_props, "require_surface", text="Require surface")
+            # require surface
+            require_box = scenery_props_group_box.row()
+            require_box.prop(layer_props, "require_surface", text="Require surface")
+
 
     # Other Options
     #layout.separator()
