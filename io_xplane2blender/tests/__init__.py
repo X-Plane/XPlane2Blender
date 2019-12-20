@@ -3,7 +3,7 @@ import shutil
 import sys
 import unittest
 
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
 
@@ -12,7 +12,7 @@ from io_xplane2blender.xplane_config import setDebug, getDebug
 from io_xplane2blender import xplane_config
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
-from io_xplane2blender.xplane_types import xplane_file, xplane_primitive
+from io_xplane2blender.xplane_types import xplane_bone, xplane_file, xplane_primitive
 from ..xplane_types import xplane_file
 from ..xplane_types.xplane_primitive import XPlanePrimitive
 from .animation_file_mappings import mappings
@@ -25,6 +25,8 @@ FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
 TMP_DIR = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
+
+FilterLinesCallback = Callable[[List[Union[float, str]]], bool]
 
 class XPlaneTestCase(unittest.TestCase):
     def setUp(self, useLogger = True):
@@ -54,29 +56,42 @@ class XPlaneTestCase(unittest.TestCase):
     # Utility method to check if objects are contained in file
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
         for name in objectNames:
+            # TODO:  Remove/change
             self.assertIsNotNone(xplaneFile.objects[name])
             self.assertTrue(isinstance(xplaneFile.objects[name],xplane_primitive.XPlanePrimitive))
             self.assertEquals(xplaneFile.objects[name].blenderObject, bpy.data.objects[name])
 
-    def assertXplaneFileHasBoneTree(self, xplaneFile, tree):
-        self.assertIsNotNone(xplaneFile.rootBone)
+    def assertXPlaneBoneTreeEqual(self, file_root_bone:xplane_bone.XPlaneBone, fixture_root_bone:xplane_bone.XPlaneBone)->None:
+        """
+        Recurses down two XPlaneBone trees, and compares each XPlaneBone's
+        - xplaneObject
+        - blenderObject
+        - blenderBone
 
-        bones = []
+        self.xplaneFile and self.parent are not compared
+        """
+        assert file_root_bone
+        assert fixture_root_bone
 
-        def collect(bone):
-            bones.append(bone)
-            for bone in bone.children:
-                collect(bone)
-
-        collect(xplaneFile.rootBone)
-
-        self.assertEquals(len(tree), len(bones))
-
-        index = 0
-
-        while index < len(bones):
-            self.assertEquals(tree[index], bones[index].getName())
-            index += 1
+        def recursively_check(file_bone: xplane_bone.XPlaneBone,
+                              fixture_bone: xplane_bone.XPlaneBone)->None:
+            file_bone_name = getattr(file_bone.xplaneObject, 'name', 'None')
+            fixture_bone_name = getattr(fixture_bone.xplaneObject, 'name', 'None')
+            self.assertEqual(
+                bool(file_bone.xplaneObject),
+                bool(fixture_bone.xplaneObject),
+                msg=f"File Bone '{file_bone.getName(ignore_indent_level=True)}'"\
+                    f" and Fixture Bone '{file_bone.getName(ignore_indent_level=True)}'"\
+                    f" don't have the same xplaneObject: ({file_bone_name, fixture_bone_name}),"
+            )
+            self.assertEqual(file_bone.blenderObject,
+                             fixture_bone.blenderObject)
+            self.assertEqual(file_bone.blenderBone,
+                             fixture_bone.blenderBone)
+            self.assertEqual(len(file_bone.children), len(fixture_bone.children))
+            for child_file_bone, child_fixture_bone in zip(file_bone.children, fixture_bone.children):
+                recursively_check(child_file_bone, child_fixture_bone)
+        recursively_check(file_root_bone, fixture_root_bone)
 
     def assertFloatsEqual(self, a, b, tolerance = None):
         if tolerance == None:
@@ -116,7 +131,11 @@ class XPlaneTestCase(unittest.TestCase):
 
         return lines
 
-    def assertFilesEqual(self, a:str, b:str, filterCallback = None, floatTolerance = None):
+    def assertFilesEqual(self,
+                         a: str,
+                         b: str,
+                         filterCallback:Optional[FilterLinesCallback] = None,
+                         floatTolerance:float = None):
         '''
         a and b should be the contents of files a and b as returned
         from open(file).read()
@@ -152,7 +171,7 @@ class XPlaneTestCase(unittest.TestCase):
             #print("lineA:%s lineB:%s" %(lineA,lineB))
             # ensure same number of line segments
             self.assertEquals(len(lineA), len(lineB))
-            
+
 
             for linePos in range(0, len(lineA)):
                 segmentA = lineA[linePos]
@@ -179,54 +198,86 @@ class XPlaneTestCase(unittest.TestCase):
                 else:
                     self.assertEquals(segmentA, segmentB)
 
-    def assertFileOutputEqualsFixture(self, fileOutput, fixturePath, filterCallback = None, floatTolerance = None):
-        fixtureFile = open(fixturePath, 'r')
-        fixtureOutput = fixtureFile.read()
-        fixtureFile.close()
+    def assertFileOutputEqualsFixture(
+            self,
+            fileOutput:str,
+            fixturePath:str,
+            filterCallback:Optional[FilterLinesCallback] = None,
+            floatTolerance:Optional[float] = None) -> None:
+        """
+        Compares the output of XPlaneFile.write (a \n separated str) to a fixture on disk.
+
+        A filterCallback ensures only matching lines are compared.
+        Highly recommended, with as simple a function as possible to prevent fixture fragility.
+        """
+        with open(fixturePath, "r") as fixtureFile:
+            fixtureOutput = fixtureFile.read()
 
         return self.assertFilesEqual(fileOutput, fixtureOutput, filterCallback, floatTolerance)
 
-    def assertFileTmpEqualsFixture(self,tmpPath,fixturePath,filterCallback=None, floatTolerance=None):
+    def assertFileTmpEqualsFixture(
+            self,
+            tmpPath:str,
+            fixturePath:str,
+            filterCallback: Optional[FilterLinesCallback] = None,
+            floatTolerance: Optional[float] = None):
         tmpFile = open(tmpPath, 'r')
         tmpOutput = tmpFile.read()
         tmpFile.close()
-        
-        return self.assertFileOutputEqualsFixture(tmpOutput, fixturePath, filterCallback, floatTolerance)
-    
 
-    # Method: assertLoggerErrors
-    #
-    # expected_logger_errors - The number of errors you expected to have happen
-    # asserts the number of errors and clears the logger of all messages
-    def assertLoggerErrors(self, expected_logger_errors):
+        return self.assertFileOutputEqualsFixture(tmpOutput, fixturePath, filterCallback, floatTolerance)
+
+    def assertLoggerErrors(self, expected_logger_errors:int)->None:
+        """
+        Asserts the logger has some number of errors, then clears the logger
+        of all messages
+        """
         self.assertEqual(len(logger.findErrors()), expected_logger_errors)
         logger.clearMessages()
-    
+
     #TODO: Must filter warnings to have this be useful
     # Method: assertLoggerWarnings
     #
     # expected_logger_warnings - The number of warnings you expected to have happen
     # asserts the number of warnings and clears the logger of all messages
-    #def assertLoggerWarnings(self, expected_logger_warnings):    
+    #def assertLoggerWarnings(self, expected_logger_warnings):
     #    self.assertEqual(len(logger.findWarnings()), expected_logger_warnings)
     #    logger.clearMessages()
-    def assertLayerExportEqualsFixture(self, layer, fixturePath, tmpFilename = None, filterCallback = None, floatTolerance = None):
+
+    def assertLayerExportEqualsFixture(self,
+            layer:int,
+            fixturePath:str,
+            tmpFilename:Optional[str] = None,
+            filterCallback:Optional[FilterLinesCallback] = None,
+            floatTolerance:Optional[float] = None)->None:
         if not ('-q' in sys.argv or '--quiet' in sys.argv):
             print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
-        out = self.exportLayer(layer, tmpFilename)
+
+        out = self.exportRootObject(bpy.data.collections[f"Layer {layer + 1}"], tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
+    #TODO: Rename assertExportableRootExportEqualsFixture
     def assertRootObjectExportEqualsFixture(self,
-            root_object:Union[bpy.types.Object, str],
+            root_object:Union[bpy.types.Collection, bpy.types.Object, str],
             fixturePath: str = None,
             tmpFilename: Optional[str] = None,
-            filterCallback: Callable[[List[Union[float, str]]], bool] = None,
+            filterCallback:Optional[FilterLinesCallback] = None,
             floatTolerance: Optional[float] = None):
+        """
+        Exports only a specific exportable root and compares the output
+        to a fixutre.
+
+        If filterCallback is None, no filter (besides stripping comments)
+        will be used.
+        """
         out = self.exportRootObject(root_object, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     # asserts that an attributes object equals a dict
-    def assertAttributesEqualDict(self, attrs, d, floatTolerance = None):
+    def assertAttributesEqualDict(self,
+                                  attrs:List[str],
+                                  d:Dict[str, Any],
+                                  floatTolerance:Optional[float] = None):
         self.assertEquals(len(d), len(attrs), 'Attribute lists have different length')
 
         for name in attrs:
@@ -249,26 +300,34 @@ class XPlaneTestCase(unittest.TestCase):
             else:
                 self.assertEquals(expectedValue, value, 'Attribute "%s" is not equal' % name)
 
-    def exportLayer(self, layer, dest = None):
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+    def exportLayer(self, layer_number:int, dest:str = None)->str:
+        """
+        DEPRECATED: New unit tests should not use this!
 
-        out = xplaneFile.write()
+        - layer_number starts at 0, as it used to access the scene.layers collection
+        - dest is a filepath without the file extension .obj, written to the TMP_DIR if not None
+        """
+        return self.exportRootObject(bpy.data.collections[f"Layer {layer_number + 1}"], dest)
 
-        if dest:
-            with open(os.path.join(TMP_DIR, dest + '.obj'), 'w') as tmp_file:
-                tmp_file.write(out)
-
-        return out
-
-    def exportRootObject(self, root_object:Union[bpy.types.Object,str], dest:str = None)->str:
-        '''
+    #TODO: Rename exportExportableRoot
+    def exportRootObject(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
+        """
         Returns the result of calling xplaneFile.write(),
         where xplaneFile came from a root object (by name or Blender data).
 
-        The output can also simultaniously written to a destination
-        '''
-        if isinstance(root_object,str):
-            root_object = bpy.data.objects[root_object]
+        - dest is a filepath without the file extension .obj, written to the TMP_DIR if not None
+
+        If root_object is an str, matching collections are looked up first.
+        If you don't want an ambiguity of root objects, don't use the name twice
+        """
+        if isinstance(root_object, str):
+            try:
+                root_object = bpy.data.collections[root_object]
+            except KeyError:
+                try:
+                    root_object = bpy.data.objects[root_object]
+                except KeyError:
+                    assert False, f"{root_object} must be in bpy.data.collections|objects"
 
         xplaneFile = xplane_file.createFileFromBlenderRootObject(root_object)
         out = xplaneFile.write()
@@ -304,9 +363,9 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             outFile = os.path.join(dest, os.path.basename(mappings[name][layer]))
             print('Exporting to "%s"' % outFile)
 
-            xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+            xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"])
 
-            self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))
+            self.assertIsNotNone(xplaneFile, f"Unable to create XPlaneFile for {name} from Layer {layer + 1}")
 
             out = xplaneFile.write()
 
@@ -324,7 +383,7 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
         for layer in mappings[name]:
             print('Testing animations against fixture "%s"' % mappings[name][layer])
 
-            xplaneFile = xplane_file.createFileFromBlenderLayerIndex(layer)
+            xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"])
 
             self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))
 
@@ -344,11 +403,6 @@ def runTestCases(testCases):
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(testCases[0])
     test_result = unittest.TextTestRunner().run(suite)
 
-    #See XPlane2Blender/tests.py for documentation. The strings must be kept in sync!
-    return_string = "RESULT: After {testsRun} tests got {errors} errors, {failures} failures, and {skipped} skipped"\
-        .format(testsRun=test_result.testsRun,
-                errors=len(test_result.errors),
-                failures=len(test_result.failures),
-                skipped=len(test_result.skipped))
-    print(return_string)
-
+    # See XPlane2Blender/tests.py for documentation. The strings must be kept in sync!
+    # This is not an optional debug print statement! The test runner needs this print statement to function
+    print(f"RESULT: After {(test_result.testsRun)} tests got {len(test_result.errors)} errors, {len(test_result.failures)} failures, and {len(test_result.skipped)} skipped")

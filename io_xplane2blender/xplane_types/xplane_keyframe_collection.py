@@ -2,7 +2,7 @@ from collections import Iterable, namedtuple
 from collections.abc import MutableSequence
 import copy
 import math
-from typing import List 
+from typing import List, Tuple
 
 import bpy
 import mathutils
@@ -61,7 +61,7 @@ class XPlaneKeyframeCollection(MutableSequence):
                     '''
                     This section covers the following cases
                     - keyframe has 0 degrees of rotation, so no axis should be produced
-                    - refAxis and axis are the same. If this happens for all keyframes, 1 reference axis will be returned! Yay! 
+                    - refAxis and axis are the same. If this happens for all keyframes, 1 reference axis will be returned! Yay!
                     - Correct axis that are the same as the previous reference axes, just inverted
                     - If at least two axis are different, we convert to Euler angles
                     '''
@@ -88,7 +88,7 @@ class XPlaneKeyframeCollection(MutableSequence):
                                  mathutils.Vector((0.0,1.0,0.0)),\
                                  mathutils.Vector((0.0,0.0,1.0))]
                     for axis in eulerAxesOrdering:
-                        axes.append(eulerAxes[axis]) 
+                        axes.append(eulerAxes[axis])
                 except:
                     raise Exception("Rotation mode %s doesn't exist in eulerAxisMap" % (keyframes.getRotationMode()))
 
@@ -138,7 +138,7 @@ class XPlaneKeyframeCollection(MutableSequence):
     def getRotationMode(self):
         return self._list[0].rotationMode
 
-    def getRotationKeyframeTable(self): # type: -> List[Tuple[Vector,List[TableEntry]]]
+    def getRotationKeyframeTable(self) -> List[Tuple[Vector, List["TableEntry"]]]:
         '''
         Return the rotation portion of a keyframe collection in the form of
         List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.
@@ -152,7 +152,7 @@ class XPlaneKeyframeCollection(MutableSequence):
         TableEntry = namedtuple('TableEntry', ['value','degrees'])
         if final_rotation_mode == "AXIS_ANGLE" or\
            final_rotation_mode == "QUATERNION":
-            keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[0])) for keyframe in self] 
+            keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[0])) for keyframe in self]
             ret[0][1]  = keyframe_table
         else:
             cur_order = self.EULER_AXIS_ORDERING[final_rotation_mode]
@@ -179,7 +179,7 @@ class XPlaneKeyframeCollection(MutableSequence):
         '''
         Return the rotation portion of a keyframe collection in the form of
         List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.
-        
+
         Does not contain any clamping keyframes.
         '''
         return XPlaneKeyframeCollection.filter_clamping_keyframes(self.getRotationKeyframeTable(), "degrees")
@@ -206,21 +206,21 @@ class XPlaneKeyframeCollection(MutableSequence):
 
     def asAA(self)->'XPlaneKeyframeCollection':
         return XPlaneKeyframeCollection([keyframe.asAA() for keyframe in self])
-        
+
     def asEuler(self)->'XPlaneKeyframeCollection':
         return XPlaneKeyframeCollection([keyframe.asEuler() for keyframe in self])
-            
+
     def asQuaternion(self)->'XPlaneKeyframeCollection':
         return XPlaneKeyframeCollection([keyframe.asQuaternion() for keyframe in self])
 
     def toAA(self)->'XPlaneKeyframeCollection':
         self._list = [keyframe.asAA() for keyframe in self]
         return self
-        
+
     def toEuler(self)->'XPlaneKeyframeCollection':
         self._list = [keyframe.asEuler() for keyframe in self]
         return self
-            
+
     def toQuaternion(self)->'XPlaneKeyframeCollection':
         self._list = [keyframe.asQuaternion() for keyframe in self]
         return self
@@ -266,4 +266,4 @@ class XPlaneKeyframeCollection(MutableSequence):
                 remove_clamp_keyframes(table, attr)
                 table.reverse()
             return cleaned_keyframe_collection
-        
+

@@ -10,11 +10,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestIST_2Mats_VarSPEC(XPlaneTestCase):
     def test_export(self):
-        filename = 'test_IST_2Mats_VarSPEC'
-
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
-        out = xplaneFile.write()
-
+        out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 
 runTestCases([TestIST_2Mats_VarSPEC])

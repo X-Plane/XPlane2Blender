@@ -2,7 +2,7 @@ import re
 
 import bpy
 
-from io_xplane2blender.xplane_types import xplane_attribute
+from io_xplane2blender.xplane_types import xplane_attribute, xplane_file, xplane_object
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 
 from ..xplane_config import getDebug
@@ -48,9 +48,9 @@ from ..xplane_helpers import floatToStr, logger
 #
 # From this table, we can determine two things:
 # 1. For any given attribute, what previously written attribute is no longer valid.  For example, if
-#	 We write ATTR_no_hard, any past ATTR_hard or ATTR_hard_deck is no longer in effect.
+#    We write ATTR_no_hard, any past ATTR_hard or ATTR_hard_deck is no longer in effect.
 # 2. If we need to write a new object that is missing a previously written setter, what is the resetter
-#	 to issue to get to default state.
+#    to issue to get to default state.
 #
 # For customization, the "addReseter" can be called to register the resetter for a custom attribute that
 # will need to be undone later by another part of the code.
@@ -70,17 +70,14 @@ from ..xplane_helpers import floatToStr, logger
 # Class: XPlaneCommands
 # Creates the OBJ commands table.
 class XPlaneCommands():
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   dict file - A file dict coming from <XPlaneData>
-    def __init__(self, xplaneFile):
+    def __init__(self, xplaneFile)->None:
         self.xplaneFile = xplaneFile
 
         self.reseters = {
             'ATTR_light_level':'ATTR_light_level_reset',
             'ATTR_cockpit|ATTR_cockpit_region':'ATTR_no_cockpit',
             'ATTR_manip_(?!none)(?!wheel)(.*)':'ATTR_manip_none',
+            'ATTR_no_shadow':'ATTR_shadow',
             'ATTR_draw_disable':'ATTR_draw_enable',
             'ATTR_poly_os':'ATTR_poly_os 0',
             'ATTR_hard|ATTR_hard_deck':'ATTR_no_hard',
@@ -99,23 +96,18 @@ class XPlaneCommands():
         self.written = {
             'ATTR_no_hard': True,
             'ATTR_blend': True,
-            'ATTR_no_hard': True,
             'ATTR_no_cockpit': True,
             'ATTR_no_solid_camera': True,
+            'ATTR_shadow': True,
             'ATTR_draw_enable': True,
             'ATTR_no_draped': True
         }
 
 
-    # Method: write
-    # Returns the OBJ commands table.
-    #
-    # Params:
-    #   int lod - (default -1) Level of detail randing from 0..2, if -1 no level of detail will be used
-    #
-    # Returns:
-    #   string - The OBJ commands table.
-    def write(self, lod = -1):
+    def write(self, lod:int = -1)->str:
+        """
+        Writes OBJ commands to a string. If lod is -1, no LODs will be used
+        """
         o = ''
         o += self.writeXPlaneBone(self.xplaneFile.rootBone, lod)
 
@@ -126,27 +118,29 @@ class XPlaneCommands():
         o += xplaneBone.writeAnimationPrefix()
         xplaneObject = xplaneBone.xplaneObject
         xplaneObjectWritten = False
-        exportMode = self.xplaneFile.exportMode
         numLods = int(self.xplaneFile.options.lods)
 
         if xplaneObject:
-            lods = []
+            lods = [False] * len(bpy.data.collections)
 
-            if exportMode == EXPORT_MODE_LAYERS:
-                lods = xplaneObject.lod
-            elif exportMode == EXPORT_MODE_ROOT_OBJECTS:
-                lods = xplaneObject.blenderObject.layers
+            for i, collection in enumerate(bpy.data.collections):
+                try:
+                    if(xplaneObject.blenderObj in collection):
+                        lods[i] = True
+                        break
+                except:
+                    pass
 
             isInLod = False
 
             for lodIndex in range(0, MAX_LODS):
-                if len(lods) > lodIndex and lods[lodIndex] == True:
+                if lodIndex < len(lods) and lods[lodIndex] == True:
                     isInLod = True
                     break
 
             if lod == -1:
                 # only write objects that are in no lod
-                if not isInLod or (exportMode == EXPORT_MODE_ROOT_OBJECTS and numLods <= 0):
+                if not isInLod or numLods <= 0:
                     o += self._writeXPlaneObjectPrefix(xplaneObject)
                     xplaneObjectWritten = True
 
@@ -175,9 +169,7 @@ class XPlaneCommands():
 
         # open object conditions
         o += self._writeConditions(xplaneObject.conditions, xplaneObject)
-
         o += xplaneObject.write()
-
         return o
 
     def _writeXPlaneObjectSuffix(self, xplaneObject):
@@ -203,7 +195,12 @@ class XPlaneCommands():
     #
     # Returns:
     #   string or None if the command must not be written.
-    def writeAttribute(self, attr, xplaneObject):
+    def writeAttribute(self,
+                       attr: xplane_attribute.XPlaneAttribute,
+                       xplaneObject: xplane_object.XPlaneObject)->str:
+        """
+        Writes attribute to string if possible and necissary to a string
+        """
         o = ''
         for i in range(len(attr.value)):
             value = attr.getValue(i)
@@ -221,7 +218,7 @@ class XPlaneCommands():
                         # If there is a resetter for this attribute, we need to
                         # nuke it from the written list - we are replacing it.
                         counterparts = self.getAttributeCounterparts(name)
-                        
+
                         for counterpart in counterparts:
                             if counterpart in self.written:
                                 del self.written[counterpart]
@@ -230,7 +227,6 @@ class XPlaneCommands():
                     # store this in the written attributes
                     self.written[name] = value
                     value = attr.getValueAsString(i)
-                    value = self.parseAttributeValue(value, xplaneObject.blenderObject)
                     o += indent + '%s\t%s\n' % (name, value)
 
                     # check if this thing has a reseter and remove counterpart if any
@@ -240,25 +236,6 @@ class XPlaneCommands():
                         if counterpart in self.written:
                             del self.written[counterpart]
         return o
-
-    # Method: parseAttributeValue
-    # Returns a string with the parsed attribute value (replacing insert tags)
-    #
-    # Parameters:
-    #   string value - The attribute value.
-    #   blenderObject - A blender object.
-    #
-    # Returns:
-    #   string - The value with replaced insert tags.
-    def parseAttributeValue(self, value, blenderObject):
-        if str(value).find('{{xyz}}') != -1:
-            return str(value).replace('{{xyz}}', '%6.8f\t%6.8f\t%6.8f' % (
-                xplane_helpers.floatToStr(blenderObject.location[0]),
-                xplane_helpers.floatToStr(blenderObject.location[2]),
-                xplane_helpers.floatToStr(-blenderObject.location[1])
-            ))
-
-        return value
 
     # Method: canWriteAttribute
     # Determines if an attribute must/can be written.
@@ -311,7 +288,7 @@ class XPlaneCommands():
             # The attribute is a setter - the resetter is a counter part
             if compiledPattern.fullmatch(attr):
                 found.append(resetter)
-    
+
             # The pattern is a resetter or ONE of the setters.
             # Every other setter but us is a counterpart.
             if attr == resetter or compiledPattern.fullmatch(attr):
@@ -338,7 +315,7 @@ class XPlaneCommands():
         debug = getDebug()
         o = ''
         indent = xplaneObject.xplaneBone.getIndent()
-        
+
         # create a temporary attributes dict
         attributes = XPlaneAttributes()
         # add custom attributes
@@ -374,10 +351,12 @@ class XPlaneCommands():
                 'ATTR_blend',
                 'ATTR_draped',
                 'ATTR_no_draped',
+                'ATTR_shadow',
+                'ATTR_no_shadow',
                 'ATTR_solid_camera',
                 'ATTR_no_solid_camera'
                 }
-        
+
         #  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         # <What's up with WHITE_LIST? IT'S A STUPID HACK!>
         #  vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -421,7 +400,7 @@ class XPlaneCommands():
                 print("WARNING: multiple written attributes matched %s" % setterPattern)
                 print(matchingWritten)
 
-            
+
             if matchingWritten and not matchingAttribute:
                 # only reset attributes that wont be written with this object again
                 #logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))

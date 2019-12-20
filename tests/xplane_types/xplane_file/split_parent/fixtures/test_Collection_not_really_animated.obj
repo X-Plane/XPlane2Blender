@@ -1,0 +1,51 @@
+I
+800
+OBJ
+
+POINT_COUNTS	18	0	0	18
+
+VT	1	0	-1	0	1	-0	1	1	# 0
+VT	1	0	1	0	1	-0	1	0	# 1
+VT	-1	0	1	0	1	-0	0	0	# 2
+VT	-1	0	-1	-0	1	-0	0	1	# 3
+VT	1	0	-1	-0	1	-0	1	1	# 4
+VT	-1	0	1	-0	1	-0	0	0	# 5
+VT	1	0	-1	0	1	-0	1	1	# 6
+VT	1	0	1	0	1	-0	1	0	# 7
+VT	-1	0	1	0	1	-0	0	0	# 8
+VT	-1	0	-1	-0	1	-0	0	1	# 9
+VT	1	0	-1	-0	1	-0	1	1	# 10
+VT	-1	0	1	-0	1	-0	0	0	# 11
+VT	1	0	-1	0	1	-0	1	1	# 12
+VT	1	0	1	0	1	-0	1	0	# 13
+VT	-1	0	1	0	1	-0	0	0	# 14
+VT	-1	0	-1	-0	1	-0	0	1	# 15
+VT	1	0	-1	-0	1	-0	1	1	# 16
+VT	-1	0	1	-0	1	-0	0	0	# 17
+
+IDX10	0	1	2	3	4	5	6	7	8	9
+IDX	10
+IDX	11
+IDX	12
+IDX	13
+IDX	14
+IDX	15
+IDX	16
+IDX	17
+
+# 0 ROOT
+	# 1 Mesh: Plane_blender_keyframes
+	# MESH: Plane_blender_keyframes	weight: 0
+	# MATERIAL: Material
+	ATTR_shiny_rat	0.5
+	TRIS	0 6
+	# 1 Mesh: Plane_xplane_keyframes
+	# MESH: Plane_xplane_keyframes	weight: 0
+	# MATERIAL: Material
+	TRIS	12 6
+	# 1 Mesh: Plane_no_keyframes
+	# MESH: Plane_no_keyframes	weight: 0
+	# MATERIAL: Material
+	TRIS	6 6
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+57.NO_BUILD_NUMBR

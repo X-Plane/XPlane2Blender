@@ -9,26 +9,23 @@ LIGHT_SPECS
 # add-on.  Any modifications to this file that work with the current version of X-Plane may crash the next version.  
 # Please consider yourself warned.
 
-# Note on proper viewing and editing: This file is best viewed with a text editor that can display tabs vs spaces visually, set it's tabstop to 8, and handle UNIX line endings.
-# When editing the file it is highly recommended you keep things aligned, neat, and consistent with other lights around it.
-
 # Note on orientation: a light's "front" face is TO the south - so if you are south of the light looking north - you see the light.
 # Thus the standard direction vector for a directional light is 0,0,1 so it is pointing along the positive Z axis (south).
 # In Sergio's textures, the default ground halo orientation is such that the RIGHT side of the halo will be aligned with the front/south
 # of the light.
 
-# This chart shows the values for each light type.  * means the light can be parameterized via a text parameter, . means it exists but is illegal for parameterization
-#                  Name   R   G   B   A   Size   Cell   Dx   Dy   Dz   Width   Frq   Phase   Amp   Day   Dataref
-# BILLBOARD_HW     .      *   *   *   .   *      .      *    *    *    *       *     *       .     .
-# BILLBOARD_SW     .      *   *   *   *   *      .      *    *    *    *                                 .
-# CONE_HW          .      *   *   *   *   *      .      *    *    *    *                                 .
-# CONE_SW          .      *   *   *   *   *      .      *    *    *    *                                 .
-# SPILL_GND        .                      *      .                    
-# SPILL_GND_REV    .                      *      .                    
-# SPILL_HW_DIR     .      *   *   *   *   *             *    *    *    *                                 .
-# SPILL_HW_FLA     .      *   *   *   *   *                                    *     *       .     .
-# SPILL_SW         .      *   *   *   *   *             *    *    *    *                                 .
-
+# This chart shows the values for each light type.  * means the light can be parameterized via a text parameter.  
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
+# BILLBOARD_HW		.					*	*	*	.	*	.	*	*	*	*	*	*	.	.
+# BILLBOARD_SW		.					*	*	*	*	*	.	*	*	*	*					.
+# CONE_HW		.					*	*	*	*	*	.	*	*	*	*					.
+# CONE_SW		.					*	*	*	*	*	.	*	*	*	*					.
+# SPILL_GND		.									*	.
+# SPILL_GND_REV		.									*	.
+# SPILL_HW_DIR		.					*	*	*	*	*		*	*	*	*					.
+# SPILL_HW_FLA		.					*	*	*	*	*						*	*	.	.
+# SPILL_SW		.					*	*	*	*	*		*	*	*	*					.
+#
 # BILLBOARD_HW - hardware accelerated billboard.  This is the same as the old LIGHT_DIRECTIONAL and LIGHT_FLASHING except now we can have both.
 # BILLBOARD_SW - dataref-driven billboard.  Same as the old LIGHT_ANIMATION and LIGHT_PARAM.
 # SPILL_GND, SPILL_GND_REV - old v8-style quads-on-the-ground light spill for runway lights.
@@ -36,6 +33,7 @@ LIGHT_SPECS
 # SPILL_SW - dataref driven spill.
 
 # NOTE: hardware billboards must have an alpha of 1.0 if any of the RGB values are parameterized!
+
 # RGBA:			This is the color tint that is applied to the light spill or the billboard.  Since light is additive, alpha is really just a master dimmer.
 # Size:			Light size.  This is the total size in meters for spill, or a 'size constant' for billboards.
 # Cell:			A triplet of ints (size, row, column, 0,0 is lower left) for billboards. Size is a power-of-two multiplier for cell size. 
@@ -303,21 +301,21 @@ BILLBOARD_SW		airplane_nav_right			1	1	1	1	0.7	1 6 7	0	0	0	1					sim/graphics/an
 
 # STATIC aircraft NAV lights
 # heavy
-#			Name					R	G	B	A	Size	Cell	DX	DY	DZ	Width	Frq	Phase	Amp	Day
-SPILL_HW_DIR		airplane_nav_tail_static_h		1	1	0.8	1.0	10		0 	0 	1 	0.2	0	0	0	1
+
+SPILL_HW_DIR		airplane_nav_tail_static_h		1	1	0.8	1.0	10		0 	0 	1 	0.2	0
 BILLBOARD_HW		airplane_nav_tail_static_h		1	1	1	1.0	0.6	1 5 7	0	0	0.83	0.3	0	0	0	1					
-SPILL_HW_DIR		airplane_nav_left_static_h		0.9	0.1	0	1.0	9.5		-0.95 	0 	-0.31	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_left_static_h		0.9	0.1	0	1.0	9.5		-0.95 	0 	-0.31	0.2	0
 BILLBOARD_HW		airplane_nav_left_static_h		1	1	1	1.0	0.65	1 7 7	-0.8	0	-0.25	0.3	0	0	0	1				
-SPILL_HW_DIR		airplane_nav_right_static_h		0.02	0.74	0.36	1.0	9.5		0.95 	0 	-0.31 	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_right_static_h		0.02	0.74	0.36	1.0	9.5		0.95 	0 	-0.31 	0.2	0
 BILLBOARD_HW		airplane_nav_right_static_h		1	1	1	1.0	0.65	1 6 7	0.8	0	-0.25	0.3	0	0	0	1					
 
 # normal
 
-SPILL_HW_DIR		airplane_nav_tail_static		1	1	0.8	1.0	5.5		0 	0 	1 	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_tail_static		1	1	0.8	1.0	5.5		0 	0 	1 	0.2	0
 BILLBOARD_HW		airplane_nav_tail_static		1	1	1	1.0	0.5	1 5 7	0	0	0.83	0.3	0	0	0	1					
-SPILL_HW_DIR		airplane_nav_left_static		0.9	0.1	0	1.0	5.5		-0.95 	0 	-0.31	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_left_static		0.9	0.1	0	1.0	5.5		-0.95 	0 	-0.31	0.2	0
 BILLBOARD_HW		airplane_nav_left_static		1	1	1	1.0	0.6	1 7 7	-0.8	0	-0.25	0.3	0	0	0	1				
-SPILL_HW_DIR		airplane_nav_right_static		0.02	0.74	0.36	1.0	5.5		0.95 	0 	-0.31 	0.2	0	0	0	1
+SPILL_HW_DIR		airplane_nav_right_static		0.02	0.74	0.36	1.0	5.5		0.95 	0 	-0.31 	0.2	0
 BILLBOARD_HW		airplane_nav_right_static		1	1	1	1.0	0.6	1 6 7	0.8	0	-0.25	0.3	0	0	0	1					
 
 
@@ -351,21 +349,45 @@ BILLBOARD_SW		PLN_airplane_nav_right			0	1	0	1	1.0	1 6 7	0	0	0	1					sim/graphic
 #BILLBOARD_SW		beacon_white	 			1.5	-0.4 	1.0	1	8	1 0 1									sim/graphics/animation/lights/airport_beacon
 
 ## BEN: These are currently in ADDITION to Sergio's custom OBJ lights!
-BILLBOARD_HW		apt_beacon_white_axial			1.0	1.0	0.9	0.7	-35	2 6 0 	1.1	0	0	12	0	0	0	1
-#BILLBOARD_SW		apt_beacon_white_axial 			1	0	0	0.5	-35	2 6 0									sim/graphics/animation/lights/airport_beacon
-SPILL_HW_DIR		apt_beacon_white_axial			1.0	0.95	0.85	1.0	200		1	0	0	0.990				1
-BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	0.7	4	1 4 6 	4	0	0	-3	0	0	0	1
-# glare:
-BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	1.0	3	2 5 2	30	4	0	-29	0	0	0	1
-BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	1.0	3	2 5 2 	30	-4	0	-29	0	0	0	1
+#BILLBOARD_HW		apt_beacon_white_axial			1.0	1.0	1.0	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
+SPILL_HW_DIR		apt_beacon_white_axial			1.0	0.95	0.85	1.0	200		0	0	-1	.975				0
+BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	0.7	0.7	1 3 7 	0	0	-6	-5	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	0.8	2.5	1 3 7 	0	0	-31	-30	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	1.0	3	2 5 2	5	4	-56	-55	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	1.0	3	2 5 2 	5	-4	-56	-55	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	1.0	3	2 5 2	-5	4	-56	-55	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_glow			1.0	1.0	1.0	1.0	3	2 5 2 	-5	-4	-56	-55	0	0	0	0
 
-BILLBOARD_HW		apt_beacon_green_axial			0.3	1.0	0.95	0.7	-35	2 6 0 	-1.0	0	0	12	0	0	0	1
-#BILLBOARD_SW		apt_beacon_green_axial 			1.5	-0.1 	1.0	0.5	-35	2 6 0									sim/graphics/animation/lights/airport_beacon
-SPILL_HW_DIR		apt_beacon_green_axial			0.3	0.9	0.9	1.0	200		-1	0	0	0.990				1
-BILLBOARD_HW		apt_beacon_green_glow			0.3	1.0	0.95	0.7	4	1 4 6 	-4	0	0	-3	0	0	0	1
-# glare:
-BILLBOARD_HW		apt_beacon_green_glow			0.3	1.0	0.95	1.0	3	2 5 2 	-30	4	0	-29	0	0	0	1
-BILLBOARD_HW		apt_beacon_green_glow			0.3	1.0	0.95	1.0	3	2 5 2	-30	-4	0	-29	0	0	0	1
+#BILLBOARD_HW		apt_beacon_white_mil_axial		1.0	1.0	1.0	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
+SPILL_HW_DIR		apt_beacon_white_mil_axial		1.0	0.95	0.85	1.0	200		0	0	-1	.975				0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	0.7	0.7	1 3 7 	0	0	-6	-5	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	0.8	2.5	1 3 7 	0	0	-61	-60	0	0	0	0
+
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2 	0	0	-401	-400	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2	5	0	-401	-400	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2 	-5	0	-401	-400	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2	10	0	-401	-400	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2 	-10	0	-401	-400	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2	15	0	-401	-400	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2 	-15	0	-401	-400	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2	20	0	-401	-400	0	0	0	0
+BILLBOARD_HW		apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2 5 2 	-20	0	-401	-400	0	0	0	0
+
+
+#BILLBOARD_HW		apt_beacon_green_axial			0.25	1.0	0.85	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
+SPILL_HW_DIR		apt_beacon_green_axial			0.25	0.9	0.8	1.0	200		0	0	-1	.975				0
+BILLBOARD_HW		apt_beacon_green_glow			0.25	1.0	0.85	0.7	0.7	1 3 7 	0	0	-6	-5	0	0	0	0
+BILLBOARD_HW		apt_beacon_green_glow			0.25	1.0	0.85	0.8	2.5	1 3 7 	0	0	-31	-30	0	0	0	0
+BILLBOARD_HW		apt_beacon_green_glow			0.25	1.0	0.85	1.0	3	2 5 2 	0	4	-56	-55	0	0	0	0
+BILLBOARD_HW		apt_beacon_green_glow			0.25	1.0	0.85	1.0	3	2 5 2	0	-4	-56	-55	0	0	0	0
+
+#BILLBOARD_HW		apt_beacon_yellow_axial			1.0	0.55	0.1	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
+SPILL_HW_DIR		apt_beacon_yellow_axial			1.0	0.65	0.1	1.0	200		0	0	-1	.975				0
+BILLBOARD_HW		apt_beacon_yellow_glow			1.0	0.55	0.1	0.7	0.7	1 3 7 	0	0	-6	-5	0	0	0	0
+BILLBOARD_HW		apt_beacon_yellow_glow			1.0	0.55	0.1	0.8	2.5	1 4 6 	0	0	-31	-30	0	0	0	0
+BILLBOARD_HW		apt_beacon_yellow_glow			1.0	0.55	0.1	1.0	3	2 5 2 	0	4	-56	-55	0	0	0	0
+BILLBOARD_HW		apt_beacon_yellow_glow			1.0	0.55	0.1	1.0	3	2 5 2	0	-4	-56	-55	0	0	0	0
+
 
 BILLBOARD_SW		VASI					100	-99 	0.0	0.0	0.7	1 4 0	0	0	0	1					sim/graphics/animation/lights/vasi_papi
 ## for this dataref:						R_white	G_white B_white	M	Size	Cell	R_red	G_red	B_red	K		(M is the rescale multiplier, K is the rescale constant)				
@@ -598,6 +620,12 @@ BILLBOARD_HW		heli_3_col_beacon			1	1	1	1	0.7	1 6 0	0	0	0	1	0.2	1.666	1240	1
 SPILL_HW_FLA		heli_3_col_beacon			1	1	1	0.3	THROW						0.2	0.0	1240	1
 SPILL_HW_FLA		heli_3_col_beacon			1.0	0.73	0.0	0.4	THROW						0.2	3.333	1240	1
 SPILL_HW_FLA		heli_3_col_beacon			0.224	0.90	0.39	0.4	THROW						0.2	1.666	1240	1
+
+## Airport Beacon Lights, white, green, and yellow. The combination of lights is managed in object.
+
+
+
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # SHIPS AND SAILBOATS
@@ -958,6 +986,12 @@ BILLBOARD_HW		traffic_amber_W				0.978	0.772	0.071	1.0	0.8	1 4 7	-3	0	0	-2	0.02	
 BILLBOARD_HW		traffic_amber_W 			0.978	0.772	0.071	1.0	0.8	1 4 7	-3	0	0	-2	0.02	0.44	1060	1					
 BILLBOARD_HW		traffic_green_W				0.015	0.983	0.966	1.0	0.8	1 4 7	-3	0	0	-2	0.02	0.1	1340	1
 
+BILLBOARD_HW		traffic_green_N_static			0.015	0.983	0.966	1.0	0.8	1 4 7	0	0	-3	-2	0	0	0	1
+BILLBOARD_HW		traffic_green_S_static			0.015	0.983	0.966	1.0	0.8	1 4 7	0	0	3	-2	0	0	0	1
+BILLBOARD_HW		traffic_green_E_static			0.015	0.983	0.966	1.0	0.8	1 4 7	3	0	0	-2	0	0	0	1
+BILLBOARD_HW		traffic_green_W_static			0.015	0.983	0.966	1.0	0.8	1 4 7	-3	0	0	-2	0	0	0	1
+
+
 # Railway Signals:
 # CPL sequence:
 #		0	0.1	0.2	0.3	0.4	0.5	0.6	0.7	0.8	0.9
@@ -1015,7 +1049,7 @@ LIGHT_PARAM_DEF		amb_std_fl_1_sp		3	X 	Y	Z
 SPILL_HW_DIR		amb_std_fl_1_sp			0.957	1.000	0.980	0.2	30		X 	Y	Z	0.85				0
 LIGHT_PARAM_DEF		amb_std_fl_2_sp		3	X 	Y	Z
 SPILL_HW_DIR		amb_std_fl_2_sp			0.957	1.000	0.980	0.3	30		X 	Y	Z	0.85				0
-LIGHT_PARAM_DEF		amb_sZZtd_fl_3_sp		3	X 	Y	Z
+LIGHT_PARAM_DEF		amb_std_fl_3_sp		3	X 	Y	Z
 SPILL_HW_DIR		amb_std_fl_3_sp			0.957	1.000	0.980	0.4	40		X 	Y	Z	0.85				0
 
 	# cool fluorescent (typical of offices):

@@ -10,11 +10,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestSSO_IllegalUsePanelTex(XPlaneTestCase):
     def test_export(self):
-        filename = 'test_SSO_IllegalUsePanelTex'
-
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
-        out = xplaneFile.write()
-
+        out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 
 runTestCases([TestSSO_IllegalUsePanelTex])

@@ -30,7 +30,7 @@ class XPlaneHeader():
     # Parameters:
     #   XPlaneFile xplaneFile - A <XPlaneFile>.
     #   int obj_version - OBJ format version.
-    def __init__(self, xplaneFile:'XPlaneFile', obj_version:int):
+    def __init__(self, xplaneFile: 'XPlaneFile', obj_version: int)->None:
         self.obj_version = obj_version
         self.xplaneFile = xplaneFile
 
@@ -57,7 +57,7 @@ class XPlaneHeader():
 
             if potential_match is None:
                 logger.error('Export path %s is not properly formed. Ensure it contains the words "Custom Scenery" or "default_scenery" followed by a directory')
-                return
+                return #TODO: Returning early in an __init__!
             else:
                 last_folder = os.path.dirname(potential_match.group(4)).split('/')[-1:][0]
 
@@ -67,7 +67,7 @@ class XPlaneHeader():
                 self.export_path_dirs.append((export_path_directive.export_path, last_folder + xplaneFile.filename + ".obj"))
 
         self.attributes = XPlaneAttributes()
-        
+
         # object attributes
         self.attributes.add(XPlaneAttribute("PARTICLE_SYSTEM", None))
         self.attributes.add(XPlaneAttribute("ATTR_layer_group", None))
@@ -91,11 +91,11 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_specular", None))
         self.attributes.add(XPlaneAttribute("BLEND_GLASS", None))
-        
+
         # draped shader attributes
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED_NORMAL", None))
-        
+
         # This is a hack to get around duplicate keynames!
         # There is no NORMAL_METALNESS_draped_hack,
         # self.write will check later for draped_hack and remove it
@@ -120,6 +120,13 @@ class XPlaneHeader():
     # TODO: Shouldn't this just be inside XPlaneHeader.write if it is only called once and only here?
     # If not should it be called collect?
     def init(self):
+        """
+        This is similar to other classes 'collect' methods, however it is called during
+        xplane_header.write, after everything else is collected.
+
+        The reason is we can only tell if certain directives should be written
+        after everything is collected (like GLOBALs)
+        """
         isAircraft = self.xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT
         isCockpit  = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
         isInstance = self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY
@@ -149,7 +156,8 @@ class XPlaneHeader():
             exportdir = os.path.dirname(os.path.abspath(os.path.normpath(os.path.join(blenddir, self.xplaneFile.filename))))
 
         if self.xplaneFile.options.autodetectTextures:
-            self._autodetectTextures()
+            #2.8 doesn't work with Texture Slots Anymore. self._autodetectTextures()
+            pass
 
         # standard textures
         if self.xplaneFile.options.texture != '':
@@ -174,7 +182,7 @@ class XPlaneHeader():
                                 .setValue(mat.getEffectiveNormalMetalness())
                 elif not has_texture_normal and mat.getEffectiveNormalMetalness():
                     logger.warn("Material '%s' has Normal Metalness, but no Normal Texture" % mat.name)
-        
+
         if xplane_version >= 1100:
             if self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[0] or self.xplaneFile.referenceMaterials[1]
@@ -190,7 +198,7 @@ class XPlaneHeader():
                 #"That's the scaling factor for the normal map available ONLY for the draped info. Without that , it can't find the texture.
                 #That makes a non-fatal error in x-plane. Without the normal map, the metalness directive is ignored" -Ben Supnik, 07/06/17 8:35pm
                 self.attributes['TEXTURE_DRAPED_NORMAL'].setValue("1.0 " + self.getPathRelativeToOBJ(self.xplaneFile.options.texture_draped_normal, exportdir, blenddir))
-            
+
             if self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[1]
                 if xplane_version >= 1100:
@@ -217,7 +225,7 @@ class XPlaneHeader():
                 else:
                     # draped specular
                     self.attributes['SPECULAR'].setValue(mat.attributes['ATTR_shiny_rat'].getValue())
-                
+
                     # prevent of writing again in material
                 mat.attributes['ATTR_shiny_rat'].setValue(None)
             # draped LOD
@@ -259,7 +267,7 @@ class XPlaneHeader():
                     blenddir
                 )
 
-                objs = self.xplaneFile.objects
+                objs = self.xplaneFile.get_xplane_objects()
 
                 if not list(filter(lambda obj: obj[1].type == "EMPTY" and\
                         obj[1].blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
@@ -288,7 +296,7 @@ class XPlaneHeader():
                 self.attributes['GLOBAL_specular'].setValue(1.0)
                 self.xplaneFile.commands.written['ATTR_shiny_rat'] = 1.0 # Here we are fooling ourselves
                 write_user_specular_values = False #It will be skipped from now on
-        
+
         # v1000
         if xplane_version >= 1000:
             if self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY and\
@@ -339,12 +347,17 @@ class XPlaneHeader():
 
         # v1010
         if xplane_version >= 1010:
-            # shadow
-            is_scenery_like_export = (self.xplaneFile.options.export_type == EXPORT_TYPE_SCENERY or \
-                                      self.xplaneFile.options.export_type == EXPORT_TYPE_INSTANCED_SCENERY)
+            if (isInstance or isScenery): # An exceptional case where a GLOBAL_ is allowed in Scenery type
+                mats = self.xplaneFile.getMaterials()
+                if mats and all(not mat.options.shadow_local for mat in mats):
+                    # No mix and match! Great!
+                    self.attributes['GLOBAL_no_shadow'].setValue(True)
 
-            if self.xplaneFile.options.shadow == False and is_scenery_like_export:
-                self.attributes['GLOBAL_no_shadow'].setValue(True)
+                if self.attributes['GLOBAL_no_shadow'].getValue():
+                    for mat in mats:
+                        # Erase the collected material's value, ensuring it won't be written
+                        # "All ATTR_shadow is false" guaranteed by GLOBAL_no_shadow
+                        mat.attributes["ATTR_no_shadow"].setValue(None)
 
             # cockpit_lit
             if isCockpit and (self.xplaneFile.options.cockpit_lit == True or xplane_version >= 1100):
@@ -436,93 +449,6 @@ class XPlaneHeader():
 
         return texture
 
-    def _autodetectTextures(self):
-        texture = None
-        textureLit = None
-        textureNormal = None
-        textureSpecular = None
-        textureDraped = None
-        textureDrapedNormal = None
-        textureDrapedSpecular = None
-        xplaneObjects = self.xplaneFile.getObjectsList()
-        hasDraped = False
-
-        for xplaneObject in xplaneObjects:
-            # skip non-mesh objects and objects without a xplane bone
-            # also skip invalid materials
-            if xplaneObject.type == 'MESH' and \
-               xplaneObject.xplaneBone and \
-               xplaneObject.material.options:
-                mat = xplaneObject.material
-
-                if mat.uv_name == None and mat.options.draw:
-                    logger.warn('Object "%s" has no UV-Map.' % xplaneObject.name)
-
-                if mat.options.draped:
-                    hasDraped = True
-
-                    if textureDraped == None and mat.texture:
-                        textureDraped = mat.texture
-
-                    if textureDrapedNormal == None and mat.textureNormal:
-                        textureDrapedNormal = mat.textureNormal
-
-                    if textureDrapedSpecular == None and mat.textureSpecular:
-                        textureDrapedSpecular = mat.textureSpecular
-                elif not mat.options.panel and not mat.options.solid_camera:
-                    if texture == None and mat.texture:
-                        texture = mat.texture
-
-                    if textureLit == None and mat.textureLit:
-                        textureLit = mat.textureLit
-
-                    if textureNormal == None and mat.textureNormal:
-                        textureNormal = mat.textureNormal
-
-                    if textureSpecular == None and mat.textureSpecular:
-                        textureSpecular = mat.textureSpecular
-
-        # now go through all textures again and list any objects with different textures
-        for xplaneObject in xplaneObjects:
-            # skip non-mesh objects and objects without a xplane bone
-            if xplaneObject.type == 'MESH' and xplaneObject.xplaneBone:
-                mat = xplaneObject.material
-
-                if mat.options.draped:
-                    if textureDraped and \
-                       self._getCanonicalTexturePath(textureDraped) != self._getCanonicalTexturePath(mat.texture):
-                        logger.warn('Material "%s" in Object "%s" must use the draped texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureDraped, mat.texture))
-
-                    if textureDrapedNormal and \
-                       self._getCanonicalTexturePath(textureDrapedNormal) != self._getCanonicalTexturePath(mat.textureNormal):
-                        logger.warn('Material "%s" in Object "%s" must use the draped normal/specular texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureDrapedNormal, mat.textureNormal))
-                elif not mat.options.panel and not mat.options.solid_camera:
-                    if texture and \
-                       self._getCanonicalTexturePath(texture) != self._getCanonicalTexturePath(mat.texture):
-                        logger.warn('Material "%s" in Object "%s" must use the color texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, texture, mat.texture))
-
-                    if textureLit and \
-                       self._getCanonicalTexturePath(textureLit) != self._getCanonicalTexturePath(mat.textureLit):
-                        logger.warn('Material "%s" in Object "%s" must use the night/lit texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureLit, mat.textureLit))
-
-                    if textureNormal and \
-                       self._getCanonicalTexturePath(textureNormal) != self._getCanonicalTexturePath(mat.textureNormal):
-                        logger.warn('Material "%s" in Object "%s" must use the normal/specular texture "%s" but uses "%s".' % (mat.name, xplaneObject.name, textureNormal, mat.textureNormal))
-
-        # generate composite normal texture if needed
-        if bpy.context.scene.xplane.compositeTextures:
-            textureNormal = self._getCompositeNormalTexture(textureNormal, textureSpecular)
-
-            if hasDraped:
-                textureDrapedNormal = self._getCompositeNormalTexture(textureDrapedNormal, textureDrapedSpecular)
-
-        self.xplaneFile.options.texture = texture or ''
-        self.xplaneFile.options.texture_normal = textureNormal or ''
-        self.xplaneFile.options.texture_lit = textureLit or ''
-        self.xplaneFile.options.texture_draped = textureDraped or ''
-        self.xplaneFile.options.texture_draped_normal = textureDrapedNormal or ''
-
-
     # Method: getPathRelativeToOBJ
     # Returns the resource path relative to the exported OBJ
     #
@@ -608,7 +534,7 @@ class XPlaneHeader():
 
                 else:
                     #This is a double fix. Boolean values with True get written (sans the word true), False does not,
-                    #and strings that start with True or False don't get treated as as booleans 
+                    #and strings that start with True or False don't get treated as as booleans
                     is_bool = len(values) == 1 and isinstance(values[0],bool)
                     if is_bool and values[0] == True:
                         o += '%s\n' % (attr.name)

@@ -1,27 +1,27 @@
-# File: xplane_ui.py
-# Creates the User Interface for all X-Plane settings.
+"""
+Creates the User Interface for all X-Plane properties.
+"""
 
 import collections
-from typing import Optional 
+from typing import Optional
 
 import bpy
-from io_xplane2blender import xplane_constants
+from io_xplane2blender import xplane_constants, xplane_props
 from bpy.types import Object, UILayout
 from io_xplane2blender.xplane_constants import MANIPULATORS_OPT_IN
-from typing import Optional
+from typing import Optional, Union
 
 from .xplane_config import *
 from .xplane_constants import *
-from .xplane_helpers import getColorAndLitTextureSlots
 from .xplane_ops import *
 from .xplane_props import *
 
 
 # Class: DATA_PT_xplane
-# Adds X-Plane lamp settings to the lamp tab. Uses <lamp_layout> and <custom_layout>.
+# Adds X-Plane light settings to the light tab. Uses <light_layout> and <custom_layout>.
 class DATA_PT_xplane(bpy.types.Panel):
-    '''XPlane Material Panel'''
-    bl_label = "XPlane"
+    '''XPlane Data/Light Panel'''
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"
@@ -30,18 +30,18 @@ class DATA_PT_xplane(bpy.types.Panel):
         obj = context.object
         version = int(bpy.context.scene.xplane.version)
 
-        if obj.type == "LAMP":
-            lamp_layout(self, obj.data)
-            custom_layout(self, obj.data, "LAMP")
+        if obj.type == "LIGHT":
+            light_layout(self.layout, obj.data)
+            custom_layout(self.layout, "LIGHT")
         if obj.type == "EMPTY" and version >= 1130:
-            empty_layout(self, obj)
+            empty_layout(self.layout, obj)
 
 
 # Class: MATERIAL_PT_xplane
 # Adds X-Plane Material settings to the material tab. Uses <material_layout> and <custom_layout>.
 class MATERIAL_PT_xplane(bpy.types.Panel):
     '''XPlane Material Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -58,18 +58,18 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
         if(obj.type == "MESH"):
             material_layout(self.layout, obj.active_material)
             self.layout.separator()
-            cockpit_layout(self, obj.active_material)
-            custom_layout(self, obj.active_material, "MATERIAL")
+            cockpit_layout(self.layout, obj.active_material)
+            custom_layout(self.layout, obj.active_material)
 
             if version >= 1000:
-                conditions_layout(self, obj.active_material, "MATERIAL")
+                conditions_layout(self.layout, obj.active_material)
 
 
 # Class: SCENE_PT_xplane
 # Adds X-Plane Layer settings to the scene tab. Uses <scene_layout>.
 class SCENE_PT_xplane(bpy.types.Panel):
     '''XPlane Scene Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
@@ -80,13 +80,13 @@ class SCENE_PT_xplane(bpy.types.Panel):
 
     def draw(self, context):
         scene = context.scene
-        scene_layout(self, scene)
+        scene_layout(self.layout, scene)
 
 # Class: OBJECT_PT_xplane
 # Adds X-Plane settings to the object tab. Uses <mesh_layout>, <cockpit_layout>, <manipulator_layout> and <custom_layout>.
 class OBJECT_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
@@ -95,7 +95,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
     def poll(self, context):
         obj = context.object
 
-        if obj.type in ("MESH", "EMPTY", "ARMATURE", "LAMP"):
+        if obj.type in ("MESH", "EMPTY", "ARMATURE", "LIGHT"):
             return True
         else:
             return False
@@ -104,30 +104,28 @@ class OBJECT_PT_xplane(bpy.types.Panel):
         obj = context.object
         version = int(context.scene.xplane.version)
 
-        if obj.type in ("MESH", "EMPTY", "ARMATURE", "LAMP"):
-            object_layer_layout(self, obj)
+        if obj.type in ("MESH", "EMPTY", "ARMATURE", "LIGHT"):
+            object_layer_layout(self.layout, obj)
 
-            animation_layout(self, obj)
+            animation_layout(self.layout, obj)
             if obj.type == "MESH":
-                mesh_layout(self, obj)
-                manipulator_layout(self, obj)
-            objType = obj.type
-            if objType == "LAMP":
-                objType = "OBJECT"
-            lod_layout(self, obj)
-            weight_layout(self, obj)
-            custom_layout(self, obj, objType)
+                mesh_layout(self.layout, obj)
+                manipulator_layout(self.layout, obj)
+            lod_layout(self.layout, obj)
+            weight_layout(self.layout, obj)
+            if obj.type != "EMPTY":
+                custom_layout(self.layout, obj)
 
             # v1000
             if version >= 1000:
-                conditions_layout(self, obj, "OBJECT")
+                conditions_layout(self.layout, obj)
 
 
 # Class: BONE_PT_xplane
 # Adds X-Plane settings to the bone tab. Uses <animation_layout>.
 class BONE_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
-    bl_label = "XPlane"
+    bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "bone"
@@ -144,10 +142,10 @@ class BONE_PT_xplane(bpy.types.Panel):
     def draw(self, context):
         bone = context.bone
         obj = context.object
-        weight_layout(self, bone)
-        animation_layout(self, bone, True)
+        weight_layout(self.layout, bone)
+        animation_layout(self.layout, bone, True)
 
-def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
+def empty_layout(layout:bpy.types.UILayout, empty_obj:bpy.types.Object):
     assert empty_obj.type == 'EMPTY'
 
     # Note: Even though this is being displayed on the Empty > Data
@@ -155,13 +153,12 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
     # from bpy.types.Object.xplane because there is no bpy.types.Empty
     emp = empty_obj.xplane.special_empty_props
 
-    layout = self.layout
     layout.row().prop(empty_obj.xplane.special_empty_props,'special_type')
 
     if emp.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
        emp.special_type == EMPTY_USAGE_EMITTER_SOUND:
         box = layout.box()
-        box.label("Emitter Settings")
+        box.label(text="Emitter Settings")
         row = box.row()
         row.prop(emp.emitter_props,"name",text="Name")
         # Adapted from properties_texture.py, factor_but
@@ -169,52 +166,60 @@ def empty_layout(self:bpy.types.UILayout, empty_obj:bpy.types.Object):
         sub.prop(emp.emitter_props, "index_enabled", text="")
         sub.active = getattr(emp.emitter_props, "index_enabled")
         sub.prop(emp.emitter_props, "index", text="Index")
+    elif emp.special_type == EMPTY_USAGE_MAGNET:
+        box = layout.box()
+        box.label(text="Magnet Settings")
+        row = box.row()
+        row.prop(emp.magnet_props, "debug_name")
+        row = box.row(align=True)
+        row.label(text="Magnet Type:")
+        sub_row = row.row(align=True)
+        sub_row.alignment = "RIGHT"
+        sub_row.prop(emp.magnet_props, "magnet_type_is_xpad")
+        sub_row.prop(emp.magnet_props, "magnet_type_is_flashlight")
 
-# Function: scene_layout
-# Draws the UI layout for scene tabs. Uses <layer_layout>.
-#
-# Parameters:
-#   self - Instance of current panel class.
-#   scene - Blender scene.
-def scene_layout(self, scene):
-    layout = self.layout
+
+def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
     layout.row().prop(scene.xplane, "version")
-    layout.row().prop(scene.xplane, "exportMode")
     layout.row().prop(scene.xplane, "compositeTextures")
 
     xp2b_ver = xplane_helpers.VerStruct.current()
     if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_RC and xp2b_ver.build_number != xplane_constants.BUILD_NUMBER_NONE:
-        layout.row().label("XPlane2Blender Version: " + str(xp2b_ver), icon="FILE_TICK")
+        layout.row().label(text="XPlane2Blender Version: " + str(xp2b_ver), icon="FILE_TICK")
     else:
-        layout.row().label("XPlane2Blender Version: " + str(xp2b_ver), icon="NONE")
+        layout.row().label(text="XPlane2Blender Version: " + str(xp2b_ver), icon="NONE")
 
     needs_warning = False
     if xp2b_ver.build_type == xplane_constants.BUILD_TYPE_ALPHA or\
         xp2b_ver.build_type == xplane_constants.BUILD_TYPE_BETA:
-        layout.row().label("BEWARE: " + xp2b_ver.build_type.capitalize() + " versions can damage files!", icon="ERROR")
+        layout.row().label(text="BEWARE: " + xp2b_ver.build_type.capitalize() + " versions can damage files!", icon="ERROR")
         needs_warning = True
     elif xp2b_ver.build_type == xplane_constants.BUILD_TYPE_DEV:
-        layout.row().label("Developer versions are DANGEROUS and UNSTABLE!", icon="RADIO")
+        layout.row().label(text="Developer versions are DANGEROUS and UNSTABLE!", icon="ORPHAN_DATA")
         needs_warning = True
 
     if xp2b_ver.build_number == xplane_constants.BUILD_NUMBER_NONE:
-        layout.row().label("No build number: addon may be EXTRA UNSTABLE.", icon="CANCEL")
+        layout.row().label(text="No build number: addon may be EXTRA UNSTABLE.", icon="CANCEL")
         needs_warning = True
 
     if needs_warning is True:
-        layout.row().label("     Make backups or switch to a more stable release!")
+        layout.row().label(text="     Make backups or switch to a more stable release!")
 
-    if scene.xplane.exportMode == 'layers':
-        if len(scene.xplane.layers) != 0:
-            for i in range(0, len(scene.layers)):
-                row = layout.row()
-                scene_layer_layout(self, scene, row, i)
-        else:
-            layout.row().operator('scene.add_xplane_layers')
+    def get_collections_w_objs(collection):
+        col_w_objs = []
+        if collection.name != "Master Collection":
+            col_w_objs.append(collection)
+        for child in collection.children:
+            col_w_objs.extend(get_collections_w_objs(child))
+        return col_w_objs
+
+    layout.label(text="Collections")
+    for collection in list(dict.fromkeys(get_collections_w_objs(scene.collection))):
+        collection_layer_layout(layout, collection)
 
     advanced_box = layout.box()
-    advanced_box.label("Advanced Settings")
+    advanced_box.label(text="Advanced Settings")
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "optimize")
     advanced_column.prop(scene.xplane, "debug")
@@ -224,12 +229,12 @@ def scene_layout(self, scene):
         #TODO: Remove profiler entirely?
         #debug_box.prop(scene.xplane, "profile")
         debug_box.prop(scene.xplane, "log")
-    
-    scene_dev_layout(self,scene,layout)
 
-def scene_dev_layout(self,scene,layout):
+    scene_dev_layout(layout, scene)
+
+def scene_dev_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
     dev_box = layout.box()
-    dev_box_row = dev_box.column_flow(2,True)
+    dev_box_row = dev_box.column_flow(columns=2, align=True)
     dev_box_row.prop(scene.xplane, "plugin_development")
     dev_box_row.label(text="", icon="ERROR")
     if scene.xplane.plugin_development:
@@ -237,17 +242,18 @@ def scene_dev_layout(self,scene,layout):
         dev_box_column.prop(scene.xplane, "dev_enable_breakpoints")
         dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
-        #Exact same operator, more convient place 
+        #Exact same operator, more convient place
         dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
-        dev_box_column.operator("scene.dev_layer_names_from_objects")
+        dev_box_column.operator("scene.dev_apply_default_material_to_all")
+        dev_box_column.operator("scene.dev_root_names_from_objects")
         updater_row = dev_box_column.row()
         updater_row.prop(scene.xplane,"dev_fake_xplane2blender_version")
         updater_row.operator("scene.dev_rerun_updater")
         updater_row = dev_box_column.row()
         updater_row.operator("scene.dev_create_lights_txt_summary")
-        
+
         history_box = dev_box_column.box()
-        history_box.label("XPlane2Blender Version History")
+        history_box.label(text="XPlane2Blender Version History")
         history_list = list(scene.xplane.xplane2blender_ver_history)
         history_list.reverse()
         for entry in history_list:
@@ -255,173 +261,145 @@ def scene_dev_layout(self,scene,layout):
             if entry.build_type == xplane_constants.BUILD_TYPE_LEGACY:
                 icon_str = "GHOST_ENABLED"
             if entry.build_type == xplane_constants.BUILD_TYPE_DEV:
-                icon_str = "RADIO"
+                icon_str = "ORPHAN_DATA"
             elif entry.build_type == xplane_constants.BUILD_TYPE_ALPHA or\
                 entry.build_type == xplane_constants.BUILD_TYPE_BETA:
                 icon_str="ERROR"
             elif entry.build_type == xplane_constants.BUILD_TYPE_RC and entry.build_number != BUILD_NUMBER_NONE:
                 icon_str="FILE_TICK"
-            
+
             history_box.label(text=str(entry), icon=icon_str)
 
-def scene_layer_layout(self, scene, layout, layer):
-    version = int(scene.xplane.version)
-    li = str(layer + 1)
-    layerObj = scene.xplane.layers[layer]
-    box = layout.box()
-    li = str(layer + 1)
+def collection_layer_layout(layout: bpy.types.UILayout, collection: bpy.types.Collection):
+    version = int(bpy.context.scene.xplane.version)
+    layer_props = collection.xplane.layer
+    row = layout.row()
+    box = row.box()
 
-    if layerObj.expanded:
+    if layer_props.expanded:
         expandIcon = "TRIA_DOWN"
-        expanded = True
     else:
         expandIcon = "TRIA_RIGHT"
-        expanded = False
+    column = box.column_flow(columns=2, align=True)
+    column.prop(layer_props, "expanded", text = collection.name, expand = True, emboss = False, icon = expandIcon)
+    column.prop(collection.xplane, "is_exportable_collection")#, text = "Export)
 
-    box.prop(layerObj, "expanded", text = "Layer " + li, expand = True, emboss = False, icon = expandIcon)
+    if layer_props.expanded:
+        layer_layout(box, layer_props, version, "object")
+        export_path_dir_layer_layout(box, layer_props, version, "object")
+        custom_layer_layout(box, layer_props, version, "object")
 
-    if expanded:
-        layer_layout(self, box, layerObj, version)
-        export_path_dir_layer_layout(self, box, layerObj, version)
-        custom_layer_layout(self, box, layerObj, version)
+def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
+    version = int(bpy.context.scene.xplane.version)
+    layer_props = obj.xplane.layer
+    row = layout.row()
 
-def object_layer_layout(self, obj):
-    if bpy.context.scene.xplane.exportMode == 'root_objects':
-        version = int(bpy.context.scene.xplane.version)
-        layerObj = obj.xplane.layer
-        row = self.layout.row()
+    row.prop(obj.xplane, 'isExportableRoot')
 
-        row.prop(obj.xplane, 'isExportableRoot')
+    if obj.xplane.isExportableRoot:
+        row = layout.row()
+        box = row.box()
 
-        if obj.xplane.isExportableRoot:
-            row = self.layout.row()
-            box = row.box()
+        if layer_props.expanded:
+            expandIcon = "TRIA_DOWN"
+            expanded = True
+        else:
+            expandIcon = "TRIA_RIGHT"
+            expanded = False
 
-            if layerObj.expanded:
-                expandIcon = "TRIA_DOWN"
-                expanded = True
-            else:
-                expandIcon = "TRIA_RIGHT"
-                expanded = False
+        box.prop(layer_props, "expanded", text = "Exportable Object", expand = True, emboss = False, icon = expandIcon)
 
-            box.prop(layerObj, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
+        if expanded:
+            layer_layout(box, layer_props, version, "object")
+            export_path_dir_layer_layout(box, layer_props, version, "object")
+            custom_layer_layout(box, layer_props, version, "object")
 
-            if expanded:
-                layer_layout(self, box, layerObj, version, 'object')
-                export_path_dir_layer_layout(self, box, layerObj, version, 'object')
-                custom_layer_layout(self, box, layerObj, version, 'object')
 
-# Function: layer_layout
-# Draws the UI layout for <XPlaneLayers>. Uses <custom_layer_layout>.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   scene - Blender scene
-#   UILayout layout - Instance of sublayout to use.
-#   int layer - <XPlaneLayer> index.
-def layer_layout(self, layout, layerObj, version, context = 'scene'):
-    canHaveDraped = version >= 1000 and layerObj.export_type not in ['aircraft', 'cockpit']
-    isInstanced = version >= 1000 and layerObj.export_type == 'instanced_scenery'
+def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLayer, version:int, context:str):
+    """Draws OBJ File Settings and advanced options"""
+    canHaveDraped = version >= 1000 and layer_props.export_type not in ['aircraft', 'cockpit']
+    isInstanced   = version >= 1000 and layer_props.export_type == 'instanced_scenery'
     canHaveSceneryProps = layerObj.export_type not in ['aircraft', 'cockpit']
 
+
     #column = layout.column()
-    layout.prop(layerObj, "name")
-    layout.prop(layerObj, "export_type")
+    layout.prop(layer_props, "name")
+    layout.prop(layer_props, "export_type")
 
     tex_box = layout.box()
-    tex_box.label('Textures')
-
-    tex_box.prop(layerObj, "autodetectTextures")
-
-    if not layerObj.autodetectTextures:
-        tex_box.prop(layerObj, "texture", text = "Default")
-        tex_box.prop(layerObj, "texture_lit", text = "Night")
-        tex_box.prop(layerObj, "texture_normal", text = "Normal / Specular")
+    tex_box.label(text='Textures')
+    tex_box.prop(layer_props, "autodetectTextures")
+    if not layer_props.autodetectTextures:
+        tex_box.prop(layer_props, "texture", text = "Default")
+        tex_box.prop(layer_props, "texture_lit", text = "Night")
+        tex_box.prop(layer_props, "texture_normal", text = "Normal / Specular")
 
         if canHaveDraped:
-            tex_box.prop(layerObj, "texture_draped", text = "Draped")
-            tex_box.prop(layerObj, "texture_draped_normal", text = "Draped Normal / Specular")
+            tex_box.prop(layer_props, "texture_draped", text = "Draped")
+            tex_box.prop(layer_props, "texture_draped_normal", text = "Draped Normal / Specular")
 
     # cockpit regions
-    if layerObj.export_type == 'cockpit':
+    if layer_props.export_type == 'cockpit':
         cockpit_box = layout.box()
-        cockpit_box.label('Cockpits')
-        #cockpit_box.prop(layerObj, "panel_texture")
-        cockpit_box.prop(layerObj, "cockpit_regions", text= "Regions")
-        num_regions = int(layerObj.cockpit_regions)
+        cockpit_box.label(text='Cockpits')
+        cockpit_box.prop(layer_props, "cockpit_regions", text= "Regions")
+        num_regions = int(layer_props.cockpit_regions)
 
         if num_regions > 0:
-            if len(layerObj.cockpit_region) < num_regions:
-                region_box = cockpit_box.box()
+            for i in range(0, num_regions):
+                # get cockpit region or create it if not present
+                if len(layer_props.cockpit_region)>i:
+                    cockpit_region = layer_props.cockpit_region[i]
 
-                if context == 'scene':
-                    region_box.operator("scene.add_xplane_layer_cockpit_regions").index = layerObj.index
-                elif context == 'object':
-                    region_box.operator("object.add_xplane_layer_cockpit_regions")
-            else:
-                for i in range(0, num_regions):
-                    # get cockpit region or create it if not present
-                    if len(layerObj.cockpit_region)>i:
-                        cockpit_region = layerObj.cockpit_region[i]
+                    if cockpit_region.expanded:
+                        expandIcon = "TRIA_DOWN"
+                    else:
+                        expandIcon = "TRIA_RIGHT"
 
-                        if cockpit_region.expanded:
-                            expandIcon = "TRIA_DOWN"
-                        else:
-                            expandIcon = "TRIA_RIGHT"
+                    region_box = cockpit_box.box()
+                    region_box.prop(cockpit_region, "expanded", text = "Cockpit region %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
 
-                        region_box = cockpit_box.box()
-                        region_box.prop(cockpit_region, "expanded", text = "Cockpit region %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
-
-                        if cockpit_region.expanded:
-                            region_box.prop(cockpit_region, "left")
-                            region_box.prop(cockpit_region, "top")
-                            region_split = region_box.split(percentage = 0.5)
-                            region_split.prop(cockpit_region, "width")
-                            region_split.label("= %d" % (2 ** cockpit_region.width))
-                            region_split = region_box.split(percentage = 0.5)
-                            region_split.prop(cockpit_region, "height")
-                            region_split.label("= %d" % (2 ** cockpit_region.height))
+                    if cockpit_region.expanded:
+                        region_box.prop(cockpit_region, "left")
+                        region_box.prop(cockpit_region, "top")
+                        region_split = region_box.split(factor = 0.5)
+                        region_split.prop(cockpit_region, "width")
+                        region_split.label(text="= %d" % (2 ** cockpit_region.width))
+                        region_split = region_box.split(factor = 0.5)
+                        region_split.prop(cockpit_region, "height")
+                        region_split.label(text="= %d" % (2 ** cockpit_region.height))
 
         # v1010
         if version < 1100:
             # cockpit_lit
             cockpit_lit_box = cockpit_box.row()
-            cockpit_lit_box.prop(layerObj, "cockpit_lit")
+            cockpit_lit_box.prop(layer_props, "cockpit_lit")
     # LODs
     else:
         lods_box = layout.box()
-        lods_box.label('Levels of Detail')
-        lods_box.prop(layerObj, "lods", text="LODs")
-        num_lods = int(layerObj.lods)
+        lods_box.label(text='Levels of Detail')
+        lods_box.prop(layer_props, "lods", text="LODs")
+        num_lods = int(layer_props.lods)
 
         if num_lods > 0:
-            if len(layerObj.lod) < num_lods:
-                lod_box = lods_box.box()
+            for i in range(0, num_lods):
+                if len(layer_props.lod)>i:
+                    lod = layer_props.lod[i]
 
-                if context == 'scene':
-                    lod_box.operator("scene.add_xplane_layer_lods").index = layerObj.index
-                elif context == 'object':
-                    lod_box.operator("object.add_xplane_layer_lods")
+                    if lod.expanded:
+                        expandIcon = "TRIA_DOWN"
+                    else:
+                        expandIcon = "TRIA_RIGHT"
 
-            else:
-                for i in range(0, num_lods):
-                    if len(layerObj.lod)>i:
-                        lod = layerObj.lod[i]
+                    lod_box = lods_box.box()
+                    lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
 
-                        if lod.expanded:
-                            expandIcon = "TRIA_DOWN"
-                        else:
-                            expandIcon = "TRIA_RIGHT"
-
-                        lod_box = lods_box.box()
-                        lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
-
-                        if lod.expanded:
-                            lod_box.prop(lod, "near")
-                            lod_box.prop(lod, "far")
+                    if lod.expanded:
+                        lod_box.prop(lod, "near")
+                        lod_box.prop(lod, "far")
 
         if canHaveDraped:
-            lods_box.prop(layerObj, "lod_draped")
+            lods_box.prop(layer_props, "lod_draped")
 
     if canHaveSceneryProps:
         #Scenery Properties Group
@@ -437,20 +415,11 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
             layer_group_box.prop(layerObj, "layer_group_draped")
             layer_group_box.prop(layerObj, "layer_group_draped_offset")
 
-        # v1010
-        if version >= 1010 and (layerObj.export_type == EXPORT_TYPE_SCENERY or
-                                layerObj.export_type == EXPORT_TYPE_INSTANCED_SCENERY):
-            
-            #TODO: Shouldn't these be material properties instead?
-            # shadow
-            shadow_box = scenery_props_group_box.box()
-            shadow_box.prop(layerObj, "shadow", "Cast shadows")
-            
         # v1000
         if version >= 1000:
             # slope_limit
             slope_box = scenery_props_group_box.box()
-            slope_box.label("Slope Properties")
+            slope_box.label(text="Slope Properties")
             slope_box.prop(layerObj, "slope_limit")
 
             if layerObj.slope_limit == True:
@@ -464,18 +433,19 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 
             # require surface
             require_box = scenery_props_group_box.row()
-            require_box.prop(layerObj, "require_surface", "Require surface")
+            require_box.prop(layer_props, "require_surface", text="Require surface")
+
 
     # Other Options
     #layout.separator()
     advanced_box = layout.box()
-    advanced_box.label("Advanced Options")
+    advanced_box.label(text="Advanced Options")
     if version >= 1130:
-        advanced_box.prop(layerObj, "particle_system_file", text="Particle System File")
-    advanced_box.prop(layerObj, "slungLoadWeight")
+        advanced_box.prop(layer_props, "particle_system_file", text="Particle System File")
+    advanced_box.prop(layer_props, "slungLoadWeight")
 
-    advanced_box.prop(layerObj, "export")
-    advanced_box.prop(layerObj, "debug")
+    advanced_box.prop(layer_props, "export")
+    advanced_box.prop(layer_props, "debug")
 
 # Function: custom_layer_layout
 # Draws the UI layout for the custom attributes of a <XPlaneLayer>.
@@ -484,27 +454,23 @@ def layer_layout(self, layout, layerObj, version, context = 'scene'):
 #   UILayout self - Instance of current UILayout.
 #   UILayout layout - Instance of sublayout to use.
 #   layerObj - <XPlaneLayer> .
-def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
+def custom_layer_layout(layout: bpy.types.UILayout, layer_props:xplane_props.XPlaneLayer, version:int, context:str):
     layout.separator()
     row = layout.row()
-    row.label("Custom Properties")
+    row.label(text="Custom Properties")
 
-    if context == 'scene':
-        row.operator("scene.add_xplane_layer_attribute").index = layerObj.index
-    elif context == 'object':
-        row.operator("object.add_xplane_layer_attribute")
+    if context == 'object':
+        row.operator('object.add_xplane_layer_attribute')
 
     box = layout.box()
 
-    for i, attr in enumerate(layerObj.customAttributes):
+    for i, attr in enumerate(layer_props.customAttributes):
         subbox = box.box()
         subrow = subbox.row()
         subrow.prop(attr, "name")
         subrow.prop(attr, "value")
 
-        if context == 'scene':
-            subrow.operator("scene.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = (layerObj.index, i)
-        elif context == 'object':
+        if context == 'object':
             subrow.operator("object.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = i
 
         if type in ("MATERIAL", "MESH"):
@@ -514,57 +480,46 @@ def custom_layer_layout(self, layout, layerObj, version, context = 'scene'):
 def command_search_window_layout(layout):
     scene = bpy.context.scene
     row = layout.row()
-    row.template_list("UL_CommandSearchList", "", scene.xplane.command_search_window_state, "command_search_list", scene.xplane.command_search_window_state, "command_search_list_idx")
+    row.template_list("XPLANE_UL_CommandSearchList", "", scene.xplane.command_search_window_state, "command_search_list", scene.xplane.command_search_window_state, "command_search_list_idx")
 
 def dataref_search_window_layout(layout):
     scene = bpy.context.scene
     row = layout.row()
-    row.template_list("UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
+    row.template_list("XPLANE_UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
 
-def export_path_dir_layer_layout(self, layout, layerObj, version, context = 'scene'):
+def export_path_dir_layer_layout(layout:bpy.types.UILayout, layer_props:xplane_props.XPlaneLayer, version:int, context:str):
     layout.separator()
     row = layout.row()
-    row.label("Export Path Directives")
-    
-    if context == 'scene':
-        row.operator("scene.add_xplane_export_path_directive").index = layerObj.index
-    elif context == 'object':
+    row.label(text="Export Path Directives")
+
+    if context == 'object':
         row.operator("object.add_xplane_export_path_directive")
-        
+
     box = layout.box()
-    
-    for i, attr in enumerate(layerObj.export_path_directives):
-        row = box.row() 
+
+    for i, attr in enumerate(layer_props.export_path_directives):
+        row = box.row()
         row.prop(attr,"export_path", text= "Export Path " + str(i))
-        
-        if context == 'scene':
-            row.operator("scene.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = (layerObj.index, i)
-        elif context == 'object':
+
+        if context == 'object':
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
-# Function: mesh_layout
-# Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def mesh_layout(self, obj):
-    layout = self.layout
-
+def mesh_layout(layout:bpy.types.UILayout, obj):
+    """
+    Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling.
+    A no-op until issue #409 is decided on
+    """
+    pass
+    """
     if bpy.context.scene.xplane.exportMode == 'layers':
         row = layout.row()
         row.prop(obj.xplane, "export_mesh", text = "Export Animation In Layers")
 
     row = layout.row()
+    """
 
-# Function: lamp_layout
-# Draws the UI layout for lamps.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender data object, the lamp itself
-def lamp_layout(self:bpy.types.UILayout, obj):
-    layout = self.layout
+
+def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Light):
     row = layout.row()
     row.prop(obj.xplane, "type", text = "Type")
 
@@ -579,7 +534,7 @@ def lamp_layout(self:bpy.types.UILayout, obj):
         row = layout.row()
         row.prop(obj.xplane, "size")
         row = layout.row()
-        row.label("Texture Coordinates:")
+        row.label(text="Texture Coordinates:")
         row = layout.row()
         row.prop(obj.xplane, "uv", text = "")
         row = layout.row()
@@ -612,7 +567,7 @@ def material_layout(layout:UILayout,
                     active_material:bpy.types.Material):
     version = int(bpy.context.scene.xplane.version)
     draw_box = layout.box()
-    draw_box.label("Draw Settings")
+    draw_box.label(text="Draw Settings")
     draw_box_column = draw_box.column()
     draw_box_column.prop(active_material.xplane, "draw")
 
@@ -630,6 +585,10 @@ def material_layout(layout:UILayout,
 
         if version >= 1100:
             draw_box_column.prop(active_material.xplane, "blend_glass")
+
+        if version >= 1010:
+            draw_box_column.prop(active_material.xplane, "shadow_local")
+
         if version >= 1000:
             blend_prop_enum = active_material.xplane.blend_v1000
         else:
@@ -641,7 +600,7 @@ def material_layout(layout:UILayout,
             draw_box_column.prop(active_material.xplane, "blendRatio")
 
     surface_behavior_box = layout.box()
-    surface_behavior_box.label("Surface Behavior")
+    surface_behavior_box.label(text="Surface Behavior")
     surface_behavior_box_column = surface_behavior_box.column()
     surface_behavior_box_column.prop(active_material.xplane, "surfaceType")
 
@@ -650,8 +609,8 @@ def material_layout(layout:UILayout,
 
     surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
     ll_box = layout.box()
-    ll_box.label("Light Levels")
-    ll_box_column = ll_box.column() 
+    ll_box.label(text="Light Levels")
+    ll_box_column = ll_box.column()
     ll_box_column.prop(active_material.xplane, "lightLevel")
 
     if active_material.xplane.lightLevel:
@@ -676,15 +635,10 @@ def material_layout(layout:UILayout,
             dataref_search_window_layout(box)
 
     ll_box_column.row()
-    if not canPreviewEmit(active_material):
-        ll_box_column.label("To enable the Day-Night Preview feature, add an albedo texture (uses Diffuse->Color) and a night texture (uses Shading->Emit)", icon = "INFO")
-    else:
-        ll_box_column.prop(active_material.xplane, "litFactor", slider = True)
-
 
     # instancing effects
     instanced_box = layout.box()
-    instanced_box.label("Instancing Effects")
+    instanced_box.label(text="Instancing Effects")
     instanced_box_column = instanced_box.column()
     instanced_box_column.prop(active_material.xplane, 'tint')
 
@@ -694,80 +648,63 @@ def material_layout(layout:UILayout,
 
     layout.row().prop(active_material.xplane, "poly_os")
 
-
-def canPreviewEmit(mat):
-    texture, textureLit = getColorAndLitTextureSlots(mat)
-
-    return (texture != None and textureLit != None)
-
-# Function: custom_layout
-# Draws the additional UI layout for custom attributes.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-#   string type - Type of object. ("MESH", "MATERIAL", "LAMP")
-def custom_layout(self, obj:bpy.types.Object, object_type:str):
-    if object_type in ("MESH", "ARMATURE", "OBJECT"):
-        oType = 'object'
-    elif object_type == "MATERIAL":
-        oType = 'material'
-    elif object_type == 'LAMP':
-        oType = 'lamp'
+def custom_layout(
+        layout:bpy.types.UILayout,
+        has_custom_props:[bpy.types.Armature, bpy.types.Light, bpy.types.Material, bpy.types.Object]):
+    if isinstance(has_custom_props, bpy.types.Material):
+        op_type = "material"
+    elif has_custom_props.type == "LIGHT":
+        op_type = "light"
+    elif has_custom_props.type in {"ARMATURE", "MESH"}:
+        op_type = "object"
     else:
-        oType = None
+        assert False, has_custom_props.name + " does not have custom_props"
 
-    layout = self.layout
     layout.separator()
 
-    if oType:
-        # regular attributes
+    # regular attributes
+    row = layout.row()
+    row.label(text="Custom Properties")
+    row.operator("object.add_xplane_"+op_type+"_attribute")
+    box = layout.box()
+    for i, attr in enumerate(has_custom_props.xplane.customAttributes):
+        subbox = box.box()
+        subrow = subbox.row()
+        subrow.prop(attr, "name")
+        subrow.operator("object.remove_xplane_"+op_type+"_attribute", text = "", emboss = False, icon = "X").index = i
+        subrow = subbox.row()
+        subrow.prop(attr, "value")
+        subrow = subbox.row()
+        subrow.prop(attr, "reset")
+        subrow = subbox.row()
+        subrow.prop(attr, "weight")
+
+    # animation attributes
+    if op_type != "material":
         row = layout.row()
-        row.label("Custom Properties")
-        row.operator("object.add_xplane_"+oType+"_attribute")
+        row.label(text="Custom Animation Properties")
+        row.operator("object.add_xplane_object_anim_attribute")
         box = layout.box()
-        for i, attr in enumerate(obj.xplane.customAttributes):
+        for i, attr in enumerate(has_custom_props.xplane.customAnimAttributes):
             subbox = box.box()
             subrow = subbox.row()
             subrow.prop(attr, "name")
-            subrow.operator("object.remove_xplane_"+oType+"_attribute", text = "", emboss = False, icon = "X").index = i
+            subrow.operator("object.remove_xplane_object_anim_attribute", text = "", emboss = False, icon = "X").index = i
             subrow = subbox.row()
             subrow.prop(attr, "value")
-            if object_type in ("MATERIAL", "MESH", "LAMP", "ARMATURE"):
-                subrow = subbox.row()
-                subrow.prop(attr, "reset")
-                subrow = subbox.row()
-                subrow.prop(attr, "weight")
-
-        # animation attributes
-        if object_type in ("MESH", "ARMATURE", "OBJECT"):
-            row = layout.row()
-            row.label("Custom Animation Properties")
-            row.operator("object.add_xplane_object_anim_attribute")
-            box = layout.box()
-            for i, attr in enumerate(obj.xplane.customAnimAttributes):
-                subbox = box.box()
-                subrow = subbox.row()
-                subrow.prop(attr, "name")
-                subrow.operator("object.remove_xplane_object_anim_attribute", text = "", emboss = False, icon = "X").index = i
-                subrow = subbox.row()
-                subrow.prop(attr, "value")
-                subrow = subbox.row()
-                subrow.prop(attr, "weight")
+            subrow = subbox.row()
+            subrow.prop(attr, "weight")
 
 # Function: animation_layout
-# Draws the UI layout for animations. This includes Datarefs.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-#   bool bone - True if the object is a bone.
-def animation_layout(self, obj, bone = False):
-    layout = self.layout
+def animation_layout(layout:bpy.types.UILayout, obj:bpy.types.Object, is_bone:bool = False):
+    """
+    Draws UI Layout for animations, including datarefs
+    and the datarefs search window
+    """
     layout.separator()
     row = layout.row()
-    row.label("Datarefs")
-    if bone:
+    row.label(text="Datarefs")
+    if is_bone:
         row.operator("bone.add_xplane_dataref", text = "Add Dataref")
         current_dataref_prop_template = "bpy.context.active_bone.xplane.datarefs[{index}].path"
     else:
@@ -792,7 +729,7 @@ def animation_layout(self, obj, bone = False):
         dataref_search_toggle_op.paired_dataref_prop = current_dataref_prop_template.format(index=i)
 
         # Next: "X" box to nuke the dataref - further to the right to keep from separating search from its field.
-        if bone:
+        if is_bone:
             subrow.operator("bone.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
         else:
             subrow.operator("object.remove_xplane_dataref", text = "", emboss = False, icon = "X").index = i
@@ -807,7 +744,7 @@ def animation_layout(self, obj, bone = False):
 
         if attr.anim_type in ('transform', 'translate', 'rotate'):
             if bpy.context.object.animation_data:
-                if bone:
+                if is_bone:
                     subrow.operator("bone.add_xplane_dataref_keyframe", text = "", icon = "KEY_HLT").index = i
                     subrow.operator("bone.remove_xplane_dataref_keyframe", text = "", icon = "KEY_DEHLT").index = i
                 else:
@@ -817,56 +754,43 @@ def animation_layout(self, obj, bone = False):
                 subrow = subbox.row()
                 subrow.prop(attr, "loop")
             else:
-                subrow.label('Object not animated')
+                subrow.label(text='Object not animated')
         elif attr.anim_type in ("show", "hide"):
             subrow.prop(attr, "show_hide_v1")
             subrow = subbox.row()
             subrow.prop(attr, "show_hide_v2")
 
-# Function: cockpit_layout
-# Draws the UI layout for cockpit parameters. This includes panel.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def cockpit_layout(self, active_material:bpy.types.Material):
-    layout = self.layout
+def cockpit_layout(layout: bpy.types.UILayout, active_material:bpy.types.Material):
+    """Draws UI for cockpit and panel regions"""
     cockpit_box = layout.box()
-    cockpit_box.label("Cockpit Panel")
+    cockpit_box.label(text="Cockpit Panel")
     cockpit_box_column = cockpit_box.column()
     cockpit_box_column.prop(active_material.xplane, 'panel')
 
     if active_material.xplane.panel:
         cockpit_box_column.prop(active_material.xplane, 'cockpit_region')
 
-def axis_detent_ranges_layout(self, layout, manip):
+def axis_detent_ranges_layout(layout:bpy.types.UILayout, manip:xplane_props.XPlaneManipulatorSettings):
     layout.separator()
     row = layout.row()
-    row.label("Axis Detent Range")
-    
+    row.label(text="Axis Detent Range")
+
     row.operator("object.add_xplane_axis_detent_range")
-        
+
     box = layout.box()
 
     for i, attr in enumerate(manip.axis_detent_ranges):
-        row = box.row() 
+        row = box.row()
         row.prop(attr,"start")
         row.prop(attr,"end")
         if manip.type == MANIP_DRAG_AXIS_DETENT:
             row.prop(attr,"height", text="Length")
         else:
             row.prop(attr,"height")
-        
+
         row.operator("object.remove_xplane_axis_detent_range", text="", emboss=False, icon="X").index = i
 
-# Function: manipulator_layout
-# Draws the UI layout for manipulator settings.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def manipulator_layout(self, obj):
-    layout = self.layout
+def manipulator_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     row = layout.row()
     row.prop(obj.xplane.manip, 'enabled')
 
@@ -903,7 +827,7 @@ def manipulator_layout(self, obj):
         def show_dataref_search_window_pairing(box, dataref_prop_name:str, prop_text:Optional[str]=None)->None:
             row = box.row()
             if prop_text:
-                row.prop(obj.xplane.manip, dataref_prop_name, prop_text)
+                row.prop(obj.xplane.manip, dataref_prop_name, text=prop_text)
             else:
                 row.prop(obj.xplane.manip, dataref_prop_name)
 
@@ -1047,7 +971,7 @@ def manipulator_layout(self, obj):
         props['hold_step']   = (lambda manip_type: manip_type in {MANIP_AXIS_KNOB, MANIP_AXIS_SWITCH_UP_DOWN, MANIP_AXIS_SWITCH_LEFT_RIGHT}, None)
         props['wheel_delta'] = (lambda manip_type: manip_type in MANIPULATORS_MOUSE_WHEEL and xplane_version >= 1050, None)
 
-        if manipType in MANIPULATORS_OPT_IN and xplane_version >= 1110: 
+        if manipType in MANIPULATORS_OPT_IN and xplane_version >= 1110:
             box.prop(obj.xplane.manip, 'autodetect_settings_opt_in')
 
         for prop,predicates in props.items():
@@ -1078,59 +1002,41 @@ def manipulator_layout(self, obj):
 
         if  manipType == MANIP_DRAG_AXIS_DETENT or\
             manipType == MANIP_DRAG_ROTATE_DETENT:
-            axis_detent_ranges_layout(self, box, obj.xplane.manip)
+            axis_detent_ranges_layout(box, obj.xplane.manip)
 
-# Function: conditions_layout
-# Draws the UI layout for conditions.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-#   obgType - object type
-def conditions_layout(self, obj, obgType):
-    layout = self.layout
-
-    obgType = obgType.lower()
+def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy.types.Material, bpy.types.Object]):
+    assert isinstance(could_have_conditions, bpy.types.Material) or isinstance(could_have_conditions, bpy.types.Object)
+    op_type = "material" if isinstance(could_have_conditions, bpy.types.Material) else "object"
 
     # regular attributes
     row = layout.row()
-    row.label("Conditions")
-    row.operator('object.add_xplane_' + obgType + '_condition', text = "Add Condition")
+    row.label(text="Conditions")
+    row.operator('object.add_xplane_' + op_type + '_condition', text = "Add Condition")
     box = layout.box()
-    for i, attr in enumerate(obj.xplane.conditions):
+    for i, attr in enumerate(could_have_conditions.xplane.conditions):
         subbox = box.box()
         subrow = subbox.row()
         subrow.prop(attr, "variable")
-        subrow.operator('object.remove_xplane_' + obgType + '_condition', text = "", emboss = False, icon = "X").index = i
+        subrow.operator('object.remove_xplane_' + op_type + '_condition', text = "", emboss = False, icon = "X").index = i
         subrow = subbox.row()
         subrow.prop(attr, "value")
 
-# Function: lod_layout
-# Draws the UI for Levels of detail
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def lod_layout(self, obj):
-    if bpy.context.scene.xplane.exportMode == 'layers':
-        layout = self.layout
-        row = layout.row()
-        row.prop(obj.xplane, "lod", text = "LOD")
+def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
+    pass
+    """
+    # A no-op until issue #451 is closed
+    #TODO: We need this for LOD support
+    row = layout.row()
+    row.prop(obj.xplane, "lod", text = "LOD")
+    """
 
-# Function: weight_layout
-# Draws the UI for Object weight
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   obj - Blender object.
-def weight_layout(self, obj):
-    layout = self.layout
+def weight_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     row = layout.row()
     row.prop(obj.xplane, 'override_weight')
     if obj.xplane.override_weight:
         row.prop(obj.xplane, 'weight')
 
-class UL_CommandSearchList(bpy.types.UIList):
+class XPLANE_UL_CommandSearchList(bpy.types.UIList):
     import io_xplane2blender.xplane_utils.xplane_commands_txt_parser
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
@@ -1144,9 +1050,9 @@ class UL_CommandSearchList(bpy.types.UIList):
             layout.alignment = "EXPAND"
             row = layout.row(align=True)
             row.alignment = "LEFT"
-            row.label(item.command, icon="NONE")
-            row.label("|")
-            row.label(item.command_description, icon="NONE")
+            row.label(text=item.command, icon="NONE")
+            row.label(text="|")
+            row.label(text=item.command_description, icon="NONE")
             return
 
         elif self.layout_type in {'GRID'}:
@@ -1161,14 +1067,14 @@ class UL_CommandSearchList(bpy.types.UIList):
     def filter_items(self, context, data, propname):
         flt_flags = []
         flt_neworder = []
-        
+
         filter_name = self.filter_name
         if filter_name == "":
             return flt_flags,flt_neworder
-        
+
         #Search info:
         # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
-        # A command must match at least one search in all searches, and must partially match each search term        
+        # A command must match at least one search in all searches, and must partially match each search term
         search_info = []
         for search in filter_name.upper().split('|'):
             search_info.append(frozenset(search.split(' ')))
@@ -1192,7 +1098,7 @@ class UL_CommandSearchList(bpy.types.UIList):
 
         return flt_flags, flt_neworder
 
-class UL_DatarefSearchList(bpy.types.UIList):
+class XPLANE_UL_DatarefSearchList(bpy.types.UIList):
     import io_xplane2blender.xplane_utils.xplane_datarefs_txt_parser
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index, flt_flag):
@@ -1206,13 +1112,13 @@ class UL_DatarefSearchList(bpy.types.UIList):
             layout.alignment = "EXPAND"
             row = layout.row(align=True)
             row.alignment = "LEFT"
-            row.label(item.dataref_path, icon="NONE")
-            row.label("|")
-            row.label(item.dataref_type, icon="NONE")
-            row.label("|")
-            row.label(item.dataref_is_writable, icon="NONE")
-            row.label("|")
-            row.label(item.dataref_units, icon="NONE")
+            row.label(text=item.dataref_path, icon="NONE")
+            row.label(text="|")
+            row.label(text=item.dataref_type, icon="NONE")
+            row.label(text="|")
+            row.label(text=item.dataref_is_writable, icon="NONE")
+            row.label(text="|")
+            row.label(text=item.dataref_units, icon="NONE")
             return
 
         elif self.layout_type in {'GRID'}:
@@ -1227,14 +1133,14 @@ class UL_DatarefSearchList(bpy.types.UIList):
     def filter_items(self, context, data, propname):
         flt_flags = []
         flt_neworder = []
-        
+
         filter_name = self.filter_name
         if filter_name == "":
             return flt_flags,flt_neworder
-        
+
         #Search info:
         # A set of one or more unique searches (split on |) composed of one or more unique search terms (split by ' ')
-        # A dataref must match at least one search in all searches, and must partially match each search term        
+        # A dataref must match at least one search in all searches, and must partially match each search term
         search_info = []
         for search in filter_name.upper().split('|'):
             search_info.append(frozenset(search.split(' ')))
@@ -1258,11 +1164,11 @@ class UL_DatarefSearchList(bpy.types.UIList):
 
         return flt_flags, flt_neworder
 
-class XPlaneMessage(bpy.types.Operator):
+class XPLANE_OT_XPlaneMessage(bpy.types.Operator):
     bl_idname = 'xplane.msg'
     bl_label = 'XPlane2Blender message'
-    msg_type = bpy.props.StringProperty(default = 'INFO')
-    msg_text = bpy.props.StringProperty(default = '')
+    msg_type: bpy.props.StringProperty(default = 'INFO')
+    msg_text: bpy.props.StringProperty(default = '')
     def execute(self, context):
         self.report(self.msg_type, self.msg_text)
         return {'FINISHED'}
@@ -1274,15 +1180,15 @@ class XPlaneMessage(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-        row.label(text = self.msg_type+': '+self.msg_text)
+        row.label(text=self.msg_type+': '+self.msg_text)
 
 
-class XPlaneError(bpy.types.Operator):
+class XPLANE_OT_XPlaneError(bpy.types.Operator):
     bl_idname = 'xplane.error'
     bl_label = 'XPlane2Blender Error'
-    msg_type = bpy.props.StringProperty(default = 'ERROR')
-    msg_text = bpy.props.StringProperty(default = '')
-    report_text = bpy.props.StringProperty(default = '')
+    msg_type: bpy.props.StringProperty(default = 'ERROR')
+    msg_text: bpy.props.StringProperty(default = '')
+    report_text: bpy.props.StringProperty(default = '')
 
     def execute(self, context):
         self.report({self.msg_type}, self.report_text)
@@ -1297,27 +1203,17 @@ class XPlaneError(bpy.types.Operator):
         row = layout.row()
         row.label(text=self.msg_text,icon="ERROR")
 
-_XPlaneUITypes = [
+_XPlaneUITypes = (
     BONE_PT_xplane,
     DATA_PT_xplane,
     MATERIAL_PT_xplane,
     OBJECT_PT_xplane,
     SCENE_PT_xplane,
 
-    UL_CommandSearchList,
-    UL_DatarefSearchList,
-    XPlaneError,
-    XPlaneMessage
-] 
+    XPLANE_UL_CommandSearchList,
+    XPLANE_UL_DatarefSearchList,
+    XPLANE_OT_XPlaneError,
+    XPLANE_OT_XPlaneMessage
+)
 
-# Function: addXPlaneUI
-# Registers all UI Panels.
-def addXPlaneUI():
-    for t in _XPlaneUITypes:
-        bpy.utils.register_class(t)
-
-# Function: removeXPlaneUI
-# Unregisters all UI Panels.
-def removeXPlaneUI():
-    for t in _XPlaneUITypes:
-        bpy.utils.unregister_class(t)
+register, unregister = bpy.utils.register_classes_factory(_XPlaneUITypes)

@@ -3,7 +3,7 @@
    #   #   # #    #  #   ##  #  ## #  #  #     #   #  #  #   # #   ##  #  #   #   #  #   #  #  #
   ##   #   # #   # # #  ##      ###   ###     ##   #  ###    # #  ##     ##   #  # # #   ##    #
   ##   #  ####   # # #  #  ###  #     # #     ##   #  # #   ####  #  ### #    #  # # #    ##   #
-  #   #   #  #   #  ##  ##  #   # #   # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  # 
+  #   #   #  #   #  ##  ##  #   # #   # #     #   #   # #   #  #  ##  #  #   #   #  ##  #  #
  #####   ##  ## ##  #    ####  ####  ## ##   #####   ## ## ##  ##  ####   ###   ##  #   ####  #
 
 This file is also an important file for the data model! See the special care
@@ -55,7 +55,9 @@ MAX_COCKPIT_REGIONS = 4
 EMPTY_USAGE_NONE = "none"
 EMPTY_USAGE_EMITTER_PARTICLE = "emitter_particle"
 EMPTY_USAGE_EMITTER_SOUND = "emitter_sound"
+EMPTY_USAGE_MAGNET = "magnet"
 
+# Kept for historical reasons for the updater
 EXPORT_MODE_LAYERS = "layers"
 EXPORT_MODE_ROOT_OBJECTS = "root_objects"
 
@@ -96,7 +98,7 @@ MANIP_COMMAND_SWITCH_UP_DOWN    = "command_switch_up_down"
 
 #11.10 and greater manips
 # Note: these are not new manips in the OBJ spec, we are reusing manip_drag_axis + using ATTR_axis_detented
-# What makes them special is their data is automatically detected as much as possible 
+# What makes them special is their data is automatically detected as much as possible
 MANIP_DRAG_AXIS_DETENT           = "drag_axis_detent"
 
 MANIP_DRAG_ROTATE                = "drag_rotate"

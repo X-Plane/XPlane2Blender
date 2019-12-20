@@ -1,47 +1,50 @@
 # File: xplane_export.py
 # Defines Classes used to create OBJ files out of XPlane data types defined in <xplane_types.py>.
 
-import os.path
-import bpy
-import mathutils
 import os
+import os.path
 import sys
+
+import bpy
+import io_xplane2blender
+import mathutils
+from bpy_extras.io_utils import ExportHelper, ImportHelper
+
+from .xplane_config import getDebug
 from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
-from .xplane_config import getDebug
-from bpy_extras.io_utils import ImportHelper, ExportHelper
-import io_xplane2blender
 
-class ExportLogDialog(bpy.types.Menu):
-    bl_idname = "SCENE_MT_xplane_export_log"
-    bl_label = "XPlane2Blender Export Log"
+
+#TODO: These class names and registrations are weird. I don't get
+# what Blender expects for bl_idname and class name to match up?
+class XPLANE_MT_xplane_export_log(bpy.types.Menu):
+    bl_idname = "XPLANE_MT_xplane_export_log"
+    bl_label = "XPlane2Blender Export Log Warning"
 
     def draw(self, context):
         row = self.layout.row()
-        row.label('Export produced errors or warnings.')
+        row.label(text='Export produced errors or warnings.')
         row = self.layout.row()
-        row.label('Please take a look into the internal text file XPlane2Blender.log')
+        row.label(text='Please see the internal text file XPlane2Blender.log')
 
 def showLogDialog():
     if not ('-b' in sys.argv or '--background' in sys.argv):
-        bpy.ops.wm.call_menu(name = "SCENE_MT_xplane_export_log")
+        bpy.ops.wm.call_menu(name="XPLANE_MT_xplane_export_log")
 
-# Class: ExportXPlane
-# Main Export class. Brings all parts together and creates the OBJ files.
-class ExportXPlane(bpy.types.Operator, ExportHelper):
+class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
     '''Export to X-Plane Object file format (.obj)'''
     bl_idname = "export.xplane_obj"
     bl_label = 'Export X-Plane Object'
 
-    filepath = bpy.props.StringProperty(
+    filename_ext = ".obj"
+
+    filepath: bpy.props.StringProperty(
         name = "File Path",
         description = "Filepath used for exporting the X-Plane file(s)",
         maxlen= 1024, default= ""
     )
 
-    filename_ext = '.obj'
-
-    export_is_relative = bpy.props.BoolProperty(
+    export_is_relative: bpy.props.BoolProperty(
         name = "Export Is Relative",
         description="Set to true when starting the export via the button (with or without the GUI on in case of unit testing)",
         default=False)
@@ -55,10 +58,10 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         # prepare logging
         self._startLogging()
-        
+
         debug = getDebug()
         export_directory = self.properties.filepath
-        
+
         if not self.properties.export_is_relative:
             export_directory = os.path.dirname(export_directory)
         else:
@@ -77,7 +80,7 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
                 #import sys;sys.path.append(r'YOUR_PYDEVPATH')
                 import pydevd;
                 #Port must be set to 5678 for Blender to connect!
-                pydevd.settrace(stdoutToServer=False,#Enable to have logger and print statements sent to 
+                pydevd.settrace(stdoutToServer=False,#Enable to have logger and print statements sent to
                                                      #the Eclipse console, as well as Blender's console.
                                                      #Only logger statements will show in xplane2blender.log
                                 stderrToServer=False,#Same as stdoutToServer
@@ -85,33 +88,16 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
                                               #Get used to immediately pressing continue unfortunately.
             except:
                 logger.info("Pydevd could not be imported, breakpoints not enabled. Ensure PyDev is installed and configured properly")
-        
-        exportMode = bpy.context.scene.xplane.exportMode
-
-        if exportMode == 'layers':
-            # check if X-Plane layers have been created
-            # TODO: only check if user selected the export from layers option, instead the export from root objects
-            if len(bpy.context.scene.xplane.layers) == 0:
-                logger.error('You must create X-Plane layers first.')
-                self._endLogging()
-                showLogDialog()
-                return {'CANCELLED'}
 
         # store current frame as we will go back to it
         currentFrame = bpy.context.scene.frame_current
 
         # goto first frame so everything is in inital state
         bpy.context.scene.frame_set(frame = 1)
-        bpy.context.scene.update()
+        bpy.context.view_layer.update()
 
         xplaneFiles = []
-
-        if exportMode == 'layers':
-            xplaneFiles = xplane_file.createFilesFromBlenderLayers()
-
-        elif exportMode == 'root_objects':
-            xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
-
+        xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
         for xplaneFile in xplaneFiles:
             if self._writeXPlaneFile(xplaneFile, export_directory) == False:
                 if logger.hasErrors():
@@ -128,9 +114,9 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
 
         # return to stored frame
         bpy.context.scene.frame_set(frame = currentFrame)
-        bpy.context.scene.update()
+        bpy.context.view_layer.update()
 
-        #TODO: enable when log dialog box is working 
+        #TODO: enable when log dialog box is working
         #if logger.hasErrors() or logger.hasWarnings():
             #showLogDialog()
 
@@ -172,41 +158,41 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         if self.logFile:
             self.logFile.close()
 
-    def _writeXPlaneFile(self, xplaneFile, dir):
+    def _writeXPlaneFile(self, xplaneFile: xplane_file.XPlaneFile, directory: str)->bool:
         debug = getDebug()
 
         # only write layers that contain objects
-        if len(xplaneFile.objects) == 0:
+        if not xplaneFile.get_xplane_objects():
             return
-        
+
         if xplaneFile.filename.find('//') == 0:
             xplaneFile.filename = xplaneFile.filename.replace('//','',1)
-        
+
         #Change any backslashes to foward slashes for file paths
-        xplaneFile.filename = xplaneFile.filename.replace('\\','/')    
-        
+        xplaneFile.filename = xplaneFile.filename.replace('\\','/')
+
         if os.path.isabs(xplaneFile.filename):
             logger.error("Bad export path %s: File paths must be relative to the .blend file" % (xplaneFile.filename))
             return False
-        
+
         #Get the relative path
         #Append .obj if needed
         #Make paths based on the absolute path
         #Write
-        relpath = os.path.normpath(os.path.join(dir, xplaneFile.filename))
+        relpath = os.path.normpath(os.path.join(directory, xplaneFile.filename))
         if not '.obj' in relpath:
             relpath += '.obj'
-        
+
         fullpath = os.path.abspath(os.path.join(os.path.dirname(bpy.context.blend_data.filepath),relpath))
         out = xplaneFile.write()
-       
+
         if logger.hasErrors():
             return False
 
         # write the file
-        if (bpy.context.scene.xplane.plugin_development is False) or \
-            (bpy.context.scene.xplane.plugin_development and         \
-             bpy.context.scene.xplane.dev_export_as_dry_run is False):
+        if (bpy.context.scene.xplane.plugin_development is False
+            or (bpy.context.scene.xplane.plugin_development
+                and bpy.context.scene.xplane.dev_export_as_dry_run is False)):
             try:
                 os.makedirs(os.path.dirname(fullpath),exist_ok=True)
                 objFile = open(fullpath, "w")
@@ -232,3 +218,10 @@ class ExportXPlane(bpy.types.Operator, ExportHelper):
         wm = context.window_manager
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+_classes = (
+        XPLANE_MT_xplane_export_log,
+        EXPORT_OT_ExportXPlane
+    )
+
+register, unregister = bpy.utils.register_classes_factory(_classes)

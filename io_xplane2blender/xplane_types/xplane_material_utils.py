@@ -1,5 +1,5 @@
 import bpy
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_types.xplane_material import XPlaneMaterial
 from ..xplane_constants import *
@@ -64,11 +64,11 @@ def compareInstanced(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]
         metalness_error = _validateNormalMetalness(refMat,mat)
         if metalness_error:
             errors.append(metalness_error)
-            
+
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
             errors.append('Texture must be "%s".' % refMat.texture)
-            
+
         if mat.textureLit != refMat.textureLit:
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
@@ -101,8 +101,9 @@ def compareAircraft(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]]
 
     return errors,warnings
 
-
-def validate(mat:XPlaneMaterial, exportType:str)->Tuple[List[str],List[str]]:
+MaterialValidationMsgs = Tuple[List[str],List[str]]
+ValidateFunction = Callable[[XPlaneMaterial], MaterialValidationMsgs]
+def validate(mat:XPlaneMaterial, exportType:str)->MaterialValidationMsgs:
     '''
     Validates material properties that don't involve comparisons to other
     materials. Returns a tuple of two lists, generated errors and generated
@@ -114,7 +115,7 @@ def validate(mat:XPlaneMaterial, exportType:str)->Tuple[List[str],List[str]]:
     if mat.options == None:
         errors.append('Is invalid.')
         return errors,warnings
-    
+
     if (exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY) and mat.options.draped:
         return validateDraped(mat)
     elif exportType == EXPORT_TYPE_SCENERY:
@@ -133,7 +134,7 @@ def validate(mat:XPlaneMaterial, exportType:str)->Tuple[List[str],List[str]]:
 
     return errors,warnings
 
-def validateScenery(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
+def validateScenery(mat:XPlaneMaterial)->MaterialValidationMsgs:
     errors   = [] # type: List[str]
     warnings = [] # type: List[str]
 
@@ -148,14 +149,14 @@ def validateScenery(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append('Must not be a manipulator.')
-    
+
     if mat.getEffectiveBlendGlass():
         errors.append('Blend glass only legal on aircraft and cockpit objects')
 
     return errors,warnings
 
 
-def validateInstanced(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
+def validateInstanced(mat:XPlaneMaterial)->MaterialValidationMsgs:
     errors   = [] # type: List[str]
     warnings = [] # type: List[str]
 
@@ -183,7 +184,7 @@ def validateInstanced(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
     return errors,warnings
 
 
-def validatePanel(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
+def validatePanel(mat:XPlaneMaterial)->MaterialValidationMsgs:
     errors   = [] # type: List[str]
     warnings = [] # type: List[str]
 
@@ -209,7 +210,7 @@ def validatePanel(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
     return errors,warnings
 
 
-def validateCockpit(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
+def validateCockpit(mat:XPlaneMaterial)->MaterialValidationMsgs:
     errors   = [] # type: List[str]
     warnings = [] # type: List[str]
 
@@ -222,7 +223,7 @@ def validateCockpit(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
     return errors,warnings
 
 
-def validateAircraft(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
+def validateAircraft(mat:XPlaneMaterial)->MaterialValidationMsgs:
     errors   = [] # type: List[str]
     warnings = [] # type: List[str]
 
@@ -238,7 +239,7 @@ def validateAircraft(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
     return errors,warnings
 
 
-def validateDraped(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
+def validateDraped(mat:XPlaneMaterial)->MaterialValidationMsgs:
     errors   = [] # type: List[str]
     warnings = [] # type: List[str]
 
@@ -271,9 +272,9 @@ def validateDraped(mat:XPlaneMaterial)->Tuple[List[str],List[str]]:
 
     return errors,warnings
 
-def getFirstMatchingMaterial(materials, validation):
+def getFirstMatchingMaterial(materials: List[XPlaneMaterial], validation:ValidateFunction):
     for mat in materials:
-        errors,warnings = validation(mat)
+        errors, warnings = validation(mat)
 
         if len(errors) == 0 and mat.options.draw:
             return mat
@@ -294,7 +295,7 @@ def getFirstMatchingMaterial(materials, validation):
 #    string exportType - The export type given by xplane_file.options.export_type
 #
 #    Returns list of 1 or more reference materials
-def getReferenceMaterials(materials, exportType):
+def getReferenceMaterials(materials:XPlaneMaterial, exportType:str)->List[XPlaneMaterial]:
     refMats = []
 
     if exportType == EXPORT_TYPE_COCKPIT:

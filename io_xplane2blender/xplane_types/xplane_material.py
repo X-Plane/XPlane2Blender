@@ -1,12 +1,12 @@
 import bpy
 import io_xplane2blender
 from typing import List,Tuple
+from io_xplane2blender.xplane_types import xplane_object
 from ..xplane_config import getDebug
 from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
 from .xplane_attributes import XPlaneAttributes
 from .xplane_attribute import XPlaneAttribute
-#from .xplane_file import getXPlaneVersion
 
 # Class: XPlaneMaterial
 # A Material
@@ -33,7 +33,7 @@ class XPlaneMaterial():
     #
     # Parameters:
     #   xplaneObject - A <XPlaneObject>
-    def __init__(self, xplaneObject):
+    def __init__(self, xplaneObject: xplane_object.XPlaneObject):
         from os import path
 
         self.xplaneObject = xplaneObject
@@ -51,9 +51,6 @@ class XPlaneMaterial():
         # Material
         self.attributes = XPlaneAttributes()
 
-        # useless according to Ben Supnik
-        # self.attributes.add(XPlaneAttribute("ATTR_specular_rgb"))
-
         self.attributes.add(XPlaneAttribute("ATTR_shiny_rat"))
         self.attributes.add(XPlaneAttribute("ATTR_hard"))
         self.attributes.add(XPlaneAttribute("ATTR_hard_deck"))
@@ -62,6 +59,9 @@ class XPlaneMaterial():
         self.attributes.add(XPlaneAttribute("ATTR_blend"))
         self.attributes.add(XPlaneAttribute("ATTR_shadow_blend"))
         self.attributes.add(XPlaneAttribute("ATTR_no_blend"))
+
+        self.attributes.add(XPlaneAttribute("ATTR_shadow"))
+        self.attributes.add(XPlaneAttribute("ATTR_no_shadow"))
         self.attributes.add(XPlaneAttribute("ATTR_draw_enable"))
         self.attributes.add(XPlaneAttribute("ATTR_draw_disable"))
         self.attributes.add(XPlaneAttribute("ATTR_solid_camera"))
@@ -80,9 +80,9 @@ class XPlaneMaterial():
         self.conditions = []
 
     def collect(self):
-        if len(self.blenderObject.data.materials) > 0 and \
-           hasattr(self.blenderObject.data.materials[0], 'name'):
-            mat = self.blenderObject.data.materials[0]
+        if (self.blenderObject.material_slots
+            and self.blenderObject.material_slots[0].material):
+            mat = self.blenderObject.material_slots[0].material
             self.name = mat.name
             self.blenderMaterial = mat
             self.options = mat.xplane # type: xplane_props.XPlaneMaterialSettings
@@ -106,23 +106,15 @@ class XPlaneMaterial():
                 if mat.xplane.panel == False:
                     self.attributes['ATTR_draw_enable'].setValue(True)
 
-                    # specular
-                    # include texture intensity of specular texture if any
-                    textureSpec = 0
-
-                    for texture in mat.texture_slots:
-                        if texture and texture.use_map_specular:
-                            textureSpec += texture.specular_factor
-
                     #SPECIAL CASE!
                     if self.getEffectiveNormalMetalness() == False:
-                        self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity + textureSpec)
+                        self.attributes['ATTR_shiny_rat'].setValue(mat.specular_intensity)
 
                     # blend
                     xplane_version = int(bpy.context.scene.xplane.version)
                     if xplane_version >= 1000:
                         xplane_blend_enum = mat.xplane.blend_v1000
-                    
+
                     if xplane_version >= 1000:
                         if xplane_blend_enum == BLEND_OFF:
                             self.attributes['ATTR_no_blend'].setValue(mat.xplane.blendRatio)
@@ -135,6 +127,15 @@ class XPlaneMaterial():
                             self.attributes['ATTR_no_blend'].setValue(mat.xplane.blendRatio)
                         else:
                             self.attributes['ATTR_blend'].setValue(True)
+
+                    if xplane_version >= 1010:
+                        if mat.xplane.shadow_local:
+                            self.attributes['ATTR_shadow'].setValue(True)
+                            self.attributes['ATTR_no_shadow'].setValue(False)
+                        else:
+                            self.attributes['ATTR_shadow'].setValue(False)
+                            self.attributes['ATTR_no_shadow'].setValue(True)
+
                 # draped
                 if mat.xplane.draped:
                     self.attributes['ATTR_draped'].setValue(True)
@@ -161,11 +162,8 @@ class XPlaneMaterial():
                 self.attributes['ATTR_no_solid_camera'].setValue(True)
 
             # try to find uv layer
-            if len(self.blenderObject.data.uv_textures) > 0:
-                self.uv_name = self.blenderObject.data.uv_textures.active.name
-
-            # try to detect textures
-            self._detectTextures(mat)
+            if len(self.blenderObject.data.uv_layers) > 0:
+                self.uv_name = self.blenderObject.data.uv_layers.active.name
 
             # add custom attributes
             self.collectCustomAttributes(mat)
@@ -174,38 +172,6 @@ class XPlaneMaterial():
             logger.error('%s: No Material found.' % self.blenderObject.name)
 
         self.attributes.order()
-
-    def _detectTextures(self, mat):
-        '''
-        Detects the texture by using Blender's texture slot properties:
-        Diffuse->Color, Shading->Emit, Geometry->Normal, and Specular-> Intensity
-        '''
-        for i in range(0, len(mat.texture_slots)):
-            slot = mat.texture_slots[i]
-
-            if slot and slot.use and slot.texture.type == 'IMAGE':
-                if slot.texture.image is not None:
-                    #Props->Texture->Influence->Diffuse->[X] Color
-                    if slot.use_map_color_diffuse and self.texture == None:
-                        self.texture = slot.texture.image.filepath
-                    #Props->Texture->Influence->Shading->[X] Emit
-                    elif slot.use_map_emit and self.textureLit == None:
-                        self.textureLit = slot.texture.image.filepath
-                    #Props->Texture->Influence->Geometry->[X] Normal
-                    elif slot.use_map_normal and self.textureNormal == None:
-                        self.textureNormal = slot.texture.image.filepath
-                    #Props->Texture->Influence->Specular->[X] Intensity
-                    elif slot.use_map_specular and self.textureSpecular == None:
-                        self.textureSpecular = slot.texture.image.filepath
-                else:
-                    logger.error("Texture '{0}' has no image".format(slot.texture.name))
-                    return
-
-        # panel materials have only a color texture
-        if self.options.panel:
-            self.textureLit = None
-            self.textureNormal = None
-            self.textureSpecular = None
 
     def collectCustomAttributes(self, mat):
         xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
@@ -216,7 +182,6 @@ class XPlaneMaterial():
                 if attr.reset:
                     commands.addReseter(attr.name, attr.reset)
                 self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
-
 
     def collectCockpitAttributes(self, mat):
         if mat.xplane.panel:
@@ -301,7 +266,7 @@ class XPlaneMaterial():
             return self.options.normal_metalness
         else:
             return False
-        
+
     # Method: getEffectiveBlendGlass
     # Predicate that returns the effective value of BLEND_GLASS, taking into account the current xplane version
     #
@@ -310,7 +275,7 @@ class XPlaneMaterial():
     # False if the current XPLane version doesn't support it
     def getEffectiveBlendGlass(self)->bool:
         xplane_version  = int(bpy.context.scene.xplane.version)
-        
+
         if xplane_version >= 1100:
             return self.options.blend_glass
         else:

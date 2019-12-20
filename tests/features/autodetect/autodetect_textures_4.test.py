@@ -13,9 +13,7 @@ class TestAutodetectTextures4(XPlaneTestCase):
             return isinstance(line[0], str) and \
                    line[0].find('TEXTURE') == 0
 
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
-        out = xplaneFile.write()
-        
+        out = self.exportLayer(0)
         self.assertLoggerErrors(1)
-        
+
 runTestCases([TestAutodetectTextures4])
