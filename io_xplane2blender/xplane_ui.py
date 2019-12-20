@@ -488,7 +488,7 @@ def dataref_search_window_layout(layout):
 def export_path_dir_layer_layout(layout:bpy.types.UILayout, layer_props:xplane_props.XPlaneLayer, version:int, context:str):
     layout.separator()
     row = layout.row()
-    row.label(text="Export Path Directives")
+    row.label(text="Laminar Library Directives")
 
     if context == 'object':
         row.operator("object.add_xplane_export_path_directive")
@@ -497,7 +497,7 @@ def export_path_dir_layer_layout(layout:bpy.types.UILayout, layer_props:xplane_p
 
     for i, attr in enumerate(layer_props.export_path_directives):
         row = box.row()
-        row.prop(attr,"export_path", text= "Export Path " + str(i))
+        row.prop(attr,"export_path", text= "Special library.txt Directive " + str(i))
 
         if context == 'object':
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i

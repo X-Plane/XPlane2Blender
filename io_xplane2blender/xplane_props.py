@@ -428,8 +428,8 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
 
 class XPlaneExportPathDirective(bpy.types.PropertyGroup):
     export_path: bpy.props.StringProperty(
-        name = "Export Path",
-        description="The export path that should be copied into a library.txt",
+        name = "Special library.txt Directive",
+        description="Special Laminar Research only directive for library.txt maintenance",
     )
 
 

@@ -334,9 +334,9 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_add_xplane_export_path_directive(bpy.types.Operator):
-    bl_label = 'Add Export Path Directive'
+    bl_label = 'Add Laminar Library Directive'
     bl_idname = 'object.add_xplane_export_path_directive'
-    bl_description = 'Add Export Path Directive'
+    bl_description = 'Add Laminar Library Directive'
 
     index: bpy.props.IntProperty()
 
@@ -346,9 +346,9 @@ class OBJECT_OT_add_xplane_export_path_directive(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
-    bl_label = 'Remove Export Path Directive'
+    bl_label = 'Remove Laminar Library Directive'
     bl_idname = 'object.remove_xplane_export_path_directive'
-    bl_description = 'Remove export path directive'
+    bl_description = 'Remove Laminar Library Directive'
 
     index: bpy.props.IntProperty()
 
