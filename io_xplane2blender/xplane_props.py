@@ -428,8 +428,8 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
 
 class XPlaneExportPathDirective(bpy.types.PropertyGroup):
     export_path: bpy.props.StringProperty(
-        name = "Export Path",
-        description="The export path that should be copied into a library.txt",
+        name = "Special library.txt Directive",
+        description="Special Laminar Research only directive for library.txt maintenance",
     )
 
 
@@ -962,7 +962,7 @@ def make_lods_array():
 class XPlaneLayer(bpy.types.PropertyGroup):
     """
     Defines settings for an OBJ file. Is was formerly tied to
-    Blender 3D-View Layers, but now it is only used for Root Objects
+    Blender 3D-View Layers, but now it is only used for Exportable Roots
     """
 
     """
@@ -1458,7 +1458,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     )
 
     isExportableRoot: bpy.props.BoolProperty(
-        name = 'Root Object',
+        name = 'Exportable Object',
         description = 'Activate to export this object and all its children into it\'s own .obj file',
         default = False
     )

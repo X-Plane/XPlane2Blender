@@ -214,7 +214,7 @@ def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
             col_w_objs.extend(get_collections_w_objs(child))
         return col_w_objs
 
-    layout.label(text="Collections w/ Objects")
+    layout.label(text="Collections")
     for collection in list(dict.fromkeys(get_collections_w_objs(scene.collection))):
         collection_layer_layout(layout, collection)
 
@@ -286,7 +286,7 @@ def collection_layer_layout(layout: bpy.types.UILayout, collection: bpy.types.Co
 
     if layer_props.expanded:
         layer_layout(box, layer_props, version, "object")
-        export_path_dir_layer_layout(box, layer_props, version, "object")
+        export_path_dir_layer_layout(box, collection, version)
         custom_layer_layout(box, layer_props, version, "object")
 
 def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
@@ -307,17 +307,20 @@ def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
             expandIcon = "TRIA_RIGHT"
             expanded = False
 
-        box.prop(layer_props, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
+        box.prop(layer_props, "expanded", text = "Exportable Object", expand = True, emboss = False, icon = expandIcon)
 
         if expanded:
             layer_layout(box, layer_props, version, "object")
-            export_path_dir_layer_layout(box, layer_props, version, "object")
+            export_path_dir_layer_layout(box, obj, version)
             custom_layer_layout(box, layer_props, version, "object")
+
 
 def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLayer, version:int, context:str):
     """Draws OBJ File Settings and advanced options"""
     canHaveDraped = version >= 1000 and layer_props.export_type not in ['aircraft', 'cockpit']
     isInstanced   = version >= 1000 and layer_props.export_type == 'instanced_scenery'
+    canHaveSceneryProps = layer_props.export_type not in ['aircraft', 'cockpit']
+
 
     #column = layout.column()
     layout.prop(layer_props, "name")
@@ -398,41 +401,41 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
         if canHaveDraped:
             lods_box.prop(layer_props, "lod_draped")
 
-    #Scenery Properties Group
-    scenery_props_group_box = layout.box()
-    scenery_props_group_box.label(text="Scenery Properties")
+    if canHaveSceneryProps:
+        #Scenery Properties Group
+        scenery_props_group_box = layout.box()
+        scenery_props_group_box.label(text="Scenery Properties")
 
-    layer_group_box = scenery_props_group_box.box()
-    layer_group_box.label(text="Layer Grouping")
-    layer_group_box.prop(layer_props, "layer_group")
-    layer_group_box.prop(layer_props, "layer_group_offset")
+        layer_group_box = scenery_props_group_box.box()
+        layer_group_box.label(text="Layer Grouping")
+        layer_group_box.prop(layer_props, "layer_group")
+        layer_group_box.prop(layer_props, "layer_group_offset")
 
-    if canHaveDraped:
-        layer_group_box.prop(layer_props, "layer_group_draped")
-        layer_group_box.prop(layer_props, "layer_group_draped_offset")
+        if canHaveDraped:
+            layer_group_box.prop(layer_props, "layer_group_draped")
+            layer_group_box.prop(layer_props, "layer_group_draped_offset")
 
-    # v1000
-    if version >= 1000:
-        # slope_limit
-        slope_box = scenery_props_group_box.box()
-        slope_box.label(text="Slope Properties")
-        slope_box.prop(layer_props, "slope_limit")
+        # v1000
+        if version >= 1000:
+            # slope_limit
+            slope_box = scenery_props_group_box.box()
+            slope_box.label(text="Slope Properties")
+            slope_box.prop(layer_props, "slope_limit")
 
-        if layer_props.slope_limit == True:
-            slope_box.row().prop(layer_props, "slope_limit_min_pitch")
-            slope_box.row().prop(layer_props, "slope_limit_max_pitch")
-            slope_box.row().prop(layer_props, "slope_limit_min_roll")
-            slope_box.row().prop(layer_props, "slope_limit_max_roll")
+            if layer_props.slope_limit == True:
+                slope_box.row().prop(layer_props, "slope_limit_min_pitch")
+                slope_box.row().prop(layer_props, "slope_limit_max_pitch")
+                slope_box.row().prop(layer_props, "slope_limit_min_roll")
+                slope_box.row().prop(layer_props, "slope_limit_max_roll")
 
-        # tilted
-        slope_box.prop(layer_props, "tilted")
+            # tilted
+            slope_box.prop(layer_props, "tilted")
 
-        # require surface
-        require_box = scenery_props_group_box.row()
-        require_box.prop(layer_props, "require_surface", text="Require surface")
+            # require surface
+            require_box = scenery_props_group_box.row()
+            require_box.prop(layer_props, "require_surface", text="Require surface")
 
-    # Other Options
-    #layout.separator()
+    # Advanced Options
     advanced_box = layout.box()
     advanced_box.label(text="Advanced Options")
     if version >= 1130:
@@ -482,21 +485,32 @@ def dataref_search_window_layout(layout):
     row = layout.row()
     row.template_list("XPLANE_UL_DatarefSearchList", "", scene.xplane.dataref_search_window_state, "dataref_search_list", scene.xplane.dataref_search_window_state, "dataref_search_list_idx")
 
-def export_path_dir_layer_layout(layout:bpy.types.UILayout, layer_props:xplane_props.XPlaneLayer, version:int, context:str):
+def export_path_dir_layer_layout(
+        layout:bpy.types.UILayout,
+        has_layer_props:Union[bpy.types.Collection, bpy.types.Object],
+        version:int):
     layout.separator()
     row = layout.row()
-    row.label(text="Export Path Directives")
+    row.label(text="Laminar Library Directives")
 
-    if context == 'object':
+    if isinstance(has_layer_props,bpy.types.Collection):
+        row.operator("collection.add_xplane_export_path_directive").collection_name = has_layer_props.name
+    elif isinstance(has_layer_props, bpy.types.Object):
         row.operator("object.add_xplane_export_path_directive")
+    else:
+        assert False, f"has_layer_prop is an unknown type {type(has_layer_props)}"
 
     box = layout.box()
 
-    for i, attr in enumerate(layer_props.export_path_directives):
+    for i, attr in enumerate(has_layer_props.xplane.layer.export_path_directives):
         row = box.row()
-        row.prop(attr,"export_path", text= "Export Path " + str(i))
+        row.prop(attr,"export_path", text= "Special library.txt Directive " + str(i))
 
-        if context == 'object':
+        if isinstance(has_layer_props, bpy.types.Collection):
+            remove_op = row.operator("collection.remove_xplane_export_path_directive", text="", emboss=False, icon="X")
+            remove_op.collection_name = has_layer_props.name
+            remove_op.index = i
+        elif isinstance(has_layer_props, bpy.types.Object):
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
 def mesh_layout(layout:bpy.types.UILayout, obj):

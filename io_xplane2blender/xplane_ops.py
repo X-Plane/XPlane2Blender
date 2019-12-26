@@ -333,12 +333,34 @@ class OBJECT_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class OBJECT_OT_add_xplane_export_path_directive(bpy.types.Operator):
-    bl_label = 'Add Export Path Directive'
-    bl_idname = 'object.add_xplane_export_path_directive'
-    bl_description = 'Add Export Path Directive'
+class COLLECTION_OT_add_xplane_export_path_directive(bpy.types.Operator):
+    bl_label = 'Add Laminar Library Directive'
+    bl_idname = 'collection.add_xplane_export_path_directive'
+    bl_description = 'Add Laminar Library Directive'
 
+    collection_name: bpy.props.StringProperty()
+    def execute(self, context):
+        coll = bpy.data.collections[self.collection_name]
+        coll.xplane.layer.export_path_directives.add()
+        return {'FINISHED'}
+
+class COLLECTION_OT_remove_xplane_export_path_directive(bpy.types.Operator):
+    bl_label = 'Remove Laminar Library Directive'
+    bl_idname = 'collection.remove_xplane_export_path_directive'
+    bl_description = 'Remove Laminar Library Directive'
+
+    collection_name: bpy.props.StringProperty()
     index: bpy.props.IntProperty()
+
+    def execute(self, context):
+        coll = bpy.data.collections[self.collection_name]
+        coll.xplane.layer.export_path_directives.remove(self.index)
+        return {'FINISHED'}
+
+class OBJECT_OT_add_xplane_export_path_directive(bpy.types.Operator):
+    bl_label = 'Add Laminar Library Directive'
+    bl_idname = 'object.add_xplane_export_path_directive'
+    bl_description = 'Add Laminar Library Directive'
 
     def execute(self, context):
         obj = context.object
@@ -346,9 +368,9 @@ class OBJECT_OT_add_xplane_export_path_directive(bpy.types.Operator):
         return {'FINISHED'}
 
 class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
-    bl_label = 'Remove Export Path Directive'
+    bl_label = 'Remove Laminar Library Directive'
     bl_idname = 'object.remove_xplane_export_path_directive'
-    bl_description = 'Remove export path directive'
+    bl_description = 'Remove Laminar Library Directive'
 
     index: bpy.props.IntProperty()
 
@@ -356,8 +378,6 @@ class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
         obj = context.object
         obj.xplane.layer.export_path_directives.remove(self.index)
         return {'FINISHED'}
-
-
 # Class: BONE_OT_add_xplane_dataref
 # Adds a <XPlaneDataref> to a Blender bone.
 class BONE_OT_add_xplane_dataref(bpy.types.Operator):
@@ -595,6 +615,8 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
         return {'FINISHED'}
 
 _ops = (
+    COLLECTION_OT_add_xplane_export_path_directive,
+    COLLECTION_OT_remove_xplane_export_path_directive,
     OBJECT_OT_add_xplane_axis_detent_range,
     OBJECT_OT_remove_xplane_axis_detent_range,
     OBJECT_OT_add_xplane_layer_attribute,

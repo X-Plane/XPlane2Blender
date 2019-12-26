@@ -60,21 +60,28 @@ class TestLayersToCollections(XPlaneTestCase):
 
     def test_collections_renamed(self)->None:
         # Also tests that collections 'Layer 1', 'Layer 3-8' are the only collections in the .blend file
-        self.assertListEqual([c.name for c in bpy.data.collections], [f"Layer {i}" for i in itertools.chain([1], range(3,9))])
+        self.assertSetEqual({c.name for c in bpy.data.scenes["Scene_first"].collection.children},
+                            {f"Layer {i}_Scene_first" for i in itertools.chain([1], range(3,9))})
+        self.assertSetEqual({c.name for c in bpy.data.scenes["Scene_second_copy"].collection.children},
+                            {f"Layer {i}_Scene_second_copy" for i in itertools.chain([1], range(3,11))})
+        self.assertEqual(bpy.data.scenes["Scene_fourth"].collection.children[0].name, "Layer 10_Scene_fourth")
 
     def test_is_exportable_is_not_hide_render(self)->None:
-        self.assertTrue(bpy.data.collections["Layer 1"].xplane.is_exportable_collection)
+        self.assertTrue(bpy.data.collections["Layer 1_Scene_first"].xplane.is_exportable_collection)
         for i in range(3, 9):
-            self.assertFalse(bpy.data.collections[f"Layer {i}"].xplane.is_exportable_collection)
+            self.assertFalse(bpy.data.collections[f"Layer {i}_Scene_first"].xplane.is_exportable_collection)
 
     def test_layer_4_properties_copied(self)->None:
-        layer = bpy.data.collections["Layer 4"].xplane.layer
+        layer_first = bpy.data.collections["Layer 4_Scene_first"].xplane.layer
+        layer_second_only = bpy.data.collections["Layer 4_Scene_second_copy"].xplane.layer
         d = self.get_default_xplane_layer_props_dict()
         d.update({"name":"found_non_default_choice (this name)"})
-        self.assertXPlaneLayerEqual(layer, d)
+        self.assertXPlaneLayerEqual(layer_first, d)
+        self.assertXPlaneLayerEqual(layer_second_only, d)
 
     def test_layer_5_properties_copied(self)->None:
-        layer = bpy.data.collections["Layer 5"].xplane.layer
+        layer_first = bpy.data.collections["Layer 5_Scene_first"].xplane.layer
+        layer_second_only = bpy.data.collections["Layer 5_Scene_second_copy"].xplane.layer
         d = self.get_default_xplane_layer_props_dict()
         d.update({
             "name": "aircraft_properties_copied",
@@ -88,11 +95,12 @@ class TestLayersToCollections(XPlaneTestCase):
             "export": False,
             "debug": False
         })
-        self.assertXPlaneLayerEqual(layer, d)
+        self.assertXPlaneLayerEqual(layer_first, d)
+        self.assertXPlaneLayerEqual(layer_second_only, d)
 
     def test_layer_6_properties_copied(self)->None:
-        layer = bpy.data.collections["Layer 6"].xplane.layer
-        assert layer.name, f"{layer.name} what the heck man!"
+        layer_first = bpy.data.collections["Layer 6_Scene_first"].xplane.layer
+        layer_second_only = bpy.data.collections["Layer 6_Scene_second_copy"].xplane.layer
         d = self.get_default_xplane_layer_props_dict()
         d.update({
             "name": "cockpit_properties_copied",
@@ -126,10 +134,12 @@ class TestLayersToCollections(XPlaneTestCase):
                 }
             ]
         })
-        self.assertXPlaneLayerEqual(layer, d)
+        self.assertXPlaneLayerEqual(layer_first, d)
+        self.assertXPlaneLayerEqual(layer_second_only, d)
 
     def test_layer_7_properties_copied(self)->None:
-        layer = bpy.data.collections["Layer 7"].xplane.layer
+        layer_first = bpy.data.collections["Layer 7_Scene_first"].xplane.layer
+        layer_second_only = bpy.data.collections["Layer 7_Scene_second_copy"].xplane.layer
         d = self.get_default_xplane_layer_props_dict()
         d.update({
             "name": "scenery_properties_copied",
@@ -166,10 +176,12 @@ class TestLayersToCollections(XPlaneTestCase):
             "tilted": True,
             "require_surface": "dry",
         })
-        self.assertXPlaneLayerEqual(layer, d)
+        self.assertXPlaneLayerEqual(layer_first, d)
+        self.assertXPlaneLayerEqual(layer_second_only, d)
 
     def test_layer_8_properties_copied(self)->None:
-        layer = bpy.data.collections["Layer 8"].xplane.layer
+        layer_first = bpy.data.collections["Layer 8_Scene_first"].xplane.layer
+        layer_second_only = bpy.data.collections["Layer 8_Scene_second_copy"].xplane.layer
         d = self.get_default_xplane_layer_props_dict()
         d.update({
             "name": "instanced_scenery_properties_copied",
@@ -183,7 +195,30 @@ class TestLayersToCollections(XPlaneTestCase):
                 {"name": "name2", "value": "value2"}
             ]
         })
-        self.assertXPlaneLayerEqual(layer, d)
+        self.assertXPlaneLayerEqual(layer_first, d)
+        self.assertXPlaneLayerEqual(layer_second_only, d)
 
+    def test_layer_9_properties_copied(self)->None:
+        layer_second_only = bpy.data.collections["Layer 9_Scene_second_copy"].xplane.layer
+        d = self.get_default_xplane_layer_props_dict()
+        d.update({
+            "name": "second_scene_only_has_nondefault",
+        })
+        self.assertXPlaneLayerEqual(layer_second_only, d)
 
+    def test_layer_10_properties_copied(self)->None:
+        layer_second_only = bpy.data.collections["Layer 10_Scene_second_copy"].xplane.layer
+        d = self.get_default_xplane_layer_props_dict()
+        d.update({
+            "name": "layer_10_content_in_Scene_second_copy",
+        })
+        self.assertXPlaneLayerEqual(layer_second_only, d)
+
+    def test_layer_10_in_Scene_fourth_copied(self)->None:
+        layer_fourth = bpy.data.collections["Layer 10_Scene_fourth"].xplane.layer
+        d = self.get_default_xplane_layer_props_dict()
+        d.update({
+            "name": "layer_10_content_in_Scene_fourth",
+        })
+        self.assertXPlaneLayerEqual(layer_fourth, d)
 runTestCases([TestLayersToCollections])

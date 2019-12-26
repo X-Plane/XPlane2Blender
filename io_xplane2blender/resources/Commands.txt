@@ -41,6 +41,7 @@ sim/operation/open_failures_window                 Open the Failures window.
 sim/operation/toggle_data_output_graph             Toggle display of the data output graph.
 sim/operation/toggle_data_output_cockpit           Toggle display of the cockpit data output.
 sim/operation/toggle_joy_profiles_window           Toggle the keyboard & joystick profiles window.
+sim/operation/toggle_custom_location_window        Toggle the Location details window.
 sim/operation/toggle_style_guide                   Toggle display of the V11 UI style guide.
 sim/operation/slider_01                            Slider #1 On/Off control.
 sim/operation/slider_02                            Slider #2 On/Off control.
@@ -88,6 +89,14 @@ sim/engines/carb_heat_toggle                       Carb heat toggle.
 sim/flight_controls/cowl_flaps_open                Move cowl flaps open a bit.
 sim/flight_controls/cowl_flaps_closed              Move cowl flaps to closed a bit.
 sim/engines/idle_hi_lo_toggle                      Idle high/low toggle.
+sim/engines/idle_hi_lo_toggle_1                    Idle high/low toggle Engine 1.
+sim/engines/idle_hi_lo_toggle_2                    Idle high/low toggle Engine 2.
+sim/engines/idle_hi_lo_toggle_3                    Idle high/low toggle Engine 3.
+sim/engines/idle_hi_lo_toggle_4                    Idle high/low toggle Engine 4.
+sim/engines/idle_hi_lo_toggle_5                    Idle high/low toggle Engine 5.
+sim/engines/idle_hi_lo_toggle_6                    Idle high/low toggle Engine 6.
+sim/engines/idle_hi_lo_toggle_7                    Idle high/low toggle Engine 7.
+sim/engines/idle_hi_lo_toggle_8                    Idle high/low toggle Engine 8.
 sim/fadec/fadec_toggle                             FADEC toggle.
 sim/engines/governor_on                            Throttle governor on.
 sim/engines/governor_off                           Throttle governor off.
@@ -384,7 +393,7 @@ sim/flight_controls/tail_wheel_lock_toggle         Toggle tailwheel lock.
 sim/flight_controls/tail_wheel_lock_engage         Engage tailwheel lock.
 sim/flight_controls/water_rudder_down              Water rudder down (engage).
 sim/flight_controls/water_rudder_up                Water rudder up (disengage).
-sim/flight_controls/water_rudder_toggle            Toggle water ruder.
+sim/flight_controls/water_rudder_toggle            Toggle water rudder.
 sim/flight_controls/left_brake                     Hold brake left.
 sim/flight_controls/right_brake                    Hold brake right.
 sim/flight_controls/brakes_toggle_regular          Toggle brakes regular effort.
@@ -415,6 +424,7 @@ sim/flight_controls/canopy_open                    Canopy open.
 sim/flight_controls/canopy_close                   Canopy close.
 sim/flight_controls/canopy_toggle                  Canopy toggle.
 sim/flight_controls/rotor_brake_toggle             Toggle rotor brake.
+sim/flight_controls/hotel_mode_toggle              Toggle hotel mode.
 sim/systems/artificial_stability_toggle            Toggle artificial stability power.
 sim/flight_controls/puffers_toggle                 Toggle puffers.
 sim/engines/rockets_up                             Orbital maneuver rockets up.
@@ -448,13 +458,25 @@ sim/fuel/fuel_selector_lft                         Set fuel selector to left tan
 sim/fuel/fuel_selector_ctr                         Set fuel selector to center tanks.
 sim/fuel/fuel_selector_rgt                         Set fuel selector to right tanks.
 sim/fuel/fuel_selector_all                         Set fuel selector to all tanks.
+sim/fuel/left_fuel_selector_none                   Set fuel selector for left engine to none (shut off).
+sim/fuel/left_fuel_selector_lft                    Set fuel selector for left engine to left tanks.
+sim/fuel/left_fuel_selector_ctr                    Set fuel selector for left engine to center tanks.
+sim/fuel/left_fuel_selector_rgt                    Set fuel selector for left engine to right tanks.
+sim/fuel/left_fuel_selector_all                    Set fuel selector for left engine to all tanks.
+sim/fuel/right_fuel_selector_none                  Set fuel selector for right engine to none (shut off).
+sim/fuel/right_fuel_selector_lft                   Set fuel selector for right engine to left tanks.
+sim/fuel/right_fuel_selector_ctr                   Set fuel selector for right engine to center tanks.
+sim/fuel/right_fuel_selector_rgt                   Set fuel selector for right engine to right tanks.
+sim/fuel/right_fuel_selector_all                   Set fuel selector for right engine to all tanks.
 sim/fuel/fuel_transfer_to_lft                      Transfer fuel to left.
 sim/fuel/fuel_transfer_to_ctr                      Transfer fuel to center.
 sim/fuel/fuel_transfer_to_rgt                      Transfer fuel to right.
+sim/fuel/fuel_transfer_to_aft                      Transfer fuel to aft.
 sim/fuel/fuel_transfer_to_off                      Transfer fuel to none.
 sim/fuel/fuel_transfer_from_lft                    Transfer fuel from left.
 sim/fuel/fuel_transfer_from_ctr                    Transfer fuel from center.
 sim/fuel/fuel_transfer_from_rgt                    Transfer fuel from right.
+sim/fuel/fuel_transfer_from_aft                    Transfer fuel from aft.
 sim/fuel/fuel_transfer_from_off                    Transfer fuel from none.
 sim/fuel/fuel_crossfeed_from_lft_tank              Cross-feed fuel from left tank.
 sim/fuel/fuel_crossfeed_off                        Cross-feed fuel off.
@@ -463,6 +485,23 @@ sim/fuel/fuel_firewall_valve_lft_open              Firewall fuel valve left open
 sim/fuel/fuel_firewall_valve_lft_closed            Firewall fuel valve left closed.
 sim/fuel/fuel_firewall_valve_rgt_open              Firewall fuel valve right open.
 sim/fuel/fuel_firewall_valve_rgt_closed            Firewall fuel valve right closed.
+sim/fuel/left_xfer_override                        Aux to feeder transfer left override.
+sim/fuel/left_xfer_on                              Aux to feeder transfer left on.
+sim/fuel/left_xfer_off                             Aux to feeder transfer left off.
+sim/fuel/left_xfer_up                              Aux to feeder transfer left off->on->overide.
+sim/fuel/left_xfer_dn                              Aux to feeder transfer left override->on->off.
+sim/fuel/right_xfer_override                       Aux to feeder transfer right override.
+sim/fuel/right_xfer_on                             Aux to feeder transfer right on.
+sim/fuel/right_xfer_off                            Aux to feeder transfer right off.
+sim/fuel/right_xfer_up                             Aux to feeder transfer right off->on->overide.
+sim/fuel/right_xfer_dn                             Aux to feeder transfer right override->on->off.
+sim/fuel/left_xfer_test                            Aux to feeder transfer test left.
+sim/fuel/right_xfer_test                           Aux to feeder transfer test right.
+sim/fuel/auto_crossfeed_on_open                    Crossfeed valve open.
+sim/fuel/auto_crossfeed_auto                       Open crossfeed valve when pressure difference detected.
+sim/fuel/auto_crossfeed_off                        Close crossfeed valve and turn off auto-crossfeed.
+sim/fuel/auto_crossfeed_up                         Auto-crossfeed off->auto->on.
+sim/fuel/auto_crossfeed_down                       Auto-crossfeed on->auto->off.
 sim/fuel/fuel_pumps_on                             Fuel pumps on.
 sim/fuel/fuel_pumps_off                            Fuel pumps off.
 sim/fuel/fuel_pumps_tog                            Fuel pumps toggle.
@@ -553,6 +592,7 @@ sim/electrical/generator_8_reset                   Generator #8 reset.
 sim/electrical/APU_start                           APU start.
 sim/electrical/APU_on                              APU on.
 sim/electrical/APU_off                             APU off.
+sim/electrical/APU_fire_shutoff                    APU emergency shutoff with fire handle.
 sim/electrical/APU_generator_on                    APU generator on.
 sim/electrical/APU_generator_off                   APU generator off.
 sim/electrical/GPU_on                              GPU on.
@@ -706,6 +746,51 @@ sim/bleed_air/bleed_air_left_off                   Bleed air left engine off.
 sim/bleed_air/bleed_air_right_on                   Bleed air right engine on.
 sim/bleed_air/bleed_air_right_ins_only             Bleed air right engine instruments only.
 sim/bleed_air/bleed_air_right_off                  Bleed air right engine off.
+sim/bleed_air/engine_1_off                         Bleed air shut off engine 1.
+sim/bleed_air/engine_2_off                         Bleed air shut off engine 2.
+sim/bleed_air/engine_3_off                         Bleed air shut off engine 3.
+sim/bleed_air/engine_4_off                         Bleed air shut off engine 4.
+sim/bleed_air/engine_5_off                         Bleed air shut off engine 5.
+sim/bleed_air/engine_6_off                         Bleed air shut off engine 6.
+sim/bleed_air/engine_7_off                         Bleed air shut off engine 7.
+sim/bleed_air/engine_8_off                         Bleed air shut off engine 8.
+sim/bleed_air/engine_1_on                          Bleed air on engine 1.
+sim/bleed_air/engine_2_on                          Bleed air on engine 2.
+sim/bleed_air/engine_3_on                          Bleed air on engine 3.
+sim/bleed_air/engine_4_on                          Bleed air on engine 4.
+sim/bleed_air/engine_5_on                          Bleed air on engine 5.
+sim/bleed_air/engine_6_on                          Bleed air on engine 6.
+sim/bleed_air/engine_7_on                          Bleed air on engine 7.
+sim/bleed_air/engine_8_on                          Bleed air on engine 8.
+sim/bleed_air/engine_1_toggle                      Bleed air toggle engine 1.
+sim/bleed_air/engine_2_toggle                      Bleed air toggle engine 2.
+sim/bleed_air/engine_3_toggle                      Bleed air toggle engine 3.
+sim/bleed_air/engine_4_toggle                      Bleed air toggle engine 4.
+sim/bleed_air/engine_5_toggle                      Bleed air toggle engine 5.
+sim/bleed_air/engine_6_toggle                      Bleed air toggle engine 6.
+sim/bleed_air/engine_7_toggle                      Bleed air toggle engine 7.
+sim/bleed_air/engine_8_toggle                      Bleed air toggle engine 8.
+sim/bleed_air/gpu_off                              Bleed air shut off GPU.
+sim/bleed_air/gpu_on                               Bleed air on GPU.
+sim/bleed_air/gpu_toggle                           Bleed air toggle GPU.
+sim/bleed_air/apu_off                              Bleed air shut off APU.
+sim/bleed_air/apu_on                               Bleed air on APU.
+sim/bleed_air/apu_toggle                           Bleed air toggle APU.
+sim/bleed_air/isolation_left_shut                  Bleed air shut left isolation.
+sim/bleed_air/isolation_left_open                  Bleed air open left isolation.
+sim/bleed_air/isolation_left_toggle                Bleed air toggle left isolation.
+sim/bleed_air/isolation_right_shut                 Bleed air shut right isolation.
+sim/bleed_air/isolation_right_open                 Bleed air open right isolation.
+sim/bleed_air/isolation_right_toggle               Bleed air toggle right isolation.
+sim/bleed_air/pack_left_off                        Bleed air left pack off.
+sim/bleed_air/pack_left_on                         Bleed air left pack on.
+sim/bleed_air/pack_left_toggle                     Bleed air left pack toggle.
+sim/bleed_air/pack_center_off                      Bleed air center pack off.
+sim/bleed_air/pack_center_on                       Bleed air center pack on.
+sim/bleed_air/pack_center_toggle                   Bleed air center pack toggle.
+sim/bleed_air/pack_right_off                       Bleed air right pack off.
+sim/bleed_air/pack_right_on                        Bleed air right pack on.
+sim/bleed_air/pack_right_toggle                    Bleed air right pack toggle.
 sim/pressurization/test                            Pressurization test.
 sim/pressurization/dump_on                         Dump pressurization on.
 sim/pressurization/dump_off                        Dump pressurization off.
@@ -713,6 +798,18 @@ sim/pressurization/vvi_down                        Cabin vertical speed down.
 sim/pressurization/vvi_up                          Cabin vertical speed up.
 sim/pressurization/cabin_alt_down                  Cabin altitude down.
 sim/pressurization/cabin_alt_up                    Cabin altitude up.
+sim/pressurization/aircond_on                      Air conditioning on.
+sim/pressurization/aircond_off                     Air conditioning off.
+sim/pressurization/heater_on                       Electric heater on.
+sim/pressurization/heater_grd_max                  Electric heater on ground max.
+sim/pressurization/heater_off                      Electric heater off.
+sim/pressurization/heater_up                       Electric heater off->on->grd max.
+sim/pressurization/heater_dn                       Electric heater grd max->on->off.
+sim/pressurization/fan_auto                        Vent fan auto (on only with AC or heat).
+sim/pressurization/fan_low                         Vent fan on low.
+sim/pressurization/fan_high                        Vent fan high.
+sim/pressurization/fan_up                          Vent fan setting up.
+sim/pressurization/fan_down                        Vent fan setting down.
 sim/ice/anti_ice_toggle                            Anti-ice: toggle all.
 sim/ice/alternate_static_port                      Toggle alternate static port.
 sim/ice/pitot_heat0_on                             Anti-ice: left pitot heat on.
@@ -725,6 +822,8 @@ sim/ice/static_heat0_on                            Anti-ice: left static heat on
 sim/ice/static_heat1_on                            Anti-ice: right static heat on.
 sim/ice/static_heat0_off                           Anti-ice: left static heat off.
 sim/ice/static_heat1_off                           Anti-ice: right static heat off.
+sim/ice/static_heat0_tog                           Anti-ice: left static heat toggle.
+sim/ice/static_heat1_tog                           Anti-ice: right static heat toggle.
 sim/ice/AOA_heat0_on                               Anti-ice: AOA on.
 sim/ice/AOA_heat1_on                               Anti-ice: AOA on.
 sim/ice/AOA_heat0_off                              Anti-ice: AOA off.
@@ -734,15 +833,45 @@ sim/ice/AOA_heat1_tog                              Anti-ice: AOA toggle.
 sim/ice/window_heat_on                             Anti-ice: window heat on.
 sim/ice/window_heat_off                            Anti-ice: window heat off.
 sim/ice/window_heat_tog                            Anti-ice: window heat toggle.
-sim/ice/wing_heat_on                               Anti-ice: all wing, de-ice on.
-sim/ice/wing_heat0_on                              Anti-ice: left wing, de-ice on.
-sim/ice/wing_heat1_on                              Anti-ice: right wing, de-ice on.
-sim/ice/wing_heat_off                              Anti-ice: all wing, de-ice off.
-sim/ice/wing_heat0_off                             Anti-ice: left wing, de-ice off.
-sim/ice/wing_heat1_off                             Anti-ice: right wing, de-ice off.
-sim/ice/wing_heat_tog                              Anti-ice: all wing, de-ice toggle.
-sim/ice/wing_heat0_tog                             Anti-ice: left wing, de-ice toggle.
-sim/ice/wing_heat1_tog                             Anti-ice: right wing, de-ice toggle.
+sim/ice/wing_heat_on                               Anti-ice: all wing, anti-ice heat on.
+sim/ice/wing_heat0_on                              Anti-ice: left wing, anti-ice heat on.
+sim/ice/wing_heat1_on                              Anti-ice: right wing, anti-ice heat on.
+sim/ice/wing_heat_off                              Anti-ice: all wing, anti-ice heat off.
+sim/ice/wing_heat0_off                             Anti-ice: left wing, anti-ice heat off.
+sim/ice/wing_heat1_off                             Anti-ice: right wing, anti-ice heat off.
+sim/ice/wing_heat_tog                              Anti-ice: all wing, anti-ice heat toggle.
+sim/ice/wing_heat0_tog                             Anti-ice: left wing, anti-ice heat toggle.
+sim/ice/wing_heat1_tog                             Anti-ice: right wing, anti-ice heat toggle.
+sim/ice/wing_boot_on                               Anti-ice: all wing, de-icing boots on schedule.
+sim/ice/wing_boot0_on                              Anti-ice: left wing, de-icing boots on schedule.
+sim/ice/wing_boot1_on                              Anti-ice: right wing, de-icing boots on schedule.
+sim/ice/wing_boot_off                              Anti-ice: all wing, de-icing boots off.
+sim/ice/wing_boot0_off                             Anti-ice: left wing, de-icing boots off.
+sim/ice/wing_boot1_off                             Anti-ice: right wing, de-icing boots off.
+sim/ice/wing_boot_tog                              Anti-ice: all wing, de-icing boots toggle.
+sim/ice/wing_boot0_tog                             Anti-ice: left wing, de-icing boots toggle.
+sim/ice/wing_boot1_tog                             Anti-ice: right wing, de-icing boots toggle.
+sim/ice/wing_tai_on                                Anti-ice: all wing, bleed anti-ice on.
+sim/ice/wing_tai0_on                               Anti-ice: left wing, bleed anti-ice on.
+sim/ice/wing_tai1_on                               Anti-ice: right wing, bleed anti-ice on.
+sim/ice/wing_tai_off                               Anti-ice: all wing, bleed anti-ice off.
+sim/ice/wing_tai0_off                              Anti-ice: left wing, bleed anti-ice off.
+sim/ice/wing_tai1_off                              Anti-ice: right wing, bleed anti-ice off.
+sim/ice/wing_tai_tog                               Anti-ice: all wing, bleed anti-ice toggle.
+sim/ice/wing_tai0_tog                              Anti-ice: left wing, bleed anti-ice toggle.
+sim/ice/wing_tai1_tog                              Anti-ice: right wing, bleed anti-ice toggle.
+sim/ice/wing_tks_on                                Anti-ice: all wing, TKS de-ice normal.
+sim/ice/wing_tks0_on                               Anti-ice: left wing, TKS de-ice normal.
+sim/ice/wing_tks1_on                               Anti-ice: right wing, TKS de-ice normal.
+sim/ice/wing_tks_high                              Anti-ice: all wing, TKS de-ice high.
+sim/ice/wing_tks0_high                             Anti-ice: left wing, TKS de-ice high.
+sim/ice/wing_tks1_high                             Anti-ice: right wing, TKS de-ice high.
+sim/ice/wing_tks_off                               Anti-ice: all wing, TKS de-ice off.
+sim/ice/wing_tks0_off                              Anti-ice: left wing, TKS de-ice off.
+sim/ice/wing_tks1_off                              Anti-ice: right wing, TKS de-ice off.
+sim/ice/wing_tks_tog                               Anti-ice: all wing, TKS de-ice toggle.
+sim/ice/wing_tks0_tog                              Anti-ice: left wing, TKS de-ice toggle.
+sim/ice/wing_tks1_tog                              Anti-ice: right wing, TKS de-ice toggle.
 sim/ice/inlet_heat0_on                             Anti-ice: engine #1 inlet heat on.
 sim/ice/inlet_heat1_on                             Anti-ice: engine #2 inlet heat on.
 sim/ice/inlet_heat2_on                             Anti-ice: engine #3 inlet heat on.
@@ -767,6 +896,30 @@ sim/ice/inlet_heat4_tog                            Anti-ice: engine #5 inlet hea
 sim/ice/inlet_heat5_tog                            Anti-ice: engine #6 inlet heat toggle.
 sim/ice/inlet_heat6_tog                            Anti-ice: engine #7 inlet heat toggle.
 sim/ice/inlet_heat7_tog                            Anti-ice: engine #8 inlet heat toggle.
+sim/ice/inlet_eai0_on                              Anti-ice: engine #1 anti-ice on.
+sim/ice/inlet_eai1_on                              Anti-ice: engine #2 anti-ice on.
+sim/ice/inlet_eai2_on                              Anti-ice: engine #3 anti-ice on.
+sim/ice/inlet_eai3_on                              Anti-ice: engine #4 anti-ice on.
+sim/ice/inlet_eai4_on                              Anti-ice: engine #5 anti-ice on.
+sim/ice/inlet_eai5_on                              Anti-ice: engine #6 anti-ice on.
+sim/ice/inlet_eai6_on                              Anti-ice: engine #7 anti-ice on.
+sim/ice/inlet_eai7_on                              Anti-ice: engine #8 anti-ice on.
+sim/ice/inlet_eai0_off                             Anti-ice: engine #1 anti-ice off.
+sim/ice/inlet_eai1_off                             Anti-ice: engine #2 anti-ice off.
+sim/ice/inlet_eai2_off                             Anti-ice: engine #3 anti-ice off.
+sim/ice/inlet_eai3_off                             Anti-ice: engine #4 anti-ice off.
+sim/ice/inlet_eai4_off                             Anti-ice: engine #5 anti-ice off.
+sim/ice/inlet_eai5_off                             Anti-ice: engine #6 anti-ice off.
+sim/ice/inlet_eai6_off                             Anti-ice: engine #7 anti-ice off.
+sim/ice/inlet_eai7_off                             Anti-ice: engine #8 anti-ice off.
+sim/ice/inlet_eai0_tog                             Anti-ice: engine #1 anti-ice toggle.
+sim/ice/inlet_eai1_tog                             Anti-ice: engine #2 anti-ice toggle.
+sim/ice/inlet_eai2_tog                             Anti-ice: engine #3 anti-ice toggle.
+sim/ice/inlet_eai3_tog                             Anti-ice: engine #4 anti-ice toggle.
+sim/ice/inlet_eai4_tog                             Anti-ice: engine #5 anti-ice toggle.
+sim/ice/inlet_eai5_tog                             Anti-ice: engine #6 anti-ice toggle.
+sim/ice/inlet_eai6_tog                             Anti-ice: engine #7 anti-ice toggle.
+sim/ice/inlet_eai7_tog                             Anti-ice: engine #8 anti-ice toggle.
 sim/ice/prop_heat_on                               Anti-ice: all prop heat on.
 sim/ice/prop_heat_off                              Anti-ice: all prop heat off.
 sim/ice/prop_heat_tog                              Anti-ice: all prop heat toggle.
@@ -794,6 +947,42 @@ sim/ice/prop_heat4_tog                             Anti-ice: engine #5 prop heat
 sim/ice/prop_heat5_tog                             Anti-ice: engine #6 prop heat toggle.
 sim/ice/prop_heat6_tog                             Anti-ice: engine #7 prop heat toggle.
 sim/ice/prop_heat7_tog                             Anti-ice: engine #8 prop heat toggle.
+sim/ice/prop_tks_on                                Anti-ice: all prop TKS norm.
+sim/ice/prop_tks_high                              Anti-ice: all prop TKS high.
+sim/ice/prop_tks_off                               Anti-ice: all prop TKS off.
+sim/ice/prop_tks_tog                               Anti-ice: all prop TKS toggle.
+sim/ice/prop_tks0_on                               Anti-ice: engine #1 prop TKS norm.
+sim/ice/prop_tks1_on                               Anti-ice: engine #2 prop TKS norm.
+sim/ice/prop_tks2_on                               Anti-ice: engine #3 prop TKS norm.
+sim/ice/prop_tks3_on                               Anti-ice: engine #4 prop TKS norm.
+sim/ice/prop_tks4_on                               Anti-ice: engine #5 prop TKS norm.
+sim/ice/prop_tks5_on                               Anti-ice: engine #6 prop TKS norm.
+sim/ice/prop_tks6_on                               Anti-ice: engine #7 prop TKS norm.
+sim/ice/prop_tks7_on                               Anti-ice: engine #8 prop TKS norm.
+sim/ice/prop_tks0_high                             Anti-ice: engine #1 prop TKS high.
+sim/ice/prop_tks1_high                             Anti-ice: engine #2 prop TKS high.
+sim/ice/prop_tks2_high                             Anti-ice: engine #3 prop TKS high.
+sim/ice/prop_tks3_high                             Anti-ice: engine #4 prop TKS high.
+sim/ice/prop_tks4_high                             Anti-ice: engine #5 prop TKS high.
+sim/ice/prop_tks5_high                             Anti-ice: engine #6 prop TKS high.
+sim/ice/prop_tks6_high                             Anti-ice: engine #7 prop TKS high.
+sim/ice/prop_tks7_high                             Anti-ice: engine #8 prop TKS high.
+sim/ice/prop_tks0_off                              Anti-ice: engine #1 prop TKS off.
+sim/ice/prop_tks1_off                              Anti-ice: engine #2 prop TKS off.
+sim/ice/prop_tks2_off                              Anti-ice: engine #3 prop TKS off.
+sim/ice/prop_tks3_off                              Anti-ice: engine #4 prop TKS off.
+sim/ice/prop_tks4_off                              Anti-ice: engine #5 prop TKS off.
+sim/ice/prop_tks5_off                              Anti-ice: engine #6 prop TKS off.
+sim/ice/prop_tks6_off                              Anti-ice: engine #7 prop TKS off.
+sim/ice/prop_tks7_off                              Anti-ice: engine #8 prop TKS off.
+sim/ice/prop_tks0_tog                              Anti-ice: engine #1 prop TKS toggle.
+sim/ice/prop_tks1_tog                              Anti-ice: engine #2 prop TKS toggle.
+sim/ice/prop_tks2_tog                              Anti-ice: engine #3 prop TKS toggle.
+sim/ice/prop_tks3_tog                              Anti-ice: engine #4 prop TKS toggle.
+sim/ice/prop_tks4_tog                              Anti-ice: engine #5 prop TKS toggle.
+sim/ice/prop_tks5_tog                              Anti-ice: engine #6 prop TKS toggle.
+sim/ice/prop_tks6_tog                              Anti-ice: engine #7 prop TKS toggle.
+sim/ice/prop_tks7_tog                              Anti-ice: engine #8 prop TKS toggle.
 sim/ice/detect_on                                  Anti-ice: ice detection on.
 sim/ice/detect_off                                 Anti-ice: ice detection off.
 sim/oxy/crew_valve_on                              Crew oxygen: master valve open/on.
@@ -1045,14 +1234,35 @@ sim/transponder/transponder_34_down                Transponder digits 3 and 4 do
 sim/transponder/transponder_34_up                  Transponder digits 3 and 4 up.
 sim/audio_panel/transmit_audio_com1                Transmit audio: COM1.
 sim/audio_panel/transmit_audio_com2                Transmit audio: COM2.
-sim/audio_panel/monitor_audio_com1                 Monitor audio: COM1.
-sim/audio_panel/monitor_audio_com2                 Monitor audio: COM2.
-sim/audio_panel/monitor_audio_nav1                 Monitor audio: NAV1.
-sim/audio_panel/monitor_audio_nav2                 Monitor audio: NAV2.
-sim/audio_panel/monitor_audio_adf1                 Monitor audio: ADF2.
-sim/audio_panel/monitor_audio_adf2                 Monitor audio: ADF2.
-sim/audio_panel/monitor_audio_dme                  Monitor audio: DME.
-sim/audio_panel/monitor_audio_mkr                  Monitor audio: MKR.
+sim/audio_panel/monitor_audio_com_auto             Monitor audio: COM auto (same as transmit) toggle.
+sim/audio_panel/monitor_audio_com1                 Monitor audio: COM1 toggle.
+sim/audio_panel/monitor_audio_com2                 Monitor audio: COM2 toggle.
+sim/audio_panel/monitor_audio_nav1                 Monitor audio: NAV1 toggle.
+sim/audio_panel/monitor_audio_nav2                 Monitor audio: NAV2 toggle.
+sim/audio_panel/monitor_audio_adf1                 Monitor audio: ADF1 toggle.
+sim/audio_panel/monitor_audio_adf2                 Monitor audio: ADF2 toggle.
+sim/audio_panel/monitor_audio_dme                  Monitor audio: DME toggle.
+sim/audio_panel/monitor_audio_mkr                  Monitor audio: MKR toggle.
+sim/audio_panel/transmit_audio_com1_man            Transmit audio: COM1 - old panel, doesn't change listener.
+sim/audio_panel/transmit_audio_com2_man            Transmit audio: COM2 - old panel, doesn't change listener.
+sim/audio_panel/monitor_audio_com_auto_off         Monitor audio: COM auto (same as transmit) off.
+sim/audio_panel/monitor_audio_com1_off             Monitor audio: COM1 off.
+sim/audio_panel/monitor_audio_com2_off             Monitor audio: COM2 off.
+sim/audio_panel/monitor_audio_nav1_off             Monitor audio: NAV1 off.
+sim/audio_panel/monitor_audio_nav2_off             Monitor audio: NAV2 off.
+sim/audio_panel/monitor_audio_adf1_off             Monitor audio: ADF1 off.
+sim/audio_panel/monitor_audio_adf2_off             Monitor audio: ADF2 off.
+sim/audio_panel/monitor_audio_dme_off              Monitor audio: DME off.
+sim/audio_panel/monitor_audio_mkr_off              Monitor audio: MKR off.
+sim/audio_panel/monitor_audio_com_auto_on          Monitor audio: COM auto (same as transmit) on.
+sim/audio_panel/monitor_audio_com1_on              Monitor audio: COM1 on.
+sim/audio_panel/monitor_audio_com2_on              Monitor audio: COM2 on.
+sim/audio_panel/monitor_audio_nav1_on              Monitor audio: NAV1 on.
+sim/audio_panel/monitor_audio_nav2_on              Monitor audio: NAV2 on.
+sim/audio_panel/monitor_audio_adf1_on              Monitor audio: ADF1 on.
+sim/audio_panel/monitor_audio_adf2_on              Monitor audio: ADF2 on.
+sim/audio_panel/monitor_audio_dme_on               Monitor audio: DME on.
+sim/audio_panel/monitor_audio_mkr_on               Monitor audio: MKR on.
 sim/transponder/transponder_ident                  Transponder ID.
 sim/transponder/transponder_off                    Transponder off.
 sim/transponder/transponder_standby                Transponder standby.
@@ -1101,6 +1311,7 @@ sim/radios/obs2_down                               OBS 2 down.
 sim/radios/obs2_up                                 OBS 2 up.
 sim/radios/obs_HSI_down                            OBS HSI down.
 sim/radios/obs_HSI_up                              OBS HSI up.
+sim/radios/obs_HSI_direct                          OBS HSI direct course.
 sim/radios/adf1_card_down                          ADF card 1 down.
 sim/radios/adf1_card_up                            ADF card 1 up.
 sim/radios/adf2_card_down                          ADF card 2 down.
@@ -1111,6 +1322,7 @@ sim/radios/copilot_obs2_down                       Copilot OBS 2 down.
 sim/radios/copilot_obs2_up                         Copilot OBS 2 up.
 sim/radios/copilot_obs_HSI_down                    Copilot OBS HSI down.
 sim/radios/copilot_obs_HSI_up                      Copilot OBS HSI up.
+sim/radios/copilot_obs_HSI_direct                  Copilot OBS HSI direct course.
 sim/radios/copilot_adf1_card_down                  Copilot ADF card 1 down.
 sim/radios/copilot_adf1_card_up                    Copilot ADF card 1 up.
 sim/radios/copilot_adf2_card_down                  Copilot ADF card 2 down.
@@ -1158,12 +1370,14 @@ sim/autopilot/autothrottle_toggle                  Autopilot auto-throttle speed
 sim/autopilot/autothrottle_n1epr                   Autopilot auto-throttle EPR/N1 hold on.
 sim/autopilot/autothrottle_n1epr_toggle            Autopilot auto-throttle EPR/N1 hold toggle.
 sim/autopilot/heading                              Autopilot heading-select.
+sim/autopilot/track                                Autopilot track.
 sim/autopilot/heading_hold                         Autopilot heading-hold.
 sim/autopilot/wing_leveler                         Autopilot wing-level / roll hold.
 sim/autopilot/rate_hold                            Autopilot wing-level / rate hold.
 sim/autopilot/hdg_nav                              Autopilot heading select and NAV arm.
 sim/autopilot/NAV                                  Autopilot VOR/LOC arm.
 sim/autopilot/vertical_speed                       Autopilot vertical speed, at current VSI.
+sim/autopilot/fpa                                  Autopilot flight path angle, current FPA.
 sim/autopilot/alt_vs                               Autopilot vertical speed, at current VSI, arm ALT.
 sim/autopilot/vertical_speed_pre_sel               Autopilot vertical speed, at pre-sel VSI.
 sim/autopilot/pitch_sync                           Autopilot pitch-sync.
@@ -1175,6 +1389,9 @@ sim/autopilot/reentry                              Autopilot re-entry.
 sim/autopilot/glide_slope                          Autopilot glideslope.
 sim/autopilot/vnav                                 Autopilot VNAV for G1000.
 sim/autopilot/gpss                                 Autopilot GPS Steering.
+sim/autopilot/climb                                Autopilot GPS Climb.
+sim/autopilot/descend                              Autopilot GPS Descend.
+sim/autopilot/trkfpa                               Autopilot TRK/FPA vs HDG/VS toggle.
 sim/autopilot/airspeed_sync                        Autopilot airspeed sync.
 sim/autopilot/heading_sync                         Autopilot heading sync.
 sim/autopilot/vertical_speed_sync                  Autopilot VVI sync.
@@ -1195,6 +1412,7 @@ sim/autopilot/nose_down_pitch_mode                 Autopilot nose down, go into 
 sim/autopilot/nose_up_pitch_mode                   Autopilot nose up, go into pitch mode
 sim/autopilot/override_left                        Autopilot override left: Go to ROL mode.
 sim/autopilot/override_right                       Autopilot override right: Go to ROL mode.
+sim/autopilot/override_center                      Autopilot override center: Go to ROL mode, 0 turn rate roll angle.
 sim/autopilot/override_up                          Autopilot override up: Go to SYN mode.
 sim/autopilot/override_down                        Autopilot override down: Go to SYN mode.
 sim/autopilot/altitude_arm                         Autopilot altitude hold ARM.
@@ -1245,6 +1463,10 @@ sim/instruments/barometer_down                     Baro selection down a bit.
 sim/instruments/barometer_up                       Baro selection up a bit.
 sim/instruments/barometer_copilot_down             Baro selection down a bit, copilot.
 sim/instruments/barometer_copilot_up               Baro selection up a bit, copilot.
+sim/instruments/barometer_stby_down                Baro selection down a bit, standby alt.
+sim/instruments/barometer_stby_up                  Baro selection up a bit, standby alt.
+sim/instruments/barometer_ap_down                  Baro selection down a bit, AP presel.
+sim/instruments/barometer_ap_up                    Baro selection up a bit, AP presel.
 sim/instruments/dh_ref_down                        Decision-height reference down.
 sim/instruments/dh_ref_up                          Decision-height reference up.
 sim/instruments/dh_ref_copilot_down                Decision-height reference copilot down.
@@ -1253,6 +1475,8 @@ sim/instruments/mda_ref_down                       Minimum descend alt reference
 sim/instruments/mda_ref_up                         Minimum descend alt reference up.
 sim/instruments/mda_ref_copilot_down               Minimum descend alt reference copilot down.
 sim/instruments/mda_ref_copilot_up                 Minimum descend alt reference copilot up.
+sim/instruments/baro_alt_alert_cancel              Cancel altitude alert (preselector).
+sim/instruments/mda_alert_cancel                   Cancel MDA alert.
 sim/instruments/panel_bright_down                  Panel brightness down a bit.
 sim/instruments/panel_bright_up                    Panel brightness up a bit.
 sim/instruments/instrument_bright_down             Instrument brightness down a bit.
@@ -1444,63 +1668,73 @@ sim/GPS/fine_select_down                           GPS fine select down.
 sim/GPS/fine_select_up                             GPS fine select up.
 sim/GPS/coarse_select_down                         GPS coarse select down.
 sim/GPS/coarse_select_up                           GPS coarse select up.
-sim/GPS/g430n1_coarse_down                         G430 COM/NAV 1 coarse down.
-sim/GPS/g430n1_coarse_up                           G430 COM/NAV 1 coarse up.
-sim/GPS/g430n1_fine_down                           G430 COM/NAV 1 fine down.
-sim/GPS/g430n1_fine_up                             G430 COM/NAV 1 fine up.
-sim/GPS/g430n1_chapter_up                          G430 NAV 1 chapter up.
-sim/GPS/g430n1_chapter_dn                          G430 NAV 1 chapter dn.
-sim/GPS/g430n1_page_up                             G430 NAV 1 page up.
-sim/GPS/g430n1_page_dn                             G430 NAV 1 page dn.
-sim/GPS/g430n1_zoom_in                             G430 NAV 1 zoom in.
-sim/GPS/g430n1_zoom_out                            G430 NAV 1 zoom out.
-sim/GPS/g430n1_nav_com_tog                         G430 NAV 1 NAV COM toggle.
-sim/GPS/g430n1_cdi                                 G430 NAV 1 CDI.
-sim/GPS/g430n1_obs                                 G430 NAV 1 OBS.
-sim/GPS/g430n1_msg                                 G430 NAV 1 MSG.
-sim/GPS/g430n1_fpl                                 G430 NAV 1 FPL.
-sim/GPS/g430n1_proc                                G430 NAV 1 PROC.
-sim/GPS/g430n1_vnav                                G430 NAV 1 VNAV.
-sim/GPS/g430n1_direct                              G430 NAV 1 Direct.
-sim/GPS/g430n1_menu                                G430 NAV 1 Menu.
-sim/GPS/g430n1_clr                                 G430 NAV 1 CLR.
-sim/GPS/g430n1_ent                                 G430 NAV 1 ENT.
-sim/GPS/g430n1_com_ff                              G430 NAV 1 COM flip flop.
-sim/GPS/g430n1_nav_ff                              G430 NAV 1 NAV flip flop.
-sim/GPS/g430n1_cursor                              G430 NAV 1 push cursor.
-sim/GPS/g430n1_popout                              G430 NAV 1 pop out window.
-sim/GPS/g430n1_popup                               G430 NAV 1 toggle popup.
-sim/GPS/g430n1_cvol                                G430 NAV 1 COM audio.
-sim/GPS/g430n1_vvol                                G430 NAV 1 NAV audio
-sim/GPS/g430n2_coarse_down                         G430 COM/NAV 2 coarse down.
-sim/GPS/g430n2_coarse_up                           G430 COM/NAV 2 coarse up.
-sim/GPS/g430n2_fine_down                           G430 COM/NAV 2 fine down.
-sim/GPS/g430n2_fine_up                             G430 COM/NAV 2 fine up.
-sim/GPS/g430n2_chapter_up                          G430 NAV 2 chapter up.
-sim/GPS/g430n2_chapter_dn                          G430 NAV 2 chapter dn.
-sim/GPS/g430n2_page_up                             G430 NAV 2 page up.
-sim/GPS/g430n2_page_dn                             G430 NAV 2 page dn.
-sim/GPS/g430n2_zoom_in                             G430 NAV 2 zoom in.
-sim/GPS/g430n2_zoom_out                            G430 NAV 2 zoom out.
-sim/GPS/g430n2_nav_com_tog                         G430 NAV 2 NAV COM toggle.
-sim/GPS/g430n2_cdi                                 G430 NAV 2 CDI.
-sim/GPS/g430n2_obs                                 G430 NAV 2 OBS.
-sim/GPS/g430n2_msg                                 G430 NAV 2 MSG.
-sim/GPS/g430n2_fpl                                 G430 NAV 2 FPL.
-sim/GPS/g430n2_proc                                G430 NAV 2 PROC.
-sim/GPS/g430n2_vnav                                G430 NAV 2 VNAV.
-sim/GPS/g430n2_direct                              G430 NAV 2 Direct.
-sim/GPS/g430n2_menu                                G430 NAV 2 Menu.
-sim/GPS/g430n2_clr                                 G430 NAV 2 CLR.
-sim/GPS/g430n2_ent                                 G430 NAV 2 ENT.
-sim/GPS/g430n2_com_ff                              G430 NAV 2 COM FF.
-sim/GPS/g430n2_nav_ff                              G430 NAV 2 NAV FF.
-sim/GPS/g430n2_cursor                              G430 NAV 2 push cursor.
-sim/GPS/g430n2_popout                              G430 NAV 2 pop out window.
-sim/GPS/g430n2_popup                               G430 NAV 2 toggle popup.
-sim/GPS/g430n2_cvol                                G430 NAV 2 COM audio.
-sim/GPS/g430n2_vvol                                G430 NAV 2 NAV audio.
+sim/GPS/g430n1_coarse_down                         GNS COM/NAV 1 coarse down.
+sim/GPS/g430n1_coarse_up                           GNS COM/NAV 1 coarse up.
+sim/GPS/g430n1_fine_down                           GNS COM/NAV 1 fine down.
+sim/GPS/g430n1_fine_up                             GNS COM/NAV 1 fine up.
+sim/GPS/g430n1_chapter_up                          GNS NAV 1 chapter up.
+sim/GPS/g430n1_chapter_dn                          GNS NAV 1 chapter dn.
+sim/GPS/g430n1_page_up                             GNS NAV 1 page up.
+sim/GPS/g430n1_page_dn                             GNS NAV 1 page dn.
+sim/GPS/g430n1_zoom_in                             GNS NAV 1 zoom in.
+sim/GPS/g430n1_zoom_out                            GNS NAV 1 zoom out.
+sim/GPS/g430n1_nav_com_tog                         GNS NAV 1 NAV COM toggle.
+sim/GPS/g430n1_cdi                                 GNS NAV 1 CDI.
+sim/GPS/g430n1_obs                                 GNS NAV 1 OBS.
+sim/GPS/g430n1_msg                                 GNS NAV 1 MSG.
+sim/GPS/g430n1_fpl                                 GNS NAV 1 FPL.
+sim/GPS/g430n1_proc                                GNS NAV 1 PROC.
+sim/GPS/g430n1_vnav                                GNS NAV 1 VNAV.
+sim/GPS/g430n1_direct                              GNS NAV 1 Direct.
+sim/GPS/g430n1_menu                                GNS NAV 1 Menu.
+sim/GPS/g430n1_clr                                 GNS NAV 1 CLR.
+sim/GPS/g430n1_ent                                 GNS NAV 1 ENT.
+sim/GPS/g430n1_com_ff                              GNS NAV 1 COM flip flop.
+sim/GPS/g430n1_nav_ff                              GNS NAV 1 NAV flip flop.
+sim/GPS/g430n1_cursor                              GNS NAV 1 push cursor.
+sim/GPS/g430n1_popout                              GNS NAV 1 pop out window.
+sim/GPS/g430n1_popup                               GNS NAV 1 toggle popup.
+sim/GPS/g430n1_cvol                                GNS NAV 1 COM audio.
+sim/GPS/g430n1_vvol                                GNS NAV 1 NAV ID
+sim/GPS/g430n1_cvol_up                             GNS NAV 1 COM audio volume up.
+sim/GPS/g430n1_cvol_dn                             GNS NAV 1 COM audio volume down.
+sim/GPS/g430n1_vvol_up                             GNS NAV 1 NAV audio volume up.
+sim/GPS/g430n1_vvol_dn                             GNS NAV 1 NAV audio volume down.
+sim/GPS/g430n2_coarse_down                         GNS COM/NAV 2 coarse down.
+sim/GPS/g430n2_coarse_up                           GNS COM/NAV 2 coarse up.
+sim/GPS/g430n2_fine_down                           GNS COM/NAV 2 fine down.
+sim/GPS/g430n2_fine_up                             GNS COM/NAV 2 fine up.
+sim/GPS/g430n2_chapter_up                          GNS NAV 2 chapter up.
+sim/GPS/g430n2_chapter_dn                          GNS NAV 2 chapter dn.
+sim/GPS/g430n2_page_up                             GNS NAV 2 page up.
+sim/GPS/g430n2_page_dn                             GNS NAV 2 page dn.
+sim/GPS/g430n2_zoom_in                             GNS NAV 2 zoom in.
+sim/GPS/g430n2_zoom_out                            GNS NAV 2 zoom out.
+sim/GPS/g430n2_nav_com_tog                         GNS NAV 2 NAV COM toggle.
+sim/GPS/g430n2_cdi                                 GNS NAV 2 CDI.
+sim/GPS/g430n2_obs                                 GNS NAV 2 OBS.
+sim/GPS/g430n2_msg                                 GNS NAV 2 MSG.
+sim/GPS/g430n2_fpl                                 GNS NAV 2 FPL.
+sim/GPS/g430n2_proc                                GNS NAV 2 PROC.
+sim/GPS/g430n2_vnav                                GNS NAV 2 VNAV.
+sim/GPS/g430n2_direct                              GNS NAV 2 Direct.
+sim/GPS/g430n2_menu                                GNS NAV 2 Menu.
+sim/GPS/g430n2_clr                                 GNS NAV 2 CLR.
+sim/GPS/g430n2_ent                                 GNS NAV 2 ENT.
+sim/GPS/g430n2_com_ff                              GNS NAV 2 COM FF.
+sim/GPS/g430n2_nav_ff                              GNS NAV 2 NAV FF.
+sim/GPS/g430n2_cursor                              GNS NAV 2 push cursor.
+sim/GPS/g430n2_popout                              GNS NAV 2 pop out window.
+sim/GPS/g430n2_popup                               GNS NAV 2 toggle popup.
+sim/GPS/g430n2_cvol                                GNS NAV 2 COM audio.
+sim/GPS/g430n2_vvol                                GNS NAV 2 NAV ID
+sim/GPS/g430n2_cvol_up                             GNS NAV 2 COM audio volume up.
+sim/GPS/g430n2_cvol_dn                             GNS NAV 2 COM audio volume down.
+sim/GPS/g430n2_vvol_up                             GNS NAV 2 NAV audio volume up.
+sim/GPS/g430n2_vvol_dn                             GNS NAV 2 NAV audio volume down.
 sim/GPS/g1000n1_nvol                               G1000 pilot NAV audio.
+sim/GPS/g1000n1_nvol_up                            G1000 pilot NAV audio volume up.
+sim/GPS/g1000n1_nvol_dn                            G1000 pilot NAV audio volume down.
 sim/GPS/g1000n1_nav_ff                             G1000 pilot NAV flip flop.
 sim/GPS/g1000n1_nav_outer_up                       G1000 pilot NAV outer ring tune up.
 sim/GPS/g1000n1_nav_outer_down                     G1000 pilot NAV outer ring tune down.
@@ -1539,12 +1773,14 @@ sim/GPS/g1000n1_softkey9                           G1000 pilot PFD Softkey 9.
 sim/GPS/g1000n1_softkey10                          G1000 pilot PFD Softkey 10.
 sim/GPS/g1000n1_softkey11                          G1000 pilot PFD Softkey 11.
 sim/GPS/g1000n1_softkey12                          G1000 pilot PFD Softkey 12.
-sim/GPS/g1000n1_cvol                               G1000 pilot com audio.
-sim/GPS/g1000n1_com_ff                             G1000 pilot com flip flop.
-sim/GPS/g1000n1_com_outer_up                       G1000 pilot com outer ring tune up.
-sim/GPS/g1000n1_com_outer_down                     G1000 pilot com outer ring tune down.
-sim/GPS/g1000n1_com_inner_up                       G1000 pilot com inner ring tune up.
-sim/GPS/g1000n1_com_inner_down                     G1000 pilot com inner ring tune down.
+sim/GPS/g1000n1_cvol                               G1000 pilot COM audio.
+sim/GPS/g1000n1_cvol_up                            G1000 pilot COM audio volume up.
+sim/GPS/g1000n1_cvol_dn                            G1000 pilot COM audio volume down.
+sim/GPS/g1000n1_com_ff                             G1000 pilot COM flip flop.
+sim/GPS/g1000n1_com_outer_up                       G1000 pilot COM outer ring tune up.
+sim/GPS/g1000n1_com_outer_down                     G1000 pilot COM outer ring tune down.
+sim/GPS/g1000n1_com_inner_up                       G1000 pilot COM inner ring tune up.
+sim/GPS/g1000n1_com_inner_down                     G1000 pilot COM inner ring tune down.
 sim/GPS/g1000n1_com12                              G1000 pilot PFD Com 1/2.
 sim/GPS/g1000n1_crs_up                             G1000 pilot CRS up.
 sim/GPS/g1000n1_crs_down                           G1000 pilot CRS down.
@@ -1576,6 +1812,8 @@ sim/GPS/g1000n1_cursor                             G1000 pilot FMS cursor.
 sim/GPS/g1000n1_popout                             G1000 pilot pop out window.
 sim/GPS/g1000n1_popup                              G1000 pilot popup.
 sim/GPS/g1000n2_nvol                               G1000 copilot NAV audio.
+sim/GPS/g1000n2_nvol_up                            G1000 copilot NAV audio volume up.
+sim/GPS/g1000n2_nvol_dn                            G1000 copilot NAV audio volume down.
 sim/GPS/g1000n2_nav_ff                             G1000 copilot NAV flip flop.
 sim/GPS/g1000n2_nav_outer_up                       G1000 copilot NAV outer ring tune up.
 sim/GPS/g1000n2_nav_outer_down                     G1000 copilot NAV outer ring tune down.
@@ -1615,6 +1853,8 @@ sim/GPS/g1000n2_softkey10                          G1000 copilot PFD Softkey 10.
 sim/GPS/g1000n2_softkey11                          G1000 copilot PFD Softkey 11.
 sim/GPS/g1000n2_softkey12                          G1000 copilot PFD Softkey 12.
 sim/GPS/g1000n2_cvol                               G1000 copilot COM audio.
+sim/GPS/g1000n2_cvol_up                            G1000 copilot COM audio volume up.
+sim/GPS/g1000n2_cvol_dn                            G1000 copilot COM audio volume down.
 sim/GPS/g1000n2_com_ff                             G1000 copilot COM flip flop.
 sim/GPS/g1000n2_com_outer_up                       G1000 copilot COM outer ring tune up.
 sim/GPS/g1000n2_com_outer_down                     G1000 copilot COM outer ring tune down.
@@ -1651,6 +1891,8 @@ sim/GPS/g1000n2_cursor                             G1000 copilot FMS cursor.
 sim/GPS/g1000n2_popout                             G1000 copilot pop out window.
 sim/GPS/g1000n2_popup                              G1000 copilot popup.
 sim/GPS/g1000n3_nvol                               G1000 MFD NAV audio.
+sim/GPS/g1000n3_nvol_up                            G1000 MFD NAV audio volume up.
+sim/GPS/g1000n3_nvol_dn                            G1000 MFD NAV audio volume down.
 sim/GPS/g1000n3_nav_ff                             G1000 MFD NAV flip flop.
 sim/GPS/g1000n3_nav_outer_up                       G1000 MFD NAV outer ring tune up.
 sim/GPS/g1000n3_nav_outer_down                     G1000 MFD NAV outer ring tune down.
@@ -1690,6 +1932,8 @@ sim/GPS/g1000n3_softkey10                          G1000 MFD Softkey 10.
 sim/GPS/g1000n3_softkey11                          G1000 MFD Softkey 11.
 sim/GPS/g1000n3_softkey12                          G1000 MFD Softkey 12.
 sim/GPS/g1000n3_cvol                               G1000 MFD COM audio.
+sim/GPS/g1000n3_cvol_up                            G1000 MFD COM audio volume up.
+sim/GPS/g1000n3_cvol_dn                            G1000 MFD COM audio volume down.
 sim/GPS/g1000n3_com_ff                             G1000 MFD COM flip flop.
 sim/GPS/g1000n3_com_outer_up                       G1000 MFD COM outer ring tune up.
 sim/GPS/g1000n3_com_outer_down                     G1000 MFD COM outer ring tune down.
@@ -1728,7 +1972,13 @@ sim/GPS/g1000n3_popup                              G1000 MFD popup.
 sim/GPS/G1000_display_reversion                    G1000 red button for display reversion (backup display).
 sim/systems/overspeed_test                         Prop overspeed test.
 sim/fuel/indicate_aux                              Fuel tanks show auxiliary tanks.
+sim/fuel/indicate_all                              Fuel tanks show all tanks.
+sim/fuel/indicate_nacelle                          Fuel tanks show nacelle tanks.
 sim/autopilot/test_auto_annunciators               Autopilot test annunciators.
+sim/flight_controls/pitch_trimA_up                 Pitch trim A up.
+sim/flight_controls/pitch_trimA_down               Pitch trim A down.
+sim/flight_controls/pitch_trimB_up                 Pitch trim B up.
+sim/flight_controls/pitch_trimB_down               Pitch trim B down.
 sim/flight_controls/pitch_trim_up                  Pitch trim up.
 sim/flight_controls/pitch_trim_down                Pitch trim down.
 sim/flight_controls/pitch_trim_up_mech             Pitch trim up - Mechanical, not servo.
@@ -1956,6 +2206,7 @@ sim/general/toggle_projection_win                  Toggle the projection configu
 sim/operation/toggle_sky_colors_win                Toggle the sky colors window.
 sim/VR/xpad/home_button                            Press the Home Button of the VR xPad.
 sim/VR/toggle_3d_mouse_cursor                      Toggle the 3-d mouse cursor in VR.
+sim/VR/toggle_vr                                   Toggle enabling of VR hardware.
 sim/VR/general/reset_view                          Reset VR View.
 sim/VR/quick_zoom_view                             Temporarily and Quickly Zoom in while in VR.
 sim/VR/reserved/select                             Reserved: VR Select/Trigger Button.

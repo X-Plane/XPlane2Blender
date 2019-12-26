@@ -37,6 +37,8 @@ import collections
 import enum
 import functools
 import pprint
+import re
+
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import bpy
@@ -340,34 +342,53 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
             copy_recursive(source_prop_group, dest_prop_group)
 
         #--- Copy Layers to Collections ---------------------------------------
-        for scene in bpy.data.scenes:
-            # Match Layers with Collections
-            # Rename everything from Collection or Collection 2...
-            # to Layer 1, Layer 2
-            try:
-                bpy.data.collections["Collection"].name = "Collection 1"
-            except KeyError:
-                pass
+        for coll in bpy.data.collections:
+            full_match = re.fullmatch("Collection(\.\d{3}|$)", coll.name)
+            if full_match:
+                coll.name = f"Collection 1{full_match.group(1)}"
 
+            # Making this regular with the rest is better,
+            # we're just going to replace all this anyway
+            if "." not in coll.name:
+                coll.name += ".000"
+
+        for i, scene in enumerate(bpy.data.scenes):
+            # We rename everything from Collection {number} to Layer {number}_{scene.name}
+            # 1. Correct any named "Collection$" to "Collection 1.000" (why Blender?!),
+            #    keeping any trailing evidence of a name collision (.001, .002, etc)
+            # 2. If our scene has a collection pre-made for the layer*, great! Use that!
+            #    If our scene has a layer with non-default values but Blender didn't
+            #    make a Collection for us (no Blender Data on it), make one ourselves
+            #    Otherwise, go to the next layer
+            #
+            #    * We need to actually check every Collection N, Collection N.001 incase
+            #      a previous scene didn't make that collection and Blender hasn't needed to
+            #      make it unique by appending the .000 business
+            # 3. Rename to match the pattern,
+            #    copy the XPlaneLayer from scene.xplane.layers to coll.xplane.layer
             for layer in scene.xplane.layers:
                 assert layer.index != -1, f"XPlaneLayer f{layer.name} was never actually initialized in 2.79"
-                collection_name = f"Layer {layer.index + 1}"
-                try:
-                    coll = bpy.data.collections[f"Collection {layer.index + 1}"]
-                except KeyError:
+                collection_new_name = f"Layer {layer.index + 1}_{scene.name}"
+                for suffix in (f"{j:03}" for j in range(0, i+1)):
+                    try_this = f"Collection {layer.index + 1}.{suffix}"
+                    try:
+                        coll = scene.collection.children[try_this]
+                    except KeyError:
+                        continue
+                    else:
+                        coll.name = collection_new_name
+                        coll.xplane.is_exportable_collection = not coll.hide_render
+                        break
+                else: # no break, no matching collection found
                     nondefaults = check_property_group_has_non_default(layer)
                     if nondefaults:
-                        coll = bpy.data.collections.new(collection_name)
+                        coll = bpy.data.collections.new(collection_new_name)
                         scene.collection.children.link(coll)
                     else:
                         continue
-                else:
-                    coll.name = collection_name
-                    coll.xplane.is_exportable_collection = not coll.hide_render
 
                 copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
         #----------------------------------------------------------------------
-
 
 
 @persistent

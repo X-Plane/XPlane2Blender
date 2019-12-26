@@ -56,7 +56,7 @@ class XPlaneHeader():
             potential_match = re.match(regex_str, cleaned_path)
 
             if potential_match is None:
-                logger.error('Export path %s is not properly formed. Ensure it contains the words "Custom Scenery" or "default_scenery" followed by a directory')
+                logger.error(f'Export path {export_path_directive.export_path} is not properly formed. Ensure it contains the words "Custom Scenery" or "default_scenery" followed by a directory')
                 return #TODO: Returning early in an __init__!
             else:
                 last_folder = os.path.dirname(potential_match.group(4)).split('/')[-1:][0]
@@ -269,10 +269,10 @@ class XPlaneHeader():
 
                 objs = self.xplaneFile.get_xplane_objects()
 
-                if not list(filter(lambda obj: obj[1].type == "EMPTY" and\
-                        obj[1].blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
-                        obj[1].blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_SOUND,\
-                        objs.items())):
+                if not list(filter(lambda obj: obj.type == "EMPTY" and\
+                        obj.blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_PARTICLE or\
+                        obj.blenderObject.xplane.special_empty_props.special_type == EMPTY_USAGE_EMITTER_SOUND,\
+                        objs)):
                     logger.warn("Particle System File {} is given, but no emitter objects are used".format(pss))
 
                 if not pss.endswith('.pss'):
