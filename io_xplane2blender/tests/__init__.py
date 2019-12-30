@@ -337,19 +337,6 @@ class XPlaneTestCase(unittest.TestCase):
 
         return out
 
-    def exportXPlaneFileFromLayerIndex(self,layer):
-        #COPY-PASTA WARNING from xplane_file: 65-75
-        # What we need is an xplaneFile in the data model and interrupt
-        # the export before the xplane_file gets deleted when going out of scope
-        xplaneLayer = xplane_file.getXPlaneLayerForBlenderLayerIndex(layer)
-
-        assert xplaneLayer is not None
-        xplaneFile = xplane_file.XPlaneFile(xplane_file.getFilenameFromXPlaneLayer(xplaneLayer), xplaneLayer)
-
-        assert xplaneFile is not None
-        xplaneFile.collectFromBlenderLayerIndex(layer)
-
-        return xplaneFile
 
 class XPlaneAnimationTestCase(XPlaneTestCase):
     def setUp(self):

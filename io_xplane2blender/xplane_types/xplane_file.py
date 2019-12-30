@@ -65,8 +65,6 @@ def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XP
     xplane_file = XPlaneFile(filename, layer_props)
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
     assert xplane_file.rootBone, "Root Bone was not assaigned during __init__ function"
-    #print("Final Root Bone (2.80)")
-    #print(xplane_file.rootBone)
     return xplane_file
 
 class XPlaneFile():

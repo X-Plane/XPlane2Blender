@@ -14,21 +14,17 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestSwLightCallbackApplied(XPlaneTestCase):
     def test_sw_light_callback_applied(self):
-        xplaneFile = self.exportXPlaneFileFromLayerIndex(0)
+        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1_Scene"])
 
-        force_omni = xplaneFile.objects["do_force_omni"]
-        force_omni.collect()
+        force_omni = xplaneFile._bl_obj_name_to_bone["do_force_omni"].xplaneObject
         self.assertEqual(force_omni.lightOverload.get("WIDTH"), 1.0)
 
-        noop = xplaneFile.objects["do_noop"]
-        noop.collect()
+        noop = xplaneFile._bl_obj_name_to_bone["do_noop"].xplaneObject
         self.assertEqual(noop.lightOverload.data_source.data,
                          [0.95, 0.82, 0.72, 0.0, 7.0, 0.0, 0.0, -1.0, 0.95,
                           'sim/graphics/animation/lights/airplane_generic_light_spill'])
 
-        rgb_to_dxyz_w_calc = xplaneFile.objects["do_rgb_to_dxyz_w_calc"]
-        rgb_to_dxyz_w_calc.collect()
-
+        rgb_to_dxyz_w_calc = xplaneFile._bl_obj_name_to_bone["do_rgb_to_dxyz_w_calc"].xplaneObject
         vec = mathutils.Vector((rgb_to_dxyz_w_calc.lightOverload.get("DX"),
                                 rgb_to_dxyz_w_calc.lightOverload.get("DY"),
                                 rgb_to_dxyz_w_calc.lightOverload.get("DZ")))
