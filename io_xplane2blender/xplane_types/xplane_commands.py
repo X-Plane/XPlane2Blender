@@ -130,11 +130,14 @@ class XPlaneCommands():
         xplaneObject = xplaneBone.xplaneObject
         xplaneObjectWritten = False
 
-        if (xplaneObject
-            and lod_bucket_index is not None
-            and xplaneObject.effective_buckets[lod_bucket_index]):
-            o += self._writeXPlaneObjectPrefix(xplaneObject)
-            xplaneObjectWritten = True
+        if xplaneObject:
+            if lod_bucket_index is None:
+                o += self._writeXPlaneObjectPrefix(xplaneObject)
+                xplaneObjectWritten = True
+            elif (lod_bucket_index is not None
+                  and xplaneObject.effective_buckets[lod_bucket_index]):
+                o += self._writeXPlaneObjectPrefix(xplaneObject)
+                xplaneObjectWritten = True
 
         # write bone children
         for childBone in xplaneBone.children:

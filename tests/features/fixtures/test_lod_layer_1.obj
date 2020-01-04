@@ -147,9 +147,24 @@ IDX10	114	115	112	114	116	117	118	119	116	118
 
 # 0 ROOT
 	# 1 Mesh: Cube_l1_0_4
+	# MESH: Cube_l1_0_4	weight: 0
+	# MATERIAL: Material
+	TRIS	0 36
 	# 1 Mesh: Cube_l1_1_4
+	# MESH: Cube_l1_1_4	weight: 0
+	# MATERIAL: Material
+	TRIS	36 36
 	# 1 Mesh: Cube_l1_2_4
+	# MESH: Cube_l1_2_4	weight: 0
+	# MATERIAL: Material
+	TRIS	72 36
 	# 1 Mesh: Cube_l1_3_4
+	# MESH: Cube_l1_3_4	weight: 0
+	# MATERIAL: Material
+	TRIS	108 36
 	# 1 Mesh: Cube_l1_4_4
+	# MESH: Cube_l1_4_4	weight: 0
+	# MATERIAL: Material
+	TRIS	144 36
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+62.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+63.NO_BUILD_NUMBR
