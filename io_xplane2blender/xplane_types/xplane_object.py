@@ -34,7 +34,10 @@ class XPlaneObject():
         self.animAttributes = XPlaneAttributes()
         self.conditions = [] # type: List[io_xplane2blender.xplane_props.XPlaneCondition]
 
-        self.lod = self.blenderObject.xplane.lod
+        # This represents all specializations of lods, on this subject,
+        # None if LOD mode isn't on. Garunteed to be valid by the collection phase
+        # TODO: Make argument of XPlaneObject constructor instead?
+        self.effective_buckets:Tuple[...] = ()
         for i, dataref in self.blenderObject.xplane.datarefs.items():
             self.datarefs[dataref.path] = dataref
 
@@ -45,7 +48,7 @@ class XPlaneObject():
             f"Name: {self.name}",
             f"Type: {self.type}",
             f"Datarefs: {len(self.datarefs)}",
-            f"Lod: {self.lod[:]}",
+            f"Effective LOD buckets: {self.effective_buckets}",
             f"Weight: {self.weight}"))
 
     def collect(self)->None:

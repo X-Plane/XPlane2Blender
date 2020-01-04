@@ -229,6 +229,7 @@ class XPlaneFile():
             blender_obj = parent
             if blender_obj:
                 new_xplane_obj = convert_to_xplane_object(blender_obj)
+                new_xplane_obj.effective_buckets = blender_obj.xplane.lod[:]
             else:
                 new_xplane_obj = None
             #print(f"new_xplane_obj:\n{new_xplane_obj}")
@@ -484,46 +485,17 @@ class XPlaneFile():
 
         return o
 
-    def _writeLods(self):
+    def _writeLods(self)->str:
         o = ''
         numLods = int(self.options.lods)
 
-        # if lods are present we need one base lod containing all objects
-        # not in a lod that should always be visible
-        if numLods > 0:
-            smallestNear = float(self.options.lod[0].near)
-            tallestFar = float(self.options.lod[0].far)
-
-            for lod in self.options.lod:
-                near = float(lod.near)
-                far = float(lod.far)
-
-                if smallestNear > near:
-                    smallestNear = near
-
-                if tallestFar < far:
-                    tallestFar = far
-
-            if smallestNear > 0:
-                o += "ATTR_LOD 0.0 %s\n" % floatToStr(smallestNear)
-                o += self.commands.write()
+        if int(self.options.lods):
+            for bucket_number in range(0, int(self.options.lods)):
+                near = self.options.lod[bucket_number].near
+                far = self.options.lod[bucket_number].far
+                o += f"ATTR_LOD\t{near}\t{far}\n"
+                o += self.commands.write(lod_bucket_index=bucket_number)
         else:
-            o += self.commands.write()
-
-        # write commands for each additional LOD
-        for lodIndex in range(0, numLods):
-            if lodIndex < len(self.options.lod):
-                o += "ATTR_LOD %s %s\n" % (
-                    floatToStr(self.options.lod[lodIndex].near),
-                    floatToStr(self.options.lod[lodIndex].far)
-                )
-                o += self.commands.write(lodIndex)
-
-        #TODO: Who's idea was this? Is this in the OBJ Spec?
-        # if lods are present we need to attach a closing lod
-        # containing all objects not in a lod that should always be visible
-        if numLods > 0 and tallestFar < 100000:
-            o += "ATTR_LOD %s 100000\n" % floatToStr(tallestFar)
-            o += self.commands.write()
+            o += self.commands.write(lod_bucket_index=None)
 
         return o
