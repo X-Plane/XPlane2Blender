@@ -209,7 +209,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Method: __repr__
     #
     # repr and repr of VerStruct are the same. It is used as a key for scene.xplane.xplane2blender_ver_history
-    def __repr__(self):
+    def __repr__(self)->str:
         return "(%s, %s, %s, %s, %s)" % ('(' + ','.join(map(str,self.addon_version)) + ')',
                                          "'" + str(self.build_type) + "'",
                                                str(self.build_type_version),
@@ -218,7 +218,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Method: __str__
     #
     # str and str of VerStruct are the same. It is used for printing to the user
-    def __str__(self):
+    def __str__(self)->str:
         return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)),
                                    self.build_type,
                                    self.build_type_version,
@@ -951,6 +951,8 @@ class XPlaneLOD(bpy.types.PropertyGroup):
         min = 0
     )
 
+    def __str__(self)->str:
+        return f"({self.near}, {self.far})"
 
 #TODO: Maybe we should change all this "X-Plane Layer" stuff
 # to XPLaneOBJSettings or something

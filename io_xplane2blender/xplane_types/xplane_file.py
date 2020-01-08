@@ -14,8 +14,9 @@ the header and XPlaneBone tree contents to a string
 
 import collections
 import operator
+import itertools
 import pprint
-from typing import Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, NamedTuple, Set, Tuple, Union
 
 import bpy
 import mathutils
@@ -44,6 +45,7 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]
 
     return xplane_files
 
+
 def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XPlaneFile"]:
     nested_errors: Set[str] = set()
     def log_nested_roots(exportable_roots: List[PotentialRoot]):
@@ -68,6 +70,7 @@ def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XP
     #print("Final Root Bone (2.80)")
     #print(xplane_file.rootBone)
     return xplane_file
+
 
 class XPlaneFile():
     """
@@ -273,7 +276,7 @@ class XPlaneFile():
 
             def make_bones_for_armature_bones(arm_obj:bpy.types.Object)->Dict[str, XPlaneBone]:
                 """
-                Makes XPlaneBones for all bones in an armature, returns a map betweeen
+                Makes XPlaneBones for all bones in an armature, returns a map between
                 Blender Bone Names and the XPlaneBones that are associated with them.
 
                 These are used later to pair XPlaneObjects with their correct parent bones
@@ -427,7 +430,6 @@ class XPlaneFile():
     def writeFooter(self):
         return "# Build with Blender %s (build %s). Exported with XPlane2Blender %s" % (bpy.app.version_string, bpy.app.build_hash, xplane_helpers.VerStruct.current())
 
-
     def write(self)->str:
         """
         Writes the contents of the file to one giant string with \n's,
@@ -487,14 +489,84 @@ class XPlaneFile():
 
     def _writeLods(self)->str:
         o = ''
-        numLods = int(self.options.lods)
+        num_lods = int(self.options.lods)
 
-        if int(self.options.lods):
+        if num_lods:
+            defined_buckets = self.options.lod[:num_lods]
+            #--- ATTR_LOD validations ----------------------------------------
+            # LOD spec #2
+            if defined_buckets[0].near != 0:
+                logger.error(f"{self.filename}'s LOD buckets must start at 0, is {defined_buckets[0].near}")
+                return o
+
             for bucket_number in range(0, int(self.options.lods)):
                 near = self.options.lod[bucket_number].near
                 far = self.options.lod[bucket_number].far
-                o += f"ATTR_LOD\t{near}\t{far}\n"
-                o += self.commands.write(lod_bucket_index=bucket_number)
+                # LOD spec #7
+                if near == far:
+                    logger.error(f"{self.filename}'s LOD bucket #{bucket_number+1}'s Near and Far match: ({near}, {far})")
+                    return o
+                # LOD spec #3
+                elif near > far:
+                    logger.error(f"{self.filename}'s LOD bucket #{bucket_number+1}'s Near is greater than its Far: ({near}, {far})")
+
+            class LODStruct(NamedTuple):
+                near:int
+                far:int
+
+                def __repr__(self)->str:
+                    return f"({self.near}, {self.far})"
+
+            # len(selective_pairs) in {0, 2, 4} == True
+            # len(additive_pairs) in range(1, 5) == True
+            # if len additive_pairs is 1 and len selective_pairs is greater than 2, you are in selective mode
+            # if len additive_pairs is > 1 and len selective pairs is greater than 2, you are in mixed modes
+            additive_pairs: Tuple[Tuple[int, LODStruct],...] = tuple(
+                    [(i, LODStruct(lod.near, lod.far))
+                      for i, lod in enumerate(defined_buckets)
+                      if i < num_lods and lod.near == 0]
+                    )
+
+            # To be in selective mode, you must have at least two LOD buckets,
+            # (0, m), (m, m+something), where m is meters
+            selective_pairs: List[Tuple[int, LODStruct]] = []
+            try:
+                for i, (prev_lod, next_lod) in enumerate(zip(defined_buckets[:num_lods-1], defined_buckets[1:])):
+                    if prev_lod.far == next_lod.near:
+                        if not selective_pairs or (i-1, (prev_lod.near, prev_lod.far)) != selective_pairs[-1]:
+                            selective_pairs.append((i, LODStruct(prev_lod.near, prev_lod.far)))
+                        selective_pairs.append((i+1, LODStruct(next_lod.near, next_lod.far)))
+                    # LOD spec #6
+                    elif prev_lod.far < next_lod.near:
+                        logger.error(f"In {self.filename}, gap found between LOD bucket #{i} and {i+1}. Far and Near should match: ({prev_lod}, {next_lod})")
+                    elif prev_lod.far > next_lod.near and len(additive_pairs) == 1: # every additive pair's far will always be greater than 0, ignore
+                        logger.error(f"In {self.filename}, overlap found between LOD bucket #{i} and {i+1}. Far and Near should match: ({prev_lod}, {next_lod})")
+            except IndexError: # fails when defined_buckets has only 1 bucket
+                pass
+            selective_pairs = tuple(selective_pairs)
+            assert len(selective_pairs) % 2 == 0, f"{selective_pairs} not a multiple of two"
+
+            # LOD spec #5
+            # It isn't just having a pairs, they both have to be in meaningful amounts
+            # to show mixing
+            if len(additive_pairs) > 1 and len(selective_pairs) >= 2:
+                logger.error(f"{self.filename} uses Additive and Selective LODs modes. Choose only one: {[str(lod) for lod in defined_buckets]}")
+
+            # LOD spec #3 (Additive version)
+            # additive_pairs and selective_pairs will always share a first
+            # but never a second pair - avoids false positives
+            if (len(additive_pairs) > 1
+                and any(
+                    [not prev_lod.far < next_lod.far
+                     for (prev_index, (prev_lod)), (next_index, (next_lod)) in zip(additive_pairs[:-1], additive_pairs[1:])]
+                    )):
+                logger.error(f"{self.filename}'s LOD buckets' Far values must be in ascending order: {[(lod) for i, lod in additive_pairs]}")
+            #-----------------------------------------------------------------
+            # LOD spec #1, this is written before the first ever
+            # or subsequent calls to commands.write
+            for lod_bucket_index, lod_bucket in enumerate(defined_buckets):
+                o += f"ATTR_LOD\t{lod_bucket.near}\t{lod_bucket.far}\n"
+                o += self.commands.write(lod_bucket_index=lod_bucket_index)
         else:
             o += self.commands.write(lod_bucket_index=None)
 

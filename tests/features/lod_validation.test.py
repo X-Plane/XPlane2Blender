@@ -42,7 +42,11 @@ class TestLodValidation(XPlaneTestCase):
 
     def test_fail_3b_selective_ordered_out_of_order(self)->None:
         filename = inspect.stack()[0].function
-        self._test_fail_case(filename)
+        self._test_fail_case(filename, num_errors=2)
+
+    def test_fail_3c_selective_ordered_out_of_order_decreasing_ranges(self)->None:
+        filename = inspect.stack()[0].function
+        self._test_fail_case(filename,num_errors=2)
 
     def test_fail_4a_additive_to_selective_mixed(self)->None:
         filename = inspect.stack()[0].function
@@ -52,9 +56,13 @@ class TestLodValidation(XPlaneTestCase):
         filename = inspect.stack()[0].function
         self._test_fail_case(filename)
 
-    def test_fail_5a_selective_far_near_equal(self)->None:
+    def test_fail_5a_selective_far_near_equal_gap(self)->None:
         filename = inspect.stack()[0].function
-        self._test_fail_case(filename)
+        self._test_fail_case(filename, num_errors=2)
+
+    def test_fail_5b_selective_far_near_equal_overlap(self)->None:
+        filename = inspect.stack()[0].function
+        self._test_fail_case(filename, num_errors=2)
 
     def test_fail_6a_selective_1st_near_is_0(self)->None:
         filename = inspect.stack()[0].function
