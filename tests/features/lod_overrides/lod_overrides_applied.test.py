@@ -12,12 +12,11 @@ __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line:Tuple[str])->bool:
     return (isinstance(line[0],str)
-             and ("OBJ_DIRECTIVE" in line[0]
-                  or "ATTR_LOD" in line[0]
+             and ("ATTR_LOD" in line[0]
                   or "TRIS" in line[0]))
 
 
-class TestLodSpecializationsApplied(XPlaneTestCase):
+class TestLodOverridesApplied(XPlaneTestCase):
     def test_AllIgnored(self)->None:
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
@@ -36,7 +35,7 @@ class TestLodSpecializationsApplied(XPlaneTestCase):
                 filterLines
             )
 
-    def test_NestedDuplicateSpecialization(self)->None:
+    def test_NestedDuplicateOverrides(self)->None:
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
                 filename[5:],
@@ -45,7 +44,7 @@ class TestLodSpecializationsApplied(XPlaneTestCase):
                 filterLines
             )
 
-    def test_NonSequentialSpecializationOverride(self)->None:
+    def test_NonSequentialOverrides(self)->None:
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
                 filename[5:],
@@ -54,7 +53,7 @@ class TestLodSpecializationsApplied(XPlaneTestCase):
                 filterLines
             )
 
-    def test_NoSpecializationTakesParents(self)->None:
+    def test_NoOverridesTakesParents(self)->None:
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
                 filename[5:],
@@ -63,7 +62,7 @@ class TestLodSpecializationsApplied(XPlaneTestCase):
                 filterLines
             )
 
-    def test_SpecializationAppliedToAllChildren(self)->None:
+    def test_OverridesAppliedToAllChildren(self)->None:
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
                 filename[5:],
@@ -72,7 +71,7 @@ class TestLodSpecializationsApplied(XPlaneTestCase):
                 filterLines
             )
 
-    def test_SpecializationOverride(self)->None:
+    def test_OverridesCombined(self)->None:
         filename = inspect.stack()[0].function
         self.assertRootObjectExportEqualsFixture(
                 filename[5:],
@@ -82,4 +81,4 @@ class TestLodSpecializationsApplied(XPlaneTestCase):
             )
 
 
-runTestCases([TestLodSpecializationsApplied])
+runTestCases([TestLodOverridesApplied])
