@@ -232,7 +232,6 @@ class XPlaneFile():
             blender_obj = parent
             if blender_obj:
                 new_xplane_obj = convert_to_xplane_object(blender_obj)
-                new_xplane_obj.effective_buckets = blender_obj.xplane.lod[:]
             else:
                 new_xplane_obj = None
             #print(f"new_xplane_obj:\n{new_xplane_obj}")

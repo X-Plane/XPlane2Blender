@@ -27,7 +27,7 @@ relationships, it cannot be assumed that the XPlaneBone Tree and Blender Hierarc
 """
 
 import math
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import bpy
 import mathutils
@@ -58,11 +58,24 @@ class XPlaneBone():
         self.blenderObject = blender_obj
         self.blenderBone = blender_bone
         self.xplaneObject = xplane_obj
+        self.parent = parent_xplane_bone
+        self.children:List["XPlaneBone"] = []
+
         if self.xplaneObject:
             assert self.xplaneObject.blenderObject == self.blenderObject, f"XPlaneBone ({self.blenderObject.name}) and XPlaneObject's blenderObject do not match ({self.blenderObject.name}, {self.xplaneObject.name})"
             self.xplaneObject.xplaneBone = self
-        self.parent = parent_xplane_bone
-        self.children:List["XPlaneBone"] = []
+            if self.xplaneObject.blenderObject.xplane.specialize_lods:
+                self.xplaneObject.effective_buckets = tuple(self.blenderObject.xplane.lod)
+            else:
+                def find_parent_buckets(parent_xplane_bone:Optional["XPlaneBone"])->Tuple[bool, bool, bool, bool]:
+                    if parent_xplane_bone.xplaneObject:
+                        return parent_xplane_bone.xplaneObject.effective_buckets
+                    elif parent_xplane_bone.parent:
+                        return find_parent_buckets(parent_xplane_bone.parent)
+                    else:
+                        return (False,) * 4
+
+                self.xplaneObject.effective_buckets = find_parent_buckets(self.parent)
 
         if self.parent:
             #TODO: It seems to me that in the bone structure is getting reversed

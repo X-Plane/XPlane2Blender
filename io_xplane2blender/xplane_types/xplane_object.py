@@ -35,9 +35,8 @@ class XPlaneObject():
         self.conditions = [] # type: List[io_xplane2blender.xplane_props.XPlaneCondition]
 
         # This represents all specializations of lods, on this subject,
-        # None if LOD mode isn't on. Garunteed to be valid by the collection phase
-        # TODO: Make argument of XPlaneObject constructor instead?
-        self.effective_buckets:Tuple[...] = ()
+        # including it's parents. Set in XPlaneBone's constructor
+        self.effective_buckets:Tuple[...] = (False,) * 4
         for i, dataref in self.blenderObject.xplane.datarefs.items():
             self.datarefs[dataref.path] = dataref
 
