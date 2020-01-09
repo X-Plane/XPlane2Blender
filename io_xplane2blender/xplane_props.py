@@ -1378,10 +1378,10 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 #   float lightLevel_v2 - Light Level Value 2
 #   string lightLevel_dataref - Light Level Dataref
 class XPlaneObjectSettings(bpy.types.PropertyGroup):
-    '''
+    """
     Settings for Blender objects. On Blender Objects these are accessed via a
     pointer property called xplane. Ex: bpy.data.objects[0].xplane.datarefs
-    '''
+    """
     customAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Attributes",
         description = "User defined attributes for the Object",
@@ -1400,6 +1400,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         type = XPlaneDataref
     )
 
+    override_lods: bpy.props.BoolProperty(
+        name = "Override LODs",
+        description = "Overrides any parent's LOD buckets for this object and its children",
+        default = False
+    )
+
     # Since "Empty" is not a Blender type, only a "type" of Object, we have
     # to put this on here, even if it might not be relavent
     # to the current object.
@@ -1408,12 +1414,6 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         name = "Special Empty Properties",
         description = "Empty Only Properties",
         type = XPlaneEmpty
-    )
-
-    specialize_lods: bpy.props.BoolProperty(
-        name = "Specialize LOD",
-        description = "Override Parent's LOD buckets",
-        default = False
     )
 
     manip: bpy.props.PointerProperty(

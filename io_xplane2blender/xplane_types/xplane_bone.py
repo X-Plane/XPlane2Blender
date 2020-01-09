@@ -64,7 +64,7 @@ class XPlaneBone():
         if self.xplaneObject:
             assert self.xplaneObject.blenderObject == self.blenderObject, f"XPlaneBone ({self.blenderObject.name}) and XPlaneObject's blenderObject do not match ({self.blenderObject.name}, {self.xplaneObject.name})"
             self.xplaneObject.xplaneBone = self
-            if self.xplaneObject.blenderObject.xplane.specialize_lods:
+            if self.xplaneObject.blenderObject.xplane.override_lods:
                 self.xplaneObject.effective_buckets = tuple(self.blenderObject.xplane.lod)
             else:
                 def find_parent_buckets(parent_xplane_bone:Optional["XPlaneBone"])->Tuple[bool, bool, bool, bool]:
