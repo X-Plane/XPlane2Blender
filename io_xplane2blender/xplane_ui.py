@@ -611,7 +611,7 @@ def material_layout(layout:UILayout,
     surface_behavior_box_column.prop(active_material.xplane, "surfaceType")
 
     if active_material.xplane.surfaceType != 'none':
-        surface_behavior_box_column.prop(active_material.xplane, "deck")
+        surface_behavior_box_column.prop(active_material.xplane, "deck", text="Only Slightly Thick")
 
     surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
     ll_box = layout.box()
