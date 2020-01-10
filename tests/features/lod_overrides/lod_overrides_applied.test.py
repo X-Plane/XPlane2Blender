@@ -17,68 +17,54 @@ def filterLines(line:Tuple[str])->bool:
 
 
 class TestLodOverridesApplied(XPlaneTestCase):
+    def _assert_root(self, filename:str)->None:
+        """
+        Tests both types of Exportable Roots at the same time as sub tests
+        """
+        for fname in [filename[5:], filename[5:].replace("_object","")]:
+            with self.subTest(fname=fname):
+                self.assertRootObjectExportEqualsFixture(
+                    fname,
+                    os.path.join(__dirname__, "fixtures", filename + ".obj"),
+                    filename,
+                    filterLines
+                )
+
     def test_AllIgnored(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
-                filename[5:],
-                os.path.join(__dirname__, "fixtures", filename + ".obj"),
-                filename,
-                filterLines
-            )
+        self._assert_root(filename)
 
     def test_IncludeAndIgnore(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
-                filename[5:],
-                os.path.join(__dirname__, "fixtures", filename + ".obj"),
-                filename,
-                filterLines
-            )
+        self._assert_root(filename)
 
     def test_NestedDuplicateOverrides(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
-                filename[5:],
-                os.path.join(__dirname__, "fixtures", filename + ".obj"),
-                filename,
-                filterLines
-            )
+        self._assert_root(filename)
 
     def test_NonSequentialOverrides(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
-                filename[5:],
-                os.path.join(__dirname__, "fixtures", filename + ".obj"),
-                filename,
-                filterLines
-            )
+        self._assert_root(filename)
 
     def test_NoOverridesTakesParents(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
-                filename[5:],
-                os.path.join(__dirname__, "fixtures", filename + ".obj"),
-                filename,
-                filterLines
-            )
+        self._assert_root(filename)
 
     def test_OverridesAppliedToAllChildren(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
-                filename[5:],
-                os.path.join(__dirname__, "fixtures", filename + ".obj"),
-                filename,
-                filterLines
-            )
+        self._assert_root(filename)
 
     def test_OverridesCombined(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
-                filename[5:],
-                os.path.join(__dirname__, "fixtures", filename + ".obj"),
-                filename,
-                filterLines
-            )
+        self._assert_root(filename)
 
+    def test_ExportableObjectOverride_object_special_1_2_3(self)->None:
+        filename = inspect.stack()[0].function
+        self.assertRootObjectExportEqualsFixture(
+            filename[5:],
+            os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filename,
+            filterLines
+        )
 
 runTestCases([TestLodOverridesApplied])

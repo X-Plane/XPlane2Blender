@@ -1033,7 +1033,7 @@ def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy
 def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     row = layout.row()
     row.prop(obj.xplane, "override_lods")
-    if obj.xplane.specialize_lods:
+    if obj.xplane.override_lods:
         box = layout.box()
         box.row().prop(obj.xplane, "lod", text = "LOD")
 

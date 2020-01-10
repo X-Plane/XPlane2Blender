@@ -68,11 +68,14 @@ class XPlaneBone():
                 self.xplaneObject.effective_buckets = tuple(self.blenderObject.xplane.lod)
             else:
                 def find_parent_buckets(parent_xplane_bone:Optional["XPlaneBone"])->Tuple[bool, bool, bool, bool]:
-                    if parent_xplane_bone.xplaneObject:
-                        return parent_xplane_bone.xplaneObject.effective_buckets
-                    elif parent_xplane_bone.parent:
-                        return find_parent_buckets(parent_xplane_bone.parent)
-                    else:
+                    try:
+                        if parent_xplane_bone.xplaneObject:
+                            return parent_xplane_bone.xplaneObject.effective_buckets
+                        elif parent_xplane_bone.parent:
+                            return find_parent_buckets(parent_xplane_bone.parent)
+                        else:
+                            return (False,) * 4
+                    except AttributeError:
                         return (False,) * 4
 
                 self.xplaneObject.effective_buckets = find_parent_buckets(self.parent)
