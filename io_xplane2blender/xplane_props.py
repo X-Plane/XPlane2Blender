@@ -1,5 +1,6 @@
-# File: xplane_props.py
-# Defines X-Plane Properties attached to regular Blender data types.
+"""
+Defines X-Plane Properties attached to regular Blender data types.
+"""
 
 import bpy
 import io_xplane2blender
@@ -83,18 +84,18 @@ undebatable alphabetical listing.
 - Tip: If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
 """
 
-# Class: XPlane2Blender
-#
-# Contains useful methods for getting information about the
-# version and build number of XPlane2Blender
-#
-# Names are usually in the format of
-# major.minor.release-(alpha|beta|dev|leg|rc)\.[0-9]+)\+\d+\.(YYYYMMDDHHMMSS)
 
 # Internal variable to enable and disable the ability to update the value of XPlane2Blender's properties
 # DO NOT CHANGE OUTSIDE OF safe_set_version_data!
 _version_safety_off = False
 class XPlane2BlenderVersion(bpy.types.PropertyGroup):
+    """
+    Contains useful methods for getting information about the
+    version and build number of XPlane2Blender
+
+    Names are usually in the format of
+    major.minor.release-(alpha|beta|dev|leg|rc)\.[0-9]+)\+\d+\.(YYYYMMDDHHMMSS)
+    """
 
     #Guards against being updated without being validated
     def update_version_property(self,context):
@@ -208,7 +209,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Method: __repr__
     #
     # repr and repr of VerStruct are the same. It is used as a key for scene.xplane.xplane2blender_ver_history
-    def __repr__(self):
+    def __repr__(self)->str:
         return "(%s, %s, %s, %s, %s)" % ('(' + ','.join(map(str,self.addon_version)) + ')',
                                          "'" + str(self.build_type) + "'",
                                                str(self.build_type_version),
@@ -217,7 +218,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # Method: __str__
     #
     # str and str of VerStruct are the same. It is used for printing to the user
-    def __str__(self):
+    def __str__(self)->str:
         return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)),
                                    self.build_type,
                                    self.build_type_version,
@@ -950,19 +951,15 @@ class XPlaneLOD(bpy.types.PropertyGroup):
         min = 0
     )
 
-def make_lods_array():
-    lods_arr = [("0","None","None")]
-    for i in range(1,MAX_LODS):
-        lods_arr.append((str(i),str(i),str(i)))
-    return lods_arr
-
+    def __str__(self)->str:
+        return f"({self.near}, {self.far})"
 
 #TODO: Maybe we should change all this "X-Plane Layer" stuff
 # to XPLaneOBJSettings or something
 class XPlaneLayer(bpy.types.PropertyGroup):
     """
     Defines settings for an OBJ file. Is was formerly tied to
-    Blender 3D-View Layers, but now it is only used for Exportable Roots
+    Blender 3D-View Layers, but now is for Exportable Roots
     """
 
     """
@@ -1116,7 +1113,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Levels of Detail",
         description = "Levels of detail",
         default = "0",
-        items = make_lods_array(),
+        items = [("0", "None", "None")] + [(str(i),) * 3 for i in range(1, MAX_LODS)],
         update = update_lods
     )
 
@@ -1381,10 +1378,10 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 #   float lightLevel_v2 - Light Level Value 2
 #   string lightLevel_dataref - Light Level Dataref
 class XPlaneObjectSettings(bpy.types.PropertyGroup):
-    '''
+    """
     Settings for Blender objects. On Blender Objects these are accessed via a
     pointer property called xplane. Ex: bpy.data.objects[0].xplane.datarefs
-    '''
+    """
     customAttributes: bpy.props.CollectionProperty(
         name = "Custom X-Plane Attributes",
         description = "User defined attributes for the Object",
@@ -1401,6 +1398,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         name = "X-Plane Datarefs",
         description = "X-Plane Datarefs",
         type = XPlaneDataref
+    )
+
+    override_lods: bpy.props.BoolProperty(
+        name = "Override LODs",
+        description = "Overrides any parent's LOD buckets for this object and its children",
+        default = False
     )
 
     # Since "Empty" is not a Blender type, only a "type" of Object, we have
@@ -1838,8 +1841,7 @@ _classes = (
     XPlaneSceneSettings
 )
 
-# Function: addXPlaneRNA
-# Registers all properties.
+
 def register():
     # basic classes
     for c in _classes:
@@ -1878,8 +1880,6 @@ def register():
     )
 
 
-# Function: removeXPlaneRNA
-# Unregisters all properties.
 def unregister():
     for c in reversed(_classes):
         bpy.utils.unregister_class(c)

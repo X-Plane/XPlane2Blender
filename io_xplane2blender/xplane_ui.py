@@ -1031,13 +1031,11 @@ def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy
         subrow.prop(attr, "value")
 
 def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
-    pass
-    """
-    # A no-op until issue #451 is closed
-    #TODO: We need this for LOD support
     row = layout.row()
-    row.prop(obj.xplane, "lod", text = "LOD")
-    """
+    row.prop(obj.xplane, "override_lods")
+    if obj.xplane.override_lods:
+        box = layout.box()
+        box.row().prop(obj.xplane, "lod", text = "LOD")
 
 def weight_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     row = layout.row()

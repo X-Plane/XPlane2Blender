@@ -1,13 +1,14 @@
 import re
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bpy
-
-from io_xplane2blender.xplane_types import xplane_attribute, xplane_file, xplane_object
+from io_xplane2blender import xplane_helpers
+from io_xplane2blender.xplane_types import (xplane_attribute, xplane_bone,
+                                            xplane_file, xplane_object)
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 
 from ..xplane_config import getDebug
 from ..xplane_constants import *
-from io_xplane2blender import xplane_helpers
 from ..xplane_helpers import floatToStr, logger
 
 
@@ -104,54 +105,43 @@ class XPlaneCommands():
         }
 
 
-    def write(self, lod:int = -1)->str:
+    def write(self, *, lod_bucket_index:Optional[int])->str:
         """
-        Writes OBJ commands to a string. If lod is -1, no LODs will be used
+        Writes OBJ commands to a string. If lod_bucket_index is None,
+        LOD mode is turned off
         """
+        # Why the kw_only? Because write(1) doesn't really tell a lot
+        assert lod_bucket_index is None or lod_bucket_index in {0, 1, 2, 3}, f"LOD bucket index ({lod_bucket_index}) must be None or a real bucket index"
         o = ''
-        o += self.writeXPlaneBone(self.xplaneFile.rootBone, lod)
+        o += self.writeXPlaneBone(self.xplaneFile.rootBone, lod_bucket_index)
 
         return o
 
-    def writeXPlaneBone(self, xplaneBone, lod):
-        o = ''
+    def writeXPlaneBone(self, xplaneBone:xplane_bone.XPlaneBone, lod_bucket_index:Optional[int])->str:
+        """
+        Writes the contents (animations, meshes, materials, etc) of an XPlaneBone and it's children recursively.
+        lod_bucket_index is an index into XPlaneLayer's lod collection property. If not None (and not out of range)
+        LOD mode is on, and the the output will be filtered by those bucket indexes
+        """
+        assert lod_bucket_index is None or lod_bucket_index in {0, 1, 2, 3}, f"LOD bucket index ({lod_bucket_index}) must be None or a real bucket index"
+        o = ""
         o += xplaneBone.writeAnimationPrefix()
+
         xplaneObject = xplaneBone.xplaneObject
         xplaneObjectWritten = False
-        numLods = int(self.xplaneFile.options.lods)
 
         if xplaneObject:
-            lods = [False] * len(bpy.data.collections)
-
-            for i, collection in enumerate(bpy.data.collections):
-                try:
-                    if(xplaneObject.blenderObj in collection):
-                        lods[i] = True
-                        break
-                except:
-                    pass
-
-            isInLod = False
-
-            for lodIndex in range(0, MAX_LODS):
-                if lodIndex < len(lods) and lods[lodIndex] == True:
-                    isInLod = True
-                    break
-
-            if lod == -1:
-                # only write objects that are in no lod
-                if not isInLod or numLods <= 0:
-                    o += self._writeXPlaneObjectPrefix(xplaneObject)
-                    xplaneObjectWritten = True
-
-            # write objects that are within that lod and in no lod, as those should appear everywhere
-            elif lods[lod] == True or not isInLod:
+            if lod_bucket_index is None:
+                o += self._writeXPlaneObjectPrefix(xplaneObject)
+                xplaneObjectWritten = True
+            elif (lod_bucket_index is not None
+                  and xplaneObject.effective_buckets[lod_bucket_index]):
                 o += self._writeXPlaneObjectPrefix(xplaneObject)
                 xplaneObjectWritten = True
 
         # write bone children
         for childBone in xplaneBone.children:
-            o += self.writeXPlaneBone(childBone, lod)
+            o += self.writeXPlaneBone(childBone, lod_bucket_index)
 
         if xplaneObject and xplaneObjectWritten:
             o += self._writeXPlaneObjectSuffix(xplaneObject)
@@ -184,22 +174,11 @@ class XPlaneCommands():
 
         return o
 
-    # Method: writeAttribute
-    # Returns the Command line for an attribute.
-    # Uses <canWrite> to determine if the command needs to be written.
-    #
-    # Parameters:
-    #   string attr - The attribute name.
-    #   string value - The attribute value.
-    #   XPlaneObject object - A <XPlaneObject>.
-    #
-    # Returns:
-    #   string or None if the command must not be written.
     def writeAttribute(self,
                        attr: xplane_attribute.XPlaneAttribute,
                        xplaneObject: xplane_object.XPlaneObject)->str:
         """
-        Writes attribute to string if possible and necissary to a string
+        Returns formatted value of attr value of, also handles the counterparts system
         """
         o = ''
         for i in range(len(attr.value)):
@@ -229,7 +208,7 @@ class XPlaneCommands():
                     value = attr.getValueAsString(i)
                     o += indent + '%s\t%s\n' % (name, value)
 
-                    # check if this thing has a reseter and remove counterpart if any
+                    # check if this thing has a resetter and remove counterpart if any
                     counterparts = self.getAttributeCounterparts(name)
 
                     for counterpart in counterparts:
@@ -237,16 +216,7 @@ class XPlaneCommands():
                             del self.written[counterpart]
         return o
 
-    # Method: canWriteAttribute
-    # Determines if an attribute must/can be written.
-    #
-    # Parameters:
-    #   string attr - The attribute name.
-    #   string value - The attribute value.
-    #
-    # Returns:
-    #   bool - True if the attribute must be written, else false.
-    def canWriteAttribute(self, attr:str, value)->bool:
+    def canWriteAttribute(self, attr:str, value:xplane_attribute.XPlaneAttribute)->bool:
         if attr not in self.written or attr in self.inpersistant:
             return True
         elif self.written[attr] == value:
@@ -254,7 +224,7 @@ class XPlaneCommands():
         else:
             return True
 
-    def addReseter(self, attr:str, reseter:str):
+    def addReseter(self, attr:str, reseter:str)->None:
         self.reseters[attr] = reseter
 
     # Method: attributeIsReseter
@@ -273,10 +243,12 @@ class XPlaneCommands():
 
         return None
 
-    # Given any non-resetter attribute, this returns the
-    # resetter that "undoes" it.  Given any resetter, this
-    # returns all setters.
-    def getAttributeCounterparts(self, attr):
+    def getAttributeCounterparts(self, attr)->List[str]:
+        """
+        Given any non-resetter attribute, this returns the
+        resetter that "undoes" it.  Given any resetter, this
+        returns all setters.
+        """
 
         found=[]
         setterPatterns = sorted(list(self.reseters.keys()))
@@ -302,16 +274,8 @@ class XPlaneCommands():
                             found.append(oneWritten)
         return found
 
-    # Method: writeReseters
-    # Returns the commands for a <XPlaneObject> needed to reset previous commands.
-    #
-    # Parameters:
-    #   XPlaneObject obj - A <XPlaneObject>
-    #   string tabs - The indentation tabs.
-    #
-    # Returns:
-    #   string - Commands
-    def writeReseters(self, xplaneObject):
+    def writeReseters(self, xplaneObject:xplane_object.XPlaneObject)->str:
+        """Writes ATTR_s needed to reset previous commands for a given XPlaneObject"""
         debug = getDebug()
         o = ''
         indent = xplaneObject.xplaneBone.getIndent()

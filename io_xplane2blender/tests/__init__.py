@@ -245,15 +245,20 @@ class XPlaneTestCase(unittest.TestCase):
     #    logger.clearMessages()
 
     def assertLayerExportEqualsFixture(self,
-            layer:int,
+            layer_number:int,
             fixturePath:str,
             tmpFilename:Optional[str] = None,
             filterCallback:Optional[FilterLinesCallback] = None,
             floatTolerance:Optional[float] = None)->None:
-        if not ('-q' in sys.argv or '--quiet' in sys.argv):
-            print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
+        """
+        DEPRECATED: New unit tests should not use this!
 
-        out = self.exportRootObject(bpy.data.collections[f"Layer {layer + 1}"], tmpFilename)
+        - layer_number starts at 0, as it used to access the scene.layers collection
+        """
+        #if not ('-q' in sys.argv or '--quiet' in sys.argv):
+            #print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
+
+        out = self.exportRootObject(bpy.data.collections[f"Layer {layer_number + 1}_Scene"], tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     #TODO: Rename assertExportableRootExportEqualsFixture
