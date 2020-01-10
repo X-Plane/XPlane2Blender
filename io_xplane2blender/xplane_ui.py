@@ -375,31 +375,28 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
             cockpit_lit_box = cockpit_box.row()
             cockpit_lit_box.prop(layer_props, "cockpit_lit")
     # LODs
-    else:
-        lods_box = layout.box()
-        lods_box.label(text='Levels of Detail')
-        lods_box.prop(layer_props, "lods", text="LODs")
-        num_lods = int(layer_props.lods)
+    lods_box = layout.box()
+    lods_box.label(text='Levels of Detail')
+    lods_box.prop(layer_props, "lods", text="LODs")
+    num_lods = int(layer_props.lods)
 
-        if num_lods > 0:
-            for i in range(0, num_lods):
-                if len(layer_props.lod)>i:
-                    lod = layer_props.lod[i]
+    if num_lods:
+        # Bad naming, I know
+        for i, lod in enumerate(layer_props.lod[:num_lods]):
+            if lod.expanded:
+                expandIcon = "TRIA_DOWN"
+            else:
+                expandIcon = "TRIA_RIGHT"
 
-                    if lod.expanded:
-                        expandIcon = "TRIA_DOWN"
-                    else:
-                        expandIcon = "TRIA_RIGHT"
+            lod_box = lods_box.box()
+            lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
 
-                    lod_box = lods_box.box()
-                    lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
+            if lod.expanded:
+                lod_box.prop(lod, "near")
+                lod_box.prop(lod, "far")
 
-                    if lod.expanded:
-                        lod_box.prop(lod, "near")
-                        lod_box.prop(lod, "far")
-
-        if canHaveDraped:
-            lods_box.prop(layer_props, "lod_draped")
+    if canHaveDraped:
+        lods_box.prop(layer_props, "lod_draped")
 
     if canHaveSceneryProps:
         #Scenery Properties Group
