@@ -328,8 +328,9 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
 
     tex_box = layout.box()
     tex_box.label(text='Textures')
-    tex_box.prop(layer_props, "autodetectTextures")
-    if not layer_props.autodetectTextures:
+    #tex_box.prop(layer_props, "autodetectTextures")
+    #if not layer_props.autodetectTextures:
+    if True: # Hack until autodetectTextures means something again
         tex_box.prop(layer_props, "texture", text = "Default")
         tex_box.prop(layer_props, "texture_lit", text = "Night")
         tex_box.prop(layer_props, "texture_normal", text = "Normal / Specular")
