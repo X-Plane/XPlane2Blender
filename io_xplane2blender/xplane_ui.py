@@ -328,8 +328,9 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
 
     tex_box = layout.box()
     tex_box.label(text='Textures')
-    tex_box.prop(layer_props, "autodetectTextures")
-    if not layer_props.autodetectTextures:
+    #tex_box.prop(layer_props, "autodetectTextures")
+    #if not layer_props.autodetectTextures:
+    if True: # Hack until autodetectTextures means something again
         tex_box.prop(layer_props, "texture", text = "Default")
         tex_box.prop(layer_props, "texture_lit", text = "Night")
         tex_box.prop(layer_props, "texture_normal", text = "Normal / Specular")
@@ -375,31 +376,28 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
             cockpit_lit_box = cockpit_box.row()
             cockpit_lit_box.prop(layer_props, "cockpit_lit")
     # LODs
-    else:
-        lods_box = layout.box()
-        lods_box.label(text='Levels of Detail')
-        lods_box.prop(layer_props, "lods", text="LODs")
-        num_lods = int(layer_props.lods)
+    lods_box = layout.box()
+    lods_box.label(text='Levels of Detail')
+    lods_box.prop(layer_props, "lods", text="LODs")
+    num_lods = int(layer_props.lods)
 
-        if num_lods > 0:
-            for i in range(0, num_lods):
-                if len(layer_props.lod)>i:
-                    lod = layer_props.lod[i]
+    if num_lods:
+        # Bad naming, I know
+        for i, lod in enumerate(layer_props.lod[:num_lods]):
+            if lod.expanded:
+                expandIcon = "TRIA_DOWN"
+            else:
+                expandIcon = "TRIA_RIGHT"
 
-                    if lod.expanded:
-                        expandIcon = "TRIA_DOWN"
-                    else:
-                        expandIcon = "TRIA_RIGHT"
+            lod_box = lods_box.box()
+            lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
 
-                    lod_box = lods_box.box()
-                    lod_box.prop(lod, "expanded", text = "Level of detail %i" % (i+1), expand = True, emboss = False, icon = expandIcon)
+            if lod.expanded:
+                lod_box.prop(lod, "near")
+                lod_box.prop(lod, "far")
 
-                    if lod.expanded:
-                        lod_box.prop(lod, "near")
-                        lod_box.prop(lod, "far")
-
-        if canHaveDraped:
-            lods_box.prop(layer_props, "lod_draped")
+    if canHaveDraped:
+        lods_box.prop(layer_props, "lod_draped")
 
     if canHaveSceneryProps:
         #Scenery Properties Group
@@ -614,7 +612,7 @@ def material_layout(layout:UILayout,
     surface_behavior_box_column.prop(active_material.xplane, "surfaceType")
 
     if active_material.xplane.surfaceType != 'none':
-        surface_behavior_box_column.prop(active_material.xplane, "deck")
+        surface_behavior_box_column.prop(active_material.xplane, "deck", text="Only Slightly Thick")
 
     surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
     ll_box = layout.box()
@@ -1031,13 +1029,11 @@ def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy
         subrow.prop(attr, "value")
 
 def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
-    pass
-    """
-    # A no-op until issue #451 is closed
-    #TODO: We need this for LOD support
     row = layout.row()
-    row.prop(obj.xplane, "lod", text = "LOD")
-    """
+    row.prop(obj.xplane, "override_lods")
+    if obj.xplane.override_lods:
+        box = layout.box()
+        box.row().prop(obj.xplane, "lod", text = "LOD")
 
 def weight_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
     row = layout.row()
