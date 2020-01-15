@@ -258,7 +258,7 @@ class XPlaneTestCase(unittest.TestCase):
         #if not ('-q' in sys.argv or '--quiet' in sys.argv):
             #print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
 
-        out = self.exportRootObject(bpy.data.collections[f"Layer {layer_number + 1}_Scene"], tmpFilename)
+        out = self.exportRootObject(bpy.data.collections[f"Layer {layer_number + 1}"], tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     #TODO: Rename assertExportableRootExportEqualsFixture
@@ -383,11 +383,11 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
 
         def filterLine(line):
             # only keep ANIM_ lines
-            return isinstance(line[0], str) and line[0].find('ANIM_') == 0
+            return isinstance(line[0], str) and ("ANIM" in line[0] or "TRIS" in line[0])
 
         for layer in mappings[name]:
             print('Testing animations against fixture "%s"' % mappings[name][layer])
-
+            bpy.data.collections[f"Layer {layer + 1}"].hide_viewport = False
             xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"])
 
             self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))

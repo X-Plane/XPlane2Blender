@@ -14,7 +14,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestSwLightCallbackApplied(XPlaneTestCase):
     def test_sw_light_callback_applied(self):
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1_Scene"])
+        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
 
         force_omni = xplaneFile._bl_obj_name_to_bone["do_force_omni"].xplaneObject
         self.assertEqual(force_omni.lightOverload.get("WIDTH"), 1.0)

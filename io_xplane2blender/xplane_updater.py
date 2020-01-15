@@ -368,7 +368,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
             #    copy the XPlaneLayer from scene.xplane.layers to coll.xplane.layer
             for layer in scene.xplane.layers:
                 assert layer.index != -1, f"XPlaneLayer f{layer.name} was never actually initialized in 2.79"
-                collection_new_name = f"Layer {layer.index + 1}_{scene.name}"
+                collection_new_name = f"Layer {layer.index + 1}" + (f"_{scene.name}" if i else f"")
                 for suffix in (f"{j:03}" for j in range(0, i+1)):
                     try_this = f"Collection {layer.index + 1}.{suffix}"
                     try:
