@@ -4,36 +4,36 @@ OBJ
 
 POINT_COUNTS	0	0	5	0
 
-VLIGHT	2	2	-2	-1	1	1
-VLIGHT	5	5	-5	9.7	9.7	9.7
-VLIGHT	4	4	-4	9.8	9.8	9.8
-VLIGHT	3	3	-3	9.9	9.9	9.9
 VLIGHT	1	1	-1	0	1	0
+VLIGHT	2	2	-2	-1	1	1
+VLIGHT	3	3	-3	9.9	9.9	9.9
+VLIGHT	4	4	-4	9.8	9.8	9.8
+VLIGHT	5	5	-5	9.7	9.7	9.7
 
 # 0 ROOT
-# 1 Lamp: 02_Lamp_flash
-# LAMP: 02_Lamp_flash	weight: 10000
-LIGHTS	0 1
-# 1 Lamp: 05_Lamp_traffic
-# LAMP: 05_Lamp_traffic	weight: 10000
-LIGHTS	1 1
-# 1 Lamp: 04_Lamp_strobe
-# LAMP: 04_Lamp_strobe	weight: 10000
-LIGHTS	2 1
-# 1 Lamp: 03_Lamp_pulse
-# LAMP: 03_Lamp_pulse	weight: 10000
-LIGHTS	3 1
-# 1 Lamp: 07_Lamp_custom
-# LAMP: 07_Lamp_custom	weight: 10000
-LIGHT_CUSTOM	7 7 -7 1 1 0 1 2 0 0 1 1 test
-# 1 Lamp: 06_Lamp_named
-# LAMP: 06_Lamp_named	weight: 10000
-LIGHT_NAMED	airplane_nav_left 6 6 -6
-# 1 Lamp: 08_Lamp_parameter
-# LAMP: 08_Lamp_parameter	weight: 10000
-LIGHT_PARAM	spot_params_sp 8 8 -8 0 .2 1    20 30   0 -1  0   1
-# 1 Lamp: 01_Lamp_default
-# LAMP: 01_Lamp_default	weight: 10000
-LIGHTS	4 1
+	# 1 Light: 01_Lamp_default
+	# LIGHT: 01_Lamp_default	weight: 10000
+	LIGHTS	0 1
+	# 1 Light: 02_Lamp_flash
+	# LIGHT: 02_Lamp_flash	weight: 10000
+	LIGHTS	1 1
+	# 1 Light: 03_Lamp_pulse
+	# LIGHT: 03_Lamp_pulse	weight: 10000
+	LIGHTS	2 1
+	# 1 Light: 04_Lamp_strobe
+	# LIGHT: 04_Lamp_strobe	weight: 10000
+	LIGHTS	3 1
+	# 1 Light: 05_Lamp_traffic
+	# LIGHT: 05_Lamp_traffic	weight: 10000
+	LIGHTS	4 1
+	# 1 Light: 06_Lamp_named
+	# LIGHT: 06_Lamp_named	weight: 10000
+	LIGHT_NAMED	airplane_nav_left 6 6 -6
+	# 1 Light: 07_Lamp_custom
+	# LIGHT: 07_Lamp_custom	weight: 10000
+	LIGHT_CUSTOM	7 7 -7 1 1 0 100 2 0 0 1 1 test
+	# 1 Light: 08_Lamp_parameter
+	# LIGHT: 08_Lamp_parameter	weight: 10000
+	LIGHT_PARAM	spot_params_sp 8 8 -8 0 .2 1    20 30   0 -1  0   1
 
-# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+41.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+65.NO_BUILD_NUMBR
