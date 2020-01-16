@@ -209,7 +209,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                 if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
                     layer_options["shadow"] = True
                 potential_objects = xplane_helpers.get_potential_objects_in_root_object(root_obj)
-                potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots]
+                potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots if slot.material]
                 _update_potential_materials(potential_materials, layer_options)
                 used_layer_info = UsedLayerInfo(
                                         options=layer_options,
