@@ -9,12 +9,9 @@ from io_xplane2blender.tests import *
 __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
-    return isinstance(line[0],str) and\
-            ("VT" in line[0]    or\
-             "IDX10" in line[0] or\
-             "IDX"  in line[0]  or\
-             "TRIS" in line[0]  or\
-             "ANIM" in line[0])
+    return (isinstance(line[0],str)
+            and ("TRIS" in line[0]
+                 or "ANIM" in line[0]))
 
 class TestArmatureNestedOffset(XPlaneTestCase):
     def test_01_datablock_datablock(self):
