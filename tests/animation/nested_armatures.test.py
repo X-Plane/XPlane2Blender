@@ -12,7 +12,7 @@ class TestNestedArmatures(XPlaneTestCase):
 
     def test_nested_armatures(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0] == 'VT' or line[0].find('ANIM') == 0)
+            return isinstance(line[0], str) and ("ANIM" in line[0] == 0)
 
         filename = 'test_nested_armatures'
         self.assertLayerExportEqualsFixture(

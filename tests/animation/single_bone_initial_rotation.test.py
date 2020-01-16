@@ -12,7 +12,7 @@ class TestSingleBoneInitialRotation(XPlaneTestCase):
 
     def test_single_bone_initial_rotation(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0] == 'VT' or line[0].find('ANIM') == 0)
+            return isinstance(line[0], str) and ("ANIM" in line[0] == 0)
 
         filename = 'test_single_bone_initial_rotation'
         self.assertLayerExportEqualsFixture(

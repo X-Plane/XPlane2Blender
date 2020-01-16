@@ -9,9 +9,7 @@ from io_xplane2blender import xplane_config
 __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
-    return isinstance(line[0],str) and\
-            ("ANIM" in line[0] or\
-             "VT" in line[0])
+    return isinstance(line[0],str) and ("ANIM" in line[0])
 
 fixtures_path = os.path.join('fixtures','nested_bones')
 

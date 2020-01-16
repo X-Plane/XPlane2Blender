@@ -12,7 +12,7 @@ class TestMultipleArmatures(XPlaneTestCase):
 
     def test_multiple_armatures(self):
         def filterLines(line):
-            return isinstance(line[0], str) and (line[0] == 'VT' or line[0].find('ANIM') == 0)
+            return isinstance(line[0], str) and ("ANIM" in line[0] == 0)
 
         filename = 'test_multiple_armatures'
         self.assertLayerExportEqualsFixture(
