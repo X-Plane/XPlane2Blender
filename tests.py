@@ -9,17 +9,17 @@ import time
 
 
 def clean_tmp_folder():
-    # TODO: This cannot run when the tmp folder is open
-    # in a file browser or is in use. This is annoying.
-    if os.path.exists('./tests/tmp'):
-        # empty temp directory
-        shutil.rmtree('./tests/tmp',ignore_errors=True)
-
     # create temp dir if not exists
-    try:
-        os.makedirs('./tests/tmp',exist_ok=True)
-    except:
-        pass
+    os.makedirs('./tests/tmp', exist_ok=True)
+
+    # Thanks Iker Jimenez for something short,
+    # https://stackoverflow.com/a/1073382
+    for root, dirs, files in os.walk('./test/tmp'):
+        for f in files:
+            os.unlink(os.path.join(root, f))
+        for d in dirs:
+            shutil.rmtree(os.path.join(root, d))
+
 
 def _make_argparse():
     parser = argparse.ArgumentParser(description="Runs the XPlane2Blender test suite")
