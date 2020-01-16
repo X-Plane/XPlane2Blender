@@ -9,18 +9,18 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestMaterials(XPlaneTestCase):
     def test_material_attributes(self):
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
+        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
 
-        green = xplaneFile.objects['green'].material
-        red = xplaneFile.objects['red'].material
-        blue = xplaneFile.objects['blue'].material
-        emissive = xplaneFile.objects['emissive'].material
-        cockpit = xplaneFile.objects['cockpit'].material
-        cockpitPanel = xplaneFile.objects['cockpit_panel'].material
-        invisible = xplaneFile.objects['invisible'].material
-        surface = xplaneFile.objects['surface'].material
-        conditions = xplaneFile.objects['conditions'].material
-        specular = xplaneFile.objects['specular'].material
+        green = xplaneFile._bl_obj_name_to_bone['green'].xplaneObject.material
+        red = xplaneFile._bl_obj_name_to_bone['red'].xplaneObject.material
+        blue = xplaneFile._bl_obj_name_to_bone['blue'].xplaneObject.material
+        emissive = xplaneFile._bl_obj_name_to_bone['emissive'].xplaneObject.material
+        cockpit = xplaneFile._bl_obj_name_to_bone['cockpit'].xplaneObject.material
+        cockpitPanel = xplaneFile._bl_obj_name_to_bone['cockpit_panel'].xplaneObject.material
+        invisible = xplaneFile._bl_obj_name_to_bone['invisible'].xplaneObject.material
+        surface = xplaneFile._bl_obj_name_to_bone['surface'].xplaneObject.material
+        conditions = xplaneFile._bl_obj_name_to_bone['conditions'].xplaneObject.material
+        specular = xplaneFile._bl_obj_name_to_bone['specular'].xplaneObject.material
 
         defaultAttrs = {
             'ATTR_shiny_rat': 1,
@@ -97,7 +97,7 @@ class TestMaterials(XPlaneTestCase):
         conditionsAttrs['custom_prop'] = '10'
 
         specularAttrs = defaultAttrs.copy()
-        specularAttrs['ATTR_shiny_rat'] = 0.75
+        specularAttrs['ATTR_shiny_rat'] = 0.25
 
         self.assertAttributesEqualDict(red.attributes, redAttrs)
         self.assertAttributesEqualDict(red.cockpitAttributes, defaultCockpitAttrs)
