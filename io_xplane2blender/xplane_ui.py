@@ -32,7 +32,7 @@ class DATA_PT_xplane(bpy.types.Panel):
 
         if obj.type == "LIGHT":
             light_layout(self.layout, obj.data)
-            custom_layout(self.layout, "LIGHT")
+            custom_layout(self.layout, obj)
         if obj.type == "EMPTY" and version >= 1130:
             empty_layout(self.layout, obj)
 
