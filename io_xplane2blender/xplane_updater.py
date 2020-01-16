@@ -49,6 +49,7 @@ from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
 from io_xplane2blender.xplane_constants import LOGGER_LEVEL_ERROR,\
     LOGGER_LEVEL_INFO, LOGGER_LEVEL_SUCCESS, BLEND_GLASS
 from io_xplane2blender.xplane_helpers import XPlaneLogger
+from io_xplane2blender.xplane_utils import xplane_updater_helpers
 
 
 def __updateLocRot(obj,logger):
@@ -90,28 +91,6 @@ def __updateLocRot(obj,logger):
                new_anim_type.capitalize()
                )
               )
-
-# This is basically a copy of EnumPropertyItem, with only the parts we care about
-_EnumItem = collections.namedtuple("EnumItem", ["identifier", "name", "description"])
-def _get_enum_item(prop_group: bpy.types.PropertyGroup, prop:bpy.types.Property)->_EnumItem:
-    """
-    Inspects a property group's enum property and return's
-    throws KeyNotFound and typeError
-
-    prop.type must be and ENUM found in prop_group
-    """
-    assert prop.identifier in prop_group.bl_rna.properties, f"{prop.identifier} is not a member of {prop_group.rna_type.name}'s properties"
-    assert prop.type == "ENUM", f"{prop.identifier} is not an ENUM and cannot be used in this function"
-    # We need get instead of getattr because only get
-    # gives us the real unfiltered value including
-    # "never changed" aka None
-    prop_value: Optional[int] = prop_group.get(prop.identifier)
-    if prop_value is None:
-        enum_key:str = prop.default
-    else:
-        enum_key:str = prop.enum_items.keys()[prop_value]
-    item:bpy.types.EnumPropertyItem = prop.enum_items[enum_key]
-    return _EnumItem(item.identifier, item.name, item.description)
 
 
 def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLogger)->None:
@@ -264,82 +243,6 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
             for layer_props in [obj.xplane.layer for obj in scene.objects]:
                 layer_props.autodetectTextures = False
         #----------------------------------------------------------------------
-        def check_property_group_has_non_default(prop_group:bpy.types.PropertyGroup, props_to_ignore={"index", "expanded"})->Dict[str, Union[bool, float, int, str]]:
-            """
-            Recursively searches a property group for any members of it that have different values than the default.
-            Returns a dictionary of property names to values. Currently does not inspect PointerPropertys
-            """
-            def check_recursive(real_prop_group:bpy.types.PropertyGroup):
-                nondefault_props = {}
-                for prop in filter(lambda p: p.identifier not in (props_to_ignore | {"rna_type"}), real_prop_group.bl_rna.properties):
-                    if prop.type == "POINTER":
-                        #TODO: This can be followed, but for now we need to press on to other bugs
-                        # and we don't have a test case that uses this
-                        #check_recursive(prop_group)
-                        continue
-                    elif prop.type == "COLLECTION":
-                        nondefaults = list(
-                            filter(None,
-                                   [check_recursive(m) for m in getattr(real_prop_group, prop.identifier)]
-                               )
-                            )
-                        if nondefaults:
-                            nondefault_props[prop.identifier] = nondefaults
-                    else:
-                        if prop.type == "ENUM":
-                            # This is the enum's identifier, what getattr and get when unchanged
-                            # or missing
-                            real_value = _get_enum_item(real_prop_group, prop).identifier
-                        else:
-                            real_value = real_prop_group.get(prop.identifier, prop.default)
-                        if real_value != prop.default:
-                            nondefault_props[prop.identifier] = real_value
-                return nondefault_props
-
-            return check_recursive(prop_group)
-
-        def copy_property_group(source_prop_group:bpy.types.PropertyGroup, dest_prop_group:bpy.types.PropertyGroup, props_to_ignore: Set[str]=None)->None:
-            """
-            Recursively copies values from one PropertyGroup to another, using setattr.
-
-            Note:
-            If your PropertyGroup has a "name" property with a non-empty str default, you must copy those
-            yourself.
-
-            To iterate, we use bl_rna.properties, whose "name" member actually refers to the partent type
-            (bpy.types.PropertyGroup)'s "name" property which is
-
-                (identifier="name",
-                 name="Name",
-                 description="Unique name used in the code and scripting",
-                 default="")
-
-            If your "name" property's default matches the parent's "name", then everything lines up by co-incidence.
-            There does not appear to be a way to get around this.
-
-            bl_rna.properties["rna_type"] is always ignored since that is Blender defined.
-            """
-
-            props_to_ignore = props_to_ignore if props_to_ignore else set()
-            def copy_recursive(source_prop_group:bpy.types.PropertyGroup, dest_prop_group:bpy.types.PropertyGroup):
-                assert source_prop_group.rna_type == dest_prop_group.rna_type
-                for prop in filter(lambda p: p.identifier not in (props_to_ignore | {"rna_type"}), source_prop_group.bl_rna.properties):
-                    if prop.type == "POINTER":
-                        #TODO: When we have a case with an POINTER to worry about
-                        # we'll fill this in
-                        continue
-                    elif prop.type == "COLLECTION":
-                        source_members = getattr(source_prop_group, prop.identifier)
-                        dest_members =   getattr(dest_prop_group, prop.identifier)
-                        for source_member, dest_member in zip(source_members, dest_members):
-                            copy_recursive(source_member, dest_member)
-                    else:
-                        source_value = source_prop_group.get(prop.identifier, prop.default)
-                        if prop.type == "ENUM":
-                            setattr(dest_prop_group, prop.identifier, _get_enum_item(source_prop_group, prop).identifier)
-                        else:
-                            setattr(dest_prop_group, prop.identifier, source_value)
-            copy_recursive(source_prop_group, dest_prop_group)
 
         #--- Copy Layers to Collections ---------------------------------------
         for coll in bpy.data.collections:
@@ -380,14 +283,14 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                         coll.xplane.is_exportable_collection = not coll.hide_render
                         break
                 else: # no break, no matching collection found
-                    nondefaults = check_property_group_has_non_default(layer)
+                    nondefaults = xplane_updater_helpers.check_property_group_has_non_default(layer)
                     if nondefaults:
                         coll = bpy.data.collections.new(collection_new_name)
                         scene.collection.children.link(coll)
                     else:
                         continue
 
-                copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
+                xplane_updater_helpers.copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
         #----------------------------------------------------------------------
 
 
