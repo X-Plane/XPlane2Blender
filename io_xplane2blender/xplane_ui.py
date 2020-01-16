@@ -287,7 +287,7 @@ def collection_layer_layout(layout: bpy.types.UILayout, collection: bpy.types.Co
     if layer_props.expanded:
         layer_layout(box, layer_props, version, "object")
         export_path_dir_layer_layout(box, collection, version)
-        custom_layer_layout(box, layer_props, version, "object")
+        custom_layer_layout(box, collection, version)
 
 def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
     version = int(bpy.context.scene.xplane.version)
@@ -312,7 +312,7 @@ def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
         if expanded:
             layer_layout(box, layer_props, version, "object")
             export_path_dir_layer_layout(box, obj, version)
-            custom_layer_layout(box, layer_props, version, "object")
+            custom_layer_layout(box, obj, version)
 
 
 def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLayer, version:int, context:str):
@@ -443,31 +443,35 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
     advanced_box.prop(layer_props, "export")
     advanced_box.prop(layer_props, "debug")
 
-# Function: custom_layer_layout
-# Draws the UI layout for the custom attributes of a <XPlaneLayer>.
-#
-# Parameters:
-#   UILayout self - Instance of current UILayout.
-#   UILayout layout - Instance of sublayout to use.
-#   layerObj - <XPlaneLayer> .
-def custom_layer_layout(layout: bpy.types.UILayout, layer_props:xplane_props.XPlaneLayer, version:int, context:str):
+def custom_layer_layout(
+        layout:bpy.types.UILayout,
+        has_layer_props:Union[bpy.types.Collection, bpy.types.Object],
+        version:int)->None:
     layout.separator()
     row = layout.row()
     row.label(text="Custom Properties")
 
-    if context == 'object':
-        row.operator('object.add_xplane_layer_attribute')
+    if isinstance(has_layer_props,bpy.types.Collection):
+        row.operator("collection.add_xplane_layer_attribute").collection_name = has_layer_props.name
+    elif isinstance(has_layer_props, bpy.types.Object):
+        row.operator("object.add_xplane_layer_attribute")
+    else:
+        assert False, f"has_layer_prop is an unknown type {type(has_layer_props)}"
 
     box = layout.box()
 
-    for i, attr in enumerate(layer_props.customAttributes):
+    for i, attr in enumerate(has_layer_props.xplane.layer.customAttributes):
         subbox = box.box()
         subrow = subbox.row()
         subrow.prop(attr, "name")
         subrow.prop(attr, "value")
 
-        if context == 'object':
-            subrow.operator("object.remove_xplane_layer_attribute", text = "", emboss = False, icon = "X").index = i
+        if isinstance(has_layer_props, bpy.types.Collection):
+            remove_op = subrow.operator("collection.remove_xplane_layer_attribute", text="", emboss=False, icon="X")
+            remove_op.collection_name = has_layer_props.name
+            remove_op.index = i
+        elif isinstance(has_layer_props, bpy.types.Object):
+            subrow.operator("object.remove_xplane_layer_attribute", text="", emboss=False, icon="X").index = i
 
         if type in ("MATERIAL", "MESH"):
             subrow = subbox.row()

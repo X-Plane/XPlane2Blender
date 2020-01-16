@@ -126,6 +126,32 @@ class OBJECT_OT_remove_xplane_axis_detent_range(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class COLLECTION_OT_add_xplane_layer_attribute(bpy.types.Operator):
+    bl_label = 'Add Layer Property'
+    bl_idname = 'collection.add_xplane_layer_attribute'
+    bl_description = 'Add a custom X-Plane Layer Property'
+
+    collection_name: bpy.props.StringProperty()
+    def execute(self, context):
+        coll = bpy.data.collections[self.collection_name]
+        coll.xplane.layer.customAttributes.add()
+        return {'FINISHED'}
+
+
+class COLLECTION_OT_remove_xplane_layer_attribute(bpy.types.Operator):
+    bl_label = 'Remove Layer Property'
+    bl_idname = 'collection.remove_xplane_layer_attribute'
+    bl_description = 'Remove the custom X-Plane Layer Property'
+
+    collection_name: bpy.props.StringProperty()
+    index: bpy.props.IntProperty()
+
+    def execute(self, context):
+        coll = bpy.data.collections[self.collection_name]
+        coll.xplane.layer.customAttributes.remove(self.index)
+        return {'FINISHED'}
+
+
 class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
     bl_label = 'Add Layer Property'
     bl_idname = 'object.add_xplane_layer_attribute'
@@ -138,8 +164,7 @@ class OBJECT_OT_add_xplane_layer_attribute(bpy.types.Operator):
         obj.xplane.layer.customAttributes.add()
         return {'FINISHED'}
 
-# Class: OBJECT_OT_remove_xplane_layer_attribute
-# Removes a custom attribute from a <XPlaneLayer>.
+
 class OBJECT_OT_remove_xplane_layer_attribute(bpy.types.Operator):
     bl_label = 'Remove Layer Property'
     bl_idname = 'object.remove_xplane_layer_attribute'
@@ -617,6 +642,8 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
 _ops = (
     COLLECTION_OT_add_xplane_export_path_directive,
     COLLECTION_OT_remove_xplane_export_path_directive,
+    COLLECTION_OT_add_xplane_layer_attribute,
+    COLLECTION_OT_remove_xplane_layer_attribute,
     OBJECT_OT_add_xplane_axis_detent_range,
     OBJECT_OT_remove_xplane_axis_detent_range,
     OBJECT_OT_add_xplane_layer_attribute,
