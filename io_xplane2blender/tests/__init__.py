@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import unittest
+import itertools
 
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -38,6 +39,7 @@ class XPlaneTestCase(unittest.TestCase):
             self.useLogger()
 
         #logger.warn("---------------")
+
     def useLogger(self):
         debug = getDebug()
         logLevels = ['error', 'warning']
@@ -93,28 +95,20 @@ class XPlaneTestCase(unittest.TestCase):
                 recursively_check(child_file_bone, child_fixture_bone)
         recursively_check(file_root_bone, fixture_root_bone)
 
-    def assertFloatsEqual(self, a, b, tolerance = None):
-        if tolerance == None:
-            tolerance = FLOAT_TOLERANCE
-
+    def assertFloatsEqual(self, a:float, b:float, tolerance:float = FLOAT_TOLERANCE):
+        """
+        Tests if floats are equal, with a default tollerance. The difference between this and assertAlmostEqual
+        is that we use abs instead of round, then compare
+        """
         if abs(a - b) < tolerance:
             return True
         else:
-            raise AssertionError('%s does not equal %s within a tolerance of %f' % (a, b, tolerance))
+            raise AssertionError(f"{a} != {b}, within a tolerance of {tolerance}")
 
-    def assertFloatVectorsEqual(self, a, b, tolerance = None):
-        if tolerance == None:
-            tolerance = FLOAT_TOLERANCE
-
+    def assertFloatVectorsEqual(self, a:int, b:int, tolerance:float = FLOAT_TOLERANCE):
         self.assertEquals(len(a), len(b))
-
-        equals = True
-
-        for i in range(0, len(a)):
-            if equals == False:
-                raise AssertionError('%s does not equal %s within a toleracne of %f' % (a, b, tolerance))
-
-            equals = abs(a[i] - b[i]) < tolerance
+        for a_comp, b_comp in zip(a, b):
+            self.assertFloatsEqual(a_comp, b_comp, tolerance)
 
     def parseFileToLines(self, data:str)->List[Union[float,str]]:
         '''
@@ -127,7 +121,7 @@ class XPlaneTestCase(unittest.TestCase):
                 line = line[0:line.index('#')]
             line = line.strip()
             if line:
-                lines.append(list(map(lambda part: float(part) if part.isnumeric() else part, line.split())))
+                lines.append(tuple(map(lambda part: float(part) if part.isnumeric() else part, line.split())))
 
         return lines
 
@@ -135,23 +129,13 @@ class XPlaneTestCase(unittest.TestCase):
                          a: str,
                          b: str,
                          filterCallback:Optional[FilterLinesCallback] = None,
-                         floatTolerance:float = None):
+                         floatTolerance:float = FLOAT_TOLERANCE):
         '''
         a and b should be the contents of files a and b as returned
         from open(file).read()
         '''
         def isnumber(d):
             return isinstance(d, float) or isinstance(d, int)
-
-        def toFloat(d, fail = None):
-            try:
-                return float(d)
-            except Exception:
-                return fail
-
-
-        if floatTolerance == None:
-            floatTolerance = FLOAT_TOLERANCE
 
         linesA = self.parseFileToLines(a)
         linesB = self.parseFileToLines(b)
@@ -162,15 +146,35 @@ class XPlaneTestCase(unittest.TestCase):
             linesB = list(filter(filterCallback, linesB))
 
         # ensure same number of lines
-        self.assertEquals(len(linesA), len(linesB))
+        try:
+            self.assertEquals(len(linesA), len(linesB))
+        except AssertionError as e:
+            only_in_a = (set(linesA) - set(linesB))
+            only_in_b = (set(linesB) - set(linesA))
+            only_in = (only_in_a if len(only_in_a) < len(only_in_b) else only_in_b)
+            diff = "\n".join(
+                        " ".join(map(str,l))
+                        for l in only_in)
+            nl = "\n"
+            raise AssertionError(
+                f"length of filtered lines unequal: "
+                f"{e.args[0]}\n{diff}\n"
+            )
 
         for lineIndex in range(0, len(linesA)):
             lineA = linesA[lineIndex]
             lineB = linesB[lineIndex]
 
-            #print("lineA:%s lineB:%s" %(lineA,lineB))
+            #print(f"lineA:{lineA}, lineB:{lineB}")
             # ensure same number of line segments
-            self.assertEquals(len(lineA), len(lineB))
+            try:
+                self.assertEquals(len(lineA), len(lineB))
+            except AssertionError as e:
+                raise AssertionError(
+                        f"Number of line components unequal: {e.args[0]}\n"
+                        f"{lineIndex}> {lineA} ({len(lineA)})"
+                        f"{lineIndex}> {lineB} ({len(lineB)})"
+                    )
 
 
             for linePos in range(0, len(lineA)):
@@ -178,12 +182,6 @@ class XPlaneTestCase(unittest.TestCase):
                 segmentB = lineB[linePos]
 
                 # convert numeric strings
-                if isinstance(segmentA, str):
-                    segmentA = toFloat(segmentA, segmentA)
-
-                if isinstance(segmentB, str):
-                    segmentB = toFloat(segmentB, segmentB)
-
                 def isdegree(segment,line):
                     if isnumber(segment):
                         return not isnumber(line) and ("rotate" in line or "manip_keyframe" in line) and isnumber(segment)
@@ -194,7 +192,22 @@ class XPlaneTestCase(unittest.TestCase):
                 if isnumber(segmentA) and isnumber(segmentB):
                     segmentA = abs(segmentA) if isdegree(segmentA,lineA[0]) else segmentA
                     segmentB = abs(segmentB) if isdegree(segmentB,lineB[0]) else segmentB
-                    self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
+                    try:
+                        self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
+                    except AssertionError as e:
+                        def make_context(source)->str:
+                            current_line = f"{lineIndex}> {' '.join(map(str, source[lineIndex]))}"
+                            return "\n".join((
+                                    f"{lineIndex - 1}: {' '.join(map(str, source[lineIndex-1]))}" if lineIndex > 0 else "",
+                                    current_line,
+                                    "^".rjust(len(" ".join(lineA[:linePos])) + 5, " "), # + 3 for the line number, + 2 for the space afterwards
+                                    f"{lineIndex + 1}: {' '.join(map(str, source[lineIndex+1]))}" if lineIndex < len(source) else "",
+                                    ))
+
+                        context_lineA = make_context(linesA)
+                        context_lineB = make_context(linesB)
+
+                        raise AssertionError(e.args[0] + "\n" + "\n\n".join((context_lineA, context_lineB)))
                 else:
                     self.assertEquals(segmentA, segmentB)
 
@@ -203,7 +216,7 @@ class XPlaneTestCase(unittest.TestCase):
             fileOutput:str,
             fixturePath:str,
             filterCallback:Optional[FilterLinesCallback] = None,
-            floatTolerance:Optional[float] = None) -> None:
+            floatTolerance:float = FLOAT_TOLERANCE) -> None:
         """
         Compares the output of XPlaneFile.write (a \n separated str) to a fixture on disk.
 
@@ -220,7 +233,7 @@ class XPlaneTestCase(unittest.TestCase):
             tmpPath:str,
             fixturePath:str,
             filterCallback: Optional[FilterLinesCallback] = None,
-            floatTolerance: Optional[float] = None):
+            floatTolerance: float = FLOAT_TOLERANCE):
         tmpFile = open(tmpPath, 'r')
         tmpOutput = tmpFile.read()
         tmpFile.close()
@@ -232,8 +245,13 @@ class XPlaneTestCase(unittest.TestCase):
         Asserts the logger has some number of errors, then clears the logger
         of all messages
         """
-        self.assertEqual(len(logger.findErrors()), expected_logger_errors)
-        logger.clearMessages()
+        try:
+            found_errors = len(logger.findErrors())
+            self.assertEqual(found_errors, expected_logger_errors)
+        except AssertionError as e:
+            raise AssertionError(f"Expected {expected_logger_errors} errors, got {found_errors}")
+        else:
+            logger.clearMessages()
 
     #TODO: Must filter warnings to have this be useful
     # Method: assertLoggerWarnings
@@ -249,7 +267,7 @@ class XPlaneTestCase(unittest.TestCase):
             fixturePath:str,
             tmpFilename:Optional[str] = None,
             filterCallback:Optional[FilterLinesCallback] = None,
-            floatTolerance:Optional[float] = None)->None:
+            floatTolerance:float = FLOAT_TOLERANCE)->None:
         """
         DEPRECATED: New unit tests should not use this!
 
@@ -267,7 +285,7 @@ class XPlaneTestCase(unittest.TestCase):
             fixturePath: str = None,
             tmpFilename: Optional[str] = None,
             filterCallback:Optional[FilterLinesCallback] = None,
-            floatTolerance: Optional[float] = None):
+            floatTolerance: float = FLOAT_TOLERANCE):
         """
         Exports only a specific exportable root and compares the output
         to a fixutre.
@@ -282,7 +300,7 @@ class XPlaneTestCase(unittest.TestCase):
     def assertAttributesEqualDict(self,
                                   attrs:List[str],
                                   d:Dict[str, Any],
-                                  floatTolerance:Optional[float] = None):
+                                  floatTolerance:float = FLOAT_TOLERANCE):
         self.assertEquals(len(d), len(attrs), 'Attribute lists have different length')
 
         for name in attrs:
@@ -325,6 +343,7 @@ class XPlaneTestCase(unittest.TestCase):
         If root_object is an str, matching collections are looked up first.
         If you don't want an ambiguity of root objects, don't use the name twice
         """
+        assert isinstance(root_object, (bpy.types.Collection, bpy.types.Object, str)), f"root_object type ({type(root_object)}) isn't allowed, must be Collection, Object, or str"
         if isinstance(root_object, str):
             try:
                 root_object = bpy.data.collections[root_object]
@@ -343,19 +362,6 @@ class XPlaneTestCase(unittest.TestCase):
 
         return out
 
-    def exportXPlaneFileFromLayerIndex(self,layer):
-        #COPY-PASTA WARNING from xplane_file: 65-75
-        # What we need is an xplaneFile in the data model and interrupt
-        # the export before the xplane_file gets deleted when going out of scope
-        xplaneLayer = xplane_file.getXPlaneLayerForBlenderLayerIndex(layer)
-
-        assert xplaneLayer is not None
-        xplaneFile = xplane_file.XPlaneFile(xplane_file.getFilenameFromXPlaneLayer(xplaneLayer), xplaneLayer)
-
-        assert xplaneFile is not None
-        xplaneFile.collectFromBlenderLayerIndex(layer)
-
-        return xplaneFile
 
 class XPlaneAnimationTestCase(XPlaneTestCase):
     def setUp(self):

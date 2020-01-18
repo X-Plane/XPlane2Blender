@@ -12,13 +12,14 @@ def clean_tmp_folder():
     # create temp dir if not exists
     os.makedirs('./tests/tmp', exist_ok=True)
 
-    # Thanks Iker Jimenez for something short,
-    # https://stackoverflow.com/a/1073382
-    for root, dirs, files in os.walk('./test/tmp'):
-        for f in files:
-            os.unlink(os.path.join(root, f))
-        for d in dirs:
-            shutil.rmtree(os.path.join(root, d))
+    # Thanks jgoeders for something short,
+    # https://stackoverflow.com/a/6615332
+    for file_object in os.listdir("./tests/tmp"):
+        file_object_path = os.path.join("./tests/tmp", file_object)
+        if os.path.isfile(file_object_path) or os.path.islink(file_object_path):
+            os.unlink(file_object_path)
+        else:
+            shutil.rmtree(file_object_path)
 
 
 def _make_argparse():

@@ -46,7 +46,7 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]
     return xplane_files
 
 
-def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->Optional["XPlaneFile"]:
+def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->"XPlaneFile":
     nested_errors: Set[str] = set()
     def log_nested_roots(exportable_roots: List[PotentialRoot]):
         err = "Exportable Roots cannot be nested, make '{}' a regular {} or ensure it is not in an exportable collection and none of its parents are exportable objects"
