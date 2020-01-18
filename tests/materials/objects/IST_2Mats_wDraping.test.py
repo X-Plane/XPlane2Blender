@@ -11,11 +11,10 @@ __dirname__ = os.path.dirname(__file__)
 class TestIST_2Mats_wDraping(XPlaneTestCase):
     def test_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and \
-                   (line[0].find('TEXTURE') == 0 or \
-                   line[0].find('ATTR_') == 0 or \
-                   line[0].find('GLOBAL') == 0 or \
-                   line[0].find('SPECULAR'))
+            return (isinstance(line[0], str)
+                    and ('ATTR_' in line[0]
+                         or 'GLOBAL' in line[0]
+                         or 'SPECULAR' in line[0]))
 
         filename = 'test_IST_2Mats_wDraping'
 

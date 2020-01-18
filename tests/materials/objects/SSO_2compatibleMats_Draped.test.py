@@ -10,8 +10,7 @@ __dirname__ = os.path.dirname(__file__)
 class TestSSO_2compatibleMats_Draped(XPlaneTestCase):
     def test_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and \
-                   (line[0].find('TEXTURE') == 0 or line[0].find('ATTR_') == 0)
+            return isinstance(line[0], str) and ("ATTR_" in line[0])
 
         filename = 'test_SSO_2compatibleMats_Draped'
 
