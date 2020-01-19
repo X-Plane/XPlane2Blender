@@ -68,6 +68,6 @@ class TestCommandsTxtParser(XPlaneTestCase):
         self.assertIsInstance(result, list)
         # Anytime we update Commands.txt we'll update this number.
         # A little annoying? Sure, but we'll get it exactly right
-        self.assertEqual(len(result), 1963, msg="Did you remember to change this hardcoded number after updating the file?")
+        self.assertEqual(len(result), 2214, msg="Did you remember to change this hardcoded number after updating the file?")
 
 runTestCases([TestCommandsTxtParser])

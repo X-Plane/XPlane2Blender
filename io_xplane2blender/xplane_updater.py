@@ -280,7 +280,9 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                         continue
                     else:
                         coll.name = collection_new_name
-                        coll.xplane.is_exportable_collection = not coll.hide_render
+                        coll.xplane.is_exportable_collection = not coll.hide_viewport
+                        bpy.context.view_layer.layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
+                        coll.hide_viewport = False
                         break
                 else: # no break, no matching collection found
                     nondefaults = xplane_updater_helpers.check_property_group_has_non_default(layer)
