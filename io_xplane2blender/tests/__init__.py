@@ -116,12 +116,18 @@ class XPlaneTestCase(unittest.TestCase):
         without comments or 0 length strings. All numeric parts are converted
         '''
         lines = [] # type: List[Union[float,str]]
+        def tryToFloat(part:str)->Union[float, str]:
+            try:
+                return float(part)
+            except (TypeError, ValueError):
+                return part
+
         for line in filter(lambda l: len(l) > 0 and l[0] != '#', data.split('\n')):
             if '#' in line:
                 line = line[0:line.index('#')]
             line = line.strip()
             if line:
-                lines.append(tuple(map(lambda part: float(part) if part.isnumeric() else part, line.split())))
+                lines.append(tuple(map(tryToFloat, line.split())))
 
         return lines
 
@@ -135,7 +141,7 @@ class XPlaneTestCase(unittest.TestCase):
         from open(file).read()
         '''
         def isnumber(d):
-            return isinstance(d, float) or isinstance(d, int)
+            return isinstance(d, (float, int))
 
         linesA = self.parseFileToLines(a)
         linesB = self.parseFileToLines(b)
@@ -157,41 +163,34 @@ class XPlaneTestCase(unittest.TestCase):
                         for l in only_in)
             nl = "\n"
             raise AssertionError(
-                f"length of filtered lines unequal: "
+                f"Length of filtered parsed lines unequal: "
                 f"{e.args[0]}\n{diff}\n"
-            )
+            ) from None
 
-        for lineIndex in range(0, len(linesA)):
-            lineA = linesA[lineIndex]
-            lineB = linesB[lineIndex]
+        for lineIndex, (lineA, lineB) in enumerate(zip(linesA, linesB)):
 
-            #print(f"lineA:{lineA}, lineB:{lineB}")
-            # ensure same number of line segments
             try:
+                #print(f"lineA:{lineA}, lineB:{lineB}")
                 self.assertEquals(len(lineA), len(lineB))
             except AssertionError as e:
                 raise AssertionError(
                         f"Number of line components unequal: {e.args[0]}\n"
                         f"{lineIndex}> {lineA} ({len(lineA)})"
                         f"{lineIndex}> {lineB} ({len(lineB)})"
-                    )
+                    ) from None
 
 
             for linePos in range(0, len(lineA)):
                 segmentA = lineA[linePos]
                 segmentB = lineB[linePos]
 
-                # convert numeric strings
-                def isdegree(segment,line):
-                    if isnumber(segment):
-                        return not isnumber(line) and ("rotate" in line or "manip_keyframe" in line) and isnumber(segment)
-                    else:
-                        return False
-
                 # assure same values (floats must be compared with tolerance)
                 if isnumber(segmentA) and isnumber(segmentB):
-                    segmentA = abs(segmentA) if isdegree(segmentA,lineA[0]) else segmentA
-                    segmentB = abs(segmentB) if isdegree(segmentB,lineB[0]) else segmentB
+                    #TODO: This is too simple! This will make call abs on the <value> AND <angle> in ANIM_rotate_key
+                    # which are not semantically the same!
+                    # Also not covered are PHI, PSI, and THETA!
+                    segmentA = abs(segmentA) if "rotate" in lineA[0] or "manip_keyframe" in lineA[0] else segmentA
+                    segmentB = abs(segmentB) if "rotate" in lineB[0] or "manip_keyframe" in lineB[0] else segmentB
                     try:
                         self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
                     except AssertionError as e:
@@ -200,14 +199,14 @@ class XPlaneTestCase(unittest.TestCase):
                             return "\n".join((
                                     f"{lineIndex - 1}: {' '.join(map(str, source[lineIndex-1]))}" if lineIndex > 0 else "",
                                     current_line,
-                                    "^".rjust(len(" ".join(lineA[:linePos])) + 5, " "), # + 3 for the line number, + 2 for the space afterwards
+                                    "?" + "^".rjust(len(" ".join(map(str,lineA[:linePos]))) + 4, " "), # + 3 for the line number, + 2 for the space afterwards
                                     f"{lineIndex + 1}: {' '.join(map(str, source[lineIndex+1]))}" if lineIndex < len(source) else "",
                                     ))
 
                         context_lineA = make_context(linesA)
                         context_lineB = make_context(linesB)
 
-                        raise AssertionError(e.args[0] + "\n" + "\n\n".join((context_lineA, context_lineB)))
+                        raise AssertionError(e.args[0] + "\n" + "\n\n".join((context_lineA, context_lineB))) from None
                 else:
                     self.assertEquals(segmentA, segmentB)
 
@@ -249,7 +248,7 @@ class XPlaneTestCase(unittest.TestCase):
             found_errors = len(logger.findErrors())
             self.assertEqual(found_errors, expected_logger_errors)
         except AssertionError as e:
-            raise AssertionError(f"Expected {expected_logger_errors} errors, got {found_errors}")
+            raise AssertionError(f"Expected {expected_logger_errors} logger errors, got {found_errors}") from None
         else:
             logger.clearMessages()
 
