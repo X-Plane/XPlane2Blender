@@ -194,7 +194,7 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
         A = create_datablock_empty(DatablockInfo("EMPTY", name="bone_nn", collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH", name="bone_n", parent_info=ParentInfo(A), collection="Layer 1"))
         set_manipulator_settings(B,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
-        bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
+        #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 

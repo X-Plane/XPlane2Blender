@@ -27,8 +27,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE", name="bone_r"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS,A)
         set_animation_data(B,T_2_FRAMES_1_X)
@@ -44,9 +44,9 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
-        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(B,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",collection="Layer 1"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(B,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,T_2_FRAMES_1_X)
@@ -62,10 +62,10 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
-        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE")))
-        C = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",parent_info=ParentInfo(B,parent_type="ARMATURE")))
-        D = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",        parent_info=ParentInfo(C,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",collection="Layer 1"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
+        C = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",parent_info=ParentInfo(B,parent_type="ARMATURE"),collection="Layer 1"))
+        D = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",        parent_info=ParentInfo(C,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(D,T_2_FRAMES_1_X)
@@ -81,10 +81,10 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
-        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE")))
-        C = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE")))
-        D = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(C,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",collection="Layer 1"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
+        C = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE"),collection="Layer 1"))
+        D = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(C,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(C,T_2_FRAMES_1_X)
@@ -100,9 +100,9 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
-        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE")))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",collection="Layer 1"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
@@ -118,9 +118,9 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
-        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_sh",parent_info=ParentInfo(A,parent_type="ARMATURE")))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",collection="Layer 1"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_sh",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,SHOW_ANIM_S)
@@ -139,8 +139,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,T_2_FRAMES_1_X)
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
@@ -156,8 +156,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
 
@@ -172,8 +172,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
 
@@ -188,7 +188,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_r"))
+        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
 
@@ -203,8 +203,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,T_2_FRAMES_1_X)
 
@@ -219,8 +219,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_n",collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(B,T_2_FRAMES_1_X)
 
@@ -235,7 +235,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_t"))
+        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",collection="Layer 1"))
 
         set_animation_data(A,T_2_FRAMES_1_X)
 
@@ -250,7 +250,7 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_n"))
+        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",collection="Layer 1"))
         set_manipulator_settings(A,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
@@ -262,8 +262,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_s"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_s",collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,SHOW_ANIM_S)
         set_animation_data(A,SHOW_ANIM_H)
@@ -279,8 +279,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_rt",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_rt",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
@@ -297,8 +297,8 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_rt"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_rt",collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(A,T_2_FRAMES_1_X)
@@ -315,9 +315,9 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
-        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B)))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",collection="Layer 1"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(B),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,T_2_FRAMES_1_X)
@@ -334,9 +334,9 @@ class TestBoneConfigurationsDragRotateDetentArm(XPlaneTestCase):
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
 
-        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r"))
-        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE")))
-        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(B,parent_type="ARMATURE")))
+        A = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_r",collection="Layer 1"))
+        B = create_datablock_armature(DatablockInfo("ARMATURE",name="bone_t",parent_info=ParentInfo(A,parent_type="ARMATURE"),collection="Layer 1"))
+        C = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(B,parent_type="ARMATURE"),collection="Layer 1"))
 
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(B,T_2_FRAMES_1_X)

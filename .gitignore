@@ -24,3 +24,5 @@ builds/*
 *.sln
 
 io_xplane2blender_build/*
+
+tests/object/config_blends/*

@@ -265,27 +265,29 @@ def create_bone(armature:bpy.types.Object,bone_info:BoneInfo)->str:
     return final_name
 
 
-def create_datablock_collection(name:str, scene:Optional[Union[str, bpy.types.Scene]]=None)->bpy.types.Collection:
+def create_datablock_collection(name:str, scene:Optional[Union[str, bpy.types.Scene]]=None, parent:Optional[Union[bpy.types.Collection, str]]=None)->bpy.types.Collection:
     """
-    If not already existing, creates a collection with the name 'name',
-    linked to a specific scene, or the current scene if not provided.
+    If already existing, return it. If not, creates a collection
+    with the name provided. It can be linked to a scene and a parent
+    other that that scene's Master Collection. (Parent must be in scene as well.)
 
-    Returns said collection.
-
-    If collection already exists, no new collection is created.
+    Otherwise, the context's scene and Master Collection is used for linking.
     """
     try:
-        coll = bpy.data.collections[name]
-    except KeyError:
-        coll = bpy.data.collections.new(name)
-    try:
-        scene = bpy.data.scenes[scene]
+        coll:bpy.types.Collection = bpy.data.collections[name]
     except (KeyError, TypeError):
-        if not scene:
-            scene = bpy.context.scene
+        coll:bpy.types.Collection = bpy.data.collections.new(name)
+    try:
+        scene:bpy.types.Scene = bpy.data.scenes[scene]
+    except (KeyError, TypeError): # scene is str and not found or is None
+        scene:bpy.types.Scene = bpy.context.scene
+    try:
+        parent:bpy.types.Collection = bpy.data.collections[parent]
+    except (KeyError, TypeError): # parent is str and not found or is Collection
+        parent:bpy.types.Collection = scene.collection
 
-    if coll.name not in scene.collection.children:
-        scene.collection.children.link(coll)
+    if coll.name not in parent.children:
+        parent.children.link(coll)
 
     return coll
 
@@ -355,7 +357,7 @@ def create_datablock_armature(info:DatablockInfo,extra_bones:Optional[Union[List
 
 def create_datablock_empty(
         info: DatablockInfo,
-        scene: Optional[Union[bpy.types.Scene, str]] = None
+        scene: Optional[Union[bpy.types.Scene, str]] = None,
     ) -> bpy.types.Object:
     """
     Creates a datablock empty and links it to a scene and collection.
@@ -363,6 +365,10 @@ def create_datablock_empty(
     """
     assert info.datablock_type == "EMPTY"
     ob = bpy.data.objects.new(info.name, object_data=None)
+    try:
+        scene = bpy.data.scenes[scene]
+    except (KeyError, TypeError):
+        scene = bpy.context.scene
     set_collection(ob, info.collection)
 
     ob.empty_display_type = 'PLAIN_AXES'
@@ -608,17 +614,24 @@ def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.
             bpy.ops.bone.add_xplane_dataref_keyframe(index=dataref_index)
         else:
             bpy.context.view_layer.objects.active = blender_struct
-            bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
+            bpy.ops.object.add_xplane_dataref_keyframe({"object":blender_struct}, index=dataref_index)
 
 
 def set_collection(blender_object:bpy.types.Object, collection:Union[bpy.types.Collection, str])->None:
-    assert isinstance(blender_object,(bpy.types.Collection, bpy.types.Object)), "collection was of type " + str(type(blender_object))
+    """
+    Links a datablock in collection. If collection is a string and does not exist, one will be made.
 
-    if isinstance(collection, str):
-        collection = bpy.data.collections[collection]
+    Remember to unlink blender_objects from other collections by hand if needed
+    """
+    assert isinstance(blender_object,(bpy.types.Object)), "collection was of type " + str(type(blender_object))
 
-    if blender_object.name not in collection.objects:
-        collection.objects.link(blender_object)
+    if isinstance(collection, bpy.types.Collection):
+        coll = collection
+    else:
+        coll = create_datablock_collection(collection)
+
+    if blender_object.name not in coll.objects:
+        coll.objects.link(blender_object)
 
 
 def set_manipulator_settings(object_datablock:bpy.types.Object,
@@ -665,19 +678,14 @@ def set_material(blender_object:bpy.types.Object,
                  material_props:Optional[Dict[str,Any]]=None,
                  create_missing:bool=True):
 
+    mat = create_material(material_name)
     try:
-        if len(blender_object.material_slots) == 0:
-            bpy.ops.object.mode_set(mode='OBJECT')
-            blender_object.data.materials.append(None)
-    except:
-        return
-    finally:
-        mat = create_material(material_name)
         blender_object.material_slots[0].material = mat
-
-        if material_props:
-            for prop,value in material_props.items():
-                setattr(mat.xplane.manip,prop,value)
+    except IndexError:
+        blender_object.data.materials.append(mat)
+    if material_props:
+        for prop,value in material_props.items():
+            setattr(mat.xplane.manip,prop,value)
 
 
 def set_parent(blender_object:bpy.types.Object,parent_info:ParentInfo)->None:
@@ -747,11 +755,11 @@ def create_initial_test_setup():
 
     # Create text file
     header_str = "Unit Test Overview"
-    if bpy.data.texts.find(header_str) == -1:
-        unit_test_overview = bpy.data.texts.new(header_str)
-    else:
+    try:
         unit_test_overview = bpy.data.texts[header_str]
-
-    unit_test_overview.write(header_str + '\n\n')
+    except KeyError:
+        unit_test_overview = bpy.data.texts.new(header_str)
+    finally:
+        unit_test_overview.write(header_str + '\n\n')
 
     #bpy.ops.console.insert(text="bpy.ops.export.xplane_obj()")
