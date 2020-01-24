@@ -8,8 +8,8 @@ __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
     return isinstance(line[0],str) and line[0].find("EXPORT") == 0
-    
-class TestExportPathCustomScen_1(XPlaneTestCase):
+
+class TestExportPathCustomScene_1(XPlaneTestCase):
     def test_find_custom_scenery(self):
            self.assertLayerExportEqualsFixture(
                0,
@@ -17,4 +17,4 @@ class TestExportPathCustomScen_1(XPlaneTestCase):
                                              "honda_1",
                filterLines)
 
-runTestCases([TestExportPathCustomScen_1])
+runTestCases([TestExportPathCustomScene_1])

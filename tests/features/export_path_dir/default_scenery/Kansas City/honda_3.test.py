@@ -8,8 +8,8 @@ __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
     return isinstance(line[0],str) and line[0].find("EXPORT") == 0
-    
-class TestExportPathCustomScen_3(XPlaneTestCase):
+
+class TestExportPathCustomScene_3(XPlaneTestCase):
     def test_no_second_folder_works(self):
            self.assertLayerExportEqualsFixture(
                0,
@@ -17,4 +17,4 @@ class TestExportPathCustomScen_3(XPlaneTestCase):
                                              "honda_3",
                filterLines)
 
-runTestCases([TestExportPathCustomScen_3])
+runTestCases([TestExportPathCustomScene_3])
