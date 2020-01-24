@@ -197,10 +197,15 @@ class XPlaneTestCase(unittest.TestCase):
                     except AssertionError as e:
                         def make_context(source, segment)->str:
                             current_line = f"{lineIndex}> {' '.join(map(str, source[lineIndex]))}"
-                            # Makes something like "?     ^~~~"
+                            # Makes something like
+                            #480> ATTR_ -0.45643 1.0 sim/test1
+                            #?          ^~~~~~~~
+                            #480> ATTR_ -1.0 1.0 sim/test1
+                            #?          ^~~~
                             question_line = (
                                 "?"
-                                 + "^".rjust(len(" ".join(map(str,lineA[:linePos]))) + 4, " ")
+                                 + " "*(len(str(lineIndex)) + 3)
+                                 + "^".rjust(len(" ".join(map(str,lineA[:linePos]))), " ")
                                  + "~"*(len(str(segment))-1)
                             )
 

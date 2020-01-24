@@ -282,7 +282,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                         coll.name = collection_new_name
                         # 0 used to mean "layers" (default), 1 used to mean "root_objects"
                         coll.xplane.is_exportable_collection = not coll.hide_viewport if scene.xplane.get("exportMode", 0) == 0 else False
-                        bpy.context.view_layer.layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
+                        scene.view_layers[0].layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
                         coll.hide_viewport = False
                         break
                 else: # no break, no matching collection found
@@ -292,7 +292,6 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                         scene.collection.children.link(coll)
                     else:
                         continue
-
                 xplane_updater_helpers.copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
         #----------------------------------------------------------------------
 

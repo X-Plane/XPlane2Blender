@@ -191,8 +191,8 @@ class TestLayersToCollections(XPlaneTestCase):
                 {"export_path": "export_path_directive_2"}
             ],
             "customAttributes": [
-                {"name": "name1", "value": "value1"},
-                {"name": "name2", "value": "value2"}
+                {"name": "name1", "value": "value1", "reset": "", "weight": 0},
+                {"name": "name2", "value": "value2", "reset": "", "weight": 0}
             ]
         })
         self.assertXPlaneLayerEqual(layer_first, d)
