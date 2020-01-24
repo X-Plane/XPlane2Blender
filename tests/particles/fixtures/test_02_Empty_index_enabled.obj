@@ -6,11 +6,11 @@ PARTICLE_SYSTEM	fake.pss
 POINT_COUNTS	0	0	0	0
 
 # 0 ROOT
-# 1 Empty: 02_Empty_index_enabled_99
-# EMPTY: 02_Empty_index_enabled_99	weight: 0
-EMITTER fake_enabled 0 0 0 0 0 0 99
-# 1 Empty: 02_Empty_index_enabled_0
-# EMPTY: 02_Empty_index_enabled_0	weight: 0
-EMITTER fake_enabled 0 0 0 0 0 0 0
+	# 1 Empty: 02_Empty_index_enabled_0
+	# EMPTY: 02_Empty_index_enabled_0	weight: 0
+	EMITTER fake_enabled 0 0 0 0 0 0 0
+	# 1 Empty: 02_Empty_index_enabled_99
+	# EMPTY: 02_Empty_index_enabled_99	weight: 0
+	EMITTER fake_enabled 0 0 0 0 0 0 99
 
-# Build with Blender 2.78 (sub 0) (build b'e92f235283'). Exported with XPlane2Blender 3.5.0-dev.0+32.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+68.NO_BUILD_NUMBR

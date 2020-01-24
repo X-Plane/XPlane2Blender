@@ -280,7 +280,8 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                         continue
                     else:
                         coll.name = collection_new_name
-                        coll.xplane.is_exportable_collection = not coll.hide_viewport
+                        # 0 used to mean "layers" (default), 1 used to mean "root_objects"
+                        coll.xplane.is_exportable_collection = not coll.hide_viewport if scene.xplane.get("exportMode", 0) == 0 else False
                         bpy.context.view_layer.layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
                         coll.hide_viewport = False
                         break

@@ -157,18 +157,19 @@ class XPlaneTestCase(unittest.TestCase):
         except AssertionError as e:
             only_in_a = (set(linesA) - set(linesB))
             only_in_b = (set(linesB) - set(linesA))
-            only_in = (only_in_a if len(only_in_a) < len(only_in_b) else only_in_b)
-            diff = "\n".join(
+            diff = ">" + "\n>".join(
                         " ".join(map(str,l))
-                        for l in only_in)
-            nl = "\n"
+                        for l in (only_in_a if len(only_in_a) > len(only_in_b) else only_in_b))
+            diff += "\n\n>" + "\n>".join(
+                        " ".join(map(str,l))
+                        for l in (only_in_a if len(only_in_a) < len(only_in_b) else only_in_b))
+
             raise AssertionError(
                 f"Length of filtered parsed lines unequal: "
                 f"{e.args[0]}\n{diff}\n"
             ) from None
 
         for lineIndex, (lineA, lineB) in enumerate(zip(linesA, linesB)):
-
             try:
                 #print(f"lineA:{lineA}, lineB:{lineB}")
                 self.assertEquals(len(lineA), len(lineB))
@@ -194,17 +195,24 @@ class XPlaneTestCase(unittest.TestCase):
                     try:
                         self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
                     except AssertionError as e:
-                        def make_context(source)->str:
+                        def make_context(source, segment)->str:
                             current_line = f"{lineIndex}> {' '.join(map(str, source[lineIndex]))}"
+                            # Makes something like "?     ^~~~"
+                            question_line = (
+                                "?"
+                                 + "^".rjust(len(" ".join(map(str,lineA[:linePos]))) + 4, " ")
+                                 + "~"*(len(str(segment))-1)
+                            )
+
                             return "\n".join((
                                     f"{lineIndex - 1}: {' '.join(map(str, source[lineIndex-1]))}" if lineIndex > 0 else "",
                                     current_line,
-                                    "?" + "^".rjust(len(" ".join(map(str,lineA[:linePos]))) + 4, " "), # + 3 for the line number, + 2 for the space afterwards
+                                    question_line,
                                     f"{lineIndex + 1}: {' '.join(map(str, source[lineIndex+1]))}" if lineIndex < len(source) else "",
                                     ))
 
-                        context_lineA = make_context(linesA)
-                        context_lineB = make_context(linesB)
+                        context_lineA = make_context(linesA, segmentA)
+                        context_lineB = make_context(linesB, segmentB)
 
                         raise AssertionError(e.args[0] + "\n" + "\n\n".join((context_lineA, context_lineB))) from None
                 else:
