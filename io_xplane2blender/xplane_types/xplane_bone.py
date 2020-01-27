@@ -81,31 +81,6 @@ class XPlaneBone():
                 self.xplaneObject.effective_buckets = find_parent_buckets(self.parent)
 
         if self.parent:
-            #TODO: It seems to me that in the bone structure is getting reversed
-            # Is this because of how collectBonesFromBlenderObjects/Bones gets called swapped back
-            """
-Final Root Bone (2.79)
-0 Empty: RootObject
-        1 Armature: Armature
-                ...
-                2 Bone: Bone2
-                        3 Mesh: CubeParentByBone2
-                        3 Bone: Bone3
-                                ...
-                2 Mesh: CubeParentByArmatureObject
-                2 Mesh: CubeParentByDatablock
-
-Final Root Bone (2.80)
-0 Empty: RootObject
-        1 Armature: Armature
-                ...
-                2 Bone: Bone2
-                        3 Bone: Bone3
-                                ....
-                        3 Mesh: CubeParentByBone2
-                2 Mesh: CubeParentByArmatureObject
-                2 Mesh: CubeParentByDatablock
-                """
             self.parent.children.append(self)
 
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
