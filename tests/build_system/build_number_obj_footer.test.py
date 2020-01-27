@@ -15,10 +15,10 @@ class TestBlendBuildNumberObjFooter(XPlaneTestCase):
         out = self.exportLayer(0)
 
         version_match = re.search("Exported with XPlane2Blender (.*)", out)
-        self.assertTrue(version_match is not None, "Version string not found in footer of obj")
+        self.assertIsNotNone(version_match, "Version string not found in footer of obj")
 
         version = VerStruct.parse_version(version_match.group(1))
-        self.assertTrue(version is not None, "%s could not be parsed to a valid VerStruct" % version_match.group(1))
-        self.assertTrue(version == xplane_helpers.VerStruct.current(),"Version in obj is not equal to current version")
+        self.assertIsNotNone(version, "%s could not be parsed to a valid VerStruct" % version_match.group(1))
+        self.assertEqual(version, xplane_helpers.VerStruct.current(),"Version in obj is not equal to current version")
 
 runTestCases([TestBlendBuildNumberObjFooter])

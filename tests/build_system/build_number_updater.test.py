@@ -11,7 +11,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestBuildNumberUpdater(XPlaneTestCase):
     @classmethod
-    def run_update_cycle(self,filename,to_parse):
+    def run_update_cycle(self,filename:str,to_parse:str):
         original_path = os.path.normpath(os.path.join(__dirname__,"originals", filename))
         copy_path = os.path.normpath(os.path.join(__dirname__,"..","tmp", filename))
         if os.path.isfile(copy_path) is False:
@@ -25,7 +25,7 @@ class TestBuildNumberUpdater(XPlaneTestCase):
 
             history = bpy.context.scene.xplane.xplane2blender_ver_history
             self.assertTrue(len(history) == 2,
-                            'xplane2blender_ver_history is %d long, not 2' % (len(history)))
+                            'xplane2blender_ver_history is %d long == not 2' % (len(history)))
 
             self.assertTrue(history[0].make_struct() == VerStruct.parse_version(to_parse),
                             'First entry in history %s is wrong or not the legacy string' % str(history[0]))
@@ -42,7 +42,7 @@ class TestBuildNumberUpdater(XPlaneTestCase):
         to_parse=".".join(addon_version)
         self.run_update_cycle(filename,"3.20.0")
         self.run_update_cycle(filename,"3.20.0")
-            
+
     def test_update_from_3_3_13(self):
         addon_version = ('3','3','13')
         filename="v" + "_".join(addon_version) + ".blend"
@@ -55,7 +55,7 @@ class TestBuildNumberUpdater(XPlaneTestCase):
         to_parse="3.4.0-beta.4+1.NO_BUILD_NUMBR"
         self.run_update_cycle(filename,to_parse)
         self.run_update_cycle(filename,to_parse)
-    
+
     def test_update_from_new_file(self):
         # To make the test stable we need to remove any existing startup file
         # to force it to use a pure factory default startup file.
@@ -65,21 +65,21 @@ class TestBuildNumberUpdater(XPlaneTestCase):
         except Exception as e:
             print(e)
             return
-        
+
         try:
             bpy.ops.wm.read_homefile()
             blend_path = os.path.join(__dirname__,"..","tmp","build_number_new_save_test.blend")
             bpy.ops.wm.save_mainfile(filepath=blend_path, check_existing=False)
             bpy.ops.wm.open_mainfile(filepath=blend_path)
 
-            self.assertTrue(bpy.context.scene['xplane2blender_version'] == xplane_constants.DEPRECATED_XP2B_VER,
+            self.assertEqual(bpy.context.scene['xplane2blender_version'], xplane_constants.DEPRECATED_XP2B_VER,
                              "scene['xplane2blender_version'] was not deprecated on load")
 
             history = bpy.context.scene.xplane.xplane2blender_ver_history
-            self.assertTrue(len(history) == 1,
+            self.assertEqual(len(history), 1,
                             'xplane2blender_ver_history is %d long, not 1' % (len(history)))
 
-            self.assertTrue(history[0].make_struct() == xplane_helpers.VerStruct.current(),
+            self.assertEqual(history[0].make_struct(), xplane_helpers.VerStruct.current(),
                             'Second entry in history %s is not current' % str(history[0]))
         finally:
             os.rename(start_up_filepath+"_backup", start_up_filepath)
@@ -87,7 +87,7 @@ class TestBuildNumberUpdater(XPlaneTestCase):
     def test_update_legacy_build_number_w_history(self):
         blend_path = os.path.join(__dirname__,"originals","legacy_build_number_w_history.blend")
         bpy.ops.wm.open_mainfile(filepath=blend_path)
-        
-        self.assertTrue(bpy.data.objects[0].xplane.datarefs[0].anim_type == xplane_constants.ANIM_TYPE_SHOW, "Updater ran again on file with version history or original file was changed")
+
+        self.assertEqual(bpy.data.objects[0].xplane.datarefs[0].anim_type, xplane_constants.ANIM_TYPE_SHOW, "Updater ran again on file with version history or original file was changed")
 
 runTestCases([TestBuildNumberUpdater])

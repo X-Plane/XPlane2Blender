@@ -13,7 +13,7 @@ class TestParamLightParams(XPlaneTestCase):
     def test_comment_correct(self):
         xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
         light = xplaneFile._bl_obj_name_to_bone["4_comment_contents_preserved_exactly"].xplaneObject
-        self.assertTrue(light.comment == "0 spaces, number starts comment with uneven and a   trailing  space ")
+        self.assertEqual(light.comment, "0 spaces, number starts comment with uneven and a   trailing  space ")
 
     def test_illegal_params_content(self):
         out = self.exportLayer(1)

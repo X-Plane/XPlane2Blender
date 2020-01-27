@@ -15,11 +15,10 @@ class TestInPlaceUpdate(XPlaneTestCase):
 
         filename = inspect.stack()[0][3]
         obj = bpy.data.objects[filename.replace("test_","")]
-        self.assertTrue(obj.xplane.datarefs[0].anim_type == xplane_constants.ANIM_TYPE_TRANSFORM)
-        self.assertTrue(obj.xplane.datarefs[1].anim_type == xplane_constants.ANIM_TYPE_TRANSFORM)
-        self.assertTrue(obj.xplane.datarefs[2].anim_type == xplane_constants.ANIM_TYPE_TRANSFORM)
-        self.assertTrue(obj.xplane.datarefs[3].anim_type == xplane_constants.ANIM_TYPE_SHOW)
-        self.assertTrue(obj.xplane.datarefs[4].anim_type == xplane_constants.ANIM_TYPE_HIDE)
+        self.assertEqual(obj.xplane.datarefs[0].anim_type, xplane_constants.ANIM_TYPE_TRANSFORM)
+        self.assertEqual(obj.xplane.datarefs[1].anim_type, xplane_constants.ANIM_TYPE_TRANSFORM)
+        self.assertEqual(obj.xplane.datarefs[2].anim_type, xplane_constants.ANIM_TYPE_TRANSFORM)
+        self.assertEqual(obj.xplane.datarefs[3].anim_type, xplane_constants.ANIM_TYPE_SHOW)
+        self.assertEqual(obj.xplane.datarefs[4].anim_type, xplane_constants.ANIM_TYPE_HIDE)
 
 runTestCases([TestInPlaceUpdate])
- 
