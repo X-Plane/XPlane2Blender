@@ -1,3 +1,4 @@
+import collections
 import os
 import shutil
 import sys
@@ -127,14 +128,17 @@ class XPlaneTestCase(unittest.TestCase):
                 line = line[0:line.index('#')]
             line = line.strip()
             if line:
-                lines.append(tuple(map(tryToFloat, line.split())))
+                if line.startswith("800"):
+                    lines.append(line.split())
+                else:
+                    lines.append(tuple(map(tryToFloat, line.split())))
 
         return lines
 
     def assertFilesEqual(self,
                          a: str,
                          b: str,
-                         filterCallback:Optional[FilterLinesCallback] = None,
+                         filterCallback:Union[FilterLinesCallback, List[str]],
                          floatTolerance:float = FLOAT_TOLERANCE):
         '''
         a and b should be the contents of files a and b as returned
@@ -147,7 +151,10 @@ class XPlaneTestCase(unittest.TestCase):
         linesB = self.parseFileToLines(b)
 
         # if a filter function is provided, additionally filter lines with it
-        if filterCallback:
+        if isinstance(filterCallback, collections.abc.Collection):
+            linesA = [line for line in linesA if any(directive in line[0] for directive in filterCallback)]
+            linesB = [line for line in linesB if any(directive in line[0] for directive in filterCallback)]
+        else:
             linesA = list(filter(filterCallback, linesA))
             linesB = list(filter(filterCallback, linesB))
 
@@ -181,10 +188,7 @@ class XPlaneTestCase(unittest.TestCase):
                     ) from None
 
 
-            for linePos in range(0, len(lineA)):
-                segmentA = lineA[linePos]
-                segmentB = lineB[linePos]
-
+            for linePos, (segmentA, segmentB) in enumerate(zip(lineA, lineB)):
                 # assure same values (floats must be compared with tolerance)
                 if isnumber(segmentA) and isnumber(segmentB):
                     #TODO: This is too simple! This will make call abs on the <value> AND <angle> in ANIM_rotate_key
@@ -227,7 +231,7 @@ class XPlaneTestCase(unittest.TestCase):
             self,
             fileOutput:str,
             fixturePath:str,
-            filterCallback:Optional[FilterLinesCallback] = None,
+            filterCallback:Optional[Union[FilterLinesCallback, List[str]]] = None,
             floatTolerance:float = FLOAT_TOLERANCE) -> None:
         """
         Compares the output of XPlaneFile.write (a \n separated str) to a fixture on disk.
@@ -235,6 +239,8 @@ class XPlaneTestCase(unittest.TestCase):
         A filterCallback ensures only matching lines are compared.
         Highly recommended, with as simple a function as possible to prevent fixture fragility.
         """
+        assert filterCallback, "This must be a filter call back or list of strings. The API is deprecated and I don't want to run find-and-replace all over it just yet"
+
         with open(fixturePath, "r") as fixtureFile:
             fixtureOutput = fixtureFile.read()
 
@@ -244,7 +250,7 @@ class XPlaneTestCase(unittest.TestCase):
             self,
             tmpPath:str,
             fixturePath:str,
-            filterCallback: Optional[FilterLinesCallback] = None,
+            filterCallback:Optional[Union[FilterLinesCallback, List[str]]] = None,
             floatTolerance: float = FLOAT_TOLERANCE):
         tmpFile = open(tmpPath, 'r')
         tmpOutput = tmpFile.read()
@@ -278,7 +284,7 @@ class XPlaneTestCase(unittest.TestCase):
             layer_number:int,
             fixturePath:str,
             tmpFilename:Optional[str] = None,
-            filterCallback:Optional[FilterLinesCallback] = None,
+            filterCallback:Optional[Union[FilterLinesCallback, List[str]]]=None,
             floatTolerance:float = FLOAT_TOLERANCE)->None:
         """
         DEPRECATED: New unit tests should not use this!
@@ -288,7 +294,7 @@ class XPlaneTestCase(unittest.TestCase):
         #if not ('-q' in sys.argv or '--quiet' in sys.argv):
             #print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
 
-        out = self.exportRootObject(bpy.data.collections[f"Layer {layer_number + 1}"], tmpFilename)
+        out = self.exportExportableRoot(bpy.data.collections[f"Layer {layer_number + 1}"], tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     #TODO: Rename assertExportableRootExportEqualsFixture
@@ -296,16 +302,16 @@ class XPlaneTestCase(unittest.TestCase):
             root_object:Union[bpy.types.Collection, bpy.types.Object, str],
             fixturePath: str = None,
             tmpFilename: Optional[str] = None,
-            filterCallback:Optional[FilterLinesCallback] = None,
+            filterCallback:Optional[Union[FilterLinesCallback, List[str]]]=None,
             floatTolerance: float = FLOAT_TOLERANCE):
         """
         Exports only a specific exportable root and compares the output
         to a fixutre.
 
-        If filterCallback is None, no filter (besides stripping comments)
+        If filterCallback is a List of string, those directives will be filtered
         will be used.
         """
-        out = self.exportRootObject(root_object, tmpFilename)
+        out = self.exportExportableRoot(root_object, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
     # asserts that an attributes object equals a dict
@@ -342,10 +348,9 @@ class XPlaneTestCase(unittest.TestCase):
         - layer_number starts at 0, as it used to access the scene.layers collection
         - dest is a filepath without the file extension .obj, written to the TMP_DIR if not None
         """
-        return self.exportRootObject(bpy.data.collections[f"Layer {layer_number + 1}"], dest)
+        return self.exportExportableRoot(bpy.data.collections[f"Layer {layer_number + 1}"], dest)
 
-    #TODO: Rename exportExportableRoot
-    def exportRootObject(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
+    def exportExportableRoot(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
         """
         Returns the result of calling xplaneFile.write(),
         where xplaneFile came from a root object (by name or Blender data).

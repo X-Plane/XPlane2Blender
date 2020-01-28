@@ -17,7 +17,7 @@ def filterLines(line:Tuple[str])->bool:
 
 class TestLodValidation(XPlaneTestCase):
     def _test_fail_case(self, name:str, num_errors:int=1):
-        out = self.exportRootObject(name[5:])
+        out = self.exportExportableRoot(name[5:])
         self.assertLoggerErrors(num_errors)
 
     def _test_passing_case(self, filename:str):
