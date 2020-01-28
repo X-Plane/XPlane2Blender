@@ -59,9 +59,9 @@ class XPlaneTestCase(unittest.TestCase):
     def assertObjectsInXPlaneFile(self, xplaneFile, objectNames):
         for name in objectNames:
             # TODO:  Remove/change
-            self.assertIsNotNone(xplaneFile.objects[name])
-            self.assertTrue(isinstance(xplaneFile.objects[name],xplane_primitive.XPlanePrimitive))
-            self.assertEquals(xplaneFile.objects[name].blenderObject, bpy.data.objects[name])
+            self.assertIsNotNone(xplaneFile._bl_obj_name_to_bone[name])
+            self.assertTrue(isinstance(xplaneFile._bl_obj_name_to_bone[name].xplaneObject,xplane_primitive.XPlanePrimitive))
+            self.assertEquals(xplaneFile._bl_obj_name_to_bone[name].blenderObject, bpy.data.objects[name])
 
     def assertXPlaneBoneTreeEqual(self, file_root_bone:xplane_bone.XPlaneBone, fixture_root_bone:xplane_bone.XPlaneBone)->None:
         """

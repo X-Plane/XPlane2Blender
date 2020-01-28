@@ -22,7 +22,27 @@ class TestCreateFromLayers(XPlaneTestCase):
             'Cube.003'
         ])
 
-        self.assertXplaneFileHasBoneTree(
+        def assertXplaneFileHasBoneTree(self, xplaneFile, tree):
+            self.assertIsNotNone(xplaneFile.rootBone)
+
+            bones = []
+
+            def collect(bone):
+                bones.append(bone)
+                for bone in bone.children:
+                    collect(bone)
+
+            collect(xplaneFile.rootBone)
+
+            self.assertEqual(len(tree), len(bones))
+
+            index = 0
+
+            while index < len(bones):
+                self.assertEqual(tree[index], bones[index].getName())
+                index += 1
+        assertXplaneFileHasBoneTree(
+            self,
             xplaneFile, [
             '0 ROOT',
                 '1 Mesh: Cube',
@@ -43,11 +63,12 @@ class TestCreateFromLayers(XPlaneTestCase):
             'Cube.005'
         ])
 
-        self.assertXplaneFileHasBoneTree(
+        assertXplaneFileHasBoneTree(
+            self,
             xplaneFile2, [
             '0 ROOT',
-                '1 Mesh: Cube.005',
-                '1 Mesh: Cube.004'
+                '1 Mesh: Cube.004',
+                '1 Mesh: Cube.005'
         ])
 
         xplaneFile3 = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 3"])
@@ -63,16 +84,17 @@ class TestCreateFromLayers(XPlaneTestCase):
             'Cube_Bone.001'
         ])
 
-        self.assertXplaneFileHasBoneTree(
+        assertXplaneFileHasBoneTree(
+            self,
             xplaneFile3, [
             '0 ROOT',
                 '1 Mesh: Cube_arm_root',
                     '2 Armature: Armature',
                         '3 Bone: Bone',
+                            '4 Bone: Bone.001',
+                                '5 Mesh: Cube_Bone.001',
                             '4 Mesh: Cube_Bone',
                                 '5 Mesh: Cube_Bone.child',
-                            '4 Bone: Bone.001',
-                                '5 Mesh: Cube_Bone.001'
         ])
 
 runTestCases([TestCreateFromLayers])
