@@ -99,9 +99,6 @@ class TestAnimations(XPlaneTestCase):
         # check for correct location and rotation
         self.assertEqual(boneKeyframes[0].location, mathutils.Vector((0, 0, 0)))
         self.assertFloatsEqual(boneKeyframes[0].rotation[0], 0.0)
-        # TODO: The issue here is that (1.0, 0, 0, 0).to_axis_angle() now returns ((0, 1, 0), 0)
-        # instead of (1, 0, 0). I'm not sure if that is a problem for us. For now I've changed it
-        # especially since this exports the same OBJs as before
         self.assertFloatVectorsEqual(boneKeyframes[0].rotation[1], mathutils.Vector((0, 1, 0)))
         self.assertEqual(boneKeyframes[0].rotationMode, 'AXIS_ANGLE')
 
