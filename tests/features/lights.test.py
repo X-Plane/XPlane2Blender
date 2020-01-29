@@ -19,8 +19,8 @@ class TestLights(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
         # TODO: When we have this capability, there is a warning that

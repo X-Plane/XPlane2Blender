@@ -15,8 +15,8 @@ class TestBoneAnimations(XPlaneTestCase):
         filename = 'test_bone_animations'
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_nested_bone_animations(self):
@@ -26,8 +26,8 @@ class TestBoneAnimations(XPlaneTestCase):
         filename = 'test_nested_bone_animations'
         self.assertLayerExportEqualsFixture(
             1, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestBoneAnimations])

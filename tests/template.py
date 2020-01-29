@@ -66,8 +66,8 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         #self.assertLayerExportEqualsFixture(
         #    0,
         #    os.path.join(__dirname__, "fixtures", filename + ".obj"),
+        #    filterLines,
         #    filename,
-        #    filterLines
         #)
 
         #TI Example testing root object against fixture
@@ -76,8 +76,8 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         #self.assertExportableRootExportEqualsFixture(
         #    filename[5:],
         #    os.path.join(__dirname__, "fixtures", filename + ".obj"),
+        #    filterLines,
         #    filename,
-        #    filterLines
         #)
 
 #TI Same class name above, we only support one TestCase in runTestCases

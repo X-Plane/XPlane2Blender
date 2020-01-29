@@ -106,7 +106,8 @@ class TestLODs(XPlaneTestCase):
             self.assertLayerExportEqualsFixture(
                 layer_idx,
                 os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+                filterLines,
                 filename,
-                filterLines)
+            )
 
 runTestCases([TestLODs])

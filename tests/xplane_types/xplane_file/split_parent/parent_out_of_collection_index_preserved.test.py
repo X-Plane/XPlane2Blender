@@ -22,8 +22,8 @@ class TestParentOutOfCollectionIndexPreserved(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_new_branch_index_1(self)->None:
@@ -32,8 +32,8 @@ class TestParentOutOfCollectionIndexPreserved(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_new_branch_index_2(self)->None:
@@ -42,8 +42,8 @@ class TestParentOutOfCollectionIndexPreserved(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_new_branch_index_last(self)->None:
@@ -52,8 +52,8 @@ class TestParentOutOfCollectionIndexPreserved(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_1_reuse_of_parent(self)->None:
@@ -62,8 +62,8 @@ class TestParentOutOfCollectionIndexPreserved(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_1_reuse_of_parent_out_of_order(self)->None:
@@ -72,8 +72,8 @@ class TestParentOutOfCollectionIndexPreserved(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_2_reuse_of_parent(self)->None:
@@ -82,8 +82,8 @@ class TestParentOutOfCollectionIndexPreserved(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
 

@@ -22,8 +22,8 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_1_WheelCollection(self)->None:
@@ -31,8 +31,8 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_2_LandingGearExpObject(self)->None:
@@ -40,8 +40,8 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_2_WheelCollection(self)->None:
@@ -49,8 +49,8 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_3_ButtonCollection(self)->None:
@@ -58,8 +58,8 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_4_ExportableCollection(self)->None:
@@ -67,8 +67,8 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
 

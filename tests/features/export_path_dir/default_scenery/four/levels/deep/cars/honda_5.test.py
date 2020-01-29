@@ -14,7 +14,8 @@ class TestExportPathCustomScene_5(XPlaneTestCase):
            self.assertLayerExportEqualsFixture(
                0,
                make_fixture_path(__dirname__,"honda_5"),
-                                             "honda_5",
-               filterLines)
+               filterLines,
+               "honda_5",
+               )
 
 runTestCases([TestExportPathCustomScene_5])

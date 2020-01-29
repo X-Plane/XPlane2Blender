@@ -69,7 +69,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
         self.assertFileOutputEqualsFixture(
             out,
             os.path.join(__dirname__, 'fixtures',  'test_export_root_objects_1.obj'),
-            filterLines
+            filterLines,
         )
 
         xplaneFile2 = xplane_file.createFileFromBlenderRootObject(bpy.data.objects['root_2'])
@@ -96,7 +96,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
         self.assertFileOutputEqualsFixture(
             out,
             os.path.join(__dirname__, 'fixtures', 'test_export_root_objects_2.obj'),
-            filterLines
+            filterLines,
         )
 
 runTestCases([TestCreateFromRootObjects])

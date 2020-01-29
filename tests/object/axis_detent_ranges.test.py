@@ -19,8 +19,8 @@ class TestAxisDetentRanges(XPlaneTestCase):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_02_gen_range_list_not_start_at_v1_min(self):
@@ -51,8 +51,8 @@ class TestAxisDetentRanges(XPlaneTestCase):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
             7, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_09_pit_stop_pit_taller_than_neighbors(self):

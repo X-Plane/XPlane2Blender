@@ -18,8 +18,8 @@ class TestMaterials(XPlaneTestCase):
         filename = 'test_custom_prop'
         self.assertLayerExportEqualsFixture(
             1, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_conditions_export(self):
@@ -32,8 +32,8 @@ class TestMaterials(XPlaneTestCase):
         filename = 'test_conditions'
         self.assertLayerExportEqualsFixture(
             2, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_optimize_export(self):
@@ -49,8 +49,8 @@ class TestMaterials(XPlaneTestCase):
         filename = 'test_optimize'
         self.assertLayerExportEqualsFixture(
             3, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_texture_coords_export(self):
@@ -62,8 +62,8 @@ class TestMaterials(XPlaneTestCase):
         filename = 'test_texture_coords'
         self.assertLayerExportEqualsFixture(
             4, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 
@@ -79,8 +79,8 @@ class TestMaterials(XPlaneTestCase):
         filename = 'test_group_instances'
         self.assertLayerExportEqualsFixture(
             5, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_custom_header_props_export(self):
@@ -92,8 +92,8 @@ class TestMaterials(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             8, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_custom_anim_prop_export(self):
@@ -105,8 +105,8 @@ class TestMaterials(XPlaneTestCase):
         filename = 'test_custom_anim_prop'
         self.assertLayerExportEqualsFixture(
             9, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_show_hide_animation_export(self):
@@ -118,8 +118,8 @@ class TestMaterials(XPlaneTestCase):
         filename = 'test_show_hide_animation'
         self.assertLayerExportEqualsFixture(
             10, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestMaterials])

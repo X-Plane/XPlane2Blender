@@ -19,17 +19,17 @@ class TestLightTypeVsIsOmniVsIsOptimized(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_spot_vs_is_omni_vs_is_optimized(self):
         filename = inspect.stack()[0][3]
-        
+
         self.assertLayerExportEqualsFixture(
             1, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestLightTypeVsIsOmniVsIsOptimized])

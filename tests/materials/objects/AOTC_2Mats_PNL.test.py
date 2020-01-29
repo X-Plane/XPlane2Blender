@@ -21,8 +21,8 @@ class TestAOTC_2Mats_PNL(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestAOTC_2Mats_PNL])

@@ -22,8 +22,8 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_ExpCollWalkToExpColl(self)->None:
@@ -32,8 +32,8 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_ExpCollWalkToMasterCollection(self)->None:
@@ -42,8 +42,8 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_ExpCollWalkToRoot(self)->None:
@@ -52,8 +52,8 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_ParentOutOfScene(self)->None:
@@ -62,8 +62,8 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
 

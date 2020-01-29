@@ -19,8 +19,8 @@ class TestNestedBones(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
     def test_2_Armature_child_bones_mesh_on_each(self):
@@ -28,8 +28,8 @@ class TestNestedBones(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             1, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
     def test_3_Armature_multiple_arms_one_leaf_mesh(self):
@@ -37,8 +37,8 @@ class TestNestedBones(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             2, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
     def test_4_Armature_multiple_arms_child_bones_on_each(self):
@@ -46,8 +46,8 @@ class TestNestedBones(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             3, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
 runTestCases([TestNestedBones])

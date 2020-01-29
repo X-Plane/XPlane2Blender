@@ -21,8 +21,8 @@ class TestRecursiveCollectionCollects(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_ExportableObject(self)->None:
@@ -31,8 +31,8 @@ class TestRecursiveCollectionCollects(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_ExportableObjectArmatureCases(self)->None:
@@ -41,8 +41,8 @@ class TestRecursiveCollectionCollects(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
 

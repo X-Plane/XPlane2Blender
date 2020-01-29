@@ -231,7 +231,7 @@ class XPlaneTestCase(unittest.TestCase):
             self,
             fileOutput:str,
             fixturePath:str,
-            filterCallback:Optional[Union[FilterLinesCallback, List[str]]] = None,
+            filterCallback:Union[FilterLinesCallback, List[str]],
             floatTolerance:float = FLOAT_TOLERANCE) -> None:
         """
         Compares the output of XPlaneFile.write (a \n separated str) to a fixture on disk.
@@ -239,7 +239,6 @@ class XPlaneTestCase(unittest.TestCase):
         A filterCallback ensures only matching lines are compared.
         Highly recommended, with as simple a function as possible to prevent fixture fragility.
         """
-        assert filterCallback, "This must be a filter call back or list of strings. The API is deprecated and I don't want to run find-and-replace all over it just yet"
 
         with open(fixturePath, "r") as fixtureFile:
             fixtureOutput = fixtureFile.read()
@@ -250,7 +249,7 @@ class XPlaneTestCase(unittest.TestCase):
             self,
             tmpPath:str,
             fixturePath:str,
-            filterCallback:Optional[Union[FilterLinesCallback, List[str]]] = None,
+            filterCallback:Union[FilterLinesCallback, List[str]],
             floatTolerance: float = FLOAT_TOLERANCE):
         tmpFile = open(tmpPath, 'r')
         tmpOutput = tmpFile.read()
@@ -283,8 +282,8 @@ class XPlaneTestCase(unittest.TestCase):
     def assertLayerExportEqualsFixture(self,
             layer_number:int,
             fixturePath:str,
+            filterCallback:Union[FilterLinesCallback, List[str]],
             tmpFilename:Optional[str] = None,
-            filterCallback:Optional[Union[FilterLinesCallback, List[str]]]=None,
             floatTolerance:float = FLOAT_TOLERANCE)->None:
         """
         DEPRECATED: New unit tests should not use this!
@@ -299,16 +298,16 @@ class XPlaneTestCase(unittest.TestCase):
 
     def assertExportableRootExportEqualsFixture(self,
             root_object:Union[bpy.types.Collection, bpy.types.Object, str],
-            fixturePath: str = None,
+            fixturePath: str,
+            filterCallback:[Union[FilterLinesCallback, List[str]]],
             tmpFilename: Optional[str] = None,
-            filterCallback:Optional[Union[FilterLinesCallback, List[str]]]=None,
-            floatTolerance: float = FLOAT_TOLERANCE):
+            floatTolerance: float = FLOAT_TOLERANCE)->None:
         """
         Exports only a specific exportable root and compares the output
         to a fixutre.
 
-        If filterCallback is a List of string, those directives will be filtered
-        will be used.
+        If filterCallback is a List[str], those directives will be filtered
+        will be used. Tip: Use TRIS or POINT_COUNTS instead of VT.
         """
         out = self.exportExportableRoot(root_object, tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)

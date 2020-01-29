@@ -26,8 +26,8 @@ class TestLodOverridesApplied(XPlaneTestCase):
                 self.assertExportableRootExportEqualsFixture(
                     fname,
                     os.path.join(__dirname__, "fixtures", filename + ".obj"),
+                    filterLines,
                     filename,
-                    filterLines
                 )
 
     def test_AllIgnored(self)->None:
@@ -63,8 +63,8 @@ class TestLodOverridesApplied(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             filename[5:],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestLodOverridesApplied])

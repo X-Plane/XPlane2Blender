@@ -22,8 +22,8 @@ class TestParticlePssFile(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             1, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_file_pss_and_real(self):
@@ -31,8 +31,8 @@ class TestParticlePssFile(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             2, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_empties_without_pss_fails(self):

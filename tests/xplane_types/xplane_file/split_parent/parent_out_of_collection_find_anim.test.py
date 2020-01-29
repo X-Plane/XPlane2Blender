@@ -22,14 +22,14 @@ class TestParentOutOfCollectionFindAnim(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:] + "_animation"],
             os.path.join(__dirname__, "fixtures", filename + "_animation" + ".obj"),
+            filterLines,
             filename + "_animation",
-            filterLines
         )
         self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:] + "_mesh"],
             os.path.join(__dirname__, "fixtures", filename + "_mesh" + ".obj"),
+            filterLines,
             filename + "_mesh",
-            filterLines
         )
 
     def test_AAA(self)->None:

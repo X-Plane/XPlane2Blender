@@ -23,8 +23,8 @@ class TestMultipleExportWorks(XPlaneTestCase):
             self.assertExportableRootExportEqualsFixture(
                 filename[5:],
                 os.path.join(__dirname__, "fixtures", filename + ".obj"),
+                filterLines,
                 filename + str(i),
-                filterLines
             )
 
     def test_multiple_export_works_uv_map(self)->None:
@@ -34,8 +34,8 @@ class TestMultipleExportWorks(XPlaneTestCase):
             self.assertExportableRootExportEqualsFixture(
                 filename[5:],
                 os.path.join(__dirname__, "fixtures", filename + ".obj"),
+                filterLines,
                 filename + str(i),
-                filterLines
             )
 
     def test_multiple_export_works_anim_bone(self)->None:
@@ -45,8 +45,8 @@ class TestMultipleExportWorks(XPlaneTestCase):
             self.assertExportableRootExportEqualsFixture(
                 filename[5:],
                 os.path.join(__dirname__, "fixtures", filename + ".obj"),
+                filterLines,
                 filename + str(i),
-                filterLines
             )
 
 runTestCases([TestMultipleExportWorks])

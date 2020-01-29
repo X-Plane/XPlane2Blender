@@ -61,16 +61,16 @@ class TestNormMetSpec(XPlaneTestCase):
         filename = "test_none_1_mat_inst"
         self.assertLayerExportEqualsFixture(
             0, make_fixture_path(__dirname__,filename,sub_dir="norm_met_spec"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_none_1_mat_scen(self):
         filename = "test_none_1_mat_scen"
         self.assertLayerExportEqualsFixture(
             1, make_fixture_path(__dirname__,filename,sub_dir="norm_met_spec"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_none_2_mat_inst(self):
@@ -81,40 +81,40 @@ class TestNormMetSpec(XPlaneTestCase):
         filename = "test_none_2_mat_scen"
         self.assertLayerExportEqualsFixture(
             3, make_fixture_path(__dirname__,filename,sub_dir="norm_met_spec"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_norm_1_mat_inst(self):
         filename = "test_norm_1_mat_inst"
         self.assertLayerExportEqualsFixture(
             4, make_fixture_path(__dirname__,filename,sub_dir="norm_met_spec"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_norm_1_mat_scen(self):
         filename = "test_norm_1_mat_scen"
         self.assertLayerExportEqualsFixture(
             5, make_fixture_path(__dirname__,filename,sub_dir="norm_met_spec"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_norm_2_mat_inst(self):
         filename = "test_norm_2_mat_inst"
         self.assertLayerExportEqualsFixture(
             6, make_fixture_path(__dirname__,filename,sub_dir="norm_met_spec"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_norm_2_mat_scen(self):
         filename = "test_norm_2_mat_scen"
         self.assertLayerExportEqualsFixture(
             7, make_fixture_path(__dirname__,filename,sub_dir="norm_met_spec"),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestNormMetSpec])

@@ -228,21 +228,21 @@ class TestNormMetBasic(XPlaneTestCase):
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_metal_NON_D_metal",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 0,make_fixture_path(__dirname__,"test_D_metal_NON_D_metal",sub_dir="norm_met_basic"),
-                "test_D_metal_NON_D_metal",filterLines)
+                filterLines, "test_D_metal_NON_D_metal")
 
     def test_D_metal_NON_D_non_metal(self):
         #out = xplane_file.createFileFromBlenderLayerIndex(1).write()
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_metal_NON_D_non_metal",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 1,make_fixture_path(__dirname__,"test_D_metal_NON_D_non_metal",sub_dir="norm_met_basic"),
-                "test_D_metal_NON_D_non_metal",filterLines)
+                filterLines, "test_D_metal_NON_D_non_metal")
 
     def test_D_metal_NON_D_none(self):
         #out = xplane_file.createFileFromBlenderLayerIndex(2).write()
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_metal_NON_D_none",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 2,make_fixture_path(__dirname__,"test_D_metal_NON_D_none",sub_dir="norm_met_basic"),
-                "test_D_metal_NON_D_none",filterLines)
+                filterLines, "test_D_metal_NON_D_none")
 
     def test_D_non_metal_NON_D_metal(self):
         #out = xplane_file.createFileFromBlenderLayerIndex(3).write()
@@ -250,21 +250,21 @@ class TestNormMetBasic(XPlaneTestCase):
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_non_metal_NON_D_metal",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 3,make_fixture_path(__dirname__,"test_D_non_metal_NON_D_metal",sub_dir="norm_met_basic"),
-                "test_D_non_metal_NON_D_metal",filterLines)
+                filterLines, "test_D_non_metal_NON_D_metal")
 
     def test_D_non_metal_NON_D_non_metal(self):
         #out = xplane_file.createFileFromBlenderLayerIndex(4).write()
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_non_metal_NON_D_non_metal",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 4,make_fixture_path(__dirname__,"test_D_non_metal_NON_D_non_metal",sub_dir="norm_met_basic"),
-                "test_D_non_metal_NON_D_non_metal",filterLines)
+                filterLines, "test_D_non_metal_NON_D_non_metal")
 
     def test_D_non_metal_NON_D_none(self):
         #out = xplane_file.createFileFromBlenderLayerIndex(5).write()
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_non_metal_NON_D_none",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 5,make_fixture_path(__dirname__,"test_D_non_metal_NON_D_none",sub_dir="norm_met_basic"),
-                "test_D_non_metal_NON_D_none",filterLines)
+                filterLines, "test_D_non_metal_NON_D_none")
 
     def test_D_none_NON_D_metal(self):
         #out = xplane_file.createFileFromBlenderLayerIndex(6).write()
@@ -272,20 +272,20 @@ class TestNormMetBasic(XPlaneTestCase):
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_none_NON_D_metal",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 6,make_fixture_path(__dirname__,"test_D_none_NON_D_metal",sub_dir="norm_met_basic"),
-                "test_D_none_NON_D_metal",filterLines)
+                filterLines, "test_D_none_NON_D_metal")
 
     def test_D_none_NON_D_non_metal(self):
         #out = xplane_file.createFileFromBlenderLayerIndex(7).write()
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_none_NON_D_non_metal",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 7,make_fixture_path(__dirname__,"test_D_none_NON_D_non_metal",sub_dir="norm_met_basic"),
-                "test_D_none_NON_D_non_metal",filterLines)
+                filterLines, "test_D_none_NON_D_non_metal")
 
     def test_D_none_NON_D_none(self):
         #out = xplane_file.createFileFromBlenderLayerIndex(8).write()
         #self.assertFileOutputEqualsFixture(out,    make_fixture_path(__dirname__,"test_D_none_NON_D_none",sub_dir="norm_met_basic"))
         self.assertLayerExportEqualsFixture(
                 8,make_fixture_path(__dirname__,"test_D_none_NON_D_none",sub_dir="norm_met_basic"),
-                "test_D_none_NON_D_none",filterLines)
+                filterLines, "test_D_none_NON_D_none")
 
 runTestCases([TestNormMetBasic])

@@ -38,7 +38,7 @@ class TestRecursiveCollectionEdgeCases(XPlaneTestCase):
         self.assertFileOutputEqualsFixture(
             out,
             os.path.join(__dirname__, 'fixtures', filename + '.obj'),
-            filterLines
+            filterLines,
         )
 
     def test_Exportable_child_out_of_scene_warn_and_ignore(self):
@@ -49,8 +49,8 @@ class TestRecursiveCollectionEdgeCases(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 

@@ -16,8 +16,8 @@ class TestBlendGlass(XPlaneTestCase):
         filename = 'test_air_glass_off_expect_no_dir'
         self.assertLayerExportEqualsFixture(
             0, make_fixture_path(__dirname__,filename),
+            filterLines,
             filename,
-            filterLines
         )
 
 
@@ -25,8 +25,8 @@ class TestBlendGlass(XPlaneTestCase):
         filename = 'test_air_glass_on_expect_dir'
         self.assertLayerExportEqualsFixture(
             1, make_fixture_path(__dirname__,filename),
+            filterLines,
             filename,
-            filterLines
         )
 
 
@@ -34,8 +34,8 @@ class TestBlendGlass(XPlaneTestCase):
         filename = 'test_ckpt_glass_off_expect_no_dir'
         self.assertLayerExportEqualsFixture(
             2, make_fixture_path(__dirname__,filename),
+            filterLines,
             filename,
-            filterLines
         )
 
 
@@ -43,8 +43,8 @@ class TestBlendGlass(XPlaneTestCase):
         filename = 'test_ckpt_glass_on_expect_dir'
         self.assertLayerExportEqualsFixture(
             3, make_fixture_path(__dirname__,filename),
+            filterLines,
             filename,
-            filterLines
         )
 
 
@@ -52,16 +52,16 @@ class TestBlendGlass(XPlaneTestCase):
         filename = 'test_panel_glass_off_expect_no_dir'
         self.assertLayerExportEqualsFixture(
             4, make_fixture_path(__dirname__,filename),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_panel_glass_on_expect_dir(self):
         filename = 'test_panel_glass_on_expect_dir'
         self.assertLayerExportEqualsFixture(
             5, make_fixture_path(__dirname__,filename),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_instanced_glass_illegal(self):

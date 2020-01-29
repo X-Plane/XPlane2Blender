@@ -17,8 +17,8 @@ class TestSingleBoneInitialRotation(XPlaneTestCase):
         filename = 'test_single_bone_initial_rotation'
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestSingleBoneInitialRotation])

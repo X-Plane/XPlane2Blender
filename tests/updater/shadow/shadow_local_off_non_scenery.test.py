@@ -34,8 +34,8 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         self.assertLayerExportEqualsFixture(
             0,
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_02_cockpit_force_global_shadows(self):
@@ -43,8 +43,8 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         self.assertLayerExportEqualsFixture(
             1,
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_01_aircraft_force_global_shadows_root(self):
@@ -52,8 +52,8 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_02_cockpit_force_global_shadows_root(self):
@@ -61,8 +61,8 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
 

@@ -18,8 +18,8 @@ class TestCurrentSceneExclusiveCollection(XPlaneTestCase):
 
         self.assertExportableRootExportEqualsFixture(
             'OBJ_Cockpit', os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestCurrentSceneExclusiveCollection])

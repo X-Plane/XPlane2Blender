@@ -27,7 +27,7 @@ class TestTranslationBoneRules(XPlaneTestCase):
     def test_03_must_only_be_driven_by_only_1_dataref(self):
         out = self.exportLayer(2)
         self.assertLoggerErrors(1)
-        
+
     def test_04_must_have_exactly_2_keyframes(self):
         out = self.exportLayer(3)
         self.assertLoggerErrors(1)
@@ -56,8 +56,8 @@ class TestTranslationBoneRules(XPlaneTestCase):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
             9, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestTranslationBoneRules])

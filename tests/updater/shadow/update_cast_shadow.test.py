@@ -43,8 +43,8 @@ class TestUpdateCastShadow(XPlaneTestCase):
         self.assertLayerExportEqualsFixture(
             0,
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_02_global_on_layers(self):
@@ -53,8 +53,8 @@ class TestUpdateCastShadow(XPlaneTestCase):
         self.assertLayerExportEqualsFixture(
             1,
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     """
@@ -63,8 +63,8 @@ class TestUpdateCastShadow(XPlaneTestCase):
         self.assertLayerExportEqualsFixture(
             2,
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_04_global_on_shared(self):
@@ -72,8 +72,8 @@ class TestUpdateCastShadow(XPlaneTestCase):
         self.assertLayerExportEqualsFixture(
             3,
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
+            filterLines,
             filename,
-            filterLines
         )
     """
 
@@ -83,8 +83,8 @@ class TestUpdateCastShadow(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
                 bpy.data.objects["01_global_off.001"],
                 os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+                filterLines,
                 filename,
-                filterLines
             )
 
     def test_02_global_on_root_objects(self):
@@ -93,8 +93,8 @@ class TestUpdateCastShadow(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
                 bpy.data.objects["02_global_on.001"],
                 os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+                filterLines,
                 filename,
-                filterLines
             )
 
     """
@@ -103,8 +103,8 @@ class TestUpdateCastShadow(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
                 bpy.data.objects[filename[5:]],
                 os.path.join(__dirname__, 'fixtures', filename + '_root_objects.obj'),
+                filterLines,
                 filename,
-                filterLines
             )
 
     def test_04_global_on_shared_root(self):
@@ -112,8 +112,8 @@ class TestUpdateCastShadow(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
                 bpy.data.objects[filename[5:]],
                 os.path.join(__dirname__, 'fixtures', filename + '_root_objects.obj'),
+                filterLines,
                 filename,
-                filterLines
             )
     """
 

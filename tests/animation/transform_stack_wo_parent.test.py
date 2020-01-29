@@ -20,8 +20,8 @@ class TestTransformStackWOParent(XPlaneTestCase):
         for filename in filenames:
             self.assertLayerExportEqualsFixture(
                 layer_num, os.path.join(__dirname__, 'fixtures', 'transform_stack', 'test_transform_stack_' + filename + '.obj'),
+                filterLines,
                 'test_transform_stack_' + filename + '.obj',
-                filterLines
             )
             layer_num += 1
 

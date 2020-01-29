@@ -20,8 +20,8 @@ class TestParticleNonColocatedAnim(XPlaneTestCase):
 
         self.assertExportableRootExportEqualsFixture(
             filename, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestParticleNonColocatedAnim])

@@ -40,8 +40,8 @@ class TestRotationBoneRules(XPlaneTestCase):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
             6, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     # See github issue #360
@@ -49,8 +49,8 @@ class TestRotationBoneRules(XPlaneTestCase):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
             7, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_09_dataref_values_descending_allowed(self):
@@ -65,8 +65,8 @@ class TestRotationBoneRules(XPlaneTestCase):
         filename = inspect.stack()[0][3]
         self.assertLayerExportEqualsFixture(
             10, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestRotationBoneRules])
