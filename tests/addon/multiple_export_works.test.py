@@ -20,7 +20,7 @@ class TestMultipleExportWorks(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         for i in range(1,4):
-            self.assertRootObjectExportEqualsFixture(
+            self.assertExportableRootExportEqualsFixture(
                 filename[5:],
                 os.path.join(__dirname__, "fixtures", filename + ".obj"),
                 filename + str(i),
@@ -31,7 +31,7 @@ class TestMultipleExportWorks(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         for i in range(1,4):
-            self.assertRootObjectExportEqualsFixture(
+            self.assertExportableRootExportEqualsFixture(
                 filename[5:],
                 os.path.join(__dirname__, "fixtures", filename + ".obj"),
                 filename + str(i),
@@ -42,7 +42,7 @@ class TestMultipleExportWorks(XPlaneTestCase):
         filename = inspect.stack()[0].function
 
         for i in range(1,4):
-            self.assertRootObjectExportEqualsFixture(
+            self.assertExportableRootExportEqualsFixture(
                 filename[5:],
                 os.path.join(__dirname__, "fixtures", filename + ".obj"),
                 filename + str(i),

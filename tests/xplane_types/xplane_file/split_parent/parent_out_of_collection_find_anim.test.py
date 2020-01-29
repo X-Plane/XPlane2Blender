@@ -19,13 +19,13 @@ def filterLines(line:Tuple[str])->bool:
 class TestParentOutOfCollectionFindAnim(XPlaneTestCase):
     def _runAssert(self)->None:
         filename = inspect.stack()[1].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:] + "_animation"],
             os.path.join(__dirname__, "fixtures", filename + "_animation" + ".obj"),
             filename + "_animation",
             filterLines
         )
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:] + "_mesh"],
             os.path.join(__dirname__, "fixtures", filename + "_mesh" + ".obj"),
             filename + "_mesh",

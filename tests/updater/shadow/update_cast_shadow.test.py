@@ -80,7 +80,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
     def test_01_global_off_root_objects(self):
         bpy.context.window.scene = bpy.data.scenes["Scene_root_objects_mode"]
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
                 bpy.data.objects["01_global_off.001"],
                 os.path.join(__dirname__, 'fixtures', filename + '.obj'),
                 filename,
@@ -90,7 +90,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
     def test_02_global_on_root_objects(self):
         bpy.context.window.scene = bpy.data.scenes["Scene_root_objects_mode"]
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
                 bpy.data.objects["02_global_on.001"],
                 os.path.join(__dirname__, 'fixtures', filename + '.obj'),
                 filename,
@@ -100,7 +100,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
     """
     def test_03_global_off_shared_root(self):
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
                 bpy.data.objects[filename[5:]],
                 os.path.join(__dirname__, 'fixtures', filename + '_root_objects.obj'),
                 filename,
@@ -109,7 +109,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
 
     def test_04_global_on_shared_root(self):
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
                 bpy.data.objects[filename[5:]],
                 os.path.join(__dirname__, 'fixtures', filename + '_root_objects.obj'),
                 filename,

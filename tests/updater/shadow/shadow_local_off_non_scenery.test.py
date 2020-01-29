@@ -49,7 +49,7 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
 
     def test_01_aircraft_force_global_shadows_root(self):
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -58,7 +58,7 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
 
     def test_02_cockpit_force_global_shadows_root(self):
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,

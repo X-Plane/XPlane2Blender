@@ -23,7 +23,7 @@ class TestLodOverridesApplied(XPlaneTestCase):
         """
         for fname in [filename[5:], filename[5:].replace("_object","")]:
             with self.subTest(fname=fname):
-                self.assertRootObjectExportEqualsFixture(
+                self.assertExportableRootExportEqualsFixture(
                     fname,
                     os.path.join(__dirname__, "fixtures", filename + ".obj"),
                     filename,
@@ -60,7 +60,7 @@ class TestLodOverridesApplied(XPlaneTestCase):
 
     def test_ExportableObjectOverride_object_special_1_2_3(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             filename[5:],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,

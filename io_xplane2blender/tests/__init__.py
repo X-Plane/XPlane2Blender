@@ -297,8 +297,7 @@ class XPlaneTestCase(unittest.TestCase):
         out = self.exportExportableRoot(bpy.data.collections[f"Layer {layer_number + 1}"], tmpFilename)
         self.assertFileOutputEqualsFixture(out, fixturePath, filterCallback, floatTolerance)
 
-    #TODO: Rename assertExportableRootExportEqualsFixture
-    def assertRootObjectExportEqualsFixture(self,
+    def assertExportableRootExportEqualsFixture(self,
             root_object:Union[bpy.types.Collection, bpy.types.Object, str],
             fixturePath: str = None,
             tmpFilename: Optional[str] = None,

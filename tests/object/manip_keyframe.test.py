@@ -20,7 +20,7 @@ class TestManipKeyframe(XPlaneTestCase):
         filename = inspect.stack()[0].function # type: str
         print(filename)
         print("adsfasdfasdf")
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             filename.replace("test_",""),
             os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
@@ -28,7 +28,7 @@ class TestManipKeyframe(XPlaneTestCase):
 
     def test_02_3_rot_kf_0_detents_1_manip_kf(self):
         filename = inspect.stack()[0].function # type: str
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             filename.replace("test_",""),
             os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
@@ -36,7 +36,7 @@ class TestManipKeyframe(XPlaneTestCase):
 
     def test_03_4_rot_kf_0_detents_2_manip_kf(self):
         filename = inspect.stack()[0].function # type: str
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             filename.replace("test_",""),
             os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
@@ -44,7 +44,7 @@ class TestManipKeyframe(XPlaneTestCase):
 
     def test_04_5_rot_kf_3_detents_3_manip_kf(self):
         filename = inspect.stack()[0].function # type: str
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             filename.replace("test_",""),
             os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
@@ -52,7 +52,7 @@ class TestManipKeyframe(XPlaneTestCase):
 
     def test_05_6_rot_kf_4_detents_1_pit_4_manip_kf(self):
         filename = inspect.stack()[0].function # type: str
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             filename.replace("test_",""),
             os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,

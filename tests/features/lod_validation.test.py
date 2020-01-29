@@ -21,7 +21,7 @@ class TestLodValidation(XPlaneTestCase):
         self.assertLoggerErrors(num_errors)
 
     def _test_passing_case(self, filename:str):
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             filename[5:],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,

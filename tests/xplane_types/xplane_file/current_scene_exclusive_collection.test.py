@@ -16,7 +16,7 @@ class TestCurrentSceneExclusiveCollection(XPlaneTestCase):
     def test_current_scene_exclusive_collection(self):
         filename = inspect.stack()[0].function
 
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             'OBJ_Cockpit', os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,
             filterLines

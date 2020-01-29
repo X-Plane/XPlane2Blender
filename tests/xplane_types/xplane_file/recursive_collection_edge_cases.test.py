@@ -46,7 +46,7 @@ class TestRecursiveCollectionEdgeCases(XPlaneTestCase):
         def filterLines(line):
             return isinstance(line[0],str) and\
                     ("TRIS" in line[0])
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, 'fixtures', filename + '.obj'),
             filename,

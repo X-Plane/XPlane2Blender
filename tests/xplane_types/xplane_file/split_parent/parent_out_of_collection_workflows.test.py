@@ -19,7 +19,7 @@ def filterLines(line:Tuple[str])->bool:
 class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
     def test_1_LandingGearCollection(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -28,7 +28,7 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
 
     def test_1_WheelCollection(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -37,7 +37,7 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
 
     def test_2_LandingGearExpObject(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -46,7 +46,7 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
 
     def test_2_WheelCollection(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -55,7 +55,7 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
 
     def test_3_ButtonCollection(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -64,7 +64,7 @@ class TestParentOutOfCollectionWorkflows(XPlaneTestCase):
 
     def test_4_ExportableCollection(self)->None:
         filename = inspect.stack()[0].function
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,

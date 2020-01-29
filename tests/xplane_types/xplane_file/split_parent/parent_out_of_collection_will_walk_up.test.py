@@ -19,7 +19,7 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
     def test_ExpCollWalkToColl(self)->None:
         filename = inspect.stack()[0].function
 
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -29,7 +29,7 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
     def test_ExpCollWalkToExpColl(self)->None:
         filename = inspect.stack()[0].function
 
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -39,7 +39,7 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
     def test_ExpCollWalkToMasterCollection(self)->None:
         filename = inspect.stack()[0].function
 
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -49,7 +49,7 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
     def test_ExpCollWalkToRoot(self)->None:
         filename = inspect.stack()[0].function
 
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,
@@ -59,7 +59,7 @@ class TestParentOutOfCollectionWillWalkUp(XPlaneTestCase):
     def test_ParentOutOfScene(self)->None:
         filename = inspect.stack()[0].function
 
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,

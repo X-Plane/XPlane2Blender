@@ -20,7 +20,7 @@ class ParentOutOfCollectionNotAnim(XPlaneTestCase):
     def test_ExpCollection_not_really_animated(self)->None:
         filename = inspect.stack()[0].function
 
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             bpy.data.collections[filename[5:]],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
             filename,

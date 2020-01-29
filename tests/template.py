@@ -73,7 +73,7 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         #TI Example testing root object against fixture
         #TI We name a root object something like "01_my_root_object" and remove filename's "test_"
         #TI instead of "test_01_my_root_object" to not run into Blender's max object name length
-        #self.assertRootObjectExportEqualsFixture(
+        #self.assertExportableRootExportEqualsFixture(
         #    filename[5:],
         #    os.path.join(__dirname__, "fixtures", filename + ".obj"),
         #    filename,
