@@ -1266,11 +1266,6 @@ class XPlaneCollectionSettings(bpy.types.PropertyGroup):
         type = XPlaneLayer
     )
 
-# Class: XPlaneSceneSettings
-# Settings for Blender scenes.
-#
-# Properties:
-#   layers - Collection of <XPlaneLayers>. Export settings for the Blender layers.
 class XPlaneSceneSettings(bpy.types.PropertyGroup):
     command_search_window_state: bpy.props.PointerProperty(
             name = "Command Search Window State",
@@ -1325,9 +1320,14 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = "")#str(bpy.context.scene.xplane.get("xplane2blender_ver")))
     #######################################
 
+    #---
+    # TODO: Currently xplane_update_helpers's
+    # copy_property_group can't handle ID Props, which makes it hard to delete this
+    # right now
+    #-------------------------------------------------------------------------
     layers: bpy.props.CollectionProperty(
         name = "Layers",
-        description = "Export settings for the Blender layers",
+        description = "DEPCRECATED: This is too time consuming to make an API to remove and copy right now. Pretend this doesn't exist.",
         type = XPlaneLayer
     )
 

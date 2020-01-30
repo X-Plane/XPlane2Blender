@@ -26,9 +26,9 @@ class TestLayersToCollections(XPlaneTestCase):
 
         def assert_prop(prop_id:str, real_value:Union[bool, float, int, str], correct_value:Union[bool, float, int, str])->None:
             if isinstance(real_value, (bool, int, str)):
-                self.assertEqual(real_value, correct_value, msg=f"'{prop_id}' real vs correct: {real_value} != {correct_value}")
+                self.assertEqual(real_value, correct_value, msg=f"'{prop_id}' real vs correct: '{real_value}' != '{correct_value}'")
             elif isinstance(real_value, float):
-                self.assertAlmostEqual(real_value, correct_value, msg=f"'{prop_id}' real vs correct: {real_value} != {correct_value}")
+                self.assertAlmostEqual(real_value, correct_value, msg=f"'{prop_id}' real vs correct: '{real_value}' != '{correct_value}'")
             else:
                 assert False, f"{real_value} is an unknown type {type(real_value)}"
 
@@ -66,10 +66,13 @@ class TestLayersToCollections(XPlaneTestCase):
                             {f"Layer {i}_Scene_second_copy" for i in itertools.chain([1], range(3,11))})
         self.assertEqual(bpy.data.scenes["Scene_fourth"].collection.children[0].name, "Layer 10_Scene_fourth")
 
-    def test_is_exportable_is_not_hide_render(self)->None:
+    def test_is_exportable_is_not_hide_viewport(self)->None:
         self.assertTrue(bpy.data.collections["Layer 1"].xplane.is_exportable_collection)
         for i in range(3, 9):
             self.assertFalse(bpy.data.collections[f"Layer {i}"].xplane.is_exportable_collection)
+
+        for coll in bpy.data.collections:
+            self.assertFalse(coll.hide_viewport)
 
     def test_layer_4_properties_copied(self)->None:
         layer_first = bpy.data.collections["Layer 4"].xplane.layer

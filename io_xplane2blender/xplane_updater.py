@@ -92,6 +92,81 @@ def __updateLocRot(obj,logger):
                )
               )
 
+def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
+    """
+    Side Effects: Collections may be created, properties changed; Deletes scene.xplane.layers
+
+    - Renames all collections to the familiar and unambiguious "Layer N"
+    - Copies any XPLaneLayers from scene.xplane.layers
+    - Creates Collections for non-default XPlaneLayers w/o content
+    - Sets visibility and exportablity
+    - and finally deletes scene.xplane.layers
+    """
+    #--- Copy Layers to Collections ---------------------------------------
+    def prepare_collections_for_renaming():
+        for coll in bpy.data.collections:
+            print(coll.name)
+            full_match = re.fullmatch("Collection(\.\d{3}|$)", coll.name)
+            if full_match:
+                coll.name = f"Collection 1{full_match.group(1)}"
+
+            # Making this regular with the rest is better,
+            # we're just going to replace all this anyway
+            if "." not in coll.name:
+                coll.name += ".000"
+
+    prepare_collections_for_renaming()
+    for i, scene in enumerate(bpy.data.scenes):
+        if not scene.xplane.layers:
+            for j, coll in enumerate(scene.collection.children, start=1):
+                coll.name = f"Layer {j}" if i == 0 else f"Layer {j}_{scene.name}"
+        else:
+            # We rename everything from Collection {number} to Layer {number}_{scene.name}
+            # 1. Correct any named "Collection$" to "Collection 1.000" (why Blender?!),
+            #    keeping any trailing evidence of a name collision (.001, .002, etc)
+            # 2. If our scene has a collection pre-made for the layer*, great! Use that!
+            #    If our scene has a layer with non-default values but Blender didn't
+            #    make a Collection for us (no Blender Data on it), make one ourselves
+            #    Otherwise, go to the next layer
+            #
+            #    * We need to actually check every Collection N, Collection N.001 incase
+            #      a previous scene didn't make that collection and Blender hasn't needed to
+            #      make it unique by appending the .000 business
+            # 3. Rename to match the pattern,
+            #    copy the XPlaneLayer from scene.xplane.layers to coll.xplane.layer
+            for layer in scene.xplane.layers:
+                assert layer.index != -1, f"XPlaneLayer f{layer.name} was never actually initialized in 2.79"
+                collection_new_name = f"Layer {layer.index + 1}" + (f"_{scene.name}" if i else f"")
+                for suffix in (f"{j:03}" for j in range(0, i+1)):
+                    try_this = f"Collection {layer.index + 1}.{suffix}"
+                    try:
+                        coll = scene.collection.children[try_this]
+                    except KeyError:
+                        continue
+                    else:
+                        coll.name = collection_new_name
+                        coll.xplane.is_exportable_collection = not coll.hide_viewport if scene.xplane.get("exportMode", 0) == 0 else False
+                        scene.view_layers[0].layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
+                        coll.hide_viewport = False
+                    break
+                else: # no break, no matching collection found
+                    nondefaults = xplane_updater_helpers.check_property_group_has_non_default(layer)
+                    if nondefaults:
+                        coll = bpy.data.collections.new(collection_new_name)
+                        scene.collection.children.link(coll)
+                        coll.xplane.is_exportable_collection = False
+                        scene.view_layers[0].layer_collection.children[coll.name].hide_viewport = True
+                        coll.hide_viewport = False
+                    else:
+                        continue
+                xplane_updater_helpers.copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
+
+    for scene in bpy.data.scenes:
+        for coll in scene.collection.children:
+            # 0 used to mean "layers" (default), 1 used to mean "root_objects"
+            coll.xplane.is_exportable_collection = not coll.hide_viewport if scene.xplane.get("exportMode", 0) == 0 else False
+            scene.view_layers[0].layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
+            coll.hide_viewport = False
 
 def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLogger)->None:
     """
@@ -101,6 +176,8 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
 
     Re-running the updater should result in no changes
     """
+    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0"):
+        _layers_to_collection(logger)
     if last_version < xplane_helpers.VerStruct.parse_version('3.3.0'):
         for scene in bpy.data.scenes:
             # set compositeTextures to False
@@ -163,7 +240,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
     if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-dev.0+43.20190606030000"):
         # This helps us conveniently save the Cast shadow value for later after we delete it
         UsedLayerInfo = collections.namedtuple("UsedLayerInfo", ["options", "cast_shadow", "final_name"])
-        def _update_potential_materials(potential_objects: bpy.types.Material, layer_options:'XPlaneLayer')->None:
+        def _update_potential_materials(potential_materials: List[bpy.types.Material], layer_options:'XPlaneLayer')->None:
             for mat in potential_materials:
                 # Default for shadow was True. get can't find shadow == no explicit value give
                 val = bool(layer_options.get("shadow", True))
@@ -244,55 +321,6 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
                 layer_props.autodetectTextures = False
         #----------------------------------------------------------------------
 
-        #--- Copy Layers to Collections ---------------------------------------
-        for coll in bpy.data.collections:
-            full_match = re.fullmatch("Collection(\.\d{3}|$)", coll.name)
-            if full_match:
-                coll.name = f"Collection 1{full_match.group(1)}"
-
-            # Making this regular with the rest is better,
-            # we're just going to replace all this anyway
-            if "." not in coll.name:
-                coll.name += ".000"
-
-        for i, scene in enumerate(bpy.data.scenes):
-            # We rename everything from Collection {number} to Layer {number}_{scene.name}
-            # 1. Correct any named "Collection$" to "Collection 1.000" (why Blender?!),
-            #    keeping any trailing evidence of a name collision (.001, .002, etc)
-            # 2. If our scene has a collection pre-made for the layer*, great! Use that!
-            #    If our scene has a layer with non-default values but Blender didn't
-            #    make a Collection for us (no Blender Data on it), make one ourselves
-            #    Otherwise, go to the next layer
-            #
-            #    * We need to actually check every Collection N, Collection N.001 incase
-            #      a previous scene didn't make that collection and Blender hasn't needed to
-            #      make it unique by appending the .000 business
-            # 3. Rename to match the pattern,
-            #    copy the XPlaneLayer from scene.xplane.layers to coll.xplane.layer
-            for layer in scene.xplane.layers:
-                assert layer.index != -1, f"XPlaneLayer f{layer.name} was never actually initialized in 2.79"
-                collection_new_name = f"Layer {layer.index + 1}" + (f"_{scene.name}" if i else f"")
-                for suffix in (f"{j:03}" for j in range(0, i+1)):
-                    try_this = f"Collection {layer.index + 1}.{suffix}"
-                    try:
-                        coll = scene.collection.children[try_this]
-                    except KeyError:
-                        continue
-                    else:
-                        coll.name = collection_new_name
-                        # 0 used to mean "layers" (default), 1 used to mean "root_objects"
-                        coll.xplane.is_exportable_collection = not coll.hide_viewport if scene.xplane.get("exportMode", 0) == 0 else False
-                        scene.view_layers[0].layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
-                        coll.hide_viewport = False
-                        break
-                else: # no break, no matching collection found
-                    nondefaults = xplane_updater_helpers.check_property_group_has_non_default(layer)
-                    if nondefaults:
-                        coll = bpy.data.collections.new(collection_new_name)
-                        scene.collection.children.link(coll)
-                    else:
-                        continue
-                xplane_updater_helpers.copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
         #----------------------------------------------------------------------
 
 
