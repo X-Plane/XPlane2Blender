@@ -105,7 +105,6 @@ def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
     #--- Copy Layers to Collections ---------------------------------------
     def prepare_collections_for_renaming():
         for coll in bpy.data.collections:
-            print(coll.name)
             full_match = re.fullmatch("Collection(\.\d{3}|$)", coll.name)
             if full_match:
                 coll.name = f"Collection 1{full_match.group(1)}"
@@ -145,6 +144,7 @@ def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
                         continue
                     else:
                         coll.name = collection_new_name
+                        # 0 used to mean "layers" (default), 1 used to mean "root_objects"
                         coll.xplane.is_exportable_collection = not coll.hide_viewport if scene.xplane.get("exportMode", 0) == 0 else False
                         scene.view_layers[0].layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
                         coll.hide_viewport = False

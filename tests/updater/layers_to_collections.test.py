@@ -65,8 +65,45 @@ class TestLayersToCollections(XPlaneTestCase):
         self.assertSetEqual({c.name for c in bpy.data.scenes["Scene_second_copy"].collection.children},
                             {f"Layer {i}_Scene_second_copy" for i in itertools.chain([1], range(3,11))})
         self.assertEqual(bpy.data.scenes["Scene_fourth"].collection.children[0].name, "Layer 10_Scene_fourth")
+        self.assertEqual(bpy.data.scenes["Scene_root_objects_mode"].collection.children[0].name, "Layer 1_Scene_root_objects_mode")
+        self.assertEqual(bpy.data.scenes["Scene_root_objects_mode"].collection.children[1].name, "Layer 2_Scene_root_objects_mode")
 
-    def test_is_exportable_is_not_hide_viewport(self)->None:
+    def test_no_extras_created(self)->None:
+        self.assertEqual(["Layer 1",
+                          "Layer 10_Scene_fourth",
+                          "Layer 10_Scene_second_copy",
+                          "Layer 1_Scene_root_objects_mode",
+                          "Layer 1_Scene_second_copy",
+                          "Layer 2_Scene_root_objects_mode",
+                          "Layer 3",
+                          "Layer 3_Scene_second_copy",
+                          "Layer 4",
+                          "Layer 4_Scene_second_copy",
+                          "Layer 5",
+                          "Layer 5_Scene_second_copy",
+                          "Layer 6",
+                          "Layer 6_Scene_second_copy",
+                          "Layer 7",
+                          "Layer 7_Scene_second_copy",
+                          "Layer 8",
+                          "Layer 8_Scene_second_copy",
+                          "Layer 9_Scene_second_copy"],
+                          [c.name for c in bpy.data.collections])
+
+    def test_is_exportable_correct(self)->None:
+        is_exportable_collection = ["Layer 1", "Layer 1_Scene_second_copy", "Layer 10_Scene_fourth"]
+        is_not_exportable_collection = (  [f"Layer {i}" for i in range(3,9)]
+                                        + [f"Layer {i}_Scene_second_copy" for i in range(3,9)]
+                                        + ["Layer 1_Scene_root_objects_mode", "Layer 2_Scene_root_objects_mode"]
+                                    )
+
+        for exp_coll_name in is_exportable_collection:
+            self.assertTrue(bpy.data.collections[exp_coll_name].xplane.is_exportable_collection, msg=f"{exp_coll_name} should be Exportable Collection")
+
+        for not_exp_coll_name in is_not_exportable_collection:
+            self.assertFalse(bpy.data.collections[not_exp_coll_name].xplane.is_exportable_collection, msg=f"{not_exp_coll_name} should be Exportable Collection")
+
+    def test_is_not_hide_viewport(self)->None:
         self.assertTrue(bpy.data.collections["Layer 1"].xplane.is_exportable_collection)
         for i in range(3, 9):
             self.assertFalse(bpy.data.collections[f"Layer {i}"].xplane.is_exportable_collection)
@@ -224,4 +261,26 @@ class TestLayersToCollections(XPlaneTestCase):
             "name": "layer_10_content_in_Scene_fourth",
         })
         self.assertXPlaneLayerEqual(layer_fourth, d)
+
+    def test_root_objects_mode_layer_1(self)->None:
+        layer_one = bpy.data.collections["Layer 1_Scene_root_objects_mode"]
+        d = self.get_default_xplane_layer_props_dict()
+        d.update({
+            "name": "still_copied_in_root_mode_has_object",
+            "lod": [
+                {
+                    "near": 0,
+                    "far": 100
+                },
+            ]
+        })
+
+    def test_root_objects_mode_layer_2(self)->None:
+        layer_two = bpy.data.collections["Layer 2_Scene_root_objects_mode"]
+        d = self.get_default_xplane_layer_props_dict()
+        d.update({
+            "name": "still_copied_in_root_mode_no_object",
+            "exportType": "scenery"
+        })
+
 runTestCases([TestLayersToCollections])
