@@ -51,47 +51,6 @@ from io_xplane2blender.xplane_constants import LOGGER_LEVEL_ERROR,\
 from io_xplane2blender.xplane_helpers import XPlaneLogger
 from io_xplane2blender.xplane_utils import xplane_updater_helpers
 
-
-def __updateLocRot(obj,logger):
-
-    #In int
-    #Out string enum
-    #Recreate the pre_34 animation types enum
-    ANIM_TYPE_TRANSLATE = "translate"
-    ANIM_TYPE_ROTATE = "rotate"
-
-    conversion_table = [
-            #pre_34_anim_types  : post_34_anim_types
-            (xplane_constants.ANIM_TYPE_TRANSFORM, xplane_constants.ANIM_TYPE_TRANSFORM),
-            (                 ANIM_TYPE_TRANSLATE, xplane_constants.ANIM_TYPE_TRANSFORM),
-            (                 ANIM_TYPE_ROTATE,    xplane_constants.ANIM_TYPE_TRANSFORM),
-            (xplane_constants.ANIM_TYPE_SHOW,      xplane_constants.ANIM_TYPE_SHOW),
-            (xplane_constants.ANIM_TYPE_HIDE,      xplane_constants.ANIM_TYPE_HIDE)
-        ]
-
-    def convert_old_to_new(old_anim_type):
-        if old_anim_type >= 0 and old_anim_type < len(conversion_table):
-            return conversion_table[old_anim_type][1]
-        else:
-            msg = "%s was not found in conversion table" % old_anim_type
-            logger.error(msg)
-            raise Exception(msg)
-
-    for d in obj.xplane.datarefs:
-        old_anim_type = d.get('anim_type')
-        if old_anim_type is None:
-            old_anim_type = 0 # If anim_type was never set in the first place, it's value is the default, aka 0 for the old anim_type
-
-        new_anim_type = convert_old_to_new(old_anim_type)
-        d.anim_type = new_anim_type
-        logger.info("Updated %s's animation dataref (%s)'s animation type from %s to %s" %
-              (obj.name,\
-               d.path,\
-               conversion_table[old_anim_type][0].capitalize(),
-               new_anim_type.capitalize()
-               )
-              )
-
 def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
     """
     Side Effects: Collections may be created, properties changed; Deletes scene.xplane.layers
@@ -186,6 +145,50 @@ def _change_pre_3_3_0_properties(logger:xplane_helpers.XPlaneLogger)->None:
     logger.info("Unless otherwise noted, changed every layer's Export Type to 'Aircraft'")
     logger.info("For all layers, in all scenes, set 'Composite Textures' and 'Autodetect Textures' to false")
 
+def _update_LocRot(has_datarefs:Union[bpy.types.Object, bpy.types.Bone],logger:XPlaneLogger)->None:
+    """
+    Side Effects: has_datarefs/bone's datarefs' anim_type may change
+    from Loc/Rot/LocRot->Transform
+    """
+
+    #Recreate the pre_34 animation types enum
+    ANIM_TYPE_TRANSLATE = "translate"
+    ANIM_TYPE_ROTATE = "rotate"
+
+    conversion_table = [
+            #pre_34_anim_types  : post_34_anim_types
+            (xplane_constants.ANIM_TYPE_TRANSFORM, xplane_constants.ANIM_TYPE_TRANSFORM),
+            (                 ANIM_TYPE_TRANSLATE, xplane_constants.ANIM_TYPE_TRANSFORM),
+            (                 ANIM_TYPE_ROTATE,    xplane_constants.ANIM_TYPE_TRANSFORM),
+            (xplane_constants.ANIM_TYPE_SHOW,      xplane_constants.ANIM_TYPE_SHOW),
+            (xplane_constants.ANIM_TYPE_HIDE,      xplane_constants.ANIM_TYPE_HIDE)
+        ]
+
+    # Returned string is the new enum_type to be used and assaigned
+    def convert_old_to_new(old_anim_type:int)->str:
+        if old_anim_type >= 0 and old_anim_type < len(conversion_table):
+            return conversion_table[old_anim_type][1]
+        else:
+            msg = "%s was not found in conversion table" % old_anim_type
+            logger.error(msg)
+            raise Exception(msg)
+
+    for d in has_datarefs.xplane.datarefs:
+        old_anim_type = d.get('anim_type')
+        if old_anim_type is None:
+            old_anim_type = 0 # If anim_type was never set in the first place, it's value is the default, aka 0 for the old anim_type
+
+        new_anim_type = convert_old_to_new(old_anim_type)
+        d.anim_type = new_anim_type
+        logger.info("Updated %s's animation dataref (%s)'s animation type from %s to %s" %
+              (has_datarefs.name,
+               d.path,
+               conversion_table[old_anim_type][0].capitalize(),
+               new_anim_type.capitalize()
+               )
+              )
+
+
 
 def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLogger)->None:
     """
@@ -205,10 +208,10 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
         for arm in bpy.data.armatures:
             for bone in arm.bones:
                 #Thanks to Python's duck typing and Blender's PointerProperties, this works
-                __updateLocRot(bone,logger)
+                _update_LocRot(bone,logger)
 
         for obj in bpy.data.objects:
-            __updateLocRot(obj,logger)
+            _update_LocRot(obj,logger)
 
     if last_version < xplane_helpers.VerStruct.parse_version('3.5.0-beta.2+32.20180725010500'):
         for mat in bpy.data.materials:
