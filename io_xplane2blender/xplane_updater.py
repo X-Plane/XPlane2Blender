@@ -149,6 +149,9 @@ def _update_LocRot(has_datarefs:Union[bpy.types.Object, bpy.types.Bone],logger:X
     """
     Side Effects: has_datarefs/bone's datarefs' anim_type may change
     from Loc/Rot/LocRot->Transform
+
+    Loc and Rot and LocRot options were combined in the enum,
+    and the enum needed to be adjusted
     """
 
     #Recreate the pre_34 animation types enum
@@ -189,6 +192,42 @@ def _update_LocRot(has_datarefs:Union[bpy.types.Object, bpy.types.Bone],logger:X
               )
 
 
+def _rollback_blend_glass(logger:XPlaneLogger)->None:
+    """
+    Side Effects: mat.xplane.blend_glass may change, mat.xplane.blend_v1100 deleted
+
+    There was a mistake in creating Blend Glass as a member of blend_v1100,
+    instead of as a BoolProperty.
+
+    This saves Blend Glass (if needed) before blend_v1100 is deleted
+    """
+    for mat in bpy.data.materials:
+        v10 = mat.xplane.get('blend_v1000')
+        v11 = mat.xplane.get('blend_v1100')
+
+        if v11 == 3: #Aka, where BLEND_GLASS was in the enum
+            mat.xplane.blend_glass = True
+
+            # This bit of code reachs around Blender's magic EnumProperty
+            # stuff and get at the RNA behind it, all to find the name.
+            # If the default for blend_v1000 ever changes, we'll be covered.
+            blend_v1000 = xplane_props.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
+            enum_items = blend_v1000.enum_items
+
+            if v10 is None:
+                v10_mode = enum_items[enum_items.find(blend_v1000.default)].name
+            else:
+                v10_mode = enum_items[v10].name
+            logger.info(
+                    "Set material \"{name}\"'s Blend Glass property to true and its Blend Mode to {v10_mode}"
+                    .format(name=mat.name, v10_mode=v10_mode))
+
+        #TODO: Replace with API
+        if v11 is not None:
+            # It appears when get returns None, del throws an error,
+            # which is not how normal python works
+            del mat.xplane['blend_v1100']
+
 
 def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLogger)->None:
     """
@@ -214,31 +253,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
             _update_LocRot(obj,logger)
 
     if last_version < xplane_helpers.VerStruct.parse_version('3.5.0-beta.2+32.20180725010500'):
-        for mat in bpy.data.materials:
-            v10 = mat.xplane.get('blend_v1000')
-            v11 = mat.xplane.get('blend_v1100')
-
-            if v11 == 3: #Aka, where BLEND_GLASS was in the enum
-                mat.xplane.blend_glass = True
-
-                # This bit of code reachs around Blender's magic EnumProperty
-                # stuff and get at the RNA behind it, all to find the name.
-                # If the default for blend_v1000 ever changes, we'll be covered.
-                blend_v1000 = xplane_props.XPlaneMaterialSettings.bl_rna.properties['blend_v1000']
-                enum_items = blend_v1000.enum_items
-
-                if v10 is None:
-                    v10_mode = enum_items[enum_items.find(blend_v1000.default)].name
-                else:
-                    v10_mode = enum_items[v10].name
-                logger.info(
-                        "Set material \"{name}\"'s Blend Glass property to true and its Blend Mode to {v10_mode}"
-                        .format(name=mat.name, v10_mode=v10_mode))
-
-            if v11 is not None:
-                # It appears when get returns None, del throws an error,
-                # which is not how normal python works
-                del mat.xplane['blend_v1100']
+        _rollback_blend_glass(logger)
 
     if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-dev.0+43.20190606030000"):
         # This helps us conveniently save the Cast shadow value for later after we delete it
