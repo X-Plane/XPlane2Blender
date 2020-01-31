@@ -161,12 +161,31 @@ def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
                         continue
                 xplane_updater_helpers.copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
 
+def _change_pre_3_3_0_properties(logger:xplane_helpers.XPlaneLogger)->None:
+    """
+    Side Effects: scene.xplane.compositeTextures, scene.xplane.autodetectTextures,
+                  layer.exportType may change
+    The purpose of this is (I think) to get pre 3_3_0 files up to speed.
+    Or something.
+    """
     for scene in bpy.data.scenes:
-        for coll in scene.collection.children:
-            # 0 used to mean "layers" (default), 1 used to mean "root_objects"
-            coll.xplane.is_exportable_collection = not coll.hide_viewport if scene.xplane.get("exportMode", 0) == 0 else False
-            scene.view_layers[0].layer_collection.children[coll.name].hide_viewport = coll.hide_viewport # Change eyeball
-            coll.hide_viewport = False
+        # set compositeTextures to False
+        scene.xplane.compositeTextures = False
+        for layer in [coll.xplane.layer for coll in scene.collection.children]:
+            # set autodetectTextures to False
+            layer.autodetectTextures = False
+
+            # set export mode to cockpit, if cockpit was previously enabled
+            prev_export_type = layer.export_type
+            if layer.cockpit:
+                layer.export_type = 'cockpit'
+                logger.info('Changed layer "%s"\'s Export Type from "%s" to "%s"' % (layer.name, prev_export_type, layer.export_type))
+            else:
+                layer.export_type = 'aircraft'
+
+    logger.info("Unless otherwise noted, changed every layer's Export Type to 'Aircraft'")
+    logger.info("For all layers, in all scenes, set 'Composite Textures' and 'Autodetect Textures' to false")
+
 
 def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLogger)->None:
     """
@@ -178,28 +197,9 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
     """
     if last_version < xplane_helpers.VerStruct.parse_version("4.0.0"):
         _layers_to_collection(logger)
+
     if last_version < xplane_helpers.VerStruct.parse_version('3.3.0'):
-        for scene in bpy.data.scenes:
-            # set compositeTextures to False
-            scene.xplane.compositeTextures = False
-
-            if scene.xplane and scene.xplane.layers and len(scene.xplane.layers) > 0:
-                for layer in scene.xplane.layers:
-                    # set autodetectTextures to False
-                    layer.autodetectTextures = False
-
-                    # set export mode to cockpit, if cockpit was previously enabled
-                    # TODO: Have users actually exported scenery objects before?
-                    # Do we need to care about non-aircraft export types?
-                    prev_export_type = layer.export_type
-                    if layer.cockpit:
-                        layer.export_type = 'cockpit'
-                        logger.info('Changed layer "%s"\'s Export Type from "%s" to "%s"' % (layer.name, prev_export_type, layer.export_type))
-                    else:
-                        layer.export_type = 'aircraft'
-
-        logger.info("Unless otherwise noted, changed every layer's Export Type to 'Aircraft'")
-        logger.info("For all layers, in all scenes, set 'Composite Textures' and 'Autodetect Textures' to false")
+        _change_pre_3_3_0_properties(logger)
 
     if last_version < xplane_helpers.VerStruct.parse_version('3.4.0'):
         for arm in bpy.data.armatures:
