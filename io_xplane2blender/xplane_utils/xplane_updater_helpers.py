@@ -3,6 +3,7 @@ import collections
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import bpy
+import idprop
 
 
 # This is basically a copy of EnumPropertyItem, with only the parts we care about
@@ -109,20 +110,39 @@ def copy_property_group(source_prop_group:bpy.types.PropertyGroup, dest_prop_gro
                     setattr(dest_prop_group, prop.identifier, source_value)
     copy_recursive(source_prop_group, dest_prop_group)
 
+def copy_former_property_group_to_property_group(from_idprop_todict:Dict[str, Any], dest_prop_group):
+    """
+    For recursively copying a deleted PropertyGroup, now an idprop_group, use this.
+    Data comes in from a call to idprop_group.to_dict()
+    """
+    #TODO: Implement this and delete scene.xplane.layers
+    ...
 
-def delete_property_from_datablock(datablock, prop:str)->Union[bool, int, float, str]:
+def delete_property_from_datablock(idprop_group:idprop.types.IDPropertyGroup, prop:str)->Union[bool, int, float, str]:
     """
     Attempts to delete a property from a datablock, if not found, raise KeyError.
     If round, return the value as reported by get #Or would getattr be better?
     """
-    pass
+    try:
+        del idprop_group[prop]
+    except KeyError:
+        pass
 
 
-def delete_property_from_blend_file(prop_group_type, prop:str)->None:
+def delete_property_from_blend_file(idprop_groups:List[Any], prop:str)->None:
     """
     Completely cleans away a property from the .blend file, leaving no trace
+    Assumes each member of bpy_types has an xplane pointer property
+
+    thing is the thing that has the property group hanging off it
     """
-    pass
+    #TODO: Not sure what I want out of this API. Something where
+    # Scene and "xplane.exportMode" are passed in, and all of
+    # "exportMode" is deleted?
+    # Better communication than lots of for loops?
+    #for idprop_group in idprop_groups:
+        #delete_property_from_datablock(idprop_group, prop)
+    ...
 
 
 def reorder_enum_prop(datablock, prop:str, conversion_table: List[Tuple[int, int]], previous_default_value:int)->None:
@@ -130,7 +150,7 @@ def reorder_enum_prop(datablock, prop:str, conversion_table: List[Tuple[int, int
     Re-orders an enum based on a conversion table, where each row of the table is the before->after index.
     Uses get, and, if no value was set, uses the previous_default_value now that getattr would return the incorrect result
     """
-    pass
+    ...
 
 
 def rename_prop(datablock, prop_old:str, prop_new_name:str, delete_old_prop:bool=True)->None:
@@ -138,4 +158,4 @@ def rename_prop(datablock, prop_old:str, prop_new_name:str, delete_old_prop:bool
     Copies the value from prop_old to prop_new, with the option to delete the old property right away.
     Works with properties that are read ID properties or old ID properties
     """
-    pass
+    ...

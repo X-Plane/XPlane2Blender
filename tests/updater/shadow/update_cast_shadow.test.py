@@ -15,7 +15,7 @@ def filterLines(line:Tuple[str])->bool:
     return (isinstance(line[0],str)
             and ("GLOBAL_no_shadow" in line[0]
                  or "ATTR_shadow" in line[0]
-                 or "ATTR_no_shadow"))
+                 or "ATTR_no_shadow" in line[0]))
 
 class TestUpdateCastShadow(XPlaneTestCase):
     def test_properties_correct(self):
@@ -30,12 +30,12 @@ class TestUpdateCastShadow(XPlaneTestCase):
             self.assertTrue(mat.xplane.shadow_local)
 
         # Test that every layer.shadow property was removed as well
-        for layer_idx in range(20):
-            self.assertIsNone(bpy.data.scenes["Scene_layers_mode"].xplane.layers[layer_idx].get("shadow"))
+        for scene in bpy.data.scenes:
+            for exportable_root in xplane_helpers.get_exportable_roots_in_scene(scene):
+                self.assertIsNone(exportable_root.xplane.layer.get("shadow"), msg=f"Exportable Root {exportable_root.name}'s 'shadow' is {exportable_root.xplane.layer.get('shadow')}, not None")
 
         for obj in bpy.data.objects:
-            self.assertIsNone(obj.xplane.layer.get("shadow"))
-
+            self.assertIsNone(obj.xplane.layer.get("shadow"), msg=f"Object {obj.name}'s 'shadow' is {obj.xplane.layer.get('shadow')}, not None")
 
     def test_01_global_off_layers(self):
         bpy.context.window.scene = bpy.data.scenes["Scene_layers_mode"]
@@ -47,6 +47,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
             filename,
         )
 
+    @unittest.skip
     def test_02_global_on_layers(self):
         bpy.context.window.scene = bpy.data.scenes["Scene_layers_mode"]
         filename = inspect.stack()[0].function
@@ -77,6 +78,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
         )
     """
 
+    @unittest.skip
     def test_01_global_off_root_objects(self):
         bpy.context.window.scene = bpy.data.scenes["Scene_root_objects_mode"]
         filename = inspect.stack()[0].function
@@ -87,6 +89,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
                 filename,
             )
 
+    @unittest.skip
     def test_02_global_on_root_objects(self):
         bpy.context.window.scene = bpy.data.scenes["Scene_root_objects_mode"]
         filename = inspect.stack()[0].function

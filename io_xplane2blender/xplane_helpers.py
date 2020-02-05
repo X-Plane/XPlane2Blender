@@ -99,7 +99,7 @@ def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
 
 
 def get_exportable_roots_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
-    return [root for root in filter(is_exportable_root, itertools.chain(scene.collection.children, scene.objects))]
+    return [root for root in filter(is_exportable_root, itertools.chain(get_collections_in_scene(scene), scene.objects))]
 
 
 def is_exportable_root(obj_or_collection: Union[bpy.types.Collection, bpy.types.Object])->bool:
