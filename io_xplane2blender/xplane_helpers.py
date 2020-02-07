@@ -65,7 +65,7 @@ def get_plugin_resources_folder()->str:
     return os.path.join(os.path.dirname(__file__),"resources")
 
 
-def get_potential_objects_in_root_object(root: PotentialRoot)->List[bpy.types.Object]:
+def get_potential_objects_in_exportable_root(root: PotentialRoot)->List[bpy.types.Object]:
     def is_potential_child(obj: bpy.types.Object)->bool:
         return obj.type in {"MESH", "LIGHT", "ARMATURE", "EMPTY"}
 

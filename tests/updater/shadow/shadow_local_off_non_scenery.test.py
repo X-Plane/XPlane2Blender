@@ -15,7 +15,7 @@ def filterLines(line:Tuple[str])->bool:
     return (isinstance(line[0],str)
             and ("GLOBAL_no_shadow" in line[0]
                  or "ATTR_shadow" in line[0]
-                 or "ATTR_no_shadow"))
+                 or "ATTR_no_shadow" in line[0]))
 
 class TestShadowLocalOffNonScenery(XPlaneTestCase):
     def test_properties_correct(self):
@@ -30,6 +30,7 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         self.assertIsNone(bpy.data.objects["02_cockpit_force_global_shadows_root"].get("shadow"))
 
     def test_01_aircraft_force_global_shadows(self):
+        bpy.context.window_manager.windows[0].scene = bpy.data.scenes["Scene_layers"]
         filename = inspect.stack()[0].function
         self.assertLayerExportEqualsFixture(
             0,
@@ -39,6 +40,7 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         )
 
     def test_02_cockpit_force_global_shadows(self):
+        bpy.context.window_manager.windows[0].scene = bpy.data.scenes["Scene_layers"]
         filename = inspect.stack()[0].function
         self.assertLayerExportEqualsFixture(
             1,
@@ -48,6 +50,7 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         )
 
     def test_01_aircraft_force_global_shadows_root(self):
+        bpy.context.window_manager.windows[0].scene = bpy.data.scenes["Scene_root_objects"]
         filename = inspect.stack()[0].function
         self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],
@@ -57,6 +60,7 @@ class TestShadowLocalOffNonScenery(XPlaneTestCase):
         )
 
     def test_02_cockpit_force_global_shadows_root(self):
+        bpy.context.window_manager.windows[0].scene = bpy.data.scenes["Scene_root_objects"]
         filename = inspect.stack()[0].function
         self.assertExportableRootExportEqualsFixture(
             bpy.data.objects[filename[5:]],

@@ -39,7 +39,7 @@ import functools
 import pprint
 import re
 
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Sequence, Tuple, Union
 
 import bpy
 from bpy.app.handlers import persistent
@@ -75,10 +75,10 @@ def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
 
     prepare_collections_for_renaming()
     for i, scene in enumerate(bpy.data.scenes):
-        if not scene.xplane.layers:
+        if "layers" in scene.xplane and not scene.xplane["layers"]:
             for j, coll in enumerate(scene.collection.children, start=1):
                 coll.name = f"Layer {j}" if i == 0 else f"Layer {j}_{scene.name}"
-        else:
+        elif "layers" in scene.xplane:
             # We rename everything from Collection {number} to Layer {number}_{scene.name}
             # 1. Correct any named "Collection$" to "Collection 1.000" (why Blender?!),
             #    keeping any trailing evidence of a name collision (.001, .002, etc)
@@ -92,11 +92,11 @@ def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
             #      make it unique by appending the .000 business
             # 3. Rename to match the pattern,
             #    copy the XPlaneLayer from scene.xplane.layers to coll.xplane.layer
-            for layer in scene.xplane.layers:
-                assert layer.index != -1, f"XPlaneLayer f{layer.name} was never actually initialized in 2.79"
-                collection_new_name = f"Layer {layer.index + 1}" + (f"_{scene.name}" if i else f"")
+            for layer in scene.xplane["layers"]:
+                assert layer['index'] != -1, f"XPlaneLayer f{layer.name} was never actually initialized in 2.79"
+                collection_new_name = f"Layer {layer['index'] + 1}" + (f"_{scene.name}" if i else f"")
                 for suffix in (f"{j:03}" for j in range(0, i+1)):
-                    try_this = f"Collection {layer.index + 1}.{suffix}"
+                    try_this = f"Collection {layer['index'] + 1}.{suffix}"
                     try:
                         coll = scene.collection.children[try_this]
                     except KeyError:
@@ -109,7 +109,32 @@ def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
                         coll.hide_viewport = False
                     break
                 else: # no break, no matching collection found
-                    nondefaults = xplane_updater_helpers.check_property_group_has_non_default(layer)
+                    def flatten(items:Dict[str,Any]):
+                        """
+                        Returns all the real values (except 'index') used in 'layer'
+                        """
+                        output = []
+                        def f(item):
+                            # No, it isn't perfect. I'm just sick of this API
+                            if item == [] or item == dict():
+                                return
+                            if isinstance(item, list):
+                                for v in item:
+                                    f(v)
+                            elif isinstance(item, dict):
+                                for k, v in item.items():
+                                    # - index will always be not None,
+                                    # - expanded isn't impressive enough to matter
+                                    # - no point collecting a change of "" for name, common mistake
+                                    if ((k not in {"expanded", "index"})
+                                        and (k, v) != ("name","")):
+                                        f(v)
+                            else:
+                                output.append(item)
+                        f(items)
+                        return output
+
+                    nondefaults = flatten(layer.to_dict())
                     if nondefaults:
                         coll = bpy.data.collections.new(collection_new_name)
                         scene.collection.children.link(coll)
@@ -118,7 +143,16 @@ def _layers_to_collection(logger:xplane_helpers.XPlaneLogger)->None:
                         coll.hide_viewport = False
                     else:
                         continue
-                xplane_updater_helpers.copy_property_group(layer, coll.xplane.layer, props_to_ignore={"index"})
+                def copy_layer_idprop_to_property(coll:bpy.types.Collection):
+                    try:
+                        coll.xplane["layer"]
+                    except KeyError:
+                        coll.xplane["layer"] = {}
+                    finally:
+                        coll.xplane["layer"].update(layer)
+                copy_layer_idprop_to_property(coll)
+        xplane_updater_helpers.delete_property_from_datablock(scene["xplane"], "layers")
+
 
 def _change_pre_3_3_0_properties(logger:xplane_helpers.XPlaneLogger)->None:
     """
@@ -144,6 +178,7 @@ def _change_pre_3_3_0_properties(logger:xplane_helpers.XPlaneLogger)->None:
 
     logger.info("Unless otherwise noted, changed every layer's Export Type to 'Aircraft'")
     logger.info("For all layers, in all scenes, set 'Composite Textures' and 'Autodetect Textures' to false")
+
 
 def _update_LocRot(has_datarefs:Union[bpy.types.Object, bpy.types.Bone],logger:XPlaneLogger)->None:
     """
@@ -228,6 +263,7 @@ def _rollback_blend_glass(logger:XPlaneLogger)->None:
             # which is not how normal python works
             del mat.xplane['blend_v1100']
 
+
 def _set_shadow_local_and_delete_global_shadow(logger:xplane_helpers.XPlaneLogger)->None:
     """
     Side Effects: mat.xplane.shadow_local may be set, based on the value of the root's
@@ -273,12 +309,13 @@ def _set_shadow_local_and_delete_global_shadow(logger:xplane_helpers.XPlaneLogge
     # This way we'll be able to map the usage (and shared-ness) of a material
     material_uses = collections.defaultdict(list) # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
 
-    for scene in bpy.data.scenes[:1]:
+    for scene in bpy.data.scenes:
         for exportable_root in xplane_helpers.get_exportable_roots_in_scene(scene):
             layer_options = exportable_root.xplane.layer
             if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
                 layer_options["shadow"] = True
-            potential_objects = xplane_helpers.get_potential_objects_in_root_object(exportable_root)
+
+            potential_objects = xplane_helpers.get_potential_objects_in_exportable_root(exportable_root)
             potential_materials = [slot.material for obj in potential_objects for slot in obj.material_slots if slot.material]
             _update_potential_materials(potential_materials, layer_options)
             used_layer_info = UsedLayerInfo(
