@@ -51,7 +51,7 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
 
         #TI Testing the results of an export without a fixture
         #TI out is the content for the .obj file
-        #out = self.exportLayer(0)
+        #out = self.exportExportableRoot("")
 
         #TI Example of expecting a failure
         #TI (Note: This doesn't test specific errors)
@@ -61,14 +61,6 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         #TI It is so much easier to understand and debug a test that way!
         #TI There is even an operator in the Plugin Dev section to help
         #filename = inspect.stack()[0].function
-
-        #TI Example of testing layer against fixture
-        #self.assertLayerExportEqualsFixture(
-        #    0,
-        #    os.path.join(__dirname__, "fixtures", filename + ".obj"),
-        #    filterLines,
-        #    filename,
-        #)
 
         #TI Example testing root object against fixture
         #TI We name a root object something like "01_my_root_object" and remove filename's "test_"

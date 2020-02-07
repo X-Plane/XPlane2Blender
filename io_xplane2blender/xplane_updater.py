@@ -374,7 +374,6 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
         for has_layer in bpy.data.collections[:] + bpy.data.objects[:]:
             xplane_updater_helpers.delete_property_from_datablock(has_layer.xplane.layer, "index")
         #----------------------------------------------------------------------
-        pass
 
 @persistent
 def load_handler(dummy):

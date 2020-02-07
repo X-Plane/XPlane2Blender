@@ -1243,8 +1243,9 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     autodetectTextures: bpy.props.BoolProperty(
         name = "Autodetect Textures",
         description = "Automaticly determines textures based on materials",
-        default = True
+        default = False
     )
+
 
 class XPlaneCollectionSettings(bpy.types.PropertyGroup):
     is_exportable_collection: bpy.props.BoolProperty(
@@ -1313,20 +1314,9 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = "")#str(bpy.context.scene.xplane.get("xplane2blender_ver")))
     #######################################
 
-    #---
-    # TODO: Currently xplane_update_helpers's
-    # copy_property_group can't handle ID Props, which makes it hard to delete this
-    # right now
-    #-------------------------------------------------------------------------
-    layers: bpy.props.CollectionProperty(
-        name = "Layers",
-        description = "DEPCRECATED: This is too time consuming to make an API to remove and copy right now. Pretend this doesn't exist.",
-        type = XPlaneLayer
-    )
-
     optimize: bpy.props.BoolProperty(
         name = "Optimize",
-        description = "If checked file size will be optimized. However this can increase export time dramatically",
+        description = "If checked file size will be optimized. However this can increase export time slightly",
         default = False
     )
 
