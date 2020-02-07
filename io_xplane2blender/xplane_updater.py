@@ -257,11 +257,7 @@ def _rollback_blend_glass(logger:XPlaneLogger)->None:
                     "Set material \"{name}\"'s Blend Glass property to true and its Blend Mode to {v10_mode}"
                     .format(name=mat.name, v10_mode=v10_mode))
 
-        #TODO: Replace with API
-        if v11 is not None:
-            # It appears when get returns None, del throws an error,
-            # which is not how normal python works
-            del mat.xplane['blend_v1100']
+        xplane_updater_helpers.delete_property_from_datablock(mat.xplane, "blend_v1100")
 
 
 def _set_shadow_local_and_delete_global_shadow(logger:xplane_helpers.XPlaneLogger)->None:
@@ -362,25 +358,23 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
     if last_version < xplane_helpers.VerStruct.parse_version("3.5.1-dev.0+43.20190606030000"):
         _set_shadow_local_and_delete_global_shadow(logger)
 
-    #TODO: Move the prop_group copying code before all this. The rest of the code will depend on it
-    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0"):
+    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0-alpha.6+71.20200207171400"):
+        #--- Disable autodetect textures --------------------------------------
+
+        # I acknowledge that the 3_3_0 updater already has code like this,
+        # however it doesn't matter much since most people aren't coming from
+        # that anymore /s
+        for has_layer in bpy.data.collections[:] + bpy.data.objects[:]:
+            has_layer.xplane.layer.autodetectTextures = False
         #--- Delete "exportMode" ----------------------------------------------
         for scene in bpy.data.scenes:
-            #TODO: Unit test for this
-            #del scene.xplane["exportMode"]
-            pass
+            xplane_updater_helpers.delete_property_from_datablock(scene.xplane, "exportMode")
         #----------------------------------------------------------------------
-
-        #--- Disable Autodetect Textures --------------------------------------
-        for scene in bpy.data.scenes:
-            #TODO: Unit test for this. Default should be changed so new collections
-            # automatically have it
-            for layer_props in [obj.xplane.layer for obj in scene.objects]:
-                layer_props.autodetectTextures = False
+        #--- Delete index -----------------------------------------------------
+        for has_layer in bpy.data.collections[:] + bpy.data.objects[:]:
+            xplane_updater_helpers.delete_property_from_datablock(has_layer.xplane.layer, "index")
         #----------------------------------------------------------------------
-
-        #----------------------------------------------------------------------
-
+        pass
 
 @persistent
 def load_handler(dummy):

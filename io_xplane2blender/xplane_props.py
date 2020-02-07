@@ -982,13 +982,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
         return None
 
-    #TODO: We can delete this now that layers aren't a thing anymore
-    index: bpy.props.IntProperty(
-        name = "Index",
-        description = "The blender layer index",
-        default = -1
-    )
-
     expanded: bpy.props.BoolProperty(
         name = "Expanded",
         description = "Toggles the layer settings visibility",
