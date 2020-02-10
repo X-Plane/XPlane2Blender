@@ -988,12 +988,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = False
     )
 
-    export: bpy.props.BoolProperty(
-        name = "Include In Export",
-        description = "If checked, OBJ will exported (assuming all other requirements and validations are met)",
-        default = True
-    )
-
     export_path_directives: bpy.props.CollectionProperty(
         name = "Export Directives for OBJ",
         description = "A collection of export paths intended for an OBJ's EXPORT directives",
@@ -1424,17 +1418,6 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         default = 0,
         min = 0
     )
-
-    exportMeshValues = []
-    while len(exportMeshValues) < 20:
-        exportMeshValues.append(True)
-
-    export_mesh: bpy.props.BoolVectorProperty(
-        name = "Export Mesh in Layers",
-        description = "If disabled only object's animations will be exported in the selected layers, but not the mesh itself",
-        default = exportMeshValues,
-        size = 20,
-        subtype = 'LAYER')
 
     # v1000
     conditions: bpy.props.CollectionProperty(

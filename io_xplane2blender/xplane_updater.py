@@ -374,6 +374,14 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
         for has_layer in bpy.data.collections[:] + bpy.data.objects[:]:
             xplane_updater_helpers.delete_property_from_datablock(has_layer.xplane.layer, "index")
         #----------------------------------------------------------------------
+        #--- Delete XPlaneObjectSettings.export_mesh---------------------------
+        for obj in bpy.data.objects:
+            xplane_updater_helpers.delete_property_from_datablock(obj.xplane, "export_mesh")
+        #----------------------------------------------------------------------
+        #--- Delete all XPlaneLayer's "Include in Export" ---------------------
+        for has_layer in bpy.data.collections[:] + bpy.data.objects[:]:
+            xplane_updater_helpers.delete_property_from_datablock(has_layer.xplane.layer, "export")
+        #----------------------------------------------------------------------
 
 @persistent
 def load_handler(dummy):

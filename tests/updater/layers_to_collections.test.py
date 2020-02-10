@@ -58,7 +58,7 @@ class TestLayersToCollections(XPlaneTestCase):
         defaults["lod"] = [{"expanded":False, "near":0, "far":0}]
         return defaults
 
-    # When the "layers" prop useless, this got messed up
+    # When the "layers" prop was deleted, this got messed up
     # and I'm sick of trying to push it back into shape.
     # Next person ot work on this gets to have the fun
     @unittest.skip
@@ -139,7 +139,6 @@ class TestLayersToCollections(XPlaneTestCase):
             "texture_normal": "tex_NML",
             "particle_system_file": "some_particle_system",
             "slungLoadWeight": 10.0,
-            "export": False,
             "debug": False
         })
         self.assertXPlaneLayerEqual(layer_first, d)

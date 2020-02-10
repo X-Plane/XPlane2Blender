@@ -440,7 +440,6 @@ def layer_layout(layout:bpy.types.UILayout, layer_props: xplane_props.XPlaneLaye
         advanced_box.prop(layer_props, "particle_system_file", text="Particle System File")
     advanced_box.prop(layer_props, "slungLoadWeight")
 
-    advanced_box.prop(layer_props, "export")
     advanced_box.prop(layer_props, "debug")
 
 def custom_layer_layout(
@@ -515,22 +514,14 @@ def export_path_dir_layer_layout(
         elif isinstance(has_layer_props, bpy.types.Object):
             row.operator("object.remove_xplane_export_path_directive", text="", emboss=False, icon="X").index = i
 
-def mesh_layout(layout:bpy.types.UILayout, obj):
+def mesh_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
     """
-    Draws the additional UI layout for Mesh-Objects. This includes light-level and depth-culling.
-    A no-op until issue #409 is decided on
+    Draws the additional UI layout for Mesh. Currently unused.
     """
     pass
-    """
-    if bpy.context.scene.xplane.exportMode == 'layers':
-        row = layout.row()
-        row.prop(obj.xplane, "export_mesh", text = "Export Animation In Layers")
-
-    row = layout.row()
-    """
 
 
-def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Light):
+def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Light)->None:
     row = layout.row()
     row.prop(obj.xplane, "type", text = "Type")
 
@@ -575,7 +566,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Light):
 #   UILayout layout - Instance of current UILayout.
 #   Material active_material - The active_material of a mesh
 def material_layout(layout:UILayout,
-                    active_material:bpy.types.Material):
+                    active_material:bpy.types.Material)->None:
     version = int(bpy.context.scene.xplane.version)
     draw_box = layout.box()
     draw_box.label(text="Draw Settings")
@@ -771,7 +762,7 @@ def animation_layout(layout:bpy.types.UILayout, obj:bpy.types.Object, is_bone:bo
             subrow = subbox.row()
             subrow.prop(attr, "show_hide_v2")
 
-def cockpit_layout(layout: bpy.types.UILayout, active_material:bpy.types.Material):
+def cockpit_layout(layout: bpy.types.UILayout, active_material:bpy.types.Material)->None:
     """Draws UI for cockpit and panel regions"""
     cockpit_box = layout.box()
     cockpit_box.label(text="Cockpit Panel")
@@ -781,7 +772,7 @@ def cockpit_layout(layout: bpy.types.UILayout, active_material:bpy.types.Materia
     if active_material.xplane.panel:
         cockpit_box_column.prop(active_material.xplane, 'cockpit_region')
 
-def axis_detent_ranges_layout(layout:bpy.types.UILayout, manip:xplane_props.XPlaneManipulatorSettings):
+def axis_detent_ranges_layout(layout:bpy.types.UILayout, manip:xplane_props.XPlaneManipulatorSettings)->None:
     layout.separator()
     row = layout.row()
     row.label(text="Axis Detent Range")
@@ -801,7 +792,7 @@ def axis_detent_ranges_layout(layout:bpy.types.UILayout, manip:xplane_props.XPla
 
         row.operator("object.remove_xplane_axis_detent_range", text="", emboss=False, icon="X").index = i
 
-def manipulator_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
+def manipulator_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
     row = layout.row()
     row.prop(obj.xplane.manip, 'enabled')
 
@@ -1015,7 +1006,7 @@ def manipulator_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
             manipType == MANIP_DRAG_ROTATE_DETENT:
             axis_detent_ranges_layout(box, obj.xplane.manip)
 
-def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy.types.Material, bpy.types.Object]):
+def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy.types.Material, bpy.types.Object])->None:
     assert isinstance(could_have_conditions, bpy.types.Material) or isinstance(could_have_conditions, bpy.types.Object)
     op_type = "material" if isinstance(could_have_conditions, bpy.types.Material) else "object"
 
@@ -1032,14 +1023,14 @@ def conditions_layout(layout:bpy.types.UILayout, could_have_conditions:Union[bpy
         subrow = subbox.row()
         subrow.prop(attr, "value")
 
-def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
+def lod_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
     row = layout.row()
     row.prop(obj.xplane, "override_lods")
     if obj.xplane.override_lods:
         box = layout.box()
         box.row().prop(obj.xplane, "lod", text = "LOD")
 
-def weight_layout(layout:bpy.types.UILayout, obj:bpy.types.Object):
+def weight_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
     row = layout.row()
     row.prop(obj.xplane, 'override_weight')
     if obj.xplane.override_weight:
