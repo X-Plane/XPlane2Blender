@@ -39,7 +39,7 @@ from .xplane_primitive import XPlanePrimitive
 def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]:
     xplane_files: List["XPlaneFile"] = []
     for exportable_root in filter(lambda o: xplane_helpers.is_exportable_root(o), scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]):
-        if exportable_root.xplane.layer.export:
+        if True: # When the eyeball visibility feature is in, we'll use it here
             xplane_file = createFileFromBlenderRootObject(exportable_root)
             xplane_files.append(xplane_file)
 
