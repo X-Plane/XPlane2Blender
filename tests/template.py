@@ -24,6 +24,7 @@ import sys
 import bpy
 from io_xplane2blender import xplane_config
 from io_xplane2blender.tests import *
+from io_xplane2blender.tests import test_creation_helpers
 #from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)

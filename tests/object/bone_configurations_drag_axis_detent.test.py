@@ -18,6 +18,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_01(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -35,6 +36,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_02(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t"))
         B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -53,6 +55,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_03(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t"))
         B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -72,6 +75,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_04(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n"))
         B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -91,6 +95,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_05(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",collection="Layer 1"))
         B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -109,6 +114,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_06(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",collection="Layer 1"))
         B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_sh",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -130,6 +136,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_07(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -147,6 +154,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_08(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -163,6 +171,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_09(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n",collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -179,6 +188,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_10(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",collection="Layer 1"))
 
@@ -194,6 +204,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_11(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",collection="Layer 1"))
 
@@ -207,8 +218,8 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_12(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        print("HIIIIIIIIIIIIIII")
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_sh"))#,collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A),collection="Layer 1"))
 
@@ -225,6 +236,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_13(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_tr",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -243,6 +255,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_14(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_rt",collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_t",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -261,6 +274,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_15(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",collection="Layer 1"))
         B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",collection="Layer 1"))
@@ -280,6 +294,7 @@ class TestBoneConfigurationsDragAxisDetent(XPlaneTestCase):
         #print("def test_drag_axis_detent_case_16(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_tt",collection="Layer 1"))
 

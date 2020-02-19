@@ -9,7 +9,7 @@ class TestCreateFromLayers(XPlaneTestCase):
     def test_create_files_from_single_layer(self):
         tmpDir = os.path.realpath(os.path.join(__file__, '../../tmp'))
 
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
+        xplaneFile = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 1"])
 
         # should contain 4 cubes
         self.assertEqual(len(xplaneFile._bl_obj_name_to_bone), 4)
@@ -52,7 +52,7 @@ class TestCreateFromLayers(XPlaneTestCase):
         ])
 
 
-        xplaneFile2 = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 2"])
+        xplaneFile2 = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 2"])
 
         # should contain 2 cubes
         self.assertEqual(len(xplaneFile2._bl_obj_name_to_bone), 2)
@@ -71,7 +71,7 @@ class TestCreateFromLayers(XPlaneTestCase):
                 '1 Mesh: Cube.005'
         ])
 
-        xplaneFile3 = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 3"])
+        xplaneFile3 = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 3"])
 
         # should contain 4 cubes
         self.assertEqual(len(xplaneFile3._bl_obj_name_to_bone), 5)

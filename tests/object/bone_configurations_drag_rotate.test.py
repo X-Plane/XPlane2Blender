@@ -18,6 +18,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_01(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",collection="Layer 1"))
         set_manipulator_settings(A,MANIP_DRAG_ROTATE)
@@ -32,6 +33,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_02(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -48,6 +50,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_03(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -64,6 +67,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_04(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n",collection="Layer 1"))
         B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -80,6 +84,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_05(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_rt",collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -97,6 +102,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_06(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -114,6 +120,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_07(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -131,6 +138,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_08(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r",collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -149,6 +157,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_09(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_mesh(DatablockInfo("MESH",name="bone_rs",collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -163,6 +172,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_10(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",collection="Layer 1"))
         set_animation_data(A,T_2_FRAMES_1_X)
@@ -177,6 +187,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_11(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n",collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_s",parent_info=ParentInfo(A),collection="Layer 1"))
@@ -192,6 +203,7 @@ class TestBoneConfigurationsDragRotate(XPlaneTestCase):
         #print("def test_drag_rotate_case_12(self):")
         create_initial_test_setup()
         set_xplane_layer(0,{'export_type':'cockpit'})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_nn",collection="Layer 1"))
         B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A),collection="Layer 1"))

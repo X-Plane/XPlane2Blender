@@ -9,7 +9,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestMaterials(XPlaneTestCase):
     def test_material_attributes(self):
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
+        xplaneFile = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 1"])
 
         green = xplaneFile._bl_obj_name_to_bone['green'].xplaneObject.material
         red = xplaneFile._bl_obj_name_to_bone['red'].xplaneObject.material

@@ -1,27 +1,19 @@
 import collections
+import itertools
 import os
 import shutil
 import sys
 import unittest
-import itertools
-
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
-
 import io_xplane2blender
-from io_xplane2blender.xplane_config import setDebug, getDebug
-from io_xplane2blender import xplane_config
-from io_xplane2blender import xplane_helpers
-from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
-from io_xplane2blender.xplane_types import xplane_bone, xplane_file, xplane_primitive
-from ..xplane_types import xplane_file
-from ..xplane_types.xplane_primitive import XPlanePrimitive
-from .animation_file_mappings import mappings
-
-
-#TODO: Make this import from XPlane2Blender/tests.py instead of just keeping it in sync manually
-TEST_RESULTS_REGEX = "RESULT: After {num_tests} tests got {errors} errors, {fails} failures, and {skip} skipped"
+from io_xplane2blender import xplane_config, xplane_helpers
+from io_xplane2blender.tests import animation_file_mappings, test_creation_helpers
+from io_xplane2blender.xplane_config import getDebug, setDebug
+from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
+from io_xplane2blender.xplane_types import (xplane_bone, xplane_file,
+                                            xplane_primitive)
 
 FLOAT_TOLERANCE = 0.0001
 
@@ -29,6 +21,48 @@ __dirname__ = os.path.dirname(__file__)
 TMP_DIR = os.path.realpath(os.path.join(__dirname__, '../../tests/tmp'))
 
 FilterLinesCallback = Callable[[List[Union[float, str]]], bool]
+
+class TemporarilyMakeRootExportable():
+    """
+    Ensures a potential_root will be exportable
+    and when finished, will revert it's exportable
+    and viewport settings
+    """
+    def __init__(
+            self,
+            potential_root:Union[xplane_helpers.PotentialRoot, str],
+            scene:Optional[bpy.types.Scene]=None):
+        self.scene = scene or bpy.context.scene
+
+        if isinstance(potential_root, str):
+            self.potential_root = test_creation_helpers.lookup_potential_root_from_name(potential_root)
+        else:
+            self.potential_root = potential_root
+
+        if isinstance(self.potential_root, bpy.types.Collection):
+            self.original_exportable = self.potential_root.xplane.is_exportable_collection
+            # The little eyeball
+            all_layer_collections = {lc.name: lc for lc in xplane_helpers.get_layer_collections_in_scene(self.scene)}
+            self.original_hide_viewport = all_layer_collections[self.potential_root.name].hide_viewport
+        elif isinstance(self.potential_root, bpy.types.Object):
+            self.original_exportable = self.potential_root.xplane.isExportableRoot
+            # The little eyeball
+            self.original_hide_viewport = self.potential_root.hide_get(view_layer=scene.view_layers[0])
+        else:
+            assert False, "How did we get here?!"
+
+        self.original_disable_viewport = self.potential_root.hide_viewport
+
+    def __enter__(self):
+        test_creation_helpers.make_root_exportable(self.potential_root, self.scene)
+
+    def __exit__(self, exc_type, value, traceback):
+        if isinstance(self.potential_root, bpy.types.Collection):
+            self.potential_root.xplane.layer.is_exportable_collection = self.original_exportable
+        elif isinstance(self.potential_root, bpy.types.Object):
+            self.potential_root.xplane.isExportableRoot = self.original_exportable
+
+        test_creation_helpers.make_root_unexportable(self.potential_root, self.scene, self.original_hide_viewport, self.original_disable_viewport)
 
 class XPlaneTestCase(unittest.TestCase):
     def setUp(self, useLogger = True):
@@ -339,24 +373,42 @@ class XPlaneTestCase(unittest.TestCase):
             else:
                 self.assertEquals(expectedValue, value, 'Attribute "%s" is not equal' % name)
 
-    def exportLayer(self, layer_number:int, dest:str = None)->str:
+    def createXPlaneFileFromPotentialRoot(
+            self,
+            potential_root:Union[xplane_helpers.PotentialRoot, str],
+            scene: Optional[bpy.types.Scene] = None
+            )->xplane_file.XPlaneFile:
+        """
+        A thin wrapper around xplane_file.createFileFromBlenderObject, where the potential root
+        temporarily is made exportable.
+        """
+        scene = scene or bpy.context.scene
+
+        with TemporarilyMakeRootExportable(potential_root, scene):
+            xp_file = xplane_file.createFileFromBlenderRootObject(potential_root)
+
+        return xp_file
+
+    def exportLayer(self, layer_number:int, dest:Optional[str] = None, force_visible=True)->str:
         """
         DEPRECATED: New unit tests should not use this!
 
         - layer_number starts at 0, as it used to access the scene.layers collection
         - dest is a filepath without the file extension .obj, written to the TMP_DIR if not None
         """
-        return self.exportExportableRoot(bpy.data.collections[f"Layer {layer_number + 1}"], dest)
+        return self.exportExportableRoot(bpy.data.collections[f"Layer {layer_number + 1}"], dest, force_visible = True)
 
-    def exportExportableRoot(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:str = None)->str:
+    def exportExportableRoot(self, root_object:Union[bpy.types.Collection, bpy.types.Object, str], dest:Optional[str] = None, force_visible = True)->str:
         """
-        Returns the result of calling xplaneFile.write(),
+        Returns the result of calling xplaneFile.write()
         where xplaneFile came from a root object (by name or Blender data).
 
         - dest is a filepath without the file extension .obj, written to the TMP_DIR if not None
 
         If root_object is an str, matching collections are looked up first.
         If you don't want an ambiguity of root objects, don't use the name twice
+
+        If an XPlaneFile could not be made, a ValueError will bubble up
         """
         assert isinstance(root_object, (bpy.types.Collection, bpy.types.Object, str)), f"root_object type ({type(root_object)}) isn't allowed, must be Collection, Object, or str"
         if isinstance(root_object, str):
@@ -368,8 +420,11 @@ class XPlaneTestCase(unittest.TestCase):
                 except KeyError:
                     assert False, f"{root_object} must be in bpy.data.collections|objects"
 
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(root_object)
-        out = xplaneFile.write()
+        if force_visible:
+            xp_file = self.createXPlaneFileFromPotentialRoot(root_object)
+        else:
+            xp_file = xplane_file.createFileFromBlenderRootObject(root_object)
+        out = xp_file.write()
 
         if dest:
             with open(os.path.join(TMP_DIR, dest + '.obj'), 'w') as tmp_file:
@@ -383,38 +438,38 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
         super(XPlaneAnimationTestCase, self).setUp()
 
     def exportAnimationTestCase(self, name, dest):
-        self.assertTrue(mappings[name])
+        self.assertTrue(animation_file_mappings.mappings[name])
 
-        for layer in mappings[name]:
-            outFile = os.path.join(dest, os.path.basename(mappings[name][layer]))
+        for layer in animation_file_mappings.mappings[name]:
+            outFile = os.path.join(dest, os.path.basename(animation_file_mappings.mappings[name][layer]))
             print('Exporting to "%s"' % outFile)
 
-            xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"])
-
-            self.assertIsNotNone(xplaneFile, f"Unable to create XPlaneFile for {name} from Layer {layer + 1}")
-
-            out = xplaneFile.write()
-
-            outFile = open(outFile, 'w')
-            outFile.write(out)
-            outFile.close()
+            io_xplane2blender.tests.test_creation_helpers.make_root_exportable(bpy.data.collections[f"Layer {layer + 1}"])
+            try:
+                xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"])
+            except ValueError:
+                assert False, f"Unable to create XPlaneFile for {name} from Layer {layer + 1}"
+            else:
+                with open(outFile, "w") as outFile:
+                    out = xplaneFile.write()
+                    outFile.write(out)
 
     def runAnimationTestCase(self, name, __dirname__):
-        self.assertTrue(mappings[name])
+        self.assertTrue(animation_file_mappings.mappings[name])
 
         def filterLine(line):
             # only keep ANIM_ lines
             return isinstance(line[0], str) and ("ANIM" in line[0] or "TRIS" in line[0])
 
-        for layer in mappings[name]:
-            print('Testing animations against fixture "%s"' % mappings[name][layer])
+        for layer in animation_file_mappings.mappings[name]:
+            #print('Testing animations against fixture "%s"' % mappings[name][layer])
             bpy.data.collections[f"Layer {layer + 1}"].hide_viewport = False
             xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"])
 
             self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))
 
             out = xplaneFile.write()
-            fixtureFile = os.path.join(__dirname__, mappings[name][layer])
+            fixtureFile = os.path.join(__dirname__, animation_file_mappings.mappings[name][layer])
 
             self.assertTrue(os.path.exists(fixtureFile), 'File "%s" does not exist' % fixtureFile)
             self.assertFileOutputEqualsFixture(out, fixtureFile, filterLine)

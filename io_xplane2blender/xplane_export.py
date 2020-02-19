@@ -96,10 +96,9 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.scene.frame_set(frame = 1)
         bpy.context.view_layer.update()
 
-        xplaneFiles = []
         xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene)
         for xplaneFile in xplaneFiles:
-            if self._writeXPlaneFile(xplaneFile, export_directory) == False:
+            if not self._writeXPlaneFile(xplaneFile, export_directory):
                 if logger.hasErrors():
                     self._endLogging()
                     showLogDialog()

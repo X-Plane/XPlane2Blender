@@ -9,7 +9,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestMaterials(XPlaneTestCase):
     def test_manipulator_attributes(self):
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
+        xplaneFile = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 1"])
 
         drag_xy = xplaneFile._bl_obj_name_to_bone['drag_xy'].xplaneObject
         self.assertAttributesEqualDict(drag_xy.cockpitAttributes, {

@@ -10,8 +10,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestBlendBuildNumberObjFooter(XPlaneTestCase):
     def test_build_number_obj_footer(self):
-        coll = bpy.data.collections.new("Layer 1")
-        coll.xplane.is_exportable_collection = True
+        test_creation_helpers.create_datablock_collection("Layer 1")
         out = self.exportLayer(0)
 
         version_match = re.search("Exported with XPlane2Blender (.*)", out)

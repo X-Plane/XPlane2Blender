@@ -204,7 +204,8 @@ def main(argv=None)->int:
                         "Read new prefs",
                         "ID user decrement error",
                         "Smart Projection time",
-                        "WARNING.*has no UV-Map."
+                        "WARNING.*has no UV-Map.",
+                        "ERROR.*wrong user count in old ID",
                     )
                 )
 

@@ -11,18 +11,16 @@ from io_xplane2blender.tests import *
 EXPORT_FOLDER = '../tmp'
 
 class TestInstantExportFromMenu(XPlaneTestCase):
-    def assert_file_exists(self,layer_num,relpath):
-        try:
-            bpy.data.collections[f"Layer {layer_num + 1}"].xplane.is_exportable_collection = True
-            bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
+    def assert_file_exists(self,layer_num:int,relpath:str):
+        with TemporarilyMakeRootExportable(f"Layer {layer_num + 1}") as coll:
+            try:
+                bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
 
-            dirname = os.path.dirname(bpy.context.blend_data.filepath)
-            path = os.path.abspath(os.path.join(dirname,relpath))
-            self.assertTrue(os.path.isfile(path))
-        except KeyError:
-            raise
-        finally:
-            bpy.data.collections[f"Layer {layer_num + 1}"].xplane.is_exportable_collection = False
+                dirname = os.path.dirname(bpy.context.blend_data.filepath)
+                path = os.path.abspath(os.path.join(dirname,relpath))
+                self.assertTrue(os.path.isfile(path))
+            except KeyError:
+                raise
 
     def test_ensure_append(self):
         self.assert_file_exists(0, os.path.join(EXPORT_FOLDER, "ensure_append.obj"))
@@ -40,15 +38,12 @@ class TestInstantExportFromMenu(XPlaneTestCase):
     def test_ensure_no_abs_path_filename(self):
         #Test Windows and Unix differently
         if os.name == 'nt':
-            coll = bpy.data.collections["Layer 4"]
+            with TemporarilyMakeRootExportable("Layer 4") as coll:
+                bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
         else:
-            coll = bpy.data.collections["Layer 5"]
-        coll.xplane.is_exportable_collection = True
-        bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
-        coll.xplane.is_exportable_collection = False
-
-        self.assertEqual(len(logger.findErrors()), 1)
-        logger.clearMessages()
+            with TemporarilyMakeRootExportable("Layer 5") as coll:
+                bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
+        self.assertLoggerErrors(1)
 
     def test_ensure_paths_are_normalized_filename(self):
         self.assert_file_exists(5, os.path.join(EXPORT_FOLDER,"ensure","paths","are","normalized","filename.obj"))

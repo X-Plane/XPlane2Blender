@@ -14,19 +14,19 @@ https://blender.stackexchange.com/questions/6101/poll-failed-context-incorrect-e
 
 import math
 import os.path
-import typing
 import shutil
+import typing
 from collections import namedtuple
 from typing import *
 
 import bpy
-
-from io_xplane2blender import xplane_constants
-from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
-from io_xplane2blender.xplane_helpers import logger, XPlaneLogger
-from mathutils import Vector, Euler, Quaternion
-from io_xplane2blender.xplane_constants import ANIM_TYPE_SHOW,ANIM_TYPE_HIDE
 import io_xplane2blender
+from io_xplane2blender import xplane_constants, xplane_helpers
+from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW
+from io_xplane2blender.xplane_helpers import (ExportableRoot, PotentialRoot,
+                                              XPlaneLogger, logger)
+from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
+from mathutils import Euler, Quaternion, Vector
 
 # Most used commands:
 #
@@ -517,6 +517,79 @@ def delete_everything():
     delete_all_text_files()
     delete_all_collections()
     delete_all_other_scenes()
+
+def lookup_potential_root_from_name(name:str)->PotentialRoot:
+    """
+    Attempts to find a Potential Root
+    using the name of the collection or object
+
+    Asserts that name is in bpy.data
+    """
+    assert isinstance(name, str), f"name must be a str, is {type(name)}"
+    try:
+        root_object = bpy.data.collections[name]
+    except KeyError:
+        try:
+            root_object = bpy.data.objects[name]
+        except KeyError:
+            assert False, f"{name} must be in bpy.data.collections|objects"
+    return root_object
+
+
+def make_root_exportable(
+        potential_root:Union[PotentialRoot, str],
+        scene:Optional[bpy.types.Scene] = None)->ExportableRoot:
+    """
+    Makes a root, as given or as found by it's name from collections then root objects,
+    meet the criteria for exportable - not disabled in viewport, not hidden in viewport, and checked Exportable.
+
+    Returns that changed ExportableRoot
+    """
+    scene = scene or bpy.context.scene
+    if isinstance(potential_root, str):
+        potential_root = lookup_potential_root_from_name(potential_root)
+
+    if isinstance(potential_root, bpy.types.Collection):
+        potential_root.xplane.is_exportable_collection = True
+        # This is actually talking about "Visibile In Viewport" - the little eyeball
+        all_layer_collections = {lc.name: lc for lc in xplane_helpers.get_layer_collections_in_scene(scene)}
+        all_layer_collections[potential_root.name].hide_viewport = False
+    elif isinstance(potential_root, bpy.types.Object):
+        potential_root.xplane.isExportableRoot = True
+        # This is actually talking about "Visibile In Viewport" - the little eyeball
+        potential_root.hide_set(False, view_layer=scene.view_layers[0])
+    else:
+        assert False, "How did we get here?!"
+
+    # This is actually talking about "Disable In Viewport"
+    potential_root.hide_viewport = False
+    return potential_root
+
+def make_root_unexportable(
+        exportable_root:Union[ExportableRoot, str],
+        scene:Optional[bpy.types.Scene] = None,
+        hide_viewport:bool = False,
+        disable_viewport:bool = False)->ExportableRoot:
+    """
+    Makes a root, unexportable, and optionally, some type of
+    hidden in the viewport. By default we just do the
+    minimum - turning off exportablity
+    """
+    scene = scene if scene else bpy.context.scene
+    if isinstance(exportable_root, str):
+        exportable_root = lookup_potential_root_from_name(exportable_root)
+
+    if isinstance(exportable_root, bpy.types.Collection):
+        exportable_root.xplane.is_exportable_collection = False
+        # This is actually talking about "Visibile In Viewport" - the little eyeball
+        all_layer_collections = {lc.name: lc for lc in xplane_helpers.get_layer_collections_in_scene(scene)}
+        all_layer_collections[exportable_root.name].hide_viewport = True
+    elif isinstance(exportable_root, bpy.types.Object):
+        exportable_root.xplane.isExportableRoot = True
+        # This is actually talking about "Visibile In Viewport" - the little eyeball
+        exportable_root.hide_set(disable_viewport)
+    else:
+        assert False, "How did we get here?!"
 
 
 def set_animation_data(blender_struct:Union[bpy.types.Object,bpy.types.Bone,bpy.types.PoseBone],

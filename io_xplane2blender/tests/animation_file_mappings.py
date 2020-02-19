@@ -1,8 +1,12 @@
-# contains blend file layers to obj file mappings
-# first level is name of blend file
-# second level is blender layer
-# third level is actuall obj file
-mappings = {
+"""
+Contains the mapping between .blend files
+and what is supposed to be tested in them
+"""
+from typing import Dict, Set
+
+# A set of .blend file names to a dictionary of
+# the .blend file's layer indexes and their fixtures to test
+mappings:Set[Dict[str, Dict[int, str]]] = {
     'TestCase1': {
         0: './fixtures/TestCase1/armature_rotation_arbitrary_axis.obj',
         1: './fixtures/TestCase1/armature_rotation_twoaxis_3keys.obj',

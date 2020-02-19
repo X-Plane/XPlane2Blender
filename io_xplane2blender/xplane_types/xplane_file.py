@@ -37,17 +37,34 @@ from .xplane_primitive import XPlanePrimitive
 
 
 def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]:
+    """
+    Returns a list of all created XPlaneFiles from all valid roots found,
+    ignoring any that could not be created
+    """
     xplane_files: List["XPlaneFile"] = []
-    for exportable_root in filter(lambda o: xplane_helpers.is_exportable_root(o), scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]):
-        if True: # When the eyeball visibility feature is in, we'll use it here
+    for exportable_root in scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]:
+        try:
             xplane_file = createFileFromBlenderRootObject(exportable_root)
+        except ValueError:
+            pass
+        else:
             xplane_files.append(xplane_file)
 
     return xplane_files
 
 
 def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->"XPlaneFile":
+    """
+    Creates the starting point for making an OBJ, creates the file and beings
+    the collection phase.
+
+
+    Raises ValueError when exportable_root is not marked as exporter or something
+    prevents collection
+    """
     nested_errors: Set[str] = set()
+    if not xplane_helpers.is_exportable_root(exportable_root):
+        raise ValueError
     def log_nested_roots(exportable_roots: List[PotentialRoot]):
         err = "Exportable Roots cannot be nested, make '{}' a regular {} or ensure it is not in an exportable collection and none of its parents are exportable objects"
         if isinstance(exportable_root, bpy.types.Collection):

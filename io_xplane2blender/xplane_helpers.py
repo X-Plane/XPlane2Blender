@@ -1,19 +1,14 @@
-# File: xplane_helpers.py
-# Defines Helpers
-
-import itertools
-from typing import List, Optional, Tuple, Union
-import bpy
-import mathutils
-
 import datetime
-from datetime import timezone
+import itertools
 import os
 import re
+from datetime import timezone
+from typing import Iterable, List, Optional, Tuple, Union
 
+import bpy
 import io_xplane2blender
-from io_xplane2blender import xplane_config
-from io_xplane2blender import xplane_constants
+import mathutils
+from io_xplane2blender import xplane_config, xplane_constants
 
 FLOAT_PRECISION = 8
 
@@ -39,7 +34,7 @@ children are not compatible
 BlenderParentType = Union[bpy.types.Collection, bpy.types.Object]
 
 
-def floatToStr(n):
+def floatToStr(n:float)->str:
     s = '0'
     n = round(n, FLOAT_PRECISION)
     n_int = int(n)
@@ -98,20 +93,44 @@ def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
     return [scene.collection] + get_collections_from_collection(scene.collection)
 
 
+def get_layer_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.LayerCollection]:
+    """
+    First entry in list is always the scene's Master Layer Collection
+    """
+    def get_layer_collections_from_layer_collection(layer_collection: bpy.types.LayerCollection) -> List[bpy.types.LayerCollection]:
+        child_lcs = []
+        for child_lc in layer_collection.children:
+            child_lcs.append(child_lc)
+            child_lcs.extend(get_layer_collections_from_layer_collection(child_lc))
+        return child_lcs
+    return [scene.view_layers[0].layer_collection] + get_layer_collections_from_layer_collection(scene.view_layers[0].layer_collection)
+
+
 def get_exportable_roots_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
     return [root for root in filter(is_exportable_root, itertools.chain(get_collections_in_scene(scene), scene.objects))]
 
 
-def is_exportable_root(obj_or_collection: Union[bpy.types.Collection, bpy.types.Object])->bool:
-    return (obj_or_collection.xplane.get("isExportableRoot")
-            or obj_or_collection.xplane.get("is_exportable_collection"))
+def is_visible_in_viewport(datablock: Union[bpy.types.Collection, bpy.types.Object])->Optional[Union[bpy.types.Collection, bpy.types.Object]]:
+    if isinstance(datablock, bpy.types.Collection):
+        all_layer_collections = {c.name: c for c in get_layer_collections_in_scene(bpy.context.scene)}
+        return all_layer_collections[datablock.name].is_visible
+    elif isinstance(datablock, bpy.types.Object):
+        return datablock.visible_get()
 
 
-def vec_b_to_x(v):
+def is_exportable_root(potential_root: PotentialRoot)->bool:
+    return (
+        (potential_root.xplane.get("isExportableRoot")
+         or potential_root.xplane.get("is_exportable_collection"))
+        and is_visible_in_viewport(potential_root)
+    )
+
+
+def vec_b_to_x(v)->mathutils.Vector:
     return mathutils.Vector((v[0], v[2], -v[1]))
 
 
-def vec_x_to_b(v):
+def vec_x_to_b(v)->mathutils.Vector:
     return mathutils.Vector((v[0], -v[2], v[1]))
 
 
