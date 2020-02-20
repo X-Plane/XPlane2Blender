@@ -34,7 +34,7 @@ class TestBoneConfigurationsDragRotateDetentBone(XPlaneTestCase):
         set_animation_data(B,T_2_FRAMES_1_X)
         set_manipulator_settings(B,MANIP_DRAG_ROTATE_DETENT,manip_props={'axis_detent_ranges':[AxisDetentRangeInfo(start=0.0,end=1.0,height=1.0)]})
 
-        bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
+        #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
         self.assertLoggerErrors(0)
 
