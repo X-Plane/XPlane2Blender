@@ -17,9 +17,10 @@ class XPlaneObject():
     tied with the Blender Object it is based off.
     """
     def __init__(self, blenderObject: bpy.types.Object)->None:
-        self.export_animation_only = False # Includes Blender and X-Plane
-                                           # keyframes and custom animation properties.
-                                           # Only set to true for split parent cases
+        # When true, keyframes and Custom Animation Properties
+        # are included in OBJ
+        # True for split parent feature or not visible
+        self.export_animation_only = blenderObject.hide_get() or blenderObject.hide_viewport
         self.blenderObject = blenderObject
 
         #This is assigned and tied together in in XPlaneBone's constructor

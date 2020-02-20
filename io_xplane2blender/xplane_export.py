@@ -158,11 +158,15 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
             self.logFile.close()
 
     def _writeXPlaneFile(self, xplaneFile: xplane_file.XPlaneFile, directory: str)->bool:
+        """
+        Finally, at the end of it all, attempts to write an XPlaneFile.
+        Returns False if there was a problem, else True
+        """
         debug = getDebug()
 
         # only write layers that contain objects
         if not xplaneFile.get_xplane_objects():
-            return
+            return False
 
         if xplaneFile.filename.find('//') == 0:
             xplaneFile.filename = xplaneFile.filename.replace('//','',1)
@@ -174,10 +178,10 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
             logger.error("Bad export path %s: File paths must be relative to the .blend file" % (xplaneFile.filename))
             return False
 
-        #Get the relative path
-        #Append .obj if needed
-        #Make paths based on the absolute path
-        #Write
+        # Get the relative path
+        # Append .obj if needed
+        # Make paths based on the absolute path
+        # Write
         relpath = os.path.normpath(os.path.join(directory, xplaneFile.filename))
         if not '.obj' in relpath:
             relpath += '.obj'
@@ -192,28 +196,25 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         if (bpy.context.scene.xplane.plugin_development is False
             or (bpy.context.scene.xplane.plugin_development
                 and bpy.context.scene.xplane.dev_export_as_dry_run is False)):
-            try:
-                os.makedirs(os.path.dirname(fullpath),exist_ok=True)
-                objFile = open(fullpath, "w")
-                logger.info("Writing %s" % fullpath)
-                objFile.write(out)
-                logger.success("Wrote %s" % fullpath)
-            except Exception as e:
-                logger.error(e)
-            finally:
-                if objFile != None:
-                    objFile.close()
+            with open(fullpath, "w") as objFile:
+                try:
+                    os.makedirs(os.path.dirname(fullpath),exist_ok=True)
+                except OSError as e:
+                    logger.error(e)
+                else:
+                    logger.info("Writing %s" % fullpath)
+                    objFile.write(out)
+                    logger.success("Wrote %s" % fullpath)
         else:
             logger.info('Skipped writing %s due to "Dry Run"' % (fullpath))
 
+        return True
 
-    # Method: invoke
-    # Used from Blender when user hits the Export-Entry in the File>Export menu.
-    # Creates a file select window.
-    #
-    # Todos:
-    #   - window does not seem to work on Mac OS. Is there something different in the py API?
     def invoke(self, context, event):
+        """
+        Used from Blender when user hits the Export-Entry in the File>Export menu.
+        Creates a file select window.
+        """
         wm = context.window_manager
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
