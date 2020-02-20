@@ -58,7 +58,7 @@ class TemporarilyMakeRootExportable():
 
     def __exit__(self, exc_type, value, traceback):
         if isinstance(self.potential_root, bpy.types.Collection):
-            self.potential_root.xplane.layer.is_exportable_collection = self.original_exportable
+            self.potential_root.xplane.is_exportable_collection = self.original_exportable
         elif isinstance(self.potential_root, bpy.types.Object):
             self.potential_root.xplane.isExportableRoot = self.original_exportable
 

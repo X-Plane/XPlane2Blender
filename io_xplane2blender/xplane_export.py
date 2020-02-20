@@ -196,12 +196,12 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         if (bpy.context.scene.xplane.plugin_development is False
             or (bpy.context.scene.xplane.plugin_development
                 and bpy.context.scene.xplane.dev_export_as_dry_run is False)):
-            with open(fullpath, "w") as objFile:
-                try:
-                    os.makedirs(os.path.dirname(fullpath),exist_ok=True)
-                except OSError as e:
-                    logger.error(e)
-                else:
+            try:
+                os.makedirs(os.path.dirname(fullpath),exist_ok=True)
+            except OSError as e:
+                logger.error(e)
+            else:
+                with open(fullpath, "w") as objFile:
                     logger.info("Writing %s" % fullpath)
                     objFile.write(out)
                     logger.success("Wrote %s" % fullpath)
