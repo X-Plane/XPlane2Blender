@@ -538,26 +538,26 @@ def lookup_potential_root_from_name(name:str)->PotentialRoot:
 
 def make_root_exportable(
         potential_root:Union[PotentialRoot, str],
-        scene:Optional[bpy.types.Scene] = None)->ExportableRoot:
+        view_layer:Optional[bpy.types.ViewLayer] = None)->ExportableRoot:
     """
     Makes a root, as given or as found by it's name from collections then root objects,
     meet the criteria for exportable - not disabled in viewport, not hidden in viewport, and checked Exportable.
 
     Returns that changed ExportableRoot
     """
-    scene = scene or bpy.context.scene
+    view_layer = view_layer or bpy.context.scene.view_layers[0]
     if isinstance(potential_root, str):
         potential_root = lookup_potential_root_from_name(potential_root)
 
     if isinstance(potential_root, bpy.types.Collection):
         potential_root.xplane.is_exportable_collection = True
         # This is actually talking about "Visibile In Viewport" - the little eyeball
-        all_layer_collections = {lc.name: lc for lc in xplane_helpers.get_layer_collections_in_scene(scene)}
+        all_layer_collections = {lc.name: lc for lc in xplane_helpers.get_layer_collections_in_view_layer(view_layer)}
         all_layer_collections[potential_root.name].hide_viewport = False
     elif isinstance(potential_root, bpy.types.Object):
         potential_root.xplane.isExportableRoot = True
         # This is actually talking about "Visibile In Viewport" - the little eyeball
-        potential_root.hide_set(False, view_layer=scene.view_layers[0])
+        potential_root.hide_set(False, view_layer=view_layer)
     else:
         assert False, "How did we get here?!"
 
@@ -567,7 +567,7 @@ def make_root_exportable(
 
 def make_root_unexportable(
         exportable_root:Union[ExportableRoot, str],
-        scene:Optional[bpy.types.Scene] = None,
+        view_layer:Optional[bpy.types.ViewLayer] = None,
         hide_viewport:bool = False,
         disable_viewport:bool = False)->ExportableRoot:
     """
@@ -575,14 +575,14 @@ def make_root_unexportable(
     hidden in the viewport. By default we just do the
     minimum - turning off exportablity
     """
-    scene = scene if scene else bpy.context.scene
+    view_layer = view_layer or bpy.context.scene.view_layers[0]
     if isinstance(exportable_root, str):
         exportable_root = lookup_potential_root_from_name(exportable_root)
 
     if isinstance(exportable_root, bpy.types.Collection):
         exportable_root.xplane.is_exportable_collection = False
         # This is actually talking about "Visibile In Viewport" - the little eyeball
-        all_layer_collections = {lc.name: lc for lc in xplane_helpers.get_layer_collections_in_scene(scene)}
+        all_layer_collections = {lc.name: lc for lc in xplane_helpers.get_layer_collections_in_view_layer(view_layer)}
         all_layer_collections[exportable_root.name].hide_viewport = True
     elif isinstance(exportable_root, bpy.types.Object):
         exportable_root.xplane.isExportableRoot = True

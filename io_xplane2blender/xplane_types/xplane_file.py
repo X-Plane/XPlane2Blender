@@ -36,15 +36,17 @@ from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 
 
-def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]:
+def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.types.ViewLayer)->List["XPlaneFile"]:
     """
     Returns a list of all created XPlaneFiles from all valid roots found,
-    ignoring any that could not be created
+    ignoring any that could not be created.
+
+    view_layer is needed to test exportability
     """
     xplane_files: List["XPlaneFile"] = []
-    for exportable_root in scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]:
+    for potential_root in scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]:
         try:
-            xplane_file = createFileFromBlenderRootObject(exportable_root)
+            xplane_file = createFileFromBlenderRootObject(potential_root, view_layer)
         except ValueError:
             pass
         else:
@@ -53,32 +55,40 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene)->List["XPlaneFile"]
     return xplane_files
 
 
-def createFileFromBlenderRootObject(exportable_root:PotentialRoot)->"XPlaneFile":
+def createFileFromBlenderRootObject(potential_root:PotentialRoot, view_layer:bpy.types.ViewLayer)->"XPlaneFile":
     """
     Creates the starting point for making an OBJ, creates the file and beings
     the collection phase.
 
+    For the purposes of testing if the potential_root is exportable,
+    we need a view_layer to test with
 
     Raises ValueError when exportable_root is not marked as exporter or something
     prevents collection
     """
     nested_errors: Set[str] = set()
-    if not xplane_helpers.is_exportable_root(exportable_root):
+    if not xplane_helpers.is_exportable_root(potential_root, view_layer):
         raise ValueError
-    def log_nested_roots(exportable_roots: List[PotentialRoot]):
+    def log_nested_roots(potential_roots: List[PotentialRoot]):
         err = "Exportable Roots cannot be nested, make '{}' a regular {} or ensure it is not in an exportable collection and none of its parents are exportable objects"
-        if isinstance(exportable_root, bpy.types.Collection):
+        if isinstance(potential_root, bpy.types.Collection):
             get_name = lambda r: r.name
-            nested_errors.update(err.format(obj.name, "Collection") for obj in filter(xplane_helpers.is_exportable_root, sorted(exportable_root.all_objects, key=get_name)))
-        for child in exportable_roots:
-            if xplane_helpers.is_exportable_root(child):
+            nested_errors.update(
+                    err.format(obj.name, "Collection")
+                    for obj in filter(
+                        lambda o: xplane_helpers.is_exportable_root(o, view_layer),
+                        sorted(potential_root.all_objects, key=get_name)))
+        for child in potential_roots:
+            if xplane_helpers.is_exportable_root(child, view_layer):
                 nested_errors.add(err.format(child.name, "Object"))
             log_nested_roots(child.children)
 
-    log_nested_roots(exportable_root.children)
+    log_nested_roots(potential_root.children)
     for error in sorted(nested_errors):
         logger.error(error)
 
+    #Name change, we're now confirmed exportable!
+    exportable_root = potential_root
     layer_props = exportable_root.xplane.layer
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)

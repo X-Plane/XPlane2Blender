@@ -92,8 +92,7 @@ def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
 
     return [scene.collection] + get_collections_from_collection(scene.collection)
 
-
-def get_layer_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.LayerCollection]:
+def get_layer_collections_in_view_layer(view_layer:bpy.types.ViewLayer)->List[bpy.types.LayerCollection]:
     """
     First entry in list is always the scene's Master Layer Collection
     """
@@ -103,26 +102,30 @@ def get_layer_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.LayerC
             child_lcs.append(child_lc)
             child_lcs.extend(get_layer_collections_from_layer_collection(child_lc))
         return child_lcs
-    return [scene.view_layers[0].layer_collection] + get_layer_collections_from_layer_collection(scene.view_layers[0].layer_collection)
+    return [view_layer.layer_collection] + get_layer_collections_from_layer_collection(view_layer.layer_collection)
 
 
-def get_exportable_roots_in_scene(scene: bpy.types.Scene)->List[bpy.types.Object]:
-    return [root for root in filter(is_exportable_root, itertools.chain(get_collections_in_scene(scene), scene.objects))]
+def get_exportable_roots_in_scene(scene: bpy.types.Scene, view_layer:bpy.types.ViewLayer)->List[bpy.types.Object]:
+    return [root for root in filter(lambda o: is_exportable_root(o, view_layer), itertools.chain(get_collections_in_scene(scene), scene.objects))]
 
 
-def is_visible_in_viewport(datablock: Union[bpy.types.Collection, bpy.types.Object])->Optional[Union[bpy.types.Collection, bpy.types.Object]]:
+def is_visible_in_viewport(datablock: Union[bpy.types.Collection, bpy.types.Object], view_layer:bpy.types.ViewLayer)->Optional[ExportableRoot]:
     if isinstance(datablock, bpy.types.Collection):
-        all_layer_collections = {c.name: c for c in get_layer_collections_in_scene(bpy.context.scene)}
+        all_layer_collections = {c.name: c for c in get_layer_collections_in_view_layer(view_layer)}
         return all_layer_collections[datablock.name].is_visible
     elif isinstance(datablock, bpy.types.Object):
-        return datablock.visible_get()
+        return datablock.visible_get() or None
 
 
-def is_exportable_root(potential_root: PotentialRoot)->bool:
+def is_exportable_root(potential_root: PotentialRoot, view_layer:bpy.types.ViewLayer)->bool:
+    """
+    Since datablocks don't keep track of which view layers they're a part of,
+    we have to provide it
+    """
     return (
         (potential_root.xplane.get("isExportableRoot")
          or potential_root.xplane.get("is_exportable_collection"))
-        and is_visible_in_viewport(potential_root)
+        and is_visible_in_viewport(potential_root, view_layer)
     )
 
 

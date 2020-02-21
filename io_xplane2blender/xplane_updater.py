@@ -306,7 +306,7 @@ def _set_shadow_local_and_delete_global_shadow(logger:xplane_helpers.XPlaneLogge
     material_uses = collections.defaultdict(list) # type: Dict[bpy.types.Material, List[UsedLayerInfo]]
 
     for scene in bpy.data.scenes:
-        for exportable_root in xplane_helpers.get_exportable_roots_in_scene(scene):
+        for exportable_root in xplane_helpers.get_exportable_roots_in_scene(scene, scene.view_layers[0]): # Don't worry, we'll always have only 1 view layer
             layer_options = exportable_root.xplane.layer
             if layer_options.export_type in {xplane_constants.EXPORT_TYPE_AIRCRAFT, xplane_constants.EXPORT_TYPE_COCKPIT}:
                 layer_options["shadow"] = True
