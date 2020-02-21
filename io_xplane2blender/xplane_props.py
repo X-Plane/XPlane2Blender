@@ -1273,6 +1273,11 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default = False
     )
 
+    expanded_non_exporting_collections: bpy.props.BoolProperty(
+            name = "Other Collections",
+            description = "Reveals Non-Exportable Collections"
+    )
+
     log: bpy.props.BoolProperty(
         name = "Create Log File",
         description = "If checked the debug information will be written to a log file",

@@ -206,17 +206,28 @@ def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
     if needs_warning is True:
         layout.row().label(text="     Make backups or switch to a more stable release!")
 
-    def get_collections_w_objs(collection):
-        col_w_objs = []
-        if collection.name != "Master Collection":
-            col_w_objs.append(collection)
-        for child in collection.children:
-            col_w_objs.extend(get_collections_w_objs(child))
-        return col_w_objs
+    exp_box = layout.box()
+    exp_box.label(text="Exportable Collections")
+    for collection in [
+        coll
+        for coll in xplane_helpers.get_collections_in_scene(scene)[1:]
+        if coll.xplane.is_exportable_collection]:
+        collection_layer_layout(exp_box, collection)
 
-    layout.label(text="Collections")
-    for collection in list(dict.fromkeys(get_collections_w_objs(scene.collection))):
-        collection_layer_layout(layout, collection)
+    non_exp_box = layout.box()
+
+    non_exp_box.prop(
+        scene.xplane,
+        "expanded_non_exporting_collections",
+        expand=True,
+        emboss=False,
+        icon="TRIA_DOWN" if scene.xplane.expanded_non_exporting_collections else "TRIA_RIGHT")
+    if scene.xplane.expanded_non_exporting_collections:
+        for collection in [
+            coll
+            for coll in xplane_helpers.get_collections_in_scene(scene)[1:]
+            if not coll.xplane.is_exportable_collection]:
+            collection_layer_layout(non_exp_box, collection)
 
     advanced_box = layout.box()
     advanced_box.label(text="Advanced Settings")
@@ -226,8 +237,6 @@ def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
 
     if scene.xplane.debug:
         debug_box = advanced_column.box()
-        #TODO: Remove profiler entirely?
-        #debug_box.prop(scene.xplane, "profile")
         debug_box.prop(scene.xplane, "log")
 
     scene_dev_layout(layout, scene)
@@ -911,7 +920,7 @@ def manipulator_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                 return False
             elif manip_type in MANIPULATORS_AUTODETECT_IMPLICIT and\
                  obj.xplane.manip.autodetect_datarefs:
-               return False
+                return False
 
             return True
 
@@ -925,7 +934,7 @@ def manipulator_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
             if manip_type == MANIP_DRAG_ROTATE or\
                manip_type == MANIP_DRAG_ROTATE_DETENT:
                 if dataref_number == 1:
-                   return "Rotation Axis Dataref"
+                    return "Rotation Axis Dataref"
 
             if manip_type == MANIP_DRAG_AXIS_DETENT or\
                 manip_type == MANIP_DRAG_ROTATE_DETENT:
@@ -1059,9 +1068,9 @@ class XPLANE_UL_CommandSearchList(bpy.types.UIList):
             pass
 
     def draw_filter(self, context, layout):
-       row = layout.row()
-       subrow = row.row(align=True)
-       subrow.prop(self, "filter_name", text="")
+        row = layout.row()
+        subrow = row.row(align=True)
+        subrow.prop(self, "filter_name", text="")
 
     # Called once to filter/reorder items.
     def filter_items(self, context, data, propname):
@@ -1125,9 +1134,9 @@ class XPLANE_UL_DatarefSearchList(bpy.types.UIList):
             pass
 
     def draw_filter(self, context, layout):
-       row = layout.row()
-       subrow = row.row(align=True)
-       subrow.prop(self, "filter_name", text="")
+        row = layout.row()
+        subrow = row.row(align=True)
+        subrow.prop(self, "filter_name", text="")
 
     # Called once to filter/reorder items.
     def filter_items(self, context, data, propname):
