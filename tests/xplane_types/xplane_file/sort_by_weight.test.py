@@ -19,7 +19,7 @@ __dirname__ = os.path.dirname(__file__)
 class TestSortByWeight(XPlaneTestCase):
     def test_sort_by_weight_objects(self)->None:
         obs = bpy.data.objects
-        xp_file = xplane_file.createFileFromBlenderRootObject(obs["sort_by_weight_objects"])
+        xp_file = self.createXPlaneFileFromPotentialRoot(obs["sort_by_weight_objects"])
         fixture_xp_file = xplane_file.XPlaneFile("Fixture XPlaneFile", obs["sort_by_weight_objects"].xplane.layer)
 
         xp_root_bone = xp_file.rootBone

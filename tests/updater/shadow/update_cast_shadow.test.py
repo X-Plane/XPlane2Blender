@@ -31,7 +31,7 @@ class TestUpdateCastShadow(XPlaneTestCase):
 
         # Test that every layer.shadow property was removed as well
         for scene in bpy.data.scenes:
-            for exportable_root in xplane_helpers.get_exportable_roots_in_scene(scene):
+            for exportable_root in xplane_helpers.get_exportable_roots_in_scene(scene, scene.view_layers[0]):
                 self.assertIsNone(exportable_root.xplane.layer.get("shadow"), msg=f"Exportable Root {exportable_root.name}'s 'shadow' is {exportable_root.xplane.layer.get('shadow')}, not None")
 
         for obj in bpy.data.objects:

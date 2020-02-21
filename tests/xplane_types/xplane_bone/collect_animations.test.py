@@ -9,7 +9,7 @@ from io_xplane2blender import xplane_config
 
 class TestAnimations(XPlaneTestCase):
     def test_bone_animations(self):
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
+        xplaneFile = self.createXPlaneFileFromPotentialRoot("Layer 1")
 
         def assertXplaneFileHasBoneTree(self, xplaneFile, tree):
             self.assertIsNotNone(xplaneFile.rootBone)

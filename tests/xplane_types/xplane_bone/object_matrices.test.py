@@ -33,7 +33,7 @@ class TestMatrices(XPlaneTestCase):
 
     def test_bone_root_matrices(self):
         identityMatrix = mathutils.Matrix.Identity(4)
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
+        xplaneFile = self.createXPlaneFileFromPotentialRoot("Layer 1")
 
         cubeStatic = self.getBoneByBlenderName('Cube_static', parent=xplaneFile.rootBone)
 
@@ -58,7 +58,7 @@ class TestMatrices(XPlaneTestCase):
 
     def test_child_bone_matrices(self):
         identityMatrix = mathutils.Matrix.Identity(4)
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Layer 1"])
+        xplaneFile = self.createXPlaneFileFromPotentialRoot("Layer 1")
 
         cubeStatic = self.getBoneByBlenderName('Cube_static', parent=xplaneFile.rootBone)
         cubeStaticChildStatic = self.getBoneByBlenderName('Cube_static.child_static', parent=xplaneFile.rootBone)

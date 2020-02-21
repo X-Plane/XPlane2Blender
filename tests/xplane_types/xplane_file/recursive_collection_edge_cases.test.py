@@ -16,7 +16,7 @@ __dirname__ = os.path.dirname(__file__)
 class TestRecursiveCollectionEdgeCases(XPlaneTestCase):
     def test_Exportable_no_convert_makes_bones(self)->None:
         obs = bpy.data.objects
-        xp_file = xplane_file.createFileFromBlenderRootObject(bpy.data.collections["Exportable_no_convert_makes_bones"])
+        xp_file = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Exportable_no_convert_makes_bones"])
         fixture_xp_file = xplane_file.XPlaneFile("Fixture XPlaneFile", bpy.data.collections["Exportable_no_convert_makes_bones"].xplane.layer)
 
         fixture_root_bone =           XPlaneBone(fixture_xp_file, None, None, None)

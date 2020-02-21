@@ -19,7 +19,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
     def test_create_files_from_root_objects(self):
         tmpDir = os.path.realpath(os.path.join(__dirname__, '../../tmp'))
 
-        xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.objects['root_1'])
+        xplaneFile = self.createXPlaneFileFromPotentialRoot("root_1")
 
         out = xplaneFile.write()
 
@@ -72,7 +72,7 @@ class TestCreateFromRootObjects(XPlaneTestCase):
             filterLines,
         )
 
-        xplaneFile2 = xplane_file.createFileFromBlenderRootObject(bpy.data.objects['root_2'])
+        xplaneFile2 = self.createXPlaneFileFromPotentialRoot("root_2")
 
         out = xplaneFile2.write()
 

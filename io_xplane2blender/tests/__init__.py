@@ -385,6 +385,11 @@ class XPlaneTestCase(unittest.TestCase):
         A thin wrapper around xplane_file.createFileFromBlenderObject, where the potential root
         temporarily is made exportable.
         """
+        potential_root = (test_creation_helpers.lookup_potential_root_from_name(potential_root)
+                          if isinstance(potential_root, str) else
+                          potential_root)
+
+        view_layer = view_layer or bpy.context.scene.view_layers[0]
         with TemporarilyMakeRootExportable(potential_root, view_layer):
             xp_file = xplane_file.createFileFromBlenderRootObject(potential_root, view_layer)
 
@@ -470,7 +475,7 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
         for layer in animation_file_mappings.mappings[name]:
             #print('Testing animations against fixture "%s"' % mappings[name][layer])
             bpy.data.collections[f"Layer {layer + 1}"].hide_viewport = False
-            xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}", bpy.contex.scene.view_layers[0]])
+            xplaneFile = self.createXPlaneFileFromPotentialRoot(bpy.data.collections[f"Layer {layer + 1}"])
 
             self.assertIsNotNone(xplaneFile, 'Unable to create XPlaneFile for %s layer %d' % (name, layer))
 

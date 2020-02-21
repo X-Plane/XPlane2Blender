@@ -27,7 +27,7 @@ class TestRootObjectOffsets(XPlaneTestCase):
 
             tmpDir = os.path.realpath(os.path.join(__dirname__, '../../tmp'))
 
-            xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.objects[root_block])
+            xplaneFile = self.createXPlaneFileFromPotentialRoot(bpy.data.objects[root_block])
 
             out = xplaneFile.write()
 
