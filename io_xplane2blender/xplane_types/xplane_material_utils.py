@@ -4,6 +4,9 @@ from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_types.xplane_material import XPlaneMaterial
 from ..xplane_constants import *
 
+MaterialValidationMsgs = Tuple[List[str],List[str]]
+ValidateFunction = Callable[[XPlaneMaterial], MaterialValidationMsgs]
+
 def _validateNormalMetalness(refMat:XPlaneMaterial, mat:XPlaneMaterial)->Optional[str]:
     if (mat.texture == refMat.texture and\
         (refMat.options.panel is False and mat.options.panel is False)): # Panel disables metalness
@@ -12,7 +15,7 @@ def _validateNormalMetalness(refMat:XPlaneMaterial, mat:XPlaneMaterial)->Optiona
 
     return None
 
-def compare(refMat, mat, exportType, autodetectTextures)->Tuple[List[str],List[str]]:
+def compare(refMat:XPlaneMaterial, mat:XPlaneMaterial, exportType:str, autodetectTextures:bool)->MaterialValidationMsgs:
     if exportType == EXPORT_TYPE_SCENERY:
         return compareScenery(refMat, mat, autodetectTextures)
     elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
@@ -20,7 +23,7 @@ def compare(refMat, mat, exportType, autodetectTextures)->Tuple[List[str],List[s
     elif exportType == EXPORT_TYPE_COCKPIT or exportType == EXPORT_TYPE_AIRCRAFT:
         return compareAircraft(refMat, mat, autodetectTextures)
 
-def compareScenery(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]]:
+def compareScenery(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTextures:bool)->MaterialValidationMsgs:
     errors   = []
     warnings = []
 
@@ -45,7 +48,7 @@ def compareScenery(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]]:
 
     return errors,warnings
 
-def compareInstanced(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]]:
+def compareInstanced(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTextures:bool)->MaterialValidationMsgs:
     errors   = []
     warnings = []
 
@@ -77,7 +80,7 @@ def compareInstanced(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]
 
     return errors,warnings
 
-def compareAircraft(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]]:
+def compareAircraft(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTextures:bool)->MaterialValidationMsgs:
     errors   = []
     warnings = []
 
@@ -101,8 +104,6 @@ def compareAircraft(refMat, mat, autodetectTextures)->Tuple[List[str],List[str]]
 
     return errors,warnings
 
-MaterialValidationMsgs = Tuple[List[str],List[str]]
-ValidateFunction = Callable[[XPlaneMaterial], MaterialValidationMsgs]
 def validate(mat:XPlaneMaterial, exportType:str)->MaterialValidationMsgs:
     '''
     Validates material properties that don't involve comparisons to other

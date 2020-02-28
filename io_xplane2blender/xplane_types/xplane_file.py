@@ -93,6 +93,7 @@ def createFileFromBlenderRootObject(potential_root:PotentialRoot, view_layer:bpy
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
+    xplane_file.header.collect()
     assert xplane_file.rootBone, "Root Bone was not assaigned during __init__ function"
     return xplane_file
 

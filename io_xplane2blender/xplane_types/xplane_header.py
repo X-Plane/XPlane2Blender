@@ -117,12 +117,10 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("POINT_COUNTS", None))
 
 
-    # TODO: Shouldn't this just be inside XPlaneHeader.write if it is only called once and only here?
-    # If not should it be called collect?
-    def init(self):
+    def collect(self):
         """
-        This is similar to other classes 'collect' methods, however it is called during
-        xplane_header.write, after everything else is collected.
+        This must be called after all other collection is done. This is needed
+        to decide if GLOBALs should replace certain ATTR_s
 
         The reason is we can only tell if certain directives should be written
         after everything is collected (like GLOBALs)
@@ -495,15 +493,11 @@ class XPlaneHeader():
 
         return texpath
 
-
-    # Method: write
-    # Returns the OBJ header.
-    #
-    # Returns:
-    #   string - OBJ header
-    def write(self):
-        self.init()
-
+    def write(self)->str:
+        """
+        Writes the collected Blender and XPlane2Blender data
+        as content for the OBJ
+        """
         system = platform.system()
 
         # line ending types (I = UNIX/DOS, A = MacOS)
@@ -540,7 +534,6 @@ class XPlaneHeader():
                         o += '%s\n' % (attr.name)
                     elif not is_bool: #True case already taken care of, don't care about False case - implicitly skipped
                         o += '%s\t%s\n' % (attr.name, attr.getValueAsString())
-
 
         return o
 

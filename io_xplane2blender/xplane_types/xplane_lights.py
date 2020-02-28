@@ -41,7 +41,7 @@ class XPlaneLights():
     #
     # Returns:
     #   string - The OBJ lights table.
-    def write(self):
+    def write(self)->str:
         o= ''
         for l in self.lines:
             o += l + '\n'

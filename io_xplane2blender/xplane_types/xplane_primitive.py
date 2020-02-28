@@ -72,7 +72,7 @@ class XPlanePrimitive(XPlaneObject):
         if self.material:
             self.material.collect()
 
-    def write(self)->None:
+    def write(self)->str:
         debug = getDebug()
         indent = self.xplaneBone.getIndent()
         o = ''

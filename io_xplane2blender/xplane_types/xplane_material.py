@@ -79,7 +79,7 @@ class XPlaneMaterial():
 
         self.conditions = []
 
-    def collect(self):
+    def collect(self)->None:
         if (self.blenderObject.material_slots
             and self.blenderObject.material_slots[0].material):
             mat = self.blenderObject.material_slots[0].material
@@ -173,7 +173,7 @@ class XPlaneMaterial():
 
         self.attributes.order()
 
-    def collectCustomAttributes(self, mat):
+    def collectCustomAttributes(self, mat:bpy.types.Material)->None:
         xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
         commands =  xplaneFile.commands
 
@@ -183,7 +183,7 @@ class XPlaneMaterial():
                     commands.addReseter(attr.name, attr.reset)
                 self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
 
-    def collectCockpitAttributes(self, mat):
+    def collectCockpitAttributes(self, mat:bpy.types.Material)->None:
         if mat.xplane.panel:
             self.cockpitAttributes['ATTR_cockpit'].setValue(True)
             self.cockpitAttributes['ATTR_no_cockpit'].setValue(None)
@@ -191,9 +191,7 @@ class XPlaneMaterial():
             if cockpit_region > 0:
                 self.cockpitAttributes['ATTR_cockpit_region'].setValue(cockpit_region - 1)
 
-    # Method: collectLightLevelAttributes
-    # Defines light level attributes in <attributes> based on settings in <XPlaneObjectSettings>.
-    def collectLightLevelAttributes(self, mat):
+    def collectLightLevelAttributes(self, mat:bpy.types.Material)->None:
         if mat.xplane.lightLevel:
             self.attributes['ATTR_light_level'].setValue((
                 mat.xplane.lightLevel_v1,
@@ -201,11 +199,11 @@ class XPlaneMaterial():
                 mat.xplane.lightLevel_dataref
             ))
 
-    def collectConditions(self, mat):
+    def collectConditions(self, mat:bpy.types.Material)->None:
         if mat.xplane.conditions:
             self.conditions = mat.xplane.conditions
 
-    def write(self):
+    def write(self)->str:
         debug = getDebug()
         o = ''
         indent = self.xplaneObject.xplaneBone.getIndent()
@@ -237,7 +235,7 @@ class XPlaneMaterial():
     #
     # Returns:
     #   list,list - A list of errors and a list of warnings
-    def isCompatibleTo(self, refMat, exportType,autodetectTextures)->Tuple[List[str],List[str]]:
+    def isCompatibleTo(self, refMat:"XPlaneMaterial", exportType:str, autodetectTextures:bool)->Tuple[List[str],List[str]]:
         import io_xplane2blender
         return io_xplane2blender.xplane_types.xplane_material_utils.compare(refMat, self, exportType,autodetectTextures)
 

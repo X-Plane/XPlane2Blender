@@ -162,17 +162,17 @@ class XPlaneLight(XPlaneObject):
                 logger.error("light name %s has an empty parameters box" % self.lightName)
                 return
 
-    def clamp(self, num, minimum, maximum):
+    def clamp(self, num:float, minimum:float, maximum:float)->float:
         if num < minimum:
             num = minimum
         elif num > maximum:
             num = maximum
         return num
 
-    def write(self):
+    def write(self)->None:
         debug = getDebug()
         indent = self.xplaneBone.getIndent()
-        o = super(XPlaneLight, self).write()
+        o = super().write()
 
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
         translation = bakeMatrix.to_translation()

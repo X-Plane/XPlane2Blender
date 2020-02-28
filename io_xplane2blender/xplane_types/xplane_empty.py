@@ -37,7 +37,11 @@ class XPlaneEmpty(XPlaneObject):
                     self.magnet_type += "|"
                 self.magnet_type += "flashlight"
 
-    def write(self):
+    def write(self)->str:
+        """
+        Writes the combined Blender and XPlane2Blender data,
+        raises UnwritableXPlaneType if logger errors found
+        """
         debug = xplane_config.getDebug()
         indent = self.xplaneBone.getIndent()
         o = super().write()
