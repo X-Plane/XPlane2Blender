@@ -92,8 +92,8 @@ class XPlaneBone():
         self.datarefs = {} # type: Dict[bpy.types.StringProperty,XPlaneDataref]
         self.collectAnimations()
 
-    def sortChildren(self):
-        def getWeight(xplaneBone):
+    def sortChildren(self)->None:
+        def getWeight(xplaneBone)->int:
             if xplaneBone.xplaneObject:
                 return xplaneBone.xplaneObject.weight
 
@@ -103,7 +103,7 @@ class XPlaneBone():
 
     # Method: isAnimatedForTranslation
     # Checks if a dataref's keyframes actually contain meaningful translations, and we should therefore write keyframes out
-    def isDataRefAnimatedForTranslation(self):
+    def isDataRefAnimatedForTranslation(self)->bool:
         if hasattr(self, 'animations') and len(self.animations) > 0:
            #Check to see if there is at least some difference in the keyframe locations
             for dataref in self.animations:
@@ -121,7 +121,7 @@ class XPlaneBone():
 
     # Method: isAnimatedForRotation
     # Checks if a dataref's keyframes actually contain meaningful rotation, and we should therefore write keyframes out
-    def isDataRefAnimatedForRotation(self):
+    def isDataRefAnimatedForRotation(self)->bool:
         if hasattr(self, 'animations') and len(self.animations) > 0:
            #Check to see if there is at least some difference in the keyframe locations
             for dataref in self.animations:
@@ -388,7 +388,7 @@ class XPlaneBone():
     # This matrix represents the world space pose of the bone just after all dynamic animation.  EVERY
     # bone has this, because everything "on" the bone (sub-bones, meshes) is attached to this pose.
     #
-    def getPostAnimationMatrix(self):
+    def getPostAnimationMatrix(self)->mathutils.Matrix:
         if self.parent == None:
             # WARNING: If the root bone has been scaled then the scale does NOT apply to the OBJ.
             # This is probably technically correct based on some insane fine-print reading of export-by-object
@@ -446,7 +446,7 @@ class XPlaneBone():
     #
     # The bake matrix for animations for bone X is the static transform _from X's parent bone to X before its animations.
     # In other words, once we are in X's parent's coordinate system, we need to do this bake to then apply our animations.
-    def getBakeMatrixForMyAnimations(self):
+    def getBakeMatrixForMyAnimations(self)->mathutils.Matrix:
         parent_bone = self.getFirstAnimatedParent()
         if parent_bone == None:
             # If we have no parent bone, our bake matrix goes from global coordinates TO our pre-animation pose.
@@ -468,7 +468,7 @@ class XPlaneBone():
     # This API gets the bake matrix to be applied to output-able primitives that are attached to -this- bone.
     # In other words, this is a helper for how to bake our lights, meshes, etc.
     #
-    def getBakeMatrixForAttached(self):
+    def getBakeMatrixForAttached(self)->mathutils.Matrix:
                 # Our anchor bone is the thing we are attached to - it might be us, or it might be our parent.
         if self.isAnimated():
             my_anchor_bone = self                           # The anchor bone is the last bone to be animated -
@@ -487,7 +487,7 @@ class XPlaneBone():
             # Find the relative matrix from the post-animation of our last animated bone to our final post animation transform.
             return anchor_post_anim.inverted_safe() @ my_final_world
 
-    def __str__(self):
+    def __str__(self)->str:
         def toString(bone: "XPlaneBone", indent:str = '')->str:
             out = indent + bone.getName() + '\n'
 
@@ -498,7 +498,7 @@ class XPlaneBone():
         out = toString(self)
         return out
 
-    def writeAnimationPrefix(self):
+    def writeAnimationPrefix(self)->None:
         debug = getDebug()
         indent = self.getIndent()
         o = ''
@@ -559,7 +559,7 @@ class XPlaneBone():
 
         return o
 
-    def _writeStaticTranslation(self, bakeMatrix):
+    def _writeStaticTranslation(self, bakeMatrix:mathutils.Matrix)->None:
         debug = getDebug()
         indent = self.getIndent()
         o = ''

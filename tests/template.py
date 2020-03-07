@@ -38,6 +38,11 @@ __dirname__ = os.path.dirname(__file__)
 class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
     #TI as per unittest requirements, all test methods must start with "test_"
     def test_fixture_or_layer_name_snake_case(self)->None:
+        #TI Example of switching scenes. If using multiple scenes in a test
+        #TI every test must start with specifying the scene, as these can run
+        #TI in any order
+        #bpy.context.window.scene = bpy.data.scenes["Scene_"]
+
         #TI Example of running the converter first (replace BULK with REGULAR as needed)
         #TI This should be at the start of every 2.49 test, the code knows to only run once
         #TI This makes it easier to use unittest.skip
@@ -68,8 +73,16 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         #TI instead of "test_01_my_root_object" to not run into Blender's max object name length
         #self.assertExportableRootExportEqualsFixture(
         #    filename[5:],
-        #    os.path.join(__dirname__, "fixtures", filename + ".obj"),
+        #    os.path.join(__dirname__, "fixtures", f"{filename}.obj"),
         #    filterLines,
+        #    filename,
+        #)
+
+        #TI or, with a set of OBJ directives
+        #self.assertExportableRootExportEqualsFixture(
+        #    filename[5:],
+        #    os.path.join(__dirname__, "fixtures", f"{filename}.obj"),
+        #    {""},
         #    filename,
         #)
 

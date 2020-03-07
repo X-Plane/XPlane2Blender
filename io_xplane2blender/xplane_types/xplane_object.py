@@ -122,6 +122,10 @@ class XPlaneObject():
 
     # Returns OBJ code for this object
     def write(self)->str:
+        """
+        Writes collected Blender and XPlane data as a \\n
+        seperated string of OBJ directives.
+        """
         if self.export_animation_only:
             return ""
 

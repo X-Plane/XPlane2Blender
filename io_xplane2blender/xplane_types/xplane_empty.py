@@ -15,7 +15,7 @@ class XPlaneEmpty(XPlaneObject):
         super().__init__(blenderObject)
         self.magnet_type = ""
 
-    def collect(self):
+    def collect(self)->None:
         super().collect()
         special_empty_props = self.blenderObject.xplane.special_empty_props
         if special_empty_props.special_type == EMPTY_USAGE_MAGNET:

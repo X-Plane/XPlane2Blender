@@ -67,10 +67,13 @@ from ..xplane_helpers import floatToStr, logger
 # exporter does not model this and the current authoring level blender data does not support it.  For the 3.4 release,
 # we expect to leave things in their currently broken state; for 3.5, we can then add specific panel attribute labeling
 # to the UI and have authors migrate their projects forward.
-#
-# Class: XPlaneCommands
-# Creates the OBJ commands table.
+
 class XPlaneCommands():
+    """
+    Writes collected animations, attributes,
+    and conditions of of XPlaneBones and their corresponding
+    resetters as needed
+    """
     def __init__(self, xplaneFile)->None:
         self.xplaneFile = xplaneFile
 
@@ -159,10 +162,13 @@ class XPlaneCommands():
 
         # open object conditions
         o += self._writeConditions(xplaneObject.conditions, xplaneObject)
-        o += xplaneObject.write()
+        try:
+            o += xplaneObject.write()
+        except xplane_helpers.UnwriteableXPlaneType:
+            pass
         return o
 
-    def _writeXPlaneObjectSuffix(self, xplaneObject):
+    def _writeXPlaneObjectSuffix(self, xplaneObject:xplane_object.XPlaneObject):
         o = ''
 
         # close material conditions

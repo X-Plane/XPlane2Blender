@@ -93,7 +93,6 @@ def createFileFromBlenderRootObject(potential_root:PotentialRoot, view_layer:bpy
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
-    xplane_file.header.collect()
     assert xplane_file.rootBone, "Root Bone was not assaigned during __init__ function"
     return xplane_file
 
@@ -380,8 +379,7 @@ class XPlaneFile():
         else:
             assert False, f"Unsupported root_object type {type(exportable_root)}"
 
-    #TODO: Test this, needs code coverage
-    def get_xplane_objects(self)->List["XPlaneObjects"]:
+    def get_xplane_objects(self)->List["XPlaneObject"]:
         """
         Returns a list of all XPlaneObjects collected by recursing down the
         completed XPlaneBone tree
@@ -478,8 +476,9 @@ class XPlaneFile():
         # validation was successful
         # retrieve reference materials
         # and compare all materials against reference materials
-        if self.options.autodetectTextures == False:
-            logger.info('Autodetect textures overridden for file %s: not fully checking manually entered textures against Blender-based reference materials\' textures' % (self.filename))
+        #TODO: One day we'll have a autodetect feature again
+        #if self.options.autodetectTextures == False:
+            #logger.info('Autodetect textures overridden for file %s: not fully checking manually entered textures against Blender-based reference materials\' textures' % (self.filename))
 
         if not self.compareMaterials(self.referenceMaterials):
             return ''

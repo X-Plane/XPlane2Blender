@@ -18,7 +18,7 @@ class XPlaneMesh():
     Stores the data for the OBJ's mesh - its VT and IDX tables.
 
     Despite the name, there is only one XPlaneMesh per XPlaneFile,
-    unlike there the many XPlaneObjects per file
+    unlike the many XPlaneObjects per file
     """
     def __init__(self):
         # Contains all OBJ VT directives, data in the order as specified by the OBJ8 spec

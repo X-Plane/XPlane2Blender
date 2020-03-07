@@ -1,24 +1,30 @@
+from typing import List
 from ..xplane_helpers import floatToStr
 from ..xplane_constants import *
+from io_xplane2blender.xplane_types import xplane_light
 
 # Class: XPlaneLights
 # Creates OBJ lights.
 # TODO: deprecate in v3.4
 class XPlaneLights():
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   dict file - A file dict coming from <XPlaneData>
-    def __init__(self):
-        self.items = []
-        # list - All lines.
-        self.lines = []
-        # list - All light indices.
-        self.indices = []
-        # int - Current global light index.
+    """
+    Makes the VLIGHT table for all old LIGHT types (DEFAULT, FLASHING,
+    STROBE, etc) ands writes it.
+
+    The actual LIGHTS directive is written in xplane_light.write
+    """
+
+    def __init__(self)->None:
+        # The XPlaneLights that will reference the VLIGHT table
+        self.items:List[xplane_light.XPlaneLight] = []
+        # The content of the VLIGHT table
+        self.lines:List[str] = []
+        # The indices of the VLIGHT table
+        self.indices:List[int] = []
+        # Current global light index.
         self.globalindex = 0
 
-    def append(self, light):
+    def append(self, light:xplane_light.XPlaneLight)->None:
         # we only write vlights here, all other lights go into the commands table directly
         if  light.lightType not in (LIGHT_NAMED, LIGHT_PARAM, LIGHT_CUSTOM):
             self.items.append(light)
@@ -36,14 +42,8 @@ class XPlaneLights():
 
             light.indices[1] = self.globalindex
 
-    # Method: write
-    # Returns the OBJ lights table by iterating <lines>.
-    #
-    # Returns:
-    #   string - The OBJ lights table.
     def write(self)->str:
-        o= ''
-        for l in self.lines:
-            o += l + '\n'
-
-        return o
+        """
+        Returns the OBJ VLIGHT table
+        """
+        return "\n".join(self.lines)

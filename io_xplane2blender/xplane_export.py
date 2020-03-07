@@ -1,5 +1,4 @@
-# File: xplane_export.py
-# Defines Classes used to create OBJ files out of XPlane data types defined in <xplane_types.py>.
+"""The starting point for the export process, the start of the addon"""
 
 import os
 import os.path
@@ -14,9 +13,9 @@ from .xplane_config import getDebug
 from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
 
+from typing import Any, IO, Optional
 
-#TODO: These class names and registrations are weird. I don't get
-# what Blender expects for bl_idname and class name to match up?
+
 class XPLANE_MT_xplane_export_log(bpy.types.Menu):
     bl_idname = "XPLANE_MT_xplane_export_log"
     bl_label = "XPlane2Blender Export Log Warning"
@@ -74,20 +73,7 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
 
         if bpy.context.scene.xplane.plugin_development and \
             bpy.context.scene.xplane.dev_enable_breakpoints:
-            try:
-                #If you do not have your interpreter set up to include pydev by default, do so, or manually fill
-                #in the path. Likely something like ~\.p2\pool\plugins\org.python.pydev_5.7.0.201704111357\pysrc
-                #import sys;sys.path.append(r'YOUR_PYDEVPATH')
-                import pydevd;
-                #Port must be set to 5678 for Blender to connect!
-                pydevd.settrace(stdoutToServer=False,#Enable to have logger and print statements sent to
-                                                     #the Eclipse console, as well as Blender's console.
-                                                     #Only logger statements will show in xplane2blender.log
-                                stderrToServer=False,#Same as stdoutToServer
-                                suspend=True) #Seems to only work having suspend be set to true.
-                                              #Get used to immediately pressing continue unfortunately.
-            except:
-                logger.info("Pydevd could not be imported, breakpoints not enabled. Ensure PyDev is installed and configured properly")
+            breakpoint()
 
         # store current frame as we will go back to it
         currentFrame = bpy.context.scene.frame_current
@@ -129,7 +115,7 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         debug = getDebug()
         logLevels = ['error', 'warning']
 
-        self.logFile = None
+        self.logFile:Optional[IO[Any]] = None
 
         logger.clearTransports()
         logger.clearMessages()
@@ -192,10 +178,9 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         if logger.hasErrors():
             return False
 
-        # write the file
-        if (bpy.context.scene.xplane.plugin_development is False
-            or (bpy.context.scene.xplane.plugin_development
-                and bpy.context.scene.xplane.dev_export_as_dry_run is False)):
+        plugin_development = bpy.context.scene.xplane.plugin_development
+        dry_run = bpy.context.scene.xplane.dev_export_as_dry_run
+        if (not plugin_development or (plugin_development and not dry_run)):
             try:
                 os.makedirs(os.path.dirname(fullpath),exist_ok=True)
             except OSError as e:

@@ -17,19 +17,12 @@ from .xplane_attributes import XPlaneAttributes
 
 from typing import List
 
-# Class: XPlaneHeader
-# Create an OBJ header.
 class XPlaneHeader():
     '''
-    Stores and writes OBJ info related to the OBJ8 header, such as POINT_COUNTS and TEXTURE.
+    Writes OBJ info related to the OBJ8 header, such as POINT_COUNTS and TEXTURE.
     Also the starting point for is responsible for autodetecting and compositing textures.
     '''
 
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   XPlaneFile xplaneFile - A <XPlaneFile>.
-    #   int obj_version - OBJ format version.
     def __init__(self, xplaneFile: 'XPlaneFile', obj_version: int)->None:
         self.obj_version = obj_version
         self.xplaneFile = xplaneFile
@@ -117,7 +110,7 @@ class XPlaneHeader():
         self.attributes.add(XPlaneAttribute("POINT_COUNTS", None))
 
 
-    def collect(self):
+    def _init(self):
         """
         This must be called after all other collection is done. This is needed
         to decide if GLOBALs should replace certain ATTR_s
@@ -480,7 +473,7 @@ class XPlaneHeader():
     #
     # Returns:
     #   string - the absolute/normalized path to the texture
-    def _getCanonicalTexturePath(self, texpath):
+    def _getCanonicalTexturePath(self, texpath)->str:
         blenddir = os.path.dirname(bpy.context.blend_data.filepath)
 
         if texpath[0:2] == '//':
@@ -498,6 +491,7 @@ class XPlaneHeader():
         Writes the collected Blender and XPlane2Blender data
         as content for the OBJ
         """
+        self._init()
         system = platform.system()
 
         # line ending types (I = UNIX/DOS, A = MacOS)
