@@ -133,7 +133,7 @@ class XPlaneCommands():
         xplaneObject = xplaneBone.xplaneObject
         xplaneObjectWritten = False
 
-        if xplaneObject:
+        if xplaneObject and not xplaneObject.export_animation_only:
             if lod_bucket_index is None:
                 o += self._writeXPlaneObjectPrefix(xplaneObject)
                 xplaneObjectWritten = True

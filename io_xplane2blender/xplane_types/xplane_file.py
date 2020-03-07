@@ -289,9 +289,12 @@ class XPlaneFile():
                 pass
 
             if new_xplane_obj:
+                # If set from walking up, keep that. Otherwise, decide based on visiblity
+                new_xplane_obj.export_animation_only = new_xplane_obj.export_animation_only or not blender_obj.visible_get()
                 # This is different than asking the Blender Light its type!
                 # This is refering to the old style default light
-                if isinstance(new_xplane_obj, XPlaneLight):
+                if (isinstance(new_xplane_obj, XPlaneLight)
+                    and not new_xplane_obj.export_animation_only):
                     self.lights.append(new_xplane_obj)
                 new_xplane_obj.collect()
             elif blender_obj:
