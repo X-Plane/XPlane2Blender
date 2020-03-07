@@ -11,7 +11,7 @@ from io_xplane2blender.tests import test_creation_helpers
 
 __dirname__ = os.path.dirname(__file__)
 
-class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
+class TestExportControlMethodsObject(XPlaneTestCase):
     def test_DisabledInViewport(self)->None:
         filename = inspect.stack()[0].function
 
@@ -34,4 +34,4 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
 
 
 #TI Same class name above, we only support one TestCase in runTestCases
-runTestCases([TestBlendFileNameCamelCaseNoPunctuation])
+runTestCases([TestExportControlMethodsObject])
