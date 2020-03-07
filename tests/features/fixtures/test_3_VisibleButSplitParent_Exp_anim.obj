@@ -1,0 +1,47 @@
+I
+800
+OBJ
+
+POINT_COUNTS	6	0	0	6
+
+VT	1	0	-1	0	1	-0	1	1	# 0
+VT	1	0	1	0	1	-0	1	0	# 1
+VT	-1	0	1	0	1	-0	0	0	# 2
+VT	-1	0	-1	-0	1	-0	0	1	# 3
+VT	1	0	-1	-0	1	-0	1	1	# 4
+VT	-1	0	1	-0	1	-0	0	0	# 5
+
+IDX	0
+IDX	1
+IDX	2
+IDX	3
+IDX	4
+IDX	5
+
+# 0 ROOT
+	# 1 Empty: 3_SplitParentVisibleChildren_Exp_anim
+		# 2 Mesh: Gear.002
+		ANIM_begin
+		# translation keyframes
+		ANIM_trans_begin	test/test1
+		ANIM_trans_key	-1	0	0	0
+		ANIM_trans_key	0	0	0	5.44429016
+		ANIM_trans_end
+			# 3 Light: VisibleButInSplitParent.001
+			ANIM_begin
+			# static translation
+			ANIM_trans	0	0	-5.44429016	0	0	-5.44429016
+			# translation keyframes
+			ANIM_trans_begin	test
+			ANIM_trans_key	0	0	0	0
+			ANIM_trans_key	1	0	3	0
+			ANIM_trans_end
+				# 4 Mesh: 3_Leaf.001
+				# MESH: 3_Leaf.001	weight: 0
+				# MATERIAL: Material.001
+				ATTR_shiny_rat	0.5
+				TRIS	0 6
+			ANIM_end
+		ANIM_end
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+75.NO_BUILD_NUMBR
