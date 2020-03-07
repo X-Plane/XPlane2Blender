@@ -18,7 +18,7 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             filename[5:],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
-            {"ANIM", "TRIS", "DONT_EXPORT_THIS"},
+            {"ANIM", "DONT_EXPORT_THIS", "ENDIF", "IF", "LIGHT", "LIGHT", "TRIS", "VLIGHT"},
             filename,
         )
 
@@ -28,7 +28,7 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         self.assertExportableRootExportEqualsFixture(
             filename[5:],
             os.path.join(__dirname__, "fixtures", filename + ".obj"),
-            {"ANIM", "TRIS", "DONT_EXPORT_THIS"},
+            {"ANIM", "DONT_EXPORT_THIS", "ENDIF", "IF", "LIGHT", "LIGHT", "TRIS", "VLIGHT"},
             filename,
         )
 
