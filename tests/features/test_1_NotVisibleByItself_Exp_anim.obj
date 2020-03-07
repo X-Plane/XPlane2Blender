@@ -1,0 +1,17 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Light: 1_NotVisibleByItself.001
+	ANIM_begin
+	# translation keyframes
+	ANIM_trans_begin	test
+	ANIM_trans_key	0	3	0	0
+	ANIM_trans_key	1	3	3	0
+	ANIM_trans_end
+	ANIM_end
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+75.NO_BUILD_NUMBR
