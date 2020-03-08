@@ -84,8 +84,8 @@ class SCENE_OT_dev_root_names_from_objects(bpy.types.Operator):
 
     name_prefix = "test_"
 
-    def execute(self, context):
-        for root in xplane_helpers.get_exportable_roots_in_scene(context.scene):
+    def execute(self, context:bpy.types.Context):
+        for root in xplane_helpers.get_exportable_roots_in_scene(context.scene, context.view_layer):
             root.xplane.layer.name = self.name_prefix + root.name
         return {'FINISHED'}
 
