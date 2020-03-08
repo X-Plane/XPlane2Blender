@@ -642,10 +642,13 @@ def check_spec_detent_bone(detent_bone:Tuple[XPlaneBone], log_errors:bool=True, 
     else:
         return False
 
-# This is a pseudo-XPlaneObject that only has a collect method
-# It's refrenced xplanePrimative provides the rest of the XPlaneObject
 class XPlaneManipulator():
-    def __init__(self, xplanePrimative):
+    """
+    This psuedo-XPlaneObject only has a collect method,
+    which validates the manipulator data and adds it to xplanePrimitive's
+    cockpitAttributes list
+    """
+    def __init__(self, xplanePrimative:"XPlanePrimitive"):
         assert xplanePrimative is not None
 
         self.manip = xplanePrimative.blenderObject.xplane.manip

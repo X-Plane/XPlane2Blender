@@ -19,29 +19,14 @@ from .xplane_material import XPlaneMaterial
 from .xplane_object import XPlaneObject
 
 
-# Class: XPlanePrimitive
-# A Mesh object.
-#
-# Extends:
-#   <XPlaneObject>
 class XPlanePrimitive(XPlaneObject):
-    # Property: indices
-    # list - [start,end] Starting end ending indices for this object.
-
-    # Property: material
-    # XPlaneMaterial - A <XPlaneMaterial>
-
-    # Property: attributes
-    # dict - Object attributes that will be turned into commands with <XPlaneCommands>.
-
-    # Constructor: __init__
-    # Defines basic <attributes> and <cockpitAttributes>, Creates <material>, runs <getManipulatorAttributes>, <getLightLevelAttributes>, <XPlaneObject.getCoordinates> and <XPlaneObject.getAnimations>.
-    #
-    # Parameters:
-    #   blenderObject - A Blender object
+    """
+    Used to represent Mesh objects and their XPlaneObjectSettings
+    """
     def __init__(self, blenderObject:bpy.types.Object):
         assert blenderObject.type == 'MESH'
         super().__init__(blenderObject)
+        # Starting end ending indices for this object.
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
         self.manipulator = XPlaneManipulator(self)
