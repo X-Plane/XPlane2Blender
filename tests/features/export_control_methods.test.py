@@ -36,5 +36,13 @@ class TestExportControlMethods(XPlaneTestCase):
         root = inspect.stack()[0].function[5:]
         self.assertRaises(ValueError, lambda: self.exportExportableRoot(root, dest=None, force_visible=False))
 
+    def test_ExpObjectDisabledInViewport(self)->None:
+        root = inspect.stack()[0].function[5:]
+        self.assertRaises(ValueError, lambda: self.exportExportableRoot(root, dest=None, force_visible=False))
+
+    def test_ExpObjectHiddenInViewport(self)->None:
+        root = inspect.stack()[0].function[5:]
+        self.assertRaises(ValueError, lambda: self.exportExportableRoot(root, dest=None, force_visible=False))
+
 
 runTestCases([TestExportControlMethods])
