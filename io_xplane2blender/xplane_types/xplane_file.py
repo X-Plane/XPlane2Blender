@@ -47,7 +47,7 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.type
     for potential_root in scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]:
         try:
             xplane_file = createFileFromBlenderRootObject(potential_root, view_layer)
-        except ValueError:
+        except ValueError as e:
             pass
         else:
             xplane_files.append(xplane_file)
@@ -182,16 +182,30 @@ class XPlaneFile():
                 parent_obj = blender_obj.parent
                 #--- Check for a reuse opportunity ------------------------
                 if parent_obj and parent_obj.name in self._bl_obj_name_to_bone:
-                    #existing_parent_bone = self._bl_obj_name_to_bone[parent_obj.name]
-                    #existing_parent_bone.
                     return current_bone
                 elif parent_obj:
-                    #--- This is all the manual work
+                    #---------------------------------------------------------
+                    # This is all the manual work
                     # the __init__ of XPlaneBone and XPlaneObject, and _recurse normally does for us
+                    # - Converting parent_obj to an XPlaneObject (if possible)
+                    # - Setting export_animation_only to True if outside collection,
+                    #   or if we're re-entering, setting based on visible_get
+                    # - Creating an XPlaneBone, and attaching the current bone as the new bone's child*
+                    # - Running the new_parent's collect
+                    # - Running walk_up to find it's split parents
+                    # *Okay, this isn't a part of _recurse, but, I thought I should mention it while on
+                    # the subject
                     #----------------------------------------------------------
                     new_parent_xplane_obj = convert_to_xplane_object(parent_obj)
                     if new_parent_xplane_obj:
-                        new_parent_xplane_obj.export_animation_only = True
+                        if not new_parent_xplane_obj.blenderObject.name in exportable_root.all_objects:
+                            # We don't have to test for blender_obj.visible_get here,
+                            # all objects that start inside the exportable collection will
+                            # have the assumption of being False - XPlaneObject's default for this is False
+                            new_parent_xplane_obj.export_animation_only = True
+                        else:
+                            new_parent_xplane_obj.export_animation_only = not new_parent_xplane_obj.blenderObject.visible_get()
+
                     try:
                         if parent_obj.type == "ARMATURE" and blender_obj.parent_type == "BONE":
                             parent_bl_bone = parent_obj.data.bones[blender_obj.parent_bone]
@@ -244,7 +258,7 @@ class XPlaneFile():
             - recurse is dealing with the first call of an exportable collection
             - parent_blender_objects = filtered coll.all_objects
 
-            parent_blender_object should always be filtered by allowed_children
+            parent_blender_objects should always be filtered by allowed_children
             """
             #print(
             #f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
@@ -255,6 +269,14 @@ class XPlaneFile():
             #print("===========================================================")
 
             blender_obj = parent
+            try:
+                new_xplane_bone = self._bl_obj_name_to_bone[blender_obj.name]
+            except (AttributeError,KeyError):
+                found_blender_obj_already = False
+            else:
+                found_blender_obj_already = True
+                new_xplane_obj = new_xplane_bone.xplaneObject
+
             if blender_obj:
                 new_xplane_obj = convert_to_xplane_object(blender_obj)
             else:
@@ -262,10 +284,11 @@ class XPlaneFile():
             #print(f"new_xplane_obj:\n{new_xplane_obj}")
 
             is_root_bone = not parent_bone # True for Exportable Collection and Object
+            # We'll never have found the root bone already, you find it once
             if (is_root_bone
                 and isinstance(exportable_root, bpy.types.Collection)):
                 new_xplane_bone = XPlaneBone(self, blender_obj=None)
-            else:
+            elif not found_blender_obj_already:
                 new_xplane_bone = XPlaneBone(
                     xplane_file=self,
                     blender_obj=blender_obj,
@@ -278,7 +301,8 @@ class XPlaneFile():
                 assert not self.rootBone, "recurse should never be assigning self.rootBone twice"
                 self.rootBone = new_xplane_bone
             try:
-                if (blender_obj.parent.name not in exportable_root.all_objects):
+                if (not found_blender_obj_already
+                    and blender_obj.parent.name not in exportable_root.all_objects):
                     if (blender_obj.parent.name in bpy.context.scene.objects):
                         walk_upward(new_xplane_bone)
                     else:
@@ -288,7 +312,7 @@ class XPlaneFile():
             except AttributeError: # For whatever of many reasons, we didn't walk up
                 pass
 
-            if new_xplane_obj:
+            if new_xplane_obj and not found_blender_obj_already: # We only collect once
                 # If set from walking up, keep that. Otherwise, decide based on visiblity
                 new_xplane_obj.export_animation_only = new_xplane_obj.export_animation_only or not blender_obj.visible_get()
                 # This is different than asking the Blender Light its type!
@@ -297,9 +321,8 @@ class XPlaneFile():
                     and not new_xplane_obj.export_animation_only):
                     self.lights.append(new_xplane_obj)
                 new_xplane_obj.collect()
-            elif blender_obj:
+            elif blender_obj and not found_blender_obj_already:
                 print(f"Blender Object: {blender_obj.name}, didn't convert")
-                pass
 
             def make_bones_for_armature_bones(arm_obj:bpy.types.Object)->Dict[str, XPlaneBone]:
                 """
@@ -497,7 +520,7 @@ class XPlaneFile():
         if len(meshOut):
             o += '\n'
 
-        # TODO: deprecate in v3.4
+        # TODO: Deprecate this one day...
         lightsOut = self.lights.write()
         o += lightsOut
 
