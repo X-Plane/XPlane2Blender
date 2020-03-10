@@ -261,42 +261,63 @@ class XPlaneFile():
             parent_blender_objects should always be filtered by allowed_children
             """
             #print(
-            #f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
-            #f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
-            #f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
-            #sep="\n"
+            #   f"Parent: {parent.name}" if parent else f"Root: {exportable_root.name}",
+            #   f"Parent Bone: {parent_bone}" if parent_bone else "No Parent Bone",
+            #   f"parent_blender_objects {[o.name for o in parent_blender_objects]}",
+            #   sep="\n"
             #)
             #print("===========================================================")
 
             blender_obj = parent
+
             try:
-                new_xplane_bone = self._bl_obj_name_to_bone[blender_obj.name]
+                self._bl_obj_name_to_bone[blender_obj.name]
             except (AttributeError,KeyError):
                 found_blender_obj_already = False
             else:
                 found_blender_obj_already = True
-                new_xplane_obj = new_xplane_bone.xplaneObject
 
-            if blender_obj:
-                new_xplane_obj = convert_to_xplane_object(blender_obj)
-            else:
-                new_xplane_obj = None
+            def get_new_xplane_obj()->Optional[XPlaneObject]:
+                """
+                When we're re-using a bone for various reasons,
+                we call it a "new bone" and call it's object
+                a "new object" so the rest of the algorithm doesn't get
+                complicated
+                """
+                if found_blender_obj_already:
+                    return self._bl_obj_name_to_bone[blender_obj.name].xplaneObject
+                elif blender_obj:
+                    return convert_to_xplane_object(blender_obj)
+                else:
+                    return None
+            new_xplane_obj = get_new_xplane_obj()
             #print(f"new_xplane_obj:\n{new_xplane_obj}")
 
             is_root_bone = not parent_bone # True for Exportable Collection and Object
-            # We'll never have found the root bone already, you find it once
-            if (is_root_bone
-                and isinstance(exportable_root, bpy.types.Collection)):
-                new_xplane_bone = XPlaneBone(self, blender_obj=None)
-            elif not found_blender_obj_already:
-                new_xplane_bone = XPlaneBone(
-                    xplane_file=self,
-                    blender_obj=blender_obj,
-                    blender_bone=None,
-                    xplane_obj=new_xplane_obj,
-                    parent_xplane_bone=parent_bone)
-                self._bl_obj_name_to_bone[blender_obj.name] = new_xplane_bone
+            def get_new_xplane_bone()->XPlaneBone:
+                """
+                If a non-root XPlaneBone is created
+                it is auto added to the dict of existing bones.
 
+                If we're re-using a bone we call it the "new" one,
+                for the rest of the algorithm's sake
+                """
+                if found_blender_obj_already:
+                    return self._bl_obj_name_to_bone[blender_obj.name]
+                # We'll never have found the root bone already, you find it once
+                elif (is_root_bone
+                      and isinstance(exportable_root, bpy.types.Collection)):
+                    return XPlaneBone(self, blender_obj=None)
+                elif not found_blender_obj_already:
+                    new_xplane_bone = XPlaneBone(
+                        xplane_file=self,
+                        blender_obj=blender_obj,
+                        blender_bone=None,
+                        xplane_obj=new_xplane_obj,
+                        parent_xplane_bone=parent_bone)
+                    self._bl_obj_name_to_bone[blender_obj.name] = new_xplane_bone
+                    return new_xplane_bone
+            new_xplane_bone = get_new_xplane_bone()
             if is_root_bone:
                 assert not self.rootBone, "recurse should never be assigning self.rootBone twice"
                 self.rootBone = new_xplane_bone
@@ -312,16 +333,18 @@ class XPlaneFile():
             except AttributeError: # For whatever of many reasons, we didn't walk up
                 pass
 
-            if new_xplane_obj and not found_blender_obj_already: # We only collect once
+            # We only collect once
+            if (not found_blender_obj_already
+                and new_xplane_obj):
                 # If set from walking up, keep that. Otherwise, decide based on visiblity
                 new_xplane_obj.export_animation_only = new_xplane_obj.export_animation_only or not blender_obj.visible_get()
-                # This is different than asking the Blender Light its type!
-                # This is refering to the old style default light
+                # This is asking if it is an old-style light,
+                # not it's Blender Light Type!
                 if (isinstance(new_xplane_obj, XPlaneLight)
                     and not new_xplane_obj.export_animation_only):
                     self.lights.append(new_xplane_obj)
                 new_xplane_obj.collect()
-            elif blender_obj and not found_blender_obj_already:
+            elif not found_blender_obj_already and blender_obj:
                 print(f"Blender Object: {blender_obj.name}, didn't convert")
 
             def make_bones_for_armature_bones(arm_obj:bpy.types.Object)->Dict[str, XPlaneBone]:
