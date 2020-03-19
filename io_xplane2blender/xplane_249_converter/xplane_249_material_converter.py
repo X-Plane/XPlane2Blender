@@ -275,6 +275,7 @@ def _get_tf_modes_from_ctypes(obj:bpy.types.Object)->Optional[TFModeAndFaceIndex
 
     return None
 
+
 def _convert_material(scene: bpy.types.Scene,
                       root_object: bpy.types.Object,
                       search_obj: bpy.types.Object,
@@ -284,7 +285,9 @@ def _convert_material(scene: bpy.types.Scene,
                       mat: bpy.types.Material)->Tuple[Optional[bpy.types.Material], Set[str], Set[str]]:
     """
     Attempts to create or return an existing derivative material
-    based on TexFace Button, Material, and Panel UV Texture Data.
+    based on a host of converter data collected so far,
+    including project information, TexFace Buttons, Game Property,
+    Materials, and Panel UV Texture Data.
 
     Returns the derivative material or None, and info and warning messages
 
@@ -452,7 +455,6 @@ def _convert_material(scene: bpy.types.Scene,
                 changed_material_values["lightLevel_v2"] = v2
                 changed_material_values["lightLevel_dataref"] = lightLevel_dataref
     #-----------------------------------------------------------------
-
     #TODO: Deck
     #deck = bool(xplane_249_helpers.find_property_in_parents(search_obj, "deck", default=0)[0]) and surfaceType != NONE #TODO That is how it works in 2.78, maybe different
     if changed_material_values != original_material_values:
@@ -463,7 +465,8 @@ def _convert_material(scene: bpy.types.Scene,
         ov = original_material_values
         cv = changed_material_values
         #round_tuple = lambda t, ndigits=3: tuple(round(n, ndigits) for n in t)
-        cmp_cv_ov = lambda key: cv[key] != ov[key]
+        def cmp_cv_ov(key:str)->bool:
+            return cv[key] != ov[key]
         xp249c = xplane_249_constants
         # Join a list of only the relavent hint suffixes
         hint_suffix = "_" + "_".join(filter(None, (
@@ -482,7 +485,10 @@ def _convert_material(scene: bpy.types.Scene,
 
             (xp249c.HINT_TF_SHADOW     if cmp_cv_ov("shadow_local") else ""),
 
+            # We simply ask if it uses lightLevel for now.
+            # Adding this to the hint_suffix acts as a template to be replaced later
             (xp249c.HINT_PROP_LIT_LEVEL if cmp_cv_ov("lightLevel") else ""),
+
 
             # Debugging only. Since we don't combine materials with the same diffuse or specularity,
             # we don't need to make it part of the lookup key
@@ -490,50 +496,40 @@ def _convert_material(scene: bpy.types.Scene,
             #(str(round(cv["specular_intensity"], 2)) if cv["specular_intensity"] != 0.5 else "") # Don't add the default
         )))
 
-        #2.49's max name length is 21, so we have 42 characters to work with
-        if len(mat.name + hint_suffix) > 63:
-            assert False, mat.name + hint_suffix + "is about to get truncated, potentially messing up a lot of stuff! Should should highly consider renaming them to be shorter and check if your TexFace buttons are correct"
-
-        #new_name is restricted to the max datablock name length, because we can't afford for these to get truncated
-        new_name = (mat.name + hint_suffix)[:63] # Max datablock name length.
-
         if cmp_cv_ov("lightLevel"):
-            # This is a "don't be too clever" moment
-            # Assumptions:
-            # - We will always make _LIT_LEVEL materials in the following sequence:
-            # _LIT_LEVEL, _LIT_LEVEL1, _LIT_LEVEL2, ...
-            # - LIT_LEVEL will always be last. If we get another like this, we'll have to get serious
-            # about string munging
-            cv_ll = (cv["lightLevel_v1"], cv["lightLevel_v2"], cv["lightLevel_dataref"])
-
-            def get_ll_index(m:bpy.types.Material):
-                """m is guaranteed to start with '249.*LIT_LEVEL'"""
-                try:
-                    return int(re.match("249.*" + xp249c.HINT_PROP_LIT_LEVEL + "(\d*)", m.name).group(1))
-                except ValueError:
-                    return 0
-
-            i = 0
-            sorted_ll_mats = sorted(filter(lambda m:m.name.startswith(new_name), bpy.data.materials), key=get_ll_index)
-            for i, ll_mat in enumerate(sorted_ll_mats):
-                # Re-use an existing material whenever possible
-                if cv_ll == (ll_mat.xplane.lightLevel_v1, ll_mat.xplane.lightLevel_v2, ll_mat.xplane.lightLevel_dataref):
-                    new_name = ll_mat.name
+            for other_material in filter(lambda m: m.name.startswith(mat.name) and m.name != mat.name, bpy.data.materials):
+                if (
+                    (cv["lightLevel_v1"], cv["lightLevel_v2"], cv["lightLevel_dataref"])
+                     == (other_material.xplane.lightLevel_v1, other_material.xplane.lightLevel_v2, other_material.xplane.lightLevel_dataref)
+                    ):
+                    # re-use moment!
+                    lookup_name = other_material.name
                     break
             else: #nobreak
-                # If we if we have ll_mats
-                if sorted_ll_mats:
-                    # With a new name, we make a new derivative
-                    new_name += str(i+1)
-                else:
-                    # This is our first ll_material, so don't add anything
-                    pass
+                # Our unique id is the length of the bpy.data.materials list using LIT_LEVEL,
+                # after this the material look up will fail and a new copy will be created and set
+                def get_lit_level_count():
+                    return sum(1 for m in bpy.data.materials if xp249c.HINT_PROP_LIT_LEVEL in m.name) + 1
 
-        if new_name in bpy.data.materials:
-            new_material = bpy.data.materials[new_name]
+                lookup_name = (mat.name + hint_suffix).replace(
+                        xp249c.HINT_PROP_LIT_LEVEL,
+                        "{}{}".format(xp249c.HINT_PROP_LIT_LEVEL, get_lit_level_count())
+                )
+        else:
+            lookup_name = (mat.name + hint_suffix)
+
+        #2.49's max name length is 21, so we have 42 characters to work with
+        if len(lookup_name) > 63:
+            assert False, lookup_name + "is about to get truncated, potentially messing up a lot of stuff! Should should highly consider renaming them to be shorter and check if your TexFace buttons are correct"
+        else:
+            #lookup_name is restricted to the max datablock name length, because we can't afford for these to get truncated
+            lookup_name = lookup_name[:63]
+
+        if lookup_name in bpy.data.materials:
+            new_material = bpy.data.materials[lookup_name]
         else:
             new_material = mat.copy()
-            new_material.name = new_name
+            new_material.name = lookup_name
             for prop, value in changed_material_values.items():
                 setattr(new_material.xplane, prop, value)
 
@@ -811,6 +807,7 @@ def convert_materials(scene: bpy.types.Scene, workflow_type: xplane_249_constant
                             split_groups[converted] = cross_over_faces
                     else:
                         pass
+
         for msg in logger_info_msgs:
             print(msg)
             logger.info(msg)

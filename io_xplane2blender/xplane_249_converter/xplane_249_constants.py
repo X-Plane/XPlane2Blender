@@ -44,7 +44,7 @@ HINT_TF_LIGHT          = "LIGHT"
 # LIT_LEVEL may have an int immediately afterwards, starting at 1
 # Ex: 249_COLL_LIT_LEVEL, 249_COLL_LIT_LEVEL1, 249_COLL_LIT_LEVEL2
 # A .blend file has 3 materials with Solid Camera and 3 unique LIT_LEVEL values
-HINT_PROP_LIT_LEVEL    = "LIT_LEVEL"
+HINT_PROP_LIT_LEVEL    = "LLEV"
 
 HINT_TF_SHADOW         = "SHADOW"
 

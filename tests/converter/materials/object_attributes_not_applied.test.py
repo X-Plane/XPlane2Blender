@@ -26,7 +26,7 @@ class TestObjectAttributesNotApplied(XPlaneTestCase):
         # We aren't checking for errors, we just want to let people move on with their conversion
         for obj in filter(lambda obj: obj.type == "MESH", bpy.data.objects):
             if obj.name == "litlevel_overwrite":
-                self.assertLitLevel(obj, xp249c.HINT_PROP_LIT_LEVEL, 3, 4, "test/chose/overwrite")
+                self.assertLitLevel(obj, xp249c.HINT_PROP_LIT_LEVEL + "1", 3, 4, "test/chose/overwrite")
             else:
                 self.assertEqual(obj.material_slots[0].material.name, xp249c.DEFAULT_MATERIAL_NAME)
 
