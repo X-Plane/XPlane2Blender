@@ -1716,6 +1716,16 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         default = False
         )
 
+    param_freq: bpy.props.FloatProperty(
+        name = "Frequency",
+        description = "Frequency of flashing lights in Hz"
+    )
+
+    param_index: bpy.props.IntProperty(
+        name = "Index",
+        description = "For use with a param light's INDEX"
+    )
+
     rgb_override_values: bpy.props.FloatVectorProperty(
         name = "RGB Override Values",
         description = "The values that will be used instead of the RGB picker",
@@ -1729,16 +1739,17 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
     type: bpy.props.EnumProperty(
         name = "Type",
         description = "Defines the type of the light in X-Plane",
-        default = LIGHT_DEFAULT,
+        default = LIGHT_AUTOMATIC,
         items = [
-                (LIGHT_DEFAULT,  "Default",                     "Default"),
-                (LIGHT_FLASHING, "Flashing" + " (deprecated)",  "Flashing" + " (deprecated)"),
-                (LIGHT_PULSING,  "Pulsing"  + " (deprecated)",  "Pulsing"  + " (deprecated)"),
-                (LIGHT_STROBE,   "Strobe"   + " (deprecated)",  "Strobe"   + " (deprecated)"),
-                (LIGHT_TRAFFIC,  "Traffic"  + " (deprecated)",  "Traffic"  + " (deprecated)"),
-                (LIGHT_NAMED,    "Named",                       "Named"),
-                (LIGHT_CUSTOM,   "Custom",                      "Custom"),
-                (LIGHT_PARAM,    "Param",                       "Param")
+                (LIGHT_DEFAULT,   "Default",                    "Default"),
+                (LIGHT_FLASHING,  "Flashing" + " (deprecated)", "Flashing" + " (deprecated)"),
+                (LIGHT_PULSING,   "Pulsing"  + " (deprecated)", "Pulsing"  + " (deprecated)"),
+                (LIGHT_STROBE,    "Strobe"   + " (deprecated)", "Strobe"   + " (deprecated)"),
+                (LIGHT_TRAFFIC,   "Traffic"  + " (deprecated)", "Traffic"  + " (deprecated)"),
+                (LIGHT_NAMED,     "Named"    + " (deprecated)", "Makes named and named only lights, use automatic"),
+                (LIGHT_CUSTOM,    "Custom",                     "Custom"),
+                (LIGHT_PARAM,     "Manual Param (deprecated)",  "Uses manual entry for parameters, not recommended"),
+                (LIGHT_AUTOMATIC, "Automatic",                  "Makes named and param lights with params taken from Blender light data"),
         ]
     )
 

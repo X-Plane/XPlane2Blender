@@ -385,6 +385,10 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
 
 @persistent
 def load_handler(dummy):
+    from io_xplane2blender.xplane_utils import xplane_lights_txt_parser
+    xplane_lights_txt_parser.parse_lights_file()
+
+
     filepath = bpy.context.blend_data.filepath
 
     for layer_props in [has_layer_props.xplane.layer for has_layer_props in bpy.data.objects[:] + bpy.data.collections[:]]:

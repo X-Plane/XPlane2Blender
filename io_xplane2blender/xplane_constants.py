@@ -204,6 +204,7 @@ LIGHT_TRAFFIC = "traffic"
 LIGHT_NAMED = "named"
 LIGHT_CUSTOM = "custom"
 LIGHT_PARAM = "param"
+LIGHT_AUTOMATIC = "automatic"
 
 LOGGER_LEVEL_ERROR   = "error"
 LOGGER_LEVEL_INFO    = "info"

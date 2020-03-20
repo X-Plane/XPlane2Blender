@@ -3,24 +3,21 @@ Creates the User Interface for all X-Plane properties.
 """
 
 import collections
-from typing import Optional
-
-import bpy
-from io_xplane2blender import xplane_constants, xplane_props
-from bpy.types import Object, UILayout
-from io_xplane2blender.xplane_constants import MANIPULATORS_OPT_IN
+import math
 from typing import Optional, Union
 
-from .xplane_config import *
+import bpy
+from bpy.types import Object, UILayout
+
+from io_xplane2blender import xplane_constants, xplane_props, xplane_utils
+
 from .xplane_constants import *
 from .xplane_ops import *
 from .xplane_props import *
 
 
-# Class: DATA_PT_xplane
-# Adds X-Plane light settings to the light tab. Uses <light_layout> and <custom_layout>.
 class DATA_PT_xplane(bpy.types.Panel):
-    '''XPlane Data/Light Panel'''
+    '''XPlane Empty/Light Data Panel'''
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -31,7 +28,7 @@ class DATA_PT_xplane(bpy.types.Panel):
         version = int(bpy.context.scene.xplane.version)
 
         if obj.type == "LIGHT":
-            light_layout(self.layout, obj.data)
+            light_layout(self.layout, obj)
             custom_layout(self.layout, obj)
         if obj.type == "EMPTY" and version >= 1130:
             empty_layout(self.layout, obj)
@@ -530,26 +527,45 @@ def mesh_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
     pass
 
 
-def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Light)->None:
-    row = layout.row()
-    row.prop(obj.xplane, "type", text = "Type")
+def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
+    light = obj.data
+    row = layout.row().prop(light.xplane, "type")
 
-    # TODO: deprecate named lights in v3.4
-    if obj.xplane.type in ("named", "param"):
-        row = layout.row()
-        row.prop(obj.xplane, "name")
-        if obj.xplane.type == "param":
-            row = layout.row()
-            row.prop(obj.xplane, "params", text = "Parameters")
-    elif obj.xplane.type == "custom":
-        row = layout.row()
-        row.prop(obj.xplane, "size")
-        row = layout.row()
-        row.label(text="Texture Coordinates:")
-        row = layout.row()
-        row.prop(obj.xplane, "uv", text = "")
-        row = layout.row()
-        row.prop(obj.xplane, "dataref", text = "Dataref")
+    if light.xplane.type == LIGHT_AUTOMATIC:
+        layout.row().prop(light.xplane, "name")
+        try:
+            parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(light.xplane.name)
+        except KeyError:
+            layout.row().label(text="Light name is unknown")
+            pass
+        else:
+            if "FREQ" in parsed_light.light_param_def:
+                layout.row().prop(light.xplane, "param_freq")
+            if "INDEX" in parsed_light.light_param_def:
+                layout.row().prop(light.xplane, "param_index")
+            debug_box = layout.box()
+            debug_box.label(text="Debug Box")
+            rgb_row = debug_box.row()
+            for param in parsed_light.light_param_def:
+                if param in {"R","G","B"}:
+                    rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 5)}")
+                if param in {"W", "WIDTH", "F", "FOCUS"}:
+                    debug_box.row().label(text=f"{param}: {round(math.degrees(light.spot_size), 5) if light.spot_size < math.pi else 'omni'}")
+                if param in {"INDEX"}:
+                    debug_box.row().label(text=f"{param}: {light.xplane.param_index}")
+                if param in {"FREQ"}:
+                    debug_box.row().label(text=f"{param}: {light.xplane.param_freq}")
+
+    elif light.xplane.type == LIGHT_NAMED:
+        layout.row().prop(light.xplane, "name")
+    elif light.xplane.type == LIGHT_PARAM:
+        layout.row().prop(light.xplane, "name")
+        layout.row().prop(light.xplane, "params")
+    elif light.xplane.type == LIGHT_CUSTOM:
+        layout.row().prop(light.xplane, "size")
+        layout.row().label(text="Texture Coordinates:")
+        layout.row().prop(light.xplane, "uv", text = "")
+        row = layout.row().prop(light.xplane, "dataref", text = "Dataref")
         scene = bpy.context.scene
         expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == "bpy.context.active_object.data.xplane.dataref"
         if expanded:
@@ -562,11 +578,9 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Light)->None:
         if expanded:
             dataref_search_window_layout(layout)
 
-        row = layout.row()
-        row.prop(obj.xplane, "enable_rgb_override")
-        if obj.xplane.enable_rgb_override:
-            row = layout.row()
-            row.prop(obj.xplane, "rgb_override_values")
+        layout.row().prop(light.xplane, "enable_rgb_override")
+        if light.xplane.enable_rgb_override:
+            layout.row().prop(light.xplane, "rgb_override_values")
 
 # Function: material_layout
 # Draws the UI layout for materials.
