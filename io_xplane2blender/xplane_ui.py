@@ -529,9 +529,11 @@ def mesh_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
 
 def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
     light = obj.data
-    row = layout.row().prop(light.xplane, "type")
+    layout.row().prop(light.xplane, "type")
 
-    if light.xplane.type == LIGHT_AUTOMATIC:
+    if light.xplane.type == LIGHT_AUTOMATIC and light.type != "SPOT":
+        layout.row().label(text="Automatic lights must use spot lights")
+    elif light.xplane.type == LIGHT_AUTOMATIC and light.type == "SPOT":
         layout.row().prop(light.xplane, "name")
         try:
             parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(light.xplane.name)
@@ -548,14 +550,13 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
             rgb_row = debug_box.row()
             for param in parsed_light.light_param_def:
                 if param in {"R","G","B"}:
-                    rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 5)}")
+                    rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 0)}")
                 if param in {"W", "WIDTH", "F", "FOCUS"}:
                     debug_box.row().label(text=f"{param}: {round(math.degrees(light.spot_size), 5) if light.spot_size < math.pi else 'omni'}")
                 if param in {"INDEX"}:
                     debug_box.row().label(text=f"{param}: {light.xplane.param_index}")
                 if param in {"FREQ"}:
                     debug_box.row().label(text=f"{param}: {light.xplane.param_freq}")
-
     elif light.xplane.type == LIGHT_NAMED:
         layout.row().prop(light.xplane, "name")
     elif light.xplane.type == LIGHT_PARAM:
