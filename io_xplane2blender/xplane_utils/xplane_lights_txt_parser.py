@@ -108,13 +108,20 @@ class ParsedLight:
     def __str__(self)->str:
         return "{self.light_name}: {" ".join(self.light_param_def) if self.light_param_def else ""}, {self.light_overloads[0]}"
 
+
 _parsed_lights_txt_content:Dict[str, ParsedLight] = {}
+
 
 def get_parsed_light(light_name:str)->ParsedLight:
     """
-    Gets a parsed light from the _parsed_lights_txt_content dictionary
+    Gets a parsed light from the _parsed_lights_txt_content dictionary.
+    Raises KeyError if light not found
     """
-    return _parsed_lights_txt_content[light_name]
+    try:
+        return _parsed_lights_txt_content[light_name]
+    except KeyError as ke:
+        raise KeyError(f"{light_name} not found in parsed lights dict") from ke
+
 
 def parse_lights_file():
     """
@@ -142,8 +149,7 @@ def parse_lights_file():
                 lambda l: l.startswith(tuple(LIGHT_TYPE_PROTOTYPES.keys()) + ("LIGHT_PARAM_DEF",)),
                 map(str.strip,lines)
             ):
-            overload_type, light_name, light_argc, *light_argv = line.split()
-            light_argv = tuple(light_argv)
+            overload_type, light_name, *light_args = line.split()
             try:
                 _parsed_lights_txt_content[light_name]
             except KeyError:
@@ -155,9 +161,11 @@ def parse_lights_file():
                     if parsed_light.light_param_def:
                         logger.error(f"{light_name} has more than one LIGHT_PARAM_DEF")
                         raise ValueError
+                    light_argc, *light_argv = light_args
                     parsed_light.light_param_def = light_argv # Skip the count
                 else:
-                    parsed_light.overloads.append(ParsedLightOverload(overload_type=overload_type, overload_arguments=light_argv))
+                    #print(light_args)
+                    parsed_light.overloads.append(ParsedLightOverload(overload_type=overload_type, overload_arguments=light_args))
                     rankings = ["CONE_SW", #Least trustworthy
                                 "CONE_HW",
                                 "SPILL_GND_REV",
@@ -170,3 +178,4 @@ def parse_lights_file():
 
                     # Semantically speaking, overloads[0] must ALWAYS be the most trustworthy
                     parsed_light.overloads.sort(key=lambda l: rankings.index(l.overload_type))
+    print(*_parsed_lights_txt_content, sep='\n')

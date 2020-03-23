@@ -3,9 +3,7 @@ from ..xplane_helpers import floatToStr
 from ..xplane_constants import *
 from io_xplane2blender.xplane_types import xplane_light
 
-# Class: XPlaneLights
-# Creates OBJ lights.
-# TODO: deprecate in v3.4
+# TODO: deprecate someday...
 class XPlaneLights():
     """
     Makes the VLIGHT table for all old LIGHT types (DEFAULT, FLASHING,

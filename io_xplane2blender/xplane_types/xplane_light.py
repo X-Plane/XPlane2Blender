@@ -1,56 +1,24 @@
 import math
 import re
-
-from .xplane_object import XPlaneObject
-from ..xplane_helpers import floatToStr, FLOAT_PRECISION, logger
-from ..xplane_constants import *
-from ..xplane_config import getDebug
-import mathutils
-from mathutils import Vector, Matrix, Euler
-from itertools import zip_longest
-from io_xplane2blender import xplane_constants
-from io_xplane2blender.xplane_types.xplane_lights_txt_parser import *
-from io_xplane2blender.xplane_types import xplane_lights_txt_parser
 from copy import deepcopy
+from itertools import zip_longest
 from typing import List, Optional
 
+import bpy
+import mathutils
+from mathutils import Euler, Matrix, Vector
 
-# Class: XPlaneLight
-# A Light
-#
-# Extends:
-#   <XPlaneObject>
-class XPlaneLight(XPlaneObject):
-    # Property: indices
-    # list - [start,end] Starting end ending indices for this light.
+from io_xplane2blender import xplane_constants, xplane_utils, xplane_types
+from io_xplane2blender.xplane_types import xplane_object
 
-    # Property: color
-    # list - [r,g,b] Color taken from the original Blender light. Can change depending on <lightType>.
+from ..xplane_config import getDebug
+from ..xplane_constants import *
+from ..xplane_helpers import FLOAT_PRECISION, floatToStr, logger
 
-    # Property: energy
-    # float - Energy taken from Blender light.
 
-    # Property: lightType
-    # string - Type of the light taken from <XPlaneLightSettings>.
-
-    # Property: size
-    # float - Size of the light taken from <XPlaneLightSettings>.
-
-    # Property: lightName
-    # string - Name of the light taken from <XPlaneLightSettings>.
-
-    # Property: params
-    # string - Parameters taken from <XPlaneLightSettings>.
-
-    # Property: dataref
-    # string - Dataref path taken from <XPlaneLightSettings>.
-
-    # Constructor: __init__
-    #
-    # Parameters:
-    #   object - A Blender object
-    def __init__(self, blenderObject):
-        super(XPlaneLight, self).__init__(blenderObject)
+class XPlaneLight(xplane_object.XPlaneObject):
+    def __init__(self, blenderObject:bpy.types.Object):
+        super().__init__(blenderObject)
         self.indices = [0,0]
         if blenderObject.data.xplane.enable_rgb_override:
             self.color = blenderObject.data.xplane.rgb_override_values[:]
@@ -89,16 +57,16 @@ class XPlaneLight(XPlaneObject):
 
         self.setWeight(10000)
 
-    def collect(self):
+    def collect(self)->None:
         super().collect()
 
-        is_parsed = xplane_lights_txt_parser.parse_lights_file()
+        is_parsed = xplane_types.xplane_lights_txt_parser.parse_lights_file()
         if is_parsed == False:
             logger.error("lights.txt file could not be parsed")
             return
 
-        if self.lightType != LIGHT_CUSTOM:
-            self.lightOverload = xplane_lights_txt_parser.get_overload(self.lightName)
+        if self.lightType not in {LIGHT_CUSTOM, LIGHT_AUTOMATIC}:
+            self.lightOverload = xplane_types.xplane_lights_txt_parser.get_overload(self.lightName)
         else:
             self.lightOverload = None
 
@@ -161,6 +129,51 @@ class XPlaneLight(XPlaneObject):
             if len(self.params.split()) == 0:
                 logger.error("light name %s has an empty parameters box" % self.lightName)
                 return
+        elif self.lightType == LIGHT_AUTOMATIC:
+            parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(self.lightName)
+            if parsed_light.light_param_def:
+                light_overload_filled_in = parsed_light.overloads[0]
+                def isfloat(f):
+                    try:
+                        float(f)
+                        return True
+                    except:
+                        return False
+
+                light = self.blenderObject.data
+                width = round(math.degrees(light.spot_size), 5) if light.spot_size < math.pi else 1.0
+                convert_table = {
+                        "R":self.color[0],
+                        "B":self.color[1],
+                        "G":self.color[2],
+                        "A":1,
+                        "W":width,
+                        "WIDTH": width,
+                        "F":     width,
+                        "FOCUS": width,
+                        "INDEX": light.xplane.param_index,
+                        "FREQ":  light.xplane.param_freq,
+                }
+                self.params = " ".join(parsed_light.overloads[0].overload_arguments)
+
+                def tofloat(f):
+                    try:
+                        float(f)
+                        return True
+                    except:
+                        return False
+
+                for i, arg in filter(lambda arg: not tofloat(arg[1]), enumerate(parsed_light.overloads[0].overload_arguments)):
+                    #TODO: This isn't good. Doesn't account for 1st, 2nd, instance. Finding W in Width
+                    print(i, arg)
+                    print("Before:", self.params)
+                    try:
+                        self.params = self.params.replace(arg, str(convert_table[arg]))
+                    except KeyError:
+                        print("KEY ERROR!", arg)
+                        self.params.replace(arg, "NotImplementedYet")
+
+                    print("After: ", self.params)
 
     def clamp(self, num:float, minimum:float, maximum:float)->float:
         if num < minimum:
@@ -183,7 +196,6 @@ class XPlaneLight(XPlaneObject):
 
         def vec_x_to_b(v):
             return Vector((v.x, -v.z, v.y))
-
 
         if self.blenderObject.data.type == 'POINT':
             pass
@@ -237,21 +249,11 @@ class XPlaneLight(XPlaneObject):
                     translation = rot_matrix.inverted() @ translation
                     has_anim = True
 
+        x,y,z = list(map(floatToStr,(translation[0],translation[2],-translation[1])))
         if self.lightType == LIGHT_NAMED:
-            o += "%sLIGHT_NAMED\t%s %s %s %s\n" % (
-                indent, self.lightName,
-                floatToStr(translation[0]),
-                floatToStr(translation[2]),
-                floatToStr(-translation[1])
-            )
-        elif self.lightType == LIGHT_PARAM:
-            o += "%sLIGHT_PARAM\t%s %s %s %s %s\n" % (
-                indent, self.lightName,
-                floatToStr(translation[0]),
-                floatToStr(translation[2]),
-                floatToStr(-translation[1]),
-                self.params
-            )
+            o += "{indent}LIGHT_NAMED\t{self.lightName} {x} {y} {z}\n"
+        elif self.lightType == LIGHT_PARAM or self.lightType == LIGHT_AUTOMATIC:
+            o += f"{indent}LIGHT_PARAM\t{self.lightName} {x} {y} {z} {self.params}\n"
         elif self.lightType == LIGHT_CUSTOM:
             o += "%sLIGHT_CUSTOM\t%s %s %s %s %s %s %s %s %s %s %s %s %s\n" % (
                 indent,
