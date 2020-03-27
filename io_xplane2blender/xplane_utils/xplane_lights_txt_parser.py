@@ -1,104 +1,169 @@
-import abc
+import copy
 import os
 import collections
 from dataclasses import dataclass
+from mathutils import Vector
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
 
-# In lights.txt, many of these have synonyms or variations, where , but this is basically it
+
 LIGHT_TYPE_PROTOTYPES = {
-    # Keys         :   1/2 of value (data provides other half)
-    #                  1,  2,  3,  4,  5      6,          7,         8,         9,   10, 11,   12,     13,    14,     15,   16
+    #                 0, 1,  2,  3,  4,     5,          6,         7,         8,   9,   10,  11,     12,    13,     14,   15
     "BILLBOARD_HW": ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH","FREQ","PHASE","AMP","DAY"),
-    #                  1,  2,  3,  4,  5      6,          7,         8,         9,   10, 11,   12,                                13
+    #                0,  1,  2,  3,  4      6,          6,         7,         8,   9,   10,  11,                                12
     "BILLBOARD_SW": ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH",                           "DREF"),
-    "CONE_HW":      ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH",                           "DREF"),
-    "CONE_SW":      ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH",                           "DREF"),
-    #                                 1,     2,          3,         4
-    "SPILL_GND":    (                "SIZE","CELL_SIZE","CELL_ROW","CELL_COL"),
+    #                                0,     1,          2,         3
+    "RPILL_GND":    (                "SIZE","CELL_SIZE","CELL_ROW","CELL_COL"),
     "SPILL_GND_REV":(                "SIZE","CELL_SIZE","CELL_ROW","CELL_COL"),
-    #                  1,  2,  3,  4,  5,                                       6,   7,   8,   9,                           10
+    #                0,  1,  2,  3,  4,                                       5,   6,   7,   8,                           9
     "SPILL_HW_DIR": ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                     "DAY"),
-    #                  1,  2,  3,  4,  5,                                                              6,   7,   8,   9,    10
+    #                0,  1,  2,  3,  4,                                                              5,     6,      7,    8
     "SPILL_HW_FLA": ("R","G","B","A","SIZE",                                                         "FREQ","PHASE","AMP","DAY"),
-    #                  1,  2,  3,  4,  5,                                       6,   7,   8,   9,                                 10
+    #                0,  1,  2,  3,  4,                                       5,   6,   7,   8,                                 9
     "SPILL_SW":     ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                           "DREF")
 }
 
 
-
-#class LightParamDef(collections.UserDict):
-    #"""
-    #Allows interaction with the LIGHT_PARAM_DEF by index, "standard name", or synonym.
-#
-    #For example for
-#
-    #LIGHT_PARAM_DEF        apron_light_billboard        5     X Y Z W S
-                                                         #R    G    B    A  SIZE   CS CR CL DX  DY   DZ   WIDTH FREQ PHASE AMP DAY
-    #BILLBOARD_HW        apron_light_billboard            1    1    1    1    S    4 2 0    X    Y    Z    W    0    0    0    1
-#
-    #light_param_def[3]
-    #light_param_def["W"]
-    #light_param_def["WIDTH"]
-#
-    #all return the same value. When first read, it is only the list of keys. Later, during collect, it can be combined with user input or automatically collected data
-    #"""
-    #def __init__(self, light_name:str, original_params:List[str])->None:
-        #"""
-        #light_name is used for hints as to what the original_params translates to for it's overloads
-        #"""
-        #SCRATCH ALL THIS, USER PROVIDED VALUES SHUOLDNT BE IN THIS API READING CLASS
-        #This class, the ability to use an index or an automaticly translating thing
-        #needs to be in xplane_lights.py
-#
-        #self._data = dict.fromkeys(original_params)
-        #self.synonms:Dict[str, str] = {}
-        #for param in original_params:
-            #x = {
-                #"W":"WIDTH",
-                #"S":"SIZE",
-            #}
-#
-            #self.synonms[param] = x[param]
-#
-    #def __getitem__(self, item:Union[int, str])->float:
-        #if isinstance(item, int):
-            #return self._data[list(self._data.keys())[item]]
-        #elif item in self.synonms:
-            #return self._data[self.synonms[item]]
-        #else:
-            #return self._data[item]
-#
-    #def __setitem__(self, key:str, value:float)->None:
-        #if isinstance(key, int):
-            #self._data[list(self._data.keys())[key]] = value
-        #if key in self.synonms:
-            #self._data[self.synonms[key]] = value
-        #else:
-            #self._data[key] = value
-#
-    #def __str__(self)->str:
-        #return f"LIGHT_PARAM_DEF    {len(self._data)} {self._data.keys()}"
-    #"""
-
 @dataclass(frozen=True)
 class ParsedLightOverload:
+    """
+    Represents a specific overload for a light, with the added ability to use [ ] indexing instead of messing with overload_arguments
+    """
     # What partially or completely filled out type this is
     overload_type:str
-    # Always contains stripped strings, even what we know as floats
-    overload_arguments:Tuple[str]
+    # Matches ParsedLight
+    name:str
+
+    # Should match ParsedLight's
+    arguments:List[Union[float,str]]
+
+    def __getitem__(self, key:Union[int,str]):
+        try:
+            if isinstance(key, int):
+                return self.arguments[key]
+            elif isinstance(key, str):
+                return self.arguments[self.arguments.index(key)]
+        except ValueError as ve:
+            raise KeyError(f"{key} not found in overload_arguments") from ve
+        except IndexError:
+            raise
+
+    def __setitem__(self, key:Union[int,str], value:float)->None:
+        try:
+            if isinstance(key, int):
+                self.arguments[key] = value
+            elif isinstance(key, str):
+                self.arguments[self.arguments.index(key)] = value
+        except ValueError as ve:
+            raise KeyError(f"{key} not found in overload_arguments") from ve
+        except IndexError:
+            raise
+
+    def __iter__(self):
+        yield from self.arguments
+
+    def apply_sw_callback(self):
+        """
+        Pre-emptively apply X-Plane's _sw callback for a dataref on a
+        fully or partially completed overload's arguments.
+
+        If the overload has no relavent DREF, nothing is mutated.
+        """
+        def get_rgb(prototype,lhs):
+            return lhs[prototype.index("R"):prototype.index("B") + 1]
+
+        def set_rgb(prototype,lhs,value):
+            lhs[prototype.index("R"):prototype.index("B")+1] = value
+
+        def get_a(prototype,lhs):
+            return lhs[prototype.index("A")]
+
+        def set_a(prototype,lhs,value):
+            lhs[prototype.index("A")] = value
+
+        def get_xyz(prototype,lhs):
+            return lhs[prototype.index("DX"):prototype.index("DZ")+1]
+
+        def set_xyz(prototype,lhs,value:List[float]):
+            lhs[prototype.index("DX"):prototype.index("DZ")+1] = value
+
+        def get_width(prototype,lhs):
+            return lhs[prototype.index("WIDTH")]
+
+        def set_width(prototype,lhs,value):
+            lhs[prototype.index("WIDTH")] = value
+
+        def do_rgb_to_dxyz_w_calc(overload):
+            global LIGHT_TYPE_PROTOTYPES
+
+            prototype = LIGHT_TYPE_PROTOTYPES[overload.overload_type]
+            args = self.arguments
+            set_xyz(prototype, args, args[prototype.index("R"):prototype.index("B")])
+            dir_vec = Vector(get_xyz(prototype,args))
+            set_width(prototype, args, 1 - dir_vec.magnitude)
+            set_xyz(prototype, args, dir_vec.normalized())
+            set_rgb(prototype, args, [1,1,1])
+
+        def do_rgba_to_dxyz_w(overload):
+            global LIGHT_TYPE_PROTOTYPES
+
+            prototype = LIGHT_TYPE_PROTOTYPES[overload.overload_type]
+            args = self.arguments
+            set_xyz(prototype,   args, get_rgb(prototype, args))
+            set_width(prototype, args, args[prototype.index("A")])
+            set_rgb(prototype,   args, [1,1,1])
+            set_a(prototype,     args, 1)
+
+        def do_force_omni(overload):
+            global LIGHT_TYPE_PROTOTYPES
+
+            prototype = LIGHT_TYPE_PROTOTYPES[overload.overload_type]
+            args = self.arguments
+            set_width(prototype, args, 1)
+
+        drefs = {
+            "sim/graphics/animation/lights/airplane_beacon_light_dir":     do_rgb_to_dxyz_w_calc,
+            "sim/graphics/animation/lights/airplane_generic_light":        do_rgb_to_dxyz_w_calc,
+            "sim/graphics/animation/lights/airplane_generic_light_flash":  do_rgb_to_dxyz_w_calc,
+            "sim/graphics/animation/lights/airplane_navigation_light_dir": do_rgb_to_dxyz_w_calc,
+
+            "sim/graphics/animation/lights/airport_beacon":                do_rgba_to_dxyz_w, #As of 11/14/2017, all lights with this are commented out
+            "sim/graphics/animation/lights/airport_beacon_flash":          do_rgba_to_dxyz_w, #As of 11/14/2017, none of this dataref appears in lights.txt
+
+            "sim/graphics/animation/lights/airplane_beacon_light_rotate":  do_force_omni,
+            "sim/graphics/animation/lights/carrier_waveoff":               do_force_omni,
+
+            "sim/graphics/animation/lights/fresnel_horizontal":            do_force_omni,
+            "sim/graphics/animation/lights/fresnel_vertical":              do_force_omni,
+            "sim/graphics/animation/lights/strobe":                        do_force_omni,
+            "sim/graphics/animation/lights/strobe_sp":                     do_force_omni,
+            "sim/graphics/animation/lights/vasi_papi":                     do_force_omni,
+            "sim/graphics/animation/lights/vasi_papi_tint":                do_force_omni,
+            "sim/graphics/animation/lights/vasi3":                         do_force_omni,
+            "sim/graphics/animation/lights/rabbit":                        do_force_omni,
+            "sim/graphics/animation/lights/rabbit_sp":                     do_force_omni,
+            "sim/graphics/animation/lights/wigwag":                        do_force_omni,
+            "sim/graphics/animation/lights/wigwag_sp":                     do_force_omni
+        }
+
+        try:
+            drefs[self["DREF"]](self)
+        except KeyError:
+            print(f"couldn't find {self['DREF']}")
+            pass
+
 
 class ParsedLight:
     """
     A parsed light represents a light and all its overloads
     from lights.txt
 
-    self.overloads is sorted based on trust worthyness, light_overloads is most trust worthy
-    If that light is also a param light, the params are provided
-    If light_param_def is empty it indicates it is not a param light
-    if not, light_param_defparams
+    self.overloads is sorted from most to least confident a software_callback should be applied.
+    This is not applicable to most lights.
+
+    One can tell a light is a parameterized light by if self.light_param_def is empty
     """
     def __init__(self, name:str)->None:
         self.name = name
@@ -114,11 +179,11 @@ _parsed_lights_txt_content:Dict[str, ParsedLight] = {}
 
 def get_parsed_light(light_name:str)->ParsedLight:
     """
-    Gets a parsed light from the _parsed_lights_txt_content dictionary.
+    Return is a copy from _parsed_lights_txt_content dict.
     Raises KeyError if light not found
     """
     try:
-        return _parsed_lights_txt_content[light_name]
+        return copy.deepcopy(_parsed_lights_txt_content[light_name])
     except KeyError as ke:
         raise KeyError(f"{light_name} not found in parsed lights dict") from ke
 
@@ -178,4 +243,3 @@ def parse_lights_file():
 
                     # Semantically speaking, overloads[0] must ALWAYS be the most trustworthy
                     parsed_light.overloads.sort(key=lambda l: rankings.index(l.overload_type))
-    print(*_parsed_lights_txt_content, sep='\n')
