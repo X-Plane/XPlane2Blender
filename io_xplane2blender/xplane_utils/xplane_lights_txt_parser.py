@@ -15,7 +15,7 @@ LIGHT_TYPE_PROTOTYPES = {
     #                0,  1,  2,  3,  4      6,          6,         7,         8,   9,   10,  11,                                12
     "BILLBOARD_SW": ("R","G","B","A","SIZE","CELL_SIZE","CELL_ROW","CELL_COL","DX","DY","DZ","WIDTH",                           "DREF"),
     #                                0,     1,          2,         3
-    "RPILL_GND":    (                "SIZE","CELL_SIZE","CELL_ROW","CELL_COL"),
+    "SPILL_GND":    (                "SIZE","CELL_SIZE","CELL_ROW","CELL_COL"),
     "SPILL_GND_REV":(                "SIZE","CELL_SIZE","CELL_ROW","CELL_COL"),
     #                0,  1,  2,  3,  4,                                       5,   6,   7,   8,                           9
     "SPILL_HW_DIR": ("R","G","B","A","SIZE",                                  "DX","DY","DZ","WIDTH",                     "DAY"),
@@ -26,40 +26,54 @@ LIGHT_TYPE_PROTOTYPES = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass
 class ParsedLightOverload:
     """
     Represents a specific overload for a light, with the added ability to use [ ] indexing instead of messing with overload_arguments
     """
-    # What partially or completely filled out type this is
     overload_type:str
-    # Matches ParsedLight
     name:str
-
-    # Should match ParsedLight's
     arguments:List[Union[float,str]]
 
+    def __post_init__(self)->None:
+        def tryfloat(s:str)->Union[float,str]:
+            try:
+                return float(s)
+            except ValueError:
+                return s
+
+        self.arguments = list(map(tryfloat,self.arguments))
+
     def __getitem__(self, key:Union[int,str]):
-        try:
-            if isinstance(key, int):
-                return self.arguments[key]
-            elif isinstance(key, str):
-                return self.arguments[self.arguments.index(key)]
-        except ValueError as ve:
-            raise KeyError(f"{key} not found in overload_arguments") from ve
-        except IndexError:
-            raise
+        """
+        Passing in an int will get you the index in the list of arguments,
+        passing in a key will get you the contents of that column of the
+        prototype
+        Raises IndexError index out of range or KeyError if param is not in overload
+        """
+        global LIGHT_TYPE_PROTOTYPES
+        prototype = LIGHT_TYPE_PROTOTYPES[self.overload_type]
+        if isinstance(key, int):
+            return self.arguments[key]
+        elif isinstance(key, str):
+            try:
+                return self.arguments[prototype.index(key)]
+            except ValueError as ve:
+                raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
 
     def __setitem__(self, key:Union[int,str], value:float)->None:
-        try:
-            if isinstance(key, int):
+        global LIGHT_TYPE_PROTOTYPES
+        prototype = LIGHT_TYPE_PROTOTYPES[self.overload_type]
+        if isinstance(key, int):
+            try:
                 self.arguments[key] = value
-            elif isinstance(key, str):
-                self.arguments[self.arguments.index(key)] = value
-        except ValueError as ve:
-            raise KeyError(f"{key} not found in overload_arguments") from ve
-        except IndexError:
-            raise
+            except IndexError:
+                raise
+        elif isinstance(key, str):
+            try:
+                self.arguments[prototype.index(key)] = value
+            except ValueError as ve:
+                raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
 
     def __iter__(self):
         yield from self.arguments
@@ -193,27 +207,29 @@ def parse_lights_file():
     Parse the lights.txt file, building the dictionary of parsed lights.
 
     If already parsed, does nothing. Raises OSError or ValueError
-    if file not found or content invalid
+    if file not found or content invalid,
+    logger errors and warnings will have been collected
     """
     global _parsed_lights_txt_content
     if _parsed_lights_txt_content:
         return
 
+    num_logger_problems = len(logger.findErrors()) + len(logger.findWarnings())
     LIGHTS_FILEPATH = os.path.join(xplane_constants.ADDON_RESOURCES_FOLDER,"lights.txt")
     if not os.path.isfile(LIGHTS_FILEPATH):
-        logger.error(f"lights.txt file was not found in resource folder %s" % (LIGHTS_FILEPATH))
-        raise ValueError
+        logger.error(f"lights.txt file was not found in resource folder {LIGHTS_FILEPATH}")
 
     with open(LIGHTS_FILEPATH,"r") as f:
         lines = f.read().splitlines()[3:]
         if len(lines) == 0:
             logger.error("lights.txt file is empty")
-            raise ValueError
 
         for line in filter(
                 lambda l: l.startswith(tuple(LIGHT_TYPE_PROTOTYPES.keys()) + ("LIGHT_PARAM_DEF",)),
                 map(str.strip,lines)
             ):
+            #TODO: HACK!!!
+            line = line.replace("INDEX", "A")
             overload_type, light_name, *light_args = line.split()
             try:
                 _parsed_lights_txt_content[light_name]
@@ -225,15 +241,14 @@ def parse_lights_file():
                 if overload_type == "LIGHT_PARAM_DEF":
                     if parsed_light.light_param_def:
                         logger.error(f"{light_name} has more than one LIGHT_PARAM_DEF")
-                        raise ValueError
                     light_argc, *light_argv = light_args
                     parsed_light.light_param_def = light_argv # Skip the count
+                    if not set(parsed_light.light_param_def) < {*LIGHT_TYPE_PROTOTYPES["BILLBOARD_HW"], "DREF"}:
+                        logger.error(f"LIGHT_PARAM_DEF for '{light_name}' contains unknown parameters: {parsed_light.light_param_def}")
                 else:
                     #print(light_args)
-                    parsed_light.overloads.append(ParsedLightOverload(overload_type=overload_type, overload_arguments=light_args))
-                    rankings = ["CONE_SW", #Least trustworthy
-                                "CONE_HW",
-                                "SPILL_GND_REV",
+                    parsed_light.overloads.append(ParsedLightOverload(overload_type=overload_type, name=light_name, arguments=light_args))
+                    rankings = ["SPILL_GND_REV", #Least trustworthy
                                 "SPILL_GND",
                                 "BILLBOARD_SW",
                                 "BILLBOARD_HW",
@@ -243,3 +258,6 @@ def parse_lights_file():
 
                     # Semantically speaking, overloads[0] must ALWAYS be the most trustworthy
                     parsed_light.overloads.sort(key=lambda l: rankings.index(l.overload_type))
+
+    if (len(logger.findErrors()) + len(logger.findWarnings())) - num_logger_problems:
+        raise ValueError

@@ -1696,34 +1696,38 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         precision = 2
     )
 
-# Class: XPlaneLightSettings
-# Settings for Blender lights.
-#
-# Properties:
-#   bool enable_rgb_manual_override - Overrides the use of Blender's color picker
-#   float vector rgb_override_values - The values to be use if override is enabled
-#   enum type - Light type as defined in OBJ specs.
-#   string name - Light name, if "type" is 'named'.
-#   string params - Light params, if "type" is 'param'.
-#   float size - Light size, if "type" is 'custom'.
-#   string dataref - Dataref driving the light, if "type" is 'custom'.
-#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
+
 class XPlaneLightSettings(bpy.types.PropertyGroup):
-    # TODO: deprecate named{?}, flashing, pulising, strobe, traffic lights in v3.4
     enable_rgb_override: bpy.props.BoolProperty(
         name = "Enable RGB Picker Override",
         description = "Used instead of the Blender color picker to input any RGB values. Useful for certain datarefs",
         default = False
         )
 
+    param_amp: bpy.props.FloatProperty(
+        name = "Amplitude",
+        description = "Rate of strobe effect of flashing effect, set in ranges from 0-1 (pulse), 1-10 (strobe), 1000+ (millisecond strobe)",
+        default=1.0,
+        min=0.0
+    )
+
     param_freq: bpy.props.FloatProperty(
         name = "Frequency",
-        description = "Frequency of flashing lights in Hz"
+        description = "The number of light flashes per second",
+        min = 0.0,
+        precision = 3
     )
 
     param_index: bpy.props.IntProperty(
-        name = "Index",
-        description = "For use with a param light's INDEX"
+            name = "Index",
+            description = "Index in light's associated array dataref",
+            min = 0
+    )
+
+    param_phase: bpy.props.FloatProperty(
+        name = "Phase",
+        description = "Phase offset of light (so it can make flashing lights that don't flash at the same time)",
+        min = 0.0,
     )
 
     rgb_override_values: bpy.props.FloatVectorProperty(

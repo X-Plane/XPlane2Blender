@@ -8,7 +8,7 @@ import bpy
 import io_xplane2blender
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender import xplane_constants, xplane_helpers
-from io_xplane2blender.xplane_types import xplane_lights_txt_parser
+from io_xplane2blender.xplane_utils import xplane_lights_txt_parser
 from collections import OrderedDict
 
 class SCENE_OT_dev_apply_default_material_to_all(bpy.types.Operator):
@@ -43,36 +43,31 @@ class SCENE_OT_dev_create_lights_txt_summary(bpy.types.Operator):
             text_file = bpy.data.texts[filename]
             text_file.clear()
 
-        named_lights = []
-        param_lights = []
-        other_lights = []
-
-        for key,value in xplane_lights_txt_parser._parsed_lights.items():
-            overload = value
-            if overload.is_param_light():
-                param_lights.append(overload)
-            else:
-                if "CONE" in overload.data_source.type or\
-                   "SPILL_GND" in overload.data_source.type:
-                    other_lights.append(overload)
-                else:
-                    named_lights.append(overload)
+        content = xplane_lights_txt_parser._parsed_lights_txt_content
+        named_lights = [parsed_light for light_name, parsed_light in content.items() if not parsed_light.light_param_def]
+        param_lights = [
+                parsed_light
+                for light_name, parsed_light in content.items()
+                if parsed_light.light_param_def and "SPILL_GND" not in parsed_light.overloads[0].overload_type]
+        other_lights = [
+                parsed_light
+                for light_name, parsed_light in content.items()
+                if not parsed_light.light_param_def and "SPILL_GND" in parsed_light.overloads[0].overload_type]
 
         text_file.write("Named Lights\n")
         text_file.write("------------\n")
         for named_light in named_lights:
-            text_file.write("%s\n" % named_light.light_name)
+            text_file.write("%s\n" % named_light.name)
 
         text_file.write("\nParam Lights (Light name, followed by parameters required)\n")
         text_file.write("------------\n")
         for param_light in param_lights:
-            cleaned_prototype = ''.join([c for c in str(param_light.light_param_def.prototype) if c not in "(),'\""])
-            text_file.write("%s\n%s\n\n" % (param_light.light_name,cleaned_prototype))
+            text_file.write("%s\n%s\n\n" % (param_light.name, " ".join(param_light.light_param_def)))
 
         text_file.write("Old X-Plane 8 Lights\n")
         text_file.write("------------\n")
         for other_light in other_lights:
-            text_file.write("%s\n" % other_light.light_name)
+            text_file.write("%s\n" % other_light.name)
 
         return {'FINISHED'}
 

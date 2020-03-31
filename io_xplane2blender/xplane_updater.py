@@ -386,8 +386,24 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
 @persistent
 def load_handler(dummy):
     from io_xplane2blender.xplane_utils import xplane_lights_txt_parser
-    xplane_lights_txt_parser.parse_lights_file()
-
+    logger = xplane_helpers.logger
+    logger.clear()
+    logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Startup Log'), xplane_constants.LOGGER_LEVELS_ALL)
+    logger.addTransport(XPlaneLogger.ConsoleTransport())
+    try:
+        xplane_lights_txt_parser.parse_lights_file()
+    except OSError as oe:
+        def draw(self, context):
+            self.layout.label(text="Some lighting features may not work. Read the internal text block 'Startup Log' for more details")
+            self.layout.label(text="Check for a missing or broken lights.txt file or re-install addon")
+            self.layout.label(text=str(oe))
+        bpy.context.window_manager.popup_menu(draw, title="Could not read io_xplane2blender/resources/lights.txt", icon="ERROR")
+    except ValueError as ve:
+        def draw(self, context):
+            self.layout.label(text="Some lighting features may not work. Read the internal text block 'Startup Log' for more details")
+            self.layout.label(text="Check replace lights.txt from X-Plane or re-install addon")
+            self.layout.label(text=str(ve))
+        bpy.context.window_manager.popup_menu(draw, title="io_xplane2blender/resources/lights.txt had invalid content", icon="ERROR")
 
     filepath = bpy.context.blend_data.filepath
 
@@ -406,7 +422,6 @@ def load_handler(dummy):
     scene = bpy.context.scene
     current_version = xplane_helpers.VerStruct.current()
     ver_history = scene.xplane.xplane2blender_ver_history
-    logger = xplane_helpers.logger
     logger.clear()
     logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport('Updater Log'), xplane_constants.LOGGER_LEVELS_ALL)
     logger.addTransport(XPlaneLogger.ConsoleTransport())

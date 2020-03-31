@@ -23,7 +23,7 @@
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
     "name": "Export: X-Plane (.obj)",
-    "description": "Import and Export X-Plane objects/planes (.obj format)",
+    "description": "Export X-Plane objects/planes (.obj format)",
     "author": "Ted Greene, Ben Supnik",
     "version": (4, 0, 0),
     "blender": (2, 80, 0),

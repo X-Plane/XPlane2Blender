@@ -21,10 +21,8 @@ class XPLANE_MT_xplane_export_log(bpy.types.Menu):
     bl_label = "XPlane2Blender Export Log Warning"
 
     def draw(self, context):
-        row = self.layout.row()
-        row.label(text='Export produced errors or warnings.')
-        row = self.layout.row()
-        row.label(text='Please see the internal text file XPlane2Blender.log')
+        self.layout.row().label(text='Export produced errors or warnings.')
+        self.layout.row().label(text='Please see the internal text file XPlane2Blender.log')
 
 def showLogDialog():
     if not ('-b' in sys.argv or '--background' in sys.argv):
