@@ -1719,9 +1719,9 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
     )
 
     param_index: bpy.props.IntProperty(
-            name = "Index",
-            description = "Index in light's associated array dataref",
-            min = 0
+        name = "Index",
+        description = "Index in light's associated array dataref",
+        min = 0
     )
 
     param_phase: bpy.props.FloatProperty(

@@ -63,31 +63,36 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
     def collect(self)->None:
         super().collect()
+        light_data = self.blenderObject.data
+        try:
+            parsed_light = xplane_lights_txt_parser.get_parsed_light(self.lightName)
+        except KeyError:
+            pass
 
-        if self.lightType != LIGHT_CUSTOM:
-            try:
-                parsed_light = xplane_lights_txt_parser.get_parsed_light(self.lightName)
-            except KeyError:
-                if parsed_light in {LIGHT_NAMED,LIGHT_PARAM}:
-                    logger.warn(
-                        f"Light name {self.lightName} is not a known light name, no autocorrection will occur. "
-                        f"Check spelling or update lights.txt"
-                    )
+        unknown_light_name_warning = (f"\"{self.blenderObject.name}\"'s Light Name '{self.lightName}' is unknown,"
+                                      f" check your spelling or update your lights.txt file")
 
-        if self.lightType == LIGHT_NAMED and parsed_light:
-            if parsed_light.light_param_def:
-                logger.error(f"light name {self.lightName} is a known param light, being used as a name light. Check the light name or light type")
-                return
-
+        # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
+        # -------------------|------------|--------------|------------------|-------
+        # LIGHT_NAMED        | *          | Yes          | Yes              | Error, "known param used as named light"
+        # LIGHT_NAMED        | *          | Yes          | No               | Apply sw_callback if possible
+        # LIGHT_NAMED        | *          | No           | N/A              | Treat as unknown named light, Warning given, NAMED written as is, no SW callbacks applied
+        if self.lightType == LIGHT_NAMED and parsed_light and parsed_light.light_param_def:
+            logger.error(f"Light name {self.lightName} is a known param light, being used as a name light. Check the light name or light type")
+            return
+        elif self.lightType == LIGHT_NAMED and parsed_light and not parsed_light.light_param_def:
+            self.params_completed = parsed_light.overloads[0]
             if parsed_light.overloads[0].overload_type in {"BILLBOARD_SW", "SPILL_SW"}:
-                self.params_completed = parsed_light.overloads[0]
                 self.params_completed.apply_sw_callback()
-        elif self.lightType == LIGHT_PARAM and parsed_light:
-            if not parsed_light.light_param_def:
-                logger.error(f"Light name {self.lightName} is a named light, not a param light."
-                             f" Check the light type drop down menu")
-                return
-
+        elif self.lightType == LIGHT_NAMED and not parsed_light:
+            logger.warn(unknown_light_name_warning)
+        # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
+        # -------------------|------------|--------------|------------------|-------
+        # LIGHT_PARAM        | "POINT"    | Yes          | Yes              | Parse params, replace self.params_complete
+        # LIGHT_PARAM        | not "POINT"| Yes          | Yes              | Parse params, replace self.params_complete, apply sw_callback if possible. Autocorrect with ANIM_
+        # LIGHT_PARAM        | *          | Yes          | No               | Error, "known named light used as a param light"
+        # LIGHT_PARAM        | *          | No           | N/A              | Warning given, PARAMS written as is, no auto correction_applied
+        elif self.lightType == LIGHT_PARAM and parsed_light and parsed_light.light_param_def:
             params_formal = parsed_light.light_param_def
 
             # Parsed params from the params box, stripped and ignoring the commemnt
@@ -128,35 +133,69 @@ class XPlaneLight(xplane_object.XPlaneObject):
             if dir_vec.magnitude == 0.0 and not self.is_omni:
                 logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
                 return
+        elif self.lightType == LIGHT_PARAM and parsed_light and not parsed_light.light_param_def:
+            logger.error(f"Light name {self.lightName} is a named light, not a param light."
+                         f" Check the light type drop down menu")
+            return
+        # Even if we don't know the PARAM light, we still have to check if we're about to write out no params
         elif self.lightType == LIGHT_PARAM and not parsed_light:
+            logger.warn(unknown_light_name_warning)
             if not self.blenderObject.data.xplane.params.split():
-                logger.error("light name %s has an empty parameters box" % self.lightName)
+                logger.error(f"'{self.blenderObject.name}' has an empty parameters box")
                 return
-        elif self.lightType == LIGHT_AUTOMATIC:
-            parsed_light = xplane_lights_txt_parser.get_parsed_light(self.lightName)
-            if parsed_light.light_param_def:
-                light = self.blenderObject.data
-                light_overload_filled_in = parsed_light.overloads[0]
-                #"CELL_", "DAY", "DREF" are never parameterizable,
-                #"DX", "DY", "DZ" cannot be filled in until later
-                convert_table = {
-                        "R":self.color[0],
-                        "G":self.color[1],
-                        "B":self.color[2],
-                        "A":1,
-                        "SIZE":light.spot,
-                        "WIDTH": math.cos(round(math.degrees(light.spot_size), 5) * 0.5),
-                        "FREQ": light.xplane.param_freq,
-                        "PHASE": light.xplane.param_phase,
-                        "AMP": light.xplane.param_amp,
-                    }
+        # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
+        # -------------------|------------|--------------|------------------|-------
+        # LIGHT_CUSTOM       | *          | N/A          | N/A              | Write custom light as is
+        elif self.lightType == LIGHT_CUSTOM:
+            pass
+        # LIGHT_AUTOMATC preforms no autocorrection. IF POINT, it is interpreted as an omni-directional light
+        #
+        # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
+        # -------------------|------------|--------------|------------------|-------
+        # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | Yes              | Fill out params and write
+        # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | No               | Treat as named light, write as is
+        # LIGHT_AUTOMATIC    |"POINT/SPOT"| No           | N/A              | Treat as named light, give warning, write as is
+        # LIGHT_AUTOMATIC    | Any Others | N/A          | N/A              | Error, "Automatic lights require POINT or SPOT"
+        elif self.lightType == LIGHT_AUTOMATIC and light_data.type not in {"POINT", "SPOT"}:
+            logger.error(f"Automatic lights must be a Point or Spot light, change {self.blenderObject.name}'s type or change it's X-Plane Light Type")
+            return
+        elif self.lightType == LIGHT_AUTOMATIC and parsed_light and parsed_light.light_param_def:
+            self.is_omni = light_data.type == "POINT"
+            #"CELL_", "DAY", "DREF" are never parameterizable,
+            #"DX", "DY", "DZ" cannot be filled in until later
+            convert_table = {
+                    "R":self.color[0],
+                    "G":self.color[1],
+                    "B":self.color[2],
+                    #TODO: HACK. If Ben and Alex decide they want the "INDEX" name kept in
+                    # lights.txt we'll make an entry in the dict. Else, we'll keep this or whatever
+                    # solution we have
+                    "A":light_data.xplane.param_index if parsed_light.has_index() else 1,
+                    "SIZE":light_data.shadow_soft_size, # Radius
+                    "WIDTH": math.cos(round(math.degrees(light_data.spot_size)) if light_data.type == "POINT" else 1,
+                    "FREQ": light_data.xplane.param_freq,
+                    "PHASE": light_data.xplane.param_phase,
+                    "AMP": light_data.xplane.param_amp,
+                }
 
-                if "WIDTH" in parsed_light.light_param_def and round(light.spot_size) == math.pi:
-                    logger.error("Spotlight Size for {self.blenderObject.name} cannot be 180 degrees")
-                    return
+            if "WIDTH" in parsed_light.light_param_def and round(light_data.spot_size) == math.pi:
+                logger.error("Spotlight Size for {self.blenderObject.name} cannot be 180 degrees")
+                return
 
-                for i, arg in filter(lambda arg: isinstance(arg, str), parsed_light.overloads[0]):
-                    parsed_light.overloads[arg] = convert_table[arg]
+            for i, arg in filter(lambda arg: isinstance(arg, str), parsed_light.overloads[0]):
+                parsed_light.overloads[arg] = convert_table[arg]
+        elif self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def:
+            # Like LIGHT_NAMED but no autocorrection
+            pass
+        elif self.lightType == LIGHT_AUTOMATIC and not parsed_light:
+            logger.warn(unknown_light_name_warning)
+        # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
+        # -------------------|------------|--------------|------------------|-------
+        # LIGHT_ old         | *          | N/A          | N/A              | Write
+        elif self.lightType in LIGHTS_OLD_TYPES:
+            pass
+        else:
+            assert False, f"{self.blenderObject.name} had some property configuation that was unaccounted for"
 
     def clamp(self, num:float, minimum:float, maximum:float)->float:
         if num < minimum:
@@ -170,15 +209,14 @@ class XPlaneLight(xplane_object.XPlaneObject):
         indent = self.xplaneBone.getIndent()
         o = super().write()
 
+        light_data = self.blenderObject.data
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
         translation = bakeMatrix.to_translation()
         has_anim = False
 
-        if self.blenderObject.data.type == 'POINT':
-            pass
-        elif (self.blenderObject.data.type != 'POINT'
-              and self.lightType != LIGHT_AUTOMATIC
-              and self.params_completed):
+        if (light_data.type != 'POINT'
+            and self.lightType != LIGHT_AUTOMATIC
+            and self.params_completed):
             # Vector P(arameters), in Blender Space
             try:
                 (dx,dy,dz) = (self.params_completed[c] for c in ["DX", "DY", "DZ"])
@@ -228,15 +266,25 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec3)
                     translation = rot_matrix.inverted() @ translation
                     has_anim = True
+        elif (light_data.type == 'SPOT'
+              and self.lightType == LIGHT_AUTOMATIC
+              and self.params_completed):
+            (dx,dy,dz) = vec_b_to_x(bakeMatrix.to_quaternion().to_axis_angle()[0])[:]
+            try:
+                self.params_completed.arguments["DX"] = dx
+                self.params_completed.arguments["DY"] = dy
+                self.params_completed.arguments["DZ"] = dz
+            except KeyError:
+                pass
 
         x,y,z = list(map(floatToStr,(translation[0],translation[2],-translation[1])))
-        parsed_light = xplane_lights_txt_parser.get_parsed_light(self.lightName)
+        light_param_def = xplane_lights_txt_parser.get_parsed_light(self.lightName).light_param_def
         if (self.lightType == LIGHT_NAMED
-            or (self.lightType == LIGHT_AUTOMATIC
-                and not parsed_light.light_param_def)):
+            or (self.lightType == LIGHT_AUTOMATIC and not light_param_def)):
             o += f"{indent}LIGHT_NAMED\t{self.lightName} {x} {y} {z}\n"
-        elif self.lightType == LIGHT_PARAM or self.lightType == LIGHT_AUTOMATIC:
-            o += f"{indent}LIGHT_PARAM\t{self.lightName} {x} {y} {z} {' '.join(self.params_completed.overload[0])}\n"
+        elif (self.lightType == LIGHT_PARAM
+              or (self.lightType == LIGHT_AUTOMATIC and light_param_def)):
+            o += f"{indent}LIGHT_PARAM\t{self.lightName} {x} {y} {z} {' '.join(self.params_completed)}\n"
         elif self.lightType == LIGHT_CUSTOM:
             o += (f"{indent}LIGHT_CUSTOM\t{x} {y} {z}"
                  f" {' '.join(self.color)} {self.energy} {self.size}"

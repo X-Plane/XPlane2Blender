@@ -185,7 +185,7 @@ BILLBOARD_HW	HGV_roof_right		1	1	1	1	0.5	1	5	1	0.86	0	-0.5	-0.5	0	0	0	0
 #
 
 # Landing light: v10 - components.
-LIGHT_PARAM_DEF	airplane_landing_core		5	R	G	B		SIZE
+LIGHT_PARAM_DEF	airplane_landing_core		5	R	G	B	INDEX	SIZE
 BILLBOARD_SW	airplane_landing_core		R	G	B	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_landing_light_flash
 LIGHT_PARAM_DEF	airplane_landing_glow		5	R	G	B	INDEX	SIZE
 BILLBOARD_SW	airplane_landing_glow		R	G	B	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_landing_light
