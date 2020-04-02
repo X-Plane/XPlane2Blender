@@ -172,7 +172,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     # solution we have
                     "A":light_data.xplane.param_index if parsed_light.has_index() else 1,
                     "SIZE":light_data.shadow_soft_size, # Radius
-                    "WIDTH": math.cos(round(math.degrees(light_data.spot_size)) if light_data.type == "POINT" else 1,
+                    "WIDTH": 1 if light_data.type == "POINT" else math.cos(round(math.degrees(light_data.spot_size))),
                     "FREQ": light_data.xplane.param_freq,
                     "PHASE": light_data.xplane.param_phase,
                     "AMP": light_data.xplane.param_amp,

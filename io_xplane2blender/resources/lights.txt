@@ -20,7 +20,7 @@ LIGHT_SPECS
 
 # OVERLOAD type | R | G | B | A | SIZE | CELL_SIZE | CELL_ROW | CELL_COL | DX | DY | DZ | WIDTH | FREQ | PHASE | AMP | DAY | DREF
 # --------------|---|---|---|---|------|-----------|----------|----------|----|----|----|-------|------|-------|-----|-----|-----
-# BILLBOARD_HW  | * | * | * | x | *    | x         | x        | x        | *  | *  | *  | *     | *    | *     | *   | x   |x
+# BILLBOARD_HW  | * | * | * | x | *    | x         | x        | x        | *  | *  | *  | *     | *    | *     | x   | x   |x
 # 
 # OVERLOAD type | R | G | B | A | SIZE | CELL_SIZE | CELL_ROW | CELL_COL | DX | DY | DZ | WIDTH | DREF 
 # --------------|---|---|---|---|------|-----------|----------|----------|----|----|----|-------|-----

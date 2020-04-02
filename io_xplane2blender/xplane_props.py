@@ -1704,13 +1704,6 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         default = False
         )
 
-    param_amp: bpy.props.FloatProperty(
-        name = "Amplitude",
-        description = "Rate of strobe effect of flashing effect, set in ranges from 0-1 (pulse), 1-10 (strobe), 1000+ (millisecond strobe)",
-        default=1.0,
-        min=0.0
-    )
-
     param_freq: bpy.props.FloatProperty(
         name = "Frequency",
         description = "The number of light flashes per second",
@@ -1724,11 +1717,12 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         min = 0
     )
 
-    param_phase: bpy.props.FloatProperty(
-        name = "Phase",
-        description = "Phase offset of light (so it can make flashing lights that don't flash at the same time)",
-        min = 0.0,
-    )
+    # We don't actually have any lights using PHASE we'll uncomment these
+    #param_phase: bpy.props.FloatProperty(
+        #name = "Phase",
+        #description = "Phase offset of light (so it can make flashing lights that don't flash at the same time)",
+        #min = 0.0,
+    #)
 
     rgb_override_values: bpy.props.FloatVectorProperty(
         name = "RGB Override Values",

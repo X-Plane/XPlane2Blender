@@ -179,7 +179,7 @@ class ParsedLight:
 
     One can tell a light is a parameterized light by if self.light_param_def is empty
     """
-    def __init__(self, name:str, has_index:bool)->None:
+    def __init__(self, name:str)->None:
         self.name = name
         self.overloads:List[ParsedLightOverload] = []
         self.light_param_def:Tuple[str] = tuple()
@@ -215,7 +215,7 @@ class ParsedLight:
         return "{self.light_name}: {" ".join(self.light_param_def) if self.light_param_def else ""}, {self.light_overloads[0]}"
 
 
-_parsed_lights_txt_content:Dict[str, ParsedLight] = {}
+_parsed_lights_txt_content = {} # type: Dict[str, ParsedLight]
 
 
 def get_parsed_light(light_name:str)->ParsedLight:
