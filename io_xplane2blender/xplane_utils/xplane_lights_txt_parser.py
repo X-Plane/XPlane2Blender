@@ -56,6 +56,12 @@ class ParsedLightOverload:
         if isinstance(key, int):
             return self.arguments[key]
         elif isinstance(key, str):
+            if key == "INDEX":
+                # HACK! So far every light in the lights.txt file that uses
+                # INDEX uses it to replace the A column
+                key = "A"
+            elif key == "UNUSED":
+                raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
                 return self.arguments[prototype.index(key)]
             except ValueError as ve:
@@ -70,6 +76,12 @@ class ParsedLightOverload:
             except IndexError:
                 raise
         elif isinstance(key, str):
+            if key == "INDEX":
+                # HACK! So far every light in the lights.txt file that uses
+                # INDEX uses it to replace the A column
+                key == "A"
+            elif key == "UNUSED":
+                raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
                 self.arguments[prototype.index(key)] = value
             except ValueError as ve:
@@ -184,32 +196,6 @@ class ParsedLight:
         self.overloads:List[ParsedLightOverload] = []
         self.light_param_def:Tuple[str] = tuple()
 
-    def has_index(self)->bool:
-        """This is in support of the hack found in parse_lights file.
-
-        Since we translate "INDEX" to "A" we need a special
-        method to tell if we would have had it.
-
-        TODO: This hardcoded solution will hopefully get a decision
-        on keeping INDEX and using __get/setitem__ or replacing it with "A"
-        or something else in lights.txt
-        """
-
-        global _parsed_lights_txt_content
-        airplane_lights = {
-                light_name
-                for light_name in _parsed_lights_txt_content
-                if light_name.startswith("airplane")
-            }
-
-        airplane_lights_no_index = {
-                "airplane_beacon_rotate",
-                "airplane_beacon_rotate_sp",
-                "airplane_nav_tail_size",
-                "airplane_nav_left_size",
-                "airplane_nav_right_size"
-            }
-        return self.name in ({'lights_fx1_sp'} | (airplane_lights ^ airplane_lights_no_index))
 
     def __str__(self)->str:
         return "{self.light_name}: {" ".join(self.light_param_def) if self.light_param_def else ""}, {self.light_overloads[0]}"
@@ -262,7 +248,6 @@ def parse_lights_file():
             # The spec breaking part is that for some like airplane_landing_flash
             # we replace SIZE WIDTH INDEX with SIZE WIDTH A, which is still not in order
             # No code yet checks the order of light_param_def against the order of the prototypes, however
-            line = line.replace("INDEX", "A")
             overload_type, light_name, *light_args = line.split()
             try:
                 _parsed_lights_txt_content[light_name]

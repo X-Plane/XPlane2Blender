@@ -21,36 +21,28 @@ LIGHT_SPECS
 # OVERLOAD type | R | G | B | A | SIZE | CELL_SIZE | CELL_ROW | CELL_COL | DX | DY | DZ | WIDTH | FREQ | PHASE | AMP | DAY | DREF
 # --------------|---|---|---|---|------|-----------|----------|----------|----|----|----|-------|------|-------|-----|-----|-----
 # BILLBOARD_HW  | * | * | * | x | *    | x         | x        | x        | *  | *  | *  | *     | *    | *     | x   | x   |x
-# 
-# OVERLOAD type | R | G | B | A | SIZE | CELL_SIZE | CELL_ROW | CELL_COL | DX | DY | DZ | WIDTH | DREF 
+#
+# OVERLOAD type | R | G | B | A | SIZE | CELL_SIZE | CELL_ROW | CELL_COL | DX | DY | DZ | WIDTH | DREF
 # --------------|---|---|---|---|------|-----------|----------|----------|----|----|----|-------|-----
 # BILLBOARD_SW  | * | * | * | * | *    | x         | x        | x        | *  | *  | *  | *     |x
-# 
+#
 # OVERLOAD type | SIZE | CELL_SIZE | CELL_ROW | CELL_COL
 # --------------|------|-----------|----------|----------
-# SPILL_GND     | *    | x         | x        | x      
-# SPILL_GND_REV | *    | x         | x        | x      
-# 
+# SPILL_GND     | *    | x         | x        | x
+# SPILL_GND_REV | *    | x         | x        | x
+#
 # OVERLOAD type | R | G | B | A | SIZE | DX | DY | DZ | WIDTH | DAY
 # --------------|---|---|---|---|------|----|----|----|-------|----
-# SPILL_HW_DIR  | * | * | * | * | *    | *  | *  | *  | *     | x 
-# 
+# SPILL_HW_DIR  | * | * | * | * | *    | *  | *  | *  | *     | x
+#
 # OVERLOAD type | R | G | B | A | SIZE | FREQ | PHASE | AMP | DAY
 # --------------|---|---|---|---|------|------|-------|-----|----
 # SPILL_HW_FLA  | * | * | * | * | *    | *    | *     | x   | x
-# 
+#
 # OVERLOAD type | R | G | B | A | SIZE | DX | DY | DZ | WIDTH | DREF
 # --------------|---|---|---|---|------|----|----|----|-------|-----
 # SPILL_SW      | * | * | * | * | *    | *  | *  | *  | *     | x
 
-#			Name				R	G	B	A	SIZE	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
-# SPILL_SW		.				*	*	*	*	*		*	*	*	*					.
-# SPILL_HW_DIR		.				*	*	*	*	*		*	*	*	*					.
-# SPILL_HW_FLA		.					*	*	*	*	*						*	*	.	.
-# SPILL_GND		.									*	.
-# SPILL_GND_REV		.									*	.
-# BILLBOARD_HW		.				*	*	*	.	*	.	*	*	*	*	*	*	.	.
-# BILLBOARD_SW		.				*	*	*	*	*	.	*	*	*	*					.
 #
 # BILLBOARD_HW - hardware accelerated billboard. This is the same as the old LIGHT_DIRECTIONAL and LIGHT_FLASHING except now we can have both.
 # BILLBOARD_SW - dataref-driven billboard. Same as the old LIGHT_ANIMATION and LIGHT_PARAM.
@@ -98,16 +90,16 @@ Y_DIVISIONS 8
 # LIGHT SIZE and DECAY
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# Param 1: decay exponent. This is the exponent that the light distance is raised to to get its size. Remember that the lights are already sized to 1/d because that's how all
-# 3-d geometry works. So...two simple examples:
-# decay exponent = 1. Since this multiplies light size by distance (and we already have 1/d implicitly) this makes all lights the same size in screen space, period.
-# decay exponent = 0. d^0 = 1, so this is no scale. So the light billboard is actually sized in real meters, and scales WITH the fixture.
-# Exponents between 0.56 and 0.7 seem to work okay. Larger numbers make the lights more "persistent" in the distance.
+# Param 1: decay exponent.  This is the exponent that the light distance is raised to to get its size.  Remember that the lights are already sized to 1/d because that's how all
+# 3-d geometry works.  So...two simple examples:
+# decay exponent = 1.  Since this multiplies light size by distance (and we already have 1/d implicitly) this makes all lights the same size in screen space, period.
+# decay exponent = 0.  d^0 = 1, so this is no scale.  So the light billboard is actually sized in real meters, and scales WITH the fixture.
+# Exponents between 0.56 and 0.7 seem to work okay.  Larger numbers make the lights more "persistent" in the distance.
 
-# Param 2: light scale. This is a constant term scale on the light distance. Use this to scale the overall size of all billboards.
+# Param 2: light scale.  This is a constant term scale on the light distance.  Use this to scale the overall size of all billboards.
 
-# Param 3: distance calibration for glare fade-out. The glare (e.g. choice of texture 1 vs. texture 2) is based on an exponential curve y=exp(-x). This scales the distance,
-# so smaller numbers cause the halo on lights to last longer. For example, a distance scale of 1.0 means the glare will be gone almost instantly, because exp(-1) is < 0.5 and
+# Param 3: distance calibration for glare fade-out.  The glare (e.g. choice of texture 1 vs. texture 2) is based on an exponential curve y=exp(-x).  This scales the distance,
+# so smaller numbers cause the halo on lights to last longer.  For example, a distance scale of 1.0 means the glare will be gone almost instantly, because exp(-1) is < 0.5 and
 # that's only 1 meter away!
 
 # Param 4: this is a linear scaling calibration of the glare fade-out..at this point it is set to 1.0 because it's not really needed.
@@ -115,12 +107,12 @@ Y_DIVISIONS 8
 #LIGHT_PARAMS 0.69 0.08 0.005 1.0
 
 
-# RGB - this ii the color to use for lights that are not textured. Exception: animated lights are ALWAYS tinted.
+# RGB - this ii the color to use for lights that are not textured.  Exception: animated lights are ALWAYS tinted.
 #
 # Lights are textured if (1) the user has tex'd lights checked or (2) the user has pixel shaders or (3) the light
 # is an animated light and force-tex is true.
 
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,7 +168,7 @@ BILLBOARD_HW	HGV_roof_right		1	1	1	1	0.5	1	5	1	0.86	0	-0.5	-0.5	0	0	0	0
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # AIRPLANE LIGHTS
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #
@@ -269,7 +261,7 @@ LIGHT_PARAM_DEF	airplane_beacon_strobe_sp		2	SIZE	INDEX
 SPILL_SW	airplane_beacon_strobe_sp		1	0	0	INDEX	SIZE	0	0	0	1	sim/graphics/animation/lights/airplane_beacon_light_spill
 
 # Legacy user-controlled beacon for v9 support.
-# Simple beacon. It will rotate or strobe depending on how the airplane is set up. Set it and forget it!
+# Simple beacon.  It will rotate or strobe depending on how the airplane is set up.  Set it and forget it!
 BILLBOARD_SW	airplane_beacon		1	0.5	0	0.6	0.45	1	15	7	0	0	0	1	sim/graphics/animation/lights/airplane_beacon_light_rotate
 BILLBOARD_SW	airplane_beacon		1	0.75	0	0.6	0.45	1	14	7	0	0	0	1	sim/graphics/animation/lights/airplane_beacon_light_rotate
 BILLBOARD_SW	airplane_beacon		1	0.0	0	0.6	0.45	1	15	6	0	0	0	1	sim/graphics/animation/lights/airplane_beacon_light_rotate
@@ -347,8 +339,8 @@ LIGHT_PARAM_DEF	airplane_inst_sp		9	R	G	B	INDEX	SIZE	DX	DY	DZ	WIDTH
 SPILL_SW	airplane_inst_sp		R	G	B	INDEX	SIZE	DX	DY	DZ	WIDTH	sim/graphics/animation/lights/airplane_inst_spill
 
 #
-# These are "preview" versions of the lights for Plane-Maker. Don't use them in X-Plane! Plane-Maker doesn't have the full
-# plugin system -- if it tries to draw the very complex lights above, it won't work. So Plane-Maker users these instead.
+# These are "preview" versions of the lights for Plane-Maker.  Don't use them in X-Plane!  Plane-Maker doesn't have the full
+# plugin system -- if it tries to draw the very complex lights above, it won't work.  So Plane-Maker users these instead.
 #
 BILLBOARD_SW	PLN_airplane_landing		1	1	1	1	2.5	1	1	7	0	0	0	1	sim/graphics/animation/lights/airplane_landing_light
 BILLBOARD_SW	PLN_airplane_taxi		1	1	1	1	2	1	0	7	0	0	0	1	sim/graphics/animation/lights/airplane_taxi_light
@@ -359,14 +351,14 @@ BILLBOARD_SW	PLN_airplane_nav_left		1	0	0	1	1.0	1	7	7	0	0	0	1	sim/graphics/anima
 BILLBOARD_SW	PLN_airplane_nav_right		0	1	0	1	1.0	1	6	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Sergio's REAL airport lights --------- parameters: cos(angle per side) = 1 - ( 1 / N )
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+# Sergio's REAL airport lights ---------     parameters: cos(angle per side) = 1 - ( 1 / N )
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#BILLBOARD_SW beacon_green 1.5 -0.1 1.0 1 8 1 2 1 sim/graphics/animation/lights/airport_beacon
-#BILLBOARD_SW beacon_white 1.5 -0.4 1.0 1 8 1 0 1 sim/graphics/animation/lights/airport_beacon
+#BILLBOARD_SW		beacon_green				1.5	-0.1 	1.0	1	8      	1 2 1									sim/graphics/animation/lights/airport_beacon
+#BILLBOARD_SW		beacon_white	 			1.5	-0.4 	1.0	1	8	1 0 1									sim/graphics/animation/lights/airport_beacon
 
 ## BEN: These are currently in ADDITION to Sergio's custom OBJ lights!
-#BILLBOARD_HW apt_beacon_white_axial 1.0 1.0 1.0 0.7 -35 2 6 0 0 0 -1.1 12 0 0 0 0
+#BILLBOARD_HW		apt_beacon_white_axial			1.0	1.0	1.0	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
 SPILL_HW_DIR	apt_beacon_white_axial		1.0	0.95	0.85	1.0	200	0	0	-1	.975	0
 BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	0.7	0.7	1	3	7	0	0	-6	-5	0	0	0	0
 BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	0.8	2.5	1	3	7	0	0	-31	-30	0	0	0	0
@@ -375,7 +367,7 @@ BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	1.0	3	2	5	2	5	-4	-56	-55	0	0	0	0
 BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	1.0	3	2	5	2	-5	4	-56	-55	0	0	0	0
 BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	1.0	3	2	5	2	-5	-4	-56	-55	0	0	0	0
 
-#BILLBOARD_HW apt_beacon_white_mil_axial 1.0 1.0 1.0 0.7 -35 2 6 0 0 0 -1.1 12 0 0 0 0
+#BILLBOARD_HW		apt_beacon_white_mil_axial		1.0	1.0	1.0	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
 SPILL_HW_DIR	apt_beacon_white_mil_axial		1.0	0.95	0.85	1.0	200	0	0	-1	.975	0
 BILLBOARD_HW	apt_beacon_white_mil_glow		1.0	1.0	1.0	0.7	0.7	1	3	7	0	0	-6	-5	0	0	0	0
 BILLBOARD_HW	apt_beacon_white_mil_glow		1.0	1.0	1.0	0.8	2.5	1	3	7	0	0	-61	-60	0	0	0	0
@@ -391,14 +383,14 @@ BILLBOARD_HW	apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2	5	2	20	0	-401	-400	0
 BILLBOARD_HW	apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2	5	2	-20	0	-401	-400	0	0	0	0
 
 
-#BILLBOARD_HW apt_beacon_green_axial 0.25 1.0 0.85 0.7 -35 2 6 0 0 0 -1.1 12 0 0 0 0
+#BILLBOARD_HW		apt_beacon_green_axial			0.25	1.0	0.85	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
 SPILL_HW_DIR	apt_beacon_green_axial		0.25	0.9	0.8	1.0	200	0	0	-1	.975	0
 BILLBOARD_HW	apt_beacon_green_glow		0.25	1.0	0.85	0.7	0.7	1	3	7	0	0	-6	-5	0	0	0	0
 BILLBOARD_HW	apt_beacon_green_glow		0.25	1.0	0.85	0.8	2.5	1	3	7	0	0	-31	-30	0	0	0	0
 BILLBOARD_HW	apt_beacon_green_glow		0.25	1.0	0.85	1.0	3	2	5	2	0	4	-56	-55	0	0	0	0
 BILLBOARD_HW	apt_beacon_green_glow		0.25	1.0	0.85	1.0	3	2	5	2	0	-4	-56	-55	0	0	0	0
 
-#BILLBOARD_HW apt_beacon_yellow_axial 1.0 0.55 0.1 0.7 -35 2 6 0 0 0 -1.1 12 0 0 0 0
+#BILLBOARD_HW		apt_beacon_yellow_axial			1.0	0.55	0.1	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
 SPILL_HW_DIR	apt_beacon_yellow_axial		1.0	0.65	0.1	1.0	200	0	0	-1	.975	0
 BILLBOARD_HW	apt_beacon_yellow_glow		1.0	0.55	0.1	0.7	0.7	1	3	7	0	0	-6	-5	0	0	0	0
 BILLBOARD_HW	apt_beacon_yellow_glow		1.0	0.55	0.1	0.8	2.5	1	4	6	0	0	-31	-30	0	0	0	0
@@ -407,12 +399,12 @@ BILLBOARD_HW	apt_beacon_yellow_glow		1.0	0.55	0.1	1.0	3	2	5	2	0	-4	-56	-55	0	0	0
 
 
 BILLBOARD_SW	VASI		100	-99	0.0	0.0	0.7	1	4	0	0	0	0	1	sim/graphics/animation/lights/vasi_papi
-## for this dataref: R_white G_white B_white M Size Cell R_red G_red B_red K (M is the rescale multiplier, K is the rescale constant)
+## for this dataref:						R_white	G_white B_white	M	Size	Cell	R_red	G_red	B_red	K		(M is the rescale multiplier, K is the rescale constant)
 BILLBOARD_SW	VASI		0.8	0.75	1.0	1000	2.0	2	7	1	1.0	0.2	0.3	-998.8	sim/graphics/animation/lights/vasi_papi_tint
 
 BILLBOARD_SW	VASI3		1.8	-0.9	0.5	0.5	1.2	1	6	0	0	0	0	1	sim/graphics/animation/lights/vasi3
 
-# Ben - a good colour for strobe spill is RGBA=0.745, 0.725, 1.0, 0.1. size = 5.0, width = 0. (big area, low level).
+# Ben - a good colour for strobe spill is RGBA=0.745, 0.725, 1.0, 0.1.  size = 5.0,  width = 0.  (big area, low level).
 
 BILLBOARD_SW	appch_rabbit_o		0.0	1.0	2.0	1	2.2	2	6	1	0	0	0	1	sim/graphics/animation/lights/rabbit
 BILLBOARD_SW	appch_rabbit_u		2.0	0.6	2.0	1	2.2	2	6	1	0	0	0	1	sim/graphics/animation/lights/rabbit
@@ -493,7 +485,7 @@ SPILL_GND_REV	inset_edge_y_rev_halo		1	1	7	4
 SPILL_GND		inset_edge_r_halo		1	1	6	4
 SPILL_GND_REV	inset_edge_r_rev_halo		1	1	6	4
 
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 BILLBOARD_HW	RCLS_w		1.0	1.0	1.0	1	0.7	1	5	2	0	0.4188	11.993	-10.8	0	0	0	1
@@ -628,7 +620,7 @@ SPILL_HW_FLA	heli_morse_beacon		1	1	1	0.2	1.0	0.5	0.266	20	1
 SPILL_HW_FLA	heli_morse_beacon		1	1	1	0.2	1.0	0.5	0.400	20	1
 
 ## Three colour, single-lamp heliport beacon (all LED, no moving parts, white - yellow - green))
-LIGHT_PARAM_DEF	heli_3_col_beacon		2	SIZE	SIZE
+LIGHT_PARAM_DEF	heli_3_col_beacon		2	SIZE	UNUSED
 # core:
 BILLBOARD_HW	heli_3_col_beacon		1	1	1	1	0.7	1	4	0	0	0	0	1	0.2	0.0	1240	1
 BILLBOARD_HW	heli_3_col_beacon		1.0	1	1	1	0.7	1	7	0	0	0	0	1	0.2	3.333	1240	1
@@ -646,7 +638,7 @@ SPILL_HW_FLA	heli_3_col_beacon		0.224	0.90	0.39	0.4	SIZE	0.2	1.666	1240	1
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # SHIPS AND SAILBOATS
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # LANDING LIGHTS AND TAXI LIGHTS - BIG BRIGHT AND DIRECTIONAL!
 # http://www.boat-ed.com/pa/course/p3-5_navigationlights.htm
@@ -685,9 +677,9 @@ BILLBOARD_HW	oilrig_deck_blue		1	1	1	1	0.6	1	4	1	0	0	0	1	0	0	0	1
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # OLD OBJECTS
-# These lights are used by the OBJ code for old objects and Austin's code for one-off tasks. Do not change the type of light...the code checks the light type and then
-# further customizes its params on the fly. Really only the cell can be sanely edited here.
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+# These lights are used by the OBJ code for old objects and Austin's code for one-off tasks.  Do not change the type of light...the code checks the light type and then
+# further customizes its params on the fly.  Really only the cell can be sanely edited here.
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BILLBOARD_SW	object_v7		1	1	1	1	2	1	0	0	0	0	0	1	NOOP
 BILLBOARD_HW	oz_lite		1	1	1	1	1	1	3	7	0	0	0	1	0	0	0	1
@@ -697,7 +689,7 @@ SPILL_HW_DIR	oz_spill		1	1	1	1	50	0	0	-1	0.85	1
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Sergio's Street Lights, 2 different size and blurring, these lights are white, aimed down to the ground and have different cutoff widths (light cone ) from narrow cone up to omnidirectional, in according with the type of lamp you like to use.
 # Plus Kriss' lights for EU-buildings
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BILLBOARD_HW	town_light_60		1	1	1	1	2	1	0	0	0	-7.5	0	-6.5	0	0	0	1
 BILLBOARD_HW	town_light_90		1	1	1	1	2	1	0	0	0	-3.41	0	-2.41	0	0	0	1
@@ -731,10 +723,10 @@ SPILL_HW_FLA	obs_red_night_sml		1.0	0.086	0.039	0.4	1	0.7	0	1	0
 
 SPILL_HW_DIR	apt_light_halo_test		1.0	1.0	0.7	1	0.1	0	-1	0	0.5	1
 
-#LIGHT_PARAM_DEF full_custom_halo 9 R G B A S X Y Z F
-#SPILL_HW_DIR full_custom_halo R G B A S X Y Z F
-#SPILL_HW_DIR full_custom_halo 1.0 0.0 0.0 1 50 0.241 -0.939 0.2408 0.5
-#SPILL_HW_DIR full_custom_halo 0.0 1.0 0.0 1 30 0.241 -0.939 0.2408 1.0 1
+#LIGHT_PARAM_DEF	full_custom_halo		9	R	G	B	A	S		X	Y	Z	F
+#SPILL_HW_DIR		full_custom_halo			R	G	B	A	S		X	Y	Z	F
+#SPILL_HW_DIR		full_custom_halo			1.0	0.0	0.0	1	50		0.241	-0.939	0.2408	0.5
+#SPILL_HW_DIR		full_custom_halo			0.0	1.0	0.0	1	30		0.241	-0.939	0.2408	1.0				1
 
 LIGHT_PARAM_DEF	full_custom_halo		9	R	G	B	A	SIZE	DX	DY	DZ	WIDTH
 SPILL_HW_DIR	full_custom_halo		R	G	B	A	SIZE	DX	DY	DZ	WIDTH	1
@@ -761,7 +753,7 @@ LIGHT_PARAM_DEF	apron_light_billboard		5	DX	DY	DZ	WIDTH	SIZE
 BILLBOARD_HW	apron_light_billboard		1	1	1	1	SIZE	4	2	0	DX	DY	DZ	WIDTH	0	0	0	1
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Alex's scenery lights - various.
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 BILLBOARD_HW	PD_ltbar_1w		1	1	1	1	1	1	0	1	0	0	0	1	3	0	4	1
@@ -833,11 +825,11 @@ SPILL_HW_DIR	flood_N_45dn		1.0	1.0	0.7	0.5	20	0	-0.707	-0.707	0.6	0
 BILLBOARD_HW	flood_dn_wide		1	1	1	1	1.5	1	0	0	0	-0.7	0	0.43	0	0	0	0
 SPILL_HW_DIR	flood_dn_wide		0.95	0.95	1.0	0.5	10	0	-1.0	0.0	0.6	0
 
-LIGHT_PARAM_DEF	flood_merc_XYZTSB		6	DX	DY	DZ	SIZE	SIZE	A
+LIGHT_PARAM_DEF	flood_merc_XYZTSB		6	DX	DY	DZ	SIZE	UNUSED	A
 BILLBOARD_HW	flood_merc_XYZTSB		1.0	1.0	1.0	1.0	SIZE	1	0	6	DX	DY	DZ	0.5	0	0	0	0
 SPILL_HW_DIR	flood_merc_XYZTSB		0.78	0.83	1.0	A	SIZE	DX	DY	DZ	0.35	0
 
-LIGHT_PARAM_DEF	flood_LPS_XYZTSB		6	DX	DY	DZ	SIZE	SIZE	A
+LIGHT_PARAM_DEF	flood_LPS_XYZTSB		6	DX	DY	DZ	SIZE	UNUSED	A
 BILLBOARD_HW	flood_LPS_XYZTSB		0.9	1.0	1.0	1	SIZE	1	2	7	DX	DY	DZ	0.5	0.0	0	0	0
 SPILL_HW_DIR	flood_LPS_XYZTSB		1.0	0.45	0.09	A	SIZE	DX	DY	DZ	0.30	0
 
@@ -975,7 +967,7 @@ BILLBOARD_HW	LevelCrossS2		1.0	0.1	0.1	1.0	1.2	1	0	0	0	0	3	-2	1.0	0.5	1.5	1
 BILLBOARD_HW	LevelCrossSCnst		1.0	0.1	0.1	1.0	1.2	1	0	0	0	0	3	-2	0.0	0.0	0.0	1
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+#	Name							R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Traffic lights:
@@ -1010,14 +1002,14 @@ BILLBOARD_HW	traffic_green_W_static		0.015	0.983	0.966	1.0	0.8	1	4	7	-3	0	0	-2	0
 
 # Railway Signals:
 # CPL sequence:
-# 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
-# G * * * * * *
-# Y * *
-# R * *
-# TL * *
-# TC * * * *
-# TR * *
-# BC * *
+#		0	0.1	0.2	0.3	0.4	0.5	0.6	0.7	0.8	0.9
+#	G					*	*	*	*	*	*
+#	Y			*	*
+#	R	*	*
+#	TL				*					*
+#	TC		*	*				*	*
+#	TR					*					*
+#	BC	*					*
 ## CPL (color position lights)
 BILLBOARD_HW	CPL_r		1.0	1.0	1.0	1	0.8	1	3	6	0	0.0	2.5	-1.5	0.004	0.0	1200	1
 BILLBOARD_HW	CPL_y		1.0	0.8	0.2	1	0.8	1	2	6	0	0.0	2.5	-1.5	0.004	0.2	1200	1
@@ -1090,17 +1082,17 @@ BILLBOARD_HW	srgb_test1		1.0	1.0	1.0	1	1.0	2	5	3	0	0.0	0	1	0	0	0	1
 BILLBOARD_HW	srgb_test2		1.0	1.0	1.0	1	1.0	2	6	3	0	0.0	0	1	0	0	0	1
 BILLBOARD_HW	srgb_test3		1.0	1.0	1.0	1	1.0	2	6	1	0	0.0	0	1	0	0	0	1
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Tom Kyler's Lights for scenery
-# Name R G B A Size Cell Dx Dy Dz Width Frq Phase Amp Day Dataref
+#  Tom Kyler's Lights for scenery
+#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-LIGHT_PARAM_DEF	sodium_flood_XYZBTSS		7	DX	DY	DZ	A	SIZE	WIDTH	SIZE
+LIGHT_PARAM_DEF	sodium_flood_XYZBTSS		7	DX	DY	DZ	A	SIZE	WIDTH	UNUSED
 SPILL_HW_DIR	sodium_flood_XYZBTSS		1.0	0.463	0.176	A	SIZE	DX	DY	DZ	WIDTH	0
-#SPILL_SW sodium_flood_XYZBTSS 1.0 0.463 0.176 BRIGHT THROW X Y Z SPREAD NULL
-#BILLBOARD_HW sodium_flood_XYZBTSS 1.0 0.75 0.5 0.5 3 2 6 2 X Y Z 0.2 0 0 0 0
+#SPILL_SW		sodium_flood_XYZBTSS			1.0	0.463	0.176	BRIGHT	THROW		X	Y	Z	SPREAD					NULL
+#BILLBOARD_HW		sodium_flood_XYZBTSS			1.0	0.75	0.5	0.5	3	2 6 2	X	Y	Z	0.2	0	0	0	0
 BILLBOARD_HW	sodium_flood_XYZBTSS		1.0	0.6	0.2	1.0	4	4	2	0	DX	DY	DZ	0	0	0	0	0
 LIGHT_PARAM_DEF	sodium_flood_BB		4	DX	DY	DZ	SIZE
-#BILLBOARD_HW sodium_flood_BB 1.0 0.75 0.5 0.5 3 2 6 2 X Y Z 0.2 0 0 0 0
+#BILLBOARD_HW		sodium_flood_BB				1.0	0.75	0.5	0.5	3	2 6 2	X	Y	Z	0.2	0	0	0	0
 BILLBOARD_HW	sodium_flood_BB		1.0	0.6	0.2	1.0	4	4	2	0	DX	DY	DZ	0	0	0	0	0
 
 
