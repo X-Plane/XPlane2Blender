@@ -1,6 +1,7 @@
+import collections
 import copy
 import os
-import collections
+import re
 from dataclasses import dataclass
 from mathutils import Vector
 from typing import Dict, List, Optional, Set, Tuple, Union
@@ -241,14 +242,14 @@ def parse_lights_file():
                 lambda l: l.startswith(tuple(LIGHT_TYPE_PROTOTYPES.keys()) + ("LIGHT_PARAM_DEF",)),
                 map(str.strip,lines)
             ):
-            #TODO: HACK!!! If Ben and Alex decide to keep "INDEX" as a standard param name
-            # we'll have __getitem__ and __setitem__ handle the case. Otherwise
-            # In all cases (as of 4/1/2020) "INDEX" is, in every overload, "A"
-            #
-            # The spec breaking part is that for some like airplane_landing_flash
-            # we replace SIZE WIDTH INDEX with SIZE WIDTH A, which is still not in order
-            # No code yet checks the order of light_param_def against the order of the prototypes, however
-            overload_type, light_name, *light_args = line.split()
+            try:
+                overload_type, light_name, *light_args = line.split()
+            except ValueError: # not enough values to unpack
+                logger.error("Line '{line}' could not be parsed to 'RECORD_TYPE <light_name> <params or args list>")
+                continue
+
+            if not re.match("[A-Za-z0-9_]+", light_name):
+                logger.error("Light name '{light_name}' must be upper/lower case letters, numbers, or underscores only")
             try:
                 _parsed_lights_txt_content[light_name]
             except KeyError:
@@ -261,10 +262,13 @@ def parse_lights_file():
                         logger.error(f"{light_name} has more than one LIGHT_PARAM_DEF")
                     light_argc, *light_argv = light_args
                     parsed_light.light_param_def = light_argv # Skip the count
-                    if not set(parsed_light.light_param_def) < {*LIGHT_TYPE_PROTOTYPES["BILLBOARD_HW"], "DREF"}:
+                    if not set(parsed_light.light_param_def) < {*LIGHT_TYPE_PROTOTYPES["BILLBOARD_HW"], "DREF", "INDEX", "UNUSED"}:
                         logger.error(f"LIGHT_PARAM_DEF for '{light_name}' contains unknown parameters: {parsed_light.light_param_def}")
+                elif overload_type not in LIGHT_TYPE_PROTOTYPES:
+                    logger.error(f"{overload_type} is not a valid OVERLOAD_TYPE. Update lights.txt or fix manually")
+                elif len(light_args) != len(LIGHT_TYPE_PROTOTYPES[overload_type]):
+                    logger.error(f"Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' isn't the right length ")
                 else:
-                    #print(light_args)
                     parsed_light.overloads.append(ParsedLightOverload(overload_type=overload_type, name=light_name, arguments=light_args))
                     rankings = ["SPILL_GND_REV", #Least trustworthy
                                 "SPILL_GND",

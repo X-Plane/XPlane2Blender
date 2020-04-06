@@ -540,10 +540,11 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
         except KeyError:
             layout.row().label(text="Unknown Light Name: check spelling or update lights.txt", icon="ERROR")
         else:
-            if parsed_light.has_index():
-                layout.row().prop(light.xplane, "param_index")
-            if "FREQ" in parsed_light.light_param_def:
-                layout.row().prop(light.xplane, "param_freq")
+            if parsed_light.light_param_def:
+                if "INDEX" in parsed_light.light_param_def:
+                    layout.row().prop(light.xplane, "param_index")
+                if "FREQ" in parsed_light.light_param_def:
+                    layout.row().prop(light.xplane, "param_freq")
             # We currently don't have any lights using PHASE
             # but one day we might!
             #if "PHASE" in parsed_light.light_param_def:

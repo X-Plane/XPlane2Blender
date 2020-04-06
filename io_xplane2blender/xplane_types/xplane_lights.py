@@ -24,7 +24,7 @@ class XPlaneLights():
 
     def append(self, light:xplane_light.XPlaneLight)->None:
         # we only write vlights here, all other lights go into the commands table directly
-        if  light.lightType not in (LIGHT_NAMED, LIGHT_PARAM, LIGHT_CUSTOM):
+        if light.lightType in LIGHTS_OLD_TYPES:
             self.items.append(light)
             light.indices[0] = self.globalindex
 

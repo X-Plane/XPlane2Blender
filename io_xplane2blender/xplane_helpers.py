@@ -33,6 +33,8 @@ children are not compatible
 """
 BlenderParentType = Union[bpy.types.Collection, bpy.types.Object]
 
+class UnwriteableXPlaneType(ValueError):
+    pass
 
 def floatToStr(n:float)->str:
     s = '0'
