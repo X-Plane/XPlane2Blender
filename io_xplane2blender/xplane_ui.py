@@ -555,9 +555,11 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
             rgb_row = debug_box.row()
             for param in parsed_light.light_param_def:
                 if param in {"R","G","B"}:
-                    rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 0)}")
+                    rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 3)}")
+                if param in {"A"}:
+                    rgb_row.label(text=f"{param}: 1")
                 if param in {"SIZE"}:
-                    debug_box.row().label(text="")
+                    debug_box.row().label(text=f"{param}: {light.shadow_soft_size}m")
                 if param in {"WIDTH"}:
                     try:
                         debug_box.row().label(text=f"{param}: {round(math.degrees(light.spot_size), 5) if light.spot_size < math.pi else 'omni'}")
@@ -568,8 +570,8 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                 if param in {"FREQ"}:
                     debug_box.row().label(text=f"{param}: {light.xplane.param_freq}")
                 # We don't currently have any lights using PHASE, but if we one day do, we're ready
-                if param in {"PHASE"}:
-                    debug_box.row().label(text=f"{param}: {light.xplane.param_phase}")
+                #if param in {"PHASE"}:
+                    #debug_box.row().label(text=f"{param}: {light.xplane.param_phase}")
     elif light.xplane.type == LIGHT_NAMED:
         layout.row().prop(light.xplane, "name")
     elif light.xplane.type == LIGHT_PARAM:

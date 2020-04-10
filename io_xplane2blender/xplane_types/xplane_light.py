@@ -2,7 +2,7 @@ import math
 import re
 from copy import deepcopy
 from itertools import zip_longest
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 import bpy
 import mathutils
@@ -53,10 +53,23 @@ class XPlaneLight(xplane_object.XPlaneObject):
         # Our lights.txt light name, not the Blender Object's name
         self.lightName = blenderObject.data.xplane.name
 
-        # The combinination of lights.txt overload, filled in params,
-        # and applied sw_light_callback
-        self.params_completed:Optional[xplane_lights_txt_parser.ParsedLightOverload] = None
+        # If the lightName is unknown
+        #     params_completed and record_completed these will be none
+        # Use __getitem__ and __contains__ to ask if there are columns
+        # and fields we care about
+
+        # self.params is the eventual content of the
+        # LIGHT_PARAM OBJ directive
+        if self.lightType == LIGHT_AUTOMATIC:
+            self.params = {}
+        elif self.lightType == LIGHT_PARAM:
+            self.params = blenderObject.data.xplane.params
+        else:
+            self.params = None
         self.comment:Optional[str] = None
+
+        # Used for auto correction For LIGHT_NAMED this is used for autocorrection (if applicable)
+        self.record_completed:Optional[xplane_lights_txt_parser.ParsedLightOverload] = None
         self.is_omni = False
 
         self.setWeight(10000)
@@ -67,7 +80,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
         try:
             parsed_light = xplane_lights_txt_parser.get_parsed_light(self.lightName)
         except KeyError:
-            pass
+            parsed_light = None
 
         unknown_light_name_warning = (f"\"{self.blenderObject.name}\"'s Light Name '{self.lightName}' is unknown,"
                                       f" check your spelling or update your lights.txt file")
@@ -75,16 +88,16 @@ class XPlaneLight(xplane_object.XPlaneObject):
         # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
         # -------------------|------------|--------------|------------------|-------
         # LIGHT_NAMED        | *          | Yes          | Yes              | Error, "known param used as named light"
-        # LIGHT_NAMED        | "POINT"    | Yes          | No               | Apply sw_callback, do not do autocorrect TODO: Is this right???
+        # LIGHT_NAMED        | "POINT"    | Yes          | No               | Apply sw_callback, do not do autocorrect (POINT means OMNI)
         # LIGHT_NAMED        | not "POINT"| Yes          | No               | Apply sw_callback if possible, autocorrect
         # LIGHT_NAMED        | *          | No           | N/A              | Treat as unknown named light, Warning given, NAMED written as is, no SW callbacks applied
         if self.lightType == LIGHT_NAMED and parsed_light and parsed_light.light_param_def:
             logger.error(f"Light name {self.lightName} is a known param light, being used as a name light. Check the light name or light type")
             return
         elif self.lightType == LIGHT_NAMED and parsed_light and not parsed_light.light_param_def:
-            self.params_completed = parsed_light.overloads[0]
-            if parsed_light.overloads[0].overload_type in {"BILLBOARD_SW", "SPILL_SW"}:
-                self.params_completed.apply_sw_callback()
+            self.record_completed = parsed_light.overloads[0]
+            if "DREF" in self.record_completed.prototype():
+                self.record_completed.apply_sw_callback()
         elif self.lightType == LIGHT_NAMED and not parsed_light:
             logger.warn(unknown_light_name_warning)
         # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
@@ -94,6 +107,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
         # LIGHT_PARAM        | *          | Yes          | No               | Error, "known named light used as a param light"
         # LIGHT_PARAM        | *          | No           | N/A              | Warning given, PARAMS written as is, no auto correction_applied
         elif self.lightType == LIGHT_PARAM and parsed_light and parsed_light.light_param_def:
+            # This section is actually validation/apply_sw_callback only, LIGHT_PARAM type inserts
+            # xplane.params content directly into the OBJ
             params_formal = parsed_light.light_param_def
 
             # Parsed params from the params box, stripped and ignoring the commemnt
@@ -109,9 +124,9 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 if not (self.comment.startswith("//") or self.comment.startswith("#")):
                     logger.warn(f"Comment in param light {self.comment} does not start with '//' or '#'")
 
-            self.params_completed = parsed_light.overloads[0]
+            self.record_completed = parsed_light.overloads[0]
             params_actual = [p.strip() for p in params_actual[0:len(params_formal)]]
-            # What happenes when params_formal is longer than params_completed
+            # What happenes when params_formal is longer than record_completed
             for i, (pformal, pactual) in enumerate(zip(params_formal, params_actual)):
                 try:
                     float(pactual)
@@ -119,17 +134,17 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     logger.error(f"Parameter {i} ({pactual}) of {self.blenderObject.name} is not a number")
                 else:
                     try:
-                        self.params_completed[pformal] = float(pactual)
+                        self.record_completed[pformal] = float(pactual)
                     except KeyError: # __setitem__ failed
                         # If the actual arguments doesn't have a replacement option,
                         # its okay. Some overloads don't use every one of them
                         pass
 
-            if parsed_light.overloads[0].overload_type in {"BILLBOARD_SW", "SPILL_SW"}:
-                self.params_completed.apply()
+            if "DREF" in self.record_completed.prototype():
+                self.record_completed.apply_sw_callback()
 
-            self.is_omni = self.params_completed["WIDTH"] >= 1.0
-            dir_vec = Vector(map(self.params_completed.__getitem__, ["DX","DY","DZ"]))
+            self.is_omni = self.record_completed["WIDTH"] >= 1.0
+            dir_vec = Vector(map(self.record_completed.__getitem__, ["DX","DY","DZ"]))
             #TODO: This aught to have rounding?
             if dir_vec.magnitude == 0.0 and not self.is_omni:
                 logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
@@ -163,31 +178,39 @@ class XPlaneLight(xplane_object.XPlaneObject):
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and parsed_light.light_param_def:
             self.is_omni = light_data.type == "POINT"
             #"CELL_", "DAY", "DREF" are never parameterizable,
-            #"DX", "DY", "DZ" cannot be filled in until later
             convert_table = {
                     "R":self.color[0],
                     "G":self.color[1],
                     "B":self.color[2],
-                    #TODO: HACK. If Ben and Alex decide they want the "INDEX" name kept in
-                    # lights.txt we'll make an entry in the dict. Else, we'll keep this or whatever
-                    # solution we have
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
                     "SIZE":light_data.shadow_soft_size, # Radius
-                    "WIDTH": 1 if light_data.type == "POINT" else math.cos(round(math.degrees(light_data.spot_size))),
+                    "DX":"DX", # Filled in later
+                    "DY":"DY", # Filled in later
+                    "DZ":"DZ", # Filled in later
+                    "WIDTH": 1 if light_data.type == "POINT" else (math.cos(light_data.spot_size * .5)),
                     "FREQ": light_data.xplane.param_freq,
                     #"PHASE": light_data.xplane.param_phase,
+                    "UNUSED":0 # We just shove in something here
                 }
 
             if "WIDTH" in parsed_light.light_param_def and round(light_data.spot_size) == math.pi:
                 logger.error("Spotlight Size for {self.blenderObject.name} cannot be 180 degrees")
                 return
 
-            for i, arg in filter(lambda arg: isinstance(arg, str), parsed_light.overloads[0]):
-                parsed_light.overloads[arg] = convert_table[arg]
+            self.params = {param:convert_table[param] for param in parsed_light.light_param_def}
+            self.record_completed = parsed_light.overloads[0]
+            for param, value in self.params:
+                self.record_completed[param] = value
+
+            if "DREF" in self.record_completed.prototype():
+                self.record_completed.apply_sw_callback()
+
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def:
             # Like LIGHT_NAMED but no autocorrection
-            pass
+            self.record_completed = parsed_light.overloads[0]
+            if "DREF" in self.record_completed.prototype():
+                self.record_completed.apply_sw_callback()
         elif self.lightType == LIGHT_AUTOMATIC and not parsed_light:
             logger.warn(unknown_light_name_warning)
         # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
@@ -205,105 +228,126 @@ class XPlaneLight(xplane_object.XPlaneObject):
         o = super().write()
 
         light_data = self.blenderObject.data
+        try:
+            parsed_light = xplane_lights_txt_parser.get_parsed_light(self.lightName)
+        except KeyError:
+            parsed_light = None
+
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
         translation = bakeMatrix.to_translation()
         has_anim = False
 
-        if (light_data.type != 'POINT'
-            and self.lightType != LIGHT_AUTOMATIC
-            and self.params_completed):
-            # Vector P(arameters), in Blender Space
-            try:
-                (dx,dy,dz) = (self.params_completed[c] for c in ["DX", "DY", "DZ"])
-            except KeyError:
-                pass
-            else:
-                def clamp(num:float, minimum:float, maximum:float)->float:
-                    if num < minimum:
-                        return minimum
-                    elif num > maximum:
-                        return maximum
-                    else:
-                        return num
-
-                dir_vec_p_norm_b = vec_x_to_b(Vector((dx,dy,dz)).normalized())
-
-                # Multiple bake matrix by Vector to get the direction of the Blender object
-                dir_vec_b_norm = bakeMatrix.to_3x3() @ Vector((0,0,-1))
-
-                # P is start rotation, and B is stop. As such, we have our axis of rotation.
-                # "We take the X-Plane light and turn it until it matches what the artist wanted"
-                axis_angle_vec3 = dir_vec_p_norm_b.cross(dir_vec_b_norm)
-
-                dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm)
-                if dot_product_p_b < 0:
-                    axis_angle_theta = math.pi - math.asin(clamp(axis_angle_vec3.magnitude,-1.0,1.0))
+        def find_autocorrect_axis_angle(dir_vec_p_norm_b:Vector, bake_matrix:Matrix)->Tuple[Vector, float]:
+            """
+            Given a vector of where the light will be pointed in X-Plane and our real rotation,
+            find the Axis-Angle for how we need to rotate via animation to make the difference
+            """
+            def clamp(num:float, minimum:float, maximum:float)->float:
+                if num < minimum:
+                    return minimum
+                elif num > maximum:
+                    return maximum
                 else:
-                    axis_angle_theta = math.asin(clamp(axis_angle_vec3.magnitude,-1.0,1.0))
+                    return num
 
-                # Ben says: lights always have some kind of offset because the light itself
-                # is "at" 0,0,0, so we treat the translation as the light position.
-                # But if there is a ROTATION then in the light's bake matrix, the
-                # translation is pre-rotation.  but we want to write a single static rotation
-                # and then NOT write a translation every time.
-                #
-                # Inverse to change our animation order (so we really have rot, trans when we
-                # originally had trans, rot) and now we can use the translation in the lamp
-                # itself.
-                if round(axis_angle_theta,5) != 0.0 and not self.is_omni:
-                    o += "%sANIM_begin\n" % indent
+            # Multiple bake matrix by Vector to get the direction of the Blender object
+            dir_vec_b_norm = bakeMatrix.to_3x3() @ Vector((0,0,-1))
 
-                    if debug:
-                        o += indent + '# static rotation\n'
+            # P is start rotation, and B is stop. As such, we have our axis of rotation.
+            # "We take the X-Plane light and turn it until it matches what the artist wanted"
+            axis_angle_vec3_b = dir_vec_p_norm_b.cross(dir_vec_b_norm)
 
-                    axis_angle_vec3_x = vec_b_to_x(axis_angle_vec3).normalized()
-                    tab = "\t"
-                    anim_rotate_dir = (
-                            f"{indent}ANIM_rotate"
-                            f"\t{tab.join(map(floatToStr,axis_angle_vec3_x))}"
-                            f"\t{floatToStr(mat.degrees(axis_angle_theta))}"
-                            f"\t{floatToStr(mat.degrees(axis_angle_theta))}"
-                        )
-                    o += anim_rotate_dir
+            dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm)
+            if dot_product_p_b < 0:
+                axis_angle_theta = math.pi - math.asin(clamp(axis_angle_vec3_b.magnitude,-1.0,1.0))
+            else:
+                axis_angle_theta = math.asin(clamp(axis_angle_vec3_b.magnitude,-1.0,1.0))
+            return axis_angle_vec3_b, axis_angle_theta
 
-                    rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec3)
-                    translation = rot_matrix.inverted() @ translation
-                    has_anim = True
-        elif (light_data.type == 'SPOT'
-              and self.lightType == LIGHT_AUTOMATIC
-              #and self.params_completed
-            ):
-            (dx,dy,dz), angle = bakeMatrix.to_quaternion().to_axis_angle()
-            (dx,dy,dz) = vec_b_to_x((dx, dy, dz))
+        def should_autocorrect_nonautomatic():
             try:
-                #We make light face forward and aim with the animation
-                self.params_completed["DX"] = 0
-                self.params_completed["DY"] = 0
-                self.params_completed["DZ"] = -1
-            except (KeyError, TypeError):
-                pass
-            if round(angle,5) != 0.0 and not self.is_omni:
+                return (self.lightType != LIGHT_AUTOMATIC
+                        # Yes, '!= "POINT"' matters for historical reasons
+                        and light_data.type != "POINT"
+                        and all(param in self.record_completed for param in ["DX", "DY", "DZ"]))
+            except (AttributeError, KeyError): # No record_completed or some DX, DY, DZ doesn't exist in record
+                return False
+
+        def should_autocorrect_automatic():
+            try:
+                return (self.lightType == LIGHT_AUTOMATIC
+                        and light_data.type == "SPOT"
+                        # If we have a DX, DY, or DZ we'll just use that instead of autocorrection
+                        and (
+                            # If we will be LIGHT_PARAM but we won't be filling in DXYZ ourselves
+                            not {"DX", "DY", "DZ"} <= set(self.params)
+                            # or we will be LIGHT_NAMED and our overload has DXYZ columns to correct
+                            or all(param in self.record_completed for param in ["DX", "DY", "DZ"])
+                            ))
+            except TypeError: # __contains__ fails if self.record_completed is None
+                return False
+
+        def should_fill_in_dxyz_for_automatic():
+            try:
+                return (self.lightType == LIGHT_AUTOMATIC
+                    and light_data.type == "SPOT"
+                    # If we have a DXYZ we'll use that instead of autocorrection
+                    and {"DX", "DY", "DZ"} <= set(self.params))
+            except TypeError: #set cannot iterate None
+                return False
+
+        if (should_autocorrect_nonautomatic() or should_autocorrect_automatic()):
+            axis_angle_vec_b, axis_angle_theta = find_autocorrect_axis_angle(
+                    vec_x_to_b(
+                        Vector(self.record_completed[c] for c in ["DX", "DY", "DZ"])
+                        ).normalized(),
+                    bakeMatrix)
+            # Vector P(arameters), in Blender Space
+
+            # Ben says: lights always have some kind of offset because the light itself
+            # is "at" 0,0,0, so we treat the translation as the light position.
+            # But if there is a ROTATION then in the light's bake matrix, the
+            # translation is pre-rotation.  but we want to write a single static rotation
+            # and then NOT write a translation every time.
+            #
+            # Inverse to change our animation order (so we really have rot, trans when we
+            # originally had trans, rot) and now we can use the translation in the lamp
+            # itself.
+            if round(axis_angle_theta,5) != 0.0 and not self.is_omni:
                 o += f"{indent}ANIM_begin\n"
+
                 if debug:
-                    o += indent + '# static rotation\n'
+                    o += f"{indent}# static rotation\n"
 
+                axis_angle_vec3_x = vec_b_to_x(axis_angle_vec_b).normalized()
                 tab = "\t"
-                o += (
-                    f"{indent}ANIM_rotate"
-                    f"\t{tab.join(map(floatToStr, (dx, dy, dz)))}"
-                    f"\t{floatToStr(math.degrees(angle))}"
-                    f"\t{floatToStr(math.degrees(angle))}"
-                )
-                has_anim = True
+                anim_rotate_dir = (
+                        f"{indent}ANIM_rotate"
+                        f"\t{tab.join(map(floatToStr,axis_angle_vec3_x))}"
+                        f"\t{floatToStr(math.degrees(axis_angle_theta))}"
+                        f"\t{floatToStr(math.degrees(axis_angle_theta))}"
+                        f"\n"
+                    )
+                o += anim_rotate_dir
 
-        x,y,z = list(map(floatToStr,(translation[0],translation[2],-translation[1])))
-        light_param_def = xplane_lights_txt_parser.get_parsed_light(self.lightName).light_param_def
+                rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec_b)
+                translation = rot_matrix.inverted() @ translation
+                has_anim = True
+        elif should_fill_in_dxyz_for_automatic():
+            axis_angle_vec3_x, axis_angle_theta = bakeMatrix.to_quaternion().to_axis_angle()
+            self.record_completed.update(
+                    {param:vec_comp
+                     for param, vec_comp in zip(
+                         ["DX","DY","DZ"],
+                         vec_b_to_x(axis_angle_vec3_x))})
+
+        x,y,z = map(floatToStr,vec_b_to_x(translation))
         if (self.lightType == LIGHT_NAMED
-            or (self.lightType == LIGHT_AUTOMATIC and not light_param_def)):
+            or (self.lightType == LIGHT_AUTOMATIC and not parsed_light.light_param_def)):
             o += f"{indent}LIGHT_NAMED\t{self.lightName} {x} {y} {z}\n"
         elif (self.lightType == LIGHT_PARAM
-              or (self.lightType == LIGHT_AUTOMATIC and light_param_def)):
-            o += f"{indent}LIGHT_PARAM\t{self.lightName} {x} {y} {z} {' '.join(self.params_completed)}\n"
+                or (self.lightType == LIGHT_AUTOMATIC and parsed_light.light_param_def)):
+            o += f"{indent}LIGHT_PARAM\t{self.lightName} {x} {y} {z} {' '.join(self.params)}\n"
         elif self.lightType == LIGHT_CUSTOM:
             o += (f"{indent}LIGHT_CUSTOM\t{x} {y} {z}"
                  f" {' '.join(self.color)} {self.energy} {self.size}"
@@ -315,6 +359,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
             o += f"{indent}LIGHTS\t{offset} {count}\n"
 
         if has_anim:
-            o += "{indent}ANIM_end\n"
+            o += f"{indent}ANIM_end\n"
 
         return o

@@ -45,6 +45,10 @@ class ParsedLightOverload:
 
         self.arguments = list(map(tryfloat,self.arguments))
 
+    def __contains__(self, item:str):
+        """For ParsedLightOverloads, 'contains' means 'this overload contain this column'"""
+        return item in LIGHT_TYPE_PROTOTYPES[self.overload_type]
+
     def __getitem__(self, key:Union[int,str]):
         """
         Passing in an int will get you the index in the list of arguments,
@@ -57,14 +61,12 @@ class ParsedLightOverload:
         if isinstance(key, int):
             return self.arguments[key]
         elif isinstance(key, str):
-            if key == "INDEX":
-                # HACK! So far every light in the lights.txt file that uses
-                # INDEX uses it to replace the A column
-                key = "A"
-            elif key == "UNUSED":
+            if key == "UNUSED":
                 raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
-                return self.arguments[prototype.index(key)]
+                # HACK! So far every light in the lights.txt file that uses
+                # INDEX uses it to replace the A column
+                return self.arguments[prototype.index(key if key != "INDEX" else "A")]
             except ValueError as ve:
                 raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
 
@@ -77,14 +79,12 @@ class ParsedLightOverload:
             except IndexError:
                 raise
         elif isinstance(key, str):
-            if key == "INDEX":
-                # HACK! So far every light in the lights.txt file that uses
-                # INDEX uses it to replace the A column
-                key == "A"
-            elif key == "UNUSED":
+            if key == "UNUSED":
                 raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
-                self.arguments[prototype.index(key)] = value
+                # HACK! So far every light in the lights.txt file that uses
+                # INDEX uses it to replace the A column
+                self.arguments[prototype.index(key if key != "INDEX" else "A")] = value
             except ValueError as ve:
                 raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
 
@@ -181,6 +181,10 @@ class ParsedLightOverload:
             print(f"couldn't find {self['DREF']}")
             pass
 
+    def prototype(self)->Tuple[str,...]:
+        global LIGHT_TYPE_PROTOTYPES
+        return LIGHT_TYPE_PROTOTYPES[self.overload_type]
+
 
 class ParsedLight:
     """
@@ -196,7 +200,6 @@ class ParsedLight:
         self.name = name
         self.overloads:List[ParsedLightOverload] = []
         self.light_param_def:Tuple[str] = tuple()
-
 
     def __str__(self)->str:
         return "{self.light_name}: {" ".join(self.light_param_def) if self.light_param_def else ""}, {self.light_overloads[0]}"
