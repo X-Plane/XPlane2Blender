@@ -220,7 +220,7 @@ class XPlaneTestCase(unittest.TestCase):
             except AssertionError as e:
                 raise AssertionError(
                         f"Number of line components unequal: {e.args[0]}\n"
-                        f"{lineIndex}> {lineA} ({len(lineA)})"
+                        f"{lineIndex}> {lineA} ({len(lineA)})\n"
                         f"{lineIndex}> {lineB} ({len(lineB)})"
                     ) from None
 
@@ -236,7 +236,7 @@ class XPlaneTestCase(unittest.TestCase):
                     try:
                         self.assertFloatsEqual(segmentA, segmentB, floatTolerance)
                     except AssertionError as e:
-                        def make_context(source, segment)->str:
+                        def make_context(source:List[str], segment:str)->str:
                             current_line = f"{lineIndex}> {' '.join(map(str, source[lineIndex]))}"
                             # Makes something like
                             #480> ATTR_ -0.45643 1.0 sim/test1
@@ -254,7 +254,7 @@ class XPlaneTestCase(unittest.TestCase):
                                     f"{lineIndex - 1}: {' '.join(map(str, source[lineIndex-1]))}" if lineIndex > 0 else "",
                                     current_line,
                                     question_line,
-                                    f"{lineIndex + 1}: {' '.join(map(str, source[lineIndex+1]))}" if lineIndex < len(source) else "",
+                                    f"{lineIndex + 1}: {' '.join(map(str, source[lineIndex+1]))}" if lineIndex+1 < len(source) else "",
                                     ))
 
                         context_lineA = make_context(linesA, segmentA)

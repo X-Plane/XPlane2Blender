@@ -1,5 +1,5 @@
 from typing import List
-from ..xplane_helpers import floatToStr
+from ..xplane_helpers import floatToStr, vec_b_to_x
 from ..xplane_constants import *
 from io_xplane2blender.xplane_types import xplane_light
 
@@ -26,19 +26,19 @@ class XPlaneLights():
         # we only write vlights here, all other lights go into the commands table directly
         if light.lightType in LIGHTS_OLD_TYPES:
             self.items.append(light)
-            light.indices[0] = self.globalindex
+            light.indices = [self.globalindex, self.globalindex+1]
+            self.indices.append(self.globalindex)
+            self.globalindex += 1
 
             # get the location
             co = light.blenderObject.location
 
-            self.lines.append("VLIGHT\t%s\t%s\t%s\t%s\t%s\t%s" % (
-                floatToStr(co[0]), floatToStr(co[2]), floatToStr(-co[1]),
-                floatToStr(light.color[0]), floatToStr(light.color[1]), floatToStr(light.color[2])
-            ))
-            self.indices.append(self.globalindex)
-            self.globalindex += 1
-
-            light.indices[1] = self.globalindex
+            tab = "\t"
+            self.lines.append(
+                    f"VLIGHT"
+                    f"\t{tab.join(map(floatToStr, vec_b_to_x(co)))}"
+                    f"\t{tab.join(map(floatToStr, light.color))}"
+                    f"\n")
 
     def write(self)->str:
         """

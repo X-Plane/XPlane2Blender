@@ -49,7 +49,7 @@ class ParsedLightOverload:
         """For ParsedLightOverloads, 'contains' means 'this overload contain this column'"""
         return item in LIGHT_TYPE_PROTOTYPES[self.overload_type]
 
-    def __getitem__(self, key:Union[int,str]):
+    def __getitem__(self, key:Union[int,str])->Union[float,str]:
         """
         Passing in an int will get you the index in the list of arguments,
         passing in a key will get you the contents of that column of the
@@ -270,8 +270,11 @@ def parse_lights_file():
                 elif overload_type not in LIGHT_TYPE_PROTOTYPES:
                     logger.error(f"{overload_type} is not a valid OVERLOAD_TYPE. Update lights.txt or fix manually")
                 elif len(light_args) != len(LIGHT_TYPE_PROTOTYPES[overload_type]):
-                    logger.error(f"Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' isn't the right length ")
+                    logger.error(f"Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is not the right length ")
                 else:
+                    #TODO: Errors needed, argument is not a valid parameter or a float we like, no NaN or 2e-15 even thought those technically converts
+                    #TODO: Need test that light_params_def will only have real parameters and no arguments
+                    #TODO: Test lights overloads always sorted correctly
                     parsed_light.overloads.append(ParsedLightOverload(overload_type=overload_type, name=light_name, arguments=light_args))
                     rankings = ["SPILL_GND_REV", #Least trustworthy
                                 "SPILL_GND",
@@ -282,7 +285,7 @@ def parse_lights_file():
                                 "SPILL_HW_DIR"] #Most trustworthy
 
                     # Semantically speaking, overloads[0] must ALWAYS be the most trustworthy
-                    parsed_light.overloads.sort(key=lambda l: rankings.index(l.overload_type))
+                    parsed_light.overloads.sort(key=lambda l: rankings.index(l.overload_type), reverse=True)
 
     if (len(logger.findErrors()) + len(logger.findWarnings())) - num_logger_problems:
         raise ValueError

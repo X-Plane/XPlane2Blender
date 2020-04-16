@@ -29,19 +29,19 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
         # Color, for use by CUSTOM or AUTOMATIC lights
         # change color according to type
-        self.color:List[float] = [0,0,0]
         if self.lightType == LIGHT_FLASHING:
-            self.color[0] = -blenderObject.data.color[0]
+            self.color:List[float] = list(blenderObject.data.color)
+            self.color[0] = -self.color[0]
         elif self.lightType == LIGHT_PULSING:
-            self.color[:] = 9.9
+            self.color = [9.9] * 3
         elif self.lightType == LIGHT_STROBE:
-            self.color[:] = 9.8
+            self.color = [9.8] * 3
         elif self.lightType == LIGHT_TRAFFIC:
-            self.color[:] = 9.7
+            self.color = [9.7] * 3
         elif blenderObject.data.xplane.enable_rgb_override:
             self.color:List[float] = blenderObject.data.xplane.rgb_override_values[:]
         else:
-            self.color:List[float] = list(blenderObject.data.color[:])
+            self.color:List[float] = list(blenderObject.data.color)
 
         self.dataref = blenderObject.data.xplane.dataref
         self.energy = blenderObject.data.energy
@@ -124,26 +124,27 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 if not (self.comment.startswith("//") or self.comment.startswith("#")):
                     logger.warn(f"Comment in param light {self.comment} does not start with '//' or '#'")
 
-            self.record_completed = parsed_light.overloads[0]
             params_actual = [p.strip() for p in params_actual[0:len(params_formal)]]
-            # What happenes when params_formal is longer than record_completed
+
+            self.record_completed = parsed_light.overloads[0]
             for i, (pformal, pactual) in enumerate(zip(params_formal, params_actual)):
                 try:
-                    float(pactual)
-                except ValueError:
-                    logger.error(f"Parameter {i} ({pactual}) of {self.blenderObject.name} is not a number")
+                    index_of_param_to_replace = self.record_completed.arguments.index(pformal)
+                except ValueError: # couldn't find pformal in overload arguments
+                    # This is okay, not every overload uses every parameter
+                    break
                 else:
                     try:
-                        self.record_completed[pformal] = float(pactual)
-                    except KeyError: # __setitem__ failed
-                        # If the actual arguments doesn't have a replacement option,
-                        # its okay. Some overloads don't use every one of them
-                        pass
+                        self.record_completed[index_of_param_to_replace] = float(pactual)
+                    except ValueError: #pactual not a float
+                        logger.error(f"Parameter {i} ({pactual}) of {self.blenderObject.name} is not a number")
+                        return
 
             if "DREF" in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
             self.is_omni = self.record_completed["WIDTH"] >= 1.0
+
             dir_vec = Vector(map(self.record_completed.__getitem__, ["DX","DY","DZ"]))
             #TODO: This aught to have rounding?
             if dir_vec.magnitude == 0.0 and not self.is_omni:
@@ -221,7 +222,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
         else:
             assert False, f"{self.blenderObject.name} had some property configuation that was unaccounted for"
 
-
     def write(self)->None:
         debug = getDebug()
         indent = self.xplaneBone.getIndent()
@@ -270,7 +270,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                         # Yes, '!= "POINT"' matters for historical reasons
                         and light_data.type != "POINT"
                         and all(param in self.record_completed for param in ["DX", "DY", "DZ"]))
-            except (AttributeError, KeyError): # No record_completed or some DX, DY, DZ doesn't exist in record
+            except TypeError as te: # self.record_completed is None
                 return False
 
         def should_autocorrect_automatic():
@@ -284,7 +284,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                             # or we will be LIGHT_NAMED and our overload has DXYZ columns to correct
                             or all(param in self.record_completed for param in ["DX", "DY", "DZ"])
                             ))
-            except TypeError: # __contains__ fails if self.record_completed is None
+            except TypeError as te: # __contains__ fails if self.record_completed is None
                 return False
 
         def should_fill_in_dxyz_for_automatic():
@@ -293,14 +293,14 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     and light_data.type == "SPOT"
                     # If we have a DXYZ we'll use that instead of autocorrection
                     and {"DX", "DY", "DZ"} <= set(self.params))
-            except TypeError: #set cannot iterate None
+            except TypeError: # self.params is None
                 return False
 
         if (should_autocorrect_nonautomatic() or should_autocorrect_automatic()):
             axis_angle_vec_b, axis_angle_theta = find_autocorrect_axis_angle(
                     vec_x_to_b(
-                        Vector(self.record_completed[c] for c in ["DX", "DY", "DZ"])
-                        ).normalized(),
+                        Vector(self.record_completed[c] for c in ["DX", "DY", "DZ"]).normalized()
+                        ),
                     bakeMatrix)
             # Vector P(arameters), in Blender Space
 
@@ -341,17 +341,19 @@ class XPlaneLight(xplane_object.XPlaneObject):
                          ["DX","DY","DZ"],
                          vec_b_to_x(axis_angle_vec3_x))})
 
-        x,y,z = map(floatToStr,vec_b_to_x(translation))
+        x,y,z = vec_b_to_x(translation)
         if (self.lightType == LIGHT_NAMED
             or (self.lightType == LIGHT_AUTOMATIC and not parsed_light.light_param_def)):
             o += f"{indent}LIGHT_NAMED\t{self.lightName} {x} {y} {z}\n"
         elif (self.lightType == LIGHT_PARAM
                 or (self.lightType == LIGHT_AUTOMATIC and parsed_light.light_param_def)):
-            o += f"{indent}LIGHT_PARAM\t{self.lightName} {x} {y} {z} {' '.join(self.params)}\n"
+            o += f"{indent}LIGHT_PARAM\t{self.lightName} {x} {y} {z}"
+            o += f" {' '.join(self.params)}" if self.lightType == LIGHT_AUTOMATIC else self.params
+            o += "\n"
         elif self.lightType == LIGHT_CUSTOM:
             o += (f"{indent}LIGHT_CUSTOM\t{x} {y} {z}"
-                 f" {' '.join(self.color)} {self.energy} {self.size}"
-                 f" {' '.join(self.uv)} {self.dataref}\n")
+                  f" {' '.join(map(str,self.color))} {self.energy} {self.size}"
+                  f" {' '.join(map(str,self.uv))} {self.dataref}\n")
         # do not render lights with no indices
         elif self.indices[1] > self.indices[0]:
             offset = self.indices[0]

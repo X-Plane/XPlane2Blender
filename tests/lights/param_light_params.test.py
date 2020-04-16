@@ -12,12 +12,16 @@ __dirname__ = os.path.dirname(__file__)
 class TestParamLightParams(XPlaneTestCase):
     def test_comment_correct(self):
         xplaneFile = self.createXPlaneFileFromPotentialRoot("Layer 1")
-        light = xplaneFile._bl_obj_name_to_bone["4_comment_contents_preserved_exactly"].xplaneObject
+        light = xplaneFile._bl_obj_name_to_bone["04_comment_contents_preserved_exactly"].xplaneObject
         self.assertEqual(light.comment, "0 spaces, number starts comment with uneven and a   trailing  space ")
 
     def test_illegal_params_content(self):
         out = self.exportLayer(1)
         self.assertLoggerErrors(3)
+
+    def test_UNUSED_and_special_case_params(self):
+        out = self.exportLayer(2)
+        #self.assertLoggerErrors(3)
 
 runTestCases([TestParamLightParams])
 
