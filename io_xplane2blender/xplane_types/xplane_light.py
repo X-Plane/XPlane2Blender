@@ -178,6 +178,14 @@ class XPlaneLight(xplane_object.XPlaneObject):
             return
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and parsed_light.light_param_def:
             self.is_omni = light_data.type == "POINT"
+
+            #TODO: Need test
+            if (light_data.type == "SPOT"
+                and "SIZE" in parsed_light.light_param_def
+                and not light_data.use_custom_distance):
+                logger.error("Automatic Spot Lights with SIZE as a parameter must have 'Custom Distance' checked")
+                return
+
             #"CELL_", "DAY", "DREF" are never parameterizable,
             convert_table = {
                     "R":self.color[0],
@@ -185,16 +193,17 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "B":self.color[2],
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
-                    "SIZE":light_data.shadow_soft_size, # Radius
+                    "SIZE":light_data.cutoff_distance, # Custom Distance > Distance
                     "DX":"DX", # Filled in later
                     "DY":"DY", # Filled in later
                     "DZ":"DZ", # Filled in later
-                    "WIDTH": 1 if light_data.type == "POINT" else (math.cos(light_data.spot_size * .5)),
+                    "WIDTH": 1 if self.is_omni else (math.cos(light_data.spot_size * .5)),
                     "FREQ": light_data.xplane.param_freq,
                     #"PHASE": light_data.xplane.param_phase,
                     "UNUSED":0 # We just shove in something here
                 }
 
+            #TODO: Need test
             if "WIDTH" in parsed_light.light_param_def and round(light_data.spot_size) == math.pi:
                 logger.error("Spotlight Size for {self.blenderObject.name} cannot be 180 degrees")
                 return
@@ -348,7 +357,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
         elif (self.lightType == LIGHT_PARAM
                 or (self.lightType == LIGHT_AUTOMATIC and parsed_light.light_param_def)):
             o += f"{indent}LIGHT_PARAM\t{self.lightName} {x} {y} {z}"
-            o += f" {' '.join(self.params)}" if self.lightType == LIGHT_AUTOMATIC else self.params
+            o += f" {' '.join(self.params.values())}" if self.lightType == LIGHT_AUTOMATIC else self.params
             o += "\n"
         elif self.lightType == LIGHT_CUSTOM:
             o += (f"{indent}LIGHT_CUSTOM\t{x} {y} {z}"
