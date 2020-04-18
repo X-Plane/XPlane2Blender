@@ -36,6 +36,9 @@ from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 
 
+class NotExportableRootError(ValueError):
+    pass
+
 def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.types.ViewLayer)->List["XPlaneFile"]:
     """
     Returns a list of all created XPlaneFiles from all valid roots found,
@@ -47,7 +50,7 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.type
     for potential_root in scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]:
         try:
             xplane_file = createFileFromBlenderRootObject(potential_root, view_layer)
-        except ValueError as e:
+        except NotExportableRootError as e:
             pass
         else:
             xplane_files.append(xplane_file)
@@ -68,7 +71,7 @@ def createFileFromBlenderRootObject(potential_root:PotentialRoot, view_layer:bpy
     """
     nested_errors: Set[str] = set()
     if not xplane_helpers.is_exportable_root(potential_root, view_layer):
-        raise ValueError
+        raise NotExportableRootError(f"{potential_root.name} is not an exportable root")
     def log_nested_roots(potential_roots: List[PotentialRoot]):
         err = "Exportable Roots cannot be nested, make '{}' a regular {} or ensure it is not in an exportable collection and none of its parents are exportable objects"
         if isinstance(potential_root, bpy.types.Collection):

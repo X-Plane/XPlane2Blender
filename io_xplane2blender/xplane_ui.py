@@ -545,6 +545,10 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                     layout.row().prop(light.xplane, "param_index")
                 if "FREQ" in parsed_light.light_param_def:
                     layout.row().prop(light.xplane, "param_freq")
+                if ("SIZE" in parsed_light.light_param_def
+                        and light.type == "SPOT"
+                        and not light.use_custom_distance):
+                    layout.row().label(text="Found 'SIZE' parameter but Custom Distance not checked", icon="ERROR")
             # We currently don't have any lights using PHASE
             # but one day we might!
             #if "PHASE" in parsed_light.light_param_def:
@@ -559,7 +563,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                 if param in {"A"}:
                     rgb_row.label(text=f"{param}: 1")
                 if param in {"SIZE"}:
-                    debug_box.row().label(text=f"{param}: {light.shadow_soft_size}m")
+                    debug_box.row().label(text=f"{param}: {light.cutoff_distance}m")
                 if param in {"WIDTH"}:
                     try:
                         debug_box.row().label(text=f"{param}: {round(math.degrees(light.spot_size), 5) if light.spot_size < math.pi else 'omni'}")

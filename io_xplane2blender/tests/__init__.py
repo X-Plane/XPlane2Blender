@@ -458,7 +458,7 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             io_xplane2blender.tests.test_creation_helpers.make_root_exportable(bpy.data.collections[f"Layer {layer + 1}"])
             try:
                 xplaneFile = xplane_file.createFileFromBlenderRootObject(bpy.data.collections[f"Layer {layer + 1}"], bpy.context.scene.view_layers[0])
-            except ValueError:
+            except xplane_file.NotExportableRootError:
                 assert False, f"Unable to create XPlaneFile for {name} from Layer {layer + 1}"
             else:
                 with open(outFile, "w") as outFile:
