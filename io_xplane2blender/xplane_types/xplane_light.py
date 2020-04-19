@@ -210,15 +210,18 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
             self.params = {param:convert_table[param] for param in parsed_light.light_param_def}
             self.record_completed = parsed_light.overloads[0]
-            for param, value in self.params.items():
-                #TODO: What about when an overload doesn't use all its params?
-                # We have __setitem__ that gives...
-                try:
-                    self.record_completed[param] = value
-                except KeyError:
-                    # This is okay, not every overload uses every parameter
-                    pass
+            # TODO: Erase this
+            # Pair each argument with a number, then only iterate over arguments which haven't been filled in
+            # We know that we won't have an overload with more arguments than light_param_def that could fill in
+            # because the parser checks that
+            # If we have fewer arguments that light_param_def, that's okay
+            # we know we won't have arguments that aren't in LIGHT_PARAM_DEF because the parser checks that too
+            for p_arg in filter(lambda arg: isinstance(arg,str) and arg not in {"DX", "DY", "DZ"}, self.record_completed):
+                self.record_completed.replace_argument(p_arg, self.params[p_arg])
 
+            # Leaving DXYZ in a record's arguments is okay
+            # - It doesn't affect any sw_callbacks (as of 4/19/2020)
+            # - We'll be filling in instead of autocorrecting
             if "DREF" in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
@@ -350,7 +353,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 # to be tidy, we can finally update it too
                 # in case we need to do something with it later
                 # -Ted, 4/17/2020
-                self.record_completed[param] = vec_comp
+                #self.record_completed[param] = vec_comp
                 self.params[param] = vec_comp
 
         translation_x_str = " ".join(map(floatToStr,vec_b_to_x(translation)))

@@ -567,7 +567,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                 if param in {"WIDTH"}:
                     try:
                         debug_box.row().label(text=f"{param}: {round(math.degrees(light.spot_size), 5) if light.spot_size < math.pi else 'omni'}")
-                    except:
+                    except AttributeError:
                         debug_box.row().label(text="omni")
                 if param in {"INDEX"}:
                     debug_box.row().label(text=f"{param}: {light.xplane.param_index}")
