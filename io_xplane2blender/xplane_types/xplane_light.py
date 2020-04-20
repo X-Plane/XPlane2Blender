@@ -1,7 +1,7 @@
 import math
 import re
 from copy import deepcopy
-from itertools import zip_longest
+from itertools import takewhile, tee, zip_longest
 from typing import Dict, List, Optional, Tuple, Union
 
 import bpy
@@ -112,19 +112,32 @@ class XPlaneLight(xplane_object.XPlaneObject):
             params_formal = parsed_light.light_param_def
 
             # Parsed params from the params box, stripped and ignoring the commemnt
-            params_actual = re.findall(r" *[^ ]*",self.blenderObject.data.xplane.params)[:-1]
+            # Make the actual parameters, if there are <= than params_formal, its okay
+            # if here are more we have a comment.
+            # Find nth group of whitespace space after the end the count
+
+            params_actual = []
+            params_itr = iter(self.blenderObject.data.xplane.params.lstrip())
+
+            while len(params_actual) < len(params_formal):
+                try:
+                    n, params_itr = tee(params_itr)
+                    next(n)
+                except StopIteration:
+                    break
+                else:
+                    actual = "".join(takewhile(lambda c: not c.isspace(), params_itr))
+                    if actual:
+                        params_actual.append(actual)
+            self.comment = "".join(params_itr).lstrip()
 
             if len(params_actual) < len(params_formal):
                 logger.error(f"Not enough actual parameters ({' '.join(params_actual)}) to"
                              f" satisfy LIGHT_PARAM_DEF {len(params_formal)} {' '.join(params_formal)}")
                 return
 
-            if len(params_actual) > len(params_formal):
-                self.comment = (''.join(params_actual[len(params_formal):])).lstrip()
-                if not (self.comment.startswith("//") or self.comment.startswith("#")):
-                    logger.warn(f"Comment in param light {self.comment} does not start with '//' or '#'")
-
-            params_actual = [p.strip() for p in params_actual[0:len(params_formal)]]
+            if self.comment and not self.comment.startswith(("//","#")):
+                logger.warn(f"Comment in param light ({self.comment}) does not start with '//' or '#'")
 
             self.record_completed = parsed_light.overloads[0]
             for i, (pformal, pactual) in enumerate(zip(params_formal, params_actual)):
@@ -368,8 +381,10 @@ class XPlaneLight(xplane_object.XPlaneObject):
             o += "\n"
         elif self.lightType == LIGHT_CUSTOM:
             o += (f"{indent}LIGHT_CUSTOM\t{translation_x_str}"
-                  f" {' '.join(map(floatToStr,(self.color, self.energy, self.size)))}"
-                  f" {' '.join(map(floatToStr,self.uv))} {self.dataref}\n")
+                  f" {' '.join(map(floatToStr,self.color))}"
+                  f" {' '.join(map(floatToStr,[self.energy, self.size]))}"
+                  f" {' '.join(map(floatToStr,self.uv))}"
+                  f" {self.dataref}\n")
         # do not render lights with no indices
         elif self.indices[1] > self.indices[0]:
             offset = self.indices[0]
