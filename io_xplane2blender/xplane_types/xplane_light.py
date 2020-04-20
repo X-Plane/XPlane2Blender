@@ -78,7 +78,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
         super().collect()
         light_data = self.blenderObject.data
         if not self.lightName and self.lightType in {LIGHT_NAMED, LIGHT_PARAM, LIGHT_AUTOMATIC}:
-            logger.error(f"{self.blenderObject.name} is a {self.lightType.title()} but has no light name")
+            logger.error(f"{self.blenderObject.name} is a {self.lightType.title()} light but has no light name")
             return
         try:
             parsed_light = xplane_lights_txt_parser.get_parsed_light(self.lightName)
@@ -145,16 +145,15 @@ class XPlaneLight(xplane_object.XPlaneObject):
             self.record_completed = parsed_light.overloads[0]
             for i, (pformal, pactual) in enumerate(zip(params_formal, params_actual)):
                 try:
-                    index_of_param_to_replace = self.record_completed.arguments.index(pformal)
-                except ValueError: # couldn't find pformal in overload arguments
-                    # This is okay, not every overload uses every parameter
-                    continue
+                    float(pactual)
+                except ValueError: # pactual not a float
+                    logger.error(f"Parameter {i} ({pactual}) of {self.blenderObject.name} is not a number")
+                    return
                 else:
                     try:
-                        self.record_completed[index_of_param_to_replace] = float(pactual)
-                    except ValueError: # pactual not a float
-                        logger.error(f"Parameter {i} ({pactual}) of {self.blenderObject.name} is not a number")
-                        return
+                        self.record_completed.replace_parameterization_argument(pformal, float(pactual))
+                    except ValueError:
+                        continue
 
             if "DREF" in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
@@ -185,7 +184,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
         # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
         # -------------------|------------|--------------|------------------|-------
         # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | Yes              | Fill out params and write
-        # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | No               | Treat as named light, write as is
+        # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | No               | Treat as named light, apply any sw_callbacks, write
         # LIGHT_AUTOMATIC    |"POINT/SPOT"| No           | N/A              | Treat as named light, give warning, write as is
         # LIGHT_AUTOMATIC    | Any Others | N/A          | N/A              | Error, "Automatic lights require POINT or SPOT"
         elif self.lightType == LIGHT_AUTOMATIC and light_data.type not in {"POINT", "SPOT"}:
@@ -232,7 +231,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # If we have fewer arguments that light_param_def, that's okay
             # we know we won't have arguments that aren't in LIGHT_PARAM_DEF because the parser checks that too
             for p_arg in filter(lambda arg: isinstance(arg,str) and not arg.startswith("sim") and arg not in {"DX", "DY", "DZ"}, self.record_completed):
-                self.record_completed.replace_argument(p_arg, self.params[p_arg])
+                self.record_completed.replace_parameterization_argument(p_arg, self.params[p_arg])
 
             # Leaving DXYZ in a record's arguments is okay
             # - It doesn't affect any sw_callbacks (as of 4/19/2020)
@@ -314,6 +313,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 elif self.record_completed:
                     # If we will be LIGHT_NAMED and our overload has DXYZ columns to correct
                     return all(column in self.record_completed for column in ["DX", "DY", "DZ"])
+            else:
+                return False
 
         def should_fill_in_dxyz_for_automatic():
             try:
@@ -372,8 +373,10 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 self.params[param] = vec_comp
 
         translation_x_str = " ".join(map(floatToStr,vec_b_to_x(translation)))
+        known_named_automatic = self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def
+        unknown_named_automatic = self.lightType == LIGHT_AUTOMATIC and not parsed_light
         if (self.lightType == LIGHT_NAMED
-            or (self.lightType == LIGHT_AUTOMATIC and not parsed_light.light_param_def)):
+            or (known_named_automatic or unknown_named_automatic)):
             o += f"{indent}LIGHT_NAMED\t{self.lightName} {translation_x_str}\n"
         elif (self.lightType == LIGHT_PARAM
                 or (self.lightType == LIGHT_AUTOMATIC and parsed_light.light_param_def)):

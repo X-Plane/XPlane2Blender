@@ -566,21 +566,20 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                 for param in parsed_light.light_param_def:
                     if param in {"R","G","B"}:
                         rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 3)}")
-                    if param in {"A"}:
+                    if param == "A":
                         rgb_row.label(text=f"{param}: 1")
-                    if param in {"SIZE"}:
+                    if param == "SIZE":
                         debug_box.row().label(text=f"{param}: {light.cutoff_distance}m")
-                    if param in {"WIDTH"}:
+                    if param == "WIDTH":
                         try:
                             debug_box.row().label(text=f"{param}: {round(math.cos(light.spot_size * .5), 5) if light.spot_size < math.pi else 'omni'}")
                         except AttributeError:
                             debug_box.row().label(text="omni")
-                    if param in {"INDEX"}:
+                    if param == "INDEX":
                         debug_box.row().label(text=f"{param}: {light.xplane.param_index}")
-                    if param in {"FREQ"}:
+                    if param == "FREQ":
                         debug_box.row().label(text=f"{param}: {light.xplane.param_freq}")
-                    # We don't currently have any lights using PHASE, but if we one day do, we're ready
-                    if param in {"PHASE"}:
+                    if param == "PHASE":
                         debug_box.row().label(text=f"{param}: {light.xplane.param_phase}")
         draw_automatic_ui()
     elif light.xplane.type == LIGHT_NAMED:

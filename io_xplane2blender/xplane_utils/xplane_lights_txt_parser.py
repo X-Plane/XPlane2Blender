@@ -134,15 +134,15 @@ class ParsedLightOverload:
             set_xyz(prototype, args, dir_vec.normalized())
             set_rgb(prototype, args, [1,1,1])
 
-        #def do_rgba_to_dxyz_w(overload):
-            #global LIGHT_TYPE_PROTOTYPES
+        def do_rgba_to_dxyz_w(overload):
+            global LIGHT_TYPE_PROTOTYPES
 
-            #prototype = LIGHT_TYPE_PROTOTYPES[overload.overload_type]
-            #args = self.arguments
-            #set_xyz(prototype,   args, get_rgb(prototype, args))
-            #set_width(prototype, args, args[prototype.index("A")])
-            #set_rgb(prototype,   args, [1,1,1])
-            #set_a(prototype,     args, 1)
+            prototype = LIGHT_TYPE_PROTOTYPES[overload.overload_type]
+            args = self.arguments
+            set_xyz(prototype,   args, get_rgb(prototype, args))
+            set_width(prototype, args, args[prototype.index("A")])
+            set_rgb(prototype,   args, [1,1,1])
+            set_a(prototype,     args, 1)
 
         def do_force_omni(overload):
             global LIGHT_TYPE_PROTOTYPES
@@ -157,8 +157,8 @@ class ParsedLightOverload:
             "sim/graphics/animation/lights/airplane_generic_light_flash":  do_rgb_to_dxyz_w_calc,
             "sim/graphics/animation/lights/airplane_navigation_light_dir": do_rgb_to_dxyz_w_calc,
 
-            #"sim/graphics/animation/lights/airport_beacon":                do_rgba_to_dxyz_w, #As of 11/14/2017, all lights with this are commented out
-            #"sim/graphics/animation/lights/airport_beacon_flash":          do_rgba_to_dxyz_w, #As of 11/14/2017, none of this dataref appears in lights.txt
+            "sim/graphics/animation/lights/airport_beacon":                do_rgba_to_dxyz_w, #As of 11/14/2017, all lights with this are commented out
+            "sim/graphics/animation/lights/airport_beacon_flash":          do_rgba_to_dxyz_w, #As of 11/14/2017, none of this dataref appears in lights.txt
 
             "sim/graphics/animation/lights/airplane_beacon_light_rotate":  do_force_omni,
             "sim/graphics/animation/lights/carrier_waveoff":               do_force_omni,
@@ -186,10 +186,10 @@ class ParsedLightOverload:
         global LIGHT_TYPE_PROTOTYPES
         return LIGHT_TYPE_PROTOTYPES[self.overload_type]
 
-    #TODO: better argument name needed, check speck
-    def replace_argument(self, argument:str, value:float):
-        """Replaces paramerter argument with value if possible, else throws ValueError"""
-        self.arguments[self.arguments.index(argument)] = value
+    def replace_parameterization_argument(self, parameterization_argument:str, value:float)->None:
+        """Replaces parameter-argument with value if possible, else throws ValueError"""
+        assert isinstance(parameterization_argument, str), f"'{parameterization_argument}' is not a string"
+        self.arguments[self.arguments.index(parameterization_argument)] = value
 
 
 class ParsedLight:
