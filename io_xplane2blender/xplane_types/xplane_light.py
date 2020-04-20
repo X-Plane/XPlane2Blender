@@ -200,7 +200,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "WIDTH": 1 if self.is_omni else (math.cos(light_data.spot_size * .5)),
                     "FREQ": light_data.xplane.param_freq,
                     #"PHASE": light_data.xplane.param_phase,
-                    "UNUSED":0 # We just shove in something here
+                    "UNUSED1":0 # We just shove in something here
                 }
 
             #TODO: Need test

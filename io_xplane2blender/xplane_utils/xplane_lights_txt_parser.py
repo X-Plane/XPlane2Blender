@@ -61,7 +61,7 @@ class ParsedLightOverload:
         if isinstance(key, int):
             return self.arguments[key]
         elif isinstance(key, str):
-            if key == "UNUSED":
+            if key.startswith("UNUSED"):
                 raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
                 # HACK! So far every light in the lights.txt file that uses
@@ -80,7 +80,7 @@ class ParsedLightOverload:
             except IndexError:
                 raise
         elif isinstance(key, str):
-            if key == "UNUSED":
+            if key.startswith("UNUSED"):
                 raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
                 # HACK! So far every light in the lights.txt file that uses
@@ -271,7 +271,7 @@ def parse_lights_file():
                         logger.error(f"{light_name} has more than one LIGHT_PARAM_DEF")
                     light_argc, *light_argv = light_args
                     parsed_light.light_param_def = light_argv # Skip the count
-                    if not set(parsed_light.light_param_def) < {*LIGHT_TYPE_PROTOTYPES["BILLBOARD_HW"], "DREF", "INDEX", "UNUSED"}:
+                    if not set(parsed_light.light_param_def) < {*LIGHT_TYPE_PROTOTYPES["BILLBOARD_HW"], "DREF", "INDEX", "UNUSED1"}:
                         logger.error(f"LIGHT_PARAM_DEF for '{light_name}' contains unknown parameters: {parsed_light.light_param_def}")
                 elif overload_type not in LIGHT_TYPE_PROTOTYPES:
                     logger.error(f"{overload_type} is not a valid OVERLOAD_TYPE. Update lights.txt or fix manually")
