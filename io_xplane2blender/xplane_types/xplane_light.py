@@ -77,6 +77,9 @@ class XPlaneLight(xplane_object.XPlaneObject):
     def collect(self)->None:
         super().collect()
         light_data = self.blenderObject.data
+        if not self.lightName and self.lightType in {LIGHT_NAMED, LIGHT_PARAM, LIGHT_AUTOMATIC}:
+            logger.error(f"{self.blenderObject.name} is a {self.lightType.title()} but has no light name")
+            return
         try:
             parsed_light = xplane_lights_txt_parser.get_parsed_light(self.lightName)
         except KeyError:
@@ -159,7 +162,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
             self.is_omni = self.record_completed["WIDTH"] >= 1.0
 
             dir_vec = Vector(map(self.record_completed.__getitem__, ["DX","DY","DZ"]))
-            #TODO: This aught to have rounding?
             if dir_vec.magnitude == 0.0 and not self.is_omni:
                 logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
                 return
@@ -210,9 +212,9 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "DX":"DX", # Filled in later
                     "DY":"DY", # Filled in later
                     "DZ":"DZ", # Filled in later
-                    "WIDTH": 1 if self.is_omni else (math.cos(light_data.spot_size * .5)),
+                    "WIDTH": 1 if self.is_omni else math.cos(light_data.spot_size * .5),
                     "FREQ": light_data.xplane.param_freq,
-                    #"PHASE": light_data.xplane.param_phase,
+                    "PHASE": light_data.xplane.param_phase,
                     "UNUSED1":0 # We just shove in something here
                 }
 
@@ -229,7 +231,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # because the parser checks that
             # If we have fewer arguments that light_param_def, that's okay
             # we know we won't have arguments that aren't in LIGHT_PARAM_DEF because the parser checks that too
-            for p_arg in filter(lambda arg: isinstance(arg,str) and arg not in {"DX", "DY", "DZ"}, self.record_completed):
+            for p_arg in filter(lambda arg: isinstance(arg,str) and not arg.startswith("sim") and arg not in {"DX", "DY", "DZ"}, self.record_completed):
                 self.record_completed.replace_argument(p_arg, self.params[p_arg])
 
             # Leaving DXYZ in a record's arguments is okay

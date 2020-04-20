@@ -1717,12 +1717,11 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         min = 0
     )
 
-    # We don't actually have any lights using PHASE we'll uncomment these
-    #param_phase: bpy.props.FloatProperty(
-        #name = "Phase",
-        #description = "Phase offset of light (so it can make flashing lights that don't flash at the same time)",
-        #min = 0.0,
-    #)
+    param_phase: bpy.props.FloatProperty(
+        name = "Phase",
+        description = "Phase offset of light (so it can make flashing lights that don't flash at the same time)",
+        min = 0.0,
+    )
 
     rgb_override_values: bpy.props.FloatVectorProperty(
         name = "RGB Override Values",

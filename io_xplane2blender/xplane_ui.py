@@ -535,47 +535,54 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
         layout.row().label(text="Automatic lights must use spot lights")
     elif light.xplane.type == LIGHT_AUTOMATIC and light.type in {"POINT","SPOT"}:
         layout.row().prop(light.xplane, "name")
-        try:
-            parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(light.xplane.name)
-        except KeyError:
-            layout.row().label(text="Unknown Light Name: check spelling or update lights.txt", icon="ERROR")
-        else:
-            if parsed_light.light_param_def:
-                if "INDEX" in parsed_light.light_param_def:
-                    layout.row().prop(light.xplane, "param_index")
-                if "FREQ" in parsed_light.light_param_def:
-                    layout.row().prop(light.xplane, "param_freq")
-                if ("SIZE" in parsed_light.light_param_def
-                        and light.type == "SPOT"
-                        and not light.use_custom_distance):
-                    layout.row().label(text="Found 'SIZE' parameter but Custom Distance not checked", icon="ERROR")
-            # We currently don't have any lights using PHASE
-            # but one day we might!
-            #if "PHASE" in parsed_light.light_param_def:
-                #layout.row().prop(light.xplane, "param_phase")
+        def draw_automatic_ui():
+            try:
+                if light.xplane.name:
+                    parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(light.xplane.name)
+                else:
+                    return
+            except KeyError:
+                layout.row().label(text="Unknown Light Name: check spelling or update lights.txt", icon="ERROR")
+            else:
+                if parsed_light.light_param_def:
+                    if "INDEX" in parsed_light.light_param_def:
+                        layout.row().prop(light.xplane, "param_index")
+                    if "FREQ" in parsed_light.light_param_def:
+                        layout.row().prop(light.xplane, "param_freq")
+                    if "PHASE" in parsed_light.light_param_def:
+                        layout.row().prop(light.xplane, "param_phase")
+                    if ("SIZE" in parsed_light.light_param_def
+                            and light.type == "SPOT"
+                            and not light.use_custom_distance):
+                        layout.row().label(text="Found 'SIZE' parameter but Custom Distance not checked", icon="ERROR")
 
-            debug_box = layout.box()
-            debug_box.label(text="Debug Box")
-            rgb_row = debug_box.row()
-            for param in parsed_light.light_param_def:
-                if param in {"R","G","B"}:
-                    rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 3)}")
-                if param in {"A"}:
-                    rgb_row.label(text=f"{param}: 1")
-                if param in {"SIZE"}:
-                    debug_box.row().label(text=f"{param}: {light.cutoff_distance}m")
-                if param in {"WIDTH"}:
-                    try:
-                        debug_box.row().label(text=f"{param}: {round(math.degrees(light.spot_size), 5) if light.spot_size < math.pi else 'omni'}")
-                    except AttributeError:
-                        debug_box.row().label(text="omni")
-                if param in {"INDEX"}:
-                    debug_box.row().label(text=f"{param}: {light.xplane.param_index}")
-                if param in {"FREQ"}:
-                    debug_box.row().label(text=f"{param}: {light.xplane.param_freq}")
-                # We don't currently have any lights using PHASE, but if we one day do, we're ready
-                #if param in {"PHASE"}:
-                    #debug_box.row().label(text=f"{param}: {light.xplane.param_phase}")
+                debug_box = layout.box()
+                debug_box.label(text="Debug Box")
+                debug_box.row().label(text=f"{len(parsed_light.light_param_def)} {' '.join(parsed_light.light_param_def)}")
+                debug_box.row().label(text=f"{parsed_light.overloads[0]['DREF'] if 'DREF' in parsed_light.overloads[0] else ''}")
+                if light.xplane.params:
+                    debug_box.row().label(text=f"Former Params: '{light.xplane.params}'")
+                rgb_row = debug_box.row()
+                for param in parsed_light.light_param_def:
+                    if param in {"R","G","B"}:
+                        rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 3)}")
+                    if param in {"A"}:
+                        rgb_row.label(text=f"{param}: 1")
+                    if param in {"SIZE"}:
+                        debug_box.row().label(text=f"{param}: {light.cutoff_distance}m")
+                    if param in {"WIDTH"}:
+                        try:
+                            debug_box.row().label(text=f"{param}: {round(math.cos(light.spot_size * .5), 5) if light.spot_size < math.pi else 'omni'}")
+                        except AttributeError:
+                            debug_box.row().label(text="omni")
+                    if param in {"INDEX"}:
+                        debug_box.row().label(text=f"{param}: {light.xplane.param_index}")
+                    if param in {"FREQ"}:
+                        debug_box.row().label(text=f"{param}: {light.xplane.param_freq}")
+                    # We don't currently have any lights using PHASE, but if we one day do, we're ready
+                    if param in {"PHASE"}:
+                        debug_box.row().label(text=f"{param}: {light.xplane.param_phase}")
+        draw_automatic_ui()
     elif light.xplane.type == LIGHT_NAMED:
         layout.row().prop(light.xplane, "name")
     elif light.xplane.type == LIGHT_PARAM:
