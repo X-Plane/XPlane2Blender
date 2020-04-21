@@ -14,7 +14,6 @@ BEFORE CHANGING THIS FILE have you:
 5. Quadruple checked every character, even the ones you didn't write?
 6. Tested it with all versions of Blender people could be using?
 7. Cross tested loading and unloading between different versions of XPlane2Blender?
-8. Immediately went into a beta cycle?
 
 Put this in your mind:
     A poor defenseless .blend file, with big watery wobbly eyes is lying on the operating table, eyeing the sharp text editors and esoteric command line commands
@@ -382,6 +381,12 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
         for has_layer in bpy.data.collections[:] + bpy.data.objects[:]:
             xplane_updater_helpers.delete_property_from_datablock(has_layer.xplane.layer, "export")
         #----------------------------------------------------------------------
+
+    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0-beta.2+81.20200421111500"):
+        # Remember, get returning 0 and return None means something different
+        for light in filter(lambda l: l.xplane.get("type") is None, bpy.data.lights):
+            light.xplane.type = xplane_constants.LIGHT_DEFAULT
+
 
 @persistent
 def load_handler(dummy):
