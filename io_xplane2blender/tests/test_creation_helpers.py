@@ -824,6 +824,9 @@ class TemporaryStartFile():
 def create_initial_test_setup():
     bpy.ops.wm.read_homefile()
     delete_everything()
+    logger.clear()
+    logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport(), xplane_constants.LOGGER_LEVELS_ALL)
+    logger.addTransport(XPlaneLogger.ConsoleTransport())
     create_material_default()
 
     # Create text file
