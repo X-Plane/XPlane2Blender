@@ -1,0 +1,3 @@
+BILLBOARD_SW	test_lamp0		1	1	1	1.0	1.2	1	1	0	0	0	0	NOOP 1
+BILLBOARD_SW	test_lamp0		1	1	1	1.0	1.2	1	1	0	0	0	0	sim/whatever 1
+

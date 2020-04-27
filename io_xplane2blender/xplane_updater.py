@@ -397,17 +397,17 @@ def load_handler(dummy):
     logger.addTransport(XPlaneLogger.ConsoleTransport())
     try:
         xplane_lights_txt_parser.parse_lights_file()
-    except OSError as oe:
+    except (FileNotFoundError, OSError) as oe:
         def draw(self, context):
             self.layout.label(text="Some lighting features may not work. Read the internal text block 'Startup Log' for more details")
             self.layout.label(text="Check for a missing or broken lights.txt file or re-install addon")
             self.layout.label(text=str(oe))
         bpy.context.window_manager.popup_menu(draw, title="Could not read io_xplane2blender/resources/lights.txt", icon="ERROR")
-    except ValueError as ve:
+    except xplane_lights_txt_parser.LightsTxtFileParsingError as pe:
         def draw(self, context):
             self.layout.label(text="Some lighting features may not work. Read the internal text block 'Startup Log' for more details")
             self.layout.label(text="Check replace lights.txt from X-Plane or re-install addon")
-            self.layout.label(text=str(ve))
+            self.layout.label(text=str(pe))
         bpy.context.window_manager.popup_menu(draw, title="io_xplane2blender/resources/lights.txt had invalid content", icon="ERROR")
 
     filepath = bpy.context.blend_data.filepath

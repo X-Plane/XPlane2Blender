@@ -12,13 +12,13 @@ instructions in xplane_updater.py before changing, especially for changing or re
 Please sort this file's sections alphabetically and align the = signs going forward. -Ted, 9/6/17
 """
 
-def _get_addon_folder():
+def _get_addon_folder()->str:
     import os
     return os.path.dirname(os.path.abspath(__file__))
 
 ADDON_FOLDER = _get_addon_folder()
 
-def _get_resources_folder():
+def _get_resources_folder()->str:
     import os
     return os.path.join(_get_addon_folder(),"resources")
 

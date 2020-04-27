@@ -1,4 +1,5 @@
 import collections
+import pathlib
 import itertools
 import os
 import shutil
@@ -66,6 +67,7 @@ class TemporarilyMakeRootExportable():
             self.potential_root.xplane.isExportableRoot = self.original_exportable
 
         test_creation_helpers.make_root_unexportable(self.potential_root, self.view_layer, self.original_hide_viewport, self.original_disable_viewport)
+
 
 class XPlaneTestCase(unittest.TestCase):
     def setUp(self, useLogger = True):
@@ -485,8 +487,23 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
             self.assertTrue(os.path.exists(fixtureFile), 'File "%s" does not exist' % fixtureFile)
             self.assertFileOutputEqualsFixture(out, fixtureFile, filterLine)
 
+def get_source_folder()->pathlib.Path:
+    """Returns the full path to the addon folder"""
+    return os.path.dirname(pathlib.Path("..", __file__))
+
+
+def get_project_folder()->pathlib.Path:
+    """Returns the full path to the project folder"""
+    return os.path.dirname(pathlib.Path("..", "..", __file__))
+
+
+def get_tests_folder()->pathlib.Path:
+    return pathlib.Path(get_project_folder(), "tests")
+
+
 def make_fixture_path(dirname,filename,sub_dir=""):
     return os.path.join(dirname, 'fixtures', sub_dir, filename + '.obj')
+
 
 def runTestCases(testCases):
     #Until a better solution for knowing if the logger's error count should be used to quit the testing,

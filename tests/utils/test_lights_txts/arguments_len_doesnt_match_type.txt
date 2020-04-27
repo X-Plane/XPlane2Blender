@@ -1,0 +1,17 @@
+# Valid lights, but, parser must sort these overloads by trustworthyness
+BILLBOARD_HW	too_few_args		1	1	1	1.3	1	6	6	0	0.5	0.86	-0.4	0	0	0	0
+BILLBOARD_SW	too_few_args		1	1	1.0	1.2	1	1	0	0	0	0	1	NOOP
+SPILL_GND		too_few_args		1	4	4
+SPILL_GND_REV	too_few_args		1	0	2
+SPILL_HW_FLA	too_few_args		1	1	0.2	1.0	0.5	0.0	20	1
+SPILL_HW_DIR	too_few_args		0.05	0	0.8	3	0	-0.5	0.86	0.7	0
+SPILL_SW	too_few_args		1.0	2.0	1.0	2.0	0	0	0	1	NOOP
+
+BILLBOARD_HW    too_many_args     1 1   1   1   1   1.3 1   6   6   0   0.5 0.86    -0.4    0   0   0   0
+BILLBOARD_SW    too_many_args     1 1   1   1   1.0 1.2 1   1   0   0   0   0   1   NOOP
+SPILL_GND       too_many_args     1 1   1   4   4
+SPILL_GND_REV   too_many_args     1 1   1   0   2
+SPILL_HW_FLA    too_many_args     1 1   1   1   0.2 1.0 0.5 0.0 20  1
+SPILL_HW_DIR    too_many_args     1 0.4 0.05    0   0.8 3   0   -0.5    0.86    0.7 0
+SPILL_SW    too_many_args     1 0.0 1.0 2.0 1.0 2.0 0   0   0   1   NOOP
+

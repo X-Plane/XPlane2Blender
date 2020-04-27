@@ -1,0 +1,4 @@
+#NOOP and Dataref in wrong place 
+BILLBOARD_SW	object_v7		1	1	1	1	2	1	0	0	0	0	0	1	NOOP
+SPILL_SW	lights_fx1_sp		0	0	0	INDEX	50.0	0.0	0.0	1.0	sim/graphics/animation/lights_fx_1_spill	0.7
+

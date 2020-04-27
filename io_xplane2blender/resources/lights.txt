@@ -359,7 +359,7 @@ BILLBOARD_SW	PLN_airplane_nav_right		0	1	0	1	1.0	1	6	7	0	0	0	1	sim/graphics/anim
 
 ## BEN: These are currently in ADDITION to Sergio's custom OBJ lights!
 #BILLBOARD_HW		apt_beacon_white_axial			1.0	1.0	1.0	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
-SPILL_HW_DIR	apt_beacon_white_axial		1.0	0.95	0.85	1.0	200	0	0	-1	.975	0
+SPILL_HW_DIR	apt_beacon_white_axial		1.0	0.95	0.85	1.0	200	0	0	-1	0.975	0
 BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	0.7	0.7	1	3	7	0	0	-6	-5	0	0	0	0
 BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	0.8	2.5	1	3	7	0	0	-31	-30	0	0	0	0
 BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	1.0	3	2	5	2	5	4	-56	-55	0	0	0	0
@@ -368,7 +368,7 @@ BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	1.0	3	2	5	2	-5	4	-56	-55	0	0	0	0
 BILLBOARD_HW	apt_beacon_white_glow		1.0	1.0	1.0	1.0	3	2	5	2	-5	-4	-56	-55	0	0	0	0
 
 #BILLBOARD_HW		apt_beacon_white_mil_axial		1.0	1.0	1.0	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
-SPILL_HW_DIR	apt_beacon_white_mil_axial		1.0	0.95	0.85	1.0	200	0	0	-1	.975	0
+SPILL_HW_DIR	apt_beacon_white_mil_axial		1.0	0.95	0.85	1.0	200	0	0	-1	0.975	0
 BILLBOARD_HW	apt_beacon_white_mil_glow		1.0	1.0	1.0	0.7	0.7	1	3	7	0	0	-6	-5	0	0	0	0
 BILLBOARD_HW	apt_beacon_white_mil_glow		1.0	1.0	1.0	0.8	2.5	1	3	7	0	0	-61	-60	0	0	0	0
 
@@ -384,14 +384,14 @@ BILLBOARD_HW	apt_beacon_white_mil_glow		1.0	1.0	1.0	1.0	3	2	5	2	-20	0	-401	-400	
 
 
 #BILLBOARD_HW		apt_beacon_green_axial			0.25	1.0	0.85	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
-SPILL_HW_DIR	apt_beacon_green_axial		0.25	0.9	0.8	1.0	200	0	0	-1	.975	0
+SPILL_HW_DIR	apt_beacon_green_axial		0.25	0.9	0.8	1.0	200	0	0	-1	0.975	0
 BILLBOARD_HW	apt_beacon_green_glow		0.25	1.0	0.85	0.7	0.7	1	3	7	0	0	-6	-5	0	0	0	0
 BILLBOARD_HW	apt_beacon_green_glow		0.25	1.0	0.85	0.8	2.5	1	3	7	0	0	-31	-30	0	0	0	0
 BILLBOARD_HW	apt_beacon_green_glow		0.25	1.0	0.85	1.0	3	2	5	2	0	4	-56	-55	0	0	0	0
 BILLBOARD_HW	apt_beacon_green_glow		0.25	1.0	0.85	1.0	3	2	5	2	0	-4	-56	-55	0	0	0	0
 
 #BILLBOARD_HW		apt_beacon_yellow_axial			1.0	0.55	0.1	0.7	-35	2 6 0 	0	0	-1.1	12	0	0	0	0
-SPILL_HW_DIR	apt_beacon_yellow_axial		1.0	0.65	0.1	1.0	200	0	0	-1	.975	0
+SPILL_HW_DIR	apt_beacon_yellow_axial		1.0	0.65	0.1	1.0	200	0	0	-1	0.975	0
 BILLBOARD_HW	apt_beacon_yellow_glow		1.0	0.55	0.1	0.7	0.7	1	3	7	0	0	-6	-5	0	0	0	0
 BILLBOARD_HW	apt_beacon_yellow_glow		1.0	0.55	0.1	0.8	2.5	1	4	6	0	0	-31	-30	0	0	0	0
 BILLBOARD_HW	apt_beacon_yellow_glow		1.0	0.55	0.1	1.0	3	2	5	2	0	4	-56	-55	0	0	0	0
@@ -620,7 +620,7 @@ SPILL_HW_FLA	heli_morse_beacon		1	1	1	0.2	1.0	0.5	0.266	20	1
 SPILL_HW_FLA	heli_morse_beacon		1	1	1	0.2	1.0	0.5	0.400	20	1
 
 ## Three colour, single-lamp heliport beacon (all LED, no moving parts, white - yellow - green))
-LIGHT_PARAM_DEF	heli_3_col_beacon		2	SIZE	UNUSED1
+LIGHT_PARAM_DEF	heli_3_col_beacon		2	SIZE	UNUSED
 # core:
 BILLBOARD_HW	heli_3_col_beacon		1	1	1	1	0.7	1	4	0	0	0	0	1	0.2	0.0	1240	1
 BILLBOARD_HW	heli_3_col_beacon		1.0	1	1	1	0.7	1	7	0	0	0	0	1	0.2	3.333	1240	1
@@ -825,11 +825,11 @@ SPILL_HW_DIR	flood_N_45dn		1.0	1.0	0.7	0.5	20	0	-0.707	-0.707	0.6	0
 BILLBOARD_HW	flood_dn_wide		1	1	1	1	1.5	1	0	0	0	-0.7	0	0.43	0	0	0	0
 SPILL_HW_DIR	flood_dn_wide		0.95	0.95	1.0	0.5	10	0	-1.0	0.0	0.6	0
 
-LIGHT_PARAM_DEF	flood_merc_XYZTSB		6	DX	DY	DZ	SIZE	UNUSED1	A
+LIGHT_PARAM_DEF	flood_merc_XYZTSB		6	DX	DY	DZ	SIZE	UNUSED	A
 BILLBOARD_HW	flood_merc_XYZTSB		1.0	1.0	1.0	1.0	SIZE	1	0	6	DX	DY	DZ	0.5	0	0	0	0
 SPILL_HW_DIR	flood_merc_XYZTSB		0.78	0.83	1.0	A	SIZE	DX	DY	DZ	0.35	0
 
-LIGHT_PARAM_DEF	flood_LPS_XYZTSB		6	DX	DY	DZ	SIZE	UNUSED1	A
+LIGHT_PARAM_DEF	flood_LPS_XYZTSB		6	DX	DY	DZ	SIZE	UNUSED	A
 BILLBOARD_HW	flood_LPS_XYZTSB		0.9	1.0	1.0	1	SIZE	1	2	7	DX	DY	DZ	0.5	0.0	0	0	0
 SPILL_HW_DIR	flood_LPS_XYZTSB		1.0	0.45	0.09	A	SIZE	DX	DY	DZ	0.30	0
 
@@ -1048,7 +1048,7 @@ SPILL_HW_DIR	amb_tungsten_2_sp		0.992	0.835	0.675	0.3	40	DX	DY	DZ	0.85	0
 LIGHT_PARAM_DEF	amb_tungsten_3_sp		3	DX	DY	DZ
 SPILL_HW_DIR	amb_tungsten_3_sp		0.992	0.835	0.675	0.30	45	DX	DY	DZ	0.85	0
 
-LIGHT_PARAM_DEF	tungsten_omni_sp		4	DX	DY	DZ
+LIGHT_PARAM_DEF	tungsten_omni_sp		3	DX	DY	DZ
 SPILL_HW_DIR	tungsten_omni_sp		0.992	0.835	0.675	0.3	60	DX	DY	DZ	1	0
 
 
@@ -1086,7 +1086,7 @@ BILLBOARD_HW	srgb_test3		1.0	1.0	1.0	1	1.0	2	6	1	0	0.0	0	1	0	0	0	1
 #			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-LIGHT_PARAM_DEF	sodium_flood_XYZBTSS		7	DX	DY	DZ	A	SIZE	WIDTH	UNUSED1
+LIGHT_PARAM_DEF	sodium_flood_XYZBTSS		7	DX	DY	DZ	A	SIZE	WIDTH	UNUSED
 SPILL_HW_DIR	sodium_flood_XYZBTSS		1.0	0.463	0.176	A	SIZE	DX	DY	DZ	WIDTH	0
 #SPILL_SW		sodium_flood_XYZBTSS			1.0	0.463	0.176	BRIGHT	THROW		X	Y	Z	SPREAD					NULL
 #BILLBOARD_HW		sodium_flood_XYZBTSS			1.0	0.75	0.5	0.5	3	2 6 2	X	Y	Z	0.2	0	0	0	0

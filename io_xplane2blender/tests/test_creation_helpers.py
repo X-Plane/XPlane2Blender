@@ -810,7 +810,7 @@ class TemporaryStartFile():
         try:
             os.replace(real_startup_filepath, real_startup_filepath + ".bak")
         except FileNotFoundError:
-            pass
+            raise
         else:
             shutil.copyfile(self.temporary_startup_path, real_startup_filepath)
         bpy.ops.wm.read_homefile()
