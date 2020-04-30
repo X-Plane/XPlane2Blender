@@ -1,8 +1,0 @@
-# In this, we have 4 problem lights,
-# LIGHT_PARAM_DEF without a params list (but a valid light name), and one that shares a light name with its next
-# record 
-# Then two cases of only the record type
-LIGHT_PARAM_DEF R
-BILLBOARD_SW R
-LIGHT_PARAM_DEF
-BILLBOARD_HW

@@ -46,7 +46,6 @@ def get_overload_column_info(overload_type:str)->Dict[str,bool]:
             "PHASE": True,
             "AMP": False,
             "DAY": False,
-            "DREF": False,
         },
         "BILLBOARD_SW": {
             "R": True,
@@ -349,11 +348,11 @@ def parse_lights_file():
                 if not light_args:
                     raise ValueError
             except ValueError: # not enough values to unpack
-                logger.error(f"Line '{line}' could not be parsed to '<RECORD_TYPE> <light_name> <params or args list>'")
+                logger.error(f"{line_num}: Line could not be parsed to '<RECORD_TYPE> <light_name> <params or args list>'")
                 continue
 
             if not re.match("[A-Za-z0-9_]+", light_name):
-                logger.error(f"Light name '{light_name}' must be upper/lower case letters, numbers, or underscores only")
+                logger.error(f"{line_num}: Light name '{light_name}' must be upper/lower case letters, numbers, or underscores only")
                 continue
 
             def get_parsed_light_of_content_dict(light_name:str)->ParsedLight:
@@ -367,36 +366,35 @@ def parse_lights_file():
             if overload_type == "LIGHT_PARAM_DEF":
                 parsed_light = get_parsed_light_of_content_dict(light_name)
                 if parsed_light.light_param_def:
-                    logger.error(f"{light_name} cannot have more than one LIGHT_PARAM_DEF")
+                    logger.error(f"{line_num}: {light_name} cannot have more than one LIGHT_PARAM_DEF")
                     continue
                 light_argc, *light_argv = light_args
                 try:
                     light_argc = int(light_argc)
                 except ValueError:
-                    logger.error(f"Parameter count must be an int, is '{light_argc}'")
+                    logger.error(f"{line_num}: Parameter count for '{light_name}''s LIGHT_PARAM_DEF must be an int, is '{light_argc}'")
                     continue
                 else:
                     if not light_argc or not light_argv or (light_argc != len(light_argv)):
-                        logger.error(f"{light_name}'s LIGHT_PARAM_DEF must have a count > 0 and an parameter list of the same length")
+                        logger.error(f"{line_num}: '{light_name}''s LIGHT_PARAM_DEF must have a count > 0 and an parameter list of the same length")
                         continue
                     elif len(set(light_argv)) < len(light_argv):
-                        logger.error(f"{light_name}'s LIGHT_PARAM_DEF has duplicate parameters in it")
+                        logger.error(f"{line_num}: '{light_name}''s LIGHT_PARAM_DEF has duplicate parameters in it")
                         continue
-                #TODO: Need test that light_params_def will only have real parameters and no arguments
                 parsed_light.light_param_def = light_argv # Skip the count
                 if parsed_light.light_param_def and any(
                     not is_allowed_param(param) for param in parsed_light.light_param_def
                 ):
-                    logger.error(f"LIGHT_PARAM_DEF for '{light_name}' contains unknown or invalid parameters: {parsed_light.light_param_def}")
+                    logger.error(f"{line_num}: LIGHT_PARAM_DEF for '{light_name}' contains unknown or invalid parameters: {parsed_light.light_param_def}")
                     continue
             elif overload_type not in OVERLOAD_TYPES:
-                logger.error(f"{overload_type} is not a valid OVERLOAD_TYPE. Update lights.txt or fix manually")
+                logger.error(f"{line_num}: '{overload_type}' is not a valid OVERLOAD_TYPE.")
                 continue
             elif len(light_args) < len(get_overload_column_info(overload_type)):
-                logger.error(f"Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is not long enough")
+                logger.error(f"{line_num}: Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is not long enough")
                 continue
             elif len(light_args) > len(get_overload_column_info(overload_type)):
-                logger.error(f"Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is too long")
+                logger.error(f"{line_num}: Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is too long")
                 continue
             else:
                 parsed_light = get_parsed_light_of_content_dict(light_name)
@@ -422,12 +420,11 @@ def parse_lights_file():
                     for i, arg in enumerate(light_args):
                         if not validate_parameterization_arg(i, arg):
                             logger.error(
-                                    f"Line {line_num}, arg #{i+1}: ('{arg}')"
+                                    f"{line_num}, '{light_name}', arg #{i+1}: ('{arg}')"
                                     f" is not a correctly formatted number or is invalid"
                                 )
                             continue
 
-                    #print((len(logger.findErrors()) - prev_logger_errors))
                     return not (len(logger.findErrors()) - prev_logger_errors)
                 if not validate_arguments():
                     continue
@@ -456,7 +453,7 @@ def parse_lights_file():
 
     for light_name, pl in _parsed_lights_txt_content.items():
         if not pl.overloads:
-            logger.error(f"{light_name} had a LIGHT_PARAM_DEF but no valid overloads. {light_name} will be ignored")
+            logger.error(f"Ignoring '{light_name}': Found LIGHT_PARAM_DEF but no valid overloads")
             continue
 
     _parsed_lights_txt_content = {

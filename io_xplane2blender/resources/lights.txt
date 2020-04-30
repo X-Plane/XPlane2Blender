@@ -18,9 +18,9 @@ LIGHT_SPECS
 # and which can be parameterized (* for yes, x for no)
 # The first column - the light name - is not included and is part of every overload type
 
-# OVERLOAD type | R | G | B | A | SIZE | CELL_SIZE | CELL_ROW | CELL_COL | DX | DY | DZ | WIDTH | FREQ | PHASE | AMP | DAY | DREF
-# --------------|---|---|---|---|------|-----------|----------|----------|----|----|----|-------|------|-------|-----|-----|-----
-# BILLBOARD_HW  | * | * | * | x | *    | x         | x        | x        | *  | *  | *  | *     | *    | *     | x   | x   |x
+# OVERLOAD type | R | G | B | A | SIZE | CELL_SIZE | CELL_ROW | CELL_COL | DX | DY | DZ | WIDTH | FREQ | PHASE | AMP | DAY
+# --------------|---|---|---|---|------|-----------|----------|----------|----|----|----|-------|------|-------|-----|-----
+# BILLBOARD_HW  | * | * | * | x | *    | x         | x        | x        | *  | *  | *  | *     | *    | *     | x   | x   
 #
 # OVERLOAD type | R | G | B | A | SIZE | CELL_SIZE | CELL_ROW | CELL_COL | DX | DY | DZ | WIDTH | DREF
 # --------------|---|---|---|---|------|-----------|----------|----------|----|----|----|-------|-----

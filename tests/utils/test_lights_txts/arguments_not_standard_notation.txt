@@ -1,2 +1,0 @@
-SPILL_GND		bad_numbers		-.	+1	.3	NaN
-SPILL_GND_REV	bad_numbers		1.e50	inf	-inf	1e-46
