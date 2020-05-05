@@ -214,23 +214,40 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "WIDTH": 1 if self.is_omni else math.cos(light_data.spot_size * .5),
                     "FREQ": light_data.xplane.param_freq,
                     "PHASE": light_data.xplane.param_phase,
-                    "UNUSED1":0 # We just shove in something here
+                    "UNUSED":0, # We just shove in something here
+                    "ZERO":0,
+                    "NEG_ONE":-1
                 }
 
             #TODO: Need test
+            #TODO: Need an error for problem case here:
+            # A xplane_sp light in a Blender Point light = Problem?
+            # A xplane_bb in a Blender Point Light = Autocorrect
             if "WIDTH" in parsed_light.light_param_def and round(light_data.spot_size) == math.pi:
                 logger.error("Spotlight Size for {self.blenderObject.name} cannot be 180 degrees")
                 return
 
-            self.params = {param:convert_table[param] for param in parsed_light.light_param_def}
+            def strip_trailing_underscores(param:str)->str:
+                """Return the param, stripped of any trailing '_'
+                """
+                if "UNUSED" in param:
+                    return "UNUSED"
+                elif "NEG_ONE" in param:
+                    return "NEG_ONE"
+                elif "ZERO" in param:
+                    return "ZERO"
+                elif "ONE" in param:
+                    return "ONE"
+                else:
+                    return param
+
+            self.params = {param:convert_table[strip_trailing_underscores(param)] for param in parsed_light.light_param_def}
             self.record_completed = parsed_light.overloads[0]
-            # TODO: Erase this
-            # Pair each argument with a number, then only iterate over arguments which haven't been filled in
-            # We know that we won't have an overload with more arguments than light_param_def that could fill in
-            # because the parser checks that
-            # If we have fewer arguments that light_param_def, that's okay
-            # we know we won't have arguments that aren't in LIGHT_PARAM_DEF because the parser checks that too
-            for p_arg in filter(lambda arg: isinstance(arg,str) and not arg.startswith("sim") and arg not in {"DX", "DY", "DZ"}, self.record_completed):
+            for p_arg in filter(
+                    lambda arg: isinstance(arg,str)
+                                and not arg.startswith("sim")
+                                and arg not in {"DX", "DY", "DZ"},
+                            self.record_completed):
                 self.record_completed.replace_parameterization_argument(p_arg, self.params[p_arg])
 
             # Leaving DXYZ in a record's arguments is okay

@@ -177,14 +177,14 @@ BILLBOARD_HW	HGV_roof_right		1	1	1	1	0.5	1	5	1	0.86	0	-0.5	-0.5	0	0	0	0
 #
 
 # Landing light: v10 - components.
-LIGHT_PARAM_DEF	airplane_landing_core		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_landing_core		R	G	B	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_landing_light_flash
-LIGHT_PARAM_DEF	airplane_landing_glow		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_landing_glow		R	G	B	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_landing_light
-LIGHT_PARAM_DEF	airplane_landing_flare		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_landing_flare		R	G	B	INDEX	SIZE	4	2	0	0	0	-28.57	-27.574	sim/graphics/animation/lights/airplane_landing_light
-LIGHT_PARAM_DEF	airplane_landing_sp		6	R	G	B	INDEX	SIZE	WIDTH
-SPILL_SW	airplane_landing_sp		R	G	B	INDEX	SIZE	0	0	-1	WIDTH	sim/graphics/animation/lights/airplane_landing_light_spill
+LIGHT_PARAM_DEF	airplane_landing_core		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_landing_core		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_landing_light_flash
+LIGHT_PARAM_DEF	airplane_landing_glow		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_landing_glow		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_landing_light
+LIGHT_PARAM_DEF	airplane_landing_flare		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_landing_flare		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	4	2	0	0	0	-28.57	-27.574	sim/graphics/animation/lights/airplane_landing_light
+LIGHT_PARAM_DEF	airplane_landing_sp		6	ZERO	ZERO_	NEG_ONE	INDEX	SIZE	WIDTH
+SPILL_SW	airplane_landing_sp		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	0	0	-1	WIDTH	sim/graphics/animation/lights/airplane_landing_light_spill
 # Landing light: v9 - compatibility.
 BILLBOARD_SW	airplane_landing		0	0	-0.8	0	0.8	1	6	5	0	0	0	1	sim/graphics/animation/lights/airplane_landing_light_flash
 BILLBOARD_SW	airplane_landing		0	-0.12	-1.2	0	2	1	4	6	0	0	0	1	sim/graphics/animation/lights/airplane_landing_light
@@ -199,14 +199,14 @@ LIGHT_PARAM_DEF	airplane_landing_flash		3	SIZE	WIDTH	INDEX
 BILLBOARD_SW	airplane_landing_flash		0	0	WIDTH	INDEX	SIZE	1	0	7	0	0	0	1	sim/graphics/animation/lights/airplane_landing_light_flash
 
 # Taxi light: v10 - components.
-LIGHT_PARAM_DEF	airplane_taxi_core		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_taxi_core		R	G	B	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_taxi_light_flash
-LIGHT_PARAM_DEF	airplane_taxi_glow		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_taxi_glow		R	G	B	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_taxi_light
-LIGHT_PARAM_DEF	airplane_taxi_flare		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_taxi_flare		R	G	B	INDEX	SIZE	4	2	0	0	0	-28.57	-27.574	sim/graphics/animation/lights/airplane_taxi_light
-LIGHT_PARAM_DEF	airplane_taxi_sp		6	R	G	B	INDEX	SIZE	WIDTH
-SPILL_SW	airplane_taxi_sp		R	G	B	INDEX	SIZE	0	0	-1	WIDTH	sim/graphics/animation/lights/airplane_taxi_light_spill
+LIGHT_PARAM_DEF	airplane_taxi_core		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_taxi_core		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_taxi_light_flash
+LIGHT_PARAM_DEF	airplane_taxi_glow		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_taxi_glow		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_taxi_light
+LIGHT_PARAM_DEF	airplane_taxi_flare		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_taxi_flare		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	4	2	0	0	0	-28.57	-27.574	sim/graphics/animation/lights/airplane_taxi_light
+LIGHT_PARAM_DEF	airplane_taxi_sp		6	ZERO	ZERO_	NEG_ONE	INDEX	SIZE	WIDTH
+SPILL_SW	airplane_taxi_sp		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	0	0	-1	WIDTH	sim/graphics/animation/lights/airplane_taxi_light_spill
 # Taxi light: v9 - compatibility
 BILLBOARD_SW	airplane_taxi		0	0	-1	0	1.0	1	3	7	0	0	0	1	sim/graphics/animation/lights/airplane_taxi_light
 BILLBOARD_SW	airplane_taxi		0	0	-5	0	2.5	4	2	0	0	0	0	1	sim/graphics/animation/lights/airplane_taxi_light
@@ -216,24 +216,24 @@ LIGHT_PARAM_DEF	airplane_taxi_flash		3	SIZE	WIDTH	INDEX
 BILLBOARD_SW	airplane_taxi_flash		0	0	WIDTH	INDEX	SIZE	1	0	7	0	0	0	1	sim/graphics/animation/lights/airplane_taxi_light_flash
 
 # Spot light: new in v10 - components.
-LIGHT_PARAM_DEF	airplane_spot_core		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_spot_core		R	G	B	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_spot_light_flash
-LIGHT_PARAM_DEF	airplane_spot_glow		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_spot_glow		R	G	B	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_spot_light
-LIGHT_PARAM_DEF	airplane_spot_flare		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_spot_flare		R	G	B	INDEX	SIZE	4	2	0	0	0	-28.57	-27.574	sim/graphics/animation/lights/airplane_spot_light
-LIGHT_PARAM_DEF	airplane_spot_sp		6	R	G	B	INDEX	SIZE	WIDTH
-SPILL_SW	airplane_spot_sp		R	G	B	INDEX	SIZE	0	0	-1	WIDTH	sim/graphics/animation/lights/airplane_spot_light_spill
+LIGHT_PARAM_DEF	airplane_spot_core		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_spot_core		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_spot_light_flash
+LIGHT_PARAM_DEF	airplane_spot_glow		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_spot_glow		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_spot_light
+LIGHT_PARAM_DEF	airplane_spot_flare		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_spot_flare		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	4	2	0	0	0	-28.57	-27.574	sim/graphics/animation/lights/airplane_spot_light
+LIGHT_PARAM_DEF	airplane_spot_sp		6	ZERO	ZERO_	NEG_ONE	INDEX	SIZE	WIDTH
+SPILL_SW	airplane_spot_sp		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	0	0	-1	WIDTH	sim/graphics/animation/lights/airplane_spot_light_spill
 
 # Generic light: v10 - components
-LIGHT_PARAM_DEF	airplane_generic_core		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_generic_core		R	G	B	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_generic_light_flash
-LIGHT_PARAM_DEF	airplane_generic_glow		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_generic_glow		R	G	B	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_generic_light
-LIGHT_PARAM_DEF	airplane_generic_flare		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_generic_flare		R	G	B	INDEX	SIZE	4	2	0	0	0	-28.57	-27.574	sim/graphics/animation/lights/airplane_generic_light
-LIGHT_PARAM_DEF	airplane_generic_sp		6	R	G	B	INDEX	SIZE	WIDTH
-SPILL_SW	airplane_generic_sp		R	G	B	INDEX	SIZE	0	0	-1	WIDTH	sim/graphics/animation/lights/airplane_generic_light_spill
+LIGHT_PARAM_DEF	airplane_generic_core		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_generic_core		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	1	6	5	0	0	-0.8	0.2	sim/graphics/animation/lights/airplane_generic_light_flash
+LIGHT_PARAM_DEF	airplane_generic_glow		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_generic_glow		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	1	4	6	0	0	-1.206	-0.206	sim/graphics/animation/lights/airplane_generic_light
+LIGHT_PARAM_DEF	airplane_generic_flare		5	ZERO	ZERO_	NEG_ONE	INDEX	SIZE
+BILLBOARD_SW	airplane_generic_flare		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	4	2	0	0	0	-28.57	-27.574	sim/graphics/animation/lights/airplane_generic_light
+LIGHT_PARAM_DEF	airplane_generic_sp		6	ZERO	ZERO_	NEG_ONE	INDEX	SIZE	WIDTH
+SPILL_SW	airplane_generic_sp		ZERO	ZERO_	NEG_ONE	INDEX	SIZE	0	0	-1	WIDTH	sim/graphics/animation/lights/airplane_generic_light_spill
 # Generic light: v9 - compatibility
 LIGHT_PARAM_DEF	airplane_generic_size		3	SIZE	WIDTH	INDEX
 BILLBOARD_SW	airplane_generic_size		0	0	WIDTH	INDEX	SIZE	1	0	7	0	0	0	1	sim/graphics/animation/lights/airplane_generic_light

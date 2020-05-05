@@ -212,7 +212,7 @@ class ParsedLightOverload:
             try:
                 # HACK! So far every light in the lights.txt file that uses
                 # INDEX uses it to replace the A column
-                return self.arguments[prototype.index(key if key != "INDEX" else "A")]
+                return self.arguments[tuple(prototype).index(key if key != "INDEX" else "A")]
             except ValueError as ve:
                 raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
 
@@ -230,7 +230,7 @@ class ParsedLightOverload:
             try:
                 # HACK! So far every light in the lights.txt file that uses
                 # INDEX uses it to replace the A column
-                self.arguments[prototype.index(key if key != "INDEX" else "A")] = value
+                self.arguments[tuple(prototype).index(key if key != "INDEX" else "A")] = value
             except ValueError as ve:
                 raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
 
@@ -255,7 +255,7 @@ class ParsedLightOverload:
             pass
 
     def prototype(self)->Tuple[str,...]:
-        return get_overload_column_info(self.overload_type).keys()
+        return tuple(get_overload_column_info(self.overload_type))
 
     def replace_parameterization_argument(self, parameterization_argument:str, value:float)->None:
         """Replaces parameter-argument with value if possible, else throws ValueError"""

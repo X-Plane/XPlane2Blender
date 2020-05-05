@@ -591,7 +591,8 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
         layout.row().prop(light.xplane, "size")
         layout.row().label(text="Texture Coordinates:")
         layout.row().prop(light.xplane, "uv", text = "")
-        row = layout.row().prop(light.xplane, "dataref", text = "Dataref")
+        row = layout.row()
+        row.prop(light.xplane, "dataref", text = "Dataref")
         scene = bpy.context.scene
         expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == "bpy.context.active_object.data.xplane.dataref"
         if expanded:
@@ -607,6 +608,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
         layout.row().prop(light.xplane, "enable_rgb_override")
         if light.xplane.enable_rgb_override:
             layout.row().prop(light.xplane, "rgb_override_values")
+    layout.row().operator("scene.dev_create_lights_txt_summary")
 
 # Function: material_layout
 # Draws the UI layout for materials.
