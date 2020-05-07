@@ -333,7 +333,7 @@ def parse_lights_file():
             "INDEX",
         }
         or p.startswith(
-            ("UNUSED",)#TODO: "NEG_ONE", "ZERO", "ONE")
+            ("UNUSED", "NEG_ONE", "ZERO", "ONE")
         ))
 
     with open(LIGHTS_FILEPATH,"r") as f:

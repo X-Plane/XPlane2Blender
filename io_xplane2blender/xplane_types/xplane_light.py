@@ -200,6 +200,15 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 logger.error("Automatic Spot Lights with 'SIZE' as a parameter must have 'Custom Distance' checked")
                 return
 
+            def calc_width()->float:
+                if self.is_omni:
+                    return 1
+                elif "BILLBOARD" in parsed_light.overloads[0].overload_type:
+                    # This will be adjusted later on during write once we know
+                    return light_data.spot_size * .5
+                elif "SPILL" in parsed_light.overloads[0].overload_type:
+                    # cos(half the cone angle)
+                    return math.cos(light_data.spot_size * .5)
             #"CELL_", "DAY", "DREF" are never parameterizable,
             convert_table = {
                     "R":self.color[0],
@@ -211,12 +220,13 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "DX":"DX", # Filled in later
                     "DY":"DY", # Filled in later
                     "DZ":"DZ", # Filled in later
-                    "WIDTH": 1 if self.is_omni else math.cos(light_data.spot_size * .5),
+                    "WIDTH": calc_width(),
                     "FREQ": light_data.xplane.param_freq,
                     "PHASE": light_data.xplane.param_phase,
                     "UNUSED":0, # We just shove in something here
+                    "NEG_ONE":-1,
                     "ZERO":0,
-                    "NEG_ONE":-1
+                    "ONE":1,
                 }
 
             #TODO: Need test
@@ -380,14 +390,25 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 translation = rot_matrix.inverted() @ translation
                 has_anim = True
         elif should_fill_in_dxyz_for_automatic():
-            dir_vec_b_norm = bakeMatrix.to_3x3() @ Vector((0,0,-1))
-            for param, vec_comp in zip(["DX","DY","DZ"], vec_b_to_x(dir_vec_b_norm.normalized())):
-                # self.record_completed isn't needed anymore, but,
-                # to be tidy, we can finally update it too
-                # in case we need to do something with it later
-                # -Ted, 4/17/2020
-                #self.record_completed[param] = vec_comp
-                self.params[param] = vec_comp
+            dir_vec_b_norm = (bakeMatrix.to_3x3() @ Vector((0,0,-1))).normalized()
+
+            if "BILLBOARD" in parsed_light.overloads[0].overload_type:
+                angle_from_center = light_data.spot_size / 2
+                new_width = math.cos(angle_from_center) / (math.cos(angle_from_center) - 1)
+                scale = 1 - new_width
+                # No divide by 0 problems, spot_size will always be in [1, 180] 1 <= spot_size <= 180 guaranteed
+                self.params["WIDTH"] = new_width
+                scaled_vec_b = dir_vec_b_norm * scale
+                self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(scaled_vec_b)))
+            else:
+                self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(dir_vec_b_norm)))
+
+            # self.record_completed isn't needed anymore, but,
+            # to be tidy, we can finally update it too
+            # in case we need to do something with it later
+            # -Ted, 4/17/2020
+            #for param in ["DX", "DY", "DZ"]:
+            #   self.record_completed[param] = self.params[param]
 
         translation_x_str = " ".join(map(floatToStr,vec_b_to_x(translation)))
         known_named_automatic = self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def
