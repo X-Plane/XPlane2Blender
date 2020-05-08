@@ -1,0 +1,26 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Empty: Empty_-123,-44.6,-50.7
+	# EMPTY: Empty_-123,-44.6,-50.7	weight: 0
+		# 2 Light: spot_params_bb_050_-9.67325_10.67325__
+		# LIGHT: spot_params_bb_050_-9.67325_10.67325__	weight: 10000
+		LIGHT_PARAM	spot_params_bb 31.2035923 11.57334232 -8.42974854 1 0 0 30 -9.51553154 4.09445763 2.57065082 -9.6732455
+		# 2 Light: spot_params_bb_090_-2.41421_3.41421__
+		# LIGHT: spot_params_bb_090_-2.41421_3.41421__	weight: 10000
+		LIGHT_PARAM	spot_params_bb 35.7134285 18.59487152 -2.91980457 0 1 0 30 -3.04387784 1.30975652 0.82231313 -2.41421338
+		# 2 Light: spot_params_bb_100_-1.79945_2.79945__
+		# LIGHT: spot_params_bb_100_-1.79945_2.79945__	weight: 10000
+		LIGHT_PARAM	spot_params_bb 40.2232666 25.61640167 2.59013939 0 0 1 30 -2.49580145 1.07392359 0.67424858 -1.79945494
+		# 2 Light: spot_params_bb_120_-1.0_2.0__
+		# LIGHT: spot_params_bb_120_-1.0_2.0__	weight: 10000
+		LIGHT_PARAM	spot_params_bb 44.73310471 32.63793182 8.1000824 1 1 0 30 -1.78306234 0.76723754 0.48169988 -0.9999999
+		# 2 Light: spot_params_bb_180_0_1__
+		# LIGHT: spot_params_bb_180_0_1__	weight: 10000
+		LIGHT_PARAM	spot_params_bb 49.24294281 39.65946198 13.61002731 1 0 1 30 -0.89153117 0.38361877 0.24084994 0.00000004
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+81.NO_BUILD_NUMBR
