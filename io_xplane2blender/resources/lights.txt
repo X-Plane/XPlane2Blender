@@ -278,10 +278,10 @@ BILLBOARD_SW	airplane_beacon_size		0	0	WIDTH	INDEX	SIZE	1	15	6	0	0	0	1	sim/graph
 #
 
 # V10: components
-LIGHT_PARAM_DEF	airplane_strobe_omni		5	R	G	B	INDEX	SIZE
-BILLBOARD_SW	airplane_strobe_omni		R	G	B	INDEX	SIZE	2	6	1	0	0	0	1	sim/graphics/animation/lights/airplane_strobe_light
-LIGHT_PARAM_DEF	airplane_strobe_dir		9	R	G	B	INDEX	SIZE	DX	DY	DZ	WIDTH
-BILLBOARD_SW	airplane_strobe_dir		R	G	B	INDEX	SIZE	2	6	1	DX	DY	DZ	WIDTH	sim/graphics/animation/lights/airplane_strobe_light_dir
+LIGHT_PARAM_DEF	airplane_strobe_omni		5	ZERO	ZERO_	ZERO__	INDEX	SIZE
+BILLBOARD_SW	airplane_strobe_omni		ZERO	ZERO_	ZERO__	INDEX	SIZE	2	6	1	0	0	0	1	sim/graphics/animation/lights/airplane_strobe_light
+LIGHT_PARAM_DEF	airplane_strobe_dir		9	ZERO	ZERO_	ZERO__	INDEX	SIZE	DX	DY	DZ	WIDTH
+BILLBOARD_SW	airplane_strobe_dir		ZERO	ZERO_	ZERO__	INDEX	SIZE	2	6	1	DX	DY	DZ	WIDTH	sim/graphics/animation/lights/airplane_strobe_light_dir
 LIGHT_PARAM_DEF	airplane_strobe_sp		9	R	G	B	INDEX	SIZE	DX	DY	DZ	WIDTH
 SPILL_SW	airplane_strobe_sp		R	G	B	INDEX	SIZE	DX	DY	DZ	WIDTH	sim/graphics/animation/lights/airplane_strobe_light_spill
 # V9: Compatibility
