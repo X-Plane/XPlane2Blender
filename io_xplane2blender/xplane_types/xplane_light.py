@@ -179,16 +179,19 @@ class XPlaneLight(xplane_object.XPlaneObject):
         # LIGHT_CUSTOM       | *          | N/A          | N/A              | Write custom light as is
         elif self.lightType == LIGHT_CUSTOM:
             pass
-        # LIGHT_AUTOMATC preforms no autocorrection. IF POINT, it is interpreted as an omni-directional light
-        #
         # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
         # -------------------|------------|--------------|------------------|-------
         # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | Yes              | Fill out params and write
         # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | No               | Treat as named light, apply any sw_callbacks, write
         # LIGHT_AUTOMATIC    |"POINT/SPOT"| No           | N/A              | Treat as named light, give warning, write as is
         # LIGHT_AUTOMATIC    | Any Others | N/A          | N/A              | Error, "Automatic lights require POINT or SPOT"
+        # LIGHT_AUTOMATIC    |"POINT/SPOT"| Incompatible | N/A              | Error, "Light is incompatible", a label in the UI should also mention this
         elif self.lightType == LIGHT_AUTOMATIC and light_data.type not in {"POINT", "SPOT"}:
             logger.error(f"Automatic lights must be a Point or Spot light, change {self.blenderObject.name}'s type or change it's X-Plane Light Type")
+            return
+        elif self.lightType == LIGHT_AUTOMATIC and parsed_light and not xplane_lights_txt_parser.is_automatic_light_compatible(self.lightName):
+            logger.error(f"Light '{self.lightName}' is not compatible with Automatic Lights."
+                         f" Pick a different light or use 'Named' or 'Manual Param' instead")
             return
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and parsed_light.light_param_def:
             self.is_omni = light_data.type == "POINT"

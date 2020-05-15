@@ -4,7 +4,7 @@ import os
 import re
 from dataclasses import dataclass
 from mathutils import Vector
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
@@ -111,31 +111,31 @@ def get_overload_column_info(overload_type:str)->Dict[str,bool]:
         },
     }[overload_type]
 
-def _get_rgb(prototype,lhs):
+def _get_rgb(prototype,lhs)->Tuple[float,float,float]:
     return lhs[prototype.index("R"):prototype.index("B") + 1]
 
-def _set_rgb(prototype,lhs,value):
+def _set_rgb(prototype,lhs,value)->None:
     lhs[prototype.index("R"):prototype.index("B")+1] = value
 
-def _get_a(prototype,lhs):
+def _get_a(prototype,lhs)->float:
     return lhs[prototype.index("A")]
 
-def _set_a(prototype,lhs,value):
+def _set_a(prototype,lhs,value)->float:
     lhs[prototype.index("A")] = value
 
-def _get_xyz(prototype,lhs):
+def _get_xyz(prototype,lhs)->Tuple[float,float,float]:
     return lhs[prototype.index("DX"):prototype.index("DZ")+1]
 
-def _set_xyz(prototype,lhs,value:List[float]):
+def _set_xyz(prototype,lhs,value:List[float])->None:
     lhs[prototype.index("DX"):prototype.index("DZ")+1] = value
 
-def _get_width(prototype,lhs):
+def _get_width(prototype,lhs)->float:
     return lhs[prototype.index("WIDTH")]
 
-def _set_width(prototype,lhs,value):
+def _set_width(prototype,lhs,value)->None:
     lhs[prototype.index("WIDTH")] = value
 
-def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload"):
+def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload")->None:
     prototype = get_overload_column_info(overload.overload_type).keys()
     args = overload.arguments
     _set_xyz(prototype, args, args[prototype.index("R"):prototype.index("B")])
@@ -144,7 +144,7 @@ def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload"):
     _set_xyz(prototype, args, dir_vec.normalized())
     _set_rgb(prototype, args, [1,1,1])
 
-def _do_rgba_to_dxyz_w(overload:"ParsedLightOverload"):
+def _do_rgba_to_dxyz_w(overload:"ParsedLightOverload")->None:
     prototype = get_overload_column_info(overload.overload_type).keys()
     args = overload.arguments
     _set_xyz(prototype,   args, _get_rgb(prototype, args))
@@ -152,7 +152,7 @@ def _do_rgba_to_dxyz_w(overload:"ParsedLightOverload"):
     _set_rgb(prototype,   args, [1,1,1])
     _set_a(prototype,     args, 1)
 
-def _do_force_omni(overload:"ParsedLightOverload"):
+def _do_force_omni(overload:"ParsedLightOverload")->None:
     prototype = get_overload_column_info(overload.overload_type).keys()
     args = overload.arguments
     _set_width(prototype, args, 1)
@@ -186,13 +186,24 @@ SW_CALLBACK_DREFS = {
 @dataclass
 class ParsedLightOverload:
     """
-    Represents a specific overload for a light, with the added ability to use [ ] indexing instead of messing with overload_arguments
+    Represents a specific overload for a light, with the added ability
+    to use [ ] to index into _columns_ instead of messing with it's arguments member.
+
+    DON'T GET CONFUSED! This API is prototype-column based, not param-based.
+
+    For example take
+
+        LIGHT_PARAM_DEF    airplane_landing_size        3    SIZE    WIDTH    INDEX
+        BILLBOARD_SW       airplane_landing_size        0    0    WIDTH    INDEX    SIZE    1    0    7    0    0    0    1    sim/graphics/animation/lights/airplane_landing_light
+
+    `my_landing_light["WIDTH"]` asks about the 12th index in my_landing_light.arguments,
+    NOT about the contents of the 3rd index where the param "WIDTH" is used.
     """
     overload_type:str
     name:str
     arguments:List[Union[float,str]]
 
-    def __contains__(self, item:str):
+    def __contains__(self, item:str)->bool:
         """For ParsedLightOverloads, 'contains' means 'this overload contain this column'"""
         return item in get_overload_column_info(self.overload_type)
 
@@ -214,7 +225,7 @@ class ParsedLightOverload:
                 # INDEX uses it to replace the A column
                 return self.arguments[tuple(prototype).index(key if key != "INDEX" else "A")]
             except ValueError as ve:
-                raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
+                raise KeyError(f"{key} not found in \"{self.name}\"'s overload's {self.overload_type} prototype") from ve
 
     def __setitem__(self, key:Union[int,str], value:float)->None:
         """Sets a record's argument by column number or column ID from it's prototype"""
@@ -237,10 +248,10 @@ class ParsedLightOverload:
     def __str__(self)->str:
         return f"{self.overload_type} {self.name} {self.arguments}"
 
-    def __iter__(self):
+    def __iter__(self)->Iterator[Union[float,str]]:
         yield from self.arguments
 
-    def apply_sw_callback(self):
+    def apply_sw_callback(self)->None:
         """
         Pre-emptively apply X-Plane's _sw callback for a dataref on a
         fully or partially completed overload's arguments.

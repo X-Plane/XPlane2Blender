@@ -34,7 +34,6 @@ class DATA_PT_xplane(bpy.types.Panel):
             empty_layout(self.layout, obj)
 
 
-# Class: MATERIAL_PT_xplane
 # Adds X-Plane Material settings to the material tab. Uses <material_layout> and <custom_layout>.
 class MATERIAL_PT_xplane(bpy.types.Panel):
     '''XPlane Material Panel'''
@@ -62,7 +61,6 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
                 conditions_layout(self.layout, obj.active_material)
 
 
-# Class: SCENE_PT_xplane
 # Adds X-Plane Layer settings to the scene tab. Uses <scene_layout>.
 class SCENE_PT_xplane(bpy.types.Panel):
     '''XPlane Scene Panel'''
@@ -79,7 +77,6 @@ class SCENE_PT_xplane(bpy.types.Panel):
         scene = context.scene
         scene_layout(self.layout, scene)
 
-# Class: OBJECT_PT_xplane
 # Adds X-Plane settings to the object tab. Uses <mesh_layout>, <cockpit_layout>, <manipulator_layout> and <custom_layout>.
 class OBJECT_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
@@ -118,7 +115,6 @@ class OBJECT_PT_xplane(bpy.types.Panel):
                 conditions_layout(self.layout, obj)
 
 
-# Class: BONE_PT_xplane
 # Adds X-Plane settings to the bone tab. Uses <animation_layout>.
 class BONE_PT_xplane(bpy.types.Panel):
     '''XPlane Object Panel'''
@@ -544,7 +540,10 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
             except KeyError:
                 layout.row().label(text="Unknown Light Name: check spelling or update lights.txt", icon="ERROR")
             else:
-                if parsed_light.light_param_def:
+                if not xplane_lights_txt_parser.is_automatic_light_compatible(parsed_light.name):
+                    layout.row().label(text=f"'{light.xplane.name} is incompatible with Automatic Lights.", icon="ERROR")
+                    layout.row().label(text=f"Use a different light or switch X-Plane Light Type to Named or Manual Param")
+                elif parsed_light.light_param_def:
                     if "INDEX" in parsed_light.light_param_def:
                         layout.row().prop(light.xplane, "param_index")
                     if "FREQ" in parsed_light.light_param_def:
