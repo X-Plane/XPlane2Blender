@@ -4,7 +4,7 @@ from ..xplane_constants import *
 from io_xplane2blender.xplane_types import xplane_light
 
 # TODO: deprecate someday...
-class XPlaneLights():
+class XPlaneVLights():
     """
     Makes the VLIGHT table for all old LIGHT types (DEFAULT, FLASHING,
     STROBE, etc) ands writes it.

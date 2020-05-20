@@ -30,10 +30,10 @@ from .xplane_bone import XPlaneBone
 from .xplane_commands import XPlaneCommands
 from .xplane_header import XPlaneHeader
 from .xplane_light import XPlaneLight
-from .xplane_lights import XPlaneLights
 from .xplane_mesh import XPlaneMesh
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
+from .xplane_vlights import XPlaneVLights
 
 
 class NotExportableRootError(ValueError):
@@ -112,7 +112,7 @@ class XPlaneFile():
         self.filename = filename
         self.options = options
 
-        self.lights = XPlaneLights()
+        self.lights = XPlaneVLights()
         self.mesh = XPlaneMesh()
         self._bl_obj_name_to_bone:Dict[str, XPlaneBone] = {}
 
