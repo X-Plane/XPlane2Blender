@@ -427,9 +427,38 @@ def create_datablock_mesh(info:DatablockInfo,
     ob.data.uv_layers.new()
 
     return ob
+def create_datablock_light(
+        info:DatablockInfo,
+        light_type:str,
+        scene: Optional[Union[bpy.types.Scene, str]] = None):
+    assert light_type in {"POINT", "SUN", "SPOT", "ARENA"}
+    li = bpy.data.lights.new(info.name, light_type)
+    ob = bpy.data.objects.new(info.name, li)
+    set_collection(ob, info.collection)
 
-def create_image_from_disk(filename:str,#Must end in .png
-        filepath:str="//tex/{}")->Optional[bpy.types.Image]:
+    try:
+        scene = bpy.data.scenes[scene]
+    except (KeyError, TypeError):
+        scene = bpy.context.scene
+    set_collection(ob, info.collection)
+
+    ob.location = info.location
+    ob.rotation_mode = info.rotation_mode
+    set_rotation(ob, info.rotation, info.rotation_mode)
+    ob.scale = info.scale
+
+    if info.parent_info:
+        set_parent(ob,info.parent_info)
+
+    return ob
+
+def create_image_from_disk(
+        filename:str,
+        filepath:str="//tex/{}")->bpy.types.Image:
+    """
+    Create an image from a .png file on disk.
+    Returns image or raises OSError
+    """
     assert os.path.splitext(filename)[1] == ".png"
     # Load image file. Change here if the snippet folder is
     # not located in you home directory.
@@ -438,9 +467,8 @@ def create_image_from_disk(filename:str,#Must end in .png
         img = bpy.data.images.load(realpath)
         img.filepath = bpy.path.relpath(realpath)
         return img
-    except:
-        raise NameError("Cannot load image %s" % realpath)
-        return None
+    except (RuntimeError, ValueError): # Couldn't load or make relative path
+        raise OSError("Cannot load image %s" % realpath)
 
 def create_material(material_name:str):
     try:
@@ -462,6 +490,12 @@ def get_image(name:str)->Optional[bpy.types.Image]:
     '''
     return bpy.data.images.get(name)
 
+def get_light(name:str)->Optional[bpy.types.Light]:
+    """
+    Gets, if possible, Light data, not the light object
+    """
+    return bpy.data.lights.get(name)
+
 #Returns the bpy.types.Material or creates it as needed
 def get_material(material_name:str)->Optional[bpy.types.Material]:
     return bpy.data.materials.get(material_name)
@@ -482,6 +516,10 @@ def delete_all_images():
         image.user_clear()
         bpy.data.images.remove(image,do_unlink=True)
 
+def delete_all_lights():
+    for light in bpy.data.lights:
+        light.user_clear()
+        bpy.data.lights.remove(light,do_unlink=True)
 
 def delete_all_materials():
     for material in bpy.data.materials:
@@ -511,6 +549,10 @@ def delete_all_text_files():
 
 
 def delete_everything():
+    """
+    Warning! Don't call this from a Blender script!
+    You'll delete the text block you're using!
+    """
     delete_all_images()
     delete_all_materials()
     delete_all_objects()

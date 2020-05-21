@@ -16,7 +16,7 @@ class TestAutomaticIgnoreOldLights(XPlaneTestCase):
     def test_automatic_ignore_old_lights(self)->None:
         filename = inspect.stack()[0].function
         self.exportExportableRoot(filename[5:])
-        self.assertLoggerErrors(9)
+        self.assertLoggerErrors(20)
 
 
 runTestCases([TestAutomaticIgnoreOldLights])

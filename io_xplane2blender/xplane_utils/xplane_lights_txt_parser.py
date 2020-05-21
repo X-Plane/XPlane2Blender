@@ -293,6 +293,44 @@ class ParsedLight:
         return f"{self.name}: {' '.join(self.light_param_def) if self.light_param_def else ''}, {self.overloads[0]}"
 
 
+def is_automatic_light_compatible(light_name:str)->bool:
+    """
+    Returns True if light is compatible, false if not. Throws KeyError if not found in parsed_lights_content
+    """
+    try:
+        get_parsed_light(light_name)
+    except KeyError:
+        raise
+    else:
+        return not light_name in {
+            # Old v9 lights
+            "airplane_landing_size",
+            "airplane_landing_flash",
+            "airplane_taxi_size",
+            "airplane_taxi_flash",
+            "airplane_generic_size",
+            "airplane_generic_flash",
+            "airplane_beacon_size",
+            "airplane_strobe_size",
+
+            # Typo
+            "full_custom_halo_",
+
+            # Weird test lights
+            "apt_light_halo_test",
+            "test_lamp0",
+            "test_lamp1",
+            "test_lamp2",
+            "test_lamp3",
+            "SW_bb",
+            "SW_sp",
+            "srgb_test0",
+            "srgb_test1",
+            "srgb_test2",
+            "srgb_test3",
+        }
+
+
 _parsed_lights_txt_content = {} # type: Dict[str, ParsedLight]
 
 
