@@ -136,7 +136,7 @@ def _set_width(prototype,lhs,value)->None:
     lhs[prototype.index("WIDTH")] = value
 
 def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload")->None:
-    prototype = get_overload_column_info(overload.overload_type).keys()
+    prototype = list(get_overload_column_info(overload.overload_type).keys())
     args = overload.arguments
     _set_xyz(prototype, args, args[prototype.index("R"):prototype.index("B")])
     dir_vec = Vector(_get_xyz(prototype,args))
@@ -145,43 +145,55 @@ def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload")->None:
     _set_rgb(prototype, args, [1,1,1])
 
 def _do_rgba_to_dxyz_w(overload:"ParsedLightOverload")->None:
-    prototype = get_overload_column_info(overload.overload_type).keys()
+    prototype = list(get_overload_column_info(overload.overload_type).keys())
     args = overload.arguments
     _set_xyz(prototype,   args, _get_rgb(prototype, args))
     _set_width(prototype, args, args[prototype.index("A")])
     _set_rgb(prototype,   args, [1,1,1])
     _set_a(prototype,     args, 1)
 
-def _do_force_omni(overload:"ParsedLightOverload")->None:
-    prototype = get_overload_column_info(overload.overload_type).keys()
+
+def _do_force_WIDTH_1(overload:"ParsedLightOverload")->None:
+    prototype = list(get_overload_column_info(overload.overload_type).keys())
     args = overload.arguments
     _set_width(prototype, args, 1)
 
-SW_CALLBACK_DREFS = {
+
+RGB_TO_DXYZ_W_CALC_DREFS = {
     "sim/graphics/animation/lights/airplane_beacon_light_dir":     _do_rgb_to_dxyz_w_calc,
     "sim/graphics/animation/lights/airplane_generic_light":        _do_rgb_to_dxyz_w_calc,
     "sim/graphics/animation/lights/airplane_generic_light_flash":  _do_rgb_to_dxyz_w_calc,
     "sim/graphics/animation/lights/airplane_navigation_light_dir": _do_rgb_to_dxyz_w_calc,
-
-    "sim/graphics/animation/lights/airport_beacon":                _do_rgba_to_dxyz_w, #As of 11/14/2017, all lights with this are commented out
-    "sim/graphics/animation/lights/airport_beacon_flash":          _do_rgba_to_dxyz_w, #As of 11/14/2017, none of this dataref appears in lights.txt
-
-    "sim/graphics/animation/lights/airplane_beacon_light_rotate":  _do_force_omni,
-    "sim/graphics/animation/lights/carrier_waveoff":               _do_force_omni,
-
-    "sim/graphics/animation/lights/fresnel_horizontal":            _do_force_omni,
-    "sim/graphics/animation/lights/fresnel_vertical":              _do_force_omni,
-    "sim/graphics/animation/lights/strobe":                        _do_force_omni,
-    "sim/graphics/animation/lights/strobe_sp":                     _do_force_omni,
-    "sim/graphics/animation/lights/vasi_papi":                     _do_force_omni,
-    "sim/graphics/animation/lights/vasi_papi_tint":                _do_force_omni,
-    "sim/graphics/animation/lights/vasi3":                         _do_force_omni,
-    "sim/graphics/animation/lights/rabbit":                        _do_force_omni,
-    "sim/graphics/animation/lights/rabbit_sp":                     _do_force_omni,
-    "sim/graphics/animation/lights/wigwag":                        _do_force_omni,
-    "sim/graphics/animation/lights/wigwag_sp":                     _do_force_omni
 }
 
+
+RGBA_TO_DXYZ_W_DREFS = {
+    "sim/graphics/animation/lights/airport_beacon":                _do_rgba_to_dxyz_w, #As of 11/14/2017, all lights with this are commented out
+    "sim/graphics/animation/lights/airport_beacon_flash":          _do_rgba_to_dxyz_w, #As of 11/14/2017, none of this dataref appears in lights.txt
+}
+
+
+# WARNING! Most affect lights are unidirectional, despite having a WIDTH of 1!
+# Use is_omni for better coverage of these cases!
+FORCE_WIDTH_1_DREFS = {
+    "sim/graphics/animation/lights/airplane_beacon_light_rotate":  _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/carrier_waveoff":               _do_force_WIDTH_1,
+
+    "sim/graphics/animation/lights/fresnel_horizontal":            _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/fresnel_vertical":              _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/strobe":                        _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/strobe_sp":                     _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/vasi_papi":                     _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/vasi_papi_tint":                _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/vasi3":                         _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/rabbit":                        _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/rabbit_sp":                     _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/wigwag":                        _do_force_WIDTH_1,
+    "sim/graphics/animation/lights/wigwag_sp":                     _do_force_WIDTH_1
+}
+
+
+SW_CALLBACK_DREFS = {**RGB_TO_DXYZ_W_CALC_DREFS, **RGBA_TO_DXYZ_W_DREFS, **FORCE_WIDTH_1_DREFS}
 
 @dataclass
 class ParsedLightOverload:
@@ -262,8 +274,84 @@ class ParsedLightOverload:
         try:
             SW_CALLBACK_DREFS[self["DREF"]](self)
         except KeyError:
-            print(f"couldn't find {self['DREF']}")
+            #print(f"couldn't find {self['DREF']}")
             pass
+
+    def is_omni(self)->bool:
+        """
+        Given a light and the WIDTH column, check if omni while acknowleding a variety if possible, Given a light name, check a number of complex special cases
+        """
+        try:
+            width_column = self["WIDTH"]
+        except KeyError:
+            width_column = None
+
+        if width_column and width_column == 1:
+            return True
+        else:
+            from_do_RGB_TO_DXYZ_W_CALC = {
+                "airplane_beacon_size",
+                "airplane_generic_core",
+                "airplane_generic_flare",
+                "airplane_generic_flash",
+                "airplane_generic_glow",
+                "airplane_generic_size",
+                "airplane_nav_left_size",
+                "airplane_nav_right_size",
+                "airplane_nav_tail_size",
+            }
+
+            from_force_WIDTH_1_omni = {
+                "airplane_beacon_rotate",
+                "airplane_beacon",
+                "appch_rabbit_o",
+                "appch_strobe_o",
+                "inset_appch_rabbit_o",
+                "inset_appch_rabbit_o_sp",
+                "inset_appch_strobe_o",
+                "inset_appch_strobe_o_sp",
+            }
+
+            from_force_WIDTH_1_unidirectional = {
+                "VASI",
+                "VASI3",
+                "appch_rabbit_u",
+                "appch_strobe_u",
+                "inset_appch_rabbit_u",
+                "inset_appch_rabbit_u_sp",
+                "inset_appch_strobe_u",
+                "inset_appch_strobe_u_sp",
+                "wigwag_y1",
+                "wigwag_y2",
+                "hold_short_y1",
+                "hold_short_y2",
+                "pad_SGSI_lo",
+                "pad_SGSI_on",
+                "pad_SGSI_hi",
+                "carrier_datum",
+                "carrier_waveoff",
+                "carrier_meatball1",
+                "carrier_meatball2",
+                "carrier_meatball3",
+                "carrier_meatball4",
+                "carrier_meatball5",
+                "frigate_SGSI_lo",
+                "frigate_SGSI_on",
+                "frigate_SGSI_hi",
+            }
+
+            if self.overload_type in {"SPILL_HW_FLA", "SPILL_GND", "SPILL_GND_REV"}:
+                return True
+            elif self.name in from_do_RGB_TO_DXYZ_W_CALC:
+                return False
+            # We don't know what direction the lights of RGBA_TO_DXYZ_W_DREFS
+            # would point, so we can only hope the first test was enough
+            elif self.name in from_force_WIDTH_1_omni:
+                return True
+            elif self.name in from_force_WIDTH_1_unidirectional:
+                return False
+            else:
+                return False
 
     def prototype(self)->Tuple[str,...]:
         return tuple(get_overload_column_info(self.overload_type))
@@ -279,7 +367,8 @@ class ParsedLight:
     A parsed light represents a light and all its overloads
     from lights.txt
 
-    self.overloads is sorted from most to least confident a software_callback should be applied.
+    self.overloads is sorted from most to least confident about what the is supposed to represent
+    and which (if any) software_callback should be applied. It is guaranteed.
     This is not applicable to most lights.
 
     One can tell a light is a parameterized light by if self.light_param_def is empty
@@ -291,6 +380,12 @@ class ParsedLight:
 
     def __str__(self)->str:
         return f"{self.name}: {' '.join(self.light_param_def) if self.light_param_def else ''}, {self.overloads[0]}"
+
+    def best_overload(self)->ParsedLightOverload:
+        if self.name == "radio_obs_flash":
+            return self.overloads[1]
+        else:
+            return self.overloads[0]
 
 
 def is_automatic_light_compatible(light_name:str)->bool:

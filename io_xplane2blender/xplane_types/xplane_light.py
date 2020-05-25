@@ -194,25 +194,29 @@ class XPlaneLight(xplane_object.XPlaneObject):
                          f" Pick a different light or use 'Named' or 'Manual Param' instead")
             return
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and parsed_light.light_param_def:
-            self.is_omni = light_data.type == "POINT"
 
-            #TODO: Need test
             if (light_data.type == "SPOT"
                 and "SIZE" in parsed_light.light_param_def
                 and not light_data.use_custom_distance):
                 logger.error("Automatic Spot Lights with 'SIZE' as a parameter must have 'Custom Distance' checked")
                 return
 
-            def calc_width()->float:
-                if self.is_omni:
+            def width_param_new_value()->float:
+                """
+                This is not This is not the final WIDTH or the answer to the question
+                "is this omni". This is just what we're replacing WIDTH with,
+                and other things can change it
+                """
+                if light_data.type == "POINT":
                     return 1
                 elif "BILLBOARD" in parsed_light.overloads[0].overload_type:
-                    # This will be adjusted later on during write once we know
+                    # This will be adjusted later on during write once we know DXYZ
                     return light_data.spot_size * .5
                 elif "SPILL" in parsed_light.overloads[0].overload_type:
                     # cos(half the cone angle)
                     return math.cos(light_data.spot_size * .5)
-            #"CELL_", "DAY", "DREF" are never parameterizable,
+
+            # "CELL_", "AMP", "DAY", "DREF" are never parameterizable
             convert_table = {
                     "R":self.color[0],
                     "G":self.color[1],
@@ -223,7 +227,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "DX":"DX", # Filled in later
                     "DY":"DY", # Filled in later
                     "DZ":"DZ", # Filled in later
-                    "WIDTH": calc_width(),
+                    "WIDTH": width_param_new_value(),
                     "FREQ": light_data.xplane.param_freq,
                     "PHASE": light_data.xplane.param_phase,
                     "UNUSED":0, # We just shove in something here
@@ -232,29 +236,12 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "ONE":1,
                 }
 
-            #TODO: Need test
-            #TODO: Need an error for problem case here:
-            # A xplane_sp light in a Blender Point light = Problem?
-            # A xplane_bb in a Blender Point Light = Autocorrect
-            if "WIDTH" in parsed_light.light_param_def and round(light_data.spot_size) == math.pi:
-                logger.error("Spotlight Size for {self.blenderObject.name} cannot be 180 degrees")
-                return
+            #EXCEPT there is aproblem with lights like spot_params_bb, which need SIZE and need WIDTH =1.0 for omni
+            #if "WIDTH" in parsed_light.light_param_def and round(light_data.spot_size,5) == round(math.pi,5):
+                #logger.error(f"Spotlight Size for {self.blenderObject.name} cannot be 180 degrees")
+                #return
 
-            def strip_trailing_underscores(param:str)->str:
-                """Return the param, stripped of any trailing '_'
-                """
-                if "UNUSED" in param:
-                    return "UNUSED"
-                elif "NEG_ONE" in param:
-                    return "NEG_ONE"
-                elif "ZERO" in param:
-                    return "ZERO"
-                elif "ONE" in param:
-                    return "ONE"
-                else:
-                    return param
-
-            self.params = {param:convert_table[strip_trailing_underscores(param)] for param in parsed_light.light_param_def}
+            self.params = {param:convert_table[param.rstrip("_")] for param in parsed_light.light_param_def}
             self.record_completed = parsed_light.overloads[0]
             for p_arg in filter(
                     lambda arg: isinstance(arg,str)
@@ -268,6 +255,16 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # - We'll be filling in instead of autocorrecting
             if "DREF" in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
+
+            try:
+                # We can't have WIDTH
+                self.record_completed["WIDTH"] = round(self.record_completed["WIDTH"], 5)
+            except KeyError:
+                pass
+
+            # After all this parameter replacing and sw_callback using, we can finally begin to answer
+            # "Is it OMNI?"
+            self.is_omni = self.is_omni(overload=self.record_completed)
 
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def:
             # Like LIGHT_NAMED but no autocorrection
