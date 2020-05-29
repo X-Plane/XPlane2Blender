@@ -9,6 +9,7 @@ import bpy
 import io_xplane2blender
 import mathutils
 from io_xplane2blender import xplane_config, xplane_constants
+from io_xplane2blender.xplane_constants import PRECISION_OBJ_FLOAT
 
 """
 Given the difficulty in keeping all these words straight, these
@@ -35,15 +36,18 @@ class UnwriteableXPlaneType(ValueError):
     pass
 
 def floatToStr(n:float)->str:
-    s = '0'
-    n = round(n, FLOAT_PRECISION)
-    n_int = int(n)
+    """
+    Makes a rounded float with as 0's
+    and decimal place removed if possible
+    """
+    #THIS IS A HOT PATH, DO NOT CHANGE WITHOUT PROFILING
 
-    if n_int == n:
-        s = '%d' % n_int
-    else:
-        s = (('%.' + str(FLOAT_PRECISION) + 'f') % n).rstrip('0')
-
+    # 'g' can do the rstrip and '.' removal for us, except for rare cases when we need to fallback
+    # to the less fast 'f', rstrip, ternary approach
+    s = f"{round(n, PRECISION_OBJ_FLOAT):.{PRECISION_OBJ_FLOAT}g}"
+    if "e" in s:
+        s = f"{round(n, PRECISION_OBJ_FLOAT):.{PRECISION_OBJ_FLOAT}f}".rstrip('0')
+        return s if s[-1] != "." else s[:-1]
     return s
 
 

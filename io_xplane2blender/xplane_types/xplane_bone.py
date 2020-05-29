@@ -90,7 +90,7 @@ class XPlaneBone():
         # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
         # IMPORTANT NOTE: Show/Hide Datarefs and datarefs without 2 keyframes will not be included and
         # must be accessed via blenderObject.xplane.datarefs!
-        self.datarefs = {} # type: Dict[bpy.types.StringProperty,XPlaneDataref]
+        self.datarefs = {} # type: Dict[str,XPlaneDataref]
         self.collectAnimations()
 
     def sortChildren(self)->None:
@@ -223,16 +223,7 @@ class XPlaneBone():
                         else:
                             self.datarefs[dataref] = blenderObject.xplane.datarefs[index]
 
-                        # store keyframes temporary, so we can resort them
-                        keyframes = []
-
-                        for i,keyframe in enumerate(fcurve.keyframe_points):
-                            #print("\t\t adding keyframe: %6.3f" % keyframe.co[0])
-                            keyframes.append(XPlaneKeyframe(keyframe,i,dataref,self))
-
-                        # sort keyframes by frame number
-                        keyframesSorted = sorted(keyframes, key = lambda keyframe: keyframe.index)
-                        self.animations[dataref] = XPlaneKeyframeCollection(keyframesSorted)
+                        self.animations[dataref] = XPlaneKeyframeCollection([XPlaneKeyframe(kf, i, dataref, self) for i, kf in enumerate(fcurve.keyframe_points)])
 
     def getName(self, ignore_indent_level:bool=False)->str:
         """
@@ -595,13 +586,10 @@ class XPlaneBone():
         indent = self.getIndent()
         o = ''
         bakeMatrix = bakeMatrix
-        rotation = bakeMatrix.to_euler('XYZ')
-        rotation[0] = round(rotation[0],5)
-        rotation[1] = round(rotation[1],5)
-        rotation[2] = round(rotation[2],5)
+        rotation = list(map(lambda c: round(c, xplane_constants.PRECISION_KEYFRAME), bakeMatrix.to_euler('XYZ')))
 
         # ignore noop rotations
-        if rotation[0] == 0 and rotation[1] == 0 and rotation[2] == 0:
+        if rotation == (0, 0, 0):
             return o
 
         if debug:
@@ -621,22 +609,21 @@ class XPlaneBone():
         # see also: http://hacksoflife.blogspot.com/2015/11/blender-notepad-eulers.html
 
         axes = (2, 1, 0)
-        eulerAxes = [(0.0,0.0,1.0),(0.0,1.0,0.0),(1.0,0.0,0.0)]
-        i = 0
+        eulerAxes = [
+                (0,0,1),
+                (0,1,0),
+                (1,0,0)
+            ]
 
-        for axis in eulerAxes:
+        for i, axis in enumerate(eulerAxes):
             deg = math.degrees(rotation[axes[i]])
 
             # ignore zero rotation
-            if not deg == 0:
-                o += indent + 'ANIM_rotate\t%s\t%s\t%s\t%s\t%s\n' % (
-                    floatToStr(axis[0]),
-                    floatToStr(axis[2]),
-                    floatToStr(-axis[1]),
-                    floatToStr(deg), floatToStr(deg)
-                )
-
-            i += 1
+            if not round(deg, xplane_constants.PRECISION_KEYFRAME) == 0:
+                tab = "\t"
+                o += (f"{indent}ANIM_rotate"
+                      f"\t{tab.join(map(floatToStr,vec_b_to_x(axis)))}"
+                      f"\t{tab.join(map(floatToStr, [deg, deg]))}\n")
 
         return o
 
@@ -646,10 +633,7 @@ class XPlaneBone():
         if dataref in self.datarefs:
             if self.datarefs[dataref].loop > 0:
                 indent = self.getIndent()
-                o += "%s\tANIM_keyframe_loop\t%s\n" % (
-                    indent,
-                    self.datarefs[dataref].loop
-                )
+                o += f"{indent}\tANIM_keyframe_loop\t{self.datarefs[dataref].loop}\n"
         return o
 
     def _writeTranslationKeyframes(self, dataref:str)->str:
@@ -668,22 +652,22 @@ class XPlaneBone():
         indent = self.getIndent()
 
         if debug:
-            o += indent + '# translation keyframes\n'
+            o += f"{indent}# translation keyframes\n"
 
-        o += "%sANIM_trans_begin\t%s\n" % (indent, dataref)
+        o += f"{indent}ANIM_trans_begin\t{dataref}\n"
 
         for keyframe in keyframes:
-            totalTrans += abs(keyframe.location[0]) + abs(keyframe.location[1]) + abs(keyframe.location[2])
+            totalTrans += sum(map(abs, keyframe.location))
 
-            o += "%sANIM_trans_key\t%s\t%s\t%s\t%s\n" % (
-                indent, floatToStr(keyframe.value),
-                floatToStr(keyframe.location[0] * pre_scale[0]),
-                floatToStr(keyframe.location[2] * pre_scale[2]),
-                floatToStr(-keyframe.location[1] * pre_scale[1])
-            )
+            o += (f"{indent}ANIM_trans_key"
+                  f"\t{floatToStr(keyframe.value)}"
+                  f"\t{floatToStr(keyframe.location[0] * pre_scale[0])}"
+                  f"\t{floatToStr(keyframe.location[2] * pre_scale[2])}"
+                  f"\t{floatToStr(-keyframe.location[1] * pre_scale[1])}"
+                  f"\n")
 
         o += self._writeKeyframesLoop(dataref)
-        o += "%sANIM_trans_end\n" % indent
+        o += f"{indent}ANIM_trans_end\n"
 
         # do not write zero translations
         if totalTrans == 0:
@@ -706,26 +690,19 @@ class XPlaneBone():
         elif len(axes) == 1:
             refAxis = axes[0]
 
-        o += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
-            indent,
-            floatToStr(refAxis[0]),
-            floatToStr(refAxis[2]),
-            floatToStr(-refAxis[1]),
-            dataref
-        )
+        tab = "\t"
+        o += (f"{indent}ANIM_rotate_begin"
+              f"\t{tab.join(map(floatToStr, vec_b_to_x(refAxis)))}"
+              f"\t{dataref}\n")
 
         for keyframe in keyframes:
             deg = math.degrees(keyframe.rotation[0])
             totalRot += abs(deg)
 
-            o += "%sANIM_rotate_key\t%s\t%s\n" % (
-                indent,
-                floatToStr(keyframe.value),
-                floatToStr(deg)
-            )
+            o += f"{indent}ANIM_rotate_key\t{floatToStr(keyframe.value)}\t{floatToStr(deg)}\n"
 
         o += self._writeKeyframesLoop(dataref)
-        o += "%sANIM_rotate_end\n" % indent
+        o += f"{indent}ANIM_rotate_end\n"
 
         # do not write zero rotations
         if round(totalRot, xplane_constants.PRECISION_KEYFRAME) == 0:
@@ -748,28 +725,20 @@ class XPlaneBone():
             ao = ''
             totalAxisRot = 0
 
-            ao += "%sANIM_rotate_begin\t%s\t%s\t%s\t%s\n" % (
-                indent,
-                floatToStr(axis[0]),
-                floatToStr(axis[2]),
-                floatToStr(-axis[1]),
-                dataref
-            )
+            tab = "\t"
+            ao += (f"{indent}ANIM_rotate_begin"
+                  f"\t{tab.join(map(floatToStr, vec_b_to_x(axis)))}"
+                  f"\t{dataref}\n")
 
 
             for keyframe in keyframes:
                 deg = math.degrees(keyframe.rotation[order])
                 totalRot += abs(deg)
                 totalAxisRot += abs(deg)
-
-                ao += "%sANIM_rotate_key\t%s\t%s\n" % (
-                    indent,
-                    floatToStr(keyframe.value),
-                    floatToStr(deg)
-                )
+                ao += f"{indent}ANIM_rotate_key\t{floatToStr(keyframe.value)}\t{floatToStr(deg)}\n"
 
             ao += self._writeKeyframesLoop(dataref)
-            ao += "%sANIM_rotate_end\n" % indent
+            ao += f"{indent}ANIM_rotate_end\n"
 
             # do not write non-animated axis
             if round(totalAxisRot, xplane_constants.PRECISION_KEYFRAME) > 0:
@@ -790,7 +759,7 @@ class XPlaneBone():
             return o
 
         if debug:
-            o += self.getIndent() + '# rotation keyframes\n'
+            o += f"{self.getIndent()}# rotation keyframes\n"
 
         rotationMode = keyframes[0].rotationMode
 
@@ -812,7 +781,7 @@ class XPlaneBone():
         for name in self.xplaneObject.animAttributes:
             attr = self.xplaneObject.animAttributes[name]
             for i in range(len(attr.value)):
-                o += self.getIndent() + '%s\t%s\n' % (attr.name, attr.getValueAsString(i=i))
+                o += f"{self.getIndent()}{attr.name}\t{attr.getValueAsString(i=i)}\n"
 
         return o
 
@@ -826,6 +795,6 @@ class XPlaneBone():
 
         if (isAnimated) or \
             hasAnimationAttributes:
-            o += self.getIndent() + 'ANIM_end\n'
+            o += f"{self.getIndent()}ANIM_end\n"
 
         return o

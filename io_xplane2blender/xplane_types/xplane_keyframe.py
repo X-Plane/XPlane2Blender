@@ -12,7 +12,7 @@ class XPlaneKeyframe():
                  index: int,
                  dataref: str,
                  xplaneBone: "XPlaneBone")->None:
-        #currentFrame = bpy.context.scene.frame_current
+        currentFrame = bpy.context.scene.frame_current
         self.dataref = dataref
         self.index = index
         self.value = keyframe.co[1]
