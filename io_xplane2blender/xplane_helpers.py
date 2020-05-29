@@ -44,9 +44,9 @@ def floatToStr(n:float)->str:
 
     # 'g' can do the rstrip and '.' removal for us, except for rare cases when we need to fallback
     # to the less fast 'f', rstrip, ternary approach
-    s = f"{round(n, PRECISION_OBJ_FLOAT):.{PRECISION_OBJ_FLOAT}g}"
+    s = f"{n:.{PRECISION_OBJ_FLOAT}g}"
     if "e" in s:
-        s = f"{round(n, PRECISION_OBJ_FLOAT):.{PRECISION_OBJ_FLOAT}f}".rstrip('0')
+        s = f"{n:.{PRECISION_OBJ_FLOAT}f}".rstrip('0')
         return s if s[-1] != "." else s[:-1]
     return s
 
