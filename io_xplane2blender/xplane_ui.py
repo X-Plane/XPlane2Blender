@@ -117,7 +117,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 
 # Adds X-Plane settings to the bone tab. Uses <animation_layout>.
 class BONE_PT_xplane(bpy.types.Panel):
-    '''XPlane Object Panel'''
+    '''XPlane Bone Panel'''
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -550,10 +550,8 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                         layout.row().prop(light.xplane, "param_freq")
                     if "PHASE" in parsed_light.light_param_def:
                         layout.row().prop(light.xplane, "param_phase")
-                    if ("SIZE" in parsed_light.light_param_def
-                            and light.type == "SPOT"
-                            and not light.use_custom_distance):
-                        layout.row().label(text="Found 'SIZE' parameter but Custom Distance not checked", icon="ERROR")
+                    if "SIZE" in parsed_light.light_param_def:
+                        layout.row().prop(light.xplane, "size")
 
                 debug_box = layout.box()
                 debug_box.label(text="Debug Box")

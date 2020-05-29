@@ -45,8 +45,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
         self.dataref = blenderObject.data.xplane.dataref
         self.energy = blenderObject.data.energy
-        # This refers to the size of the custom light,
-        # not the SIZE parameter in a param light
+        # The Size of a Custom Light
+        # and the SIZE replacement for an Automatic Light
         self.size = blenderObject.data.xplane.size
         self.uv = blenderObject.data.xplane.uv
 
@@ -194,13 +194,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
                          f" Pick a different light or use 'Named' or 'Manual Param' instead")
             return
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and parsed_light.light_param_def:
-
-            if (light_data.type == "SPOT"
-                and "SIZE" in parsed_light.light_param_def
-                and not light_data.use_custom_distance):
-                logger.error("Automatic Spot Lights with 'SIZE' as a parameter must have 'Custom Distance' checked")
-                return
-
             def width_param_new_value()->float:
                 """
                 This is not This is not the final WIDTH or the answer to the question
@@ -223,7 +216,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "B":self.color[2],
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
-                    "SIZE":light_data.cutoff_distance, # Custom Distance > Distance
+                    "SIZE":light_data.xplane.size,
                     "DX":"DX", # Filled in later
                     "DY":"DY", # Filled in later
                     "DZ":"DZ", # Filled in later
