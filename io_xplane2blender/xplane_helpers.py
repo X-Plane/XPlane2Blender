@@ -10,8 +10,6 @@ import io_xplane2blender
 import mathutils
 from io_xplane2blender import xplane_config, xplane_constants
 
-FLOAT_PRECISION = 8
-
 """
 Given the difficulty in keeping all these words straight, these
 types have been created. Use these to keep yourself from

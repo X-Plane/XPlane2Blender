@@ -14,7 +14,7 @@ from io_xplane2blender.xplane_utils import xplane_lights_txt_parser
 
 from ..xplane_config import getDebug
 from ..xplane_constants import *
-from ..xplane_helpers import (FLOAT_PRECISION, floatToStr, logger, vec_b_to_x,
+from ..xplane_helpers import (floatToStr, logger, vec_b_to_x,
                               vec_x_to_b)
 
 
@@ -160,8 +160,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
             self.is_omni = self.record_completed["WIDTH"] >= 1.0
 
-            dir_vec = Vector(map(self.record_completed.__getitem__, ["DX","DY","DZ"]))
-            if dir_vec.magnitude == 0.0 and not self.is_omni:
+            # We use precision keyframe because we don't want to animate unnecissarily
+            if round(dir_vec.magnitude, PRECISION_KEYFRAME) == 0.0 and not self.is_omni:
                 logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
                 return
         elif self.lightType == LIGHT_PARAM and parsed_light and not parsed_light.light_param_def:
@@ -230,9 +230,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 }
 
             #EXCEPT there is aproblem with lights like spot_params_bb, which need SIZE and need WIDTH =1.0 for omni
-            #if "WIDTH" in parsed_light.light_param_def and round(light_data.spot_size,5) == round(math.pi,5):
-                #logger.error(f"Spotlight Size for {self.blenderObject.name} cannot be 180 degrees")
-                #return
 
             self.params = {param:convert_table[param.rstrip("_")] for param in parsed_light.light_param_def}
             self.record_completed = parsed_light.overloads[0]
@@ -250,8 +247,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 self.record_completed.apply_sw_callback()
 
             try:
-                # We can't have WIDTH
-                self.record_completed["WIDTH"] = round(self.record_completed["WIDTH"], 5)
+                # Since WIDTH determines if we animate or not, we use PRECISION_KEYFRAME
+                self.record_completed["WIDTH"] = round(self.record_completed["WIDTH"], PRECISION_KEYFRAME)
             except KeyError:
                 pass
 
@@ -362,7 +359,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # Inverse to change our animation order (so we really have rot, trans when we
             # originally had trans, rot) and now we can use the translation in the lamp
             # itself.
-            if round(axis_angle_theta,5) != 0.0 and not self.is_omni:
+            if round(axis_angle_theta, PRECISION_KEYFRAME) != 0.0 and not self.is_omni:
                 o += f"{indent}ANIM_begin\n"
 
                 if debug:
@@ -387,12 +384,14 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
             if "BILLBOARD" in parsed_light.overloads[0].overload_type:
                 angle_from_center = light_data.spot_size / 2
+                # No divide by 0 problems, spot_size will always be in [1, 180] 1 <= spot_size <= 180 guaranteed
                 new_width = math.cos(angle_from_center) / (math.cos(angle_from_center) - 1)
                 scale = 1 - new_width
-                # No divide by 0 problems, spot_size will always be in [1, 180] 1 <= spot_size <= 180 guaranteed
-                self.params["WIDTH"] = new_width
                 scaled_vec_b = dir_vec_b_norm * scale
                 self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(scaled_vec_b)))
+                self.params["WIDTH"] = round(new_width, xplane_constants.PRECISION_KEYFRAME)
+                if self.params["WIDTH"] == 0:
+                    logger.error("light width cannot be entirely obtuse")
             else:
                 self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(dir_vec_b_norm)))
 

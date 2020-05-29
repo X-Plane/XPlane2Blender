@@ -2,6 +2,7 @@ import collections
 import copy
 import os
 import re
+
 from dataclasses import dataclass
 from mathutils import Vector
 from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
@@ -286,7 +287,7 @@ class ParsedLightOverload:
         except KeyError:
             width_column = None
 
-        if width_column and width_column == 1:
+        if width_column and round(width_column, xplane_constants.PRECISION_KEYFRAME) == 1:
             return True
         else:
             from_do_RGB_TO_DXYZ_W_CALC = {

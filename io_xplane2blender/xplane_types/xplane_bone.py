@@ -32,7 +32,8 @@ from typing import List, Optional, Tuple
 import bpy
 import mathutils
 from io_xplane2blender.xplane_config import getDebug
-from io_xplane2blender.xplane_helpers import floatToStr, FLOAT_PRECISION, logger
+from io_xplane2blender import xplane_constants
+from io_xplane2blender.xplane_helpers import floatToStr, logger, vec_b_to_x
 from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
 from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
 #from xplane_object import XPlaneObject
@@ -727,7 +728,7 @@ class XPlaneBone():
         o += "%sANIM_rotate_end\n" % indent
 
         # do not write zero rotations
-        if round(totalRot, FLOAT_PRECISION) == 0:
+        if round(totalRot, xplane_constants.PRECISION_KEYFRAME) == 0:
             return ''
 
         return o
@@ -771,11 +772,11 @@ class XPlaneBone():
             ao += "%sANIM_rotate_end\n" % indent
 
             # do not write non-animated axis
-            if round(totalAxisRot, FLOAT_PRECISION) > 0:
+            if round(totalAxisRot, xplane_constants.PRECISION_KEYFRAME) > 0:
                 o += ao
 
         # do not write zero rotations
-        if round(totalRot, FLOAT_PRECISION) == 0:
+        if round(totalRot, xplane_constants.PRECISION_KEYFRAME) == 0:
             return ''
 
         return o

@@ -4,59 +4,15 @@ from typing import Tuple
 import bpy
 import mathutils
 
-KEYFRAME_PRECISION = 5
+from io_xplane2blender.xplane_constants import PRECISION_KEYFRAME
 
-# Class: XPlaneKeyframe
-# A Keyframe.
 class XPlaneKeyframe():
-    '''
-    Property: dataref
-    string - The Path of the dataref this keyframe refers to.
-
-    Property: frame
-    int - The frame in Blender's timeline this keyframe belongs to
-
-    Property: index
-    int - The index of this keyframe in the <object> keyframe list.
-
-    Property: location
-    Vector - The location recorded in this keyframe
-
-    Property: object
-    XPlaneObject - The <XPlaneObject> this keyframe belongs to.
-
-    Property: rotation
-    Euler or list [w,x,y,z] - The rotation recorded in this keyframe, in the data structure of it's rotation mode
-
-    Property: rotationMode
-    str - The rotation mode used to make this animation, one of "QUATERNION", "AXIS_ANGLE", or a combination of "X","Y", and "Z"
-    It is kept in sync with how rotation is statefully (regretfully) changed. Probably buggy.
-
-    Property: scale
-    list - [x,y,z] With scale of the <object> in this keyframe.
-
-    Property: value
-    float - Contains the Dataref value in this keyframe.
-    '''
-
-    # Constructor: __init__
-    # Caclulates <translation>, <rotation> and <scale>.
-    #
-    # Parameters:
-    #   keyframe - A Blender keyframe
-    #   int index - The index of this keyframe in the <object> keyframe list.
-    #   string dataref - Path of the dataref this keyframe refers to.
-    #   XPlaneBone xplaneBone - An <XPlaneBone>
     def __init__(self,
                  keyframe: bpy.types.Keyframe,
                  index: int,
                  dataref: str,
                  xplaneBone: "XPlaneBone")->None:
-        '''
-        Represents the combined collected Blender Keyframe (Loc,Rot,Scale,Frame)
-        information and X-Plane Dataref Keyframe (value)
-        '''
-        currentFrame = bpy.context.scene.frame_current
+        #currentFrame = bpy.context.scene.frame_current
         self.dataref = dataref
         self.index = index
         self.value = keyframe.co[1]
@@ -70,7 +26,7 @@ class XPlaneKeyframe():
         self.frame = int(round(keyframe.co[0]))
         bpy.context.scene.frame_set(frame=self.frame)
 
-        self.location = mathutils.Vector([round(comp, KEYFRAME_PRECISION) for comp in copy.copy(blenderObject.location)])
+        self.location = mathutils.Vector([round(comp, PRECISION_KEYFRAME) for comp in copy.copy(blenderObject.location)])
         assert isinstance(self.location, mathutils.Vector)
 
         # Child bones with a parent and connection need to ignore the translation field -
@@ -93,14 +49,14 @@ class XPlaneKeyframe():
             # Different Blender functions call for arbitrary arrangements
             # of this, so my priority was whatever is easiest to convert,
             # not what I like.
-            self.rotation = (round(rot[0], KEYFRAME_PRECISION),
+            self.rotation = (round(rot[0], PRECISION_KEYFRAME),
                              mathutils.Vector(rot[1:]).normalized()) # type: Tuple[float,mathutils.Vector]
             assert isinstance(self.rotation, tuple)
             assert len(self.rotation) == 2
             for comp in self.rotation[1]:
                 assert isinstance(comp, float)
         else:
-            angles = [round(comp, KEYFRAME_PRECISION)
+            angles = [round(comp, PRECISION_KEYFRAME)
                       for comp in blenderObject.rotation_euler.copy()]
             order = blenderObject.rotation_euler.order
             self.rotation = mathutils.Euler(angles, order)
