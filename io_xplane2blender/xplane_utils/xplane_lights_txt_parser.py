@@ -280,14 +280,30 @@ class ParsedLightOverload:
 
     def is_omni(self)->bool:
         """
-        Given a light and the WIDTH column, check if omni while acknowleding a variety if possible, Given a light name, check a number of complex special cases
+        Checks if overload is omni: this method understands
+        the complex rules and special cases, as opposed to simply checking
+        the 'WIDTH' column
+
+        Since an overload's arguments are mutable and may have unreplaced parameters
+        the return value for this is not constant
         """
+
+        #--- WARNING ---------------------------------------------------------
+        # This method is the result of months of careful study
+        # and investigation, along with weeks of talking with
+        # Ben and Alex about the nuanced and _HIGHLY_ undocumented
+        # behavior of X-Plane's light systems, along with it's oral
+        # history, and map of where the bodies are buried.
+        #
+        # In otherwords: don't mess with it unless you have a damn
+        # good reason to
+        #---------------------------------------------------------------------
         try:
             width_column = self["WIDTH"]
         except KeyError:
             width_column = None
 
-        if width_column and round(width_column, xplane_constants.PRECISION_KEYFRAME) == 1:
+        if isinstance(width_column, float) and round(width_column, xplane_constants.PRECISION_KEYFRAME) == 1:
             return True
         else:
             from_do_RGB_TO_DXYZ_W_CALC = {
@@ -345,8 +361,10 @@ class ParsedLightOverload:
                 return True
             elif self.name in from_do_RGB_TO_DXYZ_W_CALC:
                 return False
-            # We don't know what direction the lights of RGBA_TO_DXYZ_W_DREFS
+            # I don't know what direction the lights of RGBA_TO_DXYZ_W_DREFS
             # would point, so we can only hope the first test was enough
+            # and honestly worrying about it at all by now is overkill
+            # - Ted, 5/31/2020
             elif self.name in from_force_WIDTH_1_omni:
                 return True
             elif self.name in from_force_WIDTH_1_unidirectional:

@@ -66,16 +66,21 @@ class XPlaneLight(xplane_object.XPlaneObject):
             self.params = blenderObject.data.xplane.params
         else:
             self.params = None
+
+        # Possible comment extracted from a param light params text field
         self.comment:Optional[str] = None
 
-        # Used for auto correction For LIGHT_NAMED this is used for autocorrection (if applicable)
+        # If applicable, after collection this will be
+        # the light's best overload with any parameters replaced
+        # and any sw_callbacks, ready for autocorrection
         self.record_completed:Optional[xplane_lights_txt_parser.ParsedLightOverload] = None
-        self.is_omni = False
 
         self.setWeight(10000)
 
     def collect(self)->None:
         super().collect()
+
+        #TODO: Put Test coverage in some old test file
         light_data = self.blenderObject.data
         if not self.lightName and self.lightType in {LIGHT_NAMED, LIGHT_PARAM, LIGHT_AUTOMATIC}:
             logger.error(f"{self.blenderObject.name} is a {self.lightType.title()} light but has no light name")
@@ -98,7 +103,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             logger.error(f"Light name {self.lightName} is a known param light, being used as a name light. Check the light name or light type")
             return
         elif self.lightType == LIGHT_NAMED and parsed_light and not parsed_light.light_param_def:
-            self.record_completed = parsed_light.overloads[0]
+            self.record_completed = parsed_light.best_overload()
             if "DREF" in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
         elif self.lightType == LIGHT_NAMED and not parsed_light:
@@ -142,7 +147,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             if self.comment and not self.comment.startswith(("//","#")):
                 logger.warn(f"Comment in param light ({self.comment}) does not start with '//' or '#'")
 
-            self.record_completed = parsed_light.overloads[0]
+            self.record_completed = parsed_light.best_overload()
             for i, (pformal, pactual) in enumerate(zip(params_formal, params_actual)):
                 try:
                     float(pactual)
@@ -158,10 +163,16 @@ class XPlaneLight(xplane_object.XPlaneObject):
             if "DREF" in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
-            self.is_omni = self.record_completed["WIDTH"] >= 1.0
+            # The only prototypes without DXYZ are SPILL_GND/_REV (of which there are no parameters)
+            # and SPILL_HW_FLA overloads, which are in fact omni
+            # but none of them are parameterized
+            try:
+                dir_vec = Vector(map(self.record_completed.__getitem__, ["DX","DY","DZ"]))
+            except KeyError:
+                dir_vec = Vector((0,0,0))
 
             # We use precision keyframe because we don't want to animate unnecissarily
-            if round(dir_vec.magnitude, PRECISION_KEYFRAME) == 0.0 and not self.is_omni:
+            if round(dir_vec.magnitude, PRECISION_KEYFRAME) == 0.0 and not self.record_completed.is_omni():
                 logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
                 return
         elif self.lightType == LIGHT_PARAM and parsed_light and not parsed_light.light_param_def:
@@ -181,7 +192,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             pass
         # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
         # -------------------|------------|--------------|------------------|-------
-        # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | Yes              | Fill out params and write
+        # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | Yes              | Fill out params, apply any sw_callbacks, and write
         # LIGHT_AUTOMATIC    |"POINT/SPOT"| Yes          | No               | Treat as named light, apply any sw_callbacks, write
         # LIGHT_AUTOMATIC    |"POINT/SPOT"| No           | N/A              | Treat as named light, give warning, write as is
         # LIGHT_AUTOMATIC    | Any Others | N/A          | N/A              | Error, "Automatic lights require POINT or SPOT"
@@ -202,10 +213,10 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 """
                 if light_data.type == "POINT":
                     return 1
-                elif "BILLBOARD" in parsed_light.overloads[0].overload_type:
-                    # This will be adjusted later on during write once we know DXYZ
-                    return light_data.spot_size * .5
-                elif "SPILL" in parsed_light.overloads[0].overload_type:
+                elif "BILLBOARD" in parsed_light.best_overload().overload_type:
+                    # To be filled in later when we know DXYZ
+                    return "WIDTH"
+                elif "SPILL" in parsed_light.best_overload().overload_type:
                     # cos(half the cone angle)
                     return math.cos(light_data.spot_size * .5)
 
@@ -232,7 +243,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             #EXCEPT there is aproblem with lights like spot_params_bb, which need SIZE and need WIDTH =1.0 for omni
 
             self.params = {param:convert_table[param.rstrip("_")] for param in parsed_light.light_param_def}
-            self.record_completed = parsed_light.overloads[0]
+            self.record_completed = parsed_light.best_overload()
             for p_arg in filter(
                     lambda arg: isinstance(arg,str)
                                 and not arg.startswith("sim")
@@ -249,16 +260,25 @@ class XPlaneLight(xplane_object.XPlaneObject):
             try:
                 # Since WIDTH determines if we animate or not, we use PRECISION_KEYFRAME
                 self.record_completed["WIDTH"] = round(self.record_completed["WIDTH"], PRECISION_KEYFRAME)
-            except KeyError:
+            except (KeyError, TypeError): # No WIDTH column or no __round__for str
                 pass
 
-            # After all this parameter replacing and sw_callback using, we can finally begin to answer
-            # "Is it OMNI?"
-            self.is_omni = self.is_omni(overload=self.record_completed)
-
+            # This is to prevent astonishing aiming-Points-has-no-feedback
+            # and aiming-Spot-does-nothing problems
+            # for the user. The UI will show this too.
+            #
+            # Beacuse is_omni's special checks and the fact that
+            # directional billboards will never have a WIDTH of 1
+            # means we can check this here instead of in write
+            #START HERE: What conditions make us reach these?
+            if self.record_completed.is_omni() and light_data.type == "SPOT":
+                logger.error("Omni light should use a Point Light, no animation will occur")
+                return
+            elif not self.record_completed.is_omni() and light_data.type == "POINT":
+                logger.error("Directional lights must a Spot light to Aim")
+                return
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def:
-            # Like LIGHT_NAMED but no autocorrection
-            self.record_completed = parsed_light.overloads[0]
+            self.record_completed = parsed_light.best_overload()
             if "DREF" in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
         elif self.lightType == LIGHT_AUTOMATIC and not parsed_light:
@@ -313,17 +333,24 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 axis_angle_theta = math.asin(clamp(axis_angle_vec3_b.magnitude,-1.0,1.0))
             return axis_angle_vec3_b, axis_angle_theta
 
-        def should_autocorrect_nonautomatic():
+        def should_autocorrect_preautomatic():
             try:
-                return (self.lightType != LIGHT_AUTOMATIC
-                        # Yes, '!= "POINT"' matters for historical reasons
-                        and light_data.type != "POINT"
-                        and all(param in self.record_completed for param in ["DX", "DY", "DZ"]))
+                return (
+                    self.lightType
+                    in {
+                        xplane_constants.LIGHT_NAMED,
+                        xplane_constants.LIGHT_PARAM,
+                    }
+                    and not self.record_completed.is_omni()
+                    # Yes, '!= "POINT"' matters for historical reasons
+                    and light_data.type != "POINT"
+                    and all(param in self.record_completed for param in ["DX", "DY", "DZ"])
+                )
             except TypeError as te: # self.record_completed is None
                 return False
 
         def should_autocorrect_automatic():
-            if (self.lightType == LIGHT_AUTOMATIC and light_data.type == "SPOT"):
+            if (self.lightType == LIGHT_AUTOMATIC and not self.record_completed.is_omni()):
                 if self.params:
                     # If we will be LIGHT_PARAM but we won't be filling in DXYZ ourselves
                     return all(param not in self.params for param in ["DX", "DY", "DZ"])
@@ -335,14 +362,16 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
         def should_fill_in_dxyz_for_automatic():
             try:
-                return (self.lightType == LIGHT_AUTOMATIC
-                    and light_data.type == "SPOT"
+                return (
+                    self.lightType == LIGHT_AUTOMATIC
+                    and not self.record_completed.is_omni()
                     # If we have a DXYZ we'll use that instead of autocorrection
-                    and {"DX", "DY", "DZ"} <= set(self.params))
-            except TypeError: # self.params is None
+                    and {"DX", "DY", "DZ"} <= set(self.params)
+                )
+            except TypeError:  # self.params is None
                 return False
 
-        if (should_autocorrect_nonautomatic() or should_autocorrect_automatic()):
+        if (should_autocorrect_preautomatic() or should_autocorrect_automatic()):
             axis_angle_vec_b, axis_angle_theta = find_autocorrect_axis_angle(
                     vec_x_to_b(
                         Vector(self.record_completed[param] for param in ["DX", "DY", "DZ"]).normalized()
@@ -359,7 +388,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # Inverse to change our animation order (so we really have rot, trans when we
             # originally had trans, rot) and now we can use the translation in the lamp
             # itself.
-            if round(axis_angle_theta, PRECISION_KEYFRAME) != 0.0 and not self.is_omni:
+            if round(axis_angle_theta, PRECISION_KEYFRAME) != 0.0:
                 o += f"{indent}ANIM_begin\n"
 
                 if debug:
@@ -392,6 +421,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 self.params["WIDTH"] = round(new_width, xplane_constants.PRECISION_KEYFRAME)
                 if self.params["WIDTH"] == 0:
                     logger.error("light width cannot be entirely obtuse")
+                    return o
             else:
                 self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(dir_vec_b_norm)))
 
@@ -401,21 +431,31 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # -Ted, 4/17/2020
             #for param in ["DX", "DY", "DZ"]:
             #   self.record_completed[param] = self.params[param]
+        else:
+            # Basically, you're here if the light is
+            # - unknown
+            # - omni
+            # - a real lights the user didn't want autocorrected
+            #
+            # No animation was emited and no change to self.record_completed/params made
+            pass
 
-        translation_x_str = " ".join(map(floatToStr,vec_b_to_x(translation)))
+        translation_xp_str = " ".join(map(floatToStr,vec_b_to_x(translation)))
         known_named_automatic = self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def
         unknown_named_automatic = self.lightType == LIGHT_AUTOMATIC and not parsed_light
         if (self.lightType == LIGHT_NAMED
             or (known_named_automatic or unknown_named_automatic)):
-            o += f"{indent}LIGHT_NAMED\t{self.lightName} {translation_x_str}\n"
+            o += f"{indent}LIGHT_NAMED\t{self.lightName} {translation_xp_str}\n"
         elif (self.lightType == LIGHT_PARAM
                 or (self.lightType == LIGHT_AUTOMATIC and parsed_light.light_param_def)):
-            o += f"{indent}LIGHT_PARAM\t{self.lightName} {translation_x_str}"
-            o += " "
-            o += f"{' '.join(map(floatToStr,self.params.values()))}" if self.lightType == LIGHT_AUTOMATIC else self.params
-            o += "\n"
+            o += (
+                f"{indent}LIGHT_PARAM\t{self.lightName}"
+                f" {translation_xp_str}"
+                f" {' '.join(map(floatToStr,self.params.values())) if self.lightType == LIGHT_AUTOMATIC else self.params}"
+                f"\n"
+            )
         elif self.lightType == LIGHT_CUSTOM:
-            o += (f"{indent}LIGHT_CUSTOM\t{translation_x_str}"
+            o += (f"{indent}LIGHT_CUSTOM\t{translation_xp_str}"
                   f" {' '.join(map(floatToStr,self.color))}"
                   f" {' '.join(map(floatToStr,[self.energy, self.size]))}"
                   f" {' '.join(map(floatToStr,self.uv))}"
