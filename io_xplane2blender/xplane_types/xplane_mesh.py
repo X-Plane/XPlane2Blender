@@ -142,34 +142,29 @@ class XPlaneMesh():
         ######################################################################
         # WARNING! This is a hot path! So don't change it without profiling! #
         ######################################################################
-        o = bytearray()
         #print("Begin XPlaneMesh.writeVertices")
         #start = time.perf_counter()
         debug = getDebug()
-
-        vt_array = array.array('f', [round(component,8) for vertice in self.vertices for component in vertice])
-        #Loop through every line, format it's 8 components, use rstrip, if statement for 10.00000000->10.0
-        #52-60 seconds
-        for i,line in enumerate(range(0,len(vt_array),8)):
-            o += b"VT"
-            for component in  vt_array[line:line+8]:
-                sb = bytes("\t%.8f" % component,"utf-8").rstrip(b'0')
-                if sb[-1] == 46:#'.':
-                    o += sb[:-1]
-                else:
-                    o += sb
-
-            if debug:
-                o += bytes("\t# %d\n" % i,"utf-8")
-            else:
-                o += b"\n"
-
-        #print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
-        return o.decode("utf-8")
+        tab = f"\t"
+        if debug:
+            s = "".join(f"VT\t"
+                        f"{tab.join(floatToStr(component) for component in line)}"
+                        f"# {i}"
+                        f"\n"
+                        for i, line in enumerate(self.vertices))
+            #print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
+            return s
+        else:
+            s = "".join(f"VT\t"
+                        f"{tab.join(floatToStr(component) for component in line)}"
+                        f"\n"
+                        for line in self.vertices)
+            #print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
+            return s
 
     def writeIndices(self)->str:
         """
-        Turns the collected vertices into the OBJ's IDX table
+        Turns the collected indices into the OBJ's IDX10/IDX table
         """
         ######################################################################
         # WARNING! This is a hot path! So don't change it without profiling! #
