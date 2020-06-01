@@ -284,6 +284,8 @@ class ParsedLightOverload:
         the complex rules and special cases, as opposed to simply checking
         the 'WIDTH' column
 
+        Raises ValueError if WIDTH column does not have a number yet.
+
         Since an overload's arguments are mutable and may have unreplaced parameters
         the return value for this is not constant
         """
@@ -299,74 +301,76 @@ class ParsedLightOverload:
         # good reason to
         #---------------------------------------------------------------------
 
-        try:
-            return round(self["WIDTH"], xplane_constants.PRECISION_KEYFRAME) == 1
-        except (KeyError, TypeError): # No WIDTH column or "WIDTH" unreplaced
-            from_do_RGB_TO_DXYZ_W_CALC = {
-                "airplane_beacon_size",
-                "airplane_generic_core",
-                "airplane_generic_flare",
-                "airplane_generic_flash",
-                "airplane_generic_glow",
-                "airplane_generic_size",
-                "airplane_nav_left_size",
-                "airplane_nav_right_size",
-                "airplane_nav_tail_size",
-            }
+        from_do_RGB_TO_DXYZ_W_CALC = {
+            "airplane_beacon_size",
+            "airplane_generic_core",
+            "airplane_generic_flare",
+            "airplane_generic_flash",
+            "airplane_generic_glow",
+            "airplane_generic_size",
+            "airplane_nav_left_size",
+            "airplane_nav_right_size",
+            "airplane_nav_tail_size",
+        }
 
-            from_force_WIDTH_1_omni = {
-                "airplane_beacon_rotate",
-                "airplane_beacon",
-                "appch_rabbit_o",
-                "appch_strobe_o",
-                "inset_appch_rabbit_o",
-                "inset_appch_rabbit_o_sp",
-                "inset_appch_strobe_o",
-                "inset_appch_strobe_o_sp",
-            }
+        from_force_WIDTH_1_omni = {
+            "airplane_beacon_rotate",
+            "airplane_beacon",
+            "appch_rabbit_o",
+            "appch_strobe_o",
+            "inset_appch_rabbit_o",
+            "inset_appch_rabbit_o_sp",
+            "inset_appch_strobe_o",
+            "inset_appch_strobe_o_sp",
+        }
 
-            from_force_WIDTH_1_unidirectional = {
-                "VASI",
-                "VASI3",
-                "appch_rabbit_u",
-                "appch_strobe_u",
-                "inset_appch_rabbit_u",
-                "inset_appch_rabbit_u_sp",
-                "inset_appch_strobe_u",
-                "inset_appch_strobe_u_sp",
-                "wigwag_y1",
-                "wigwag_y2",
-                "hold_short_y1",
-                "hold_short_y2",
-                "pad_SGSI_lo",
-                "pad_SGSI_on",
-                "pad_SGSI_hi",
-                "carrier_datum",
-                "carrier_waveoff",
-                "carrier_meatball1",
-                "carrier_meatball2",
-                "carrier_meatball3",
-                "carrier_meatball4",
-                "carrier_meatball5",
-                "frigate_SGSI_lo",
-                "frigate_SGSI_on",
-                "frigate_SGSI_hi",
-            }
+        from_force_WIDTH_1_unidirectional = {
+            "VASI",
+            "VASI3",
+            "appch_rabbit_u",
+            "appch_strobe_u",
+            "inset_appch_rabbit_u",
+            "inset_appch_rabbit_u_sp",
+            "inset_appch_strobe_u",
+            "inset_appch_strobe_u_sp",
+            "wigwag_y1",
+            "wigwag_y2",
+            "hold_short_y1",
+            "hold_short_y2",
+            "pad_SGSI_lo",
+            "pad_SGSI_on",
+            "pad_SGSI_hi",
+            "carrier_datum",
+            "carrier_waveoff",
+            "carrier_meatball1",
+            "carrier_meatball2",
+            "carrier_meatball3",
+            "carrier_meatball4",
+            "carrier_meatball5",
+            "frigate_SGSI_lo",
+            "frigate_SGSI_on",
+            "frigate_SGSI_hi",
+        }
 
-            if self.overload_type in {"SPILL_HW_FLA", "SPILL_GND", "SPILL_GND_REV"}:
-                return True
-            elif self.name in from_do_RGB_TO_DXYZ_W_CALC:
-                return False
-            # I don't know what direction the lights of RGBA_TO_DXYZ_W_DREFS
-            # would point, so we can only hope the first test was enough
-            # and honestly worrying about it at all by now is overkill
-            # - Ted, 5/31/2020
-            elif self.name in from_force_WIDTH_1_omni:
-                return True
-            elif self.name in from_force_WIDTH_1_unidirectional:
+        if self.overload_type in {"SPILL_HW_FLA", "SPILL_GND", "SPILL_GND_REV"}:
+            return True
+        elif self.name in from_force_WIDTH_1_omni:
+            return True
+        elif self.name in from_do_RGB_TO_DXYZ_W_CALC:
+            return False
+        elif self.name in from_force_WIDTH_1_unidirectional:
+            return False
+        else:
+            try:
+                w = self["WIDTH"]
+            except KeyError: # No WIDTH column
                 return False
             else:
-                return False
+                if w == "WIDTH":
+                    raise ValueError # Function not ready yet
+                else:
+                    return round(w, xplane_constants.PRECISION_KEYFRAME) == 1
+
 
     def prototype(self)->Tuple[str,...]:
         return tuple(get_overload_column_info(self.overload_type))

@@ -171,10 +171,14 @@ class XPlaneLight(xplane_object.XPlaneObject):
             except KeyError:
                 dir_vec = Vector((0,0,0))
 
-            # We use precision keyframe because we don't want to animate unnecissarily
-            if round(dir_vec.magnitude, PRECISION_KEYFRAME) == 0.0 and not self.record_completed.is_omni():
-                logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
-                return
+            try:
+                # We use precision keyframe because we don't want to animate unnecissarily
+                if round(dir_vec.magnitude, PRECISION_KEYFRAME) == 0.0 and not self.record_completed.is_omni():
+                    logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
+                    return
+            except ValueError: # is_omni not ready yet
+                pass
+
         elif self.lightType == LIGHT_PARAM and parsed_light and not parsed_light.light_param_def:
             logger.error(f"Light name {self.lightName} is a named light, not a param light."
                          f" Check the light type drop down menu")
@@ -248,7 +252,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     lambda arg: isinstance(arg,str)
                                 and not arg.startswith("sim")
                                 and arg not in {"DX", "DY", "DZ"},
-                            self.record_completed):
+                    self.record_completed):
                 self.record_completed.replace_parameterization_argument(p_arg, self.params[p_arg])
 
             # Leaving DXYZ in a record's arguments is okay
@@ -260,8 +264,15 @@ class XPlaneLight(xplane_object.XPlaneObject):
             try:
                 # Since WIDTH determines if we animate or not, we use PRECISION_KEYFRAME
                 self.record_completed["WIDTH"] = round(self.record_completed["WIDTH"], PRECISION_KEYFRAME)
+                is_omni = self.record_completed.is_omni()
             except (KeyError, TypeError): # No WIDTH column or no __round__for str
-                pass
+                is_omni = False
+
+            if is_omni:
+                self.record_completed.replace_parameterization_argument("DX", 0)
+                self.record_completed.replace_parameterization_argument("DY", 0)
+                self.record_completed.replace_parameterization_argument("DZ", 0)
+                self.params.update({"DX":0, "DY":0, "DZ":0})
 
             # This is to prevent astonishing aiming-Points-has-no-feedback
             # and aiming-Spot-does-nothing problems
@@ -271,10 +282,10 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # directional billboards will never have a WIDTH of 1
             # means we can check this here instead of in write
             #START HERE: What conditions make us reach these?
-            if self.record_completed.is_omni() and light_data.type == "SPOT":
+            if is_omni and light_data.type == "SPOT":
                 logger.error("Omni light should use a Point Light, no animation will occur")
                 return
-            elif not self.record_completed.is_omni() and light_data.type == "POINT":
+            elif not is_omni and light_data.type == "POINT":
                 logger.error("Directional lights must a Spot light to Aim")
                 return
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def:
@@ -346,11 +357,16 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     and light_data.type != "POINT"
                     and all(param in self.record_completed for param in ["DX", "DY", "DZ"])
                 )
-            except TypeError as te: # self.record_completed is None
+            except (ValueError, TypeError): # is_omni not ready, self.record_completed is None
                 return False
 
         def should_autocorrect_automatic():
-            if (self.lightType == LIGHT_AUTOMATIC and not self.record_completed.is_omni()):
+            try:
+                is_omni = self.record_completed.is_omni()
+            except ValueError:
+                is_omni = False
+
+            if (self.lightType == LIGHT_AUTOMATIC and not is_omni):
                 if self.params:
                     # If we will be LIGHT_PARAM but we won't be filling in DXYZ ourselves
                     return all(param not in self.params for param in ["DX", "DY", "DZ"])
@@ -362,9 +378,17 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
         def should_fill_in_dxyz_for_automatic():
             try:
+                if self.record_completed.is_omni():
+                    return False
+            except ValueError:
+                # We have no WIDTH column or WIDTH
+                # not yet replaced which in this case means we have a
+                # billboard light and next stop is replacement!
+                assert self.record_completed.overload_type.startswith("BILLBOARD"), "Non-billboard didn't get its proper new WIDTH value back in collect"
+
+            try:
                 return (
                     self.lightType == LIGHT_AUTOMATIC
-                    and not self.record_completed.is_omni()
                     # If we have a DXYZ we'll use that instead of autocorrection
                     and {"DX", "DY", "DZ"} <= set(self.params)
                 )
@@ -411,7 +435,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
         elif should_fill_in_dxyz_for_automatic():
             dir_vec_b_norm = (bakeMatrix.to_3x3() @ Vector((0,0,-1))).normalized()
 
-            if "BILLBOARD" in parsed_light.overloads[0].overload_type:
+            if "BILLBOARD" in parsed_light.best_overload().overload_type:
                 angle_from_center = light_data.spot_size / 2
                 # No divide by 0 problems, spot_size will always be in [1, 180] 1 <= spot_size <= 180 guaranteed
                 new_width = math.cos(angle_from_center) / (math.cos(angle_from_center) - 1)
@@ -419,18 +443,13 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 scaled_vec_b = dir_vec_b_norm * scale
                 self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(scaled_vec_b)))
                 self.params["WIDTH"] = round(new_width, xplane_constants.PRECISION_KEYFRAME)
-                if self.params["WIDTH"] == 0:
-                    logger.error("light width cannot be entirely obtuse")
-                    return o
+                for param in ["DX", "DY", "DZ"]:
+                   self.record_completed[param] = self.params[param]
+                self.record_completed["WIDTH"] = self.params["WIDTH"]
             else:
                 self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(dir_vec_b_norm)))
-
-            # self.record_completed isn't needed anymore, but,
-            # to be tidy, we can finally update it too
-            # in case we need to do something with it later
-            # -Ted, 4/17/2020
-            #for param in ["DX", "DY", "DZ"]:
-            #   self.record_completed[param] = self.params[param]
+                for param in ["DX", "DY", "DZ"]:
+                   self.record_completed[param] = self.params[param]
         else:
             # Basically, you're here if the light is
             # - unknown
@@ -439,6 +458,9 @@ class XPlaneLight(xplane_object.XPlaneObject):
             #
             # No animation was emited and no change to self.record_completed/params made
             pass
+        if isinstance(self.params, dict):
+            assert all(isinstance(p, (int, float)) for p in self.params.values()), f"One of {self.lightName} parameters did not get replaced in collect or write: {self.params}"
+        assert all(isinstance(c, (float, int)) or c.startswith(("NOOP", "sim")) for c in self.record_completed), f"record_completed is not complete {self.record_completed}"
 
         translation_xp_str = " ".join(map(floatToStr,vec_b_to_x(translation)))
         known_named_automatic = self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def
