@@ -46,7 +46,9 @@ class TestAutomaticIsOmniLight(XPlaneTestCase):
         # No WIDTH parameter. TODO: Is this right to test?
         _test("airplane_beacon_rotate")
         _test("inset_appch_rabbit_o_sp")
-
+        _test("wind_turbine_obs")
+        _test("TDZL_halo")
+        _test("edge_rw_halo")
 
     def test_is_non_omni_api(self)->None:
         parse_lights_file()

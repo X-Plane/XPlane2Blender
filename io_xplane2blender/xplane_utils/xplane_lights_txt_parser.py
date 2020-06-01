@@ -298,14 +298,10 @@ class ParsedLightOverload:
         # In otherwords: don't mess with it unless you have a damn
         # good reason to
         #---------------------------------------------------------------------
-        try:
-            width_column = self["WIDTH"]
-        except KeyError:
-            width_column = None
 
-        if isinstance(width_column, float) and round(width_column, xplane_constants.PRECISION_KEYFRAME) == 1:
-            return True
-        else:
+        try:
+            return round(self["WIDTH"], xplane_constants.PRECISION_KEYFRAME) == 1
+        except (KeyError, TypeError): # No WIDTH column or "WIDTH" unreplaced
             from_do_RGB_TO_DXYZ_W_CALC = {
                 "airplane_beacon_size",
                 "airplane_generic_core",
