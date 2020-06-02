@@ -365,6 +365,21 @@ class VerStruct():
 #What gets output when.
 message_to_str_count = 0
 
+"""
+Logging Style Guide:
+    - Put the name of object or source of error first, leave a trail to follow quickly
+    - Include how to correct a problem instead of simply complaining about it, if possible
+    - Simple English benefits all, no programmer speak, mentions of the API, or complex grammar
+    - Be clear when you're talking about Blender concepts and X-Plane concepts
+    - Be terse, avoid more than a sentence including data filled in strings - avoid word wrapping
+    - Speak calmly and positively. Avoid "you failed" statements and exclamation marks
+    - One error per problem, not one error per newline
+    - Find errors whenever possible during the collection phase instead of writing the writing phase
+    - Test errors are emitted as part of unit testing
+
+Spending 20mins on a good error message is better than 2hrs troubleshooting an author's
+non-existant bug
+"""
 class XPlaneLogger():
     def __init__(self):
         self.transports = []

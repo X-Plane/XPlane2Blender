@@ -1,3 +1,84 @@
+"""
+The main class for parsing and interpring the contents of lights.txt.
+
+First parse the file, then get ParsedLights via get_parsed_light and the light name.
+
+These tell you information about the name, any parameters, and its overloads.
+Use it's best_overload function to get get valuable information about how X-Plane will end up
+using this light
+"""
+
+"""
+--- BIG NOTE --------------------------------------------------------
+The rules of the Automatic Lights feature:
+
+X-Plane
+-------
+1. A light may be Omni or Directional. If you want both, use one of each
+2. In general, the "WIDTH" column controls if it is omni or directional
+3. A dataref can mess with this and change the behavior
+4. The "WIDTH" _column_ may be parameterized by something, probably a "WIDTH" parameter
+5. BILLBOARD_SW cone lights use a formula for their WIDTH that requires the angle of the light
+
+Lights.txt
+----------
+1. Just read the whole spec. Seriously.
+
+XPlane2Blender
+--------------
+1. A user sees this feature through the lens of Blender Light Types and the UI only
+2. We will never let them do something shocking like
+    > Let a POINT light (which hides directionality in the 3D View, though it has `rotation`) create a directional light
+    > Let a SPOT light (which is _very_ directional in the 3D View) create an omni light
+3. The rules are deterministic: if we know the WIDTH column, dataref, (and rarely a specific light name)
+    we can tell if the light will become Omni or Directional
+4. We only have the contents of lights.txt to worry about. If lights.txt got updated, our code would have to be reviewed
+    instead of being forced to build entirely general solutions
+
+When well implemented, these neatly make guarantees like
+- "A POINT light will never become directional"
+- "A light with a 'WIDTH' of 1 came from a POINT light"
+- "No POINT light will receive animation to autocorrect"
+- "A SPOT light will always have a WIDTH of < 1"
+    > Yes, but remember, for BILLBOARD_SW, parameterized-WIDTH columns
+      must be figured out after the bake matrix is calculated
+- "No light has it's 3rd best overload be its secretly most important"
+    > Yes, but only until someone invents a new light that breaks our code
+- "If we need to re-calculate "WIDTH", our light type is a BILLBOARD_SW
+
+There are some ideas that are WRONG! For instance
+- "SPOT lights always animate to aim a light"
+    > No, sometimes autocorrection isn't necessary or we have DXYZ parameters we can fill in
+- "DXYZ parameters or columns imply directionality"
+    > Knowing "DXYZ" columns are useless without knowing "WIDTH" and dataref
+- "Autocorrection will start from (0, 0, -1)"
+    > False, some lights need special autocorrection
+- "SPOT lights will always have a WIDTH column of < 1"
+    > Slightly pedantic, - some overload_types do not have a WIDTH column
+- "Because it is deterministic, we can tell just from the light name and Blender Light type"
+    > Again, the dataref and "WIDTH" column can mess with the answer
+- "Because the "WIDTH" is < 1, it was a SPOT"
+    > Remember, billboards can be directional, despite not having a "cone" of light
+- "Because the "WIDTH" column == 1, it is omni"
+    > Nope! There are special cases and is_omni takes care of this for you
+
+To deal with these extreme subtleties follow these rules while writing code:
+
+1. Let ParsedLightOverload.is_omni drive the conversation
+    - It hands much of the complexity and was developed after months of research.
+      Use it consistently to reduce sloppy logic
+    - Decide for yourself what a ValueError means. You may need the distinction between "Directional, but only later" and "Directional"
+2. Don't talk about "WIDTH", "DXYZ", or any parameters
+    Since parameters may be ignored or used in bizarre ways they're far less reliable sources of information
+3. Use the ParsedLight.best_overload function instead of direct indexing
+    It captures edge cases and is easier to read
+4. Talk about the UI as little as possible
+    POINT is synonymous with "Omni" only because of a properly implemented spec and we got lucky with how Blender's UI works
+5. Again, talk about "WIDTH" columns, datarefs, and edge cases as much as possible
+    This is how X-Plane thinks, and fixing special rules will come from XPlane2Blender discovering more about X-Plane, not the other way around
+
+Hopefully this guide will help you avoid nasty edge cases and read the sometimes obtuse sounding logic
+"""
 import collections
 import copy
 import os
@@ -280,11 +361,16 @@ class ParsedLightOverload:
 
     def is_omni(self)->bool:
         """
-        Checks if overload is omni: this method understands
+        Checks if overload is omni. This method understands
         the complex rules and special cases, as opposed to simply checking
         the 'WIDTH' column
 
-        Raises ValueError if WIDTH column does not have a number yet.
+        May raise ValueError if "WIDTH" column is unreplaced
+        and no other special case knows what to return.
+
+        Note: Since a SPOT will never be omni, "function not ready"
+        will always eventually mean "not omni". The distinction is still useful
+        information
 
         Since an overload's arguments are mutable and may have unreplaced parameters
         the return value for this is not constant
@@ -297,7 +383,7 @@ class ParsedLightOverload:
         # behavior of X-Plane's light systems, along with it's oral
         # history, and map of where the bodies are buried.
         #
-        # In otherwords: don't mess with it unless you have a damn
+        # In other words: don't mess with it unless you have a damn
         # good reason to
         #---------------------------------------------------------------------
 
@@ -363,14 +449,15 @@ class ParsedLightOverload:
         else:
             try:
                 w = self["WIDTH"]
-            except KeyError: # No WIDTH column
+            except KeyError: # No "WIDTH" column
+                # No WIDTH column and we know we're not a special "always omni" case?
+                # We're "Always Directional"
                 return False
             else:
                 if w == "WIDTH":
-                    raise ValueError # Function not ready yet
+                    raise ValueError(f"{self.name}'s 'WIDTH' column does not contain a float, omni-ness cannot be determined yet")
                 else:
                     return round(w, xplane_constants.PRECISION_KEYFRAME) == 1
-
 
     def prototype(self)->Tuple[str,...]:
         return tuple(get_overload_column_info(self.overload_type))

@@ -244,8 +244,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "ONE":1,
                 }
 
-            #EXCEPT there is aproblem with lights like spot_params_bb, which need SIZE and need WIDTH =1.0 for omni
-
             self.params = {param:convert_table[param.rstrip("_")] for param in parsed_light.light_param_def}
             self.record_completed = parsed_light.best_overload()
             for p_arg in filter(
@@ -269,25 +267,14 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 is_omni = False
 
             if is_omni:
-                self.record_completed.replace_parameterization_argument("DX", 0)
-                self.record_completed.replace_parameterization_argument("DY", 0)
-                self.record_completed.replace_parameterization_argument("DZ", 0)
-                self.params.update({"DX":0, "DY":0, "DZ":0})
+                try:
+                    self.record_completed.replace_parameterization_argument("DX", 0)
+                    self.record_completed.replace_parameterization_argument("DY", 0)
+                    self.record_completed.replace_parameterization_argument("DZ", 0)
+                    self.params.update({"DX":0, "DY":0, "DZ":0})
+                except ValueError: # No DX, DY, DZ
+                    pass
 
-            # This is to prevent astonishing aiming-Points-has-no-feedback
-            # and aiming-Spot-does-nothing problems
-            # for the user. The UI will show this too.
-            #
-            # Beacuse is_omni's special checks and the fact that
-            # directional billboards will never have a WIDTH of 1
-            # means we can check this here instead of in write
-            #START HERE: What conditions make us reach these?
-            if is_omni and light_data.type == "SPOT":
-                logger.error("Omni light should use a Point Light, no animation will occur")
-                return
-            elif not is_omni and light_data.type == "POINT":
-                logger.error("Directional lights must a Spot light to Aim")
-                return
         elif self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def:
             self.record_completed = parsed_light.best_overload()
             if "DREF" in self.record_completed.prototype():
@@ -301,6 +288,19 @@ class XPlaneLight(xplane_object.XPlaneObject):
             pass
         else:
             assert False, f"{self.blenderObject.name} had some property configuation that was unaccounted for"
+
+        if self.lightType == LIGHT_AUTOMATIC and self.record_completed:
+            try:
+                is_omni = self.record_completed.is_omni()
+            except ValueError:
+                is_omni = False
+
+            if is_omni and light_data.type == "SPOT":
+                logger.error(f"{self.blenderObject.name}'s '{self.lightName}' light will be omnidirectional in X-Plane. Use a Point light")
+                return
+            elif not is_omni and light_data.type == "POINT":
+                logger.error(f"{self.blenderObject.name}'s '{self.lightName}' light will be directional in X-Plane. Use a Spot light")
+                return
 
     def write(self)->None:
         debug = getDebug()
