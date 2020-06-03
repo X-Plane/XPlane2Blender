@@ -13,8 +13,7 @@ from io_xplane2blender.tests import test_creation_helpers
 __dirname__ = os.path.dirname(__file__)
 
 class TestAutomaticIsOmniLight(XPlaneTestCase):
-    @unittest.skip("Not ready")
-    def test_is_omni_lights(self)->None:
+    def test_omni_lights(self)->None:
         filename = inspect.stack()[0].function
         self.assertExportableRootExportEqualsFixture(
             filename[5:],
@@ -23,8 +22,7 @@ class TestAutomaticIsOmniLight(XPlaneTestCase):
             filename,
         )
 
-    @unittest.skip("Not ready")
-    def test_is_non_omni_lights(self)->None:
+    def test_non_omni_lights(self)->None:
         filename = inspect.stack()[0].function
         self.assertExportableRootExportEqualsFixture(
             filename[5:],

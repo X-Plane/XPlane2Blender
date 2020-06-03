@@ -1,0 +1,35 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Empty: sw_light_callback_used
+	# EMPTY: sw_light_callback_used	weight: 0
+		# 2 Light: do_force_omni
+		# LIGHT: do_force_omni	weight: 10000
+		LIGHT_NAMED	pad_SGSI_lo 0 0 -0
+		# 2 Light: do_noop
+		# LIGHT: do_noop	weight: 10000
+		ANIM_begin
+		# static rotation
+		ANIM_rotate	0.59040731	0.80710554	0	81.6911	81.6911
+		LIGHT_PARAM	airplane_generic_sp 0 0 -0 0.95 0.82 0.72    0    7    .95
+		ANIM_end
+		# 2 Light: do_rgb_to_dxyz_w_calc
+		# LIGHT: do_rgb_to_dxyz_w_calc	weight: 10000
+		ANIM_begin
+		# static rotation
+		ANIM_rotate	0	-0.94638681	-0.32303587	135.55771	135.55771
+		LIGHT_PARAM	airplane_nav_right_size 0 0 -0 2 0.1
+		ANIM_end
+		# 2 Light: do_rgb_to_dxyz_w_calc_alt
+		# LIGHT: do_rgb_to_dxyz_w_calc_alt	weight: 10000
+		ANIM_begin
+		# static rotation
+		ANIM_rotate	1	-0	-0	180	180
+		LIGHT_PARAM	airplane_generic_core 0 0 -0 0 0 -1     0 5
+		ANIM_end
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+82.NO_BUILD_NUMBR

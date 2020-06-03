@@ -86,7 +86,7 @@ import re
 
 from dataclasses import dataclass
 from mathutils import Vector
-from typing import Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Mapping, Set, Tuple, Union
 
 from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
@@ -193,52 +193,29 @@ def get_overload_column_info(overload_type:str)->Dict[str,bool]:
         },
     }[overload_type]
 
-def _get_rgb(prototype,lhs)->Tuple[float,float,float]:
-    return lhs[prototype.index("R"):prototype.index("B") + 1]
 
-def _set_rgb(prototype,lhs,value)->None:
-    lhs[prototype.index("R"):prototype.index("B")+1] = value
+def _replace_columns_via_values(overload:"ParsedLightOverload", new_values:Mapping[str,float]):
+    for column, value in new_values.items():
+        overload[column] = value
 
-def _get_a(prototype,lhs)->float:
-    return lhs[prototype.index("A")]
-
-def _set_a(prototype,lhs,value)->float:
-    lhs[prototype.index("A")] = value
-
-def _get_xyz(prototype,lhs)->Tuple[float,float,float]:
-    return lhs[prototype.index("DX"):prototype.index("DZ")+1]
-
-def _set_xyz(prototype,lhs,value:List[float])->None:
-    lhs[prototype.index("DX"):prototype.index("DZ")+1] = value
-
-def _get_width(prototype,lhs)->float:
-    return lhs[prototype.index("WIDTH")]
-
-def _set_width(prototype,lhs,value)->None:
-    lhs[prototype.index("WIDTH")] = value
 
 def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload")->None:
-    prototype = list(get_overload_column_info(overload.overload_type).keys())
-    args = overload.arguments
-    _set_xyz(prototype, args, args[prototype.index("R"):prototype.index("B")])
-    dir_vec = Vector(_get_xyz(prototype,args))
-    _set_width(prototype, args, 1 - dir_vec.magnitude)
-    _set_xyz(prototype, args, dir_vec.normalized())
-    _set_rgb(prototype, args, [1,1,1])
+    _replace_columns_via_values(overload, {"DX":overload["R"], "DY":overload["G"], "DZ":overload["B"]})
+    dir_vec = Vector((overload["DX"], overload["DY"], overload["DZ"]))
+    overload["WIDTH"] = 1 - dir_vec.magnitude
+    dvn = dir_vec.normalized()
+    _replace_columns_via_values(overload, {"DX":dvn[0], "DY":dvn[1], "DZ":dvn[2]})
+    _replace_columns_via_values(overload, {"R":1, "G": 1, "B": 1})
+
 
 def _do_rgba_to_dxyz_w(overload:"ParsedLightOverload")->None:
-    prototype = list(get_overload_column_info(overload.overload_type).keys())
-    args = overload.arguments
-    _set_xyz(prototype,   args, _get_rgb(prototype, args))
-    _set_width(prototype, args, args[prototype.index("A")])
-    _set_rgb(prototype,   args, [1,1,1])
-    _set_a(prototype,     args, 1)
+    _replace_columns_via_values(overload, {"DX":overload["R"], "DY":overload["G"], "DZ":overload["B"]})
+    overload["WIDTH"] = overload["A"]
+    _replace_columns_via_values(overload, {"R":1, "G": 1, "B": 1, "A": 1})
 
 
 def _do_force_WIDTH_1(overload:"ParsedLightOverload")->None:
-    prototype = list(get_overload_column_info(overload.overload_type).keys())
-    args = overload.arguments
-    _set_width(prototype, args, 1)
+    overload["WIDTH"] = 1
 
 
 RGB_TO_DXYZ_W_CALC_DREFS = {

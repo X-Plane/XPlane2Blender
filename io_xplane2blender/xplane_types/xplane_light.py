@@ -174,7 +174,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             try:
                 # We use precision keyframe because we don't want to animate unnecissarily
                 if round(dir_vec.magnitude, PRECISION_KEYFRAME) == 0.0 and not self.record_completed.is_omni():
-                    logger.error("Non-omni light cannot have (0.0,0.0,0.0) for direction")
+                    logger.error(f"{self.blenderObject.name}'s '{self.lightName}' is directional, but has (0, 0, 0) for direction")
                     return
             except ValueError: # is_omni not ready yet
                 pass
@@ -344,7 +344,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 axis_angle_theta = math.asin(clamp(axis_angle_vec3_b.magnitude,-1.0,1.0))
             return axis_angle_vec3_b, axis_angle_theta
 
-        def should_autocorrect_preautomatic():
+        def should_autocorrect_preautomatic()->bool:
             try:
                 return (
                     self.lightType
@@ -357,13 +357,13 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     and light_data.type != "POINT"
                     and all(param in self.record_completed for param in ["DX", "DY", "DZ"])
                 )
-            except (ValueError, TypeError): # is_omni not ready, self.record_completed is None
+            except (ValueError, AttributeError): # is_omni not ready, self.record_completed is None
                 return False
 
-        def should_autocorrect_automatic():
+        def should_autocorrect_automatic()->bool:
             try:
                 is_omni = self.record_completed.is_omni()
-            except ValueError:
+            except (AttributeError, ValueError): # self.record_completed is None, is_omni not ready
                 is_omni = False
 
             if (self.lightType == LIGHT_AUTOMATIC and not is_omni):
@@ -376,11 +376,13 @@ class XPlaneLight(xplane_object.XPlaneObject):
             else:
                 return False
 
-        def should_fill_in_dxyz_for_automatic():
+        def should_fill_in_dxyz_for_automatic()->bool:
             try:
                 if self.record_completed.is_omni():
                     return False
-            except ValueError:
+            except AttributeError: # record_completed is None
+                return False
+            except ValueError: # is_omni not ready
                 # We have no WIDTH column or WIDTH
                 # not yet replaced which in this case means we have a
                 # billboard light and next stop is replacement!
@@ -460,7 +462,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
             pass
         if isinstance(self.params, dict):
             assert all(isinstance(p, (int, float)) for p in self.params.values()), f"One of {self.lightName} parameters did not get replaced in collect or write: {self.params}"
-        assert all(isinstance(c, (float, int)) or c.startswith(("NOOP", "sim")) for c in self.record_completed), f"record_completed is not complete {self.record_completed}"
+        if self.record_completed:
+            assert all(isinstance(c, (float, int)) or c.startswith(("NOOP", "sim")) for c in self.record_completed), f"record_completed is not complete {self.record_completed}"
 
         translation_xp_str = " ".join(map(floatToStr,vec_b_to_x(translation)))
         known_named_automatic = self.lightType == LIGHT_AUTOMATIC and parsed_light and not parsed_light.light_param_def
