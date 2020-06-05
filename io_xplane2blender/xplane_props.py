@@ -1334,12 +1334,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         ]
     )
 
-    compositeTextures: bpy.props.BoolProperty(
-        name = "Compile Normal-Textures",
-        description = "Will automatically create and use corrected normal textures",
-        default = True
-    )
-
     # This list of version histories the .blend file has encountered,
     # from the earliest
     xplane2blender_ver_history: bpy.props.CollectionProperty(

@@ -383,6 +383,12 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
             xplane_updater_helpers.delete_property_from_datablock(has_layer.xplane.layer, "export")
         #----------------------------------------------------------------------
 
+    #TODO: Must replace with real build number of beta.3, when we get there
+    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0-dev.0+76.20200605105300"):
+        for scene in bpy.data.scenes:
+            xplane_updater_helpers.delete_property_from_datablock(scene.xplane, "compositeTextures")
+
+
 @persistent
 def load_handler(dummy):
     filepath = bpy.context.blend_data.filepath
