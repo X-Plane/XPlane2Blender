@@ -80,7 +80,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
     def collect(self)->None:
         super().collect()
 
-        #TODO: Put Test coverage in some old test file
         light_data = self.blenderObject.data
         if not self.lightName and self.lightType in {LIGHT_NAMED, LIGHT_PARAM, LIGHT_AUTOMATIC}:
             logger.error(f"{self.blenderObject.name} is a {self.lightType.title()} light but has no light name")
@@ -218,23 +217,50 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 if light_data.type == "POINT":
                     return 1
                 elif "BILLBOARD" in parsed_light.best_overload().overload_type:
-                    # To be filled in later when we know DXYZ
-                    return "WIDTH"
+                    return XPlaneLight._WIDTH_for_billboard(light_data.spot_size)
                 elif "SPILL" in parsed_light.best_overload().overload_type:
                     # cos(half the cone angle)
-                    return math.cos(light_data.spot_size * .5)
+                    return XPlaneLight._WIDTH_for_spill(light_data.spot_size)
 
-            # "CELL_", "AMP", "DAY", "DREF" are never parameterizable
-            convert_table = {
+            def new_dxyz_values()->Vector:
+                "Returns scaled light direction vector (X-Plane coords) of new light direction"
+                def get_basis_for_autocorrection():
+                    try:
+                        basis_b = {
+                                "airplane_nav_left_size": Vector((1, 0, 0)),
+                                "airplane_nav_right_size": Vector((-1, 0, 0)),
+                                "airplane_nav_tail_size": Vector((0, 1, 0))
+                            }[parsed_light.name]
+                    except KeyError:
+                        basis_b = Vector((0, 0, -1))
+                    return basis_b
+                basis_b = get_basis_for_autocorrection()
+                if light_data.type == "POINT":
+                    return Vector((0, 0, 0))
+                elif "BILLBOARD" in parsed_light.best_overload().overload_type:
+                    #if "DIR_MAG" in parsed_light.light_param_def:
+                        #scale = 1 - XPlaneLight._WIDTH_for_billboard(light_data.spot_size)
+                    #else:
+                    scale = 1 - XPlaneLight._WIDTH_for_billboard(light_data.spot_size)
+                    dir_vec_b_norm = self.get_light_direction(basis_b)
+                    scaled_vec_b = dir_vec_b_norm * scale
+                    return vec_b_to_x(scaled_vec_b)
+                elif "SPILL" in parsed_light.best_overload().overload_type:
+                    return vec_b_to_x(self.get_light_direction(basis_b))
+
+
+            dxyz_values_x = new_dxyz_values()
+            def convert_table(param:str)->float:
+                table = {
                     "R":self.color[0],
                     "G":self.color[1],
                     "B":self.color[2],
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
                     "SIZE":light_data.xplane.size,
-                    "DX":"DX", # Filled in later
-                    "DY":"DY", # Filled in later
-                    "DZ":"DZ", # Filled in later
+                    "DX":dxyz_values_x[0],
+                    "DY":dxyz_values_x[1],
+                    "DZ":dxyz_values_x[2],
                     "WIDTH": width_param_new_value(),
                     "FREQ": light_data.xplane.param_freq,
                     "PHASE": light_data.xplane.param_phase,
@@ -244,12 +270,15 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "ONE":1,
                 }
 
-            self.params = {param:convert_table[param.rstrip("_")] for param in parsed_light.light_param_def}
+                if light_data.type == "SPOT":
+                    table["DIR_MAG"] = XPlaneLight._DIR_MAG_for_billboard(light_data.spot_size)
+                return table[param]
+
+            self.params = {param:convert_table(param.rstrip("_")) for param in parsed_light.light_param_def}
             self.record_completed = parsed_light.best_overload()
             for p_arg in filter(
                     lambda arg: isinstance(arg,str)
-                                and not arg.startswith("sim")
-                                and arg not in {"DX", "DY", "DZ"},
+                                and not arg.startswith(("NOOP", "sim")),
                     self.record_completed):
                 self.record_completed.replace_parameterization_argument(p_arg, self.params[p_arg])
 
@@ -331,7 +360,18 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     return num
 
             # Multiple bake matrix by Vector to get the direction of the Blender object
-            dir_vec_b_norm = bakeMatrix.to_3x3() @ Vector((0,0,-1))
+            def get_basis_for_autocorrection():
+                try:
+                    basis_b = {
+                            "airplane_nav_left_size": Vector((1, 0, 0)),
+                            "airplane_nav_right_size": Vector((-1, 0, 0)),
+                            "airplane_nav_tail_size": Vector((0, 1, 0))
+                        }[parsed_light.name]
+                except KeyError:
+                    basis_b = Vector((0, 0, -1))
+                return basis_b
+
+            dir_vec_b_norm = self.get_light_direction(get_basis_for_autocorrection())
 
             # P is start rotation, and B is stop. As such, we have our axis of rotation.
             # "We take the X-Plane light and turn it until it matches what the artist wanted"
@@ -376,27 +416,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
             else:
                 return False
 
-        def should_fill_in_dxyz_for_automatic()->bool:
-            try:
-                if self.record_completed.is_omni():
-                    return False
-            except AttributeError: # record_completed is None
-                return False
-            except ValueError: # is_omni not ready
-                # We have no WIDTH column or WIDTH
-                # not yet replaced which in this case means we have a
-                # billboard light and next stop is replacement!
-                assert self.record_completed.overload_type.startswith("BILLBOARD"), "Non-billboard didn't get its proper new WIDTH value back in collect"
-
-            try:
-                return (
-                    self.lightType == LIGHT_AUTOMATIC
-                    # If we have a DXYZ we'll use that instead of autocorrection
-                    and {"DX", "DY", "DZ"} <= set(self.params)
-                )
-            except TypeError:  # self.params is None
-                return False
-
         if (should_autocorrect_preautomatic() or should_autocorrect_automatic()):
             axis_angle_vec_b, axis_angle_theta = find_autocorrect_axis_angle(
                     vec_x_to_b(
@@ -434,24 +453,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 rot_matrix = mathutils.Matrix.Rotation(axis_angle_theta,4,axis_angle_vec_b)
                 translation = rot_matrix.inverted() @ translation
                 has_anim = True
-        elif should_fill_in_dxyz_for_automatic():
-            dir_vec_b_norm = (bakeMatrix.to_3x3() @ Vector((0,0,-1))).normalized()
-
-            if "BILLBOARD" in parsed_light.best_overload().overload_type:
-                angle_from_center = light_data.spot_size / 2
-                # No divide by 0 problems, spot_size will always be in [1, 180] 1 <= spot_size <= 180 guaranteed
-                new_width = math.cos(angle_from_center) / (math.cos(angle_from_center) - 1)
-                scale = 1 - new_width
-                scaled_vec_b = dir_vec_b_norm * scale
-                self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(scaled_vec_b)))
-                self.params["WIDTH"] = round(new_width, xplane_constants.PRECISION_KEYFRAME)
-                for param in ["DX", "DY", "DZ"]:
-                   self.record_completed[param] = self.params[param]
-                self.record_completed["WIDTH"] = self.params["WIDTH"]
-            else:
-                self.params.update(zip(["DX","DY","DZ"], vec_b_to_x(dir_vec_b_norm)))
-                for param in ["DX", "DY", "DZ"]:
-                   self.record_completed[param] = self.params[param]
         else:
             # Basically, you're here if the light is
             # - unknown
@@ -460,6 +461,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             #
             # No animation was emited and no change to self.record_completed/params made
             pass
+
         if isinstance(self.params, dict):
             assert all(isinstance(p, (int, float)) for p in self.params.values()), f"One of {self.lightName} parameters did not get replaced in collect or write: {self.params}"
         if self.record_completed:
@@ -495,3 +497,35 @@ class XPlaneLight(xplane_object.XPlaneObject):
             o += f"{indent}ANIM_end\n"
 
         return o
+
+    def get_light_direction(self, basis_b=None)->Vector:
+        """
+        Returns a unit vector the light's direction,
+        even if the light is a POINT light.
+
+        If the light does not face (in X-Plane co-ords) forward by default,
+        a new basis (given in Blender co-ords) can be used.
+        Else, Blender's default (0, 0, -1) is used.
+
+        Must be called after self.xplaneBone has been assaigned
+        """
+        if basis_b is None:
+            basis_b = Vector((0, 0, -1))
+
+        bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
+        dir_vec_b_norm = (bakeMatrix.to_3x3() @ basis_b).normalized()
+        return dir_vec_b_norm
+
+    @staticmethod
+    def _DIR_MAG_for_billboard(spot_size:float):
+        return 1 - XPlaneLight._WIDTH_for_billboard(spot_size)
+
+    @staticmethod
+    def _WIDTH_for_billboard(spot_size:float):
+        assert spot_size != 0, "spot_size is 0, divide by zero error will occur"
+        angle_from_center = spot_size / 2
+        return math.cos(angle_from_center)/(math.cos(angle_from_center)-1)
+
+    @staticmethod
+    def _WIDTH_for_spill(spot_size:float):
+        return math.cos(spot_size * .5)

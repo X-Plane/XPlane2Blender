@@ -207,6 +207,14 @@ def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload")->None:
     _replace_columns_via_values(overload, {"DX":dvn[0], "DY":dvn[1], "DZ":dvn[2]})
     _replace_columns_via_values(overload, {"R":1, "G": 1, "B": 1})
 
+def _do_rgb_to_dxyz_dir_mag_calc(overload:"ParsedLightOverload")->None:
+    _replace_columns_via_values(overload, {"DX":overload["R"], "DY":overload["G"], "DZ":overload["B"]})
+    dir_vec = Vector((overload["DX"], overload["DY"], overload["DZ"]))
+    # TODO: This isn't right, is it?
+    overload["DIR_MAG"] = 1 - dir_vec.magnitude
+    dvn = dir_vec.normalized()
+    _replace_columns_via_values(overload, {"DX":dvn[0], "DY":dvn[1], "DZ":dvn[2]})
+    _replace_columns_via_values(overload, {"R":1, "G": 1, "B": 1})
 
 def _do_rgba_to_dxyz_w(overload:"ParsedLightOverload")->None:
     _replace_columns_via_values(overload, {"DX":overload["R"], "DY":overload["G"], "DZ":overload["B"]})
@@ -218,11 +226,15 @@ def _do_force_WIDTH_1(overload:"ParsedLightOverload")->None:
     overload["WIDTH"] = 1
 
 
+RGB_TO_DXYZ_DIR_MAG_CALC_DREFS = {
+    "sim/graphics/animation/lights/airplane_navigation_light_dir": _do_rgb_to_dxyz_dir_mag_calc,
+}
+
+
 RGB_TO_DXYZ_W_CALC_DREFS = {
     "sim/graphics/animation/lights/airplane_beacon_light_dir":     _do_rgb_to_dxyz_w_calc,
     "sim/graphics/animation/lights/airplane_generic_light":        _do_rgb_to_dxyz_w_calc,
     "sim/graphics/animation/lights/airplane_generic_light_flash":  _do_rgb_to_dxyz_w_calc,
-    "sim/graphics/animation/lights/airplane_navigation_light_dir": _do_rgb_to_dxyz_w_calc,
 }
 
 
@@ -252,7 +264,7 @@ FORCE_WIDTH_1_DREFS = {
 }
 
 
-SW_CALLBACK_DREFS = {**RGB_TO_DXYZ_W_CALC_DREFS, **RGBA_TO_DXYZ_W_DREFS, **FORCE_WIDTH_1_DREFS}
+SW_CALLBACK_DREFS = {**RGB_TO_DXYZ_DIR_MAG_CALC_DREFS, **RGB_TO_DXYZ_W_CALC_DREFS, **RGBA_TO_DXYZ_W_DREFS, **FORCE_WIDTH_1_DREFS}
 
 @dataclass
 class ParsedLightOverload:
@@ -424,17 +436,30 @@ class ParsedLightOverload:
         elif self.name in from_force_WIDTH_1_unidirectional:
             return False
         else:
-            try:
-                w = self["WIDTH"]
-            except KeyError: # No "WIDTH" column
-                # No WIDTH column and we know we're not a special "always omni" case?
+            w = self.get("WIDTH")
+            dir_mag = self.get("DIR_MAG")
+
+            if w == "WIDTH":
+                raise ValueError(f"{self.name}'s 'WIDTH' column does not contain a float, omni-ness cannot be determined yet")
+            elif dir_mag == "DIR_MAG":
+                raise ValueError(f"{self.name}'s 'DIR_MAG' column does not contain a float, omni-ness cannot be determined yet")
+            elif w is not None:
+                return round(w, xplane_constants.PRECISION_KEYFRAME) == 1
+            elif dir_mag is not None:
+                return round(dir_mag, xplane_constants.PRECISION_KEYFRAME) == 0
+            else:
+                # No WIDTH or DIR_MAG column and we know
+                # we're not a special "always omni" case?
                 # We're "Always Directional"
                 return False
-            else:
-                if w == "WIDTH":
-                    raise ValueError(f"{self.name}'s 'WIDTH' column does not contain a float, omni-ness cannot be determined yet")
-                else:
-                    return round(w, xplane_constants.PRECISION_KEYFRAME) == 1
+
+    def get(self, key:str, default:Optional[Union[float, str]]=None)->Optional[float]:
+        """"Return the value for key if key is in the dictionary, else default.
+        Uses __getitem__ under the hood"""
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def prototype(self)->Tuple[str,...]:
         return tuple(get_overload_column_info(self.overload_type))

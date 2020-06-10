@@ -12,7 +12,7 @@ from io_xplane2blender.tests import test_creation_helpers
 __dirname__ = os.path.dirname(__file__)
 
 
-class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
+class TestAutomaticWidthRecalc(XPlaneTestCase):
     def test_spot_params_bb(self)->None:
         filename = inspect.stack()[0].function
 
@@ -44,4 +44,4 @@ class TestBlendFileNameCamelCaseNoPunctuation(XPlaneTestCase):
         )
 
 
-runTestCases([TestBlendFileNameCamelCaseNoPunctuation])
+runTestCases([TestAutomaticWidthRecalc])
