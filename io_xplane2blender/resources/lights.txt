@@ -294,12 +294,12 @@ BILLBOARD_SW	airplane_strobe		1	1	1	1	1.0	2	6	1	0	0	0	1	sim/graphics/animation/l
 #
 
 # V10: components
-LIGHT_PARAM_DEF	airplane_nav_tail_size		2	SIZE	WIDTH
-BILLBOARD_SW	airplane_nav_tail_size		0	0	WIDTH	1	SIZE	1	5	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light_dir
-LIGHT_PARAM_DEF	airplane_nav_left_size		2	SIZE	WIDTH
-BILLBOARD_SW	airplane_nav_left_size		WIDTH	0	0	1	SIZE	1	7	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light_dir
-LIGHT_PARAM_DEF	airplane_nav_right_size		2	SIZE	WIDTH
-BILLBOARD_SW	airplane_nav_right_size		WIDTH	0	0	1	SIZE	1	6	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light_dir
+LIGHT_PARAM_DEF	airplane_nav_tail_size		2	SIZE	DIR_MAG
+BILLBOARD_SW	airplane_nav_tail_size		0	0	DIR_MAG	1	SIZE	1	5	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light_dir
+LIGHT_PARAM_DEF	airplane_nav_left_size		2	SIZE	DIR_MAG
+BILLBOARD_SW	airplane_nav_left_size		DIR_MAG	0	0	1	SIZE	1	7	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light_dir
+LIGHT_PARAM_DEF	airplane_nav_right_size		2	SIZE	DIR_MAG
+BILLBOARD_SW	airplane_nav_right_size		DIR_MAG	0	0	1	SIZE	1	6	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light_dir
 LIGHT_PARAM_DEF	airplane_nav_sp		9	R	G	B	INDEX	SIZE	DX	DY	DZ	WIDTH
 SPILL_SW	airplane_nav_sp		R	G	B	INDEX	SIZE	DX	DY	DZ	WIDTH	sim/graphics/animation/lights/airplane_navigation_light_spill
 #v9: compatibility

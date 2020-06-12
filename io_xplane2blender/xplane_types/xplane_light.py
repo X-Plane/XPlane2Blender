@@ -222,34 +222,24 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     # cos(half the cone angle)
                     return XPlaneLight._WIDTH_for_spill(light_data.spot_size)
 
-            def new_dxyz_values()->Vector:
-                "Returns scaled light direction vector (X-Plane coords) of new light direction"
-                def get_basis_for_autocorrection():
-                    try:
-                        basis_b = {
-                                "airplane_nav_left_size": Vector((1, 0, 0)),
-                                "airplane_nav_right_size": Vector((-1, 0, 0)),
-                                "airplane_nav_tail_size": Vector((0, 1, 0))
-                            }[parsed_light.name]
-                    except KeyError:
-                        basis_b = Vector((0, 0, -1))
-                    return basis_b
-                basis_b = get_basis_for_autocorrection()
+            def new_dxyz_vec_x()->Vector:
+                """
+                Returns (potentially scaled) light direction
+                or (0, 0, 0) for omni lights in X-Plane coords
+                """
+
                 if light_data.type == "POINT":
                     return Vector((0, 0, 0))
                 elif "BILLBOARD" in parsed_light.best_overload().overload_type:
-                    #if "DIR_MAG" in parsed_light.light_param_def:
-                        #scale = 1 - XPlaneLight._WIDTH_for_billboard(light_data.spot_size)
-                    #else:
+                    # Works for DIR_MAG as well, but we'll probably never have a case for that
                     scale = 1 - XPlaneLight._WIDTH_for_billboard(light_data.spot_size)
-                    dir_vec_b_norm = self.get_light_direction(basis_b)
+                    dir_vec_b_norm = self.get_light_direction_b()
                     scaled_vec_b = dir_vec_b_norm * scale
                     return vec_b_to_x(scaled_vec_b)
                 elif "SPILL" in parsed_light.best_overload().overload_type:
-                    return vec_b_to_x(self.get_light_direction(basis_b))
+                    return vec_b_to_x(self.get_light_direction_b())
 
-
-            dxyz_values_x = new_dxyz_values()
+            dxyz_values_x = new_dxyz_vec_x()
             def convert_table(param:str)->float:
                 table = {
                     "R":self.color[0],
@@ -272,6 +262,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
                 if light_data.type == "SPOT":
                     table["DIR_MAG"] = XPlaneLight._DIR_MAG_for_billboard(light_data.spot_size)
+                elif light_data.type == "POINT":
+                    table["DIR_MAG"] = 0
                 return table[param]
 
             self.params = {param:convert_table(param.rstrip("_")) for param in parsed_light.light_param_def}
@@ -289,8 +281,6 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 self.record_completed.apply_sw_callback()
 
             try:
-                # Since WIDTH determines if we animate or not, we use PRECISION_KEYFRAME
-                self.record_completed["WIDTH"] = round(self.record_completed["WIDTH"], PRECISION_KEYFRAME)
                 is_omni = self.record_completed.is_omni()
             except (KeyError, TypeError): # No WIDTH column or no __round__for str
                 is_omni = False
@@ -360,29 +350,19 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     return num
 
             # Multiple bake matrix by Vector to get the direction of the Blender object
-            def get_basis_for_autocorrection():
-                try:
-                    basis_b = {
-                            "airplane_nav_left_size": Vector((1, 0, 0)),
-                            "airplane_nav_right_size": Vector((-1, 0, 0)),
-                            "airplane_nav_tail_size": Vector((0, 1, 0))
-                        }[parsed_light.name]
-                except KeyError:
-                    basis_b = Vector((0, 0, -1))
-                return basis_b
 
-            dir_vec_b_norm = self.get_light_direction(get_basis_for_autocorrection())
+            dir_vec_b_norm = self.get_light_direction_b()
 
             # P is start rotation, and B is stop. As such, we have our axis of rotation.
             # "We take the X-Plane light and turn it until it matches what the artist wanted"
-            axis_angle_vec3_b = dir_vec_p_norm_b.cross(dir_vec_b_norm)
+            axis_angle_vec_b = dir_vec_p_norm_b.cross(dir_vec_b_norm)
 
             dot_product_p_b = dir_vec_p_norm_b.dot(dir_vec_b_norm)
             if dot_product_p_b < 0:
-                axis_angle_theta = math.pi - math.asin(clamp(axis_angle_vec3_b.magnitude,-1.0,1.0))
+                axis_angle_theta = math.pi - math.asin(clamp(axis_angle_vec_b.magnitude,-1.0,1.0))
             else:
-                axis_angle_theta = math.asin(clamp(axis_angle_vec3_b.magnitude,-1.0,1.0))
-            return axis_angle_vec3_b, axis_angle_theta
+                axis_angle_theta = math.asin(clamp(axis_angle_vec_b.magnitude,-1.0,1.0))
+            return axis_angle_vec_b, axis_angle_theta
 
         def should_autocorrect_preautomatic()->bool:
             try:
@@ -498,22 +478,15 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
         return o
 
-    def get_light_direction(self, basis_b=None)->Vector:
+    def get_light_direction_b(self)->Vector:
         """
         Returns a unit vector the light's direction,
         even if the light is a POINT light.
 
-        If the light does not face (in X-Plane co-ords) forward by default,
-        a new basis (given in Blender co-ords) can be used.
-        Else, Blender's default (0, 0, -1) is used.
-
         Must be called after self.xplaneBone has been assaigned
         """
-        if basis_b is None:
-            basis_b = Vector((0, 0, -1))
-
         bakeMatrix = self.xplaneBone.getBakeMatrixForAttached()
-        dir_vec_b_norm = (bakeMatrix.to_3x3() @ basis_b).normalized()
+        dir_vec_b_norm = (bakeMatrix.to_3x3() @ Vector((0, 0, -1))).normalized()
         return dir_vec_b_norm
 
     @staticmethod

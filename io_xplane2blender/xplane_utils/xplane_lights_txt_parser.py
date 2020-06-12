@@ -210,8 +210,12 @@ def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload")->None:
 def _do_rgb_to_dxyz_dir_mag_calc(overload:"ParsedLightOverload")->None:
     _replace_columns_via_values(overload, {"DX":overload["R"], "DY":overload["G"], "DZ":overload["B"]})
     dir_vec = Vector((overload["DX"], overload["DY"], overload["DZ"]))
-    # TODO: This isn't right, is it?
-    overload["DIR_MAG"] = 1 - dir_vec.magnitude
+    # I don't know what X-Plane does, but this works for our is_omni function.
+    # Step through collect with a POINT light to understand this
+    # to understand this hack.
+    #
+    # -Ted, 6/12/2020
+    overload["WIDTH"] = round(dir_vec.magnitude, xplane_constants.PRECISION_KEYFRAME)
     dvn = dir_vec.normalized()
     _replace_columns_via_values(overload, {"DX":dvn[0], "DY":dvn[1], "DZ":dvn[2]})
     _replace_columns_via_values(overload, {"R":1, "G": 1, "B": 1})
@@ -304,9 +308,13 @@ class ParsedLightOverload:
             if key.startswith("UNUSED"):
                 raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
-                # HACK! So far every light in the lights.txt file that uses
-                # INDEX uses it to replace the A column
-                return self.arguments[tuple(prototype).index(key if key != "INDEX" else "A")]
+                if key == "INDEX":
+                    key = "A"
+                elif key == "DIR_MAG" and self.name in {"airplane_nav_tail_size"}:
+                    key = "B"
+                elif key == "DIR_MAG" and self.name in {"airplane_nav_left_size", "airplane_nav_right_size"}:
+                    key = "R"
+                return self.arguments[tuple(prototype).index(key)]
             except ValueError as ve:
                 raise KeyError(f"{key} not found in \"{self.name}\"'s overload's {self.overload_type} prototype") from ve
 
@@ -322,9 +330,13 @@ class ParsedLightOverload:
             if key.startswith("UNUSED"):
                 raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
-                # HACK! So far every light in the lights.txt file that uses
-                # INDEX uses it to replace the A column
-                self.arguments[tuple(prototype).index(key if key != "INDEX" else "A")] = value
+                if key == "INDEX":
+                    key = "A"
+                elif key == "DIR_MAG" and self.name in {"airplane_nav_tail_size"}:
+                    key = "B"
+                elif key == "DIR_MAG" and self.name in {"airplane_nav_left_size", "airplane_nav_right_size"}:
+                    key = "R"
+                self.arguments[tuple(prototype).index(key)] = value
             except ValueError as ve:
                 raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
 
@@ -383,6 +395,9 @@ class ParsedLightOverload:
             "airplane_generic_flash",
             "airplane_generic_glow",
             "airplane_generic_size",
+        }
+
+        from_do_RGB_TO_DXYZ_DIR_MAG_CALC = {
             "airplane_nav_left_size",
             "airplane_nav_right_size",
             "airplane_nav_tail_size",
@@ -431,24 +446,23 @@ class ParsedLightOverload:
             return True
         elif self.name in from_force_WIDTH_1_omni:
             return True
-        elif self.name in from_do_RGB_TO_DXYZ_W_CALC:
+        elif (self.name in from_do_RGB_TO_DXYZ_W_CALC
+                and self.name not in from_do_RGB_TO_DXYZ_DIR_MAG_CALC):
             return False
         elif self.name in from_force_WIDTH_1_unidirectional:
             return False
         else:
             w = self.get("WIDTH")
-            dir_mag = self.get("DIR_MAG")
 
             if w == "WIDTH":
                 raise ValueError(f"{self.name}'s 'WIDTH' column does not contain a float, omni-ness cannot be determined yet")
-            elif dir_mag == "DIR_MAG":
-                raise ValueError(f"{self.name}'s 'DIR_MAG' column does not contain a float, omni-ness cannot be determined yet")
             elif w is not None:
-                return round(w, xplane_constants.PRECISION_KEYFRAME) == 1
-            elif dir_mag is not None:
-                return round(dir_mag, xplane_constants.PRECISION_KEYFRAME) == 0
+                if self.name in from_do_RGB_TO_DXYZ_DIR_MAG_CALC:
+                    return round(w, xplane_constants.PRECISION_KEYFRAME) == 0
+                else:
+                    return round(w, xplane_constants.PRECISION_KEYFRAME) == 1
             else:
-                # No WIDTH or DIR_MAG column and we know
+                # No WIDTH column and we know
                 # we're not a special "always omni" case?
                 # We're "Always Directional"
                 return False
@@ -583,6 +597,7 @@ def parse_lights_file():
             "FREQ",
             "PHASE",
             "INDEX",
+            "DIR_MAG",
         }
         or p.startswith(
             ("UNUSED", "NEG_ONE", "ZERO", "ONE")

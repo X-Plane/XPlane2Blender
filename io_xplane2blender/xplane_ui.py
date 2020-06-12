@@ -9,7 +9,7 @@ from typing import Optional, Union
 import bpy
 from bpy.types import Object, UILayout
 
-from io_xplane2blender import xplane_constants, xplane_props, xplane_utils
+from io_xplane2blender import xplane_constants, xplane_props, xplane_types, xplane_utils
 
 from .xplane_constants import *
 from .xplane_ops import *
@@ -579,7 +579,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                     if param == "SIZE":
                         debug_box.row().label(text=f"{param}: {round(light.xplane.size)}m")
                     #--- WIDTH -----------------------------------------------
-                    if param == "WIDTH":
+                    if param == "WIDTH" or param == "DIR_MAG":
                         if is_omni or light.type == "POINT":
                             debug_box.row().label(
                                 text=f"{param}: Omni"
@@ -591,7 +591,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                             debug_box.row().label(
                                 text=f"{param}: {round(math.cos(light.spot_size * .5), 5)}"
                             )
-                        elif not is_omni and not omni_conclusively_known and light.type == "POINT":
+                        elif not is_omni and not omni_conclusively_known and light.type == "SPOT":
                             # Directional billboard
                             debug_box.row().label(
                                 text=f"{param}: Directional, final 'WIDTH' calculated during export"
