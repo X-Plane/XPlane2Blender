@@ -61,6 +61,9 @@ There are some ideas that are WRONG! For instance
     > Remember, billboards can be directional, despite not having a "cone" of light
 - "Because the "WIDTH" column == 1, it is omni"
     > Nope! There are special cases and is_omni takes care of this for you
+- "If it is omni, "WIDTH" column == 1"
+    > If you're using DIR_MAG, is_omni is True
+      when DIR_MAG (secretly "WIDTH") is 0
 
 To deal with these extreme subtleties follow these rules while writing code:
 
@@ -304,9 +307,13 @@ class ParsedLightOverload:
             if key.startswith("UNUSED"):
                 raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
-                # HACK! So far every light in the lights.txt file that uses
-                # INDEX uses it to replace the A column
-                return self.arguments[tuple(prototype).index(key if key != "INDEX" else "A")]
+                if key == "INDEX":
+                    key = "A"
+                elif key == "DIR_MAG" and self.name in {"airplane_nav_tail_size"}:
+                    key = "B"
+                elif key == "DIR_MAG" and self.name in {"airplane_nav_left_size", "airplane_nav_right_size"}:
+                    key = "R"
+                return self.arguments[tuple(prototype).index(key)]
             except ValueError as ve:
                 raise KeyError(f"{key} not found in \"{self.name}\"'s overload's {self.overload_type} prototype") from ve
 
@@ -322,9 +329,13 @@ class ParsedLightOverload:
             if key.startswith("UNUSED"):
                 raise KeyError(f"{key} cannot represent a real index in the argument's list")
             try:
-                # HACK! So far every light in the lights.txt file that uses
-                # INDEX uses it to replace the A column
-                self.arguments[tuple(prototype).index(key if key != "INDEX" else "A")] = value
+                if key == "INDEX":
+                    key = "A"
+                elif key == "DIR_MAG" and self.name in {"airplane_nav_tail_size"}:
+                    key = "B"
+                elif key == "DIR_MAG" and self.name in {"airplane_nav_left_size", "airplane_nav_right_size"}:
+                    key = "R"
+                self.arguments[tuple(prototype).index(key)] = value
             except ValueError as ve:
                 raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
 
@@ -583,6 +594,7 @@ def parse_lights_file():
             "FREQ",
             "PHASE",
             "INDEX",
+            "DIR_MAG",
         }
         or p.startswith(
             ("UNUSED", "NEG_ONE", "ZERO", "ONE")

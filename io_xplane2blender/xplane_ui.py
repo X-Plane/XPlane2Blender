@@ -591,7 +591,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                             debug_box.row().label(
                                 text=f"{param}: {round(math.cos(light.spot_size * .5), 5)}"
                             )
-                        elif not is_omni and not omni_conclusively_known and light.type == "POINT":
+                        elif not is_omni and not omni_conclusively_known and light.type == "SPOT":
                             # Directional billboard
                             debug_box.row().label(
                                 text=f"{param}: Directional, final 'WIDTH' calculated during export"
