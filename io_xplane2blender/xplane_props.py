@@ -48,7 +48,7 @@ is a great way to RUIN EVERYTHING. Re-arranging the items list requires great ca
 - Properties use snake_case
 
 - Name is in the form of "Title Case Always", description is "Sentence case, no period". Don't be lazy and just copy and paste the constant name for all three columns.
-A good deal of time was spent making the UI look pretty for 3.4.0 so please don't undo that overtime
+A good deal of time was spent making the UI look pretty for 3.4.0 so please don't undo that over time
 
 - Properties and classes must be in alphabetical order, starting from the top, including if they're exceptionally related.
 Classes may be out of order if needed to be declared out of order. Try to make everything as alphabetically ordered as possible
@@ -1024,6 +1024,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         ]
     )
 
+    # TODO: Remove this already!
     # Deprecated: This will be removed in v3.4
     cockpit: bpy.props.BoolProperty(
         name = "Cockpit",
@@ -1708,18 +1709,18 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         name = "Frequency",
         description = "The number of light flashes per second",
         min = 0.0,
-        precision = 3
     )
 
     param_index: bpy.props.IntProperty(
         name = "Index",
         description = "Index in light's associated array dataref",
-        min = 0
+        min = 0,
+        max = 127
     )
 
     param_phase: bpy.props.FloatProperty(
         name = "Phase",
-        description = "Phase offset of light (so it can make flashing lights that don't flash at the same time)",
+        description = "Phase offset in seconds of light (so it can make flashing lights that don't flash at the same time)",
         min = 0.0,
     )
 
@@ -1751,8 +1752,8 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
     )
 
     name: bpy.props.StringProperty(
-        name = 'Name',
-        description = "Named lights allow a light to be created based on pre-existing types",
+        name = "Name",
+        description = "Name from lights.txt, see the summary for more detail",
         default = ""
     )
 
@@ -1764,9 +1765,8 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
 
     size: bpy.props.FloatProperty(
         name = 'Size',
-        description = "Spill size is in meters; billboard size uses arbitrary scales - bigger is brighter",
+        description = "Spill size uses meters; billboard size uses arbitrary scales - bigger is brighter",
         default = 1.0,
-        min = 0.0
     )
 
     dataref: bpy.props.StringProperty(
