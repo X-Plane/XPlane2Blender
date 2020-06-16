@@ -61,6 +61,9 @@ There are some ideas that are WRONG! For instance
     > Remember, billboards can be directional, despite not having a "cone" of light
 - "Because the "WIDTH" column == 1, it is omni"
     > Nope! There are special cases and is_omni takes care of this for you
+- "If it is omni, "WIDTH" column == 1"
+    > If you're using DIR_MAG, is_omni is True
+      when DIR_MAG (secretly "WIDTH") is 0
 
 To deal with these extreme subtleties follow these rules while writing code:
 
