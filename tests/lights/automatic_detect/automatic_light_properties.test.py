@@ -6,6 +6,7 @@ import sys
 
 import bpy
 from io_xplane2blender import xplane_config
+from io_xplane2blender.xplane_types import xplane_light
 from io_xplane2blender.tests import *
 from io_xplane2blender.tests import test_creation_helpers
 
@@ -23,5 +24,10 @@ class TestAutomaticLightProperties(XPlaneTestCase):
             filename,
         )
 
+    def test_stripped_light_name(self)->None:
+        ob = bpy.data.objects["taxi_y_spaces_stripped"]
+        light_name_to_strip = "    taxi_y  "
+        ob.data.xplane.name = light_name_to_strip
+        self.assertEqual(ob.data.xplane.name,  light_name_to_strip.strip())
 
 runTestCases([TestAutomaticLightProperties])

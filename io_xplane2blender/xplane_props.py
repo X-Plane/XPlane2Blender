@@ -1751,10 +1751,18 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         ]
     )
 
+    def get_name(self)->str:
+        return self["name"]
+
+    def set_name(self, value:str)->None:
+        self["name"] = value.strip()
+
     name: bpy.props.StringProperty(
         name = "Name",
         description = "Name from lights.txt, see the summary for more detail",
-        default = ""
+        default = "",
+        get=get_name,
+        set=set_name
     )
 
     params: bpy.props.StringProperty(

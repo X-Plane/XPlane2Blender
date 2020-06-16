@@ -233,7 +233,7 @@ class ParentInfo():
             assert isinstance(parent,bpy.types.Object)
 
         if parent_bone:
-            assert isinstance(parent_bone,int) or isinstance(parent_bone,str) or isinstance(parent_bone,bpy.types.Bone)
+            assert isinstance(parent_bone,str)
         self.parent = parent
         self.parent_type = parent_type
         self.parent_bone = parent_bone
