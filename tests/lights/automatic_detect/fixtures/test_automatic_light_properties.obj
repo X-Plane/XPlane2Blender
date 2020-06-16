@@ -1,0 +1,22 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Light: airplane_beacon_rotate
+	# LIGHT: airplane_beacon_rotate	weight: 10000
+	LIGHT_PARAM	airplane_beacon_rotate 0 0 -0 1.3 0.25
+	# 1 Light: airplane_landing_core
+	# LIGHT: airplane_landing_core	weight: 10000
+	ANIM_begin
+	# static rotation
+	ANIM_rotate	-1	0	-0	90	90
+	LIGHT_PARAM	airplane_landing_core 0 0 -0 0 0 -1 10 11
+	ANIM_end
+	# 1 Light: spot_params_sp
+	# LIGHT: spot_params_sp	weight: 10000
+	LIGHT_PARAM	spot_params_sp 0 0 -0 1 1 1 1 22 0 -1 -0 0.90630779
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+82.NO_BUILD_NUMBR

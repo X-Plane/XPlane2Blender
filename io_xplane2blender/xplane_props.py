@@ -1724,6 +1724,13 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         min = 0.0,
     )
 
+    param_size: bpy.props.FloatProperty(
+        name = 'Size',
+        description = "Spill size uses meters; billboard size uses arbitrary scales - bigger is brighter",
+        default = 1.0,
+        min = LIGHT_PARAM_SIZE_MIN
+    )
+
     rgb_override_values: bpy.props.FloatVectorProperty(
         name = "RGB Override Values",
         description = "The values that will be used instead of the RGB picker",
@@ -1752,7 +1759,10 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
     )
 
     def get_name(self)->str:
-        return self["name"]
+        try:
+            return self["name"]
+        except KeyError:
+            return ""
 
     def set_name(self, value:str)->None:
         self["name"] = value.strip()
@@ -1773,7 +1783,7 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
 
     size: bpy.props.FloatProperty(
         name = 'Size',
-        description = "Spill size uses meters; billboard size uses arbitrary scales - bigger is brighter",
+        description = "Size parameter for Custom Lights",
         default = 1.0,
     )
 

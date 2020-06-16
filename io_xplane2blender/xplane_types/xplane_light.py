@@ -247,7 +247,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "B":self.color[2],
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
-                    "SIZE":light_data.xplane.size,
+                    "SIZE":light_data.xplane.param_size,
                     "DX":dxyz_values_x[0],
                     "DY":dxyz_values_x[1],
                     "DZ":dxyz_values_x[2],

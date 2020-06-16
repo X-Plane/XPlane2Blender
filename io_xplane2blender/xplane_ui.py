@@ -559,7 +559,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                     "INDEX": "param_index",
                     "FREQ": "param_freq",
                     "PHASE": "param_phase",
-                    "SIZE": "size"
+                    "SIZE": "param_size"
                 }.items():
                     if param in parsed_light.light_param_def:
                         layout.row().prop(light.xplane, prop_name)
