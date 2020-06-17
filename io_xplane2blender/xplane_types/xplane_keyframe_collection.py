@@ -175,7 +175,7 @@ class XPlaneKeyframeCollection(MutableSequence):
 
         return ret
 
-    def getRotationKeyframeTableNoClamps(self): # List[Tuple[axis, List[Tuple['value','degrees']]]]
+    def getRotationKeyframeTableNoClamps(self)->List[Tuple[Vector, List[Tuple['value','degrees']]]]:
         '''
         Return the rotation portion of a keyframe collection in the form of
         List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.

@@ -139,7 +139,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             self.comment = "".join(params_itr).lstrip()
 
             if len(params_actual) < len(params_formal):
-                logger.error(f"Not enough actual parameters ('{' '.join(params_actual)}') to"
+                logger.error(f"'{self.blenderObject.name}':Not enough actual parameters ('{' '.join(params_actual)}') to"
                              f" satisfy 'LIGHT_PARAM_DEF {len(params_formal)} {' '.join(params_formal)}'")
                 return
 

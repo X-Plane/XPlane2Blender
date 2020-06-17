@@ -39,6 +39,7 @@ from .xplane_vlights import XPlaneVLights
 class NotExportableRootError(ValueError):
     pass
 
+
 def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.types.ViewLayer)->List["XPlaneFile"]:
     """
     Returns a list of all created XPlaneFiles from all valid roots found,
@@ -95,7 +96,7 @@ def createFileFromBlenderRootObject(potential_root:PotentialRoot, view_layer:bpy
     layer_props = exportable_root.xplane.layer
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
-    xplane_file.create_xplane_bone_hiearchy(exportable_root)
+    xplane_file.create_xplane_bone_hierarchy(exportable_root)
     assert xplane_file.rootBone, "Root Bone was not assaigned during __init__ function"
     return xplane_file
 
@@ -128,7 +129,7 @@ class XPlaneFile():
         self.header = XPlaneHeader(self, 8)
 
 
-    def create_xplane_bone_hiearchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
+    def create_xplane_bone_hierarchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
         def allowed_children(parent_like:Union[bpy.types.Collection, bpy.types.Object])->List[bpy.types.Object]:
             """
             Returns only the objects the recurse function is allowed to use.

@@ -108,7 +108,6 @@ class XPlaneMesh():
                         vertex = xplane_helpers.vec_b_to_x(mesh.vertices[index].co)
                         normal = xplane_helpers.vec_b_to_x(tmp_face.split_normals[i] if tmp_face.original_face.use_smooth else tmp_face.normal)
                         uv = tmp_face.uvs[i]
-                        #TODO: We could probably move the rounding step from writeVertexes to here so we're not iterating over this stuff twice
                         vt_entry = tuple(vertex[:] + normal[:] + uv[:])
 
                         # Optimization Algorithm:
