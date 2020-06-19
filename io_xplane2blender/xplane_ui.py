@@ -572,46 +572,45 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                     if param in parsed_light.light_param_def:
                         layout.row().prop(light_data.xplane, prop_name)
 
-                debug_box = layout.box()
-                debug_box.label(text="Debug Box")
-                debug_box.row().label(text=f"{len(parsed_light.light_param_def)} {' '.join(parsed_light.light_param_def)}")
-                debug_box.row().label(text=f"{parsed_light.overloads[0]['DREF'] if 'DREF' in parsed_light.overloads[0] else ''}")
-                if light_data.xplane.params:
-                    debug_box.row().label(text=f"Former Params: '{light_data.xplane.params}'")
-                rgb_row = debug_box.row()
-                for param in parsed_light.light_param_def:
-                    if param in {"R","G","B"}:
-                        rgb_row.label(text=f"{param}: {round(light_data.color['RGB'.index(param)], 3)}")
-                    if param == "A":
-                        rgb_row.label(text=f"{param}: 1")
-                    if param == "SIZE":
-                        debug_box.row().label(text=f"{param}: {round(light_data.xplane.size)}m")
-                    #--- WIDTH -----------------------------------------------
-                    if param == "WIDTH" or param == "DIR_MAG":
-                        if is_omni or light_data.type == "POINT":
-                            debug_box.row().label(
-                                text=f"{param}: Omni"
-                            )
-                        elif is_omni and not omni_conclusively_known:
-                            assert False, "is_omni can't be True and not conclusively known"
-                        elif not is_omni and omni_conclusively_known and light_data.type == "SPOT":
-                            # We can only get this by being a non-special case Spot Light
-                            debug_box.row().label(
-                                text=f"{param}: {round(math.cos(light_data.spot_size * .5), 5)}"
-                            )
-                        elif not is_omni and not omni_conclusively_known and light_data.type == "SPOT":
-                            # Directional billboard
-                            debug_box.row().label(
-                                text=f"{param}: Directional, final 'WIDTH' calculated during export"
-                            )
-                            #TODO: actually, if we don't have a SW callback, we can answer this for all billboards
-                    #---------------------------------------------------------
-                    if param == "INDEX":
-                        debug_box.row().label(text=f"{param}: {light_data.xplane.param_index}")
-                    if param == "FREQ":
-                        debug_box.row().label(text=f"{param}: {light_data.xplane.param_freq}")
-                    if param == "PHASE":
-                        debug_box.row().label(text=f"{param}: {light_data.xplane.param_phase}")
+                has_width = "WIDTH" in parsed_light.light_param_def
+                has_dir_mag = "DIR_MAG" in parsed_light.light_param_def
+                if has_width or has_dir_mag:
+                    debug_box = layout.box()
+                    debug_box.label(text="Calculated Values")
+                #debug_box = layout.box()
+                #debug_box.row().label(text=f"{len(parsed_light.light_param_def)} {' '.join(parsed_light.light_param_def)}")
+                #debug_box.row().label(text=f"{parsed_light.overloads[0]['DREF'] if 'DREF' in parsed_light.overloads[0] else ''}")
+                #if light_data.xplane.params:
+                    #debug_box.row().label(text=f"Former Params: '{light_data.xplane.params}'")
+                #if {"R","G","B"} <= set(parsed_light.light_param_def):
+                    #debug_box.row().label(text=f"R, G, B: {', '.join(map(lambda c: str(round(c, 3)), light_data.color))}")
+
+                #def try_param(prop:str, param:str, text:str, n=5)->None:
+                    #if param in parsed_light.light_param_def:
+                        #debug_box.row().label(text=f"{text}: {round(light_data.xplane.get(prop), n)}")
+
+                #try_param("param_size", "Size", 3)
+                #--- WIDTH -----------------------------------------------
+                if has_width or has_dir_mag:
+                    # Covers DIR_MAG case as well,
+                    # though, ideally we'd stick with only using is_omni
+                    if light_data.type == "POINT":
+                        WIDTH_val = "Omni"
+                    elif is_omni and not omni_conclusively_known:
+                        assert False, "is_omni can't be True and not conclusively known"
+                    elif not is_omni:
+                        if has_width:
+                            if "BILLBOARD" in parsed_light.best_overload().overload_type:
+                                WIDTH_val = round(xplane_types.XPlaneLight.WIDTH_for_billboard(light_data.spot_size), 5)
+                            elif "SPILL" in parsed_light.best_overload().overload_type:
+                                WIDTH_val = round(xplane_types.XPlaneLight.WIDTH_for_spill(light_data.spot_size), 5)
+                        elif has_dir_mag:
+                            WIDTH_val = round(xplane_types.XPlaneLight.DIR_MAG_for_billboard(light_data.spot_size), 5)
+                    debug_box.row().label(text=f"Width: {WIDTH_val}")
+                #---------------------------------------------------------
+                #try_param("param_index", "INDEX", "Dataref Index", n=0)
+                #try_param("param_freq", "FREQ", "Freq")
+                #try_param("param_phase", "PHASE", "Phase")
         draw_automatic_ui()
     elif light_data.xplane.type == LIGHT_NAMED:
         layout.row().prop(light_data.xplane, "name")

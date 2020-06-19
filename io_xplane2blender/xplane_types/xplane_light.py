@@ -217,10 +217,10 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 if light_data.type == "POINT":
                     return 1
                 elif "BILLBOARD" in parsed_light.best_overload().overload_type:
-                    return XPlaneLight._WIDTH_for_billboard(light_data.spot_size)
+                    return XPlaneLight.WIDTH_for_billboard(light_data.spot_size)
                 elif "SPILL" in parsed_light.best_overload().overload_type:
                     # cos(half the cone angle)
-                    return XPlaneLight._WIDTH_for_spill(light_data.spot_size)
+                    return XPlaneLight.WIDTH_for_spill(light_data.spot_size)
 
             def new_dxyz_vec_x()->Vector:
                 """
@@ -232,7 +232,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     return Vector((0, 0, 0))
                 elif "BILLBOARD" in parsed_light.best_overload().overload_type:
                     # Works for DIR_MAG as well, but we'll probably never have a case for that
-                    scale = 1 - XPlaneLight._WIDTH_for_billboard(light_data.spot_size)
+                    scale = 1 - XPlaneLight.WIDTH_for_billboard(light_data.spot_size)
                     dir_vec_b_norm = self.get_light_direction_b()
                     scaled_vec_b = dir_vec_b_norm * scale
                     return vec_b_to_x(scaled_vec_b)
@@ -261,7 +261,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 }
 
                 if light_data.type == "SPOT":
-                    table["DIR_MAG"] = XPlaneLight._DIR_MAG_for_billboard(light_data.spot_size)
+                    table["DIR_MAG"] = XPlaneLight.DIR_MAG_for_billboard(light_data.spot_size)
                 elif light_data.type == "POINT":
                     table["DIR_MAG"] = 0
                 return table[param]
@@ -490,15 +490,15 @@ class XPlaneLight(xplane_object.XPlaneObject):
         return dir_vec_b_norm
 
     @staticmethod
-    def _DIR_MAG_for_billboard(spot_size:float):
-        return 1 - XPlaneLight._WIDTH_for_billboard(spot_size)
+    def DIR_MAG_for_billboard(spot_size:float):
+        return 1 - XPlaneLight.WIDTH_for_billboard(spot_size)
 
     @staticmethod
-    def _WIDTH_for_billboard(spot_size:float):
+    def WIDTH_for_billboard(spot_size:float):
         assert spot_size != 0, "spot_size is 0, divide by zero error will occur"
         angle_from_center = spot_size / 2
         return math.cos(angle_from_center)/(math.cos(angle_from_center)-1)
 
     @staticmethod
-    def _WIDTH_for_spill(spot_size:float):
+    def WIDTH_for_spill(spot_size:float):
         return math.cos(spot_size * .5)

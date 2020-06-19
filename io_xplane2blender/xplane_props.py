@@ -1706,29 +1706,30 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         )
 
     param_freq: bpy.props.FloatProperty(
-        name = "Frequency",
+        name = "Flash Frequency",
         description = "The number of light flashes per second",
         min = 0.0,
     )
 
     param_index: bpy.props.IntProperty(
-        name = "Index",
+        name = "Dataref Index",
         description = "Index in light's associated array dataref",
         min = 0,
         max = 127
     )
 
     param_phase: bpy.props.FloatProperty(
-        name = "Phase",
+        name = "Phase Offset",
         description = "Phase offset in seconds of light (so it can make flashing lights that don't flash at the same time)",
         min = 0.0,
     )
 
     param_size: bpy.props.FloatProperty(
-        name = 'Size',
+        name = "Size",
         description = "Spill size uses meters; billboard size uses arbitrary scales - bigger is brighter",
         default = 1.0,
-        min = LIGHT_PARAM_SIZE_MIN
+        min = LIGHT_PARAM_SIZE_MIN,
+        precision = 3
     )
 
     rgb_override_values: bpy.props.FloatVectorProperty(
