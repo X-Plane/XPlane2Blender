@@ -959,7 +959,7 @@ class XPlaneLOD(bpy.types.PropertyGroup):
 class XPlaneLayer(bpy.types.PropertyGroup):
     """
     Defines settings for an OBJ file. Is was formerly tied to
-    Blender 3D-View Layers, but now is for Exportable Roots
+    Blender 3D-View Layers, but now is for Roots
     """
 
     """
@@ -1244,7 +1244,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
 class XPlaneCollectionSettings(bpy.types.PropertyGroup):
     is_exportable_collection: bpy.props.BoolProperty(
-        name = "Exportable Collection",
+        name = "Root Collection",
         description = "Activate to export all this collection's children as an .obj file",
         default = False
     )
@@ -1276,7 +1276,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
     expanded_non_exporting_collections: bpy.props.BoolProperty(
             name = "Other Collections",
-            description = "Reveals Non-Exportable Collections"
+            description = "Reveals Non-Root Collections"
     )
 
     log: bpy.props.BoolProperty(
@@ -1433,8 +1433,8 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
     )
 
     isExportableRoot: bpy.props.BoolProperty(
-        name = 'Exportable Object',
-        description = 'Activate to export this object and all its children into it\'s own .obj file',
+        name = "Root Object",
+        description = "Activate to export this object and all its children into it's own .obj file",
         default = False
     )
 

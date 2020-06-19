@@ -200,7 +200,7 @@ def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
         layout.row().label(text="     Make backups or switch to a more stable release!")
 
     exp_box = layout.box()
-    exp_box.label(text="Exportable Collections")
+    exp_box.label(text="Root Collections")
     for collection in [
         coll
         for coll in xplane_helpers.get_collections_in_scene(scene)[1:]
@@ -309,7 +309,7 @@ def object_layer_layout(layout: bpy.types.UILayout, obj: bpy.types.Object):
             expandIcon = "TRIA_RIGHT"
             expanded = False
 
-        box.prop(layer_props, "expanded", text = "Exportable Object", expand = True, emboss = False, icon = expandIcon)
+        box.prop(layer_props, "expanded", text = "Root Object", expand = True, emboss = False, icon = expandIcon)
 
         if expanded:
             layer_layout(box, layer_props, version, "object")
