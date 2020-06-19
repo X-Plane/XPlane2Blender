@@ -524,18 +524,26 @@ def mesh_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
 
 
 def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
-    light = obj.data
-    layout.row().prop(light.xplane, "type")
+    light_data = obj.data
+    layout.row().prop(light_data.xplane, "type")
 
-    if light.xplane.type == LIGHT_AUTOMATIC and light.type not in {"POINT", "SPOT"}:
+    if light_data.xplane.type == LIGHT_AUTOMATIC and light_data.type not in {"POINT", "SPOT"}:
         layout.row().label(text="Automatic lights must use spot lights")
-    elif light.xplane.type == LIGHT_AUTOMATIC and light.type in {"POINT","SPOT"}:
-        layout.row().prop(light.xplane, "name")
+    elif light_data.xplane.type == LIGHT_AUTOMATIC and light_data.type in {"POINT","SPOT"}:
+        layout.row().prop(light_data.xplane, "name")
         def draw_automatic_ui():
             try:
-                if light.xplane.name:
-                    parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(light.xplane.name)
-                    is_omni = parsed_light.best_overload().is_omni()
+                if light_data.xplane.name:
+                    parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(light_data.xplane.name)
+                    # HACK: We take this shortcut because otherwise we'd need to pretend to
+                    # fill in the overload and apply the sw_callback which breaks DRY.
+                    # We know exactly what happens here, and we don't need to muck with is_omni over the UI
+                    # - Ted, 06/18/2020
+                    if "DIR_MAG" in parsed_light.light_param_def:
+                        is_omni = light_data.type == "POINT"
+                    else:
+                        is_omni = parsed_light.best_overload().is_omni()
+
                     omni_conclusively_known = True
                 else:
                     return
@@ -547,13 +555,13 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                 omni_conclusively_known = False
 
             if not xplane_lights_txt_parser.is_automatic_light_compatible(parsed_light.name):
-                layout.row().label(text=f"'{light.xplane.name} is incompatible with Automatic Lights.", icon="ERROR")
+                layout.row().label(text=f"'{light_data.xplane.name} is incompatible with Automatic Lights.", icon="ERROR")
                 layout.row().label(text=f"Use a different light or switch X-Plane Light Type to Named or Manual Param")
             # To understand why this all works, see the massive comment in xplane_lights_txt_parser.py
-            elif is_omni and light.type == "SPOT":
-                layout.row().label(text=f"'{light.xplane.name}' will be omnidirectional in X-Plane, use a Point Light")
-            elif not is_omni and omni_conclusively_known and light.type == "POINT":
-                layout.row().label(text=f"'{light.xplane.name}' will be directional in X-Plane, use a Spot Light")
+            elif is_omni and light_data.type == "SPOT":
+                layout.row().label(text=f"'{light_data.xplane.name}' will be omnidirectional in X-Plane, use a Point Light")
+            elif not is_omni and omni_conclusively_known and light_data.type == "POINT":
+                layout.row().label(text=f"'{light_data.xplane.name}' will be directional in X-Plane, use a Spot Light")
             elif parsed_light.light_param_def:
                 for param, prop_name in {
                     "INDEX": "param_index",
@@ -562,59 +570,60 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                     "SIZE": "param_size"
                 }.items():
                     if param in parsed_light.light_param_def:
-                        layout.row().prop(light.xplane, prop_name)
+                        layout.row().prop(light_data.xplane, prop_name)
 
                 debug_box = layout.box()
                 debug_box.label(text="Debug Box")
                 debug_box.row().label(text=f"{len(parsed_light.light_param_def)} {' '.join(parsed_light.light_param_def)}")
                 debug_box.row().label(text=f"{parsed_light.overloads[0]['DREF'] if 'DREF' in parsed_light.overloads[0] else ''}")
-                if light.xplane.params:
-                    debug_box.row().label(text=f"Former Params: '{light.xplane.params}'")
+                if light_data.xplane.params:
+                    debug_box.row().label(text=f"Former Params: '{light_data.xplane.params}'")
                 rgb_row = debug_box.row()
                 for param in parsed_light.light_param_def:
                     if param in {"R","G","B"}:
-                        rgb_row.label(text=f"{param}: {round(light.color['RGB'.index(param)], 3)}")
+                        rgb_row.label(text=f"{param}: {round(light_data.color['RGB'.index(param)], 3)}")
                     if param == "A":
                         rgb_row.label(text=f"{param}: 1")
                     if param == "SIZE":
-                        debug_box.row().label(text=f"{param}: {round(light.xplane.size)}m")
+                        debug_box.row().label(text=f"{param}: {round(light_data.xplane.size)}m")
                     #--- WIDTH -----------------------------------------------
                     if param == "WIDTH" or param == "DIR_MAG":
-                        if is_omni or light.type == "POINT":
+                        if is_omni or light_data.type == "POINT":
                             debug_box.row().label(
                                 text=f"{param}: Omni"
                             )
                         elif is_omni and not omni_conclusively_known:
                             assert False, "is_omni can't be True and not conclusively known"
-                        elif not is_omni and omni_conclusively_known and light.type == "SPOT":
+                        elif not is_omni and omni_conclusively_known and light_data.type == "SPOT":
                             # We can only get this by being a non-special case Spot Light
                             debug_box.row().label(
-                                text=f"{param}: {round(math.cos(light.spot_size * .5), 5)}"
+                                text=f"{param}: {round(math.cos(light_data.spot_size * .5), 5)}"
                             )
-                        elif not is_omni and not omni_conclusively_known and light.type == "SPOT":
+                        elif not is_omni and not omni_conclusively_known and light_data.type == "SPOT":
                             # Directional billboard
                             debug_box.row().label(
                                 text=f"{param}: Directional, final 'WIDTH' calculated during export"
                             )
+                            #TODO: actually, if we don't have a SW callback, we can answer this for all billboards
                     #---------------------------------------------------------
                     if param == "INDEX":
-                        debug_box.row().label(text=f"{param}: {light.xplane.param_index}")
+                        debug_box.row().label(text=f"{param}: {light_data.xplane.param_index}")
                     if param == "FREQ":
-                        debug_box.row().label(text=f"{param}: {light.xplane.param_freq}")
+                        debug_box.row().label(text=f"{param}: {light_data.xplane.param_freq}")
                     if param == "PHASE":
-                        debug_box.row().label(text=f"{param}: {light.xplane.param_phase}")
+                        debug_box.row().label(text=f"{param}: {light_data.xplane.param_phase}")
         draw_automatic_ui()
-    elif light.xplane.type == LIGHT_NAMED:
-        layout.row().prop(light.xplane, "name")
-    elif light.xplane.type == LIGHT_PARAM:
-        layout.row().prop(light.xplane, "name")
-        layout.row().prop(light.xplane, "params")
-    elif light.xplane.type == LIGHT_CUSTOM:
-        layout.row().prop(light.xplane, "size")
+    elif light_data.xplane.type == LIGHT_NAMED:
+        layout.row().prop(light_data.xplane, "name")
+    elif light_data.xplane.type == LIGHT_PARAM:
+        layout.row().prop(light_data.xplane, "name")
+        layout.row().prop(light_data.xplane, "params")
+    elif light_data.xplane.type == LIGHT_CUSTOM:
+        layout.row().prop(light_data.xplane, "size")
         layout.row().label(text="Texture Coordinates:")
-        layout.row().prop(light.xplane, "uv", text = "")
+        layout.row().prop(light_data.xplane, "uv", text = "")
         row = layout.row()
-        row.prop(light.xplane, "dataref", text = "Dataref")
+        row.prop(light_data.xplane, "dataref", text = "Dataref")
         scene = bpy.context.scene
         expanded = scene.xplane.dataref_search_window_state.dataref_prop_dest == "bpy.context.active_object.data.xplane.dataref"
         if expanded:
@@ -627,9 +636,9 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
         if expanded:
             dataref_search_window_layout(layout)
 
-        layout.row().prop(light.xplane, "enable_rgb_override")
-        if light.xplane.enable_rgb_override:
-            layout.row().prop(light.xplane, "rgb_override_values")
+        layout.row().prop(light_data.xplane, "enable_rgb_override")
+        if light_data.xplane.enable_rgb_override:
+            layout.row().prop(light_data.xplane, "rgb_override_values")
     layout.row().operator("scene.dev_create_lights_txt_summary")
 
 # Function: material_layout
