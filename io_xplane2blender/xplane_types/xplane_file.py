@@ -70,34 +70,34 @@ def createFileFromBlenderRootObject(potential_root:PotentialRoot, view_layer:bpy
     Raises ValueError when exportable_root is not marked as exporter or something
     prevents collection
     """
-    nested_errors: Set[str] = set()
     if not xplane_helpers.is_exportable_root(potential_root, view_layer):
-        raise NotExportableRootError(f"{potential_root.name} is not an exportable root")
-    def log_nested_roots(potential_roots: List[PotentialRoot]):
-        err = "Exportable Roots cannot be nested, make '{}' a regular {} or ensure it is not in an exportable collection and none of its parents are exportable objects"
+        raise NotExportableRootError(f"{potential_root.name} is not a root")
+    nested_roots: Set[PotentialRoot] = set()
+    def find_nested_roots(potential_roots: List[PotentialRoot]):
+        nonlocal nested_roots
         if isinstance(potential_root, bpy.types.Collection):
-            get_name = lambda r: r.name
-            nested_errors.update(
-                    err.format(obj.name, "Collection")
-                    for obj in filter(
-                        lambda o: xplane_helpers.is_exportable_root(o, view_layer),
-                        sorted(potential_root.all_objects, key=get_name)))
+            nested_roots.update(
+                    o for o in potential_root.all_objects
+                    if xplane_helpers.is_exportable_root(o, view_layer)
+                )
+
         for child in potential_roots:
             if xplane_helpers.is_exportable_root(child, view_layer):
-                nested_errors.add(err.format(child.name, "Object"))
-            log_nested_roots(child.children)
+                nested_roots.update({child})
+            find_nested_roots(child.children)
 
-    log_nested_roots(potential_root.children)
-    for error in sorted(nested_errors):
-        logger.error(error)
+    find_nested_roots(potential_root.children)
+    if nested_roots:
+        names = [f"'{potential_root.name}'"] + [f"'{r.name}'" for r in nested_roots]
+        logger.error(f"Nested roots found below '{potential_root.name}'. Checkmark only one of these as the Root: {', '.join(names)}")
 
     #Name change, we're now confirmed exportable!
     exportable_root = potential_root
     layer_props = exportable_root.xplane.layer
     filename = layer_props.name if layer_props.name else exportable_root.name
     xplane_file = XPlaneFile(filename, layer_props)
-    xplane_file.create_xplane_bone_hierarchy(exportable_root)
-    assert xplane_file.rootBone, "Root Bone was not assaigned during __init__ function"
+    xplane_file.create_xplane_bone_hiearchy(exportable_root)
+    assert xplane_file.rootBone, "Root Bone was not assigned during __init__ function"
     return xplane_file
 
 
@@ -129,7 +129,7 @@ class XPlaneFile():
         self.header = XPlaneHeader(self, 8)
 
 
-    def create_xplane_bone_hierarchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
+    def create_xplane_bone_hiearchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
         def allowed_children(parent_like:Union[bpy.types.Collection, bpy.types.Object])->List[bpy.types.Object]:
             """
             Returns only the objects the recurse function is allowed to use.

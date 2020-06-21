@@ -623,12 +623,12 @@ def make_root_unexportable(
 
     if isinstance(exportable_root, bpy.types.Collection):
         exportable_root.xplane.is_exportable_collection = False
-        # This is actually talking about "Visibile In Viewport" - the little eyeball
+        # This is actually talking about "Visible In Viewport" - the little eyeball
         all_layer_collections = {lc.name: lc for lc in xplane_helpers.get_layer_collections_in_view_layer(view_layer)}
         all_layer_collections[exportable_root.name].hide_viewport = True
     elif isinstance(exportable_root, bpy.types.Object):
         exportable_root.xplane.isExportableRoot = True
-        # This is actually talking about "Visibile In Viewport" - the little eyeball
+        # This is actually talking about "Visible In Viewport" - the little eyeball
         exportable_root.hide_set(disable_viewport)
     else:
         assert False, "How did we get here?!"

@@ -445,6 +445,14 @@ class XPlaneTestCase(unittest.TestCase):
 
         return out
 
+    @staticmethod
+    def get_XPlane2Blender_log_content()->List[str]:
+        """
+        Returns the content of the log file after export as a collection of lines, no trailing new lines,
+        or KeyError if the text block doesn't exist yet (rare).
+        """
+        return [l.body for l in bpy.data.texts["XPlane2Blender.log"].lines]
+
 
 class XPlaneAnimationTestCase(XPlaneTestCase):
     def setUp(self):
