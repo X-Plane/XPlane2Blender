@@ -1725,7 +1725,7 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
     )
 
     param_size: bpy.props.FloatProperty(
-        name = "Size",
+        name = "Light Size",
         description = "Spill size uses meters; billboard size uses arbitrary scales - bigger is brighter",
         default = 1.0,
         min = LIGHT_PARAM_SIZE_MIN,

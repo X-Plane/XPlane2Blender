@@ -559,9 +559,9 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
                 layout.row().label(text=f"Use a different light or switch X-Plane Light Type to Named or Manual Param")
             # To understand why this all works, see the massive comment in xplane_lights_txt_parser.py
             elif is_omni and light_data.type == "SPOT":
-                layout.row().label(text=f"'{light_data.xplane.name}' will be omnidirectional in X-Plane, use a Point Light")
+                layout.row().label(text=f"'{light_data.xplane.name}' is omnidirectional and must use a Point Light")
             elif not is_omni and omni_conclusively_known and light_data.type == "POINT":
-                layout.row().label(text=f"'{light_data.xplane.name}' will be directional in X-Plane, use a Spot Light")
+                layout.row().label(text=f"'{light_data.xplane.name}' is directional and must use a Spot Light")
             elif parsed_light.light_param_def:
                 for param, prop_name in {
                     "INDEX": "param_index",

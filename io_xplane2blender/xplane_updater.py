@@ -382,7 +382,7 @@ def update(last_version:xplane_helpers.VerStruct, logger:xplane_helpers.XPlaneLo
             xplane_updater_helpers.delete_property_from_datablock(has_layer.xplane.layer, "export")
         #----------------------------------------------------------------------
 
-    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0-beta.2+81.20200421111500"):
+    if last_version < xplane_helpers.VerStruct.parse_version("4.0.0-beta.2+88.20200622133200"):
         # Remember, get returning 0 and return None means something different
         for light in filter(lambda l: l.xplane.get("type") is None, bpy.data.lights):
             light.xplane.type = xplane_constants.LIGHT_DEFAULT
