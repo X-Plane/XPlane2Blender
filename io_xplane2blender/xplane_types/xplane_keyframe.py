@@ -4,17 +4,18 @@ from typing import Tuple
 import bpy
 import mathutils
 
+from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_constants import PRECISION_KEYFRAME
 
 class XPlaneKeyframe():
     def __init__(self,
                  keyframe: bpy.types.Keyframe,
-                 index: int,
+                 dataref_values_index: int,
                  dataref: str,
                  xplaneBone: "XPlaneBone")->None:
         self.dataref = dataref
-        self.index = index
-        self.value = keyframe.co[1]
+        self.dataref_values_index = dataref_values_index
+        self.dataref_value = keyframe.co[1]
 
         if xplaneBone.blenderBone:
             # we need the pose bone
@@ -22,10 +23,25 @@ class XPlaneKeyframe():
         else:
             blenderObject = xplaneBone.blenderObject
 
-        self.frame = int(round(keyframe.co[0]))
-        bpy.context.scene.frame_set(frame=self.frame)
+        try:
+            key = (xplaneBone.blenderObject.name, xplaneBone.blenderBone.name if xplaneBone.blenderBone else None)
+            frame_num, location, rotation_mode, rotation = xplaneBone.xplaneFile._bl_animatable_name_to_keyframes[key][int(keyframe.co[0])]
+        except KeyError:
+            def get_rotation(obj_or_bone):
+                rotation_mode = obj_or_bone.rotation_mode
 
-        self.location = mathutils.Vector([round(comp, PRECISION_KEYFRAME) for comp in copy.copy(blenderObject.location)])
+                if rotation_mode == "QUATERNION":
+                    return obj_or_bone.rotation_quaternion.copy()
+                elif rotation_mode == "AXIS_ANGLE":
+                    return tuple(obj_or_bone.rotation_axis_angle)
+                else:
+                    return obj_or_bone.rotation_euler.copy()
+
+            frame_num, location, rotation_mode, rotation = int(keyframe.co[0]), blenderObject.location, blenderObject.rotation_mode, get_rotation(blenderObject)
+
+        self.frame = frame_num
+
+        self.location = xplane_helpers.round_vec(location, PRECISION_KEYFRAME)
         assert isinstance(self.location, mathutils.Vector)
 
         # Child bones with a parent and connection need to ignore the translation field -
@@ -33,31 +49,27 @@ class XPlaneKeyframe():
         # so we have to!
         if xplaneBone.blenderBone:
             if xplaneBone.blenderBone.use_connect and xplaneBone.blenderBone.parent:
-                self.location[0] = 0
-                self.location[1] = 0
-                self.location[2] = 0
+                self.location[:] = 0, 0, 0
 
-        self.rotationMode = blenderObject.rotation_mode
+        self.rotationMode = rotation_mode
 
         if self.rotationMode == 'QUATERNION':
-            self.rotation = blenderObject.rotation_quaternion.copy().normalized()
+            self.rotation = rotation.normalized()
             assert isinstance(self.rotation, mathutils.Quaternion)
         elif self.rotationMode == 'AXIS_ANGLE':
-            rot = blenderObject.rotation_axis_angle
             # Why tuple(angle, axis) when the thing is called axis_angle?
             # Different Blender functions call for arbitrary arrangements
             # of this, so my priority was whatever is easiest to convert,
             # not what I like.
-            self.rotation = (round(rot[0], PRECISION_KEYFRAME),
-                             mathutils.Vector(rot[1:]).normalized()) # type: Tuple[float,mathutils.Vector]
+            self.rotation = (round(rotation[0], PRECISION_KEYFRAME),
+                             mathutils.Vector(rotation[1:]).normalized()) # type: Tuple[float,mathutils.Vector]
             assert isinstance(self.rotation, tuple)
             assert len(self.rotation) == 2
             for comp in self.rotation[1]:
                 assert isinstance(comp, float)
         else:
-            angles = [round(comp, PRECISION_KEYFRAME)
-                      for comp in blenderObject.rotation_euler.copy()]
-            order = blenderObject.rotation_euler.order
+            angles = xplane_helpers.round_vec(rotation, PRECISION_KEYFRAME)
+            order = rotation.order
             self.rotation = mathutils.Euler(angles, order)
             assert isinstance(self.rotation, mathutils.Euler)
 

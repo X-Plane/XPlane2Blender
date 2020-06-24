@@ -11,6 +11,7 @@ Later, the write process starts with xplane_file.write, and uses the collected d
 the header and XPlaneBone tree contents to a string
 """
 
+from pprint import pprint
 
 import collections
 import operator
@@ -35,6 +36,50 @@ from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 from .xplane_vlights import XPlaneVLights
 
+global_stupid_variable = collections.defaultdict(dict)
+
+def get_global_table():
+    global global_stupid_variable
+    def get_rotation(obj_or_bone)->Union[mathutils.Euler, mathutils.Quaternion, Tuple[float, float, float, float]]:
+        rotation_mode = obj_or_bone.rotation_mode
+
+        if rotation_mode == "QUATERNION":
+            return obj_or_bone.rotation_quaternion.copy()
+        elif rotation_mode == "AXIS_ANGLE":
+            return tuple(obj_or_bone.rotation_axis_angle)
+        else:
+            return obj_or_bone.rotation_euler.copy()
+
+    # A set of all keyframes that could have data we care about
+    frames_to_visit = sorted({
+        int(kf.co[0])
+        for action in bpy.data.actions
+        for fcurve in action.fcurves
+        for kf in fcurve.keyframe_points
+        if kf.co[0].is_integer()
+    })
+
+    for frame_num in frames_to_visit:
+        bpy.context.scene.frame_set(frame_num)
+
+        for obj in bpy.context.scene.objects:
+            if obj.type == "ARMATURE":
+                for bone in obj.pose.bones:
+                    global_stupid_variable[(obj.name, bone.name)][frame_num] = (
+                            frame_num,
+                            bone.location.copy(),
+                            bone.rotation_mode,
+                            get_rotation(bone)
+                        )
+            else:
+                global_stupid_variable[(obj.name, None)][frame_num] = (
+                        frame_num,
+                        obj.location.copy(),
+                        obj.rotation_mode,
+                        get_rotation(obj)
+                    )
+
+    bpy.context.scene.frame_set(1)
 
 class NotExportableRootError(ValueError):
     pass
@@ -47,6 +92,7 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.type
 
     view_layer is needed to test exportability
     """
+    get_global_table()
     xplane_files: List["XPlaneFile"] = []
     for potential_root in scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]:
         try:
@@ -128,6 +174,11 @@ class XPlaneFile():
 
         # Header assumes that its xplaneFile is completely formed
         self.header = XPlaneHeader(self, 8)
+
+        # Where key is a Tuple of Object name, and if bone, pose bone name of that armature
+        # Where AnimTuple is Tuple[int, Vector, str, Union[AxisAngle, Euler, Quaternion]]
+        # for location, rotation mode, and some rotation data
+        self._bl_animatable_name_to_keyframes:Dict[Tuple[str, Optional[str]], "AnimTuple"] = global_stupid_variable.copy()
 
 
     def create_xplane_bone_hiearchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
@@ -648,4 +699,5 @@ class XPlaneFile():
         else:
             o += self.commands.write(lod_bucket_index=None)
 
+        #print(o)
         return o

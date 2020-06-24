@@ -152,13 +152,13 @@ class XPlaneKeyframeCollection(MutableSequence):
         TableEntry = namedtuple('TableEntry', ['value','degrees'])
         if final_rotation_mode == "AXIS_ANGLE" or\
            final_rotation_mode == "QUATERNION":
-            keyframe_table = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[0])) for keyframe in self]
+            keyframe_table = [TableEntry(keyframe.dataref_value, math.degrees(keyframe.rotation[0])) for keyframe in self]
             ret[0][1]  = keyframe_table
         else:
             cur_order = self.EULER_AXIS_ORDERING[final_rotation_mode]
-            ret[0][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[0]])) for keyframe in self]
-            ret[1][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[1]])) for keyframe in self]
-            ret[2][1]  = [TableEntry(keyframe.value, math.degrees(keyframe.rotation[cur_order[2]])) for keyframe in self]
+            ret[0][1]  = [TableEntry(keyframe.dataref_value, math.degrees(keyframe.rotation[cur_order[0]])) for keyframe in self]
+            ret[1][1]  = [TableEntry(keyframe.dataref_value, math.degrees(keyframe.rotation[cur_order[1]])) for keyframe in self]
+            ret[2][1]  = [TableEntry(keyframe.dataref_value, math.degrees(keyframe.rotation[cur_order[2]])) for keyframe in self]
 
         ret = [tuple((axis_info[0],axis_info[1])) for axis_info in ret]
 
@@ -189,7 +189,7 @@ class XPlaneKeyframeCollection(MutableSequence):
         Returns List[TranslationKeyframe[keyframe.value, keyframe.location]] where location is a Vector
         '''
         TranslationKeyframe = namedtuple('TranslationKeyframe', ['value','location'])
-        return [TranslationKeyframe(keyframe.value, keyframe.location) for keyframe in self]
+        return [TranslationKeyframe(keyframe.dataref_value, keyframe.location) for keyframe in self]
 
     def getTranslationKeyframeTableNoClamps(self):
         '''
@@ -198,7 +198,7 @@ class XPlaneKeyframeCollection(MutableSequence):
         '''
         return XPlaneKeyframeCollection.filter_clamping_keyframes(self.getTranslationKeyframeTable(), "location")
 
-    # Returns list  of tuples of (keyframe.value, keyframe.location)
+    # Returns list  of tuples of (keyframe.dataref_value, keyframe.location)
     # with location being a Vector in Blender form and scaled by the scaling amount
     def getTranslationKeyframeTableWScale(self):
         pre_scale = self[0].xplaneBone.getPreAnimationMatrix().decompose()[2]

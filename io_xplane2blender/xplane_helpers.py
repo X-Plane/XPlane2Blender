@@ -132,6 +132,8 @@ def is_exportable_root(potential_root: PotentialRoot, view_layer:bpy.types.ViewL
         and is_visible_in_viewport(potential_root, view_layer)
     )
 
+def round_vec(v:mathutils.Vector, ndigits:int)->mathutils.Vector:
+    return mathutils.Vector(round(comp, ndigits) for comp in v)
 
 def vec_b_to_x(v)->mathutils.Vector:
     return mathutils.Vector((v[0], v[2], -v[1]))

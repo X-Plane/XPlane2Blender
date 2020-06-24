@@ -32,7 +32,7 @@ from typing import List, Optional, Tuple
 import bpy
 import mathutils
 from io_xplane2blender.xplane_config import getDebug
-from io_xplane2blender import xplane_constants
+from io_xplane2blender import xplane_constants, xplane_props
 from io_xplane2blender.xplane_helpers import floatToStr, logger, vec_b_to_x
 from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
 from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
@@ -87,10 +87,9 @@ class XPlaneBone():
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
         self.animations = {} # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
 
-        # dict - The keys area dataref paths and the values are <XPlaneDataref> properties
         # IMPORTANT NOTE: Show/Hide Datarefs and datarefs without 2 keyframes will not be included and
         # must be accessed via blenderObject.xplane.datarefs!
-        self.datarefs = {} # type: Dict[str,XPlaneDataref]
+        self.datarefs:Dict[str, xplane_props.XPlaneDataref] = {}
         self.collectAnimations()
 
     def sortChildren(self)->None:
@@ -660,7 +659,7 @@ class XPlaneBone():
             totalTrans += sum(map(abs, keyframe.location))
 
             o += (f"{indent}ANIM_trans_key"
-                  f"\t{floatToStr(keyframe.value)}"
+                  f"\t{floatToStr(keyframe.dataref_value)}"
                   f"\t{floatToStr(keyframe.location[0] * pre_scale[0])}"
                   f"\t{floatToStr(keyframe.location[2] * pre_scale[2])}"
                   f"\t{floatToStr(-keyframe.location[1] * pre_scale[1])}"
@@ -699,7 +698,7 @@ class XPlaneBone():
             deg = math.degrees(keyframe.rotation[0])
             totalRot += abs(deg)
 
-            o += f"{indent}ANIM_rotate_key\t{floatToStr(keyframe.value)}\t{floatToStr(deg)}\n"
+            o += f"{indent}ANIM_rotate_key\t{floatToStr(keyframe.dataref_value)}\t{floatToStr(deg)}\n"
 
         o += self._writeKeyframesLoop(dataref)
         o += f"{indent}ANIM_rotate_end\n"
@@ -735,7 +734,7 @@ class XPlaneBone():
                 deg = math.degrees(keyframe.rotation[order])
                 totalRot += abs(deg)
                 totalAxisRot += abs(deg)
-                ao += f"{indent}ANIM_rotate_key\t{floatToStr(keyframe.value)}\t{floatToStr(deg)}\n"
+                ao += f"{indent}ANIM_rotate_key\t{floatToStr(keyframe.dataref_value)}\t{floatToStr(deg)}\n"
 
             ao += self._writeKeyframesLoop(dataref)
             ao += f"{indent}ANIM_rotate_end\n"

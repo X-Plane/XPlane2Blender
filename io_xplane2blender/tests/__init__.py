@@ -77,6 +77,7 @@ class XPlaneTestCase(unittest.TestCase):
 
         if useLogger:
             self.useLogger()
+        xplane_file.get_global_table()
 
         #logger.warn("---------------")
 
