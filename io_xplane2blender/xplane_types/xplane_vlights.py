@@ -1,3 +1,4 @@
+import bpy
 from typing import List
 from ..xplane_helpers import floatToStr, vec_b_to_x
 from ..xplane_constants import *
@@ -25,6 +26,7 @@ class XPlaneVLights():
     def append(self, light:xplane_light.XPlaneLight)->None:
         # we only write vlights here, all other lights go into the commands table directly
         if light.lightType in LIGHTS_OLD_TYPES:
+            bpy.context.scene.frame_set(1)
             self.items.append(light)
             light.indices = [self.globalindex, self.globalindex+1]
             self.indices.append(self.globalindex)

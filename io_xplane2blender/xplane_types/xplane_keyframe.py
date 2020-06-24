@@ -12,7 +12,6 @@ class XPlaneKeyframe():
                  index: int,
                  dataref: str,
                  xplaneBone: "XPlaneBone")->None:
-        currentFrame = bpy.context.scene.frame_current
         self.dataref = dataref
         self.index = index
         self.value = keyframe.co[1]
@@ -63,8 +62,6 @@ class XPlaneKeyframe():
             assert isinstance(self.rotation, mathutils.Euler)
 
         self.scale = copy.copy(blenderObject.scale)
-
-        bpy.context.scene.frame_set(frame=currentFrame)
 
     def __str__(self)->str:
         # TODO: We aren't printing out the bone, or saving it, because we haven't solved the deepcopy
