@@ -148,7 +148,7 @@ class XPlaneMesh():
         if debug:
             s = "".join(f"VT\t"
                         f"{tab.join(floatToStr(component) for component in line)}"
-                        f"# {i}"
+                        f"\t# {i}"
                         f"\n"
                         for i, line in enumerate(self.vertices))
             #print("end XPlaneMesh.writeVertices " + str(time.perf_counter()-start))
