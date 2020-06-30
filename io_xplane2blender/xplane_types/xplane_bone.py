@@ -153,76 +153,72 @@ class XPlaneBone():
         bone = self.blenderBone
         blenderObject = self.blenderObject
 
-        # if bone:
-        #     groupName = "XPlane Datarefs " + bone.name
-        # else:
-        #     groupName = "XPlane Datarefs"
-
         #check for animation
         #if bone:
             #print("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
         #else:
             #print("\t\t checking animations of %s" % blenderObject.name)
 
-        animationData = blenderObject.animation_data
+        try:
+            if bone:
+                # bone animation data resides in the armature objects .data block
+                fcurves = [
+                    f
+                    for f in blenderObject.data.animation_data.action.fcurves
+                    if f.data_path.startswith(f'bones["{bone.name}"].xplane.datarefs')
+                ]
+            else:
+                fcurves = [
+                    f
+                    for f in blenderObject.animation_data.action.fcurves
+                    if f.data_path.startswith(f"xplane.datarefs")
+                ]
+        except AttributeError:
+            pass
+        else:
+            for fcurve in fcurves:
+                if bone:
+                    index = int(
+                        fcurve.data_path[
+                            len(f'bones["{bone.name}"].xplane.datarefs[') : -len(
+                                "].value"
+                            )
+                        ]
+                    )
+                else:
+                    index = int(
+                        fcurve.data_path[len("xplane.datarefs[") : -len("].value")]
+                    )
 
-        # bone animation data resides in the armature objects .data block
-        if bone:
-            animationData = blenderObject.data.animation_data
-
-        if (animationData != None and animationData.action != None and len(animationData.action.fcurves) > 0):
-            #print("\t\t animation found")
-            #check for dataref animation by getting fcurves with the dataref group
-            for fcurve in animationData.action.fcurves:
-                #print("\t\t checking FCurve %s Group: %s" % (fcurve.data_path, fcurve.group))
-
-                # Ben says: I'm not sure if this is the right way to do this -- when we iterate the fcurve data for this
-                # armature, EVERY bone is included in a big pile.  So we parse the data_path and if it's clearly (1) for a bone and
-                # (2) NOT for us, we skip it.  Without this, the key frames from differing bones get cross-contaminated in a multi-
-                # bone case.
-                if fcurve.data_path.startswith("bones[\"") and bone != None:
-                    path_we_want = "bones[\"%s\"]" % bone.name
-                    if not fcurve.data_path.startswith(path_we_want):
-                        continue
-
-                if ('xplane.datarefs' in fcurve.data_path):
-                    # get dataref name
-                    pos = fcurve.data_path.find('xplane.datarefs[')
-                    if pos!=-1:
-                        index = fcurve.data_path[pos+len('xplane.datarefs[') : -len('].value')]
-                    else:
-                        return
-
-                    # old style datarefs with wrong datapaths can cause errors so we just skip them
-                    try:
-                        index = int(index)
-                    except:
-                        return
-
-                    # FIXME: removed datarefs keep fcurves, so we have to check if dataref is still there.
-                    # FCurves have to be deleted correctly.
+                try:
                     if bone:
-                        if index < len(bone.xplane.datarefs):
-                            dataref = bone.xplane.datarefs[index].path
-                        else:
-                            return
+                        dataref = bone.xplane.datarefs[index].path
                     else:
-                        if index < len(blenderObject.xplane.datarefs):
-                            dataref = blenderObject.xplane.datarefs[index].path
-                        else:
-                            return
-
-                    #print("\t\t adding dataref animation: %s" % dataref)
-
-                    if len(fcurve.keyframe_points) > 1:
-                        # time to add dataref to animations
-
+                        dataref = blenderObject.xplane.datarefs[index].path
+                except IndexError:
+                    # Due to a long standing bug in (I think in BONE_OT_remove_xplane_dataref.execute)
+                    # sometimes a Bone's fcurve is not properly removed. Any further indexes will also
+                    # be wrong.
+                    #
+                    # TODO: Fix whatever is causing this, but, we'll still need this for old .blend files
+                    # - Ted, 6/24/2020
+                    return
+                else:
+                    if fcurve.keyframe_points:
                         if bone:
                             self.datarefs[dataref] = bone.xplane.datarefs[index]
                         else:
-                            self.datarefs[dataref] = blenderObject.xplane.datarefs[index]
+                            self.datarefs[dataref] = blenderObject.xplane.datarefs[
+                                index
+                            ]
 
-                        self.animations[dataref] = XPlaneKeyframeCollection([XPlaneKeyframe(kf, i, dataref, self) for i, kf in enumerate(fcurve.keyframe_points)])
+                        self.animations[dataref] = XPlaneKeyframeCollection(
+                            [
+                                XPlaneKeyframe(kf, i, dataref, self)
+                                for i, kf in enumerate(fcurve.keyframe_points)
+                            ]
+                        )
+
 
     def getName(self, ignore_indent_level:bool=False)->str:
         """

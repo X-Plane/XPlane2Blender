@@ -25,6 +25,7 @@ from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW
 from io_xplane2blender.xplane_helpers import (ExportableRoot, PotentialRoot,
                                               XPlaneLogger, logger)
+from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
 from mathutils import Euler, Quaternion, Vector
 
@@ -154,6 +155,9 @@ class KeyframeInfo():
                 assert len(self.rotation) == 3
             else:
                 assert False, "Unsupported rotation mode: " + self.rotation_mode
+
+    def __str__(self)->str:
+        return f"({self.idx}, {self.dataref_path}, {self.dataref_value}, {self.dataref_show_hide_v1}, {self.dataref_show_hide_v2}, {self.dataref_anim_type}, {self.location}, {self.rotation_mode}, {self.rotation})"
 
 # Common presets for animations
 R_2_FRAMES_45_Y_AXIS = (
@@ -482,6 +486,12 @@ def create_material_default()->bpy.types.Material:
     Creates the default 'Material' if it doesn't already exist
     '''
     return create_material('Material')
+
+def create_scene(name:str)->bpy.types.Scene:
+    try:
+        return bpy.data.scenes[name]
+    except KeyError:
+        return bpy.data.scenes.new(name)
 
 #Do not include .png. It is only for the source path
 def get_image(name:str)->Optional[bpy.types.Image]:
@@ -866,6 +876,7 @@ class TemporaryStartFile():
 def create_initial_test_setup():
     bpy.ops.wm.read_homefile()
     delete_everything()
+    xplane_file._all_keyframe_infos.clear()
     logger.clear()
     logger.addTransport(xplane_helpers.XPlaneLogger.InternalTextTransport(), xplane_constants.LOGGER_LEVELS_ALL)
     logger.addTransport(XPlaneLogger.ConsoleTransport())

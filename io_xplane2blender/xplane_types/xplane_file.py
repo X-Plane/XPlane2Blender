@@ -11,9 +11,8 @@ Later, the write process starts with xplane_file.write, and uses the collected d
 the header and XPlaneBone tree contents to a string
 """
 
-from pprint import pprint
-
 import collections
+import dataclasses
 import operator
 import itertools
 import pprint
@@ -36,50 +35,6 @@ from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
 from .xplane_vlights import XPlaneVLights
 
-global_stupid_variable = collections.defaultdict(dict)
-
-def get_global_table():
-    global global_stupid_variable
-    def get_rotation(obj_or_bone)->Union[mathutils.Euler, mathutils.Quaternion, Tuple[float, float, float, float]]:
-        rotation_mode = obj_or_bone.rotation_mode
-
-        if rotation_mode == "QUATERNION":
-            return obj_or_bone.rotation_quaternion.copy()
-        elif rotation_mode == "AXIS_ANGLE":
-            return tuple(obj_or_bone.rotation_axis_angle)
-        else:
-            return obj_or_bone.rotation_euler.copy()
-
-    # A set of all keyframes that could have data we care about
-    frames_to_visit = sorted({
-        int(kf.co[0])
-        for action in bpy.data.actions
-        for fcurve in action.fcurves
-        for kf in fcurve.keyframe_points
-        if kf.co[0].is_integer()
-    })
-
-    for frame_num in frames_to_visit:
-        bpy.context.scene.frame_set(frame_num)
-
-        for obj in bpy.context.scene.objects:
-            if obj.type == "ARMATURE":
-                for bone in obj.pose.bones:
-                    global_stupid_variable[(obj.name, bone.name)][frame_num] = (
-                            frame_num,
-                            bone.location.copy(),
-                            bone.rotation_mode,
-                            get_rotation(bone)
-                        )
-            else:
-                global_stupid_variable[(obj.name, None)][frame_num] = (
-                        frame_num,
-                        obj.location.copy(),
-                        obj.rotation_mode,
-                        get_rotation(obj)
-                    )
-
-    bpy.context.scene.frame_set(1)
 
 class NotExportableRootError(ValueError):
     pass
@@ -92,7 +47,6 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.type
 
     view_layer is needed to test exportability
     """
-    get_global_table()
     xplane_files: List["XPlaneFile"] = []
     for potential_root in scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]:
         try:
@@ -101,6 +55,10 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.type
             pass
         else:
             xplane_files.append(xplane_file)
+
+    # Without this the cache never gets cleared
+    # and no new animations are exported without a restart
+    _all_keyframe_infos.clear()
 
     return xplane_files
 
@@ -141,11 +99,89 @@ def createFileFromBlenderRootObject(potential_root:PotentialRoot, view_layer:bpy
     exportable_root = potential_root
     layer_props = exportable_root.xplane.layer
     filename = layer_props.name if layer_props.name else exportable_root.name
+
     xplane_file = XPlaneFile(filename, layer_props)
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
     bpy.context.scene.frame_set(1)
     assert xplane_file.rootBone, "Root Bone was not assigned during __init__ function"
     return xplane_file
+
+
+@dataclasses.dataclass(frozen=True)
+class LocRotPerFrame:
+    """Location/Rotation information at each frame we could care about, copied"""
+    frame_num:int
+    location:mathutils.Vector
+    rotation_mode:str
+    rotation:Union[mathutils.Euler, mathutils.Quaternion, Tuple[float, float, float, float]]
+
+
+ObjectBoneNameKey = Tuple[str, str]
+FrameToLocRotPerFrame = Dict[int, LocRotPerFrame]
+
+
+# IMPORTANT! You must clear this cache when finished exporting all your OBJs,
+# or you'll never export new animations! We clear in
+# - xplane_file.createFilesFromBlenderRootObjects - from using the export operator
+# - tests/__init__.exportExportableRoot - from using a test
+_all_keyframe_infos:Dict[str, Dict[ObjectBoneNameKey, FrameToLocRotPerFrame]] = collections.defaultdict(dict)
+
+
+def _pre_scan_all_keyframes():
+    """Returns a copy of all this scene's LocRotPerFrame, scanning for it as needed"""
+
+    ###--- THIS IS A HOTPATH -------------------------------------------------
+    # Do not change without profiling
+    #
+    # Calling frame_set __once__ per every keyframe in a scene is
+    # a huge performance win. We cache the results in case the user has multiple roots
+    # in a scene
+
+    global _all_keyframe_infos
+    if bpy.context.scene.name in _all_keyframe_infos:
+        return
+    else:
+        scene_keyframe_infos = collections.defaultdict(dict)
+
+    # A set of all keyframes that could have data we care about
+    frames_to_visit = sorted({
+        int(kf.co[0])
+        for action in bpy.data.actions
+        for fcurve in action.fcurves
+        for kf in fcurve.keyframe_points
+        if kf.co[0].is_integer()
+    })
+
+    #--- Begin frames to visit-------------------
+    for frame_num in frames_to_visit:
+        bpy.context.scene.frame_set(frame_num)
+
+        #--- Begin objects to visit -------------
+        for obj in bpy.context.scene.objects:
+            if obj.type == "ARMATURE":
+                #--- Begin bones to visit -------
+                for bone in obj.pose.bones:
+                    l = LocRotPerFrame(
+                            frame_num,
+                            bone.location.copy(),
+                            bone.rotation_mode,
+                            xplane_helpers.get_rotation_from_rotatable(bone)
+                        )
+
+                    scene_keyframe_infos[(obj.name, bone.name)][frame_num] = l
+                #--- End bones to visit ---------
+            l = LocRotPerFrame(
+                frame_num,
+                obj.location.copy(),
+                obj.rotation_mode,
+                xplane_helpers.get_rotation_from_rotatable(obj)
+            )
+            scene_keyframe_infos[(obj.name, None)][frame_num] = l
+        #--- End objects to visit ---------------
+    #--- End frames to visit---------------------
+    bpy.context.scene.frame_set(1)
+    _all_keyframe_infos[bpy.context.scene.name] = scene_keyframe_infos
+    return
 
 
 class XPlaneFile():
@@ -175,11 +211,9 @@ class XPlaneFile():
         # Header assumes that its xplaneFile is completely formed
         self.header = XPlaneHeader(self, 8)
 
-        # Where key is a Tuple of Object name, and if bone, pose bone name of that armature
-        # Where AnimTuple is Tuple[int, Vector, str, Union[AxisAngle, Euler, Quaternion]]
-        # for location, rotation mode, and some rotation data
-        self._bl_animatable_name_to_keyframes:Dict[Tuple[str, Optional[str]], "AnimTuple"] = global_stupid_variable.copy()
-
+        # You'll never ever forget to call XPlaneFile, so,
+        # we stick this here
+        _pre_scan_all_keyframes()
 
     def create_xplane_bone_hiearchy(self, exportable_root:ExportableRoot)->Optional[XPlaneObject]:
         def allowed_children(parent_like:Union[bpy.types.Collection, bpy.types.Object])->List[bpy.types.Object]:

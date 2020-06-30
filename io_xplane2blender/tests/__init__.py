@@ -77,7 +77,6 @@ class XPlaneTestCase(unittest.TestCase):
 
         if useLogger:
             self.useLogger()
-        xplane_file.get_global_table()
 
         #logger.warn("---------------")
 
@@ -439,6 +438,7 @@ class XPlaneTestCase(unittest.TestCase):
         else:
             xp_file = xplane_file.createFileFromBlenderRootObject(potential_root, view_layer)
         out = xp_file.write()
+        xplane_file._all_keyframe_infos.clear()
 
         if dest:
             with open(os.path.join(TMP_DIR, dest + '.obj'), 'w') as tmp_file:

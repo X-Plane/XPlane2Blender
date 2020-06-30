@@ -103,14 +103,17 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         #if logger.hasErrors() or logger.hasWarnings():
             #showLogDialog()
 
-        if not logger.hasErrors() and xplaneFiles:
-            logger.success("Export finished without errors")
-            self._endLogging()
-            return {'FINISHED'}
-        elif not xplaneFiles:
+        if not xplaneFiles:
             logger.error("Could not find any Exportable Collections or Objects, did you forget check 'Exportable Collection' or 'Exportable Object'?")
             self._endLogging()
             return {'CANCELLED'}
+        elif logger.hasErrors():
+            self._endLogging()
+            return {'CANCELLED'}
+        elif not logger.hasErrors() and xplaneFiles:
+            logger.success("Export finished without errors")
+            self._endLogging()
+            return {'FINISHED'}
 
     def _startLogging(self):
         debug = getDebug()

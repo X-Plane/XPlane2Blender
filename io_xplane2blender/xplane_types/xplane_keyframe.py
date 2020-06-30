@@ -13,6 +13,7 @@ class XPlaneKeyframe():
                  dataref_values_index: int,
                  dataref: str,
                  xplaneBone: "XPlaneBone")->None:
+        from io_xplane2blender.xplane_types import xplane_file
         self.dataref = dataref
         self.dataref_values_index = dataref_values_index
         self.dataref_value = keyframe.co[1]
@@ -23,23 +24,18 @@ class XPlaneKeyframe():
         else:
             blenderObject = xplaneBone.blenderObject
 
+        self.frame_num = int(keyframe.co[0])
         try:
-            key = (xplaneBone.blenderObject.name, xplaneBone.blenderBone.name if xplaneBone.blenderBone else None)
-            frame_num, location, rotation_mode, rotation = xplaneBone.xplaneFile._bl_animatable_name_to_keyframes[key][int(keyframe.co[0])]
+            key = (
+                xplaneBone.blenderObject.name,
+                xplaneBone.blenderBone.name if xplaneBone.blenderBone else None,
+            )
+            keyframe_info_per_frame = xplane_file._all_keyframe_infos[bpy.context.scene.name][key][self.frame_num]
+            location = keyframe_info_per_frame.location
+            rotation_mode = keyframe_info_per_frame.rotation_mode
+            rotation = keyframe_info_per_frame.rotation
         except KeyError:
-            def get_rotation(obj_or_bone):
-                rotation_mode = obj_or_bone.rotation_mode
-
-                if rotation_mode == "QUATERNION":
-                    return obj_or_bone.rotation_quaternion.copy()
-                elif rotation_mode == "AXIS_ANGLE":
-                    return tuple(obj_or_bone.rotation_axis_angle)
-                else:
-                    return obj_or_bone.rotation_euler.copy()
-
-            frame_num, location, rotation_mode, rotation = int(keyframe.co[0]), blenderObject.location, blenderObject.rotation_mode, get_rotation(blenderObject)
-
-        self.frame = frame_num
+            location, rotation_mode, rotation = blenderObject.location, blenderObject.rotation_mode, xplane_helpers.get_rotation_from_rotatable(blenderObject)
 
         self.location = xplane_helpers.round_vec(location, PRECISION_KEYFRAME)
         assert isinstance(self.location, mathutils.Vector)
@@ -80,7 +76,7 @@ class XPlaneKeyframe():
         # of xplaneBone. Currently, that just poses an issue for debugging (and if all you need is the name
         # of the bone to track it down, you can certainly store the name!)
         return "Value={} Dataref={} Rotation Mode={} Rotation=({}) Location=({})".format(
-            self.value, self.dataref, self.rotationMode, self.rotation, self.location)
+            self.dataref_value, self.dataref, self.rotationMode, self.rotation, self.location)
 
     def asAA(self)->'XPlaneKeyframe':
         '''

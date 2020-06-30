@@ -82,6 +82,20 @@ def get_potential_objects_in_exportable_root(root: PotentialRoot)->List[bpy.type
         return [obj for obj in root.all_objects if is_potential_child(obj)]
 
 
+def get_rotation_from_rotatable(
+    obj_or_bone: Union[bpy.types.Object, bpy.types.PoseBone]
+) -> Union[mathutils.Euler, mathutils.Quaternion, Tuple[float, float, float, float]]:
+    """Returns a copy of the rotation, in whatever mode was given"""
+    rotation_mode = obj_or_bone.rotation_mode
+
+    if rotation_mode == "QUATERNION":
+        return obj_or_bone.rotation_quaternion.copy()
+    elif rotation_mode == "AXIS_ANGLE":
+        return tuple(obj_or_bone.rotation_axis_angle)
+    else:
+        return obj_or_bone.rotation_euler.copy()
+
+
 def get_collections_in_scene(scene:bpy.types.Scene)->List[bpy.types.Collection]:
     """
     First entry in list is always the scene's 'Master Collection'
