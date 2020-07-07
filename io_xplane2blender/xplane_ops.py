@@ -539,20 +539,6 @@ class OBJECT_OT_remove_xplane_material_condition(bpy.types.Operator):
         obj.xplane.conditions.remove(self.index)
         return {'FINISHED'}
 
-# Class: SCENE_OT_export_to_relative_dir
-# Exports OBJS into the same folder as the .blend file, and/or folders beneath it
-class SCENE_OT_export_to_relative_dir(bpy.types.Operator):
-    bl_label = 'Export OBJs'
-    bl_idname = 'scene.export_to_relative_dir'
-    bl_description = 'Exports OBJs relative to the .blend file'
-
-    #initial_dir that will be prepended to the path.
-    initial_dir: bpy.props.StringProperty()
-
-    def execute(self, context):
-        bpy.ops.export.xplane_obj(filepath=self.initial_dir, export_is_relative=True)
-        return {'FINISHED'}
-
 
 class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
     '''
@@ -670,7 +656,6 @@ _ops = (
     OBJECT_OT_remove_xplane_object_condition,
     OBJECT_OT_add_xplane_material_condition,
     OBJECT_OT_remove_xplane_material_condition,
-    SCENE_OT_export_to_relative_dir,
     XPLANE_OT_CommandSearchToggle,
     XPLANE_OT_DatarefSearchToggle,
 )

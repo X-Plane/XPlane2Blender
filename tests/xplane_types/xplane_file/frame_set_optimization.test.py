@@ -20,7 +20,7 @@ class TestFrameSetOptimization(XPlaneTestCase):
         bpy.context.window.scene = bpy.data.scenes["Scene_time_test"]
 
         start = time.perf_counter()
-        bpy.ops.scene.export_to_relative_dir()
+        bpy.ops.export.xplane_obj()
         total = time.perf_counter() - start
         self.assertLess(
             total,
@@ -112,14 +112,14 @@ class TestFrameSetOptimization(XPlaneTestCase):
         self._edit_export_edit_export(suffix)
         col = bpy.data.collections[f"edit_export_edit_export_{suffix}"]
         ob = bpy.data.objects[f"anim_empty_{suffix}"]
-        bpy.ops.scene.export_to_relative_dir()
+        bpy.ops.export.xplane_obj()
         filepath = os.path.join(TMP_DIR, f"{col.name}.obj")
         with open(filepath, "r") as f:
             two_kfs = f.readlines()
         test_creation_helpers.set_animation_data(
             ob, [test_creation_helpers.KeyframeInfo(2, "test", 1, location=(2, 0, 0))]
         )
-        bpy.ops.scene.export_to_relative_dir()
+        bpy.ops.export.xplane_obj()
         with open(filepath, "r") as f:
             three_kfs = f.readlines()
 

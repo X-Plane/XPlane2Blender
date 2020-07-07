@@ -37,14 +37,9 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
 
     filepath: bpy.props.StringProperty(
         name = "File Path",
-        description = "Filepath used for exporting the X-Plane file(s)",
+        description = "Filepath used for exporting the X-Plane file(s). If none given, use the directory of the .blend file",
         maxlen= 1024, default= ""
     )
-
-    export_is_relative: bpy.props.BoolProperty(
-        name = "Export Is Relative",
-        description="Set to true when starting the export via the button (with or without the GUI on in case of unit testing)",
-        default=False)
 
     # Method: execute
     # Used from Blender when user invokes export.
@@ -57,20 +52,18 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         self._startLogging()
 
         debug = getDebug()
-        export_directory = self.properties.filepath
 
-        if not self.properties.export_is_relative:
-            export_directory = os.path.dirname(export_directory)
-        else:
-            if bpy.context.blend_data.filepath == '':
-                #We can't just save files relative to nothing somewhere on a users HDD (bad usability!) so we say there is an error.
-                logger.error("Save your blend file before using the '%s' button" % io_xplane2blender.xplane_ops.SCENE_OT_export_to_relative_dir.bl_label)
-                self._endLogging()
-                showLogDialog()
-                return {'CANCELLED'}
+        xp_scene_settings = bpy.context.scene.xplane
+        if (bpy.context.blend_data.filepath == ""
+            and not xp_scene_settings.dry_run):
+            # We can't just save files relative to nothing somewhere on a users HDD (bad usability!) so we say there is an error.
+            logger.error("Save your .blend file before exporting")
+            self._endLogging()
+            showLogDialog()
+            return {'CANCELLED'}
 
-        if bpy.context.scene.xplane.plugin_development and \
-            bpy.context.scene.xplane.dev_enable_breakpoints:
+        if (xp_scene_settings.plugin_development
+            and xp_scene_settings.dev_enable_breakpoints):
             breakpoint()
 
         # store current frame as we will go back to it
@@ -82,14 +75,16 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
 
         xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene, bpy.context.view_layer)
         for xplaneFile in xplaneFiles:
-            if not self._writeXPlaneFile(xplaneFile, export_directory):
+            try:
+                self._writeXPlaneFile(xplaneFile)
+            except (OSError, ValueError):
                 if logger.hasErrors():
                     self._endLogging()
                     showLogDialog()
 
-                if bpy.context.scene.xplane.plugin_development and \
-                    bpy.context.scene.xplane.dev_continue_export_on_error:
-                    logger.info("Continuing export despite error in %s" % xplaneFile.filename)
+                if (xp_scene_settings.plugin_development
+                    and xp_scene_settings.dev_continue_export_on_error):
+                    logger.info(f"Continuing export despite possible errors in '{xplaneFile.filename}'")
                     logger.clearMessages()
                     continue
                 else:
@@ -104,7 +99,7 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
             #showLogDialog()
 
         if not xplaneFiles:
-            logger.error("Could not find any Exportable Collections or Objects, did you forget check 'Exportable Collection' or 'Exportable Object'?")
+            logger.error("Could not find any Root Collections or Objects, did you forget check 'Root Collection' or 'Root Object'?")
             self._endLogging()
             return {'CANCELLED'}
         elif logger.hasErrors():
@@ -147,57 +142,65 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         if self.logFile:
             self.logFile.close()
 
-    def _writeXPlaneFile(self, xplaneFile: xplane_file.XPlaneFile, directory: str)->bool:
+    def _writeXPlaneFile(self, xplaneFile: xplane_file.XPlaneFile) -> bool:
         """
         Finally, at the end of it all, attempts to write an XPlaneFile.
-        Returns False if there was a problem, else True
+        Raises OSError or ValueError if something went wrong
         """
         debug = getDebug()
 
         # only write layers that contain objects
         if not xplaneFile.get_xplane_objects():
-            return False
+            raise ValueError
+        elif os.path.isabs(
+            xplaneFile.filename[2:]
+            if xplaneFile.filename.startswith("//")
+            else xplaneFile.filename
+        ):
+            logger.error(
+                f"Root file name '{xplaneFile.filename}' must not be an absolute path - it must be relative to the .blend file"
+            )
+            raise ValueError
 
-        if xplaneFile.filename.find('//') == 0:
-            xplaneFile.filename = xplaneFile.filename.replace('//','',1)
-
-        #Change any backslashes to foward slashes for file paths
-        xplaneFile.filename = xplaneFile.filename.replace('\\','/')
-
-        if os.path.isabs(xplaneFile.filename):
-            logger.error("Bad export path %s: File paths must be relative to the .blend file" % (xplaneFile.filename))
-            return False
-
-        # Get the relative path
-        # Append .obj if needed
-        # Make paths based on the absolute path
-        # Write
-        relpath = os.path.normpath(os.path.join(directory, xplaneFile.filename))
-        if not '.obj' in relpath:
-            relpath += '.obj'
-
-        fullpath = os.path.abspath(os.path.join(os.path.dirname(bpy.context.blend_data.filepath),relpath))
-        out = xplaneFile.write()
-
-        if logger.hasErrors():
-            return False
+        xplaneFile.filename = bpy.path.ensure_ext(xplaneFile.filename, ".obj")
+        if self.filepath:
+            xplaneFile.filename = xplaneFile.filename.replace("//","")
+            final_path = os.path.abspath(
+                        os.path.join(
+                            self.filepath,
+                            xplaneFile.filename
+                        )
+                    )
+        else:
+            if xplaneFile.filename.startswith("//"):
+                final_path = os.path.abspath(bpy.path.abspath(xplaneFile.filename))
+            else:
+                final_path = os.path.abspath(
+                    os.path.join(
+                        os.path.dirname(bpy.context.blend_data.filepath),
+                        bpy.path.abspath(xplaneFile.filename),
+                    )
+                )
 
         plugin_development = bpy.context.scene.xplane.plugin_development
         dry_run = bpy.context.scene.xplane.dev_export_as_dry_run
-        if (not plugin_development or (plugin_development and not dry_run)):
+        out = xplaneFile.write()
+        if logger.hasErrors():
+            raise ValueError
+        elif plugin_development and dry_run:
+            logger.info("Not writing '{fullpath}' due to 'Dry Run'")
+        else:
             try:
-                os.makedirs(os.path.dirname(fullpath),exist_ok=True)
+                os.makedirs(os.path.dirname(final_path), exist_ok=True)
             except OSError as e:
                 logger.error(e)
+                raise
             else:
-                with open(fullpath, "w") as objFile:
-                    logger.info("Writing %s" % fullpath)
+                with open(final_path, "w") as objFile:
+                    logger.info("Writing '{final_path}'")
                     objFile.write(out)
-                    logger.success("Wrote %s" % fullpath)
-        else:
-            logger.info('Skipped writing %s due to "Dry Run"' % (fullpath))
+                    logger.success(f"Wrote '{final_path}'")
 
-        return True
 
     def invoke(self, context, event):
         """

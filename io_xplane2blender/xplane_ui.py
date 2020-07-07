@@ -173,7 +173,7 @@ def empty_layout(layout:bpy.types.UILayout, empty_obj:bpy.types.Object):
 
 
 def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
-    layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
+    layout.row().operator("export.xplane_obj", icon="EXPORT")
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "compositeTextures")
 
@@ -245,7 +245,7 @@ def scene_dev_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
         dev_box_column.prop(scene.xplane, "dev_continue_export_on_error")
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
         #Exact same operator, more convient place
-        dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
+        dev_box_column.operator("export.xplane_obj", icon="EXPORT")
         dev_box_column.operator("scene.dev_apply_default_material_to_all")
         dev_box_column.operator("scene.dev_root_names_from_objects")
         updater_row = dev_box_column.row()

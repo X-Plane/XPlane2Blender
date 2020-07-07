@@ -1,5 +1,4 @@
 import os
-import unittest.mock
 import bpy
 
 from io_xplane2blender import xplane_constants
@@ -8,13 +7,13 @@ from io_xplane2blender.tests import *
 #This folder is going to be messy with creating folders
 #We use fakefilename to imitate what a user will go through
 #in the file picking box
-EXPORT_FOLDER = '../tmp'
+EXPORT_FOLDER = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','tmp'))
 
 class TestInstantExportFromMenu(XPlaneTestCase):
     def assert_file_exists(self,layer_num:int,relpath:str):
         with TemporarilyMakeRootExportable(f"Layer {layer_num + 1}") as coll:
             try:
-                bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
+                bpy.ops.export.xplane_obj(filepath=EXPORT_FOLDER)
 
                 dirname = os.path.dirname(bpy.context.blend_data.filepath)
                 path = os.path.abspath(os.path.join(dirname,relpath))
@@ -30,7 +29,7 @@ class TestInstantExportFromMenu(XPlaneTestCase):
 
     def test_ensure_no_folder_named_filename(self):
         bpy.data.collections["Layer 3"].xplane.is_exportable_collection = True
-        bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
+        bpy.ops.export.xplane_obj()
         bpy.data.collections["Layer 3"].xplane.is_exportable_collection = False
 
         self.assertFalse(os.path.isdir(os.path.join(EXPORT_FOLDER,"ensure","no","folder","named","filename")))
@@ -39,10 +38,11 @@ class TestInstantExportFromMenu(XPlaneTestCase):
         #Test Windows and Unix differently
         if os.name == 'nt':
             with TemporarilyMakeRootExportable("Layer 4") as coll:
-                bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
+                bpy.ops.export.xplane_obj()
         else:
             with TemporarilyMakeRootExportable("Layer 5") as coll:
-                bpy.ops.scene.export_to_relative_dir(initial_dir=EXPORT_FOLDER)
+                bpy.ops.export.xplane_obj()
+
         self.assertLoggerErrors(1)
 
     def test_ensure_paths_are_normalized_filename(self):
