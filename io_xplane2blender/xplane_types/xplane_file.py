@@ -40,7 +40,11 @@ class NotExportableRootError(ValueError):
     pass
 
 
-def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.types.ViewLayer)->List["XPlaneFile"]:
+def createFilesFromBlenderRootObjects(
+    scene: bpy.types.Scene,
+    view_layer: bpy.types.ViewLayer,
+    only_selected_roots: bool = False,
+) -> List["XPlaneFile"]:
     """
     Returns a list of all created XPlaneFiles from all valid roots found,
     ignoring any that could not be created.
@@ -48,7 +52,14 @@ def createFilesFromBlenderRootObjects(scene:bpy.types.Scene, view_layer:bpy.type
     view_layer is needed to test exportability
     """
     xplane_files: List["XPlaneFile"] = []
-    for potential_root in scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]:
+    if only_selected_roots:
+        potential_roots = [ob for ob in scene.objects if ob.select_get()]
+    else:
+        potential_roots = (
+            scene.objects[:] + xplane_helpers.get_collections_in_scene(scene)[1:]
+        )
+
+    for potential_root in potential_roots:
         try:
             xplane_file = createFileFromBlenderRootObject(potential_root, view_layer)
         except NotExportableRootError as e:

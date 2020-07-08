@@ -173,7 +173,8 @@ def empty_layout(layout:bpy.types.UILayout, empty_obj:bpy.types.Object):
 
 
 def scene_layout(layout:bpy.types.UILayout, scene:bpy.types.Scene):
-    layout.row().operator("export.xplane_obj", icon="EXPORT")
+    op = layout.row().operator("export.xplane_obj", icon="EXPORT")
+    op.filepath = ""
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "compositeTextures")
 

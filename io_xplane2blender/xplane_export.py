@@ -41,6 +41,12 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         maxlen= 1024, default= ""
     )
 
+    only_selected_roots: bpy.props.BoolProperty(
+        name = "Only Selected Roots",
+        description = "If true, only valid selected roots will be exported",
+        default=False
+    )
+
     # Method: execute
     # Used from Blender when user invokes export.
     # Invokes the exporting.
@@ -73,7 +79,11 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.scene.frame_set(frame = 1)
         bpy.context.view_layer.update()
 
-        xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(bpy.context.scene, bpy.context.view_layer)
+        xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(
+            bpy.context.scene,
+            bpy.context.view_layer,
+            self.only_selected_roots
+        )
         for xplaneFile in xplaneFiles:
             try:
                 self._writeXPlaneFile(xplaneFile)
@@ -197,7 +207,7 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
                 raise
             else:
                 with open(final_path, "w") as objFile:
-                    logger.info("Writing '{final_path}'")
+                    logger.info(f"Writing '{final_path}'")
                     objFile.write(out)
                     logger.success(f"Wrote '{final_path}'")
 
