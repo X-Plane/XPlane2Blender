@@ -9,6 +9,8 @@ import mathutils
 from mathutils import Vector
 
 from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
+from io_xplane2blender.xplane_helpers import round_vec
+from io_xplane2blender import xplane_constants
 
 # Class: XPlaneKeyframeCollection
 #
@@ -138,51 +140,69 @@ class XPlaneKeyframeCollection(MutableSequence):
     def getRotationMode(self):
         return self._list[0].rotationMode
 
-    def getRotationKeyframeTable(self) -> List[Tuple[Vector, List["TableEntry"]]]:
+    AxisKeyframeTable = namedtuple('AxisKeyframeTable', ['axis', 'table'])
+    AxisKeyframeTable.__doc__ = "The reference axis and the table of keyframe rotations along it"
+    TableEntry = namedtuple('TableEntry', ['value','degrees'])
+    TableEntry.__doc__ = "An entry in the keyframe table, where value is the dataref value"
+
+    def getRotationKeyframeTables(self) -> List["XPlaneKeyframeCollection.AxisKeyframeTable"]:
         '''
-        Return the rotation portion of a keyframe collection in the form of
-        List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.
+        List of sub tables will either be 1 (for AA or Quaternion) or 3 (for Eulers)
         '''
+        AxisKeyframeTable = XPlaneKeyframeCollection.AxisKeyframeTable
+        TableEntry = XPlaneKeyframeCollection.TableEntry
+
         axes, final_rotation_mode = self.getReferenceAxes()
-
-        #List(length 1 or 3)[
-        #    List[Vector:rotation axis, List[TableEntry]]
-        #]
-        ret = [[axis,None] for axis in axes]
-        TableEntry = namedtuple('TableEntry', ['value','degrees'])
-        if final_rotation_mode == "AXIS_ANGLE" or\
-           final_rotation_mode == "QUATERNION":
-            keyframe_table = [TableEntry(keyframe.dataref_value, math.degrees(keyframe.rotation[0])) for keyframe in self]
-            ret[0][1]  = keyframe_table
+        if final_rotation_mode in {"AXIS_ANGLE", "QUATERNION"}:
+            rot_keyframe_tables = [
+                AxisKeyframeTable(
+                    axis=axes[0],
+                    table=[
+                        TableEntry(
+                            keyframe.dataref_value,
+                            math.degrees(keyframe.rotation[0]),
+                        )
+                        for keyframe in self
+                    ],
+                )
+            ]
         else:
+            rot_keyframe_tables = []
             cur_order = self.EULER_AXIS_ORDERING[final_rotation_mode]
-            ret[0][1]  = [TableEntry(keyframe.dataref_value, math.degrees(keyframe.rotation[cur_order[0]])) for keyframe in self]
-            ret[1][1]  = [TableEntry(keyframe.dataref_value, math.degrees(keyframe.rotation[cur_order[1]])) for keyframe in self]
-            ret[2][1]  = [TableEntry(keyframe.dataref_value, math.degrees(keyframe.rotation[cur_order[2]])) for keyframe in self]
+            for i, axis in enumerate(axes):
+                rot_keyframe_tables.append(
+                    AxisKeyframeTable(
+                        axis=axis,
+                        table=[
+                            TableEntry(
+                                keyframe.dataref_value,
+                                math.degrees(keyframe.rotation[cur_order[i]]),
+                            )
+                            for keyframe in self
+                        ],
+                    )
+                )
 
-        ret = [tuple((axis_info[0],axis_info[1])) for axis_info in ret]
-
-        assert isinstance(ret,list)
-        for axis_info in ret:
+        assert isinstance(rot_keyframe_tables,list)
+        for axis_info in rot_keyframe_tables:
             assert isinstance(axis_info,tuple)
-            assert isinstance(axis_info[0],Vector)
-            assert isinstance(axis_info[1],list)
+            assert isinstance(axis_info.axis,Vector)
+            assert isinstance(axis_info.table,list)
 
-            for table_entry in axis_info[1]:
+            for table_entry in axis_info.table:
                 assert isinstance(table_entry,tuple)
                 assert isinstance(table_entry.value,float)
                 assert isinstance(table_entry.degrees,float)
 
-        return ret
+        return rot_keyframe_tables
 
-    def getRotationKeyframeTableNoClamps(self)->List[Tuple[Vector, List[Tuple['value','degrees']]]]:
+    def getRotationKeyframeTablesNoClamps(self)->List["XPlaneKeyframeCollection.AxisKeyframeTable"]:
         '''
-        Return the rotation portion of a keyframe collection in the form of
-        List[Tuple[axis, List[Tuple[value,degrees]]]], where axis is Vector.
-
-        Does not contain any clamping keyframes.
+        Returns rotation keyframbe tables without clamping keyframes.
+        Throws a ValueError if all resulting keyframe tables would be less than 2 keyframes
+        (this should only be possible for certain Euler cases)
         '''
-        return XPlaneKeyframeCollection.filter_clamping_keyframes(self.getRotationKeyframeTable(), "degrees")
+        return XPlaneKeyframeCollection.filter_clamping_keyframes(self.getRotationKeyframeTables(), "degrees")
 
     def getTranslationKeyframeTable(self):
         '''
@@ -226,11 +246,15 @@ class XPlaneKeyframeCollection(MutableSequence):
         return self
 
     @staticmethod
-    def filter_clamping_keyframes(keyframe_collection:'XPlaneKeyframeCollection',attr:str):
+    def filter_clamping_keyframes(keyframe_collection:'XPlaneKeyframeCollection',attr:str)->"XPlaneKeyframeCollection":
         '''
         Returns a new keyframe collection without clamping keyframes
         attr specifies which keyframe attribute will be used to filter,
-        and must be "location" or "degrees"
+        and must be "location" or "degrees".
+
+        Raises ValueError if resulting cleaned XPlaneKeyframeCollection
+        would have less than 2 keyframes
+        (which should only be possible for Euler RotationKeyframeTables)
         '''
         assert attr in ("location","degrees")
 
@@ -239,31 +263,62 @@ class XPlaneKeyframeCollection(MutableSequence):
         #   List[TranslationKeyframe[keyframe.value, keyframe.location]]
         # elif attr == 'degrees
         #   List[RotationKeyframe['value','degrees']] from List[Tuple[axis, List[Tuple['value','degrees']]]]
-        def remove_clamp_keyframes(keyframes,attr):
-            itr = iter(keyframes)
-            while len(keyframes) > 2:
-                current       = next(itr)
-                next_keyframe = next(itr,None)
+        ndigits = xplane_constants.PRECISION_KEYFRAME
+        def find_1st_non_clamping(keyframes, attr)->int:
+            def cmp_location(current, next_keyframe):
+                return round_vec(current.location, ndigits) != round_vec(
+                    next_keyframe.location, ndigits
+                )
 
-                if next_keyframe is not None:
-                    if getattr(current,attr) == getattr(next_keyframe,attr):
-                        del keyframes[keyframes.index(current)]
-                        itr = iter(keyframes)
-                    else:
-                        break
+            def cmp_rotation(current, next_keyframe):
+                return round(current.degrees, ndigits) != round(
+                    next_keyframe.degrees, ndigits
+                )
 
-        cleaned_keyframe_collection = keyframe_collection[:]
+            if attr == "location":
+                cmp_fn = cmp_location
+            elif attr == "degrees":
+                cmp_fn = cmp_rotation
+
+            if len(keyframes) < 2:
+                raise ValueError("Keyframe table is less than 2 entries long")
+
+            for i in range(len(keyframes)-1):
+                if cmp_fn(keyframes[i], keyframes[i+1]):
+                    break
+            else: # nobreak
+                raise ValueError("No non-clamping found")
+            return i
+
         if attr == 'location':
-            remove_clamp_keyframes(cleaned_keyframe_collection,attr)
-            cleaned_keyframe_collection.reverse()
-            remove_clamp_keyframes(cleaned_keyframe_collection,attr)
-            cleaned_keyframe_collection.reverse()
-            return cleaned_keyframe_collection
+            try:
+                start = find_1st_non_clamping(keyframe_collection, attr)
+            except ValueError:
+                raise
+            else:
+                try:
+                    end = len(keyframe_collection) - find_1st_non_clamping(list(reversed(keyframe_collection)), attr)
+                except ValueError:
+                    raise
+                else:
+                    return keyframe_collection[start: end]
         elif attr == 'degrees':
-            for axis,table in cleaned_keyframe_collection:
-                remove_clamp_keyframes(table, attr)
-                table.reverse()
-                remove_clamp_keyframes(table, attr)
-                table.reverse()
-            return cleaned_keyframe_collection
+            new_keyframe_table = []
+            for i, (axis, table) in enumerate(keyframe_collection):
+                try:
+                    start = find_1st_non_clamping(table, attr)
+                except ValueError:
+                    new_keyframe_table.append(XPlaneKeyframeCollection.AxisKeyframeTable(axis, []))
+                    continue
+                else:
+                    try:
+                        end = len(table) - find_1st_non_clamping(list(reversed(table)), attr)
+                    except ValueError:
+                        new_keyframe_table.append(XPlaneKeyframeCollection.AxisKeyframeTable(axis, []))
+                        continue
+                    else:
+                        new_keyframe_table.append(XPlaneKeyframeCollection.AxisKeyframeTable(axis, table[start: end]))
+            if all(table == [] for axis, table in new_keyframe_table):
+                raise ValueError("XPlaneKeyframeCollection had only clamping keyframes")
+            return new_keyframe_table
 

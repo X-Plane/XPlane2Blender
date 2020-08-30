@@ -120,7 +120,7 @@ def check_bone_is_animated_on_n_axes(bone:XPlaneBone,num_axis_of_rotation:int, l
     if log_errors:
         assert manipulator
 
-    rotation_keyframe_table = next(iter(bone.animations.values())).getRotationKeyframeTable()
+    rotation_keyframe_table = next(iter(bone.animations.values())).getRotationKeyframeTables()
 
     if len(rotation_keyframe_table) == 3:
         deg_per_axis = []
@@ -250,7 +250,7 @@ def check_bones_rotation_translation_animations_are_orthogonal(rotation_bone:XPl
     rotation_keyframe_table =\
         next(iter(rotation_bone.animations.values()))\
         .asAA()\
-        .getRotationKeyframeTable()
+        .getRotationKeyframeTables()
 
     rotation_axis = rotation_keyframe_table[0][0]
 
@@ -267,43 +267,6 @@ def check_bones_rotation_translation_animations_are_orthogonal(rotation_bone:XPl
         return False
     else:
         return True
-
-def _check_keyframe_rotation_count(rotation_bone:XPlaneBone, count:int, exclude_clamping:bool, cmp_func, cmp_error_msg:str, log_errors:bool=True,manipulator:'XPlaneManipulator'=None) -> bool:
-    if log_errors:
-        assert manipulator
-    keyframe_col = next(iter(rotation_bone.animations.values())).asAA()
-
-    if exclude_clamping:
-        res = cmp_func(len(keyframe_col.getRotationKeyframeTableNoClamps()[0]),count)
-    else:
-        res = cmp_func(len(keyframe_col.getRotationKeyframeTable()[0]),count)
-
-    if not res:
-        try:
-            logger.error("{} manipulator attached to {} must have {} {} {}keyframes for its rotation animation".format(
-                manipulator.manip.get_effective_type_name(),
-                rotation_bone.getBlenderName(),
-                cmp_error_msg,
-                count,
-                "non-clamping " if exclude_clamping else ""))
-        except:
-            logger.error("{} must have {} {} {}keyframes for its rotation animation".format(
-                rotation_bone.getBlenderName(),
-                cmp_error_msg,
-                count,
-                "non-clamping " if exclude_clamping else ""))
-
-        return False
-    else:
-        return True
-
-
-def check_keyframe_rotation_eq_count(rotation_bone:XPlaneBone, count:int, exclude_clamping:bool, log_errors:bool=True,manipulator:'XPlaneManipulator'=None) -> bool:
-    return _check_keyframe_rotation_count(rotation_bone, count, exclude_clamping, lambda x,y: x==y, "exactly", log_errors,manipulator)
-
-
-def check_keyframe_rotation_ge_count(rotation_bone:XPlaneBone, count:int, exclude_clamping:bool, log_errors:bool=True,manipulator:'XPlaneManipulator'=None) -> bool:
-    return _check_keyframe_rotation_count(rotation_bone, count, exclude_clamping, lambda x,y: x>=y, "greater than or equal to", log_errors,manipulator)
 
 def _check_keyframe_translation_count(translation_bone:XPlaneBone, count:int, exclude_clamping:bool, cmp_func, cmp_error_msg:str, log_errors:bool=True,manipulator:'XPlaneManipulator'=None) -> bool:
     if log_errors:
@@ -352,7 +315,7 @@ def check_keyframes_rotation_are_orderered(rotation_bone:XPlaneBone, log_errors:
     rotation_keyframe_table =\
         next(iter(rotation_bone.animations.values()))\
         .asAA()\
-        .getRotationKeyframeTable()
+        .getRotationKeyframeTables()
 
     rotation_axis = rotation_keyframe_table[0][0]
     rotation_keyframe_data = rotation_keyframe_table[0][1]
@@ -899,19 +862,21 @@ class XPlaneManipulator():
                         self.manip.dataref2 = "none"
 
                 rotation_origin = rotation_bone.getBlenderWorldMatrix().to_translation()
-
-                rotation_keyframe_table_cleaned =\
-                    next(iter(rotation_bone.animations.values()))\
-                    .asAA()\
-                    .getRotationKeyframeTableNoClamps()
-
-                rotation_axis = rotation_keyframe_table_cleaned[0][0]
-
                 rotation_origin_xp = xplane_helpers.vec_b_to_x(rotation_origin)
-                rotation_axis_xp   = xplane_helpers.vec_b_to_x(rotation_axis)
 
-                v1_min, angle1 = rotation_keyframe_table_cleaned[0][1][0]
-                v1_max, angle2 = rotation_keyframe_table_cleaned[0][1][-1]
+                kf_collection = next(iter(rotation_bone.animations.values()))
+
+                # If AA, we'll find the 1st table in a list of one
+                # if Euler we'll find the only table with entries
+                rotation_axis, rotation_table = next(
+                        sub_table
+                        for sub_table in kf_collection.getRotationKeyframeTablesNoClamps()
+                        if sub_table.table
+                    )
+                rotation_axis_xp = xplane_helpers.vec_b_to_x(rotation_axis)
+
+                v1_min, angle1 = rotation_table[0]
+                v1_max, angle2 = rotation_table[-1]
 
                 if round(angle1,5) == round(angle2,5):
                     # Because of the previous guarantees that
@@ -1170,8 +1135,8 @@ class XPlaneManipulator():
 
             # 4. All ATTR_manip_keyframes (DRAG_ROTATE)
             if self.type == MANIP_DRAG_ROTATE or self.type == MANIP_DRAG_ROTATE_DETENT:
-                if len(rotation_keyframe_table_cleaned[0][1]) > 2:
-                    for rot_keyframe in rotation_keyframe_table_cleaned[0][1][1:-1]:
+                if len(rotation_table) > 2:
+                    for rot_keyframe in rotation_table[1:-1]:
                         self.xplanePrimative.cockpitAttributes.add(
                             XPlaneAttribute('ATTR_manip_keyframe', (rot_keyframe.value,rot_keyframe.degrees))
                         )
