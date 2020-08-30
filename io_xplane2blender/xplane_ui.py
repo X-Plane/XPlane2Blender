@@ -534,7 +534,7 @@ def light_layout(layout:bpy.types.UILayout, obj:bpy.types.Object)->None:
         def draw_automatic_ui():
             try:
                 if light_data.xplane.name:
-                    parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(light_data.xplane.name)
+                    parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(light_data.xplane.name.strip())
                     # HACK: We take this shortcut because otherwise we'd need to pretend to
                     # fill in the overload and apply the sw_callback which breaks DRY.
                     # We know exactly what happens here, and we don't need to muck with is_omni over the UI

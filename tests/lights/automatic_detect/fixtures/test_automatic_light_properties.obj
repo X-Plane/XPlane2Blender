@@ -18,5 +18,12 @@ POINT_COUNTS	0	0	0	0
 	# 1 Light: spot_params_sp
 	# LIGHT: spot_params_sp	weight: 10000
 	LIGHT_PARAM	spot_params_sp 0 0 -0 1 1 1 1 22 0 -1 -0 0.90630779
+	# 1 Light: taxi_y_spaces_stripped
+	# LIGHT: taxi_y_spaces_stripped	weight: 10000
+	ANIM_begin
+	# static rotation
+	ANIM_rotate	0.99999994	0	-0	44.999998	44.999998
+	LIGHT_NAMED	taxi_y 0 0 -0
+	ANIM_end
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+82.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+89.NO_BUILD_NUMBR

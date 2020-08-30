@@ -51,7 +51,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
         self.uv = blenderObject.data.xplane.uv
 
         # Our lights.txt light name, not the Blender Object's name
-        self.lightName = blenderObject.data.xplane.name
+        self.lightName = blenderObject.data.xplane.name.strip()
 
         # If the lightName is unknown
         #     params_completed and record_completed these will be none
