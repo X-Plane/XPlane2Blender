@@ -204,7 +204,7 @@ class XPlaneBone():
                     # - Ted, 6/24/2020
                     return
                 else:
-                    if fcurve.keyframe_points:
+                    if len(fcurve.keyframe_points) > 1:
                         if bone:
                             self.datarefs[dataref] = bone.xplane.datarefs[index]
                         else:
