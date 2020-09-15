@@ -15,7 +15,7 @@ XPlane2Blender for Blender 2.79 can still be downloaded from the releases page, 
 ## Automatic Installation
 **Note: This process will override an existing copy of the plugin!** To backup your current version of the plugin, see the manual instructions in the [manual](https://xp2b-docs.gitbook.io/xplane2blender-docs/index-3/34_installation). **Always make backups of your work, especially when beta testing, as newer versions may not be backwards compatibility.** Read the release notes for more details.
 
-1. Download the [addon](https://github.com/X-Plane/XPlane2Blender/releases/latest) with a name like ``io_xplane2blender_4_0_0-rc_1-89_20200910152046.zip``. Do not download the folder called "Source Code". Do **NOT** unzip the file
+1. Download the [addon](https://github.com/X-Plane/XPlane2Blender/releases/latest) with a name like ``io_xplane2blender_4_0_0-rc_1-89_20200910152046.zip``. **Do not download the .zip file called "Source Code", do not unzip the io_xplane2blender .zip file**
 2. In Blender, open up the Preferences, go to the Addons tab, and click at the bottom "Install From File..."
 3. Using the file picker, find the .zip file and click "Install From File...". This will automatically unzip to the addons folder
 4. Ensure the checkbox next to the words "Import-Export: Export: X-Plane (.obj)" is checked
