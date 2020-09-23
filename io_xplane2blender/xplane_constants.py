@@ -208,6 +208,7 @@ LIGHT_NAMED = "named"
 LIGHT_CUSTOM = "custom"
 LIGHT_PARAM = "param"
 LIGHT_AUTOMATIC = "automatic"
+LIGHT_SPILL_CUSTOM = "light_spill_custom"
 
 LIGHTS_OLD_TYPES = {
     LIGHT_DEFAULT,
