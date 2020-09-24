@@ -1,0 +1,15 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Light: Point_size_67.58
+	# LIGHT: Point_size_67.58	weight: 10000
+	LIGHT_SPILL_CUSTOM 5 5 -5 1 0.1 0.80000001 1 67.580002 0 0 0 1 
+	# 1 Light: Spot_size_40
+	# LIGHT: Spot_size_40	weight: 10000
+	LIGHT_SPILL_CUSTOM -4 5 4 0 1 0.25 1 40 0 -1 -0 0.92387953 
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+90.NO_BUILD_NUMBR

@@ -1,0 +1,24 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Light: Point_1
+	# LIGHT: Point_1	weight: 10000
+	LIGHT_SPILL_CUSTOM -20 14 -0 1 1 1 1 35 0 0 0 1 
+	# 1 Light: Point_180
+	# LIGHT: Point_180	weight: 10000
+	LIGHT_SPILL_CUSTOM 20 14 -0 1 1 1 1 35 0 0 0 1 
+	# 1 Light: Point_35
+	# LIGHT: Point_35	weight: 10000
+	LIGHT_SPILL_CUSTOM -10 14 -0 1 1 1 1 35 0 0 0 1 
+	# 1 Light: Point_45
+	# LIGHT: Point_45	weight: 10000
+	LIGHT_SPILL_CUSTOM 0 14 -0 1 1 1 1 35 0 0 0 1 
+	# 1 Light: Pointt_120
+	# LIGHT: Pointt_120	weight: 10000
+	LIGHT_SPILL_CUSTOM 10 14 -0 1 1 1 1 35 0 0 0 1 
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+90.NO_BUILD_NUMBR
