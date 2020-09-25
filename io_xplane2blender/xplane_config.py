@@ -23,8 +23,10 @@ CURRENT_DATA_MODEL_VERSION = 89
 # The build number, hardcoded by the build script when there is one, otherwise it is xplane_constants.BUILD_NUMBER_NONE
 CURRENT_BUILD_NUMBER = xplane_constants.BUILD_NUMBER_NONE
 
-def getDebug()->bool:
+
+def getDebug() -> bool:
     return bpy.context.scene.xplane.debug
 
-def setDebug(debug: bool)->None:
+
+def setDebug(debug: bool) -> None:
     bpy.context.scene.xplane.debug = debug

@@ -3,8 +3,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bpy
 from io_xplane2blender import xplane_helpers
-from io_xplane2blender.xplane_types import (xplane_attribute, xplane_bone,
-                                            xplane_file, xplane_object)
+from io_xplane2blender.xplane_types import (
+    xplane_attribute,
+    xplane_bone,
+    xplane_file,
+    xplane_object,
+)
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 
 from ..xplane_config import getDebug
@@ -68,65 +72,75 @@ from ..xplane_helpers import floatToStr, logger
 # we expect to leave things in their currently broken state; for 3.5, we can then add specific panel attribute labeling
 # to the UI and have authors migrate their projects forward.
 
-class XPlaneCommands():
+
+class XPlaneCommands:
     """
     Writes collected animations, attributes,
     and conditions of of XPlaneBones and their corresponding
     resetters as needed
     """
-    def __init__(self, xplaneFile)->None:
+
+    def __init__(self, xplaneFile) -> None:
         self.xplaneFile = xplaneFile
 
         self.reseters = {
-            'ATTR_light_level':'ATTR_light_level_reset',
-            'ATTR_cockpit|ATTR_cockpit_region':'ATTR_no_cockpit',
-            'ATTR_manip_(?!none)(?!wheel)(.*)':'ATTR_manip_none',
-            'ATTR_no_shadow':'ATTR_shadow',
-            'ATTR_draw_disable':'ATTR_draw_enable',
-            'ATTR_poly_os':'ATTR_poly_os 0',
-            'ATTR_hard|ATTR_hard_deck':'ATTR_no_hard',
-            'ATTR_no_blend|ATTR_shadow_blend':'ATTR_blend',
-            'ATTR_draped': 'ATTR_no_draped',
-            'ATTR_solid_camera': 'ATTR_no_solid_camera'
+            "ATTR_light_level": "ATTR_light_level_reset",
+            "ATTR_cockpit|ATTR_cockpit_region": "ATTR_no_cockpit",
+            "ATTR_manip_(?!none)(?!wheel)(.*)": "ATTR_manip_none",
+            "ATTR_no_shadow": "ATTR_shadow",
+            "ATTR_draw_disable": "ATTR_draw_enable",
+            "ATTR_poly_os": "ATTR_poly_os 0",
+            "ATTR_hard|ATTR_hard_deck": "ATTR_no_hard",
+            "ATTR_no_blend|ATTR_shadow_blend": "ATTR_blend",
+            "ATTR_draped": "ATTR_no_draped",
+            "ATTR_solid_camera": "ATTR_no_solid_camera",
         }
 
         # these attributes/commands are not persistant and must always be rewritten
-        self.inpersistant = {
-            'ATTR_axis_detent_range',
-            'ATTR_manip_wheel'
-        }
+        self.inpersistant = {"ATTR_axis_detent_range", "ATTR_manip_wheel"}
 
         # add default X-Plane states to presve writing them in the obj
         self.written = {
-            'ATTR_no_hard': True,
-            'ATTR_blend': True,
-            'ATTR_no_cockpit': True,
-            'ATTR_no_solid_camera': True,
-            'ATTR_shadow': True,
-            'ATTR_draw_enable': True,
-            'ATTR_no_draped': True
+            "ATTR_no_hard": True,
+            "ATTR_blend": True,
+            "ATTR_no_cockpit": True,
+            "ATTR_no_solid_camera": True,
+            "ATTR_shadow": True,
+            "ATTR_draw_enable": True,
+            "ATTR_no_draped": True,
         }
 
-
-    def write(self, *, lod_bucket_index:Optional[int])->str:
+    def write(self, *, lod_bucket_index: Optional[int]) -> str:
         """
         Writes OBJ commands to a string. If lod_bucket_index is None,
         LOD mode is turned off
         """
         # Why the kw_only? Because write(1) doesn't really tell a lot
-        assert lod_bucket_index is None or lod_bucket_index in {0, 1, 2, 3}, f"LOD bucket index ({lod_bucket_index}) must be None or a real bucket index"
-        o = ''
+        assert lod_bucket_index is None or lod_bucket_index in {
+            0,
+            1,
+            2,
+            3,
+        }, f"LOD bucket index ({lod_bucket_index}) must be None or a real bucket index"
+        o = ""
         o += self.writeXPlaneBone(self.xplaneFile.rootBone, lod_bucket_index)
 
         return o
 
-    def writeXPlaneBone(self, xplaneBone:xplane_bone.XPlaneBone, lod_bucket_index:Optional[int])->str:
+    def writeXPlaneBone(
+        self, xplaneBone: xplane_bone.XPlaneBone, lod_bucket_index: Optional[int]
+    ) -> str:
         """
         Writes the contents (animations, meshes, materials, etc) of an XPlaneBone and it's children recursively.
         lod_bucket_index is an index into XPlaneLayer's lod collection property. If not None (and not out of range)
         LOD mode is on, and the the output will be filtered by those bucket indexes
         """
-        assert lod_bucket_index is None or lod_bucket_index in {0, 1, 2, 3}, f"LOD bucket index ({lod_bucket_index}) must be None or a real bucket index"
+        assert lod_bucket_index is None or lod_bucket_index in {
+            0,
+            1,
+            2,
+            3,
+        }, f"LOD bucket index ({lod_bucket_index}) must be None or a real bucket index"
         o = ""
         o += xplaneBone.writeAnimationPrefix()
 
@@ -137,8 +151,10 @@ class XPlaneCommands():
             if lod_bucket_index is None:
                 o += self._writeXPlaneObjectPrefix(xplaneObject)
                 xplaneObjectWritten = True
-            elif (lod_bucket_index is not None
-                  and xplaneObject.effective_buckets[lod_bucket_index]):
+            elif (
+                lod_bucket_index is not None
+                and xplaneObject.effective_buckets[lod_bucket_index]
+            ):
                 o += self._writeXPlaneObjectPrefix(xplaneObject)
                 xplaneObjectWritten = True
 
@@ -154,10 +170,10 @@ class XPlaneCommands():
         return o
 
     def _writeXPlaneObjectPrefix(self, xplaneObject):
-        o = ''
+        o = ""
 
         # open material conditions
-        if hasattr(xplaneObject, 'material'):
+        if hasattr(xplaneObject, "material"):
             o += self._writeConditions(xplaneObject.material.conditions, xplaneObject)
 
         # open object conditions
@@ -168,25 +184,29 @@ class XPlaneCommands():
             pass
         return o
 
-    def _writeXPlaneObjectSuffix(self, xplaneObject:xplane_object.XPlaneObject):
-        o = ''
+    def _writeXPlaneObjectSuffix(self, xplaneObject: xplane_object.XPlaneObject):
+        o = ""
 
         # close material conditions
-        if hasattr(xplaneObject, 'material'):
-            o += self._writeConditions(xplaneObject.material.conditions, xplaneObject, True)
+        if hasattr(xplaneObject, "material"):
+            o += self._writeConditions(
+                xplaneObject.material.conditions, xplaneObject, True
+            )
 
         # close object conditions
         o += self._writeConditions(xplaneObject.conditions, xplaneObject, True)
 
         return o
 
-    def writeAttribute(self,
-                       attr: xplane_attribute.XPlaneAttribute,
-                       xplaneObject: xplane_object.XPlaneObject)->str:
+    def writeAttribute(
+        self,
+        attr: xplane_attribute.XPlaneAttribute,
+        xplaneObject: xplane_object.XPlaneObject,
+    ) -> str:
         """
         Returns formatted value of attr value of, also handles the counterparts system
         """
-        o = ''
+        o = ""
         for i in range(len(attr.value)):
             value = attr.getValue(i)
             name = attr.name
@@ -195,7 +215,7 @@ class XPlaneCommands():
             if value != None and self.canWriteAttribute(name, value):
                 if isinstance(value, bool):
                     if value:
-                        o += indent + '%s\n' % name
+                        o += indent + "%s\n" % name
 
                         # store this in the written attributes
                         self.written[name] = value
@@ -212,7 +232,7 @@ class XPlaneCommands():
                     # store this in the written attributes
                     self.written[name] = value
                     value = attr.getValueAsString(i)
-                    o += indent + '%s\t%s\n' % (name, value)
+                    o += indent + "%s\t%s\n" % (name, value)
 
                     # check if this thing has a resetter and remove counterpart if any
                     counterparts = self.getAttributeCounterparts(name)
@@ -222,7 +242,9 @@ class XPlaneCommands():
                             del self.written[counterpart]
         return o
 
-    def canWriteAttribute(self, attr:str, value:xplane_attribute.XPlaneAttribute)->bool:
+    def canWriteAttribute(
+        self, attr: str, value: xplane_attribute.XPlaneAttribute
+    ) -> bool:
         if attr not in self.written or attr in self.inpersistant:
             return True
         elif self.written[attr] == value:
@@ -230,7 +252,7 @@ class XPlaneCommands():
         else:
             return True
 
-    def addReseter(self, attr:str, reseter:str)->None:
+    def addReseter(self, attr: str, reseter: str) -> None:
         self.reseters[attr] = reseter
 
     # Method: attributeIsReseter
@@ -249,14 +271,14 @@ class XPlaneCommands():
 
         return None
 
-    def getAttributeCounterparts(self, attr)->List[str]:
+    def getAttributeCounterparts(self, attr) -> List[str]:
         """
         Given any non-resetter attribute, this returns the
         resetter that "undoes" it.  Given any resetter, this
         returns all setters.
         """
 
-        found=[]
+        found = []
         setterPatterns = sorted(list(self.reseters.keys()))
 
         for setterPattern in setterPatterns:
@@ -280,10 +302,10 @@ class XPlaneCommands():
                             found.append(oneWritten)
         return found
 
-    def writeReseters(self, xplaneObject:xplane_object.XPlaneObject)->str:
+    def writeReseters(self, xplaneObject: xplane_object.XPlaneObject) -> str:
         """Writes ATTR_s needed to reset previous commands for a given XPlaneObject"""
         debug = getDebug()
-        o = ''
+        o = ""
         indent = xplaneObject.xplaneBone.getIndent()
 
         # create a temporary attributes dict
@@ -294,7 +316,7 @@ class XPlaneCommands():
                 attributes.add(xplaneObject.attributes[attr])
 
         # add material attributes if any
-        if hasattr(xplaneObject, 'material'):
+        if hasattr(xplaneObject, "material"):
             for attr in xplaneObject.material.attributes:
                 if xplaneObject.material.attributes[attr].getValue():
                     attributes.add(xplaneObject.material.attributes[attr])
@@ -304,28 +326,28 @@ class XPlaneCommands():
                 attributes.add(xplaneObject.cockpitAttributes[attr])
 
         WHITE_LIST = {
-                'ATTR_light_level',
-                'ATTR_light_level_reset',
-                'ATTR_cockpit',
-                'ATTR_cockpit_region',
-                'ATTR_no_cockpit',
-                'ATTR_draw_disable',
-                'ATTR_draw_enable',
-                'ATTR_poly_os',
-                'ATTR_poly_os 0',
-                'ATTR_hard',
-                'ATTR_hard_deck',
-                'ATTR_no_hard',
-                'ATTR_no_blend',
-                'ATTR_shadow_blend',
-                'ATTR_blend',
-                'ATTR_draped',
-                'ATTR_no_draped',
-                'ATTR_shadow',
-                'ATTR_no_shadow',
-                'ATTR_solid_camera',
-                'ATTR_no_solid_camera'
-                }
+            "ATTR_light_level",
+            "ATTR_light_level_reset",
+            "ATTR_cockpit",
+            "ATTR_cockpit_region",
+            "ATTR_no_cockpit",
+            "ATTR_draw_disable",
+            "ATTR_draw_enable",
+            "ATTR_poly_os",
+            "ATTR_poly_os 0",
+            "ATTR_hard",
+            "ATTR_hard_deck",
+            "ATTR_no_hard",
+            "ATTR_no_blend",
+            "ATTR_shadow_blend",
+            "ATTR_blend",
+            "ATTR_draped",
+            "ATTR_no_draped",
+            "ATTR_shadow",
+            "ATTR_no_shadow",
+            "ATTR_solid_camera",
+            "ATTR_no_solid_camera",
+        }
 
         #  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         # <What's up with WHITE_LIST? IT'S A STUPID HACK!>
@@ -363,38 +385,39 @@ class XPlaneCommands():
             # Now that the added white list trick is in place,
             # we'll nearly always have 2 matching attributes
             if len(matchingAttribute) > 2:
-                print("WARNING: multiple incoming attributes matched %s" % setterPattern)
+                print(
+                    "WARNING: multiple incoming attributes matched %s" % setterPattern
+                )
                 print(matchingAttribute)
 
             if len(matchingWritten) > 1:
                 print("WARNING: multiple written attributes matched %s" % setterPattern)
                 print(matchingWritten)
 
-
             if matchingWritten and not matchingAttribute:
                 # only reset attributes that wont be written with this object again
-                #logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
+                # logger.info('writing Reseter for %s: %s' % (attr,self.reseters[attr]))
                 # write reseter and add it to written
                 o += indent + resetingAttr + "\n"
                 self.written[resetingAttr] = True
 
                 for orphan in matchingWritten:
-                    #print("orphan: "+orphan)
+                    # print("orphan: "+orphan)
                     # we've reset an attribute so remove it from written as it will need rewrite with next object
                     del self.written[orphan]
         return o
 
-    def _writeConditions(self, conditions, xplaneObject, close = False):
-        o = ''
+    def _writeConditions(self, conditions, xplaneObject, close=False):
+        o = ""
         indent = xplaneObject.xplaneBone.getIndent()
 
         for condition in conditions:
             if close == True:
-                o += indent + 'ENDIF\n'
+                o += indent + "ENDIF\n"
             else:
                 if condition.value == True:
-                    o += indent + 'IF %s\n' % condition.variable
+                    o += indent + "IF %s\n" % condition.variable
                 else:
-                    o += indent + 'IF NOT %s\n' % condition.variable
+                    o += indent + "IF NOT %s\n" % condition.variable
 
         return o

@@ -4,18 +4,28 @@ from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_types.xplane_material import XPlaneMaterial
 from ..xplane_constants import *
 
-MaterialValidationMsgs = Tuple[List[str],List[str]]
+MaterialValidationMsgs = Tuple[List[str], List[str]]
 ValidateFunction = Callable[[XPlaneMaterial], MaterialValidationMsgs]
 
-def _validateNormalMetalness(refMat:XPlaneMaterial, mat:XPlaneMaterial)->Optional[str]:
-    if (mat.texture == refMat.texture and\
-        (refMat.options.panel is False and mat.options.panel is False)): # Panel disables metalness
+
+def _validateNormalMetalness(
+    refMat: XPlaneMaterial, mat: XPlaneMaterial
+) -> Optional[str]:
+    if mat.texture == refMat.texture and (
+        refMat.options.panel is False and mat.options.panel is False
+    ):  # Panel disables metalness
         if mat.getEffectiveNormalMetalness() != refMat.getEffectiveNormalMetalness():
-            return 'NORMAL_METALNESS must be set for all materials with the same albedo texture'
+            return "NORMAL_METALNESS must be set for all materials with the same albedo texture"
 
     return None
 
-def compare(refMat:XPlaneMaterial, mat:XPlaneMaterial, exportType:str, autodetectTextures:bool)->MaterialValidationMsgs:
+
+def compare(
+    refMat: XPlaneMaterial,
+    mat: XPlaneMaterial,
+    exportType: str,
+    autodetectTextures: bool,
+) -> MaterialValidationMsgs:
     if exportType == EXPORT_TYPE_SCENERY:
         return compareScenery(refMat, mat, autodetectTextures)
     elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
@@ -23,16 +33,28 @@ def compare(refMat:XPlaneMaterial, mat:XPlaneMaterial, exportType:str, autodetec
     elif exportType == EXPORT_TYPE_COCKPIT or exportType == EXPORT_TYPE_AIRCRAFT:
         return compareAircraft(refMat, mat, autodetectTextures)
 
-def compareScenery(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTextures:bool)->MaterialValidationMsgs:
-    errors   = []
+
+def compareScenery(
+    refMat: XPlaneMaterial, mat: XPlaneMaterial, autodetectTextures: bool
+) -> MaterialValidationMsgs:
+    errors = []
     warnings = []
 
     if mat.options.draw:
         if mat.options.draped and refMat.options.draped:
-            if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
-               mat.getEffectiveNormalMetalness() == False:
-                errors.append('Specularity must be %f, is %f' % (refMat.blenderMaterial.specular_intensity,mat.blenderMaterial.specular_intensity))
-        metalness_error = _validateNormalMetalness(refMat,mat)
+            if (
+                mat.blenderMaterial.specular_intensity
+                != refMat.blenderMaterial.specular_intensity
+                and mat.getEffectiveNormalMetalness() == False
+            ):
+                errors.append(
+                    "Specularity must be %f, is %f"
+                    % (
+                        refMat.blenderMaterial.specular_intensity,
+                        mat.blenderMaterial.specular_intensity,
+                    )
+                )
+        metalness_error = _validateNormalMetalness(refMat, mat)
         if metalness_error:
             errors.append(metalness_error)
 
@@ -44,27 +66,41 @@ def compareScenery(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTextures
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
         if mat.textureNormal != refMat.textureNormal:
-            errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+            errors.append(
+                'Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal
+            )
 
-    return errors,warnings
+    return errors, warnings
 
-def compareInstanced(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTextures:bool)->MaterialValidationMsgs:
-    errors   = []
+
+def compareInstanced(
+    refMat: XPlaneMaterial, mat: XPlaneMaterial, autodetectTextures: bool
+) -> MaterialValidationMsgs:
+    errors = []
     warnings = []
 
     if mat.options.draw:
-        if mat.blenderMaterial.specular_intensity != refMat.blenderMaterial.specular_intensity and \
-           mat.getEffectiveNormalMetalness() == False:
-            errors.append('Specularity must be %f, is %f' % (refMat.blenderMaterial.specular_intensity,mat.blenderMaterial.specular_intensity))
+        if (
+            mat.blenderMaterial.specular_intensity
+            != refMat.blenderMaterial.specular_intensity
+            and mat.getEffectiveNormalMetalness() == False
+        ):
+            errors.append(
+                "Specularity must be %f, is %f"
+                % (
+                    refMat.blenderMaterial.specular_intensity,
+                    mat.blenderMaterial.specular_intensity,
+                )
+            )
 
         if mat.options.blend != refMat.options.blend:
             if refMat.options.blend:
-                errors.append('Alpha cutoff must be enabled.')
+                errors.append("Alpha cutoff must be enabled.")
             else:
-                errors.append('Alpha cutoff must be disabled.')
+                errors.append("Alpha cutoff must be disabled.")
         elif mat.options.blendRatio != refMat.options.blendRatio:
-            errors.append('Alpha cutoff ratio must be %f' % refMat.options.blendRatio)
-        metalness_error = _validateNormalMetalness(refMat,mat)
+            errors.append("Alpha cutoff ratio must be %f" % refMat.options.blendRatio)
+        metalness_error = _validateNormalMetalness(refMat, mat)
         if metalness_error:
             errors.append(metalness_error)
 
@@ -76,16 +112,21 @@ def compareInstanced(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTextur
             errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
         if mat.textureNormal != refMat.textureNormal:
-            errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+            errors.append(
+                'Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal
+            )
 
-    return errors,warnings
+    return errors, warnings
 
-def compareAircraft(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTextures:bool)->MaterialValidationMsgs:
-    errors   = []
+
+def compareAircraft(
+    refMat: XPlaneMaterial, mat: XPlaneMaterial, autodetectTextures: bool
+) -> MaterialValidationMsgs:
+    errors = []
     warnings = []
 
     if mat.options.draw:
-        metalness_error = _validateNormalMetalness(refMat,mat)
+        metalness_error = _validateNormalMetalness(refMat, mat)
         if metalness_error:
             errors.append(metalness_error)
         # panel parts can have anything
@@ -97,27 +138,34 @@ def compareAircraft(refMat:XPlaneMaterial, mat:XPlaneMaterial, autodetectTexture
                 errors.append('Lit/Emissive texture must be "%s".' % refMat.textureLit)
 
             if mat.textureNormal != refMat.textureNormal:
-                errors.append('Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal)
+                errors.append(
+                    'Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal
+                )
 
         if mat.getEffectiveBlendGlass() != refMat.getEffectiveBlendGlass():
-            errors.append('BLEND_GLASS must be set for all materials with the same albedo texture')
+            errors.append(
+                "BLEND_GLASS must be set for all materials with the same albedo texture"
+            )
 
-    return errors,warnings
+    return errors, warnings
 
-def validate(mat:XPlaneMaterial, exportType:str)->MaterialValidationMsgs:
-    '''
+
+def validate(mat: XPlaneMaterial, exportType: str) -> MaterialValidationMsgs:
+    """
     Validates material properties that don't involve comparisons to other
     materials. Returns a tuple of two lists, generated errors and generated
     warnings.
-    '''
-    errors   = [] # type: List[str]
-    warnings = [] # type: List[str]
+    """
+    errors = []  # type: List[str]
+    warnings = []  # type: List[str]
 
     if mat.options == None:
-        errors.append('Is invalid.')
-        return errors,warnings
+        errors.append("Is invalid.")
+        return errors, warnings
 
-    if (exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY) and mat.options.draped:
+    if (
+        exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY
+    ) and mat.options.draped:
         return validateDraped(mat)
     elif exportType == EXPORT_TYPE_SCENERY:
         return validateScenery(mat)
@@ -133,147 +181,151 @@ def validate(mat:XPlaneMaterial, exportType:str)->MaterialValidationMsgs:
         else:
             return validateAircraft(mat)
 
-    return errors,warnings
+    return errors, warnings
 
-def validateScenery(mat:XPlaneMaterial)->MaterialValidationMsgs:
-    errors   = [] # type: List[str]
-    warnings = [] # type: List[str]
+
+def validateScenery(mat: XPlaneMaterial) -> MaterialValidationMsgs:
+    errors = []  # type: List[str]
+    warnings = []  # type: List[str]
 
     if mat.options.panel:
-        errors.append('Must not be part of the cockpit panel.')
+        errors.append("Must not be part of the cockpit panel.")
 
     if mat.options.draped:
-        errors.append('Must not be draped.')
+        errors.append("Must not be draped.")
 
     if mat.options.solid_camera:
-        errors.append('Must have camera collision disabled.')
+        errors.append("Must have camera collision disabled.")
 
     if mat.blenderObject.xplane.manip.enabled:
-        errors.append('Must not be a manipulator.')
+        errors.append("Must not be a manipulator.")
 
     if mat.getEffectiveBlendGlass():
-        errors.append('Blend glass only legal on aircraft and cockpit objects')
+        errors.append("Blend glass only legal on aircraft and cockpit objects")
 
-    return errors,warnings
+    return errors, warnings
 
 
-def validateInstanced(mat:XPlaneMaterial)->MaterialValidationMsgs:
-    errors   = [] # type: List[str]
-    warnings = [] # type: List[str]
+def validateInstanced(mat: XPlaneMaterial) -> MaterialValidationMsgs:
+    errors = []  # type: List[str]
+    warnings = []  # type: List[str]
 
     if mat.options.lightLevel:
-        errors.append('Must not override light level.')
+        errors.append("Must not override light level.")
 
     if mat.options.panel:
-        errors.append('Must not be part of the cockpit panel.')
+        errors.append("Must not be part of the cockpit panel.")
 
     if mat.options.draped:
-        errors.append('Must not be draped.')
+        errors.append("Must not be draped.")
 
     if mat.options.solid_camera:
-        errors.append('Must have camera collision disabled.')
+        errors.append("Must have camera collision disabled.")
 
     if mat.options.poly_os > 0:
-        errors.append('Must not have polygon offset.')
+        errors.append("Must not have polygon offset.")
 
     if mat.blenderObject.xplane.manip.enabled:
-        errors.append('Must not be a manipulator.')
+        errors.append("Must not be a manipulator.")
 
     if mat.getEffectiveBlendGlass():
-        errors.append('Blend glass only legal on aircraft and cockpit objects')
+        errors.append("Blend glass only legal on aircraft and cockpit objects")
 
-    return errors,warnings
+    return errors, warnings
 
 
-def validatePanel(mat:XPlaneMaterial)->MaterialValidationMsgs:
-    errors   = [] # type: List[str]
-    warnings = [] # type: List[str]
+def validatePanel(mat: XPlaneMaterial) -> MaterialValidationMsgs:
+    errors = []  # type: List[str]
+    warnings = []  # type: List[str]
 
     if mat.options.lightLevel:
-        errors.append('Must not override light level.')
+        errors.append("Must not override light level.")
 
     if mat.options.draw:
         if mat.textureLit:
-            errors.append('Must not have a lit/emissive texture.')
+            errors.append("Must not have a lit/emissive texture.")
 
         if mat.textureNormal:
-            errors.append('Must not have a normal/alpha/specularity texture.')
+            errors.append("Must not have a normal/alpha/specularity texture.")
 
     if not mat.options.panel:
-        errors.append('Must be part of the cockpit panel.')
+        errors.append("Must be part of the cockpit panel.")
 
     if mat.options.draped:
-        errors.append('Must not be draped.')
+        errors.append("Must not be draped.")
 
-    if mat.options.surfaceType != 'none':
+    if mat.options.surfaceType != "none":
         errors.append('Must have the surface type "none".')
 
-    return errors,warnings
+    return errors, warnings
 
 
-def validateCockpit(mat:XPlaneMaterial)->MaterialValidationMsgs:
-    errors   = [] # type: List[str]
-    warnings = [] # type: List[str]
-
-    if mat.options.panel:
-        errors.append('Must not be part of the cockpit panel.')
-
-    if mat.options.draped:
-        errors.append('Must not be draped.')
-
-    return errors,warnings
-
-
-def validateAircraft(mat:XPlaneMaterial)->MaterialValidationMsgs:
-    errors   = [] # type: List[str]
-    warnings = [] # type: List[str]
+def validateCockpit(mat: XPlaneMaterial) -> MaterialValidationMsgs:
+    errors = []  # type: List[str]
+    warnings = []  # type: List[str]
 
     if mat.options.panel:
-        errors.append('Must not be part of the cockpit panel.')
+        errors.append("Must not be part of the cockpit panel.")
 
     if mat.options.draped:
-        errors.append('Must not be draped.')
+        errors.append("Must not be draped.")
+
+    return errors, warnings
+
+
+def validateAircraft(mat: XPlaneMaterial) -> MaterialValidationMsgs:
+    errors = []  # type: List[str]
+    warnings = []  # type: List[str]
+
+    if mat.options.panel:
+        errors.append("Must not be part of the cockpit panel.")
+
+    if mat.options.draped:
+        errors.append("Must not be draped.")
 
     if mat.blenderObject.xplane.manip.enabled:
-        errors.append('Must not be a manipulator.')
+        errors.append("Must not be a manipulator.")
 
-    return errors,warnings
+    return errors, warnings
 
 
-def validateDraped(mat:XPlaneMaterial)->MaterialValidationMsgs:
-    errors   = [] # type: List[str]
-    warnings = [] # type: List[str]
+def validateDraped(mat: XPlaneMaterial) -> MaterialValidationMsgs:
+    errors = []  # type: List[str]
+    warnings = []  # type: List[str]
 
     if not mat.options.draped:
-        errors.append('Must be draped')
+        errors.append("Must be draped")
 
     if mat.options.lightLevel:
-        errors.append('Must not override light level.')
+        errors.append("Must not override light level.")
 
     if mat.options.panel:
-        errors.append('Must not be part of the cockpit panel.')
+        errors.append("Must not be part of the cockpit panel.")
 
-    if mat.options.surfaceType != 'none':
+    if mat.options.surfaceType != "none":
         errors.append('Must have the surface type "none".')
 
     if not mat.options.draw:
-        errors.append('Must have draw enabled.')
+        errors.append("Must have draw enabled.")
 
     if mat.options.solid_camera:
-        errors.append('Must have camera collision disabled.')
+        errors.append("Must have camera collision disabled.")
 
     if mat.options.poly_os > 0:
-        errors.append('Must not have polygon offset.')
+        errors.append("Must not have polygon offset.")
 
     if mat.blenderObject.xplane.manip.enabled:
-        errors.append('Must not be a manipulator.')
+        errors.append("Must not be a manipulator.")
 
     if mat.getEffectiveBlendGlass():
-       errors.append('Blend glass only legal on aircraft and cockpit objects')
+        errors.append("Blend glass only legal on aircraft and cockpit objects")
 
-    return errors,warnings
+    return errors, warnings
 
-def getFirstMatchingMaterial(materials: List[XPlaneMaterial], validation:ValidateFunction):
+
+def getFirstMatchingMaterial(
+    materials: List[XPlaneMaterial], validation: ValidateFunction
+):
     for mat in materials:
         errors, warnings = validation(mat)
 
@@ -281,6 +333,7 @@ def getFirstMatchingMaterial(materials: List[XPlaneMaterial], validation:Validat
             return mat
 
     return None
+
 
 # Method: getReferenceMaterials
 # Returns a list of one or materials, the first valid ones it finds. The content of the slots has meaning based on
@@ -296,7 +349,9 @@ def getFirstMatchingMaterial(materials: List[XPlaneMaterial], validation:Validat
 #    string exportType - The export type given by xplane_file.options.export_type
 #
 #    Returns list of 1 or more reference materials
-def getReferenceMaterials(materials:XPlaneMaterial, exportType:str)->List[XPlaneMaterial]:
+def getReferenceMaterials(
+    materials: XPlaneMaterial, exportType: str
+) -> List[XPlaneMaterial]:
     refMats = []
 
     if exportType == EXPORT_TYPE_COCKPIT:

@@ -1,5 +1,6 @@
 import bpy
 
+
 def getImageByFilepath(filepath):
     image = None
     i = 0
@@ -11,15 +12,18 @@ def getImageByFilepath(filepath):
 
     return image
 
+
 def getImagePixels(image):
-    pixels = [0.0,0.0,0.0,1.0] * int((len(image.pixels) / 4))
-    #for i in range(0, len(image.pixels)):
+    pixels = [0.0, 0.0, 0.0, 1.0] * int((len(image.pixels) / 4))
+    # for i in range(0, len(image.pixels)):
     #    pixels.append(image.pixels[i])
 
     return pixels
 
+
 def imageSizesEqual(a, b):
     return a.size[0] == b.size[0] and a.size[1] == b.size[1]
+
 
 def getGeneratedImage(targetName, width, height, channels):
     image = None
@@ -32,11 +36,14 @@ def getGeneratedImage(targetName, width, height, channels):
             image = None
 
     if image == None:
-        image = bpy.ops.image.new(name = targetName, width = width, height = height, color = color, alpha = alpha)
+        image = bpy.ops.image.new(
+            name=targetName, width=width, height=height, color=color, alpha=alpha
+        )
         image = bpy.data.images[targetName]
-        image.file_format = 'PNG'
+        image.file_format = "PNG"
 
     return image
+
 
 def specularToGrayscale(specularImage, targetName):
     width = specularImage.size[0]
@@ -55,6 +62,7 @@ def specularToGrayscale(specularImage, targetName):
 
     return image
 
+
 def normalWithoutAlpha(normalImage, targetName):
     width = normalImage.size[0]
     height = normalImage.size[1]
@@ -72,11 +80,12 @@ def normalWithoutAlpha(normalImage, targetName):
 
     return image
 
+
 def combineSpecularAndNormal(specularImage, normalImage, targetName):
     if not imageSizesEqual(specularImage, normalImage):
         # TODO: provide more usefull output
         # and eventually use the debugger to log this error instead of rasining it
-        raise Exception('Image sizes do not match')
+        raise Exception("Image sizes do not match")
 
     width = specularImage.size[0]
     height = specularImage.size[1]

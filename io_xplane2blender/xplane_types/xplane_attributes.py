@@ -24,26 +24,25 @@ class XPlaneAttributes(OrderedDict):
                 self.move_to_end(name, True)
                 max_weight = self[name].weight
 
-    def add(self, attr:XPlaneAttribute):
+    def add(self, attr: XPlaneAttribute):
         if attr.name in self:
             self[attr.name].addValues(attr.getValues())
         else:
             self[attr.name] = attr
 
-    def get(self, name:str)->Optional[XPlaneAttribute]:
+    def get(self, name: str) -> Optional[XPlaneAttribute]:
         if name in self:
             return self[name]
         else:
             return None
 
-    def set(self, attr:XPlaneAttribute)->None:
+    def set(self, attr: XPlaneAttribute) -> None:
         if attr.name in self:
             self[attr.name] = attr
 
-    def __str__(self)->str:
-        o = ''
+    def __str__(self) -> str:
+        o = ""
         for name in self:
-            o += name + ': ' + self[name].getValuesAsString() + '\n'
+            o += name + ": " + self[name].getValuesAsString() + "\n"
 
         return o
-
