@@ -3,17 +3,17 @@
 import os
 import os.path
 import sys
+from typing import IO, Any, Optional
 
 import bpy
-import io_xplane2blender
 import mathutils
+
+import io_xplane2blender
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 from .xplane_config import getDebug
 from .xplane_helpers import XPlaneLogger, logger
 from .xplane_types import xplane_file
-
-from typing import Any, IO, Optional
 
 
 class XPLANE_MT_xplane_export_log(bpy.types.Menu):

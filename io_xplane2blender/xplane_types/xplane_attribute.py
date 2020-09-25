@@ -1,4 +1,5 @@
 from typing import Any, List, Optional, Union
+
 from io_xplane2blender.xplane_helpers import floatToStr
 
 # TODO: This API is either redundent or self.value should be private.

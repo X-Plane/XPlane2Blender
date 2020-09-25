@@ -3,6 +3,7 @@ from typing import Optional
 
 from io_xplane2blender.xplane_types.xplane_attribute import XPlaneAttribute
 
+
 # Class: XPlaneAttributes
 # A Wrapper for OrderedDict that stores a collection of <XPlaneAttribute>.
 class XPlaneAttributes(OrderedDict):

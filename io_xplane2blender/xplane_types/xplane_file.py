@@ -13,19 +13,20 @@ the header and XPlaneBone tree contents to a string
 
 import collections
 import dataclasses
-import operator
 import itertools
+import operator
 import pprint
-from typing import Dict, List, Optional, NamedTuple, Set, Tuple, Union
+from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import bpy
 import mathutils
+
 from io_xplane2blender import xplane_constants, xplane_helpers, xplane_props
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_types import (
     xplane_empty,
-    xplane_material_utils,
     xplane_material,
+    xplane_material_utils,
 )
 
 from ..xplane_helpers import (

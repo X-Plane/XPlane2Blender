@@ -37,19 +37,18 @@ import enum
 import functools
 import pprint
 import re
-
-from typing import Any, Dict, List, Optional, Set, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 import bpy
 from bpy.app.handlers import persistent
 
 import io_xplane2blender
-from io_xplane2blender import xplane_props, xplane_helpers, xplane_constants
+from io_xplane2blender import xplane_constants, xplane_helpers, xplane_props
 from io_xplane2blender.xplane_constants import (
+    BLEND_GLASS,
     LOGGER_LEVEL_ERROR,
     LOGGER_LEVEL_INFO,
     LOGGER_LEVEL_SUCCESS,
-    BLEND_GLASS,
 )
 from io_xplane2blender.xplane_helpers import XPlaneLogger
 from io_xplane2blender.xplane_utils import xplane_updater_helpers

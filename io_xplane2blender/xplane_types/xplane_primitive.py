@@ -1,16 +1,17 @@
 import collections
 import math
 import sys
+from typing import Any
 
 import bpy
+from mathutils import Vector
+
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_constants import (
     MANIP_DRAG_AXIS_DETENT,
     MANIP_DRAG_ROTATE_DETENT,
 )
 from io_xplane2blender.xplane_types import xplane_manipulator
-from mathutils import Vector
-from typing import Any
 
 from ..xplane_config import getDebug
 from ..xplane_constants import *

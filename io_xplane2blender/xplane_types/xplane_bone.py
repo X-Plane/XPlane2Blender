@@ -31,8 +31,9 @@ from typing import List, Optional, Tuple
 
 import bpy
 import mathutils
-from io_xplane2blender.xplane_config import getDebug
+
 from io_xplane2blender import xplane_constants, xplane_props
+from io_xplane2blender.xplane_config import getDebug
 from io_xplane2blender.xplane_helpers import floatToStr, logger, vec_b_to_x
 from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
 from io_xplane2blender.xplane_types.xplane_keyframe_collection import (

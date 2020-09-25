@@ -6,12 +6,14 @@ Created on Jan 30, 2018
 
 import collections
 import typing
-from typing import Callable, List, Tuple, Optional
+from typing import Callable, List, Optional, Tuple
+
 import bpy
 from mathutils import Vector
+
 from io_xplane2blender import xplane_helpers
-from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_constants import *
+from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_props import (
     XPlaneAxisDetentRange,
     XPlaneManipulatorSettings,
@@ -659,8 +661,10 @@ Manipulator Type Requirements:
 
         for i in range(len(white_list)):
             if i > 0:
-                type_requirements += ", which must be a child of a {anim_type_white} animation".format(
-                    anim_type_white=white_list[i][1].title()
+                type_requirements += (
+                    ", which must be a child of a {anim_type_white} animation".format(
+                        anim_type_white=white_list[i][1].title()
+                    )
                 )
 
         animations_found = """

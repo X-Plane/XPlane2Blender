@@ -1,12 +1,16 @@
-import bpy
-import io_xplane2blender
 from typing import List, Tuple
+
+import bpy
+
+import io_xplane2blender
 from io_xplane2blender.xplane_types import xplane_object
+
 from ..xplane_config import getDebug
-from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
-from .xplane_attributes import XPlaneAttributes
+from ..xplane_helpers import floatToStr, logger
 from .xplane_attribute import XPlaneAttribute
+from .xplane_attributes import XPlaneAttributes
+
 
 # Class: XPlaneMaterial
 # A Material

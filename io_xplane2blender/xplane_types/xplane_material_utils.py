@@ -1,7 +1,10 @@
-import bpy
 from typing import Callable, List, Optional, Tuple
+
+import bpy
+
 from io_xplane2blender.xplane_helpers import logger
 from io_xplane2blender.xplane_types.xplane_material import XPlaneMaterial
+
 from ..xplane_constants import *
 
 MaterialValidationMsgs = Tuple[List[str], List[str]]

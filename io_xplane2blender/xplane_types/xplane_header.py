@@ -2,8 +2,10 @@ import os
 import platform
 import re
 from collections import OrderedDict
+from typing import List
 
 import bpy
+
 from io_xplane2blender.xplane_constants import EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_SCENERY
 
 from ..xplane_constants import *
@@ -16,8 +18,6 @@ from ..xplane_image_composer import (
 )
 from .xplane_attribute import XPlaneAttribute
 from .xplane_attributes import XPlaneAttributes
-
-from typing import List
 
 
 class XPlaneHeader:

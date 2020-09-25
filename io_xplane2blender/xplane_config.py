@@ -1,9 +1,10 @@
 # File: xplane_config.py
 # Holds config variables that are used throughout the addon.
 from typing import Tuple
+
 import bpy
-from io_xplane2blender import bl_info
-from io_xplane2blender import xplane_constants
+
+from io_xplane2blender import bl_info, xplane_constants
 
 # We make a copy here so as not to cause a circular dependency in xplane_props and other places
 CURRENT_ADDON_VERSION: Tuple[int, int, int] = bl_info["version"]

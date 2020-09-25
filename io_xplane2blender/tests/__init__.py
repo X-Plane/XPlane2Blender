@@ -1,13 +1,14 @@
 import collections
-import pathlib
 import itertools
 import os
+import pathlib
 import shutil
 import sys
 import unittest
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
+
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_helpers
 from io_xplane2blender.tests import animation_file_mappings, test_creation_helpers

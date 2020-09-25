@@ -1,16 +1,17 @@
-from collections import Iterable, namedtuple
-from collections.abc import MutableSequence
 import copy
 import math
+from collections import Iterable, namedtuple
+from collections.abc import MutableSequence
 from typing import List, Tuple
 
 import bpy
 import mathutils
 from mathutils import Vector
 
-from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
-from io_xplane2blender.xplane_helpers import round_vec
 from io_xplane2blender import xplane_constants
+from io_xplane2blender.xplane_helpers import round_vec
+from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
+
 
 # Class: XPlaneKeyframeCollection
 #
@@ -175,7 +176,8 @@ class XPlaneKeyframeCollection(MutableSequence):
                     axis=axes[0],
                     table=[
                         TableEntry(
-                            keyframe.dataref_value, math.degrees(keyframe.rotation[0]),
+                            keyframe.dataref_value,
+                            math.degrees(keyframe.rotation[0]),
                         )
                         for keyframe in self
                     ],

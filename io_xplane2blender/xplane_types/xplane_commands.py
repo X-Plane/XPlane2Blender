@@ -2,6 +2,7 @@ import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bpy
+
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_types import (
     xplane_attribute,
@@ -14,7 +15,6 @@ from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 from ..xplane_config import getDebug
 from ..xplane_constants import *
 from ..xplane_helpers import floatToStr, logger
-
 
 # Setters, resetters, and counterparts:
 #

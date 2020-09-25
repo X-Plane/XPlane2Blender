@@ -4,11 +4,11 @@ import re
 import sys
 from collections import OrderedDict
 from pathlib import Path
-
 from typing import List, Optional, Union
 
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_export import showLogDialog
+
 
 """
 Commands.txt file format spec
@@ -56,8 +56,8 @@ def parse_commands_txt(filepath: str) -> Union[List[CommandInfoStruct], str]:
                 if line == "\n":
                     continue
                 elif line.startswith((" ", "\t")):
-                    last_error = "Line {} cannot start with whitespace or be empty".format(
-                        i
+                    last_error = (
+                        "Line {} cannot start with whitespace or be empty".format(i)
                     )
                     break
                 elif line[-2].endswith((" ", "\t")):

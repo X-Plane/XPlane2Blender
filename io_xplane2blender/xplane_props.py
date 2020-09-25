@@ -2,11 +2,13 @@
 Defines X-Plane Properties attached to regular Blender data types.
 """
 
+from typing import List
+
 import bpy
+
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_constants import VERSION_1100
-from typing import List
 
 from .xplane_constants import *
 

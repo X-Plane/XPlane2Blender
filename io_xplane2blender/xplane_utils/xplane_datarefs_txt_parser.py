@@ -4,11 +4,11 @@ import re
 import sys
 from collections import OrderedDict
 from pathlib import Path
-
 from typing import List, Optional, Union
 
 from io_xplane2blender import xplane_helpers
 from io_xplane2blender.xplane_export import showLogDialog
+
 
 """
 Datarefs.txt file format spec

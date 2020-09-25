@@ -6,8 +6,9 @@ from datetime import timezone
 from typing import Iterable, List, Optional, Tuple, Union
 
 import bpy
-import io_xplane2blender
 import mathutils
+
+import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_constants
 from io_xplane2blender.xplane_constants import PRECISION_OBJ_FLOAT
 

@@ -86,14 +86,13 @@ import collections
 import copy
 import os
 import re
-
 from dataclasses import dataclass
+from typing import Dict, Iterator, List, Mapping, Optional, Set, Tuple, Union
+
 from mathutils import Vector
-from typing import Dict, Iterator, List, Optional, Mapping, Set, Tuple, Union
 
 from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
-
 
 OVERLOAD_TYPES = {
     "BILLBOARD_HW",
@@ -510,7 +509,7 @@ class ParsedLightOverload:
     def get(
         self, key: str, default: Optional[Union[float, str]] = None
     ) -> Optional[float]:
-        """"Return the value for key if key is in the dictionary, else default.
+        """ "Return the value for key if key is in the dictionary, else default.
         Uses __getitem__ under the hood"""
         try:
             return self[key]
@@ -634,21 +633,25 @@ def parse_lights_file():
         raise FileNotFoundError
 
     def is_allowed_param(p: str) -> bool:
-        return p in {
-            "R",
-            "G",
-            "B",
-            "A",
-            "SIZE",
-            "DX",
-            "DY",
-            "DZ",
-            "WIDTH",
-            "FREQ",
-            "PHASE",
-            "INDEX",
-            "DIR_MAG",
-        } or p.startswith(("UNUSED", "NEG_ONE", "ZERO", "ONE"))
+        return (
+            p
+            in {
+                "R",
+                "G",
+                "B",
+                "A",
+                "SIZE",
+                "DX",
+                "DY",
+                "DZ",
+                "WIDTH",
+                "FREQ",
+                "PHASE",
+                "INDEX",
+                "DIR_MAG",
+            }
+            or p.startswith(("UNUSED", "NEG_ONE", "ZERO", "ONE"))
+        )
 
     with open(LIGHTS_FILEPATH, "r") as f:
         lines = [

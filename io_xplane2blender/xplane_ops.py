@@ -4,6 +4,7 @@ import pathlib
 from typing import Optional
 
 import bpy
+
 from io_xplane2blender import xplane_props
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_constants import MAX_COCKPIT_REGIONS, MAX_LODS
@@ -12,6 +13,7 @@ from io_xplane2blender.xplane_utils import (
     xplane_commands_txt_parser,
     xplane_datarefs_txt_parser,
 )
+
 
 # Function: findFCurveByPath
 # Helper function to find an FCurve by an data-path.
@@ -631,8 +633,10 @@ class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
             filepath = pathlib.Path(
                 xplane_helpers.get_plugin_resources_folder(), "Commands.txt"
             )
-            get_commands_txt_result = xplane_commands_txt_parser.get_commands_txt_file_content(
-                filepath.as_posix()
+            get_commands_txt_result = (
+                xplane_commands_txt_parser.get_commands_txt_file_content(
+                    filepath.as_posix()
+                )
             )
             if isinstance(get_commands_txt_result, str):
                 short_filepath = "..." + os.path.sep.join(filepath.parts[-3:])
@@ -685,8 +689,10 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
             filepath = pathlib.Path(
                 xplane_helpers.get_plugin_resources_folder(), "DataRefs.txt"
             )
-            get_datarefs_txt_result = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(
-                filepath.as_posix()
+            get_datarefs_txt_result = (
+                xplane_datarefs_txt_parser.get_datarefs_txt_file_content(
+                    filepath.as_posix()
+                )
             )
             if isinstance(get_datarefs_txt_result, str):
                 short_filepath = "..." + os.path.sep.join(filepath.parts[-3:])

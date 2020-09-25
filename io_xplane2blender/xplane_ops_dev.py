@@ -3,13 +3,14 @@
 
 import os
 import re
+from collections import OrderedDict
 
 import bpy
+
 import io_xplane2blender
-from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender import xplane_constants, xplane_helpers
+from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_utils import xplane_lights_txt_parser
-from collections import OrderedDict
 
 
 class SCENE_OT_dev_apply_default_material_to_all(bpy.types.Operator):

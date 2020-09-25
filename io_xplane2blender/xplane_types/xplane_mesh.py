@@ -1,15 +1,17 @@
 import array
 import collections
-import time
 import re
+import time
 from typing import List, Optional
 
 import bpy
 import mathutils
+
 from io_xplane2blender import xplane_helpers
+
 from ..xplane_config import getDebug
-from ..xplane_helpers import floatToStr, logger
 from ..xplane_constants import *
+from ..xplane_helpers import floatToStr, logger
 from .xplane_face import XPlaneFace
 from .xplane_object import XPlaneObject
 

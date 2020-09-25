@@ -1,8 +1,12 @@
-import bpy
 from typing import List
-from ..xplane_helpers import floatToStr, vec_b_to_x
-from ..xplane_constants import *
+
+import bpy
+
 from io_xplane2blender.xplane_types import xplane_light
+
+from ..xplane_constants import *
+from ..xplane_helpers import floatToStr, vec_b_to_x
+
 
 # TODO: deprecate someday...
 class XPlaneVLights:

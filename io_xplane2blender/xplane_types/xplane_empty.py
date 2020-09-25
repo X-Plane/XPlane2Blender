@@ -2,6 +2,7 @@ import math
 
 import bpy
 import mathutils
+
 from io_xplane2blender import xplane_config, xplane_helpers
 from io_xplane2blender.xplane_config import getDebug
 from io_xplane2blender.xplane_constants import *

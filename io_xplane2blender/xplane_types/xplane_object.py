@@ -1,15 +1,15 @@
 import itertools
+from typing import Dict, List, Optional
 
 import bpy
 import mathutils
 
-from typing import Dict, List, Optional
 from io_xplane2blender.xplane_config import getDebug
-from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_constants import *
+from io_xplane2blender.xplane_helpers import *
+from io_xplane2blender.xplane_types import xplane_bone
 from io_xplane2blender.xplane_types.xplane_attribute import XPlaneAttribute
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
-from io_xplane2blender.xplane_types import xplane_bone
 
 
 class XPlaneObject:

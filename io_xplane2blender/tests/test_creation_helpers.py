@@ -20,6 +20,8 @@ from collections import namedtuple
 from typing import *
 
 import bpy
+from mathutils import Euler, Quaternion, Vector
+
 import io_xplane2blender
 from io_xplane2blender import xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_constants import ANIM_TYPE_HIDE, ANIM_TYPE_SHOW
@@ -29,9 +31,8 @@ from io_xplane2blender.xplane_helpers import (
     XPlaneLogger,
     logger,
 )
-from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender.xplane_props import XPlaneManipulatorSettings
-from mathutils import Euler, Quaternion, Vector
+from io_xplane2blender.xplane_types import xplane_file
 
 # Most used commands:
 #
@@ -399,7 +400,8 @@ def create_datablock_armature(
 
 
 def create_datablock_empty(
-    info: DatablockInfo, scene: Optional[Union[bpy.types.Scene, str]] = None,
+    info: DatablockInfo,
+    scene: Optional[Union[bpy.types.Scene, str]] = None,
 ) -> bpy.types.Object:
     """
     Creates a datablock empty and links it to a scene and collection.
@@ -980,7 +982,8 @@ class TemporaryStartFile:
         )
         try:
             os.replace(real_startup_filepath, real_startup_filepath + ".bak")
-        except FileNotFoundError:
+        except FileNotFoundError as e:
+            print(e)
             raise
         else:
             shutil.copyfile(self.temporary_startup_path, real_startup_filepath)

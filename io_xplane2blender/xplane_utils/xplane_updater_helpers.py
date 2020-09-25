@@ -1,10 +1,8 @@
 import collections
-
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import bpy
 import idprop
-
 
 # This is basically a copy of EnumPropertyItem, with only the parts we care about
 _EnumItem = collections.namedtuple("EnumItem", ["identifier", "name", "description"])
