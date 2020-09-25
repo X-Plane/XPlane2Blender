@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/X-Plane/XPlane2Blender.svg?branch=master)](https://travis-ci.org/X-Plane/XPlane2Blender)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
 # Introduction
 This addon for Blender 2.80 and up makes it possible to export models made in Blender to the X-Plane object format (.obj). **Despite the name "XPlane2Blender", there is no import feature.**
