@@ -11,18 +11,6 @@ MaterialValidationMsgs = Tuple[List[str], List[str]]
 ValidateFunction = Callable[[XPlaneMaterial], MaterialValidationMsgs]
 
 
-def _validateNormalMetalness(
-    refMat: XPlaneMaterial, mat: XPlaneMaterial
-) -> Optional[str]:
-    if mat.texture == refMat.texture and (
-        refMat.options.panel is False and mat.options.panel is False
-    ):  # Panel disables metalness
-        if mat.getEffectiveNormalMetalness() != refMat.getEffectiveNormalMetalness():
-            return "NORMAL_METALNESS must be set for all materials with the same albedo texture"
-
-    return None
-
-
 def compare(
     refMat: XPlaneMaterial,
     mat: XPlaneMaterial,
@@ -48,7 +36,7 @@ def compareScenery(
             if (
                 mat.blenderMaterial.specular_intensity
                 != refMat.blenderMaterial.specular_intensity
-                and mat.getEffectiveNormalMetalness() == False
+                and not mat.xplaneObject.xplaneBone.xplaneFile.options.normal_metalness
             ):
                 errors.append(
                     "Specularity must be %f, is %f"
@@ -57,9 +45,6 @@ def compareScenery(
                         mat.blenderMaterial.specular_intensity,
                     )
                 )
-        metalness_error = _validateNormalMetalness(refMat, mat)
-        if metalness_error:
-            errors.append(metalness_error)
 
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
@@ -86,7 +71,7 @@ def compareInstanced(
         if (
             mat.blenderMaterial.specular_intensity
             != refMat.blenderMaterial.specular_intensity
-            and mat.getEffectiveNormalMetalness() == False
+            and not mat.xplaneObject.xplaneBone.xplaneFile.options.normal_metalness
         ):
             errors.append(
                 "Specularity must be %f, is %f"
@@ -103,9 +88,6 @@ def compareInstanced(
                 errors.append("Alpha cutoff must be disabled.")
         elif mat.options.blendRatio != refMat.options.blendRatio:
             errors.append("Alpha cutoff ratio must be %f" % refMat.options.blendRatio)
-        metalness_error = _validateNormalMetalness(refMat, mat)
-        if metalness_error:
-            errors.append(metalness_error)
 
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
@@ -129,9 +111,6 @@ def compareAircraft(
     warnings = []
 
     if mat.options.draw:
-        metalness_error = _validateNormalMetalness(refMat, mat)
-        if metalness_error:
-            errors.append(metalness_error)
         # panel parts can have anything
         if not mat.options.panel and not refMat.options.panel and autodetectTextures:
             if mat.texture != refMat.texture:
@@ -144,11 +123,6 @@ def compareAircraft(
                 errors.append(
                     'Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal
                 )
-
-        if mat.getEffectiveBlendGlass() != refMat.getEffectiveBlendGlass():
-            errors.append(
-                "BLEND_GLASS must be set for all materials with the same albedo texture"
-            )
 
     return errors, warnings
 
@@ -203,9 +177,6 @@ def validateScenery(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     if mat.blenderObject.xplane.manip.enabled:
         errors.append("Must not be a manipulator.")
 
-    if mat.getEffectiveBlendGlass():
-        errors.append("Blend glass only legal on aircraft and cockpit objects")
-
     return errors, warnings
 
 
@@ -230,9 +201,6 @@ def validateInstanced(mat: XPlaneMaterial) -> MaterialValidationMsgs:
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append("Must not be a manipulator.")
-
-    if mat.getEffectiveBlendGlass():
-        errors.append("Blend glass only legal on aircraft and cockpit objects")
 
     return errors, warnings
 
@@ -319,9 +287,6 @@ def validateDraped(mat: XPlaneMaterial) -> MaterialValidationMsgs:
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append("Must not be a manipulator.")
-
-    if mat.getEffectiveBlendGlass():
-        errors.append("Blend glass only legal on aircraft and cockpit objects")
 
     return errors, warnings
 

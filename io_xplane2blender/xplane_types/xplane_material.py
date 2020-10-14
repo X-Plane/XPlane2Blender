@@ -112,14 +112,17 @@ class XPlaneMaterial:
                 if mat.xplane.panel == False:
                     self.attributes["ATTR_draw_enable"].setValue(True)
 
+                    xplane_version = int(bpy.context.scene.xplane.version)
+                    normal_metalness = (
+                        self.xplaneObject.xplaneBone.xplaneFile.options.normal_metalness
+                    )
                     # SPECIAL CASE!
-                    if self.getEffectiveNormalMetalness() == False:
+                    if not normal_metalness:
                         self.attributes["ATTR_shiny_rat"].setValue(
                             mat.specular_intensity
                         )
 
                     # blend
-                    xplane_version = int(bpy.context.scene.xplane.version)
                     if xplane_version >= 1000:
                         xplane_blend_enum = mat.xplane.blend_v1000
 
@@ -278,29 +281,3 @@ class XPlaneMaterial:
         return io_xplane2blender.xplane_types.xplane_material_utils.validate(
             self, exportType
         )
-
-    # Method: getEffectiveNormalMetalness
-    # Predicate that returns the effective value of NORMAL_METALNESS, taking into account the current xplane version
-    #
-    # Returns:
-    # bool - True or false if the version of X-Plane chosen supports NORMAL_METALNESS and what its value is,
-    # False if the current XPLane version doesn't support it
-    def getEffectiveNormalMetalness(self) -> bool:
-        if int(bpy.context.scene.xplane.version) >= 1100:
-            return self.options.normal_metalness
-        else:
-            return False
-
-    # Method: getEffectiveBlendGlass
-    # Predicate that returns the effective value of BLEND_GLASS, taking into account the current xplane version
-    #
-    # Returns:
-    # bool - True or false if the version of X-Plane chosen supports BLEND_GLASS and what its value is,
-    # False if the current XPLane version doesn't support it
-    def getEffectiveBlendGlass(self) -> bool:
-        xplane_version = int(bpy.context.scene.xplane.version)
-
-        if xplane_version >= 1100:
-            return self.options.blend_glass
-        else:
-            return False

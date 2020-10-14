@@ -1017,6 +1017,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
         return None
 
+    blend_glass: bpy.props.BoolProperty(
+        name = "Blend Glass",
+        description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering",
+        default = False
+    )
+
     expanded: bpy.props.BoolProperty(
         name = "Expanded",
         description = "Toggles the layer settings visibility",
@@ -1027,6 +1033,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Export Directives for OBJ",
         description = "A collection of export paths intended for an OBJ's EXPORT directives",
         type = XPlaneExportPathDirective
+    )
+
+    normal_metalness: bpy.props.BoolProperty(
+        name = "Normal Metalness",
+        description = "The normal map's blue channel will be used for base reflectance",
+        default = False
     )
 
     particle_system_file: bpy.props.StringProperty(
@@ -1573,11 +1585,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio",
         default = False
     )
-    blend_glass: bpy.props.BoolProperty(
-        name = "Blend Glass",
-        description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering",
-        default = False
-    )
 
     # v1000
     blend_v1000: bpy.props.EnumProperty(
@@ -1686,12 +1693,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = False
     )
 
-    # v1100
-    normal_metalness: bpy.props.BoolProperty(
-        name = "Normal Metalness",
-        description = "Blue channel will be used for base reflectance",
-        default = False
-        )
 
 
     # v1000 (draped only)

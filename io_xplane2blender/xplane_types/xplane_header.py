@@ -215,35 +215,35 @@ class XPlaneHeader:
 
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= 1100:
-            mat = self.xplaneFile.referenceMaterials[0]
-            if mat:
-                self.attributes["NORMAL_METALNESS"].setValue(
-                    mat.getEffectiveNormalMetalness()
+            texture_normal = self.attributes["TEXTURE_NORMAL"].getValue()
+            normal_metalness = self.xplaneFile.options.normal_metalness
+            if texture_normal:
+                self.attributes["NORMAL_METALNESS"].setValue(normal_metalness)
+            elif not texture_normal and normal_metalness:
+                logger.warn(
+                    "{self.xplaneFile.filename} uses Normal Metalness but has no Normal Texture"
                 )
-                has_texture_normal = (
-                    self.attributes["TEXTURE_NORMAL"].getValue(0) is not None
-                )
-                if has_texture_normal:
-                    if mat.options.panel is False:
-                        self.attributes["NORMAL_METALNESS"].setValue(
-                            mat.getEffectiveNormalMetalness()
-                        )
-                elif not has_texture_normal and mat.getEffectiveNormalMetalness():
-                    logger.warn(
-                        "Material '%s' has Normal Metalness, but no Normal Texture"
-                        % mat.name
-                    )
 
         if xplane_version >= 1100:
-            if (
-                self.xplaneFile.referenceMaterials[0]
-                or self.xplaneFile.referenceMaterials[1]
-            ):
-                mat = (
-                    self.xplaneFile.referenceMaterials[0]
-                    or self.xplaneFile.referenceMaterials[1]
+
+            if self.xplaneFile.options.export_type in {
+                EXPORT_TYPE_AIRCRAFT,
+                EXPORT_TYPE_COCKPIT,
+            }:
+                self.attributes["BLEND_GLASS"].setValue(
+                    self.xplaneFile.options.blend_glass
                 )
-                self.attributes["BLEND_GLASS"].setValue(mat.getEffectiveBlendGlass())
+            elif (
+                self.xplaneFile.options.export_type
+                in {
+                    EXPORT_TYPE_INSTANCED_SCENERY,
+                    EXPORT_TYPE_SCENERY,
+                }
+                and self.xplaneFile.options.blend_glass
+            ):
+                logger.error(
+                    f"{self.xplaneFile.filename} can't use 'Blend Glass'. 'Blend Glass' is only for Aircraft and Cockpits"
+                )
 
         if canHaveDraped:
             # draped textures
@@ -268,23 +268,20 @@ class XPlaneHeader:
                 )
 
             if self.xplaneFile.referenceMaterials[1]:
-                mat = self.xplaneFile.referenceMaterials[1]
                 if xplane_version >= 1100:
-                    has_texture_draped_nml = (
-                        self.attributes["TEXTURE_DRAPED_NORMAL"].getValue(0) is not None
-                    )
-                    if has_texture_draped_nml:
-                        if mat.options.panel is False:
-                            self.attributes["NORMAL_METALNESS_draped_hack"].setValue(
-                                mat.getEffectiveNormalMetalness()
-                            )
-                    elif (
-                        not has_texture_draped_nml and mat.getEffectiveNormalMetalness()
-                    ):
-                        logger.warn(
-                            "Material '%s' has Normal Metalness, but no Draped Normal Texture"
-                            % mat.name
+                    texture_draped_nml = self.attributes[
+                        "TEXTURE_DRAPED_NORMAL"
+                    ].getValue()
+                    normal_metalness = self.xplaneFile.options.normal_metalness
+                    if texture_draped_nml:
+                        self.attributes["NORMAL_METALNESS_draped_hack"].setValue(
+                            normal_metalness
                         )
+                    elif not texture_draped_nml and normal_metalness:
+                        logger.warn(
+                            f"{self.xplaneFile.filename} uses Normal Metalness but has no Draped Normal Texture"
+                        )
+                mat = self.xplaneFile.referenceMaterials[1]
 
                 # draped bump level
                 if mat.options.bump_level != 1.0:
@@ -298,7 +295,7 @@ class XPlaneHeader:
                 mat.attributes["ATTR_no_blend"].setValue(None)
 
                 # draped specular
-                if xplane_version >= 1100 and mat.getEffectiveNormalMetalness():
+                if xplane_version >= 1100 and self.xplaneFile.options.normal_metalness:
                     # draped specular
                     self.attributes["SPECULAR"].setValue(1.0)
                 else:
@@ -390,7 +387,7 @@ class XPlaneHeader:
 
         if xplane_version >= 1100 and self.xplaneFile.referenceMaterials[0]:
             mat = self.xplaneFile.referenceMaterials[0]
-            if mat.getEffectiveNormalMetalness():
+            if self.xplaneFile.options.normal_metalness:
                 self.attributes["GLOBAL_specular"].setValue(1.0)
                 self.xplaneFile.commands.written[
                     "ATTR_shiny_rat"
