@@ -404,6 +404,17 @@ def layer_layout(
                 layer_props, "texture_draped_normal", text="Draped Normal / Specular"
             )
 
+    global_mat_box = layout.box()
+    global_mat_box.label(text="Global Material Options")
+    if version >= 1100:
+        global_mat_box.row().prop(layer_props, "blend_glass")
+        global_mat_box.row().prop(layer_props, "normal_metalness")
+        if layer_props.export_type in {
+            EXPORT_TYPE_INSTANCED_SCENERY,
+            EXPORT_TYPE_SCENERY,
+        }:
+            global_mat_box.row().prop(layer_props, "normal_metalness_draped")
+
     # cockpit regions
     if layer_props.export_type == "cockpit":
         cockpit_box = layout.box()
@@ -662,8 +673,10 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
         def draw_automatic_ui():
             try:
                 if light_data.xplane.name:
-                    parsed_light = xplane_utils.xplane_lights_txt_parser.get_parsed_light(
-                        light_data.xplane.name.strip()
+                    parsed_light = (
+                        xplane_utils.xplane_lights_txt_parser.get_parsed_light(
+                            light_data.xplane.name.strip()
+                        )
                     )
                     # HACK: We take this shortcut because otherwise we'd need to pretend to
                     # fill in the overload and apply the sw_callback which breaks DRY.
@@ -827,17 +840,9 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
     if active_material.xplane.draw:
         draw_box_column.prop(active_material.xplane, "draped")
 
-        if version >= 1100 and not active_material.xplane.panel:
-            draw_box_column.prop(active_material.xplane, "normal_metalness")
-
         # v1000 blend / v9000 blend
         if version >= 1000:
             draw_box_column.prop(active_material.xplane, "blend_v1000")
-        else:
-            draw_box_column.prop(active_material.xplane, "blend")
-
-        if version >= 1100:
-            draw_box_column.prop(active_material.xplane, "blend_glass")
 
         if version >= 1010:
             draw_box_column.prop(active_material.xplane, "shadow_local")
@@ -1017,8 +1022,8 @@ def animation_layout(
         dataref_search_toggle_op = subrow.operator(
             "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
         )
-        dataref_search_toggle_op.paired_dataref_prop = current_dataref_prop_template.format(
-            index=i
+        dataref_search_toggle_op.paired_dataref_prop = (
+            current_dataref_prop_template.format(index=i)
         )
 
         # Next: "X" box to nuke the dataref - further to the right to keep from separating search from its field.

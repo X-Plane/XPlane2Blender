@@ -35,6 +35,7 @@ You may now proceed to the rest of the file.
 import collections
 import enum
 import functools
+import itertools
 import pprint
 import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
@@ -276,7 +277,10 @@ def _rollback_blend_glass(logger: XPlaneLogger) -> None:
         v11 = mat.xplane.get("blend_v1100")
 
         if v11 == 3:  # Aka, where BLEND_GLASS was in the enum
-            mat.xplane.blend_glass = True
+            # v4.1.0 note - we've moved blend_glass to the header
+            # but I don't want to change the rest of this function
+            # So... we fake it to match later expectations!
+            mat["xplane"]["blend_glass"] = True
 
             # This bit of code reachs around Blender's magic EnumProperty
             # stuff and get at the RNA behind it, all to find the name.
@@ -485,6 +489,65 @@ def update(
         # Remember, get returning 0 and return None means something different
         for light in filter(lambda l: l.xplane.get("type") is None, bpy.data.lights):
             light.xplane.type = xplane_constants.LIGHT_DEFAULT
+
+    if last_version < xplane_helpers.VerStruct.parse_version(
+        "4.1.0-beta.1+90.20201014183300"
+    ):
+        for scene in bpy.data.scenes:
+            exp_collections = [
+                col
+                for col in xplane_helpers.get_collections_in_scene(scene)
+                if col.xplane.is_exportable_collection
+            ]
+            exp_objects = [o for o in scene.objects if o.xplane.isExportableRoot]
+
+            for exp in itertools.chain(exp_collections, exp_objects):
+
+                def try_xplane_idprop_get(mat: bpy.types.Material, prop) -> bool:
+                    try:
+                        return bool(mat["xplane"][prop])
+                    except KeyError:
+                        return False
+
+                if isinstance(exp, bpy.types.Collection):
+                    all_objects = exp.all_objects
+                else:
+
+                    def recurse_obj_tree(obj: bpy.types.Collection):
+                        yield obj
+                        for c in obj.children:
+                            yield from recurse_obj_tree(c)
+
+                    all_objects = [*recurse_obj_tree(exp)]
+
+                for m in [
+                    slot.material
+                    for o in all_objects
+                    for slot in o.material_slots
+                    if slot.material
+                ]:
+                    exp.xplane.layer.blend_glass |= try_xplane_idprop_get(
+                        m, "blend_glass"
+                    )
+                    normal_metalness_idprop = try_xplane_idprop_get(
+                        m, "normal_metalness"
+                    )
+
+                    if m.xplane.draped:
+                        exp.xplane.layer.normal_metalness_draped |= (
+                            normal_metalness_idprop
+                        )
+                    else:
+                        exp.xplane.layer.normal_metalness |= normal_metalness_idprop
+
+        for m in bpy.data.materials:
+            xplane_updater_helpers.delete_property_from_datablock(
+                m.xplane, "blend_glass"
+            )
+            xplane_updater_helpers.delete_property_from_datablock(
+                m.xplane, "normal_metalness"
+            )
+    # --- end last_version < "4.1.0-beta.1+90.2020101483300"-------------------
 
 
 @persistent

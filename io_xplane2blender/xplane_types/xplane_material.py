@@ -7,7 +7,12 @@ from io_xplane2blender.xplane_types import xplane_object
 
 from ..xplane_config import getDebug
 from ..xplane_constants import *
-from ..xplane_helpers import floatToStr, logger
+from ..xplane_helpers import (
+    effective_normal_metalness,
+    effective_normal_metalness_draped,
+    floatToStr,
+    logger,
+)
 from .xplane_attribute import XPlaneAttribute
 from .xplane_attributes import XPlaneAttributes
 
@@ -110,16 +115,20 @@ class XPlaneMaterial:
                     self.attributes["ATTR_poly_os"].setValue(mat.xplane.poly_os)
 
                 if mat.xplane.panel == False:
+                    xplane_version = int(bpy.context.scene.xplane.version)
                     self.attributes["ATTR_draw_enable"].setValue(True)
-
-                    # SPECIAL CASE!
-                    if self.getEffectiveNormalMetalness() == False:
+                    eff_fn = (
+                        effective_normal_metalness_draped
+                        if mat.xplane.draped
+                        else effective_normal_metalness
+                    )
+                    xp_file = self.xplaneObject.xplaneBone.xplaneFile
+                    if not eff_fn(xp_file):
                         self.attributes["ATTR_shiny_rat"].setValue(
                             mat.specular_intensity
                         )
 
                     # blend
-                    xplane_version = int(bpy.context.scene.xplane.version)
                     if xplane_version >= 1000:
                         xplane_blend_enum = mat.xplane.blend_v1000
 
@@ -278,29 +287,3 @@ class XPlaneMaterial:
         return io_xplane2blender.xplane_types.xplane_material_utils.validate(
             self, exportType
         )
-
-    # Method: getEffectiveNormalMetalness
-    # Predicate that returns the effective value of NORMAL_METALNESS, taking into account the current xplane version
-    #
-    # Returns:
-    # bool - True or false if the version of X-Plane chosen supports NORMAL_METALNESS and what its value is,
-    # False if the current XPLane version doesn't support it
-    def getEffectiveNormalMetalness(self) -> bool:
-        if int(bpy.context.scene.xplane.version) >= 1100:
-            return self.options.normal_metalness
-        else:
-            return False
-
-    # Method: getEffectiveBlendGlass
-    # Predicate that returns the effective value of BLEND_GLASS, taking into account the current xplane version
-    #
-    # Returns:
-    # bool - True or false if the version of X-Plane chosen supports BLEND_GLASS and what its value is,
-    # False if the current XPLane version doesn't support it
-    def getEffectiveBlendGlass(self) -> bool:
-        xplane_version = int(bpy.context.scene.xplane.version)
-
-        if xplane_version >= 1100:
-            return self.options.blend_glass
-        else:
-            return False

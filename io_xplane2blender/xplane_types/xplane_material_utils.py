@@ -2,25 +2,18 @@ from typing import Callable, List, Optional, Tuple
 
 import bpy
 
-from io_xplane2blender.xplane_helpers import logger
+from io_xplane2blender.xplane_helpers import (
+    effective_normal_metalness,
+    effective_normal_metalness_draped,
+    floatToStr,
+    logger,
+)
 from io_xplane2blender.xplane_types.xplane_material import XPlaneMaterial
 
 from ..xplane_constants import *
 
 MaterialValidationMsgs = Tuple[List[str], List[str]]
 ValidateFunction = Callable[[XPlaneMaterial], MaterialValidationMsgs]
-
-
-def _validateNormalMetalness(
-    refMat: XPlaneMaterial, mat: XPlaneMaterial
-) -> Optional[str]:
-    if mat.texture == refMat.texture and (
-        refMat.options.panel is False and mat.options.panel is False
-    ):  # Panel disables metalness
-        if mat.getEffectiveNormalMetalness() != refMat.getEffectiveNormalMetalness():
-            return "NORMAL_METALNESS must be set for all materials with the same albedo texture"
-
-    return None
 
 
 def compare(
@@ -45,21 +38,14 @@ def compareScenery(
 
     if mat.options.draw:
         if mat.options.draped and refMat.options.draped:
-            if (
-                mat.blenderMaterial.specular_intensity
-                != refMat.blenderMaterial.specular_intensity
-                and mat.getEffectiveNormalMetalness() == False
+            mat_spec = mat.blenderMaterial.specular_intensity
+            ref_mat_spec = refMat.blenderMaterial.specular_intensity
+            if mat_spec != ref_mat_spec and not effective_normal_metalness_draped(
+                mat.xplaneObject.xplaneBone.xplaneFile
             ):
                 errors.append(
-                    "Specularity must be %f, is %f"
-                    % (
-                        refMat.blenderMaterial.specular_intensity,
-                        mat.blenderMaterial.specular_intensity,
-                    )
+                    f"Specularity must be {floatToStr(ref_mat_spec)}, is {floatToStr(mat_spec)}"
                 )
-        metalness_error = _validateNormalMetalness(refMat, mat)
-        if metalness_error:
-            errors.append(metalness_error)
 
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
@@ -83,17 +69,15 @@ def compareInstanced(
     warnings = []
 
     if mat.options.draw:
-        if (
-            mat.blenderMaterial.specular_intensity
-            != refMat.blenderMaterial.specular_intensity
-            and mat.getEffectiveNormalMetalness() == False
+        mat_spec = mat.blenderMaterial.specular_intensity
+        ref_mat_spec = refMat.blenderMaterial.specular_intensity
+        xp_file = mat.xplaneObject.xplaneBone.xplaneFile
+        if mat_spec != ref_mat_spec and not (
+            effective_normal_metalness(xp_file)
+            or effective_normal_metalness_draped(xp_file)
         ):
             errors.append(
-                "Specularity must be %f, is %f"
-                % (
-                    refMat.blenderMaterial.specular_intensity,
-                    mat.blenderMaterial.specular_intensity,
-                )
+                f"Specularity must be {floatToStr(ref_mat_spec)}, is {floatToStr(mat_spec)}"
             )
 
         if mat.options.blend != refMat.options.blend:
@@ -103,9 +87,6 @@ def compareInstanced(
                 errors.append("Alpha cutoff must be disabled.")
         elif mat.options.blendRatio != refMat.options.blendRatio:
             errors.append("Alpha cutoff ratio must be %f" % refMat.options.blendRatio)
-        metalness_error = _validateNormalMetalness(refMat, mat)
-        if metalness_error:
-            errors.append(metalness_error)
 
     if mat.options.draw and autodetectTextures:
         if mat.texture != refMat.texture:
@@ -129,9 +110,6 @@ def compareAircraft(
     warnings = []
 
     if mat.options.draw:
-        metalness_error = _validateNormalMetalness(refMat, mat)
-        if metalness_error:
-            errors.append(metalness_error)
         # panel parts can have anything
         if not mat.options.panel and not refMat.options.panel and autodetectTextures:
             if mat.texture != refMat.texture:
@@ -144,11 +122,6 @@ def compareAircraft(
                 errors.append(
                     'Normal/Alpha/Specular texture must be "%s".' % refMat.textureNormal
                 )
-
-        if mat.getEffectiveBlendGlass() != refMat.getEffectiveBlendGlass():
-            errors.append(
-                "BLEND_GLASS must be set for all materials with the same albedo texture"
-            )
 
     return errors, warnings
 
@@ -203,9 +176,6 @@ def validateScenery(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     if mat.blenderObject.xplane.manip.enabled:
         errors.append("Must not be a manipulator.")
 
-    if mat.getEffectiveBlendGlass():
-        errors.append("Blend glass only legal on aircraft and cockpit objects")
-
     return errors, warnings
 
 
@@ -230,9 +200,6 @@ def validateInstanced(mat: XPlaneMaterial) -> MaterialValidationMsgs:
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append("Must not be a manipulator.")
-
-    if mat.getEffectiveBlendGlass():
-        errors.append("Blend glass only legal on aircraft and cockpit objects")
 
     return errors, warnings
 
@@ -319,9 +286,6 @@ def validateDraped(mat: XPlaneMaterial) -> MaterialValidationMsgs:
 
     if mat.blenderObject.xplane.manip.enabled:
         errors.append("Must not be a manipulator.")
-
-    if mat.getEffectiveBlendGlass():
-        errors.append("Blend glass only legal on aircraft and cockpit objects")
 
     return errors, warnings
 

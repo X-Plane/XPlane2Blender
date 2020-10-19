@@ -9,7 +9,7 @@ import bpy
 import mathutils
 
 import io_xplane2blender
-from io_xplane2blender import xplane_config, xplane_constants
+from io_xplane2blender import xplane_config, xplane_constants, xplane_props
 from io_xplane2blender.xplane_constants import PRECISION_OBJ_FLOAT
 
 """
@@ -61,6 +61,20 @@ def resolveBlenderPath(path: str) -> str:
         return os.path.join(blenddir, path[2:])
     else:
         return path
+
+
+def effective_normal_metalness(xp_file: "xplane_file.XPlaneFile") -> bool:
+    return (
+        int(bpy.context.scene.xplane.version) >= 1100
+        and xp_file.options.normal_metalness
+    )
+
+
+def effective_normal_metalness_draped(xp_file: "xplane_file.XPlaneFile") -> bool:
+    return (
+        int(bpy.context.scene.xplane.version) >= 1100
+        and xp_file.options.normal_metalness_draped
+    )
 
 
 def get_plugin_resources_folder() -> str:
