@@ -2,7 +2,12 @@ from typing import Callable, List, Optional, Tuple
 
 import bpy
 
-from io_xplane2blender.xplane_helpers import logger
+from io_xplane2blender.xplane_helpers import (
+    effective_normal_metalness,
+    effective_normal_metalness_draped,
+    floatToStr,
+    logger,
+)
 from io_xplane2blender.xplane_types.xplane_material import XPlaneMaterial
 
 from ..xplane_constants import *
@@ -33,17 +38,13 @@ def compareScenery(
 
     if mat.options.draw:
         if mat.options.draped and refMat.options.draped:
-            if (
-                mat.blenderMaterial.specular_intensity
-                != refMat.blenderMaterial.specular_intensity
-                and not mat.xplaneObject.xplaneBone.xplaneFile.options.normal_metalness
+            mat_spec = mat.blenderMaterial.specular_intensity
+            ref_mat_spec = refMat.blenderMaterial.specular_intensity
+            if mat_spec != ref_mat_spec and not effective_normal_metalness_draped(
+                mat.xplaneObject.xplaneBone.xplaneFile
             ):
                 errors.append(
-                    "Specularity must be %f, is %f"
-                    % (
-                        refMat.blenderMaterial.specular_intensity,
-                        mat.blenderMaterial.specular_intensity,
-                    )
+                    f"Specularity must be {floatToStr(ref_mat_spec)}, is {floatToStr(mat_spec)}"
                 )
 
     if mat.options.draw and autodetectTextures:
@@ -68,17 +69,15 @@ def compareInstanced(
     warnings = []
 
     if mat.options.draw:
-        if (
-            mat.blenderMaterial.specular_intensity
-            != refMat.blenderMaterial.specular_intensity
-            and not mat.xplaneObject.xplaneBone.xplaneFile.options.normal_metalness
+        mat_spec = mat.blenderMaterial.specular_intensity
+        ref_mat_spec = refMat.blenderMaterial.specular_intensity
+        xp_file = mat.xplaneObject.xplaneBone.xplaneFile
+        if mat_spec != ref_mat_spec and not (
+            effective_normal_metalness(xp_file)
+            or effective_normal_metalness_draped(xp_file)
         ):
             errors.append(
-                "Specularity must be %f, is %f"
-                % (
-                    refMat.blenderMaterial.specular_intensity,
-                    mat.blenderMaterial.specular_intensity,
-                )
+                f"Specularity must be {floatToStr(ref_mat_spec)}, is {floatToStr(mat_spec)}"
             )
 
         if mat.options.blend != refMat.options.blend:

@@ -7,7 +7,12 @@ from io_xplane2blender.xplane_types import xplane_object
 
 from ..xplane_config import getDebug
 from ..xplane_constants import *
-from ..xplane_helpers import floatToStr, logger
+from ..xplane_helpers import (
+    effective_normal_metalness,
+    effective_normal_metalness_draped,
+    floatToStr,
+    logger,
+)
 from .xplane_attribute import XPlaneAttribute
 from .xplane_attributes import XPlaneAttributes
 
@@ -110,14 +115,15 @@ class XPlaneMaterial:
                     self.attributes["ATTR_poly_os"].setValue(mat.xplane.poly_os)
 
                 if mat.xplane.panel == False:
-                    self.attributes["ATTR_draw_enable"].setValue(True)
-
                     xplane_version = int(bpy.context.scene.xplane.version)
-                    normal_metalness = (
-                        self.xplaneObject.xplaneBone.xplaneFile.options.normal_metalness
+                    self.attributes["ATTR_draw_enable"].setValue(True)
+                    eff_fn = (
+                        effective_normal_metalness_draped
+                        if mat.xplane.draped
+                        else effective_normal_metalness
                     )
-                    # SPECIAL CASE!
-                    if not normal_metalness:
+                    xp_file = self.xplaneObject.xplaneBone.xplaneFile
+                    if not eff_fn(xp_file):
                         self.attributes["ATTR_shiny_rat"].setValue(
                             mat.specular_intensity
                         )

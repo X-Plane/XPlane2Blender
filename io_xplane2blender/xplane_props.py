@@ -1041,6 +1041,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = False
     )
 
+    normal_metalness_draped: bpy.props.BoolProperty(
+        name = "Normal Metalness (Draped)",
+        description = "The draped normal map's blue channel will be used for base reflectance",
+        default = False
+    )
+
     particle_system_file: bpy.props.StringProperty(
         name = "Particle System Definition File",
         description = "Relative file path to a .pss that defines particles",

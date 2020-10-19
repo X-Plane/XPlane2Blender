@@ -277,7 +277,10 @@ def _rollback_blend_glass(logger: XPlaneLogger) -> None:
         v11 = mat.xplane.get("blend_v1100")
 
         if v11 == 3:  # Aka, where BLEND_GLASS was in the enum
-            mat.xplane.blend_glass = True
+            # v4.1.0 note - we've moved blend_glass to the header
+            # but I don't want to change the rest of this function
+            # So... we fake it to match later expectations!
+            mat["xplane"]["blend_glass"] = True
 
             # This bit of code reachs around Blender's magic EnumProperty
             # stuff and get at the RNA behind it, all to find the name.
@@ -524,13 +527,16 @@ def update(
                         exp.xplane.layer.blend_glass |= try_xplane_idprop_get(
                             m, "blend_glass"
                         )
-                        exp.xplane.layer.normal_metalness |= try_xplane_idprop_get(
+                        normal_metalness_idprop = try_xplane_idprop_get(
                             m, "normal_metalness"
                         )
 
-                print("exp.name", exp.name)
-                print("normmet", exp.xplane.layer.normal_metalness)
-                print("blend_glass", exp.xplane.layer.blend_glass)
+                        if m.xplane.draped:
+                            exp.xplane.layer.normal_metalness_draped |= (
+                                normal_metalness_idprop
+                            )
+                        else:
+                            exp.xplane.layer.normal_metalness |= normal_metalness_idprop
 
 
 @persistent

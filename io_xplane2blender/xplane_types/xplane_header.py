@@ -9,7 +9,13 @@ import bpy
 from io_xplane2blender.xplane_constants import EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_SCENERY
 
 from ..xplane_constants import *
-from ..xplane_helpers import floatToStr, logger, resolveBlenderPath
+from ..xplane_helpers import (
+    effective_normal_metalness,
+    effective_normal_metalness_draped,
+    floatToStr,
+    logger,
+    resolveBlenderPath,
+)
 from ..xplane_image_composer import (
     combineSpecularAndNormal,
     getImageByFilepath,
@@ -113,7 +119,7 @@ class XPlaneHeader:
         # else out. -Ted, 8/9/2018
         self.attributes.add(
             XPlaneAttribute("NORMAL_METALNESS_draped_hack", None)
-        )  # NORMAL_METALNESS for draped textures
+        )  # normal_metalness for draped textures
         self.attributes.add(XPlaneAttribute("BUMP_LEVEL", None))
         self.attributes.add(XPlaneAttribute("NO_BLEND", None))
         self.attributes.add(XPlaneAttribute("SPECULAR", None))
@@ -216,12 +222,12 @@ class XPlaneHeader:
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= 1100:
             texture_normal = self.attributes["TEXTURE_NORMAL"].getValue()
-            normal_metalness = self.xplaneFile.options.normal_metalness
+            normal_metalness = effective_normal_metalness(self.xplaneFile)
             if texture_normal:
                 self.attributes["NORMAL_METALNESS"].setValue(normal_metalness)
             elif not texture_normal and normal_metalness:
                 logger.warn(
-                    "{self.xplaneFile.filename} uses Normal Metalness but has no Normal Texture"
+                    f"{self.xplaneFile.filename} uses Normal Metalness but has no Normal Texture"
                 )
 
         if xplane_version >= 1100:
@@ -268,20 +274,22 @@ class XPlaneHeader:
                 )
 
             if self.xplaneFile.referenceMaterials[1]:
+                mat = self.xplaneFile.referenceMaterials[1]
                 if xplane_version >= 1100:
                     texture_draped_nml = self.attributes[
                         "TEXTURE_DRAPED_NORMAL"
                     ].getValue()
-                    normal_metalness = self.xplaneFile.options.normal_metalness
+                    normal_metalness_draped = effective_normal_metalness_draped(
+                        self.xplaneFile
+                    )
                     if texture_draped_nml:
                         self.attributes["NORMAL_METALNESS_draped_hack"].setValue(
-                            normal_metalness
+                            normal_metalness_draped
                         )
-                    elif not texture_draped_nml and normal_metalness:
+                    elif not texture_draped_nml and normal_metalness_draped:
                         logger.warn(
                             f"{self.xplaneFile.filename} uses Normal Metalness but has no Draped Normal Texture"
                         )
-                mat = self.xplaneFile.referenceMaterials[1]
 
                 # draped bump level
                 if mat.options.bump_level != 1.0:
@@ -295,7 +303,9 @@ class XPlaneHeader:
                 mat.attributes["ATTR_no_blend"].setValue(None)
 
                 # draped specular
-                if xplane_version >= 1100 and self.xplaneFile.options.normal_metalness:
+                if xplane_version >= 1100 and effective_normal_metalness_draped(
+                    self.xplaneFile
+                ):
                     # draped specular
                     self.attributes["SPECULAR"].setValue(1.0)
                 else:
@@ -304,7 +314,7 @@ class XPlaneHeader:
                         mat.attributes["ATTR_shiny_rat"].getValue()
                     )
 
-                    # prevent of writing again in material
+                # prevent of writing again in material
                 mat.attributes["ATTR_shiny_rat"].setValue(None)
             # draped LOD
             if self.xplaneFile.options.lod_draped != 0.0:
@@ -387,7 +397,7 @@ class XPlaneHeader:
 
         if xplane_version >= 1100 and self.xplaneFile.referenceMaterials[0]:
             mat = self.xplaneFile.referenceMaterials[0]
-            if self.xplaneFile.options.normal_metalness:
+            if effective_normal_metalness(self.xplaneFile):
                 self.attributes["GLOBAL_specular"].setValue(1.0)
                 self.xplaneFile.commands.written[
                     "ATTR_shiny_rat"
