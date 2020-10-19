@@ -503,9 +503,9 @@ def update(
 
             for exp in itertools.chain(exp_collections, exp_objects):
 
-                def try_xplane_idprop_get(mat: bpy.types.Material, prop):
+                def try_xplane_idprop_get(mat: bpy.types.Material, prop) -> bool:
                     try:
-                        return mat["xplane"][prop]
+                        return bool(mat["xplane"][prop])
                     except KeyError:
                         return False
 
@@ -520,23 +520,34 @@ def update(
 
                     all_objects = [*recurse_obj_tree(exp)]
 
-                for o in all_objects:
-                    for m in [
-                        slot.material for slot in o.material_slots if slot.material
-                    ]:
-                        exp.xplane.layer.blend_glass |= try_xplane_idprop_get(
-                            m, "blend_glass"
-                        )
-                        normal_metalness_idprop = try_xplane_idprop_get(
-                            m, "normal_metalness"
-                        )
+                for m in [
+                    slot.material
+                    for o in all_objects
+                    for slot in o.material_slots
+                    if slot.material
+                ]:
+                    exp.xplane.layer.blend_glass |= try_xplane_idprop_get(
+                        m, "blend_glass"
+                    )
+                    normal_metalness_idprop = try_xplane_idprop_get(
+                        m, "normal_metalness"
+                    )
 
-                        if m.xplane.draped:
-                            exp.xplane.layer.normal_metalness_draped |= (
-                                normal_metalness_idprop
-                            )
-                        else:
-                            exp.xplane.layer.normal_metalness |= normal_metalness_idprop
+                    if m.xplane.draped:
+                        exp.xplane.layer.normal_metalness_draped |= (
+                            normal_metalness_idprop
+                        )
+                    else:
+                        exp.xplane.layer.normal_metalness |= normal_metalness_idprop
+
+        for m in bpy.data.materials:
+            xplane_updater_helpers.delete_property_from_datablock(
+                m.xplane, "blend_glass"
+            )
+            xplane_updater_helpers.delete_property_from_datablock(
+                m.xplane, "normal_metalness"
+            )
+    # --- end last_version < "4.1.0-beta.1+90.2020101483300"-------------------
 
 
 @persistent

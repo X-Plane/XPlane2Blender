@@ -61,5 +61,10 @@ class TestMoveNormalMetalnessBlendGlass(XPlaneTestCase):
                 msg=f"{name} did not set properly",
             )
 
+    def test_idprops_deleted(self):
+        for m in bpy.data.materials:
+            self.assertRaises(KeyError, lambda m: m["xplane"]["blend_glass"], m=m)
+            self.assertRaises(KeyError, lambda m: m["xplane"]["normal_metalness"], m=m)
+
 
 runTestCases([TestMoveNormalMetalnessBlendGlass])
