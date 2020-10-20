@@ -491,8 +491,14 @@ def update(
             light.xplane.type = xplane_constants.LIGHT_DEFAULT
 
     if last_version < xplane_helpers.VerStruct.parse_version(
-        "4.1.0-beta.1+90.20201014183300"
+        "4.1.0-alpha.1+92.20201020151500"
     ):
+        default_blend_glass = False
+        default_normal_metalness = False
+        default_tint = False
+        default_tint_albedo = 0.0
+        default_tint_emissive = 0.0
+
         for scene in bpy.data.scenes:
             exp_collections = [
                 col
@@ -502,12 +508,6 @@ def update(
             exp_objects = [o for o in scene.objects if o.xplane.isExportableRoot]
 
             for exp in itertools.chain(exp_collections, exp_objects):
-
-                def try_xplane_idprop_get(mat: bpy.types.Material, prop) -> bool:
-                    try:
-                        return bool(mat["xplane"][prop])
-                    except KeyError:
-                        return False
 
                 if isinstance(exp, bpy.types.Collection):
                     all_objects = exp.all_objects
@@ -520,34 +520,47 @@ def update(
 
                     all_objects = [*recurse_obj_tree(exp)]
 
+                exp.xplane.layer.blend_glass = default_blend_glass
+                exp.xplane.layer.normal_metalness = default_normal_metalness
+
                 for m in [
                     slot.material
                     for o in all_objects
                     for slot in o.material_slots
                     if slot.material
                 ]:
-                    exp.xplane.layer.blend_glass |= try_xplane_idprop_get(
-                        m, "blend_glass"
-                    )
-                    normal_metalness_idprop = try_xplane_idprop_get(
-                        m, "normal_metalness"
-                    )
-
+                    exp.xplane.layer.blend_glass |= bool(m["xplane"].get("blend_glass"))
+                    old_normal_metalness = bool(m["xplane"].get("normal_metalness"))
                     if m.xplane.draped:
-                        exp.xplane.layer.normal_metalness_draped |= (
-                            normal_metalness_idprop
-                        )
+                        exp.xplane.layer.normal_metalness_draped |= old_normal_metalness
                     else:
-                        exp.xplane.layer.normal_metalness |= normal_metalness_idprop
+                        exp.xplane.layer.normal_metalness |= old_normal_metalness
+
+                    # Copying only the 1st material we see is a heuristic -
+                    # Since we had no error we have no definitive answer. I'm hoping this choice
+                    # which mimics picking the 1st reference material
+                    # is good enough. If not... well... its a one time fix of only so many clicks.
+                    # ...
+                    # Right?
+                    if exp.xplane.layer.get("tint") == None:
+                        exp.xplane.layer.tint = bool(m["xplane"].get("tint"))
+                        exp.xplane.layer.tint_albedo = m["xplane"].get(
+                            "tint_albedo", default_tint_albedo
+                        )
+                        exp.xplane.layer.tint_emissive = m["xplane"].get(
+                            "tint_emissive", default_tint_emissive
+                        )
 
         for m in bpy.data.materials:
-            xplane_updater_helpers.delete_property_from_datablock(
-                m.xplane, "blend_glass"
-            )
-            xplane_updater_helpers.delete_property_from_datablock(
-                m.xplane, "normal_metalness"
-            )
-    # --- end last_version < "4.1.0-beta.1+90.2020101483300"-------------------
+            for prop in [
+                "blend_glass",
+                "normal_metalness",
+                "tint",
+                "tint_albedo",
+                "tint_emissive",
+            ]:
+                xplane_updater_helpers.delete_property_from_datablock(m.xplane, prop)
+    # --- end last_version < "4.1.0-alpha.1+92.20201020151500" -------------------
 
 
 @persistent

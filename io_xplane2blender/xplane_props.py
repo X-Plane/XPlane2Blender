@@ -1053,6 +1053,35 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         subtype = "FILE_PATH"
     )
 
+    # v1000 (only for instances)
+    tint: bpy.props.BoolProperty(
+        name = "Tint",
+        description = "If active you can set the albedo and emissive tint",
+        default = False
+    )
+
+    # v1000 (only for instances)
+    tint_albedo: bpy.props.FloatProperty(
+        name = "Albedo Tint",
+        description = "Albedo tint. 0.0 is no darkening, 1.0 is total darkening",
+        min = 0.0,
+        max = 1.0,
+        step = .01,
+        default = 0.0,
+        precision = 2
+    )
+
+    # v1000 (only for instances)
+    tint_emissive: bpy.props.FloatProperty(
+        name = "Emissive Tint",
+        description = "Emissive tint. 0.0 is no darkening, 1.0 is total darkening",
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        default = 0.0,
+        precision = 2
+    )
+
     debug: bpy.props.BoolProperty(
         name = "Debug This OBJ",
         description = "If this and Scene > Advanced Settings > Debug are checked, debug information for this OBJ will be written to the export log and the OBJ",
@@ -1710,34 +1739,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         max = 2.0
     )
 
-    # v1000 (only for instances)
-    tint: bpy.props.BoolProperty(
-        name = "Tint",
-        description = "If active you can set the albedo and emissive tint",
-        default = False
-    )
-
-    # v1000 (only for instances)
-    tint_albedo: bpy.props.FloatProperty(
-        name = "Albedo",
-        description = "Albedo tint. 0.0 no darkening, 1.0 total darkening",
-        min = 0.0,
-        max = 1.0,
-        step = .01,
-        default = 0.0,
-        precision = 2
-    )
-
-    # v1000 (only for instances)
-    tint_emissive: bpy.props.FloatProperty(
-        name = "Emissive",
-        description = "Emissive tint. 0.0 no darkening, 1.0 total darkening",
-        min = 0.0,
-        max = 1.0,
-        step = 0.01,
-        default = 0.0,
-        precision = 2
-    )
 
 
 class XPlaneLightSettings(bpy.types.PropertyGroup):

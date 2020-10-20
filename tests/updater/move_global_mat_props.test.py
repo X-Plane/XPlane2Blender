@@ -1,20 +1,3 @@
-# TI To use
-# TI 1. Copy and rename to match your blend files name - "name.test.py"
-# TI 2. Delete all lines that begin with #TI, like this one
-# TI    (otherwise it will NOT pass code review)
-# TI 3. Rename as needed, following conventions
-# TI
-# TI Guidelines for .test.blend files
-# TI (Developed after many many many tests made)
-# TI - An active text window with text block called "Unit Test Overview" should be shown featuring an outline of what the test is for and what the names, data, etc means
-# TI - The textblock "Unit Test Overview" should start with the header "Unit Test Overview", followed by a blank line and text starting after 4 spaces
-# TI - The textblock should be manually word wrapped so the contents don't change when you adjust the size of the window
-# TI - Layers are alphabetical, start with "test", and take their names from object names
-# TI - Use "01_","02_", etc to enforce alphabetical layer order, rather than abusing a thesaurus
-# TI - The console should also be open with the code "bpy.ops.export.xplane_obj()" typed. It should be the focused window allowing a person to open the .blend file and press enter
-# TI - Scene > Advanced Settings > Debug (and Object > Advanced Options > Debug for every OBJ Setting) turned on
-# TI - In Blender file, select some useful object to immediatly see, or select the last object in the outliner
-# TI (Nearly entirely arbitrary: consistency is generally useful someday)
 import inspect
 import os
 import sys
@@ -29,7 +12,7 @@ from io_xplane2blender.tests import test_creation_helpers
 __dirname__ = os.path.dirname(__file__)
 
 
-class TestMoveNormalMetalnessBlendGlass(XPlaneTestCase):
+class TestMoveGlobalMatProps(XPlaneTestCase):
     def test_properties_updated(self):
         names = [
             "01_NoMaterials_BecomesFalse",
@@ -43,6 +26,7 @@ class TestMoveNormalMetalnessBlendGlass(XPlaneTestCase):
             "08_NoMaterialsHierarchyObject_BecomesFalse",
             "09_MaterialTrueObject_BecomesTrue",
         ]
+
         for name in names:
             if "Object" in name:
                 test_block = bpy.data.objects[name]
@@ -61,10 +45,43 @@ class TestMoveNormalMetalnessBlendGlass(XPlaneTestCase):
                 msg=f"{name} did not set properly",
             )
 
+            if name.startswith(("01",)):
+                tint, tint_albedo, tint_emissive = (False, 0.0, 0.0)
+            elif name.startswith(
+                (
+                    "02",
+                    "05",
+                    "06",
+                    "09",
+                    "10",
+                )
+            ):
+                tint, tint_albedo, tint_emissive = (True, 0.2, 0.8)
+            elif name.startswith(
+                (
+                    "03",
+                    "04",
+                    "07",
+                    "08",
+                )
+            ):
+                tint, tint_albedo, tint_emissive = (False, 0.1, 0.9)
+
+            self.assertEqual(test_block.xplane.layer.tint, tint)
+            self.assertAlmostEqual(
+                test_block.xplane.layer.tint_albedo, tint_albedo, places=1
+            )
+            self.assertAlmostEqual(
+                test_block.xplane.layer.tint_emissive, tint_emissive, places=1
+            )
+
     def test_idprops_deleted(self):
         for m in bpy.data.materials:
             self.assertRaises(KeyError, lambda m: m["xplane"]["blend_glass"], m=m)
             self.assertRaises(KeyError, lambda m: m["xplane"]["normal_metalness"], m=m)
+            self.assertRaises(KeyError, lambda m: m["xplane"]["tint"], m=m)
+            self.assertRaises(KeyError, lambda m: m["xplane"]["tint_albedo"], m=m)
+            self.assertRaises(KeyError, lambda m: m["xplane"]["tint_emissive"], m=m)
 
 
-runTestCases([TestMoveNormalMetalnessBlendGlass])
+runTestCases([TestMoveGlobalMatProps])

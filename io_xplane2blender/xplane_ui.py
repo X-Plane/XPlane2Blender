@@ -414,6 +414,12 @@ def layer_layout(
             EXPORT_TYPE_SCENERY,
         }:
             global_mat_box.row().prop(layer_props, "normal_metalness_draped")
+            row = global_mat_box.row()
+            row.active = layer_props.tint
+            row.prop(layer_props, "tint")
+            if layer_props.tint:
+                row.prop(layer_props, "tint_albedo", text="Albedo")
+                row.prop(layer_props, "tint_emissive", text="Emissive", slider=True)
 
     # cockpit regions
     if layer_props.export_type == "cockpit":
@@ -904,15 +910,6 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
     ll_box_column.row()
 
     # instancing effects
-    instanced_box = layout.box()
-    instanced_box.label(text="Instancing Effects")
-    instanced_box_column = instanced_box.column()
-    instanced_box_column.prop(active_material.xplane, "tint")
-
-    if active_material.xplane.tint:
-        instanced_box_column.prop(active_material.xplane, "tint_albedo")
-        instanced_box_column.prop(active_material.xplane, "tint_emissive")
-
     layout.row().prop(active_material.xplane, "poly_os")
 
 
