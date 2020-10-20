@@ -433,9 +433,12 @@ class XPlaneHeader:
                     self.xplaneFile.commands.written["ATTR_shiny_rat"] = attr.getValue()
 
                 # tint
-                if mat.options.tint:
+                if self.xplaneFile.options.tint:
                     self.attributes["GLOBAL_tint"].setValue(
-                        (mat.options.tint_albedo, mat.options.tint_emissive)
+                        (
+                            self.xplaneFile.options.tint_albedo,
+                            self.xplaneFile.options.tint_emissive,
+                        )
                     )
 
             if not isCockpit:
