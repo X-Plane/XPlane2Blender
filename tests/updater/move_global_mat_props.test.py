@@ -75,13 +75,5 @@ class TestMoveGlobalMatProps(XPlaneTestCase):
                 test_block.xplane.layer.tint_emissive, tint_emissive, places=1
             )
 
-    def test_idprops_deleted(self):
-        for m in bpy.data.materials:
-            self.assertRaises(KeyError, lambda m: m["xplane"]["blend_glass"], m=m)
-            self.assertRaises(KeyError, lambda m: m["xplane"]["normal_metalness"], m=m)
-            self.assertRaises(KeyError, lambda m: m["xplane"]["tint"], m=m)
-            self.assertRaises(KeyError, lambda m: m["xplane"]["tint_albedo"], m=m)
-            self.assertRaises(KeyError, lambda m: m["xplane"]["tint_emissive"], m=m)
-
 
 runTestCases([TestMoveGlobalMatProps])

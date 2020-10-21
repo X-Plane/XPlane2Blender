@@ -550,16 +550,6 @@ def update(
                         exp.xplane.layer.tint_emissive = m["xplane"].get(
                             "tint_emissive", default_tint_emissive
                         )
-
-        for m in bpy.data.materials:
-            for prop in [
-                "blend_glass",
-                "normal_metalness",
-                "tint",
-                "tint_albedo",
-                "tint_emissive",
-            ]:
-                xplane_updater_helpers.delete_property_from_datablock(m.xplane, prop)
     # --- end last_version < "4.1.0-alpha.1+92.20201020151500" -------------------
 
 
