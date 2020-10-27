@@ -465,8 +465,12 @@ def _move_global_material_props(
                 for slot in o.material_slots
                 if slot.material
             ]:
-                exp.xplane.layer.blend_glass |= bool(m["xplane"].get("blend_glass"))
-                old_normal_metalness = bool(m["xplane"].get("normal_metalness"))
+                exp.xplane.layer.blend_glass |= bool(
+                    m.xplane.get("blend_glass", default_blend_glass)
+                )
+                old_normal_metalness = bool(
+                    m.xplane.get("normal_metalness", default_normal_metalness)
+                )
                 if m.xplane.draped:
                     exp.xplane.layer.normal_metalness_draped |= old_normal_metalness
                 else:
@@ -479,11 +483,11 @@ def _move_global_material_props(
                 # ...
                 # Right?
                 if exp.xplane.layer.get("tint") == None:
-                    exp.xplane.layer.tint = bool(m["xplane"].get("tint"))
-                    exp.xplane.layer.tint_albedo = m["xplane"].get(
+                    exp.xplane.layer.tint = bool(m.xplane.get("tint", default_tint))
+                    exp.xplane.layer.tint_albedo = m.xplane.get(
                         "tint_albedo", default_tint_albedo
                     )
-                    exp.xplane.layer.tint_emissive = m["xplane"].get(
+                    exp.xplane.layer.tint_emissive = m.xplane.get(
                         "tint_emissive", default_tint_emissive
                     )
 
