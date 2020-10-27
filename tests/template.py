@@ -16,16 +16,15 @@
 #TI - In Blender file, select some useful object to immediatly see, or select the last object in the outliner
 #TI (Nearly entirely arbitrary: consistency is generally useful someday)
 import inspect
-
-from typing import Tuple
 import os
 import sys
+from typing import Tuple
 
 import bpy
+
 from io_xplane2blender import xplane_config
 from io_xplane2blender.tests import *
 from io_xplane2blender.tests import test_creation_helpers
-#from io_xplane2blender.xplane_249_converter.xplane_249_constants import ProjectType, WorkflowType
 
 __dirname__ = os.path.dirname(__file__)
 
