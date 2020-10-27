@@ -205,7 +205,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
             self.build_number = build_number
             _version_safety_off = False
             if debug_add_to_history:
-                xplane_helpers.VerStruct.add_to_version_history(self)
+                xplane_helpers.VerStruct.add_to_version_history(bpy.context.scene, self)
             return True
         else:
             return False

@@ -19,7 +19,6 @@ from io_xplane2blender.xplane_types import xplane_bone, xplane_file, xplane_prim
 FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
-TMP_DIR = os.path.realpath(os.path.join(__dirname__, "../../tests/tmp"))
 
 FilterLinesCallback = Callable[[List[Union[float, str]]], bool]
 
@@ -564,7 +563,7 @@ class XPlaneTestCase(unittest.TestCase):
         xplane_file._all_keyframe_infos.clear()
 
         if dest:
-            with open(os.path.join(TMP_DIR, dest + ".obj"), "w") as tmp_file:
+            with open(os.path.join(get_tmp_folder(), dest + ".obj"), "w") as tmp_file:
                 tmp_file.write(out)
 
         return out
@@ -640,16 +639,20 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
 
 def get_source_folder() -> pathlib.Path:
     """Returns the full path to the addon folder"""
-    return os.path.dirname(pathlib.Path("..", __file__))
+    return pathlib.Path(__file__).parent
 
 
 def get_project_folder() -> pathlib.Path:
     """Returns the full path to the project folder"""
-    return os.path.dirname(pathlib.Path("..", "..", __file__))
+    return pathlib.Path(__file__).parent.parent.parent
 
 
 def get_tests_folder() -> pathlib.Path:
     return pathlib.Path(get_project_folder(), "tests")
+
+
+def get_tmp_folder() -> pathlib.Path:
+    return pathlib.Path(get_tests_folder(), "tmp")
 
 
 def make_fixture_path(dirname, filename, sub_dir=""):

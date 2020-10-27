@@ -209,11 +209,11 @@ def vec_x_to_b(v) -> mathutils.Vector:
 class VerStruct:
     def __init__(
         self,
-        addon_version: Tuple[int, int, int] = None,
-        build_type: str = None,
-        build_type_version: int = None,
-        data_model_version: int = None,
-        build_number=None,
+        addon_version: Optional[Tuple[int, int, int]] = None,
+        build_type: Optional[str] = None,
+        build_type_version: Optional[int] = None,
+        data_model_version: Optional[int] = None,
+        build_number: Optional[str] = None,
     ):
         # fmt: off
         self.addon_version      = tuple(addon_version) if addon_version      is not None else (0,0,0)
@@ -373,8 +373,11 @@ class VerStruct:
             return False
 
     @staticmethod
-    def add_to_version_history(version_to_add):
-        history = bpy.context.scene.xplane.xplane2blender_ver_history
+    def add_to_version_history(
+        scene: bpy.types.Scene,
+        version_to_add: Union["VerStruct", "xplane_props.XPlane2BlenderVersion"],
+    ):
+        history = scene.xplane.xplane2blender_ver_history
 
         if len(history) == 0 or history[-1].name != repr(version_to_add):
             new_hist_entry = history.add()
@@ -408,6 +411,18 @@ class VerStruct:
             xplane_config.CURRENT_BUILD_TYPE_VERSION,
             xplane_config.CURRENT_DATA_MODEL_VERSION,
             xplane_config.CURRENT_BUILD_NUMBER,
+        )
+
+    @staticmethod
+    def from_version_entry(
+        version_entry: "xplane_props.XPlane2BlenderVersion",
+    ) -> "VerStruct":
+        return VerStruct(
+            version_entry.addon_version,
+            version_entry.build_type,
+            version_entry.build_type_version,
+            version_entry.data_model_version,
+            version_entry.build_number,
         )
 
     @staticmethod

@@ -124,7 +124,7 @@ class TestFrameSetOptimization(XPlaneTestCase):
         col = bpy.data.collections[f"edit_export_edit_export_{suffix}"]
         ob = bpy.data.objects[f"anim_empty_{suffix}"]
         bpy.ops.scene.export_to_relative_dir()
-        filepath = os.path.join(TMP_DIR, f"{col.name}.obj")
+        filepath = os.path.join(get_tmp_folder(), f"{col.name}.obj")
         with open(filepath, "r") as f:
             two_kfs = f.readlines()
         test_creation_helpers.set_animation_data(
