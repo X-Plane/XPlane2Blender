@@ -989,8 +989,6 @@ class XPlaneLOD(bpy.types.PropertyGroup):
     def __str__(self)->str:
         return f"({self.near}, {self.far})"
 
-#TODO: Maybe we should change all this "X-Plane Layer" stuff
-# to XPLaneOBJSettings or something
 class XPlaneLayer(bpy.types.PropertyGroup):
     """
     Defines settings for an OBJ file. Is was formerly tied to
@@ -1020,6 +1018,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     blend_glass: bpy.props.BoolProperty(
         name = "Blend Glass",
         description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering",
+        default = False
+    )
+
+    cockpit_lit_only: bpy.props.BoolProperty(
+        name="Emissive Panel Texture Only",
+        description="Only emissive panel texture will be dynamic. Great for computer displays",
         default = False
     )
 
