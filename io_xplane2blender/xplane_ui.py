@@ -406,6 +406,12 @@ def layer_layout(
 
     global_mat_box = layout.box()
     global_mat_box.label(text="Global Material Options")
+    if version >= 1110:
+        if (
+            layer_props.export_type == EXPORT_TYPE_COCKPIT
+            and layer_props.cockpit_regions == "0"
+        ):
+            global_mat_box.row().prop(layer_props, "cockpit_lit_only")
     if version >= 1100:
         global_mat_box.row().prop(layer_props, "blend_glass")
         global_mat_box.row().prop(layer_props, "normal_metalness")
@@ -422,7 +428,7 @@ def layer_layout(
                 row.prop(layer_props, "tint_emissive", text="Emissive", slider=True)
 
     # cockpit regions
-    if layer_props.export_type == "cockpit":
+    if layer_props.export_type == EXPORT_TYPE_COCKPIT:
         cockpit_box = layout.box()
         cockpit_box.label(text="Cockpits")
         cockpit_box.prop(layer_props, "cockpit_regions", text="Regions")
