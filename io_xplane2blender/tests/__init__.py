@@ -413,7 +413,7 @@ class XPlaneTestCase(unittest.TestCase):
         - layer_number starts at 0, as it used to access the scene.layers collection
         """
         # if not ('-q' in sys.argv or '--quiet' in sys.argv):
-        # print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
+        #     print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
 
         out = self.exportExportableRoot(
             bpy.data.collections[f"Layer {layer_number + 1}"], tmpFilename
@@ -648,11 +648,11 @@ def get_project_folder() -> pathlib.Path:
 
 
 def get_tests_folder() -> pathlib.Path:
-    return os.path.realpath(os.path.join(__dirname__, "../../tests/tmp"))
+    return pathlib.Path(get_project_folder(), "tests")
 
 
 def get_tmp_folder() -> pathlib.Path:
-    return pathlib.Path(get_tests_folder(), "tmp")
+    return os.path.realpath(os.path.join(__dirname__, "../../tests/tmp"))
 
 
 def make_fixture_path(dirname, filename, sub_dir=""):
