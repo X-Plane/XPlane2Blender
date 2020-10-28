@@ -648,7 +648,7 @@ def get_project_folder() -> pathlib.Path:
 
 
 def get_tests_folder() -> pathlib.Path:
-    return pathlib.Path(get_project_folder(), "tests")
+    return os.path.realpath(os.path.join(__dirname__, "../../tests/tmp"))
 
 
 def get_tmp_folder() -> pathlib.Path:
