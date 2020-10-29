@@ -228,7 +228,7 @@ class XPlaneHeader:
                 self.attributes["NORMAL_METALNESS"].setValue(normal_metalness)
             elif not texture_normal and normal_metalness:
                 logger.warn(
-                    f"{self.xplaneFile.filename} uses Normal Metalness but has no Normal Texture"
+                    f"{self.xplaneFile.filename}: No Normal Texture found, ignoring use of Normal Metalness"
                 )
 
         if xplane_version >= 1100:
@@ -289,7 +289,7 @@ class XPlaneHeader:
                         )
                     elif not texture_draped_nml and normal_metalness_draped:
                         logger.warn(
-                            f"{self.xplaneFile.filename} uses Normal Metalness but has no Draped Normal Texture"
+                            f"{self.xplaneFile.filename}: No Draped Normal Texture found, ignoring use of Normal Metalness"
                         )
 
                 # draped bump level
