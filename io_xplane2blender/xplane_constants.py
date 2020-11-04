@@ -247,3 +247,7 @@ LOGGER_LEVELS_ALL = (
     LOGGER_LEVEL_SUCCESS,
     LOGGER_LEVEL_WARN,
 )
+
+PANEL_COCKPIT = "cockpit"
+PANEL_COCKPIT_LIT_ONLY = "cockpit_lit_only"
+PANEL_COCKPIT_REGION = "cockpit_region"

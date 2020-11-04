@@ -87,7 +87,6 @@ class XPlaneHeader:
         self.attributes.add(XPlaneAttribute("COCKPIT_REGION", None))
         self.attributes.add(XPlaneAttribute("DEBUG", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_cockpit_lit", None))
-        self.attributes.add(XPlaneAttribute("ATTR_cockpit_lit_only", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_tint", None))
         self.attributes.add(XPlaneAttribute("REQUIRE_WET", None))
         self.attributes.add(XPlaneAttribute("REQUIRE_DRY", None))
@@ -324,7 +323,7 @@ class XPlaneHeader:
                 )
 
         # set cockpit regions
-        if isCockpit:
+        if isAircraft or isCockpit:
             num_regions = int(self.xplaneFile.options.cockpit_regions)
 
             if num_regions > 0:
@@ -481,15 +480,9 @@ class XPlaneHeader:
                         mat.attributes["ATTR_no_shadow"].setValue(None)
 
             # cockpit_lit
-            if isCockpit:
+            if isAircraft or isCockpit:
                 if self.xplaneFile.options.cockpit_lit or xplane_version >= 1100:
                     self.attributes["GLOBAL_cockpit_lit"].setValue(True)
-                if (
-                    self.xplaneFile.options.cockpit_lit_only
-                    and xplane_version >= 1110
-                    and self.xplaneFile.options.cockpit_regions == "0"
-                ):
-                    self.attributes["ATTR_cockpit_lit_only"].setValue(True)
 
         if len(self.export_path_dirs):
             self.attributes["EXPORT"].value = [

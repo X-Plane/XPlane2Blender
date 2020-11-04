@@ -1004,11 +1004,13 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     or they'll reload the file and the problem will be (hopefully solved)
     """
     def update_cockpit_regions(self, context)->None:
+        # Avoids the need for operators to increase and decrease the size of self.cockpit_region
         while len(self.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
             self.cockpit_region.add()
         return None
 
     def update_lods(self, context):
+        # Avoids the need for operators to increase and decrease the size of self.lods
         #MAX_LODS also counts "None", so we have to subtract by 1
         while len(self.lod) < xplane_constants.MAX_LODS - 1:
             self.lod.add()
@@ -1021,10 +1023,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = False
     )
 
-    cockpit_lit_only: bpy.props.BoolProperty(
-        name="Emissive Panel Texture Only",
-        description="Only emissive panel texture will be dynamic. Great for computer displays",
-        default = False
+    cockpit_panel_mode: bpy.props.EnumProperty(
+        name="Panel Texture Mode",
+        description="Panel Texture Mode, affects all Materials using Panel",
+        items=[
+            (PANEL_COCKPIT, "Default", "Full Panel Texture: Albedo, Lit, and Normal"),
+            (PANEL_COCKPIT_LIT_ONLY, "Emissive Panel Texture Only", "Only emissive panel texture will be dynamic. Great for computer displays"),
+            (PANEL_COCKPIT_REGION, "Regions", "Uses regions of panel texture")
+        ],
+        default=PANEL_COCKPIT,
     )
 
     expanded: bpy.props.BoolProperty(
@@ -1163,6 +1170,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = ""
     )
 
+    # BAD NAME ALERT!
+    # regions (plural) is the enum, region (singular) is the collection
     cockpit_regions: bpy.props.EnumProperty(
         name = "Cockpit Regions",
         description = "Number of Cockpit regions to use",
@@ -1183,6 +1192,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "Cockpit Region"
     )
 
+    # BAD NAME ALERT!
+    # lods (plural) is the enum, lod (singular) is the collection
     lods: bpy.props.EnumProperty(
         name = "Levels of Detail",
         description = "Levels of detail",

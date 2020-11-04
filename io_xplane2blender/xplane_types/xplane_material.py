@@ -83,8 +83,9 @@ class XPlaneMaterial:
 
         self.cockpitAttributes = XPlaneAttributes()
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit", None, 2000))
-        self.cockpitAttributes.add(XPlaneAttribute("ATTR_no_cockpit", True, 2000))
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_lit_only", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_region", None, 2000))
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_no_cockpit", True, 2000))
 
         self.conditions = []
 
@@ -206,13 +207,29 @@ class XPlaneMaterial:
 
     def collectCockpitAttributes(self, mat: bpy.types.Material) -> None:
         if mat.xplane.panel:
-            self.cockpitAttributes["ATTR_cockpit"].setValue(True)
-            self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+            xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
+            xplane_version = int(bpy.context.scene.xplane.version)
+            cockpit_panel_mode = xplaneFile.options.cockpit_panel_mode
             cockpit_region = int(mat.xplane.cockpit_region)
-            if cockpit_region > 0:
-                self.cockpitAttributes["ATTR_cockpit_region"].setValue(
-                    cockpit_region - 1
-                )
+
+            self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+            if xplane_version >= 1110:
+                if cockpit_panel_mode == PANEL_COCKPIT:
+                    self.cockpitAttributes["ATTR_cockpit"].setValue(True)
+                elif cockpit_panel_mode == PANEL_COCKPIT_LIT_ONLY:
+                    self.cockpitAttributes["ATTR_cockpit_lit_only"].setValue(True)
+                elif cockpit_panel_mode == PANEL_COCKPIT_REGION and cockpit_region:
+                    self.cockpitAttributes["ATTR_cockpit_region"].setValue(
+                        cockpit_region - 1
+                    )
+            elif xplane_version < 1110:
+                # TODO: I believe this is wrong!
+                # This prints out ATTR_cockpit then region no matter
+                self.cockpitAttributes["ATTR_cockpit"].setValue(True)
+                if cockpit_region:
+                    self.cockpitAttributes["ATTR_cockpit_region"].setValue(
+                        cockpit_region - 1
+                    )
 
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
         if mat.xplane.lightLevel:

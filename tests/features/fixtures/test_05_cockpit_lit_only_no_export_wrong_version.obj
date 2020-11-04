@@ -53,10 +53,10 @@ IDX	34
 IDX	35
 
 # 0 ROOT
-	# 1 Mesh: Cube.005
-	# MESH: Cube.005	weight: 2
+	# 1 Mesh: Cube.004
+	# MESH: Cube.004	weight: 2
 	# MATERIAL: MaterialPartOfPanel
-	ATTR_cockpit_lit_only
+	ATTR_cockpit
 	TRIS	0 36
 
 # Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-dev.0+94.NO_BUILD_NUMBR

@@ -53,8 +53,8 @@ IDX	34
 IDX	35
 
 # 0 ROOT
-	# 1 Mesh: Cube.005
-	# MESH: Cube.005	weight: 2
+	# 1 Mesh: Cube
+	# MESH: Cube	weight: 2
 	# MATERIAL: MaterialPartOfPanel
 	ATTR_cockpit_lit_only
 	TRIS	0 36

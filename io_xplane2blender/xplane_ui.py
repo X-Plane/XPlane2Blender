@@ -406,12 +406,6 @@ def layer_layout(
 
     global_mat_box = layout.box()
     global_mat_box.label(text="Global Material Options")
-    if version >= 1110:
-        if (
-            layer_props.export_type == EXPORT_TYPE_COCKPIT
-            and layer_props.cockpit_regions == "0"
-        ):
-            global_mat_box.row().prop(layer_props, "cockpit_lit_only")
     if version >= 1100:
         global_mat_box.row().prop(layer_props, "blend_glass")
         global_mat_box.row().prop(layer_props, "normal_metalness")
@@ -428,42 +422,42 @@ def layer_layout(
                 row.prop(layer_props, "tint_emissive", text="Emissive", slider=True)
 
     # cockpit regions
-    if layer_props.export_type == EXPORT_TYPE_COCKPIT:
+    if layer_props.export_type in {EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT}:
         cockpit_box = layout.box()
-        cockpit_box.label(text="Cockpits")
-        cockpit_box.prop(layer_props, "cockpit_regions", text="Regions")
-        num_regions = int(layer_props.cockpit_regions)
+        cockpit_box.label(text="Cockpit Panel Options")
+        if version >= 1110:
+            cockpit_box.row().prop(layer_props, "cockpit_panel_mode")
 
-        if num_regions > 0:
-            for i in range(0, num_regions):
-                # get cockpit region or create it if not present
-                if len(layer_props.cockpit_region) > i:
-                    cockpit_region = layer_props.cockpit_region[i]
+        if layer_props.cockpit_panel_mode == PANEL_COCKPIT:
+            pass
+        elif (
+            version >= 1110 and layer_props.cockpit_panel_mode == PANEL_COCKPIT_LIT_ONLY
+        ):
+            pass
+        elif layer_props.cockpit_panel_mode == PANEL_COCKPIT_REGION or version < 1110:
+            cockpit_box.prop(layer_props, "cockpit_regions", text="Regions")
+            for i, cockpit_region in enumerate(
+                layer_props.cockpit_region[: int(layer_props.cockpit_regions)]
+            ):
+                region_box = cockpit_box.box()
+                region_box.prop(
+                    cockpit_region,
+                    "expanded",
+                    text="Cockpit region %i" % (i + 1),
+                    expand=True,
+                    emboss=False,
+                    icon=("TRIA_DOWN" if cockpit_region.expanded else "TRIA_RIGHT"),
+                )
 
-                    if cockpit_region.expanded:
-                        expandIcon = "TRIA_DOWN"
-                    else:
-                        expandIcon = "TRIA_RIGHT"
-
-                    region_box = cockpit_box.box()
-                    region_box.prop(
-                        cockpit_region,
-                        "expanded",
-                        text="Cockpit region %i" % (i + 1),
-                        expand=True,
-                        emboss=False,
-                        icon=expandIcon,
-                    )
-
-                    if cockpit_region.expanded:
-                        region_box.prop(cockpit_region, "left")
-                        region_box.prop(cockpit_region, "top")
-                        region_split = region_box.split(factor=0.5)
-                        region_split.prop(cockpit_region, "width")
-                        region_split.label(text="= %d" % (2 ** cockpit_region.width))
-                        region_split = region_box.split(factor=0.5)
-                        region_split.prop(cockpit_region, "height")
-                        region_split.label(text="= %d" % (2 ** cockpit_region.height))
+                if cockpit_region.expanded:
+                    region_box.prop(cockpit_region, "left")
+                    region_box.prop(cockpit_region, "top")
+                    region_split = region_box.split(factor=0.5)
+                    region_split.prop(cockpit_region, "width")
+                    region_split.label(text="= %d" % (2 ** cockpit_region.width))
+                    region_split = region_box.split(factor=0.5)
+                    region_split.prop(cockpit_region, "height")
+                    region_split.label(text="= %d" % (2 ** cockpit_region.height))
 
         # v1010
         if version < 1100:
