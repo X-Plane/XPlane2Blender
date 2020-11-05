@@ -85,7 +85,7 @@ class XPlaneCommands:
 
         self.reseters = {
             "ATTR_light_level": "ATTR_light_level_reset",
-            "ATTR_cockpit|ATTR_cockpit_region": "ATTR_no_cockpit",
+            "ATTR_cockpit(_lit_only|_region)?": "ATTR_no_cockpit",
             "ATTR_manip_(?!none)(?!wheel)(.*)": "ATTR_manip_none",
             "ATTR_no_shadow": "ATTR_shadow",
             "ATTR_draw_disable": "ATTR_draw_enable",
@@ -329,6 +329,7 @@ class XPlaneCommands:
             "ATTR_light_level",
             "ATTR_light_level_reset",
             "ATTR_cockpit",
+            "ATTR_cockpit_lit_only",
             "ATTR_cockpit_region",
             "ATTR_no_cockpit",
             "ATTR_draw_disable",
@@ -357,20 +358,12 @@ class XPlaneCommands:
         # manips) to the attributes.
         #
         # This way the resetter thinks it doesn't have to reset
-        # because the next object "has" it already.
+        # because the next XPlaneObject passed in "has" it already.
+        #
+        # *
         for attr in WHITE_LIST:
             attributes.add(xplane_attribute.XPlaneAttribute(attr))
 
-        # This is the attributes that the next object will have.
-        #
-        # Comment about the comment: Remember "next object",
-        # can mean self if that is what you passed in. Don't confuse
-        # the comment's sense of tense with how this is currently used in
-        # the exporter. Just remember who xplaneObject is and you'll be fine.
-        #
-        # Comment about the comment about the comment:
-        # The resetter system is so confusing its
-        # good comments also need good comments. Ugh.
         attributeNames = sorted(attributes.keys())
 
         # This is the attributes we have already stated that MIGHT need to be reset.
@@ -384,7 +377,7 @@ class XPlaneCommands:
 
             # Now that the added white list trick is in place,
             # we'll nearly always have 2 matching attributes
-            if len(matchingAttribute) > 2:
+            if len(matchingAttribute) > 3:
                 print(
                     "WARNING: multiple incoming attributes matched %s" % setterPattern
                 )

@@ -35,6 +35,7 @@ class TestCockpitLitOnly(XPlaneTestCase):
             "test_01_cockpit_lit_only_exported",
             "test_03_cockpit_lit_only_no_export_regions",
             "test_04_cockpit_lit_no_export_panel_mode_default",
+            "test_07_cockpit_lit_only_resets",
         ]:
             with self.subTest(f"Testing fixture {filename}", filename=filename):
                 self.assertExportableRootExportEqualsFixture(
