@@ -108,6 +108,7 @@ class XPlaneCommands:
             "ATTR_shadow": True,
             "ATTR_draw_enable": True,
             "ATTR_no_draped": True,
+            "ATTR_light_level_reset": True,
         }
 
     def write(self, *, lod_bucket_index: Optional[int]) -> str:

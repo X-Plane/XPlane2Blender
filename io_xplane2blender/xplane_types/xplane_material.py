@@ -77,6 +77,7 @@ class XPlaneMaterial:
         self.attributes.add(XPlaneAttribute("ATTR_no_solid_camera"))
 
         self.attributes.add(XPlaneAttribute("ATTR_light_level", None, 1000))
+        self.attributes.add(XPlaneAttribute("ATTR_light_level_reset", True, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_poly_os", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_draped", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_no_draped", True, 1000))
@@ -240,6 +241,7 @@ class XPlaneMaterial:
                     mat.xplane.lightLevel_dataref,
                 )
             )
+            self.attributes["ATTR_light_level_reset"].setValue(False)
 
     def collectConditions(self, mat: bpy.types.Material) -> None:
         if mat.xplane.conditions:
