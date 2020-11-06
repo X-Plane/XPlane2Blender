@@ -418,7 +418,7 @@ def layer_layout(
             row.active = layer_props.tint
             row.prop(layer_props, "tint")
             if layer_props.tint:
-                row.prop(layer_props, "tint_albedo", text="Albedo")
+                row.prop(layer_props, "tint_albedo", text="Albedo", slider=True)
                 row.prop(layer_props, "tint_emissive", text="Emissive", slider=True)
 
     # cockpit regions
