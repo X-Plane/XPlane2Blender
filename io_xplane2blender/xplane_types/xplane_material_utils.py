@@ -111,7 +111,11 @@ def compareAircraft(
 
     if mat.options.draw:
         # panel parts can have anything
-        if not mat.options.panel and not refMat.options.panel and autodetectTextures:
+        if (
+            mat.options.cockpit_feature == COCKPIT_FEATURE_NONE
+            and refMat.options.cockpit_feature == COCKPIT_FEATURE_NONE
+            and autodetectTextures
+        ):
             if mat.texture != refMat.texture:
                 errors.append('Texture must be "%s".' % refMat.texture)
 
@@ -139,6 +143,7 @@ def validate(mat: XPlaneMaterial, exportType: str) -> MaterialValidationMsgs:
         errors.append("Is invalid.")
         return errors, warnings
 
+    cockpit_feature = mat.options.cockpit_feature
     if (
         exportType == EXPORT_TYPE_SCENERY or exportType == EXPORT_TYPE_INSTANCED_SCENERY
     ) and mat.options.draped:
@@ -147,12 +152,15 @@ def validate(mat: XPlaneMaterial, exportType: str) -> MaterialValidationMsgs:
         return validateScenery(mat)
     elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
         return validateInstanced(mat)
-    elif exportType == EXPORT_TYPE_COCKPIT and mat.options.panel:
+    elif exportType == EXPORT_TYPE_COCKPIT and cockpit_feature == COCKPIT_FEATURE_PANEL:
         return validatePanel(mat)
-    elif exportType == EXPORT_TYPE_COCKPIT and not mat.options.panel:
+    elif exportType == EXPORT_TYPE_COCKPIT and cockpit_feature == COCKPIT_FEATURE_NONE:
         return validateCockpit(mat)
     elif exportType == EXPORT_TYPE_AIRCRAFT:
-        if bpy.context.scene.xplane.version >= VERSION_1040 and mat.options.panel:
+        if (
+            bpy.context.scene.xplane.version >= VERSION_1040
+            and cockpit_feature == COCKPIT_FEATURE_PANEL
+        ):
             return validatePanel(mat)
         else:
             return validateAircraft(mat)
@@ -164,7 +172,7 @@ def validateScenery(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     errors = []  # type: List[str]
     warnings = []  # type: List[str]
 
-    if mat.options.panel:
+    if mat.options.cockpit_feature == COCKPIT_FEATURE_PANEL:
         errors.append("Must not be part of the cockpit panel.")
 
     if mat.options.draped:
@@ -186,7 +194,7 @@ def validateInstanced(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     if mat.options.lightLevel:
         errors.append("Must not override light level.")
 
-    if mat.options.panel:
+    if mat.options.cockpit_feature == COCKPIT_FEATURE_PANEL:
         errors.append("Must not be part of the cockpit panel.")
 
     if mat.options.draped:
@@ -218,7 +226,7 @@ def validatePanel(mat: XPlaneMaterial) -> MaterialValidationMsgs:
         if mat.textureNormal:
             errors.append("Must not have a normal/alpha/specularity texture.")
 
-    if not mat.options.panel:
+    if mat.options.cockpit_feature == COCKPIT_FEATURE_NONE:
         errors.append("Must be part of the cockpit panel.")
 
     if mat.options.draped:
@@ -234,8 +242,12 @@ def validateCockpit(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     errors = []  # type: List[str]
     warnings = []  # type: List[str]
 
-    if mat.options.panel:
-        errors.append("Must not be part of the cockpit panel.")
+    if mat.options.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+        if not any((mat.options.get(f"device_bus_{i}") for i in range(6))):
+            errors.append("Cockpit device must specify at least one bus")
+
+    if mat.options.cockpit_feature == COCKPIT_FEATURE_PANEL:
+        errors.append("Cockpit .obj Material cannot be 'Part Of Panel'.")
 
     if mat.options.draped:
         errors.append("Must not be draped.")
@@ -247,8 +259,12 @@ def validateAircraft(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     errors = []  # type: List[str]
     warnings = []  # type: List[str]
 
-    if mat.options.panel:
-        errors.append("Must not be part of the cockpit panel.")
+    if mat.options.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+        if not any((mat.options.get(f"device_bus_{i}") for i in range(6))):
+            errors.append("Cockpit device must specify at least one bus")
+
+    if mat.options.cockpit_feature == COCKPIT_FEATURE_PANEL:
+        errors.append("Aircraft .obj Material cannot be 'Part Of Panel'.")
 
     if mat.options.draped:
         errors.append("Must not be draped.")
@@ -269,7 +285,7 @@ def validateDraped(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     if mat.options.lightLevel:
         errors.append("Must not override light level.")
 
-    if mat.options.panel:
+    if mat.options.cockpit_feature == COCKPIT_FEATURE_PANEL:
         errors.append("Must not be part of the cockpit panel.")
 
     if mat.options.surfaceType != "none":

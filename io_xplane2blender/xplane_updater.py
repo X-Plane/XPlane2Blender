@@ -492,6 +492,15 @@ def _move_global_material_props(
                     )
 
 
+def _panel_to_cockpit_feature(logger: xplane_helpers.XPlaneLogger):
+    for mat in bpy.data.materials:
+        mat.xplane.cockpit_feature = (
+            xplane_constants.COCKPIT_FEATURE_PANEL
+            if mat.xplane.get("panel", False)
+            else xplane_constants.COCKPIT_FEATURE_NONE
+        )
+
+
 def update(
     last_version: xplane_helpers.VerStruct, logger: xplane_helpers.XPlaneLogger
 ) -> None:
@@ -573,6 +582,10 @@ def update(
         "4.1.0-alpha.1+92.20201020151500"
     ):
         _move_global_material_props(logger)
+    if last_version < xplane_helpers.VerStruct.parse_version(
+        "4.1.0-beta.1+97.20201109172400"
+    ):
+        _panel_to_cockpit_feature(logger)
 
 
 def _synchronize_last_version_across_histories(last_version: xplane_helpers.VerStruct):

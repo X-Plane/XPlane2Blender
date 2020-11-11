@@ -53,7 +53,7 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
         obj = context.object
         version = int(context.scene.xplane.version)
 
-        if obj.type == "MESH":
+        if obj and obj.type == "MESH":
             material_layout(self.layout, obj.active_material)
             self.layout.separator()
             cockpit_layout(self.layout, obj.active_material)
@@ -277,6 +277,12 @@ def scene_dev_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
         # Exact same operator, more convient place
         dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
+        op = dev_box_column.operator(
+            "scene.export_to_relative_dir",
+            text="Export to fixtures folder",
+            icon="EXPORT",
+        )
+        op.initial_dir = "fixtures"
         dev_box_column.operator("scene.dev_apply_default_material_to_all")
         dev_box_column.operator("scene.dev_root_names_from_objects")
         updater_row = dev_box_column.row()
@@ -679,11 +685,9 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
         def draw_automatic_ui():
             try:
                 if light_data.xplane.name:
-                    parsed_light = (
-                        xplane_utils.xplane_lights_txt_parser.get_parsed_light(
-                            light_data.xplane.name.strip()
-                        )
-                    )
+                    # Idk why Black was fighing so much about this line
+                    gpl = xplane_utils.xplane_lights_txt_parser.get_parsed_light
+                    parsed_light = gpl(light_data.xplane.name.strip())
                     # HACK: We take this shortcut because otherwise we'd need to pretend to
                     # fill in the overload and apply the sw_callback which breaks DRY.
                     # We know exactly what happens here, and we don't need to muck with is_omni over the UI
@@ -1019,10 +1023,9 @@ def animation_layout(
         dataref_search_toggle_op = subrow.operator(
             "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
         )
-        dataref_search_toggle_op.paired_dataref_prop = (
-            current_dataref_prop_template.format(index=i)
-        )
+        paired_prop = current_dataref_prop_template.format(index=i)
 
+        dataref_search_toggle_op.paired_dataref_prop = paired_prop
         # Next: "X" box to nuke the dataref - further to the right to keep from separating search from its field.
         if is_bone:
             subrow.operator(
@@ -1075,12 +1078,27 @@ def cockpit_layout(
 ) -> None:
     """Draws UI for cockpit and panel regions"""
     cockpit_box = layout.box()
-    cockpit_box.label(text="Cockpit Panel")
+    cockpit_box.label(text="Cockpit Features")
     cockpit_box_column = cockpit_box.column()
-    cockpit_box_column.prop(active_material.xplane, "panel")
+    cockpit_box_column.prop(active_material.xplane, "cockpit_feature")
 
-    if active_material.xplane.panel:
+    if active_material.xplane.cockpit_feature == COCKPIT_FEATURE_NONE:
+        pass
+    elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
         cockpit_box_column.prop(active_material.xplane, "cockpit_region")
+    elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+        device_box = cockpit_box_column.box()
+        device_box.label(text="Cockpit Device")
+        device_box.prop(active_material.xplane, "device_name")
+        if not any(
+            getattr(active_material.xplane, f"device_bus_{bus}") for bus in range(6)
+        ):
+            device_box.label(text="Select at least one bus", icon="ERROR")
+        column = device_box.column_flow(columns=2, align=True)
+        for bus in range(6):
+            column.prop(active_material.xplane, f"device_bus_{bus}")
+        device_box.prop(active_material.xplane, "device_lighting_channel")
+        device_box.prop(active_material.xplane, "device_auto_adjust")
 
 
 def axis_detent_ranges_layout(

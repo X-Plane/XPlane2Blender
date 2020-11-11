@@ -50,6 +50,7 @@ class TestMaterials(XPlaneTestCase):
             "ATTR_no_draped": True,
         }
         defaultCockpitAttrs = {
+            "ATTR_cockpit_device": None,
             "ATTR_cockpit": None,
             "ATTR_cockpit_lit_only": None,
             "ATTR_cockpit_region": None,

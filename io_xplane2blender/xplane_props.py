@@ -1029,7 +1029,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         items=[
             (PANEL_COCKPIT, "Default", "Full Panel Texture: Albedo, Lit, and Normal"),
             (PANEL_COCKPIT_LIT_ONLY, "Emissive Panel Texture Only", "Only emissive panel texture will be dynamic. Great for computer displays"),
-            (PANEL_COCKPIT_REGION, "Regions", "Uses regions of panel texture")
+            (PANEL_COCKPIT_REGION, "Regions", "Uses regions of panel texture"),
         ],
         default=PANEL_COCKPIT,
     )
@@ -1451,7 +1451,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 #   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
 #   bool depth - True if object will use depth culling.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
-#   bool panel - True if object is part of the cockpit panel.
 #   XPlaneManipulator manip - Manipulator settings.
 #   bool lightLevel - True if object overrides default light levels.
 #   float lightLevel_v1 - Light Level Value 1
@@ -1593,6 +1592,43 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = True
     )
 
+    # --- cockpit_device props ------------------------------------------------
+    device_name: bpy.props.EnumProperty(
+        name = "Cockpit Device Name",
+        description = "GPS device name",
+        default = "GNS430_1",
+        items = [
+            (DEVICE_GNS430_1,    DEVICE_GNS430_1,     DEVICE_GNS430_1),
+            (DEVICE_GNS430_2,    DEVICE_GNS430_2,     DEVICE_GNS430_2),
+            (DEVICE_GNS530_1,    DEVICE_GNS530_1,     DEVICE_GNS530_1),
+            (DEVICE_GNS530_2,    DEVICE_GNS530_2,     DEVICE_GNS530_2),
+            (DEVICE_CDU739_1,    DEVICE_CDU739_1,     DEVICE_CDU739_1),
+            (DEVICE_CDU739_2,    DEVICE_CDU739_2,     DEVICE_CDU739_2),
+            (DEVICE_G1000_PFD1,  DEVICE_G1000_PFD1,   DEVICE_G1000_PFD1),
+            (DEVICE_G1000_MFD,   DEVICE_G1000_MFD,    DEVICE_G1000_MFD),
+            (DEVICE_G1000_PFD2,  DEVICE_G1000_PFD2,   DEVICE_G1000_PFD2),
+        ]
+    )
+    device_bus_0: bpy.props.BoolProperty(name="Bus 1", description="1st system bus")
+    device_bus_1: bpy.props.BoolProperty(name="Bus 2", description="2nd system bus")
+    device_bus_2: bpy.props.BoolProperty(name="Bus 3", description="3rd system bus")
+    device_bus_3: bpy.props.BoolProperty(name="Bus 4", description="4th system bus")
+    device_bus_4: bpy.props.BoolProperty(name="Bus 5", description="5th system bus")
+    device_bus_5: bpy.props.BoolProperty(name="Bus 6", description="6th system bus")
+
+    device_lighting_channel: bpy.props.IntProperty(
+        name="Rheostat Lighting Channel",
+        description="0 based index that control's screen's brightness. Not affected by 'Light Level'",
+        default=0,
+        min=0,
+    )
+    device_auto_adjust: bpy.props.BoolProperty(
+        name="Auto-adjust for daytime readability",
+        description="If true, the screen brightens automatically to be readable in the day. Otherwise it is 'washed out' in daylight",
+        default=True,
+    )
+    # -------------------------------------------------------------------------
+
     surfaceType: bpy.props.EnumProperty(
         name = 'Surface Type',
         description = 'Controls the bumpiness of material in X-Plane',
@@ -1658,12 +1694,16 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         min = 0.0
     )
 
-    panel: bpy.props.BoolProperty(
-        name = "Part Of Cockpit Panel",
-        description = "If checked this object will use the panel texture and will be clickable",
-        default = False
-    )
-
+    cockpit_feature: bpy.props.EnumProperty(
+        name = "Cockpit Feature",
+        description = "What cockpit feature to enable",
+        default=COCKPIT_FEATURE_NONE,
+        items=[
+            (COCKPIT_FEATURE_NONE, "None", "Material uses no advanced cocked features"),
+            (COCKPIT_FEATURE_PANEL, "Panel Texture", "Material uses Panel Texture"),
+            (COCKPIT_FEATURE_DEVICE, "Cockpit Device", "Material uses Device Texture"),
+            ],
+        )
     cockpit_region: bpy.props.EnumProperty(
         name = "Cockpit Region",
         description = "Cockpit region to use",

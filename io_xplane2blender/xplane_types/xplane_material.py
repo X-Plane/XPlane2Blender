@@ -83,6 +83,7 @@ class XPlaneMaterial:
         self.attributes.add(XPlaneAttribute("ATTR_no_draped", True, 1000))
 
         self.cockpitAttributes = XPlaneAttributes()
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_device", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_lit_only", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_region", None, 2000))
@@ -116,7 +117,7 @@ class XPlaneMaterial:
                 if mat.xplane.poly_os > 0:
                     self.attributes["ATTR_poly_os"].setValue(mat.xplane.poly_os)
 
-                if mat.xplane.panel == False:
+                if mat.xplane.cockpit_feature == COCKPIT_FEATURE_NONE:
                     xplane_version = int(bpy.context.scene.xplane.version)
                     self.attributes["ATTR_draw_enable"].setValue(True)
                     eff_fn = (
@@ -207,9 +208,26 @@ class XPlaneMaterial:
                 self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
 
     def collectCockpitAttributes(self, mat: bpy.types.Material) -> None:
-        if mat.xplane.panel:
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= 1100:
+            if mat.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+                self.cockpitAttributes["ATTR_cockpit_device"].setValue(
+                    [
+                        mat.xplane.device_name,
+                        bin(
+                            sum(
+                                getattr(mat.xplane, f"device_bus_{i}") << i
+                                for i in range(6)
+                            )
+                        )[2:],
+                        mat.xplane.device_lighting_channel,
+                        mat.xplane.device_auto_adjust,
+                    ]
+                )
+                self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+
+        if mat.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
             xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
-            xplane_version = int(bpy.context.scene.xplane.version)
             cockpit_panel_mode = xplaneFile.options.cockpit_panel_mode
             cockpit_region = int(mat.xplane.cockpit_region)
 
