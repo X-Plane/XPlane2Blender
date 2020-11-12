@@ -2,12 +2,17 @@ I
 800
 OBJ
 
+GLOBAL_cockpit_lit
 POINT_COUNTS	0	0	5	0
 
 VLIGHT	1	1	-1	0	1	0
+
 VLIGHT	2	2	-2	-1	1	1
+
 VLIGHT	3	3	-3	9.9	9.9	9.9
+
 VLIGHT	4	4	-4	9.8	9.8	9.8
+
 VLIGHT	5	5	-5	9.7	9.7	9.7
 
 # 0 ROOT
@@ -35,5 +40,6 @@ VLIGHT	5	5	-5	9.7	9.7	9.7
 	# 1 Light: 08_Lamp_parameter
 	# LIGHT: 08_Lamp_parameter	weight: 10000
 	LIGHT_PARAM	spot_params_sp 8 8 -8 0 .2 1    20 30   0 -1  0   1
+	# 1 Light: 09_Lamp_non_exporting
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+65.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-dev.0+98.NO_BUILD_NUMBR

@@ -1854,6 +1854,7 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
                 (LIGHT_CUSTOM,    "Custom",                     "Custom"),
                 (LIGHT_PARAM,     "Manual Param (deprecated)",  "Uses manual entry for parameters, not recommended"),
                 (LIGHT_AUTOMATIC, "Automatic",                  "Makes named and param lights with params taken from Blender light data"),
+                (LIGHT_NON_EXPORTING, "Non-Exporting", "Light will not be in the OBJ"),
         ]
     )
 

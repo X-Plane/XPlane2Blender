@@ -240,6 +240,7 @@ LIGHT_NAMED = "named"
 LIGHT_CUSTOM = "custom"
 LIGHT_PARAM = "param"
 LIGHT_AUTOMATIC = "automatic"
+LIGHT_NON_EXPORTING = "nonexporting"
 
 LIGHTS_OLD_TYPES = {
     LIGHT_DEFAULT,
