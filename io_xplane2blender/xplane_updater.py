@@ -583,7 +583,7 @@ def update(
     ):
         _move_global_material_props(logger)
     if last_version < xplane_helpers.VerStruct.parse_version(
-        "4.1.0-beta.1+97.20201109172400"
+        "4.1.0-alpha.1+97.20201109172400"
     ):
         _panel_to_cockpit_feature(logger)
 

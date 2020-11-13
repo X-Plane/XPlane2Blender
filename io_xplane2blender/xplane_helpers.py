@@ -293,7 +293,7 @@ class VerStruct:
     # according to our spec
     #
     # Returns True or False
-    def is_valid(self):
+    def is_valid(self) -> bool:
         types_correct = (
             isinstance(self.addon_version, tuple)
             and len(self.addon_version) == 3
@@ -368,6 +368,7 @@ class VerStruct:
                         return True
             else:
                 print("build_type %s was not found in BUILD_TYPES" % self.build_type)
+                return False
         else:
             print("addon_version %s is invalid" % str(self.addon_version))
             return False
