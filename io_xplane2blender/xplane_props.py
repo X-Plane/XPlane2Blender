@@ -1584,7 +1584,6 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
 #   enum surfaceType - Surface type as defined in OBJ specs.
 #   bool blend - True if the material uses alpha cutoff.
 #   float blendRatio - Alpha cutoff ratio.
-#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     draw: bpy.props.BoolProperty(
         name = "Draw Objects With This Material",
@@ -1596,7 +1595,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     device_name: bpy.props.EnumProperty(
         name = "Cockpit Device Name",
         description = "GPS device name",
-        default = "GNS430_1",
+        default = DEVICE_GNS430_1,
         items = [
             (DEVICE_GNS430_1,    DEVICE_GNS430_1,     DEVICE_GNS430_1),
             (DEVICE_GNS430_2,    DEVICE_GNS430_2,     DEVICE_GNS430_2),
