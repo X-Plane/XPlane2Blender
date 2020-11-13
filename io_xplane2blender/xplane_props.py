@@ -1685,7 +1685,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     blendRatio: bpy.props.FloatProperty(
         name = "Alpha Cutoff Ratio",
-        description = "Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque",
+        description = "Levels in the texture below this level are rendered as fully transparent and levels above this level are fully opaque",
         default = 0.5,
         step = 0.1,
         precision = 2,
