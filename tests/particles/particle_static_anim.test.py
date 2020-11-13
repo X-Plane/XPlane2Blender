@@ -19,8 +19,8 @@ class TestParticleStaticAnim(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_particle_emitter_static(self):
@@ -28,8 +28,8 @@ class TestParticleStaticAnim(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             1, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestParticleStaticAnim])

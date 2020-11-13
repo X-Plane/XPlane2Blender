@@ -7,37 +7,34 @@ TEXTURE_LIT	texture_lit.png
 TEXTURE_NORMAL	texture_nm.png
 POINT_COUNTS	12	0	0	36
 
-VT	1	0	-1	0	-1	0	1	1	# 0
-VT	-1	0	-1	0	-1	0	0	1	# 1
-VT	-1	0	1	0	-1	0	0	0	# 2
-VT	1	0	1	0	-1	0	1	0	# 3
-VT	0.5	0	-0.5	0	1	0	0.75000006	0.74999988	# 4
-VT	0.5	0	0.5	0	1	0	0.75000006	0.24999996	# 5
-VT	-0.5	0	0.5	0	1	0	0.25000006	0.24999996	# 6
-VT	-0.5	0	-0.5	0	1	0	0.25000006	0.74999988	# 7
+VT	1	0	-1	-0	-1	0	1	1	# 0
+VT	-1	0	-1	-0	-1	0	0	1	# 1
+VT	-1	0	1	-0	-1	0	0	0	# 2
+VT	1	0	1	-0	-1	-0	1	0	# 3
+VT	0.5	0	-0.5	0	1	-0	0.75000006	0.74999988	# 4
+VT	0.5	0	0.5	0	1	-0	0.75000006	0.24999996	# 5
+VT	-0.5	0	0.5	0	1	-0	0.25000006	0.24999996	# 6
+VT	-0.5	0	-0.5	-0	1	-0	0.25000006	0.74999988	# 7
 VT	-1	0	-1	0	1	0	0	1	# 8
 VT	1	0	-1	0	1	0	1	1	# 9
-VT	1	0	1	0	1	0	1	0	# 10
-VT	-1	0	1	0	1	0	0	0	# 11
+VT	1	0	1	0	1	-0	1	0	# 10
+VT	-1	0	1	0	1	-0	0	0	# 11
 
-IDX10	0	1	2	2	3	0	4	5	6	6
-IDX10	7	4	7	8	9	9	4	7	5	10
-IDX10	11	11	6	5	4	9	10	10	5	4
+IDX10	0	1	2	3	0	2	4	5	6	7
+IDX10	4	6	7	8	9	4	7	9	5	10
+IDX10	11	6	5	11	4	9	10	5	4	10
 IDX	6
 IDX	11
 IDX	8
-IDX	8
 IDX	7
 IDX	6
-
+IDX	8
 
 # 0 ROOT
-# 1 Object: texture_coords
-# PRIMITIVE: texture_coords	weight: 0
-# MATERIAL: Material
-ATTR_diffuse_rgb	0.5	0.5	0.5
-ATTR_emission_rgb	0	0	0
-ATTR_shiny_rat	0
-TRIS	0 36
+	# 1 Mesh: texture_coords
+	# MESH: texture_coords	weight: 0
+	# MATERIAL: Material
+	ATTR_shiny_rat	0
+	TRIS	0 36
 
-# Build with Blender 2.75 (sub 0) (build b'c27589e') Exported with XPlane2Blender 3.3.0
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+65.NO_BUILD_NUMBR

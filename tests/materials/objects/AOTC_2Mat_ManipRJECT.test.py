@@ -10,9 +10,7 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestAOTC_2Mat_ManipRJECT(XPlaneTestCase):
     def test_export(self):
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
-        out = xplaneFile.write()
-
+        out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 
 runTestCases([TestAOTC_2Mat_ManipRJECT])

@@ -5,69 +5,69 @@ OBJ
 POINT_COUNTS	0	0	0	0
 
 # 0 ROOT
-# 1 Object: grouped_trick_on_empty
-ANIM_begin
-# static translation
-ANIM_trans	0	5	0	0	5	0
-# rotation keyframes
-ANIM_rotate_begin	0	1	0	none
-ANIM_rotate_key	0	333.00021759
-ANIM_rotate_key	999	0
-ANIM_rotate_end
-ANIM_rotate_begin	0	0	-1	none
-ANIM_rotate_key	0	333.00021759
-ANIM_rotate_key	999	0
-ANIM_rotate_end
-ANIM_rotate_begin	1	0	0	none
-ANIM_rotate_key	0	333.00021759
-ANIM_rotate_key	999	0
-ANIM_rotate_end
-# EMPTY: grouped_trick_on_empty	weight: 0
-	# 2 Object: billboard
-	# LAMP: billboard	weight: 10000
-	LIGHT_NAMED	taxi_b -0.00000018 0.00000019 -2
-	# 2 Object: custom_light
-	# LAMP: custom_light	weight: 10000
-	LIGHT_CUSTOM	0 0.00000024 0 1 1 1 1 1 0 0 1 1 
-	# 2 Object: unkown_light_name
-	# LAMP: unkown_light_name	weight: 10000
-	LIGHT_NAMED	unknown -0.00000006 0.00000028 2
-ANIM_end
-# 1 Object: lone_unknown_light_name
-ANIM_begin
-# static translation
-ANIM_trans	-2	5	-2	-2	5	-2
-# rotation keyframes
-ANIM_rotate_begin	1	0	0	none
-ANIM_rotate_key	0	45.00010371
-ANIM_rotate_key	999	0
-ANIM_rotate_end
-# LAMP: lone_unknown_light_name	weight: 10000
-LIGHT_NAMED	unknown 0 0 0.00000024
-ANIM_end
-# 1 Object: lone_custom_light
-ANIM_begin
-# static translation
-ANIM_trans	0	5	-2	0	5	-2
-# rotation keyframes
-ANIM_rotate_begin	1	0	0	none
-ANIM_rotate_key	0	45.00010371
-ANIM_rotate_key	999	0
-ANIM_rotate_end
-# LAMP: lone_custom_light	weight: 10000
-LIGHT_CUSTOM	0 0 0.00000024 1 1 1 1 1 0 0 1 1 
-ANIM_end
-# 1 Object: lone_billboard
-ANIM_begin
-# static translation
-ANIM_trans	2	5	-2	2	5	-2
-# rotation keyframes
-ANIM_rotate_begin	1	0	0	none
-ANIM_rotate_key	0	45.00010371
-ANIM_rotate_key	999	0
-ANIM_rotate_end
-# LAMP: lone_billboard	weight: 10000
-LIGHT_NAMED	taxi_b 0 0 0.00000024
-ANIM_end
+	# 1 Empty: grouped_trick_on_empty
+	ANIM_begin
+	# static translation
+	ANIM_trans	0	5	0	0	5	0
+	# rotation keyframes
+	ANIM_rotate_begin	0	1	0	none
+	ANIM_rotate_key	0	333.00021759
+	ANIM_rotate_key	999	0
+	ANIM_rotate_end
+	ANIM_rotate_begin	0	0	-1	none
+	ANIM_rotate_key	0	333.00021759
+	ANIM_rotate_key	999	0
+	ANIM_rotate_end
+	ANIM_rotate_begin	1	0	0	none
+	ANIM_rotate_key	0	333.00021759
+	ANIM_rotate_key	999	0
+	ANIM_rotate_end
+	# EMPTY: grouped_trick_on_empty	weight: 0
+		# 2 Light: billboard
+		# LIGHT: billboard	weight: 10000
+		LIGHT_NAMED	taxi_b -0.00000018 0.00000019 -2
+		# 2 Light: custom_light
+		# LIGHT: custom_light	weight: 10000
+		LIGHT_CUSTOM	0 0.00000024 0 1 1 1 100 1 0 0 1 1 
+		# 2 Light: unkown_light_name
+		# LIGHT: unkown_light_name	weight: 10000
+		LIGHT_NAMED	unknown -0.00000006 0.00000028 2
+	ANIM_end
+	# 1 Light: lone_billboard
+	ANIM_begin
+	# static translation
+	ANIM_trans	2	5	-2	2	5	-2
+	# rotation keyframes
+	ANIM_rotate_begin	1	0	0	none
+	ANIM_rotate_key	0	45.00010371
+	ANIM_rotate_key	999	0
+	ANIM_rotate_end
+	# LIGHT: lone_billboard	weight: 10000
+	LIGHT_NAMED	taxi_b 0 0 0.00000024
+	ANIM_end
+	# 1 Light: lone_custom_light
+	ANIM_begin
+	# static translation
+	ANIM_trans	0	5	-2	0	5	-2
+	# rotation keyframes
+	ANIM_rotate_begin	1	0	0	none
+	ANIM_rotate_key	0	45.00010371
+	ANIM_rotate_key	999	0
+	ANIM_rotate_end
+	# LIGHT: lone_custom_light	weight: 10000
+	LIGHT_CUSTOM	0 0 0.00000024 1 1 1 1 1 0 0 1 1 
+	ANIM_end
+	# 1 Light: lone_unknown_light_name
+	ANIM_begin
+	# static translation
+	ANIM_trans	-2	5	-2	-2	5	-2
+	# rotation keyframes
+	ANIM_rotate_begin	1	0	0	none
+	ANIM_rotate_key	0	45.00010371
+	ANIM_rotate_key	999	0
+	ANIM_rotate_end
+	# LIGHT: lone_unknown_light_name	weight: 10000
+	LIGHT_NAMED	unknown 0 0 0.00000024
+	ANIM_end
 
-# Build with Blender 2.78 (sub 0) (build b'4bb1e22'). Exported with XPlane2Blender 3.4.0-dev.0+15.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+66.NO_BUILD_NUMBR

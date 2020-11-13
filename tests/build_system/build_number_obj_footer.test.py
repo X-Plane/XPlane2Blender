@@ -10,14 +10,14 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestBlendBuildNumberObjFooter(XPlaneTestCase):
     def test_build_number_obj_footer(self):
-        bpy.ops.scene.add_xplane_layers()
+        test_creation_helpers.create_datablock_collection("Layer 1")
         out = self.exportLayer(0)
 
         version_match = re.search("Exported with XPlane2Blender (.*)", out)
-        self.assertTrue(version_match is not None, "Version string not found in footer of obj")
-        
+        self.assertIsNotNone(version_match, "Version string not found in footer of obj")
+
         version = VerStruct.parse_version(version_match.group(1))
-        self.assertTrue(version is not None, "%s could not be parsed to a valid VerStruct" % version_match.group(1))
-        self.assertTrue(version == xplane_helpers.VerStruct.current(),"Version in obj is not equal to current version")
-        
+        self.assertIsNotNone(version, "%s could not be parsed to a valid VerStruct" % version_match.group(1))
+        self.assertEqual(version, xplane_helpers.VerStruct.current(),"Version in obj is not equal to current version")
+
 runTestCases([TestBlendBuildNumberObjFooter])

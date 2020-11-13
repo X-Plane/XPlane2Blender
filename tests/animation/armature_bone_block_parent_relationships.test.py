@@ -21,8 +21,8 @@ class TestArmatureBoneBlockParentRelationships(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             4, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
     def test_Armature_arm_anim_bone_no_anim(self):
@@ -30,8 +30,8 @@ class TestArmatureBoneBlockParentRelationships(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             3, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
     def test_Armature_arm_no_anim_bone_anim(self):
@@ -39,8 +39,8 @@ class TestArmatureBoneBlockParentRelationships(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             2, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
     def test_Armature_arm_no_anim_bone_no_anim(self):
@@ -48,8 +48,8 @@ class TestArmatureBoneBlockParentRelationships(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             1, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
     def test_no_parent(self):
@@ -57,8 +57,8 @@ class TestArmatureBoneBlockParentRelationships(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, fixtures_path, filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
             )
 
 runTestCases([TestArmatureBoneBlockParentRelationships])

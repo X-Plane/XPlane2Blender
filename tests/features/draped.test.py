@@ -16,11 +16,11 @@ class TestDraped(XPlaneTestCase):
                    line[0].find('TRIS') == 0)
 
         filename = 'test_draped'
-        
+
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestDraped])

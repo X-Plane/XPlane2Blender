@@ -14,7 +14,7 @@ bpy.ops.wm.open_mainfile(filepath=os.path.join(__dirname__,'originals','v3_4_0-b
 class TestBuildNumberProp(XPlaneTestCase):
     current = xplane_helpers.VerStruct.current()
 
-    def test_safe_set_version_data(self): 
+    def test_safe_set_version_data(self):
         xplane2blender_ver = bpy.context.scene.xplane.xplane2blender_ver_history[0]
         self.assertTrue(xplane2blender_ver.safe_set_version_data((3,4,0),"leg",0,0,xplane_constants.BUILD_NUMBER_NONE),
                         "xplane2blender_ver.safe_set_version_data failed with known good data")
@@ -43,6 +43,6 @@ class TestBuildNumberProp(XPlaneTestCase):
         #self.xplane2blender_ver.build_type_version = 0
         #self.xplane2blender_ver.data_model_version = 0
         #self.xplane2blender_ver.build_number = "20170915041130"
-        #self.assertTrue(old_values == self.xplane2blender_ver.make_struct(), "XPlane2BlenderVersion properties changed outside of safe_set_version_data")
+        #self.assertEqual(old_values, self.xplane2blender_ver.make_struct(), "XPlane2BlenderVersion properties changed outside of safe_set_version_data")
 
 runTestCases([TestBuildNumberProp])

@@ -8,8 +8,8 @@ __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
     return isinstance(line[0],str) and line[0].find("EXPORT") == 0
-    
-class TestExportPathCustomScen_2(XPlaneTestCase):
+
+class TestExportPathCustomScene_2(XPlaneTestCase):
     def test_find_default_scenery(self):
         tmp_path = os.path.abspath(os.path.join(__dirname__,'../../../../../tmp'))
         filename = 'honda_2'
@@ -19,4 +19,4 @@ class TestExportPathCustomScen_2(XPlaneTestCase):
             make_fixture_path(__dirname__,"honda_2"),
             filterLines)
 
-runTestCases([TestExportPathCustomScen_2])
+runTestCases([TestExportPathCustomScene_2])

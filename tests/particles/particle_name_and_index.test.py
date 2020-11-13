@@ -23,8 +23,8 @@ class TestParticleNameAndIndex(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             1, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
     def test_03_Empty_index_disabled(self):
@@ -32,8 +32,8 @@ class TestParticleNameAndIndex(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             2, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestParticleNameAndIndex])

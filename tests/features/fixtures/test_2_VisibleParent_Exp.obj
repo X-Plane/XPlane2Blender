@@ -1,0 +1,11 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 Empty: 2_VisibleParent_Exp
+# EMPTY: 2_VisibleParent_Exp	weight: 0
+	# 1 Light: 2_NotVisibleByContainingCollection
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+75.NO_BUILD_NUMBR

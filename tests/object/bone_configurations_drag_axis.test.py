@@ -13,13 +13,14 @@ from io_xplane2blender.xplane_constants import *
 __dirname__ = os.path.dirname(__file__)
 
 class TestBoneConfigurationsDragAxis(XPlaneTestCase):
-    #Case 1: The Classic 
+    #Case 1: The Classic
     def test_drag_axis_case_01(self):
         #print("def test_drag_axis_case_01(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_t"))
+        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_t", collection="Layer 1"))
         set_manipulator_settings(A,MANIP_DRAG_AXIS)
         set_animation_data(A,T_2_FRAMES_1_X)
 
@@ -31,12 +32,13 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
     def test_drag_axis_case_02(self):
         #print("def test_drag_axis_case_02(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t"))
+        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t", collection="Layer 1"))
         set_animation_data(A,T_2_FRAMES_1_X)
 
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A)))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A), collection="Layer 1"))
         set_manipulator_settings(B,MANIP_DRAG_AXIS)
 
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
@@ -47,7 +49,8 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
     def test_drag_axis_case_03(self):
         #print("def test_drag_axis_case_03(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t"))
         set_animation_data(A,T_2_FRAMES_1_X)
@@ -63,7 +66,8 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
     def test_drag_axis_case_04(self):
         #print("def test_drag_axis_case_04(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n"))
         B = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t",parent_info=ParentInfo(A)))
@@ -79,7 +83,8 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
     def test_drag_axis_case_05(self):
         #print("def test_drag_axis_case_05(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_rt"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
@@ -92,12 +97,12 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
         out = self.exportLayer(0)
         self.assertLoggerErrors(0)
 
-    #Failure
     #Case 6: N->SH->T
     def test_drag_axis_case_06(self):
         #print("def test_drag_axis_case_06(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
         A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t"))
         set_animation_data(A,T_2_FRAMES_1_X)
@@ -107,18 +112,20 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
         set_manipulator_settings(C,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(1) #currently show/hide misses "specific parent" error
+        self.assertLoggerErrors(0) # S/H is ignored, not a problem
 
+    #Failures
     #Case 7: Wrong Order R->T
     def test_drag_axis_case_07(self):
         #print("def test_drag_axis_case_07(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t"))
+        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_t", collection="Layer 1"))
         set_animation_data(A,T_2_FRAMES_1_X)
 
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A)))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_r",parent_info=ParentInfo(A), collection="Layer 1"))
         set_animation_data(B,R_2_FRAMES_45_Y_AXIS)
         set_manipulator_settings(B,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
 
@@ -130,9 +137,10 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
     def test_drag_axis_case_08(self):
         #print("def test_drag_axis_case_08(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_rt"))
+        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_rt", collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
         set_animation_data(A,T_2_FRAMES_1_X)
         set_manipulator_settings(A,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
@@ -141,30 +149,32 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
         out = self.exportLayer(0)
         self.assertLoggerErrors(1)
 
-    #Case 9: T,S/H
+    #Case 9: T,S/H (not a failure)
     def test_drag_axis_case_09(self):
         #print("def test_drag_axis_case_09(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_tsh"))
+        A = create_datablock_mesh(DatablockInfo("MESH",name="bone_tsh", collection="Layer 1"))
         set_animation_data(A,T_2_FRAMES_1_X)
         set_animation_data(A,SHOW_ANIM_S)
         set_animation_data(A,SHOW_ANIM_H)
         set_manipulator_settings(A,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
-        self.assertLoggerErrors(1)
+        self.assertLoggerErrors(0)
 
     #Case 10: Missing T, version 1
     def test_drag_axis_case_10(self):
         #print("def test_drag_axis_case_10(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r"))
+        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_r", collection="Layer 1"))
         set_animation_data(A,R_2_FRAMES_45_Y_AXIS)
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A)))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A), collection="Layer 1"))
         set_manipulator_settings(B,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)
@@ -174,10 +184,11 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
     def test_drag_axis_case_11(self):
         #print("def test_drag_axis_case_11(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_sh",parent_info=ParentInfo(A)))
+        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_n", collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_sh",parent_info=ParentInfo(A), collection="Layer 1"))
         set_animation_data(B,SHOW_ANIM_S)
         set_animation_data(B,SHOW_ANIM_H)
         set_manipulator_settings(B,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
@@ -189,10 +200,11 @@ class TestBoneConfigurationsDragAxis(XPlaneTestCase):
     def test_drag_axis_case_12(self):
         #print("def test_drag_axis_case_12(self):")
         create_initial_test_setup()
-        set_xplane_layer(0,{'export_type':'cockpit'})
+        set_xplane_layer(0, {"export_type":"cockpit"})
+        bpy.data.collections[0].xplane.is_exportable_collection = True
 
-        A = create_datablock_empty(DatablockInfo("EMPTY",name="bone_nn"))
-        B = create_datablock_mesh(DatablockInfo("MESH",name="bone_n",parent_info=ParentInfo(A)))
+        A = create_datablock_empty(DatablockInfo("EMPTY", name="bone_nn", collection="Layer 1"))
+        B = create_datablock_mesh(DatablockInfo("MESH", name="bone_n", parent_info=ParentInfo(A), collection="Layer 1"))
         set_manipulator_settings(B,MANIP_DRAG_AXIS,manip_props={'autodetect_settings_opt_in':True})
         #bpy.ops.wm.save_mainfile(filepath=__dirname__+"/config_blends/{}.blend".format(inspect.stack()[0][3]))
         out = self.exportLayer(0)

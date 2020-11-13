@@ -18,10 +18,10 @@ class TestParticleNonColocatedAnim(XPlaneTestCase):
     def test_particle_non_colocated_anim(self):
         filename = inspect.stack()[0][3]
 
-        self.assertRootObjectExportEqualsFixture(
+        self.assertExportableRootExportEqualsFixture(
             filename, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestParticleNonColocatedAnim])

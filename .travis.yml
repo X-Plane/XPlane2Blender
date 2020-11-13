@@ -1,15 +1,15 @@
 language: python
 python:
-  - "3.5"
+  - "3.7"
 addons:
   apt:
     packages:
       - blender
 sudo: false
 install:
-  - BLENDER_VERSION="2.78"
+  - BLENDER_VERSION="2.80"
   - BLENDER_VERSION_SUFFIX=""
-  - BLENDER_ARCHIVE="blender-${BLENDER_VERSION}${BLENDER_VERSION_SUFFIX}-linux-glibc211-x86_64"
+  - BLENDER_ARCHIVE="blender-${BLENDER_VERSION}${BLENDER_VERSION_SUFFIX}-linux-glibc217-x86_64"
   - mkdir tmp && cd tmp
   - wget http://ftp.nluug.nl/pub/graphics/blender/release/Blender${BLENDER_VERSION}/${BLENDER_ARCHIVE}.tar.bz2
   - tar jxf ${BLENDER_ARCHIVE}.tar.bz2

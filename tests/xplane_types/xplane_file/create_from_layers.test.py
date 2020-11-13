@@ -6,25 +6,13 @@ from io_xplane2blender.xplane_types import xplane_file
 from io_xplane2blender import xplane_config
 
 class TestCreateFromLayers(XPlaneTestCase):
-    def setUp(self):
-        super(TestCreateFromLayers, self).setUp()
-
-        # initially create xplane layers
-        bpy.ops.scene.add_xplane_layers()
-
-    def test_getActiveBlenderLayerIndexes(self):
-        # blender by default only activates first layer
-        layers = xplane_file.getActiveBlenderLayerIndexes()
-        self.assertEqual(len(layers), 1)
-        self.assertEqual(layers[0], 0)
-
     def test_create_files_from_single_layer(self):
         tmpDir = os.path.realpath(os.path.join(__file__, '../../tmp'))
 
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
+        xplaneFile = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 1"])
 
         # should contain 4 cubes
-        self.assertEqual(len(xplaneFile.objects), 4)
+        self.assertEqual(len(xplaneFile._bl_obj_name_to_bone), 4)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile, [
@@ -34,7 +22,27 @@ class TestCreateFromLayers(XPlaneTestCase):
             'Cube.003'
         ])
 
-        self.assertXplaneFileHasBoneTree(
+        def assertXplaneFileHasBoneTree(self, xplaneFile, tree):
+            self.assertIsNotNone(xplaneFile.rootBone)
+
+            bones = []
+
+            def collect(bone):
+                bones.append(bone)
+                for bone in bone.children:
+                    collect(bone)
+
+            collect(xplaneFile.rootBone)
+
+            self.assertEqual(len(tree), len(bones))
+
+            index = 0
+
+            while index < len(bones):
+                self.assertEqual(tree[index], bones[index].getName())
+                index += 1
+        assertXplaneFileHasBoneTree(
+            self,
             xplaneFile, [
             '0 ROOT',
                 '1 Mesh: Cube',
@@ -43,10 +51,11 @@ class TestCreateFromLayers(XPlaneTestCase):
                             '4 Mesh: Cube.003'
         ])
 
-        xplaneFile2 = xplane_file.createFileFromBlenderLayerIndex(1)
+
+        xplaneFile2 = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 2"])
 
         # should contain 2 cubes
-        self.assertEqual(len(xplaneFile2.objects), 2)
+        self.assertEqual(len(xplaneFile2._bl_obj_name_to_bone), 2)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile2, [
@@ -54,17 +63,18 @@ class TestCreateFromLayers(XPlaneTestCase):
             'Cube.005'
         ])
 
-        self.assertXplaneFileHasBoneTree(
+        assertXplaneFileHasBoneTree(
+            self,
             xplaneFile2, [
             '0 ROOT',
-                '1 Mesh: Cube.005',
-                '1 Mesh: Cube.004'
+                '1 Mesh: Cube.004',
+                '1 Mesh: Cube.005'
         ])
 
-        xplaneFile3 = xplane_file.createFileFromBlenderLayerIndex(2)
+        xplaneFile3 = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 3"])
 
         # should contain 4 cubes
-        self.assertEqual(len(xplaneFile3.objects), 5)
+        self.assertEqual(len(xplaneFile3._bl_obj_name_to_bone), 5)
 
         self.assertObjectsInXPlaneFile(
             xplaneFile3, [
@@ -74,16 +84,17 @@ class TestCreateFromLayers(XPlaneTestCase):
             'Cube_Bone.001'
         ])
 
-        self.assertXplaneFileHasBoneTree(
+        assertXplaneFileHasBoneTree(
+            self,
             xplaneFile3, [
             '0 ROOT',
                 '1 Mesh: Cube_arm_root',
                     '2 Armature: Armature',
                         '3 Bone: Bone',
+                            '4 Bone: Bone.001',
+                                '5 Mesh: Cube_Bone.001',
                             '4 Mesh: Cube_Bone',
                                 '5 Mesh: Cube_Bone.child',
-                            '4 Bone: Bone.001',
-                                '5 Mesh: Cube_Bone.001'
         ])
 
 runTestCases([TestCreateFromLayers])

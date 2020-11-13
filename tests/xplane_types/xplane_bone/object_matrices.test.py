@@ -4,7 +4,7 @@ import mathutils
 import os
 import sys
 from io_xplane2blender.tests import *
-from io_xplane2blender.xplane_types import xplane_file
+from io_xplane2blender.xplane_types import xplane_file, xplane_bone
 from io_xplane2blender import xplane_config
 
 # This was useful for exploring noise in the low bits of matrices
@@ -16,16 +16,31 @@ from io_xplane2blender import xplane_config
 #         m[0][3], m[1][3], m[2][3], m[3][3]))
 
 class TestMatrices(XPlaneTestCase):
+    def getBoneByBlenderName(self, name: str, parent: xplane_bone.XPlaneBone)->Optional[xplane_bone.XPlaneBone]:
+        '''
+        Performs a depth first search of the child bones for a bone with matching name.
+        Returns the bone or None if not found
+        '''
+        for bone in parent.children:
+            if bone.getBlenderName() == name:
+                return bone
+            else: # decsent to children
+                _bone = self.getBoneByBlenderName(name, bone)
+                if _bone:
+                    return _bone
+
+        return None
+
     def test_bone_root_matrices(self):
         identityMatrix = mathutils.Matrix.Identity(4)
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
+        xplaneFile = self.createXPlaneFileFromPotentialRoot("Layer 1")
 
-        cubeStatic = xplaneFile.getBoneByBlenderName('Cube_static')
+        cubeStatic = self.getBoneByBlenderName('Cube_static', parent=xplaneFile.rootBone)
 
         # FIXME: we are actually testing getBoneByBlenderName() here, should be in it's own test file
         self.assertIsNotNone(cubeStatic)
 
-        cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated')
+        cubeAnimated = self.getBoneByBlenderName('Cube_animated', parent=xplaneFile.rootBone)
         self.assertIsNotNone(cubeAnimated)
 
         preMatrix = cubeAnimated.getPreAnimationMatrix()
@@ -43,31 +58,31 @@ class TestMatrices(XPlaneTestCase):
 
     def test_child_bone_matrices(self):
         identityMatrix = mathutils.Matrix.Identity(4)
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
+        xplaneFile = self.createXPlaneFileFromPotentialRoot("Layer 1")
 
-        cubeStatic = xplaneFile.getBoneByBlenderName('Cube_static')
-        cubeStaticChildStatic = xplaneFile.getBoneByBlenderName('Cube_static.child_static')
+        cubeStatic = self.getBoneByBlenderName('Cube_static', parent=xplaneFile.rootBone)
+        cubeStaticChildStatic = self.getBoneByBlenderName('Cube_static.child_static', parent=xplaneFile.rootBone)
 
         # FIXME: we are actually testing getBoneByBlenderName() here, should be in it's own test file
         self.assertIsNotNone(cubeStaticChildStatic)
 
         # no to the animated child
-        cubeStaticChildAnimated = xplaneFile.getBoneByBlenderName('Cube_static.child_animated')
+        cubeStaticChildAnimated = self.getBoneByBlenderName('Cube_static.child_animated', parent=xplaneFile.rootBone)
 
         preMatrix = cubeStaticChildAnimated.getPreAnimationMatrix()
         postMatrix = cubeStaticChildAnimated.getPostAnimationMatrix()
         bakeMatrix = cubeStaticChildAnimated.getBakeMatrixForMyAnimations()
 
         # pre matrix should be parents world matrix * inverted matrix relative to parent
-        self.assertMatricesEqual(preMatrix, cubeStaticChildAnimated.blenderObject.parent.matrix_world * cubeStaticChildAnimated.blenderObject.matrix_parent_inverse)
+        self.assertMatricesEqual(preMatrix, cubeStaticChildAnimated.blenderObject.parent.matrix_world @ cubeStaticChildAnimated.blenderObject.matrix_parent_inverse)
 
         # post matrix should be world matrix
         self.assertMatricesEqual(postMatrix, cubeStaticChildAnimated.blenderObject.matrix_world,0.0001)
 
         # bake matrix should be inverted identity matrix *  own preanimation matrix
-        self.assertMatricesEqual(bakeMatrix, identityMatrix.inverted_safe() * preMatrix)
+        self.assertMatricesEqual(bakeMatrix, identityMatrix.inverted_safe() @ preMatrix)
 
-        cubeAnimated = xplaneFile.getBoneByBlenderName('Cube_animated')
-        cubeAnimatedChildStatic = xplaneFile.getBoneByBlenderName('Cube_animated.child_static')
+        cubeAnimated = self.getBoneByBlenderName('Cube_animated', parent=xplaneFile.rootBone)
+        cubeAnimatedChildStatic = self.getBoneByBlenderName('Cube_animated.child_static', parent=xplaneFile.rootBone)
 
 runTestCases([TestMatrices])

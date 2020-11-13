@@ -9,17 +9,18 @@ import time
 
 
 def clean_tmp_folder():
-    # TODO: This cannot run when the tmp folder is open
-    # in a file browser or is in use. This is annoying.
-    if os.path.exists('./tests/tmp'):
-        # empty temp directory
-        shutil.rmtree('./tests/tmp',ignore_errors=True)
-
     # create temp dir if not exists
-    try:
-        os.makedirs('./tests/tmp',exist_ok=True)
-    except:
-        pass
+    os.makedirs('./tests/tmp', exist_ok=True)
+
+    # Thanks jgoeders for something short,
+    # https://stackoverflow.com/a/6615332
+    for file_object in os.listdir("./tests/tmp"):
+        file_object_path = os.path.join("./tests/tmp", file_object)
+        if os.path.isfile(file_object_path) or os.path.islink(file_object_path):
+            os.unlink(file_object_path)
+        else:
+            shutil.rmtree(file_object_path)
+
 
 def _make_argparse():
     parser = argparse.ArgumentParser(description="Runs the XPlane2Blender test suite")
@@ -194,6 +195,24 @@ def main(argv=None)->int:
 
             #Run Blender, normalize output line endings because Windows is dumb
             out = subprocess.check_output(blender_args, stderr = subprocess.STDOUT, universal_newlines=True) # type: str
+            if not argv.force_blender_debug:
+                # Ignore the junk!
+                pattern = "^(%s)" % "|".join(
+                    (
+                        "DAG zero",
+                        "found bundled python",
+                        "Read new prefs",
+                        "ID user decrement error",
+                        "Smart Projection time",
+                        "WARNING.*has no UV-Map.",
+                        "ERROR.*wrong user count in old ID",
+                    )
+                )
+
+                out = "\n".join(filter(
+                    lambda line: not re.match(pattern, line),
+                    out.splitlines()
+                ))
             if not (argv.quiet or argv.print_fails):
                 print(out)
 

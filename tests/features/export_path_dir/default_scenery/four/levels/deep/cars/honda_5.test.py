@@ -8,13 +8,14 @@ __dirname__ = os.path.dirname(__file__)
 
 def filterLines(line):
     return isinstance(line[0],str) and line[0].find("EXPORT") == 0
-    
-class TestExportPathCustomScen_5(XPlaneTestCase):
+
+class TestExportPathCustomScene_5(XPlaneTestCase):
     def test_deeply_nested_still_works(self):
            self.assertLayerExportEqualsFixture(
                0,
                make_fixture_path(__dirname__,"honda_5"),
-                                             "honda_5",
-               filterLines)
+               filterLines,
+               "honda_5",
+               )
 
-runTestCases([TestExportPathCustomScen_5])
+runTestCases([TestExportPathCustomScene_5])

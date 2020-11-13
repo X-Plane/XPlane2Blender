@@ -11,18 +11,18 @@ __dirname__ = os.path.dirname(__file__)
 class TestCOTC_2Mat_Manip_SolidCamera(XPlaneTestCase):
     def test_export(self):
         def filterLines(line):
-            return isinstance(line[0], str) and \
-                   (line[0].find('TEXTURE') == 0 or \
-                   line[0].find('ATTR_') == 0 or \
-                   line[0].find('GLOBAL') == 0 or \
-                   line[0].find('SPECULAR'))
+            return (isinstance(line[0], str)
+                    and ("TEXTURE" in line[0]
+                        or 'ATTR_' in line[0]
+                        or 'GLOBAL' in line[0]
+                        or 'SPECULAR' in line[0]))
 
         filename = 'test_COTC_2Mat_Manip_SolidCamera'
 
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, '..', 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestCOTC_2Mat_Manip_SolidCamera])

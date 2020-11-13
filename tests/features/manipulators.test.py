@@ -9,9 +9,9 @@ __dirname__ = os.path.dirname(__file__)
 
 class TestMaterials(XPlaneTestCase):
     def test_manipulator_attributes(self):
-        xplaneFile = xplane_file.createFileFromBlenderLayerIndex(0)
+        xplaneFile = self.createXPlaneFileFromPotentialRoot(bpy.data.collections["Layer 1"])
 
-        drag_xy = xplaneFile.objects['drag_xy']
+        drag_xy = xplaneFile._bl_obj_name_to_bone['drag_xy'].xplaneObject
         self.assertAttributesEqualDict(drag_xy.cockpitAttributes, {
             'ATTR_manip_drag_xy': (
                 'hand',
@@ -22,7 +22,7 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_manip_wheel': (1)
         })
 
-        drag_axis = xplaneFile.objects['drag_axis']
+        drag_axis = xplaneFile._bl_obj_name_to_bone['drag_axis'].xplaneObject
         self.assertAttributesEqualDict(drag_axis.cockpitAttributes, {
             'ATTR_manip_drag_axis': (
                 'four_arrows',
@@ -32,7 +32,7 @@ class TestMaterials(XPlaneTestCase):
             )
         })
 
-        command = xplaneFile.objects['command']
+        command = xplaneFile._bl_obj_name_to_bone['command'].xplaneObject
         self.assertAttributesEqualDict(command.cockpitAttributes, {
             'ATTR_manip_command': (
                 'button',
@@ -41,7 +41,7 @@ class TestMaterials(XPlaneTestCase):
             )
         })
 
-        command_axis = xplaneFile.objects['command_axis']
+        command_axis = xplaneFile._bl_obj_name_to_bone['command_axis'].xplaneObject
         self.assertAttributesEqualDict(command_axis.cockpitAttributes, {
             'ATTR_manip_command_axis': (
                 'rotate_small',
@@ -51,7 +51,7 @@ class TestMaterials(XPlaneTestCase):
             )
         })
 
-        push = xplaneFile.objects['push']
+        push = xplaneFile._bl_obj_name_to_bone['push'].xplaneObject
         self.assertAttributesEqualDict(push.cockpitAttributes, {
             'ATTR_manip_push': (
                 'rotate_small_left',
@@ -62,7 +62,7 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_manip_wheel': (1)
         })
 
-        radio = xplaneFile.objects['radio']
+        radio = xplaneFile._bl_obj_name_to_bone['radio'].xplaneObject
         self.assertAttributesEqualDict(radio.cockpitAttributes, {
             'ATTR_manip_radio': (
                 'rotate_small_right',
@@ -73,7 +73,7 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_manip_wheel': (1)
         })
 
-        delta = xplaneFile.objects['delta']
+        delta = xplaneFile._bl_obj_name_to_bone['delta'].xplaneObject
         self.assertAttributesEqualDict(delta.cockpitAttributes, {
             'ATTR_manip_delta': (
                 'rotate_medium',
@@ -84,7 +84,7 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_manip_wheel': (1)
         })
 
-        wrap = xplaneFile.objects['wrap']
+        wrap = xplaneFile._bl_obj_name_to_bone['wrap'].xplaneObject
         self.assertAttributesEqualDict(wrap.cockpitAttributes, {
             'ATTR_manip_wrap': (
                 'rotate_medium_left',
@@ -95,7 +95,7 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_manip_wheel': (1)
         })
 
-        toggle = xplaneFile.objects['toggle']
+        toggle = xplaneFile._bl_obj_name_to_bone['toggle'].xplaneObject
         self.assertAttributesEqualDict(toggle.cockpitAttributes, {
             'ATTR_manip_toggle': (
                 'rotate_medium_right',
@@ -106,7 +106,7 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_manip_wheel': (1)
         })
 
-        noop = xplaneFile.objects['noop']
+        noop = xplaneFile._bl_obj_name_to_bone['noop'].xplaneObject
         self.assertAttributesEqualDict(noop.cockpitAttributes, {
             'ATTR_manip_noop': (
                 'dataref',
@@ -114,7 +114,7 @@ class TestMaterials(XPlaneTestCase):
             )
         })
 
-        drag_axis_pix = xplaneFile.objects['drag_axis_pix']
+        drag_axis_pix = xplaneFile._bl_obj_name_to_bone['drag_axis_pix'].xplaneObject
         self.assertAttributesEqualDict(drag_axis_pix.cockpitAttributes, {
             'ATTR_manip_drag_axis_pix': (
                 'rotate_large_left',
@@ -125,7 +125,7 @@ class TestMaterials(XPlaneTestCase):
             'ATTR_manip_wheel': (1)
         })
 
-        command_knob = xplaneFile.objects['command_knob']
+        command_knob = xplaneFile._bl_obj_name_to_bone['command_knob'].xplaneObject
         self.assertAttributesEqualDict(command_knob.cockpitAttributes, {
             'ATTR_manip_command_knob': (
                 'rotate_large_left',
@@ -134,7 +134,7 @@ class TestMaterials(XPlaneTestCase):
             )
         })
 
-        command_switch_up_down = xplaneFile.objects['command_switch_up_down']
+        command_switch_up_down = xplaneFile._bl_obj_name_to_bone['command_switch_up_down'].xplaneObject
         self.assertAttributesEqualDict(command_switch_up_down.cockpitAttributes, {
             'ATTR_manip_command_switch_up_down': (
                 'rotate_large_left',
@@ -143,7 +143,7 @@ class TestMaterials(XPlaneTestCase):
             )
         })
 
-        command_switch_left_right = xplaneFile.objects['command_switch_left_right']
+        command_switch_left_right = xplaneFile._bl_obj_name_to_bone['command_switch_left_right'].xplaneObject
         self.assertAttributesEqualDict(command_switch_left_right.cockpitAttributes, {
             'ATTR_manip_command_switch_left_right': (
                 'rotate_large_left',
@@ -152,7 +152,7 @@ class TestMaterials(XPlaneTestCase):
             )
         })
 
-        axis_switch_up_down = xplaneFile.objects['axis_switch_up_down']
+        axis_switch_up_down = xplaneFile._bl_obj_name_to_bone['axis_switch_up_down'].xplaneObject
         self.assertAttributesEqualDict(axis_switch_up_down.cockpitAttributes, {
             'ATTR_manip_axis_switch_up_down': (
                 'rotate_large_left',
@@ -162,7 +162,7 @@ class TestMaterials(XPlaneTestCase):
             )
         })
 
-        axis_switch_left_right = xplaneFile.objects['axis_switch_left_right']
+        axis_switch_left_right = xplaneFile._bl_obj_name_to_bone['axis_switch_left_right'].xplaneObject
         self.assertAttributesEqualDict(axis_switch_left_right.cockpitAttributes, {
             'ATTR_manip_axis_switch_left_right': (
                 'rotate_large_left',
@@ -179,8 +179,8 @@ class TestMaterials(XPlaneTestCase):
         filename = 'test_manipulators'
         self.assertLayerExportEqualsFixture(
             0, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestMaterials])

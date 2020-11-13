@@ -57,8 +57,8 @@ class TestDragAxisWDetents(XPlaneTestCase):
 
         self.assertLayerExportEqualsFixture(
             9, os.path.join(__dirname__, 'fixtures', filename + '.obj'),
+            filterLines,
             filename,
-            filterLines
         )
 
 runTestCases([TestDragAxisWDetents])
