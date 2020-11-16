@@ -863,11 +863,16 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
             blend_prop_enum = None
 
         if active_material.xplane.blend == True and version < 1000:
-            draw_box_column.prop(active_material.xplane, "blendRatio", slider = True)
+            draw_box_column.prop(active_material.xplane, "blendRatio", slider=True)
         elif blend_prop_enum == BLEND_OFF and version >= 1000:
-            draw_box_column.prop(active_material.xplane, "blendRatio", slider = True)
+            draw_box_column.prop(active_material.xplane, "blendRatio", slider=True)
         elif blend_prop_enum == BLEND_SHADOW and version >= 1000:
-            draw_box_column.prop(active_material.xplane, "blendRatio", "Shadow Blend Ratio", slider = True)
+            draw_box_column.prop(
+                active_material.xplane,
+                "blendRatio",
+                text="Shadow Blend Ratio",
+                slider=True,
+            )
 
     surface_behavior_box = layout.box()
     surface_behavior_box.label(text="Surface Behavior")
