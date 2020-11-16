@@ -922,7 +922,7 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
 # Defines settings for a cockpit region.
 #
 # Properties:
-#   int top - top position of the region in px
+#   int top - BAD NAME ALERT it should have been called bottom! Bottom position of the region in px
 #   int left - left position of the region in px
 #   int width - width of the region in powers of 2
 #   int height - height of the region in powers of 2
@@ -933,9 +933,12 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
         default = False
     )
 
+    # BAD NAME ALERT: Should have been called "bottom"
+    # One day we'll have nothing better to do in life than fix this
+    # see #416
     top: bpy.props.IntProperty(
-        name = "Top",
-        description = "Top",
+        name = "Bottom",
+        description = "Bottom of cockpit region",
         default = 0,
         min = 0,
         max = 2048
@@ -943,7 +946,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
 
     left: bpy.props.IntProperty(
         name = "Left",
-        description = "Left",
+        description = "Left of cockpit region",
         default = 0,
         min = 0,
         max = 2048
@@ -951,7 +954,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
 
     width: bpy.props.IntProperty(
         name = "Width",
-        description = "Width in powers of 2",
+        description = "Width of cockpit region in powers of 2",
         default = 1,
         min = 1,
         max = 11
@@ -959,7 +962,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
 
     height: bpy.props.IntProperty(
         name = "Height",
-        description = "Height in powers of 2",
+        description = "Height of cockpit region in powers of 2",
         default = 1,
         min = 1,
         max = 11
@@ -1689,8 +1692,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = 0.5,
         step = 0.1,
         precision = 2,
+        min = 0.0,
         max = 1.0,
-        min = 0.0
     )
 
     cockpit_feature: bpy.props.EnumProperty(

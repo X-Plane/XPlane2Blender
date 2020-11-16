@@ -333,7 +333,7 @@ class XPlaneHeader:
                     self.attributes["COCKPIT_REGION"].addValue(
                         (
                             cockpit_region.left,
-                            cockpit_region.top,
+                            cockpit_region.top,  # bad name alert! Should have been "bottom"
                             cockpit_region.left + (2 ** cockpit_region.width),
                             cockpit_region.top + (2 ** cockpit_region.height),
                         )
