@@ -501,6 +501,15 @@ def _panel_to_cockpit_feature(logger: xplane_helpers.XPlaneLogger):
         )
 
 
+def _regions_change_panel_mode(logger: xplane_helpers.XPlaneLogger):
+    for col in bpy.data.collections:
+        col.xplane.layer.cockpit_panel_mode = (
+            xplane_constants.PANEL_COCKPIT_REGION
+            if int(col.xplane.layer.cockpit_regions)
+            else col.xplane.layer.cockpit_panel_mode
+        )
+
+
 def update(
     last_version: xplane_helpers.VerStruct, logger: xplane_helpers.XPlaneLogger
 ) -> None:
@@ -586,6 +595,10 @@ def update(
         "4.1.0-alpha.1+97.20201109172400"
     ):
         _panel_to_cockpit_feature(logger)
+    if last_version < xplane_helpers.VerStruct.parse_version(
+        "4.1.0-beta.1+100.20201117112800"
+    ):
+        _regions_change_panel_mode(logger)
 
 
 def _synchronize_last_version_across_histories(last_version: xplane_helpers.VerStruct):
