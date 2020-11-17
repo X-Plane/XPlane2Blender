@@ -2,11 +2,13 @@
 Defines X-Plane Properties attached to regular Blender data types.
 """
 
+from typing import List
+
 import bpy
+
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_constants, xplane_helpers
 from io_xplane2blender.xplane_constants import VERSION_1100
-from typing import List
 
 from .xplane_constants import *
 
@@ -88,6 +90,8 @@ undebatable alphabetical listing.
 # Internal variable to enable and disable the ability to update the value of XPlane2Blender's properties
 # DO NOT CHANGE OUTSIDE OF safe_set_version_data!
 _version_safety_off = False
+
+
 class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     """
     Contains useful methods for getting information about the
@@ -97,21 +101,24 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     major.minor.release-(alpha|beta|dev|leg|rc)\.[0-9]+)\+\d+\.(YYYYMMDDHHMMSS)
     """
 
-    #Guards against being updated without being validated
-    def update_version_property(self,context):
+    # Guards against being updated without being validated
+    def update_version_property(self, context):
         if _version_safety_off is False:
-            raise Exception("Do not modify version property outside of safe_set_version_data!")
+            raise Exception(
+                "Do not modify version property outside of safe_set_version_data!"
+            )
         return None
 
     # Property: addon_version
     #
     # Tuple of Blender addon version, (major, minor, revision)
     addon_version: bpy.props.IntVectorProperty(
-        name = "XPlane2Blender Addon Version",
-        description = "The version of the addon (also found in it's addon information)",
+        name="XPlane2Blender Addon Version",
+        description="The version of the addon (also found in it's addon information)",
         default=xplane_config.CURRENT_ADDON_VERSION,
         update=update_version_property,
-        size=3)
+        size=3,
+    )
 
     # Property: build_type
     #
@@ -120,7 +127,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         name="Build Type",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=xplane_config.CURRENT_BUILD_TYPE,
-        update=update_version_property
+        update=update_version_property,
     )
 
     # Property: build_type_version
@@ -130,7 +137,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         name="Build Type Version",
         description="Which iteration in the development cycle of the chosen build type we're at",
         default=xplane_config.CURRENT_BUILD_TYPE_VERSION,
-        update=update_version_property
+        update=update_version_property,
     )
 
     # Property: data_model_version
@@ -140,7 +147,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         name="Data Model Version",
         description="Version of the data model (constants,props, and updater functionality) this version of the addon is. Always incrementing on changes",
         default=xplane_config.CURRENT_DATA_MODEL_VERSION,
-        update=update_version_property
+        update=update_version_property,
     )
 
     # Property: build_number
@@ -152,7 +159,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
         name="Build Number",
         description="Build number of XPlane2Blender. If xplane_constants.BUILD_NUMBER_NONE, this is a development or legacy build!",
         default=xplane_config.CURRENT_BUILD_NUMBER,
-        update=update_version_property
+        update=update_version_property,
     )
 
     # Method: safe_set_version_data
@@ -162,32 +169,40 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     # when the data is valid
     #
     # Passing nothing in results in no change
-    def safe_set_version_data(self, addon_version=None, build_type=None,
-                              build_type_version=None, data_model_version=None,
-                              build_number=None, debug_add_to_history=False):
+    def safe_set_version_data(
+        self,
+        addon_version=None,
+        build_type=None,
+        build_type_version=None,
+        data_model_version=None,
+        build_number=None,
+        debug_add_to_history=False,
+    ):
         if addon_version is None:
             addon_version = self.addon_version
-        if build_type  is None:
-            build_type  = self.build_type
+        if build_type is None:
+            build_type = self.build_type
         if build_type_version is None:
-            build_type_version =  self.build_type_version
+            build_type_version = self.build_type_version
         if data_model_version is None:
             data_model_version = self.data_model_version
         if build_number is None:
             build_number = self.build_number
 
-        if xplane_helpers.VerStruct(addon_version,
-                          build_type,
-                          build_type_version,
-                          data_model_version,
-                          build_number).is_valid():
+        if xplane_helpers.VerStruct(
+            addon_version,
+            build_type,
+            build_type_version,
+            data_model_version,
+            build_number,
+        ).is_valid():
             global _version_safety_off
             _version_safety_off = True
-            self.addon_version      = addon_version
-            self.build_type         = build_type
+            self.addon_version = addon_version
+            self.build_type = build_type
             self.build_type_version = build_type_version
             self.data_model_version = data_model_version
-            self.build_number       = build_number
+            self.build_number = build_number
             _version_safety_off = False
             if debug_add_to_history:
                 xplane_helpers.VerStruct.add_to_version_history(self)
@@ -199,32 +214,44 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     #
     # Make a VerStruct version of itself
     def make_struct(self):
-        return xplane_helpers.VerStruct(self.addon_version, self.build_type, self.build_type_version, self.data_model_version, self.build_number)
+        return xplane_helpers.VerStruct(
+            self.addon_version,
+            self.build_type,
+            self.build_type_version,
+            self.data_model_version,
+            self.build_number,
+        )
 
-
-    #Addon string in the form of "m.m.r", no parenthesis
+    # Addon string in the form of "m.m.r", no parenthesis
     def addon_version_clean_str(self):
-        return '.'.join(map(str,self.addon_version))
+        return ".".join(map(str, self.addon_version))
 
     # Method: __repr__
     #
     # repr and repr of VerStruct are the same. It is used as a key for scene.xplane.xplane2blender_ver_history
-    def __repr__(self)->str:
-        return "(%s, %s, %s, %s, %s)" % ('(' + ','.join(map(str,self.addon_version)) + ')',
-                                         "'" + str(self.build_type) + "'",
-                                               str(self.build_type_version),
-                                               str(self.data_model_version),
-                                         "'" + str(self.build_number) + "'")
+    def __repr__(self) -> str:
+        return "(%s, %s, %s, %s, %s)" % (
+            "(" + ",".join(map(str, self.addon_version)) + ")",
+            "'" + str(self.build_type) + "'",
+            str(self.build_type_version),
+            str(self.data_model_version),
+            "'" + str(self.build_number) + "'",
+        )
+
     # Method: __str__
     #
     # str and str of VerStruct are the same. It is used for printing to the user
-    def __str__(self)->str:
-        return "%s-%s.%s+%s.%s" % ('.'.join(map(str,self.addon_version)),
-                                   self.build_type,
-                                   self.build_type_version,
-                                   self.data_model_version,
-                                   self.build_number)
+    def __str__(self) -> str:
+        return "%s-%s.%s+%s.%s" % (
+            ".".join(map(str, self.addon_version)),
+            self.build_type,
+            self.build_type_version,
+            self.data_model_version,
+            self.build_number,
+        )
 
+
+# fmt: off
 class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
     start: bpy.props.FloatProperty(
             name = "Start",
@@ -277,50 +304,47 @@ class XPlaneCustomAttribute(bpy.types.PropertyGroup):
         default = 0,
         min = 0
     )
+# fmt: on
 
 
 class ListItemCommand(bpy.types.PropertyGroup):
-    '''
+    """
     This is essentially a copy of xplane_commands_txt_parser.CommandInfoStruct's members
-    '''
+    """
+
     command: bpy.props.StringProperty(
         name="Command For Search List",
-        description="A command path in the command search window. Comes from a Commands definitions file"
+        description="A command path in the command search window. Comes from a Commands definitions file",
     )
 
     command_description: bpy.props.StringProperty(
         name="Command Description For Search List",
-        description="Indicates the type, shown in a column in the commands search window. Comes from a Commands definitions file"
+        description="Indicates the type, shown in a column in the commands search window. Comes from a Commands definitions file",
     )
 
+
 class ListItemDataref(bpy.types.PropertyGroup):
-    '''
+    """
     This is essentially a copy of xplane_datarefs_txt_parser.DatarefInfoStruct's members
-    '''
+    """
+
     dataref_path: bpy.props.StringProperty(
         name="Dataref Path Data For Search List",
-        description="A dataref path in the dataref search window. Comes from a Datarefs definitions file"
+        description="A dataref path in the dataref search window. Comes from a Datarefs definitions file",
     )
 
     dataref_type: bpy.props.StringProperty(
         name="Dataref Type Data For Search List",
-        description="Indicates the type, shown in a column in the datarefs search window. Comes from a Datarefs definitions file"
+        description="Indicates the type, shown in a column in the datarefs search window. Comes from a Datarefs definitions file",
     )
 
     dataref_is_writable: bpy.props.StringProperty(
-        name="Dataref 'Is Writable' Data For Search List",
-        description = "A "
+        name="Dataref 'Is Writable' Data For Search List", description="A "
     )
 
-    dataref_units: bpy.props.StringProperty(
-        name="",
-        description=""
-    )
+    dataref_units: bpy.props.StringProperty(name="", description="")
 
-    dataref_description: bpy.props.StringProperty(
-        name="",
-        description=""
-    )
+    dataref_description: bpy.props.StringProperty(name="", description="")
 
 
 class XPlaneCommandSearchWindow(bpy.types.PropertyGroup):
@@ -329,44 +353,49 @@ class XPlaneCommandSearchWindow(bpy.types.PropertyGroup):
     # as if it were being put into the Python console.
     # For instance: "bpy.context.active_object.xplane.commands[0].path"
     command_prop_dest: bpy.props.StringProperty(
-            default="",
-            name="Current Command Property To Change",
-            description="The destination command property, starting with 'bpy.context...'"
+        default="",
+        name="Current Command Property To Change",
+        description="The destination command property, starting with 'bpy.context...'",
     )
 
-    def onclick_command(self,context):
-        '''
+    def onclick_command(self, context):
+        """
         This method is called when the template_list uilist writes to the current selected index as the user selects.
         We dig out our stashed search info, write the command, and clear the current search, zapping out the UI.
-        '''
+        """
 
         xplane = context.scene.xplane
         command_prop_dest = xplane.command_search_window_state.command_prop_dest
         commands_search_list = xplane.command_search_window_state.command_search_list
-        commands_search_list_idx = xplane.command_search_window_state.command_search_list_idx
+        commands_search_list_idx = (
+            xplane.command_search_window_state.command_search_list_idx
+        )
         command = commands_search_list[commands_search_list_idx].command
-        assert command_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
-        def getattr_recursive(obj,names):
-            '''This automatically expands [] operators'''
-            if len(names) == 1:
-                if '[' in names[0]:
-                    name = names[0]
-                    collection_name = name[:name.find('[')]
-                    index = name[name.find('[')+1:-1]
-                    return getattr(obj,collection_name)[int(index)]
-                else:
-                    return getattr(obj,names[0])
-            else:
-                if '[' in names[0]:
-                    name = names[0]
-                    collection_name = name[:name.find('[')]
-                    index = name[name.find('[')+1:-1]
-                    obj = getattr(obj,collection_name)[int(index)]
-                else:
-                    obj = getattr(obj,names[0])
-                return getattr_recursive(obj,names[1:])
+        assert (
+            command_prop_dest != ""
+        ), "should not be able to click button when search window is supposed to be closed"
 
-        components = command_prop_dest.split('.')
+        def getattr_recursive(obj, names):
+            """This automatically expands [] operators"""
+            if len(names) == 1:
+                if "[" in names[0]:
+                    name = names[0]
+                    collection_name = name[: name.find("[")]
+                    index = name[name.find("[") + 1 : -1]
+                    return getattr(obj, collection_name)[int(index)]
+                else:
+                    return getattr(obj, names[0])
+            else:
+                if "[" in names[0]:
+                    name = names[0]
+                    collection_name = name[: name.find("[")]
+                    index = name[name.find("[") + 1 : -1]
+                    obj = getattr(obj, collection_name)[int(index)]
+                else:
+                    obj = getattr(obj, names[0])
+                return getattr_recursive(obj, names[1:])
+
+        components = command_prop_dest.split(".")
         assert components[0] == "bpy"
         setattr(getattr_recursive(bpy, components[1:-1]), components[-1], command)
         xplane.command_search_window_state.command_prop_dest = ""
@@ -381,44 +410,49 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
     # as if it were being put into the Python console.
     # For instance: "bpy.context.active_object.xplane.datarefs[0].path"
     dataref_prop_dest: bpy.props.StringProperty(
-            default="",
-            name="Current Dataref Property To Change",
-            description="The destination dataref property, starting with 'bpy.context...'"
+        default="",
+        name="Current Dataref Property To Change",
+        description="The destination dataref property, starting with 'bpy.context...'",
     )
 
-    def onclick_dataref(self,context):
-        '''
+    def onclick_dataref(self, context):
+        """
         This method is called when the template_list uilist writes to the current selected index as the user selects.
         We dig out our stashed search info, write the dataref, and clear the current search, zapping out the UI.
-        '''
+        """
 
         xplane = context.scene.xplane
         dataref_prop_dest = xplane.dataref_search_window_state.dataref_prop_dest
         datarefs_search_list = xplane.dataref_search_window_state.dataref_search_list
-        datarefs_search_list_idx = xplane.dataref_search_window_state.dataref_search_list_idx
+        datarefs_search_list_idx = (
+            xplane.dataref_search_window_state.dataref_search_list_idx
+        )
         path = datarefs_search_list[datarefs_search_list_idx].dataref_path
-        assert dataref_prop_dest != "", "should not be able to click button when search window is supposed to be closed"
-        def getattr_recursive(obj,names):
-            '''This automatically expands [] operators'''
-            if len(names) == 1:
-                if '[' in names[0]:
-                    name = names[0]
-                    collection_name = name[:name.find('[')]
-                    index = name[name.find('[')+1:-1]
-                    return getattr(obj,collection_name)[int(index)]
-                else:
-                    return getattr(obj,names[0])
-            else:
-                if '[' in names[0]:
-                    name = names[0]
-                    collection_name = name[:name.find('[')]
-                    index = name[name.find('[')+1:-1]
-                    obj = getattr(obj,collection_name)[int(index)]
-                else:
-                    obj = getattr(obj,names[0])
-                return getattr_recursive(obj,names[1:])
+        assert (
+            dataref_prop_dest != ""
+        ), "should not be able to click button when search window is supposed to be closed"
 
-        components = dataref_prop_dest.split('.')
+        def getattr_recursive(obj, names):
+            """This automatically expands [] operators"""
+            if len(names) == 1:
+                if "[" in names[0]:
+                    name = names[0]
+                    collection_name = name[: name.find("[")]
+                    index = name[name.find("[") + 1 : -1]
+                    return getattr(obj, collection_name)[int(index)]
+                else:
+                    return getattr(obj, names[0])
+            else:
+                if "[" in names[0]:
+                    name = names[0]
+                    collection_name = name[: name.find("[")]
+                    index = name[name.find("[") + 1 : -1]
+                    obj = getattr(obj, collection_name)[int(index)]
+                else:
+                    obj = getattr(obj, names[0])
+                return getattr_recursive(obj, names[1:])
+
+        components = dataref_prop_dest.split(".")
         assert components[0] == "bpy"
         setattr(getattr_recursive(bpy, components[1:-1]), components[-1], path)
         xplane.dataref_search_window_state.dataref_prop_dest = ""
@@ -427,6 +461,7 @@ class XPlaneDatarefSearchWindow(bpy.types.PropertyGroup):
     dataref_search_list_idx: bpy.props.IntProperty(update=onclick_dataref)
 
 
+# fmt: off
 class XPlaneExportPathDirective(bpy.types.PropertyGroup):
     export_path: bpy.props.StringProperty(
         name = "Special library.txt Directive",
@@ -1799,6 +1834,7 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         description = "User defined light attributes for the X-Plane file",
         type = XPlaneCustomAttribute
     )
+# fmt: on
 
 
 _classes = (
@@ -1818,7 +1854,6 @@ _classes = (
     XPlaneManipulatorSettings,
     XPlaneCockpitRegion,
     XPlaneLOD,
-
     # complex classes, depending on basic classes
     XPlaneLayer,
     XPlaneCollectionSettings,
@@ -1826,7 +1861,7 @@ _classes = (
     XPlaneBoneSettings,
     XPlaneMaterialSettings,
     XPlaneLightSettings,
-    XPlaneSceneSettings
+    XPlaneSceneSettings,
 )
 
 
@@ -1836,35 +1871,35 @@ def register():
         bpy.utils.register_class(c)
 
     bpy.types.Collection.xplane = bpy.props.PointerProperty(
-        type = XPlaneCollectionSettings,
-        name = "X-Plane Collection Settings",
-        description = "X-Plane Collection Settings",
+        type=XPlaneCollectionSettings,
+        name="X-Plane Collection Settings",
+        description="X-Plane Collection Settings",
     )
 
     bpy.types.Scene.xplane = bpy.props.PointerProperty(
-        type = XPlaneSceneSettings,
-        name = "X-Plane Scene Settings",
-        description = "X-Plane Scene Settings"
+        type=XPlaneSceneSettings,
+        name="X-Plane Scene Settings",
+        description="X-Plane Scene Settings",
     )
     bpy.types.Object.xplane = bpy.props.PointerProperty(
-        type = XPlaneObjectSettings,
-        name = "X-Plane Object Settings",
-        description = "X-Plane Object Settings"
+        type=XPlaneObjectSettings,
+        name="X-Plane Object Settings",
+        description="X-Plane Object Settings",
     )
     bpy.types.Bone.xplane = bpy.props.PointerProperty(
-        type = XPlaneBoneSettings,
-        name = "X-Plane Bone Settings",
-        description = "X-Plane Bone Settings"
+        type=XPlaneBoneSettings,
+        name="X-Plane Bone Settings",
+        description="X-Plane Bone Settings",
     )
     bpy.types.Material.xplane = bpy.props.PointerProperty(
-        type = XPlaneMaterialSettings,
-        name = "X-Plane Material Settings",
-        description = "X-Plane Material Settings"
+        type=XPlaneMaterialSettings,
+        name="X-Plane Material Settings",
+        description="X-Plane Material Settings",
     )
     bpy.types.Light.xplane = bpy.props.PointerProperty(
-        type = XPlaneLightSettings,
-        name = "X-Plane Light Settings",
-        description = "X-Plane Light Settings"
+        type=XPlaneLightSettings,
+        name="X-Plane Light Settings",
+        description="X-Plane Light Settings",
     )
 
 

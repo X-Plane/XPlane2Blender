@@ -1,14 +1,17 @@
 import collections
 import math
 import sys
+from typing import Any
 
 import bpy
-from io_xplane2blender import xplane_helpers
-from io_xplane2blender.xplane_constants import (MANIP_DRAG_AXIS_DETENT,
-                                                MANIP_DRAG_ROTATE_DETENT)
-from io_xplane2blender.xplane_types import xplane_manipulator
 from mathutils import Vector
-from typing import Any
+
+from io_xplane2blender import xplane_helpers
+from io_xplane2blender.xplane_constants import (
+    MANIP_DRAG_AXIS_DETENT,
+    MANIP_DRAG_ROTATE_DETENT,
+)
+from io_xplane2blender.xplane_types import xplane_manipulator
 
 from ..xplane_config import getDebug
 from ..xplane_constants import *
@@ -23,8 +26,9 @@ class XPlanePrimitive(XPlaneObject):
     """
     Used to represent Mesh objects and their XPlaneObjectSettings
     """
-    def __init__(self, blenderObject:bpy.types.Object):
-        assert blenderObject.type == 'MESH'
+
+    def __init__(self, blenderObject: bpy.types.Object):
+        assert blenderObject.type == "MESH"
         super().__init__(blenderObject)
         # Starting end ending indices for this object.
         self.indices = [0, 0]
@@ -33,19 +37,25 @@ class XPlanePrimitive(XPlaneObject):
 
         self.setWeight()
 
-    def setWeight(self, defaultWeight = 0)->None:
+    def setWeight(self, defaultWeight=0) -> None:
         super().setWeight(defaultWeight)
 
-        if not hasattr(self.blenderObject.xplane, 'override_weight') or not self.blenderObject.xplane.override_weight:
+        if (
+            not hasattr(self.blenderObject.xplane, "override_weight")
+            or not self.blenderObject.xplane.override_weight
+        ):
             mat_weight = 0
 
             for i in range(0, len(bpy.data.materials)):
-                if len(self.blenderObject.data.materials) > 0 and self.blenderObject.data.materials[0] == bpy.data.materials[i]:
+                if (
+                    len(self.blenderObject.data.materials) > 0
+                    and self.blenderObject.data.materials[0] == bpy.data.materials[i]
+                ):
                     mat_weight = i
 
             self.weight += mat_weight
 
-    def collect(self)->None:
+    def collect(self) -> None:
         super().collect()
 
         # add manipulator attributes
@@ -57,16 +67,21 @@ class XPlanePrimitive(XPlaneObject):
         if self.material:
             self.material.collect()
 
-    def write(self)->str:
+    def write(self) -> str:
         debug = getDebug()
         indent = self.xplaneBone.getIndent()
-        o = ''
+        o = ""
 
         xplaneFile = self.xplaneBone.xplaneFile
-        commands =  xplaneFile.commands
+        commands = xplaneFile.commands
 
         if debug:
-            o += "%s# %s: %s\tweight: %d\n" % (indent, self.type, self.name, self.weight)
+            o += "%s# %s: %s\tweight: %d\n" % (
+                indent,
+                self.type,
+                self.name,
+                self.weight,
+            )
 
         o += commands.writeReseters(self)
 
@@ -81,12 +96,16 @@ class XPlanePrimitive(XPlaneObject):
         if xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT:
             if self.blenderObject.xplane.manip.enabled:
                 manip = self.blenderObject.xplane.manip
-                if  manip.type == MANIP_DRAG_AXIS or\
-                    manip.type == MANIP_DRAG_AXIS_DETENT or\
-                    manip.type == MANIP_DRAG_ROTATE or\
-                    manip.type == MANIP_DRAG_ROTATE_DETENT:
-                    if not xplane_manipulator.check_bone_is_leaf(self.xplaneBone,True,self.manipulator):
-                        return ''
+                if (
+                    manip.type == MANIP_DRAG_AXIS
+                    or manip.type == MANIP_DRAG_AXIS_DETENT
+                    or manip.type == MANIP_DRAG_ROTATE
+                    or manip.type == MANIP_DRAG_ROTATE_DETENT
+                ):
+                    if not xplane_manipulator.check_bone_is_leaf(
+                        self.xplaneBone, True, self.manipulator
+                    ):
+                        return ""
 
             for attr in self.cockpitAttributes:
                 o += commands.writeAttribute(self.cockpitAttributes[attr], self)

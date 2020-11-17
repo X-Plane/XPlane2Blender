@@ -86,14 +86,13 @@ import collections
 import copy
 import os
 import re
-
 from dataclasses import dataclass
+from typing import Dict, Iterator, List, Mapping, Optional, Set, Tuple, Union
+
 from mathutils import Vector
-from typing import Dict, Iterator, List, Optional, Mapping, Set, Tuple, Union
 
 from io_xplane2blender import xplane_constants
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
-
 
 OVERLOAD_TYPES = {
     "BILLBOARD_HW",
@@ -106,7 +105,7 @@ OVERLOAD_TYPES = {
 }
 
 
-def get_overload_column_info(overload_type:str)->Dict[str,bool]:
+def get_overload_column_info(overload_type: str) -> Dict[str, bool]:
     """
     Returns a Dict[ColumnName, IsParameterizable].
     The keys of this dict are the overload prototype.
@@ -197,21 +196,28 @@ def get_overload_column_info(overload_type:str)->Dict[str,bool]:
     }[overload_type]
 
 
-def _replace_columns_via_values(overload:"ParsedLightOverload", new_values:Mapping[str,float]):
+def _replace_columns_via_values(
+    overload: "ParsedLightOverload", new_values: Mapping[str, float]
+):
     for column, value in new_values.items():
         overload[column] = value
 
 
-def _do_rgb_to_dxyz_w_calc(overload:"ParsedLightOverload")->None:
-    _replace_columns_via_values(overload, {"DX":overload["R"], "DY":overload["G"], "DZ":overload["B"]})
+def _do_rgb_to_dxyz_w_calc(overload: "ParsedLightOverload") -> None:
+    _replace_columns_via_values(
+        overload, {"DX": overload["R"], "DY": overload["G"], "DZ": overload["B"]}
+    )
     dir_vec = Vector((overload["DX"], overload["DY"], overload["DZ"]))
     overload["WIDTH"] = 1 - dir_vec.magnitude
     dvn = dir_vec.normalized()
-    _replace_columns_via_values(overload, {"DX":dvn[0], "DY":dvn[1], "DZ":dvn[2]})
-    _replace_columns_via_values(overload, {"R":1, "G": 1, "B": 1})
+    _replace_columns_via_values(overload, {"DX": dvn[0], "DY": dvn[1], "DZ": dvn[2]})
+    _replace_columns_via_values(overload, {"R": 1, "G": 1, "B": 1})
 
-def _do_rgb_to_dxyz_dir_mag_calc(overload:"ParsedLightOverload")->None:
-    _replace_columns_via_values(overload, {"DX":overload["R"], "DY":overload["G"], "DZ":overload["B"]})
+
+def _do_rgb_to_dxyz_dir_mag_calc(overload: "ParsedLightOverload") -> None:
+    _replace_columns_via_values(
+        overload, {"DX": overload["R"], "DY": overload["G"], "DZ": overload["B"]}
+    )
     dir_vec = Vector((overload["DX"], overload["DY"], overload["DZ"]))
     # I don't know what X-Plane does, but this works for our is_omni function.
     # Step through collect with a POINT light to understand this
@@ -220,19 +226,23 @@ def _do_rgb_to_dxyz_dir_mag_calc(overload:"ParsedLightOverload")->None:
     # -Ted, 6/12/2020
     overload["WIDTH"] = round(dir_vec.magnitude, xplane_constants.PRECISION_KEYFRAME)
     dvn = dir_vec.normalized()
-    _replace_columns_via_values(overload, {"DX":dvn[0], "DY":dvn[1], "DZ":dvn[2]})
-    _replace_columns_via_values(overload, {"R":1, "G": 1, "B": 1})
+    _replace_columns_via_values(overload, {"DX": dvn[0], "DY": dvn[1], "DZ": dvn[2]})
+    _replace_columns_via_values(overload, {"R": 1, "G": 1, "B": 1})
 
-def _do_rgba_to_dxyz_w(overload:"ParsedLightOverload")->None:
-    _replace_columns_via_values(overload, {"DX":overload["R"], "DY":overload["G"], "DZ":overload["B"]})
+
+def _do_rgba_to_dxyz_w(overload: "ParsedLightOverload") -> None:
+    _replace_columns_via_values(
+        overload, {"DX": overload["R"], "DY": overload["G"], "DZ": overload["B"]}
+    )
     overload["WIDTH"] = overload["A"]
-    _replace_columns_via_values(overload, {"R":1, "G": 1, "B": 1, "A": 1})
+    _replace_columns_via_values(overload, {"R": 1, "G": 1, "B": 1, "A": 1})
 
 
-def _do_force_WIDTH_1(overload:"ParsedLightOverload")->None:
+def _do_force_WIDTH_1(overload: "ParsedLightOverload") -> None:
     overload["WIDTH"] = 1
 
 
+# fmt: off
 RGB_TO_DXYZ_DIR_MAG_CALC_DREFS = {
     "sim/graphics/animation/lights/airplane_navigation_light_dir": _do_rgb_to_dxyz_dir_mag_calc,
 }
@@ -269,9 +279,16 @@ FORCE_WIDTH_1_DREFS = {
     "sim/graphics/animation/lights/wigwag":                        _do_force_WIDTH_1,
     "sim/graphics/animation/lights/wigwag_sp":                     _do_force_WIDTH_1
 }
+# fmt: on
 
 
-SW_CALLBACK_DREFS = {**RGB_TO_DXYZ_DIR_MAG_CALC_DREFS, **RGB_TO_DXYZ_W_CALC_DREFS, **RGBA_TO_DXYZ_W_DREFS, **FORCE_WIDTH_1_DREFS}
+SW_CALLBACK_DREFS = {
+    **RGB_TO_DXYZ_DIR_MAG_CALC_DREFS,
+    **RGB_TO_DXYZ_W_CALC_DREFS,
+    **RGBA_TO_DXYZ_W_DREFS,
+    **FORCE_WIDTH_1_DREFS,
+}
+
 
 @dataclass
 class ParsedLightOverload:
@@ -289,15 +306,16 @@ class ParsedLightOverload:
     `my_landing_light["WIDTH"]` asks about the 12th index in my_landing_light.arguments,
     NOT about the contents of the 3rd index where the param "WIDTH" is used.
     """
-    overload_type:str
-    name:str
-    arguments:List[Union[float,str]]
 
-    def __contains__(self, item:str)->bool:
+    overload_type: str
+    name: str
+    arguments: List[Union[float, str]]
+
+    def __contains__(self, item: str) -> bool:
         """For ParsedLightOverloads, 'contains' means 'this overload contain this column'"""
         return item in get_overload_column_info(self.overload_type)
 
-    def __getitem__(self, key:Union[int,str])->Union[float,str]:
+    def __getitem__(self, key: Union[int, str]) -> Union[float, str]:
         """
         Passing in an int will get you the index in the list of arguments,
         passing in a key will get you the contents of that column of the
@@ -309,19 +327,26 @@ class ParsedLightOverload:
             return self.arguments[key]
         elif isinstance(key, str):
             if key.startswith("UNUSED"):
-                raise KeyError(f"{key} cannot represent a real index in the argument's list")
+                raise KeyError(
+                    f"{key} cannot represent a real index in the argument's list"
+                )
             try:
                 if key == "INDEX":
                     key = "A"
                 elif key == "DIR_MAG" and self.name in {"airplane_nav_tail_size"}:
                     key = "B"
-                elif key == "DIR_MAG" and self.name in {"airplane_nav_left_size", "airplane_nav_right_size"}:
+                elif key == "DIR_MAG" and self.name in {
+                    "airplane_nav_left_size",
+                    "airplane_nav_right_size",
+                }:
                     key = "R"
                 return self.arguments[tuple(prototype).index(key)]
             except ValueError as ve:
-                raise KeyError(f"{key} not found in \"{self.name}\"'s overload's {self.overload_type} prototype") from ve
+                raise KeyError(
+                    f"{key} not found in \"{self.name}\"'s overload's {self.overload_type} prototype"
+                ) from ve
 
-    def __setitem__(self, key:Union[int,str], value:float)->None:
+    def __setitem__(self, key: Union[int, str], value: float) -> None:
         """Sets a record's argument by column number or column ID from it's prototype"""
         prototype = get_overload_column_info(self.overload_type)
         if isinstance(key, int):
@@ -331,25 +356,32 @@ class ParsedLightOverload:
                 raise
         elif isinstance(key, str):
             if key.startswith("UNUSED"):
-                raise KeyError(f"{key} cannot represent a real index in the argument's list")
+                raise KeyError(
+                    f"{key} cannot represent a real index in the argument's list"
+                )
             try:
                 if key == "INDEX":
                     key = "A"
                 elif key == "DIR_MAG" and self.name in {"airplane_nav_tail_size"}:
                     key = "B"
-                elif key == "DIR_MAG" and self.name in {"airplane_nav_left_size", "airplane_nav_right_size"}:
+                elif key == "DIR_MAG" and self.name in {
+                    "airplane_nav_left_size",
+                    "airplane_nav_right_size",
+                }:
                     key = "R"
                 self.arguments[tuple(prototype).index(key)] = value
             except ValueError as ve:
-                raise KeyError(f"{key} not found in overload's {self.overload_type} prototype") from ve
+                raise KeyError(
+                    f"{key} not found in overload's {self.overload_type} prototype"
+                ) from ve
 
-    def __str__(self)->str:
+    def __str__(self) -> str:
         return f"{self.overload_type} {self.name} {self.arguments}"
 
-    def __iter__(self)->Iterator[Union[float,str]]:
+    def __iter__(self) -> Iterator[Union[float, str]]:
         yield from self.arguments
 
-    def apply_sw_callback(self)->None:
+    def apply_sw_callback(self) -> None:
         """
         Pre-emptively apply X-Plane's _sw callback for a dataref on a
         fully or partially completed overload's arguments.
@@ -360,10 +392,10 @@ class ParsedLightOverload:
         try:
             SW_CALLBACK_DREFS[self["DREF"]](self)
         except KeyError:
-            #print(f"couldn't find {self['DREF']}")
+            # print(f"couldn't find {self['DREF']}")
             pass
 
-    def is_omni(self)->bool:
+    def is_omni(self) -> bool:
         """
         Checks if overload is omni. This method understands
         the complex rules and special cases, as opposed to simply checking
@@ -380,7 +412,7 @@ class ParsedLightOverload:
         the return value for this is not constant
         """
 
-        #--- WARNING ---------------------------------------------------------
+        # --- WARNING ---------------------------------------------------------
         # This method is the result of months of careful study
         # and investigation, along with weeks of talking with
         # Ben and Alex about the nuanced and _HIGHLY_ undocumented
@@ -389,7 +421,7 @@ class ParsedLightOverload:
         #
         # In other words: don't mess with it unless you have a damn
         # good reason to
-        #---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         from_do_RGB_TO_DXYZ_W_CALC = {
             "airplane_beacon_size",
@@ -449,8 +481,10 @@ class ParsedLightOverload:
             return True
         elif self.name in from_force_WIDTH_1_omni:
             return True
-        elif (self.name in from_do_RGB_TO_DXYZ_W_CALC
-                and self.name not in from_do_RGB_TO_DXYZ_DIR_MAG_CALC):
+        elif (
+            self.name in from_do_RGB_TO_DXYZ_W_CALC
+            and self.name not in from_do_RGB_TO_DXYZ_DIR_MAG_CALC
+        ):
             return False
         elif self.name in from_force_WIDTH_1_unidirectional:
             return False
@@ -458,7 +492,9 @@ class ParsedLightOverload:
             w = self.get("WIDTH")
 
             if w == "WIDTH":
-                raise ValueError(f"{self.name}'s 'WIDTH' column does not contain a float, omni-ness cannot be determined yet")
+                raise ValueError(
+                    f"{self.name}'s 'WIDTH' column does not contain a float, omni-ness cannot be determined yet"
+                )
             elif w is not None:
                 if self.name in from_do_RGB_TO_DXYZ_DIR_MAG_CALC:
                     return round(w, xplane_constants.PRECISION_KEYFRAME) == 0
@@ -470,20 +506,26 @@ class ParsedLightOverload:
                 # We're "Always Directional"
                 return False
 
-    def get(self, key:str, default:Optional[Union[float, str]]=None)->Optional[float]:
-        """"Return the value for key if key is in the dictionary, else default.
+    def get(
+        self, key: str, default: Optional[Union[float, str]] = None
+    ) -> Optional[float]:
+        """ "Return the value for key if key is in the dictionary, else default.
         Uses __getitem__ under the hood"""
         try:
             return self[key]
         except KeyError:
             return default
 
-    def prototype(self)->Tuple[str,...]:
+    def prototype(self) -> Tuple[str, ...]:
         return tuple(get_overload_column_info(self.overload_type))
 
-    def replace_parameterization_argument(self, parameterization_argument:str, value:float)->None:
+    def replace_parameterization_argument(
+        self, parameterization_argument: str, value: float
+    ) -> None:
         """Replaces parameter-argument with value if possible, else throws ValueError"""
-        assert isinstance(parameterization_argument, str), f"'{parameterization_argument}' is not a string"
+        assert isinstance(
+            parameterization_argument, str
+        ), f"'{parameterization_argument}' is not a string"
         self.arguments[self.arguments.index(parameterization_argument)] = value
 
 
@@ -498,22 +540,23 @@ class ParsedLight:
 
     One can tell a light is a parameterized light by if self.light_param_def is empty
     """
-    def __init__(self, name:str)->None:
-        self.name = name
-        self.overloads:List[ParsedLightOverload] = []
-        self.light_param_def:Tuple[str] = tuple()
 
-    def __str__(self)->str:
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self.overloads: List[ParsedLightOverload] = []
+        self.light_param_def: Tuple[str] = tuple()
+
+    def __str__(self) -> str:
         return f"{self.name}: {' '.join(self.light_param_def) if self.light_param_def else ''}, {self.overloads[0]}"
 
-    def best_overload(self)->ParsedLightOverload:
+    def best_overload(self) -> ParsedLightOverload:
         if self.name == "radio_obs_flash":
             return self.overloads[1]
         else:
             return self.overloads[0]
 
 
-def is_automatic_light_compatible(light_name:str)->bool:
+def is_automatic_light_compatible(light_name: str) -> bool:
     """
     Returns True if light is compatible, false if not. Throws KeyError if not found in parsed_lights_content
     """
@@ -532,10 +575,8 @@ def is_automatic_light_compatible(light_name:str)->bool:
             "airplane_generic_flash",
             "airplane_beacon_size",
             "airplane_strobe_size",
-
             # Typo
             "full_custom_halo_",
-
             # Weird test lights
             "apt_light_halo_test",
             "test_lamp0",
@@ -551,10 +592,10 @@ def is_automatic_light_compatible(light_name:str)->bool:
         }
 
 
-_parsed_lights_txt_content = {} # type: Dict[str, ParsedLight]
+_parsed_lights_txt_content = {}  # type: Dict[str, ParsedLight]
 
 
-def get_parsed_light(light_name:str)->ParsedLight:
+def get_parsed_light(light_name: str) -> ParsedLight:
     """
     Return is a copy from _parsed_lights_txt_content dict.
     Raises KeyError if light not found
@@ -567,6 +608,7 @@ def get_parsed_light(light_name:str)->ParsedLight:
 
 class LightsTxtFileParsingError(Exception):
     pass
+
 
 def parse_lights_file():
     """
@@ -581,51 +623,62 @@ def parse_lights_file():
         return
 
     num_logger_problems = len(logger.findErrors())
-    LIGHTS_FILEPATH = os.path.join(xplane_constants.ADDON_RESOURCES_FOLDER,"lights.txt")
+    LIGHTS_FILEPATH = os.path.join(
+        xplane_constants.ADDON_RESOURCES_FOLDER, "lights.txt"
+    )
     if not os.path.isfile(LIGHTS_FILEPATH):
-        logger.error(f"lights.txt file was not found in resource folder {LIGHTS_FILEPATH}")
+        logger.error(
+            f"lights.txt file was not found in resource folder {LIGHTS_FILEPATH}"
+        )
         raise FileNotFoundError
 
-    def is_allowed_param(p:str)->bool:
-        return (p in {
-            "R",
-            "G",
-            "B",
-            "A",
-            "SIZE",
-            "DX",
-            "DY",
-            "DZ",
-            "WIDTH",
-            "FREQ",
-            "PHASE",
-            "INDEX",
-            "DIR_MAG",
-        }
-        or p.startswith(
-            ("UNUSED", "NEG_ONE", "ZERO", "ONE")
-        ))
+    def is_allowed_param(p: str) -> bool:
+        return (
+            p
+            in {
+                "R",
+                "G",
+                "B",
+                "A",
+                "SIZE",
+                "DX",
+                "DY",
+                "DZ",
+                "WIDTH",
+                "FREQ",
+                "PHASE",
+                "INDEX",
+                "DIR_MAG",
+            }
+            or p.startswith(("UNUSED", "NEG_ONE", "ZERO", "ONE"))
+        )
 
-    with open(LIGHTS_FILEPATH,"r") as f:
-        lines = [(line_num, l.strip())
-                for line_num,l in enumerate(f.read().splitlines())
-                if l.startswith((*OVERLOAD_TYPES,"LIGHT_PARAM_DEF"))]
+    with open(LIGHTS_FILEPATH, "r") as f:
+        lines = [
+            (line_num, l.strip())
+            for line_num, l in enumerate(f.read().splitlines())
+            if l.startswith((*OVERLOAD_TYPES, "LIGHT_PARAM_DEF"))
+        ]
 
         for line_num, line in lines:
-            #print(line)
+            # print(line)
             try:
                 overload_type, light_name, *light_args = line.split()
                 if not light_args:
                     raise ValueError
-            except ValueError: # not enough values to unpack
-                logger.error(f"{line_num}: Line could not be parsed to '<RECORD_TYPE> <light_name> <params or args list>'")
+            except ValueError:  # not enough values to unpack
+                logger.error(
+                    f"{line_num}: Line could not be parsed to '<RECORD_TYPE> <light_name> <params or args list>'"
+                )
                 continue
 
             if not re.match("[A-Za-z0-9_]+", light_name):
-                logger.error(f"{line_num}: Light name '{light_name}' must be upper/lower case letters, numbers, or underscores only")
+                logger.error(
+                    f"{line_num}: Light name '{light_name}' must be upper/lower case letters, numbers, or underscores only"
+                )
                 continue
 
-            def get_parsed_light_of_content_dict(light_name:str)->ParsedLight:
+            def get_parsed_light_of_content_dict(light_name: str) -> ParsedLight:
                 try:
                     _parsed_lights_txt_content[light_name]
                 except KeyError:
@@ -636,50 +689,79 @@ def parse_lights_file():
             if overload_type == "LIGHT_PARAM_DEF":
                 parsed_light = get_parsed_light_of_content_dict(light_name)
                 if parsed_light.light_param_def:
-                    logger.error(f"{line_num}: {light_name} cannot have more than one LIGHT_PARAM_DEF")
+                    logger.error(
+                        f"{line_num}: {light_name} cannot have more than one LIGHT_PARAM_DEF"
+                    )
                     continue
                 light_argc, *light_argv = light_args
                 try:
                     light_argc = int(light_argc)
                 except ValueError:
-                    logger.error(f"{line_num}: Parameter count for '{light_name}''s LIGHT_PARAM_DEF must be an int, is '{light_argc}'")
+                    logger.error(
+                        f"{line_num}: Parameter count for '{light_name}''s LIGHT_PARAM_DEF must be an int, is '{light_argc}'"
+                    )
                     continue
                 else:
-                    if not light_argc or not light_argv or (light_argc != len(light_argv)):
-                        logger.error(f"{line_num}: '{light_name}''s LIGHT_PARAM_DEF must have a count > 0 and an parameter list of the same length")
+                    if (
+                        not light_argc
+                        or not light_argv
+                        or (light_argc != len(light_argv))
+                    ):
+                        logger.error(
+                            f"{line_num}: '{light_name}''s LIGHT_PARAM_DEF must have a count > 0 and an parameter list of the same length"
+                        )
                         continue
                     elif len(set(light_argv)) < len(light_argv):
-                        logger.error(f"{line_num}: '{light_name}''s LIGHT_PARAM_DEF has duplicate parameters in it")
+                        logger.error(
+                            f"{line_num}: '{light_name}''s LIGHT_PARAM_DEF has duplicate parameters in it"
+                        )
                         continue
-                parsed_light.light_param_def = light_argv # Skip the count
+                parsed_light.light_param_def = light_argv  # Skip the count
                 if parsed_light.light_param_def and any(
-                    not is_allowed_param(param) for param in parsed_light.light_param_def
+                    not is_allowed_param(param)
+                    for param in parsed_light.light_param_def
                 ):
-                    logger.error(f"{line_num}: LIGHT_PARAM_DEF for '{light_name}' contains unknown or invalid parameters: {parsed_light.light_param_def}")
+                    logger.error(
+                        f"{line_num}: LIGHT_PARAM_DEF for '{light_name}' contains unknown or invalid parameters: {parsed_light.light_param_def}"
+                    )
                     continue
             elif overload_type not in OVERLOAD_TYPES:
-                logger.error(f"{line_num}: '{overload_type}' is not a valid OVERLOAD_TYPE.")
+                logger.error(
+                    f"{line_num}: '{overload_type}' is not a valid OVERLOAD_TYPE."
+                )
                 continue
             elif len(light_args) < len(get_overload_column_info(overload_type)):
-                logger.error(f"{line_num}: Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is not long enough")
+                logger.error(
+                    f"{line_num}: Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is not long enough"
+                )
                 continue
             elif len(light_args) > len(get_overload_column_info(overload_type)):
-                logger.error(f"{line_num}: Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is too long")
+                logger.error(
+                    f"{line_num}: Arguments list for '{overload_type} {light_name} {' '.join(light_args)}' is too long"
+                )
                 continue
             else:
                 parsed_light = get_parsed_light_of_content_dict(light_name)
-                def validate_arguments()->bool:
-                    def validate_parameterization_arg(i, arg)->bool:
+
+                def validate_arguments() -> bool:
+                    def validate_parameterization_arg(i, arg) -> bool:
                         try:
-                            light_param_def = get_parsed_light(light_name).light_param_def
-                            if (arg in light_param_def
-                                and list(get_overload_column_info(overload_type).values())[i]):
+                            light_param_def = get_parsed_light(
+                                light_name
+                            ).light_param_def
+                            if (
+                                arg in light_param_def
+                                and list(
+                                    get_overload_column_info(overload_type).values()
+                                )[i]
+                            ):
                                 return True
                         except KeyError:
                             return False
                         else:
-                            if ((arg == "NOOP" or arg.startswith("sim/"))
-                                and i == len(light_args) - 1):
+                            if (arg == "NOOP" or arg.startswith("sim/")) and i == len(
+                                light_args
+                            ) - 1:
                                 return True
                             elif re.match("-?\d+(\.\d+)?", arg):
                                 return True
@@ -690,40 +772,52 @@ def parse_lights_file():
                     for i, arg in enumerate(light_args):
                         if not validate_parameterization_arg(i, arg):
                             logger.error(
-                                    f"{line_num}, '{light_name}', arg #{i+1}: ('{arg}')"
-                                    f" is not a correctly formatted number or is invalid"
-                                )
+                                f"{line_num}, '{light_name}', arg #{i+1}: ('{arg}')"
+                                f" is not a correctly formatted number or is invalid"
+                            )
                             continue
 
                     return not (len(logger.findErrors()) - prev_logger_errors)
+
                 if not validate_arguments():
                     continue
 
-                def tryfloat(s:str)->float:
+                def tryfloat(s: str) -> float:
                     try:
                         return float(s)
                     except ValueError:
                         return s
-                parsed_light.overloads.append(ParsedLightOverload(overload_type=overload_type, name=light_name, arguments=list(map(tryfloat,light_args))))
+
+                parsed_light.overloads.append(
+                    ParsedLightOverload(
+                        overload_type=overload_type,
+                        name=light_name,
+                        arguments=list(map(tryfloat, light_args)),
+                    )
+                )
                 # This is a heuristic/careful reading of X-Plane's light system
                 # of what is most likely to give us
                 # the correct direction to autocorrect
                 rankings = [
-                    "SPILL_HW_DIR", # Most trustworthy
+                    "SPILL_HW_DIR",  # Most trustworthy
                     "SPILL_HW_FLA",
                     "SPILL_SW",
                     "BILLBOARD_HW",
-                    "BILLBOARD_SW", # Least trustworthy
-                    "SPILL_GND", # Ignored by autocorrector, ranked last
-                    "SPILL_GND_REV", # Ignored by autocorrector, ranked last
+                    "BILLBOARD_SW",  # Least trustworthy
+                    "SPILL_GND",  # Ignored by autocorrector, ranked last
+                    "SPILL_GND_REV",  # Ignored by autocorrector, ranked last
                 ]
 
                 # Semantically speaking, overloads[0] must ALWAYS be the most trustworthy
-                parsed_light.overloads.sort(key=lambda l: rankings.index(l.overload_type))
+                parsed_light.overloads.sort(
+                    key=lambda l: rankings.index(l.overload_type)
+                )
 
     for light_name, pl in _parsed_lights_txt_content.items():
         if not pl.overloads:
-            logger.error(f"Ignoring '{light_name}': Found LIGHT_PARAM_DEF but no valid overloads")
+            logger.error(
+                f"Ignoring '{light_name}': Found LIGHT_PARAM_DEF but no valid overloads"
+            )
             continue
 
     _parsed_lights_txt_content = {

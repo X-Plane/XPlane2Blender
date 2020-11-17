@@ -31,20 +31,27 @@ from typing import List, Optional, Tuple
 
 import bpy
 import mathutils
-from io_xplane2blender.xplane_config import getDebug
+
 from io_xplane2blender import xplane_constants, xplane_props
+from io_xplane2blender.xplane_config import getDebug
 from io_xplane2blender.xplane_helpers import floatToStr, logger, vec_b_to_x
 from io_xplane2blender.xplane_types.xplane_keyframe import XPlaneKeyframe
-from io_xplane2blender.xplane_types.xplane_keyframe_collection import XPlaneKeyframeCollection
-#from xplane_object import XPlaneObject
+from io_xplane2blender.xplane_types.xplane_keyframe_collection import (
+    XPlaneKeyframeCollection,
+)
 
-class XPlaneBone():
-    def __init__(self,
-                 xplane_file:'XPlaneFile',
-                 blender_obj:Optional[bpy.types.Object],
-                 blender_bone:Optional[bpy.types.Bone]=None,
-                 xplane_obj:Optional['XPlaneObject']=None,
-                 parent_xplane_bone:Optional['XPlaneBone']=None):
+# from xplane_object import XPlaneObject
+
+
+class XPlaneBone:
+    def __init__(
+        self,
+        xplane_file: "XPlaneFile",
+        blender_obj: Optional[bpy.types.Object],
+        blender_bone: Optional[bpy.types.Bone] = None,
+        xplane_obj: Optional["XPlaneObject"] = None,
+        parent_xplane_bone: Optional["XPlaneBone"] = None,
+    ):
         """
         self.blenderObject is the Blender Object associated with this XPlaneBone (according to our traversal of the Blender hierarchy).
         It is only None for the root XPlaneBone of an Exportable Collection
@@ -60,15 +67,22 @@ class XPlaneBone():
         self.blenderBone = blender_bone
         self.xplaneObject = xplane_obj
         self.parent = parent_xplane_bone
-        self.children:List["XPlaneBone"] = []
+        self.children: List["XPlaneBone"] = []
 
         if self.xplaneObject:
-            assert self.xplaneObject.blenderObject == self.blenderObject, f"XPlaneBone ({self.blenderObject.name}) and XPlaneObject's blenderObject do not match ({self.blenderObject.name}, {self.xplaneObject.name})"
+            assert (
+                self.xplaneObject.blenderObject == self.blenderObject
+            ), f"XPlaneBone ({self.blenderObject.name}) and XPlaneObject's blenderObject do not match ({self.blenderObject.name}, {self.xplaneObject.name})"
             self.xplaneObject.xplaneBone = self
             if self.xplaneObject.blenderObject.xplane.override_lods:
-                self.xplaneObject.effective_buckets = tuple(self.blenderObject.xplane.lod)
+                self.xplaneObject.effective_buckets = tuple(
+                    self.blenderObject.xplane.lod
+                )
             else:
-                def find_parent_buckets(parent_xplane_bone:Optional["XPlaneBone"])->Tuple[bool, bool, bool, bool]:
+
+                def find_parent_buckets(
+                    parent_xplane_bone: Optional["XPlaneBone"],
+                ) -> Tuple[bool, bool, bool, bool]:
                     try:
                         if parent_xplane_bone.xplaneObject:
                             return parent_xplane_bone.xplaneObject.effective_buckets
@@ -85,33 +99,35 @@ class XPlaneBone():
             self.parent.children.append(self)
 
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
-        self.animations = {} # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
+        self.animations = (
+            {}
+        )  # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
 
         # IMPORTANT NOTE: Show/Hide Datarefs and datarefs without 2 keyframes will not be included and
         # must be accessed via blenderObject.xplane.datarefs!
-        self.datarefs:Dict[str, xplane_props.XPlaneDataref] = {}
+        self.datarefs: Dict[str, xplane_props.XPlaneDataref] = {}
         self.collectAnimations()
 
-    def sortChildren(self)->None:
-        def getWeight(xplaneBone)->int:
+    def sortChildren(self) -> None:
+        def getWeight(xplaneBone) -> int:
             if xplaneBone.xplaneObject:
                 return xplaneBone.xplaneObject.weight
 
             return 0
 
-        self.children.sort(key = getWeight)
+        self.children.sort(key=getWeight)
 
     # Method: isAnimatedForTranslation
     # Checks if a dataref's keyframes actually contain meaningful translations, and we should therefore write keyframes out
-    def isDataRefAnimatedForTranslation(self)->bool:
-        if hasattr(self, 'animations') and len(self.animations) > 0:
-           #Check to see if there is at least some difference in the keyframe locations
+    def isDataRefAnimatedForTranslation(self) -> bool:
+        if hasattr(self, "animations") and len(self.animations) > 0:
+            # Check to see if there is at least some difference in the keyframe locations
             for dataref in self.animations:
                 keyframes = self.animations[dataref]
                 if len(keyframes) > 0:
                     last_keyframe = keyframes[0]
                     for keyframe in keyframes:
-                        #if there is a difference
+                        # if there is a difference
                         if keyframe.location != last_keyframe.location:
                             return True
                         else:
@@ -121,15 +137,15 @@ class XPlaneBone():
 
     # Method: isAnimatedForRotation
     # Checks if a dataref's keyframes actually contain meaningful rotation, and we should therefore write keyframes out
-    def isDataRefAnimatedForRotation(self)->bool:
-        if hasattr(self, 'animations') and len(self.animations) > 0:
-           #Check to see if there is at least some difference in the keyframe locations
+    def isDataRefAnimatedForRotation(self) -> bool:
+        if hasattr(self, "animations") and len(self.animations) > 0:
+            # Check to see if there is at least some difference in the keyframe locations
             for dataref in self.animations:
                 keyframes = self.animations[dataref]
                 if len(keyframes) > 0:
                     last_keyframe = keyframes[0]
                     for keyframe in keyframes:
-                        #if there is a difference
+                        # if there is a difference
                         if keyframe.rotation != last_keyframe.rotation:
                             return True
                         else:
@@ -137,11 +153,14 @@ class XPlaneBone():
 
         return False
 
-    def isAnimated(self)->bool:
+    def isAnimated(self) -> bool:
         """Uses isDataRefAnimated functions to check if the object is animated"""
-        return self.isDataRefAnimatedForTranslation() or self.isDataRefAnimatedForRotation()
+        return (
+            self.isDataRefAnimatedForTranslation()
+            or self.isDataRefAnimatedForRotation()
+        )
 
-    def collectAnimations(self)->None:
+    def collectAnimations(self) -> None:
         """
         Collects animation_data from blenderObject, and pairs it with xplane datarefs
         """
@@ -153,11 +172,11 @@ class XPlaneBone():
         bone = self.blenderBone
         blenderObject = self.blenderObject
 
-        #check for animation
-        #if bone:
-            #print("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
-        #else:
-            #print("\t\t checking animations of %s" % blenderObject.name)
+        # check for animation
+        # if bone:
+        # print("\t\t checking animations of %s:%s" % (blenderObject.name, bone.name))
+        # else:
+        # print("\t\t checking animations of %s" % blenderObject.name)
 
         try:
             if bone:
@@ -219,8 +238,7 @@ class XPlaneBone():
                             ]
                         )
 
-
-    def getName(self, ignore_indent_level:bool=False)->str:
+    def getName(self, ignore_indent_level: bool = False) -> str:
         """
         Gets the (optionally) indent level, Blender Type, and name.
         Useful for debugging and error message.
@@ -228,19 +246,25 @@ class XPlaneBone():
         Note: Unit tests, like the ones in xplane_file,
         test against the output of this method!
         """
-        count_parents = lambda bone: 1 + count_parents(bone.parent) if bone.parent else 0
+        count_parents = (
+            lambda bone: 1 + count_parents(bone.parent) if bone.parent else 0
+        )
         prefix = "" if ignore_indent_level else f"{count_parents(self)} "
 
         if self.blenderBone:
             return f"{prefix}Bone: {self.blenderBone.name}"
         elif self.blenderObject:
-            return f"{prefix}{self.blenderObject.type.title()}: {self.blenderObject.name}"
+            return (
+                f"{prefix}{self.blenderObject.type.title()}: {self.blenderObject.name}"
+            )
         elif self.parent == None:
             return f"{prefix}ROOT"
         else:
-            assert False, "XPlaneBone has no Blender Data, but also is not the root. How did we did we get here?"
+            assert (
+                False
+            ), "XPlaneBone has no Blender Data, but also is not the root. How did we did we get here?"
 
-    def getBlenderName(self)->str:
+    def getBlenderName(self) -> str:
         if self.blenderBone:
             return self.blenderBone.name
         elif self.blenderObject:
@@ -248,11 +272,13 @@ class XPlaneBone():
         else:
             assert False, "Cannot call getBlenderName on a root bone"
 
-    def getIndent(self)->str:
-        count_parents = lambda bone: 1 + count_parents(bone.parent) if bone.parent else 0
+    def getIndent(self) -> str:
+        count_parents = (
+            lambda bone: 1 + count_parents(bone.parent) if bone.parent else 0
+        )
         return "\t" * count_parents(self)
 
-    def getFirstAnimatedParent(self)->Optional[str]:
+    def getFirstAnimatedParent(self) -> Optional[str]:
         if self.parent == None:
             return None
 
@@ -267,7 +293,7 @@ class XPlaneBone():
     # If we want to emit a mesh, this is where the mesh lives.  The world matrix might be "more"
     # transforms than post-animation if there is a static rotation after a dynamic translation.
     #
-    def getBlenderWorldMatrix(self)->mathutils.Matrix:
+    def getBlenderWorldMatrix(self) -> mathutils.Matrix:
         if self.blenderBone:
             # Blender bones in their current pose (which matches the shape of all data
             # blocks 'right now') are stored as a transform in the pose bone relative
@@ -277,7 +303,10 @@ class XPlaneBone():
                 return self.blenderObject.matrix_world.copy() @ poseBone.matrix.copy()
             else:
                 # FIXME: is there ever not a pose bone for a bone?  Should this be some kind of assert?
-                return self.blenderObject.matrix_world.copy() @ self.blenderBone.matrix_local.copy()
+                return (
+                    self.blenderObject.matrix_world.copy()
+                    @ self.blenderBone.matrix_local.copy()
+                )
         elif self.blenderObject:
             # Data blocks simply know their world-space location post-transform.
             return self.blenderObject.matrix_world.copy()
@@ -286,9 +315,8 @@ class XPlaneBone():
         elif self.parent == None:
             return mathutils.Matrix.Identity(4)
         else:
-        # Wat!?!  We have a non-root bone with NO blender stuff attached.
+            # Wat!?!  We have a non-root bone with NO blender stuff attached.
             raise Exception()
-
 
     #
     # THE PRE-ANIMATION MATRIX (POSE)
@@ -299,7 +327,7 @@ class XPlaneBone():
     #
     # It is only legal to ask for this if (1) a bone is animated and (2) it is not the root
     # bone.
-    def getPreAnimationMatrix(self)->mathutils.Matrix:
+    def getPreAnimationMatrix(self) -> mathutils.Matrix:
         if self.parent == None:
             # No one should ever need the pre-animation matrix of the root bone -
             # we only need this to get a bake matrix between two animations.
@@ -316,8 +344,9 @@ class XPlaneBone():
 
             static_translation = mathutils.Matrix.Identity(4)
             if not self.isDataRefAnimatedForTranslation():
-                static_translation = mathutils.Matrix.Translation(poseBone.matrix_basis.to_translation())
-
+                static_translation = mathutils.Matrix.Translation(
+                    poseBone.matrix_basis.to_translation()
+                )
 
             if self.blenderBone.parent and poseBone and poseBone.parent:
                 # This special cases a bone that is parented to another bone.  In this case, we have a
@@ -327,18 +356,29 @@ class XPlaneBone():
                 #
                 # So we construct it ourselves.  r2r is the _relative_ transform from the parent bone
                 # to our bone when at rest - in other words, it's the bake matrix from our parent bone to us.
-                r2r = self.blenderBone.parent.matrix_local.inverted_safe() @ self.blenderBone.matrix_local
+                r2r = (
+                    self.blenderBone.parent.matrix_local.inverted_safe()
+                    @ self.blenderBone.matrix_local
+                )
                 # Now we can formulate that the full transform is:
                 # 1. Armature's world space
                 # 2. Our parent's pose
                 # 3. The bake matrix from our parent's pose to us.
                 # This gets us up to right before our transform.
-                return (self.blenderObject.matrix_world.copy() @ poseBone.parent.matrix.copy() @ r2r) @ static_translation
+                return (
+                    self.blenderObject.matrix_world.copy()
+                    @ poseBone.parent.matrix.copy()
+                    @ r2r
+                ) @ static_translation
 
             # This is the unparented bone case (and any fall-throughs from crazy objects):
             # Simply apply our rest position (relative to the armature) to the armature's current world-space
             # position.
-            return self.blenderObject.matrix_world.copy() @ self.blenderBone.matrix_local.copy() @ static_translation
+            return (
+                self.blenderObject.matrix_world.copy()
+                @ self.blenderBone.matrix_local.copy()
+                @ static_translation
+            )
 
         elif self.blenderObject:
 
@@ -375,14 +415,16 @@ class XPlaneBone():
     # This matrix represents the world space pose of the bone just after all dynamic animation.  EVERY
     # bone has this, because everything "on" the bone (sub-bones, meshes) is attached to this pose.
     #
-    def getPostAnimationMatrix(self)->mathutils.Matrix:
+    def getPostAnimationMatrix(self) -> mathutils.Matrix:
         if self.parent == None:
             # WARNING: If the root bone has been scaled then the scale does NOT apply to the OBJ.
             # This is probably technically correct based on some insane fine-print reading of export-by-object
             # but may astonish users.
-            return self.getBlenderWorldMatrix() # correctly returns Identity for root bone
+            return (
+                self.getBlenderWorldMatrix()
+            )  # correctly returns Identity for root bone
         elif not self.isAnimated():
-                        #No one should be asking or post-animation matrices on _non_-animated bones!
+            # No one should be asking or post-animation matrices on _non_-animated bones!
             print(self)
             raise Exception()
         else:
@@ -399,10 +441,12 @@ class XPlaneBone():
             # First: get our world matrix without ANY scaling.
             world_matrix = self.getBlenderWorldMatrix()
             loc, rot, scale = world_matrix.decompose()
-            world_matrix_no_scale = mathutils.Matrix.Translation(loc) @ rot.to_matrix().to_4x4()
+            world_matrix_no_scale = (
+                mathutils.Matrix.Translation(loc) @ rot.to_matrix().to_4x4()
+            )
             # If there is no scaling, just take our real matrix, don't decompose and recompose.  This aims to
             # avoid floating point crap accumulation
-            if scale == mathutils.Vector((1.0,1.0,1.0)):
+            if scale == mathutils.Vector((1.0, 1.0, 1.0)):
                 world_matrix_no_scale = world_matrix
 
             if not self.isDataRefAnimatedForRotation():
@@ -413,7 +457,11 @@ class XPlaneBone():
                     poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
                     our_loc, our_rot, our_scale = poseBone.matrix_basis.decompose()
                 else:
-                    our_loc, our_rot, our_scale = self.blenderObject.matrix_basis.decompose()
+                    (
+                        our_loc,
+                        our_rot,
+                        our_scale,
+                    ) = self.blenderObject.matrix_basis.decompose()
 
                 our_rot_inv = our_rot.to_matrix().to_4x4().inverted_safe()
                 return world_matrix_no_scale @ our_rot_inv
@@ -433,7 +481,7 @@ class XPlaneBone():
     #
     # The bake matrix for animations for bone X is the static transform _from X's parent bone to X before its animations.
     # In other words, once we are in X's parent's coordinate system, we need to do this bake to then apply our animations.
-    def getBakeMatrixForMyAnimations(self)->mathutils.Matrix:
+    def getBakeMatrixForMyAnimations(self) -> mathutils.Matrix:
         parent_bone = self.getFirstAnimatedParent()
         if parent_bone == None:
             # If we have no parent bone, our bake matrix goes from global coordinates TO our pre-animation pose.
@@ -447,7 +495,6 @@ class XPlaneBone():
             pre = self.getPreAnimationMatrix()
             return parent_post.inverted_safe() @ pre
 
-
     # ATTACHENT BAKE MATRIX (DELTA)
     #
     # This bake matrix is the delta from the final bone (post animation) to an actual THING like a mesh or a light.
@@ -455,11 +502,11 @@ class XPlaneBone():
     # This API gets the bake matrix to be applied to output-able primitives that are attached to -this- bone.
     # In other words, this is a helper for how to bake our lights, meshes, etc.
     #
-    def getBakeMatrixForAttached(self)->mathutils.Matrix:
-                # Our anchor bone is the thing we are attached to - it might be us, or it might be our parent.
+    def getBakeMatrixForAttached(self) -> mathutils.Matrix:
+        # Our anchor bone is the thing we are attached to - it might be us, or it might be our parent.
         if self.isAnimated():
-            my_anchor_bone = self                           # The anchor bone is the last bone to be animated -
-        else:                                               # We are 'in' its post-animation coordinate system
+            my_anchor_bone = self  # The anchor bone is the last bone to be animated -
+        else:  # We are 'in' its post-animation coordinate system
             my_anchor_bone = self.getFirstAnimatedParent()
 
         if my_anchor_bone == None:
@@ -474,25 +521,26 @@ class XPlaneBone():
             # Find the relative matrix from the post-animation of our last animated bone to our final post animation transform.
             return anchor_post_anim.inverted_safe() @ my_final_world
 
-    def __str__(self)->str:
-        def toString(bone: "XPlaneBone", indent:str = '')->str:
-            out = indent + bone.getName() + '\n'
+    def __str__(self) -> str:
+        def toString(bone: "XPlaneBone", indent: str = "") -> str:
+            out = indent + bone.getName() + "\n"
 
             for bone in bone.children:
-                out += toString(bone, indent + '\t')
+                out += toString(bone, indent + "\t")
 
             return out
+
         out = toString(self)
         return out
 
-    def writeAnimationPrefix(self)->None:
+    def writeAnimationPrefix(self) -> None:
         debug = getDebug()
         indent = self.getIndent()
-        o = ''
+        o = ""
 
         if debug:
-            o += indent + '# ' + self.getName() + '\n'
-            '''
+            o += indent + "# " + self.getName() + "\n"
+            """
             if self.blenderBone:
                 poseBone = self.blenderObject.pose.bones[self.blenderBone.name]
                 if poseBone != None:
@@ -519,19 +567,20 @@ class XPlaneBone():
                o += str(p.getPostAnimationMatrix()) + '\n'
                o += str(p.getBakeMatrixForMyAnimations()) + '\n'
                p = None
-            '''
+            """
         isAnimated = self.isAnimated()
-        hasAnimationAttributes = (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
+        hasAnimationAttributes = (
+            self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0
+        )
 
         if not isAnimated and not hasAnimationAttributes:
             return o
 
         # and postMatrix is not preMatrix
-        if (isAnimated) or \
-            hasAnimationAttributes:
-            o += indent + 'ANIM_begin\n'
+        if (isAnimated) or hasAnimationAttributes:
+            o += indent + "ANIM_begin\n"
 
-        if isAnimated:# and postMatrix is not preMatrix:
+        if isAnimated:  # and postMatrix is not preMatrix:
             # write out static translations of bake
             bakeMatrix = self.getBakeMatrixForMyAnimations()
             o += self._writeStaticTranslation(bakeMatrix)
@@ -546,49 +595,54 @@ class XPlaneBone():
 
         return o
 
-    def _writeStaticTranslation(self, bakeMatrix:mathutils.Matrix)->None:
+    def _writeStaticTranslation(self, bakeMatrix: mathutils.Matrix) -> None:
         debug = getDebug()
         indent = self.getIndent()
-        o = ''
+        o = ""
 
         bakeMatrix = bakeMatrix
 
         translation = bakeMatrix.to_translation()
-        translation[0] = round(translation[0],5)
-        translation[1] = round(translation[1],5)
-        translation[2] = round(translation[2],5)
+        translation[0] = round(translation[0], 5)
+        translation[1] = round(translation[1], 5)
+        translation[2] = round(translation[2], 5)
 
         # ignore noop translations
         if translation[0] == 0 and translation[1] == 0 and translation[2] == 0:
             return o
 
         if debug:
-            o += indent + '# static translation\n'
+            o += indent + "# static translation\n"
 
-        o += indent + 'ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n' % (
+        o += indent + "ANIM_trans\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
             floatToStr(translation[0]),
             floatToStr(translation[2]),
             floatToStr(-translation[1]),
             floatToStr(translation[0]),
             floatToStr(translation[2]),
-            floatToStr(-translation[1])
+            floatToStr(-translation[1]),
         )
 
         return o
 
-    def _writeStaticRotation(self, bakeMatrix:mathutils.Matrix)->str:
+    def _writeStaticRotation(self, bakeMatrix: mathutils.Matrix) -> str:
         debug = getDebug()
         indent = self.getIndent()
-        o = ''
+        o = ""
         bakeMatrix = bakeMatrix
-        rotation = list(map(lambda c: round(c, xplane_constants.PRECISION_KEYFRAME), bakeMatrix.to_euler('XYZ')))
+        rotation = list(
+            map(
+                lambda c: round(c, xplane_constants.PRECISION_KEYFRAME),
+                bakeMatrix.to_euler("XYZ"),
+            )
+        )
 
         # ignore noop rotations
         if rotation == (0, 0, 0):
             return o
 
         if debug:
-            o += indent + '# static rotation\n'
+            o += indent + "# static rotation\n"
 
         # Ben says: this is SLIGHTLY counter-intuitive...Blender axes are
         # globally applied in a Euler, so in our XYZ, X is affected -by- Y
@@ -604,11 +658,7 @@ class XPlaneBone():
         # see also: http://hacksoflife.blogspot.com/2015/11/blender-notepad-eulers.html
 
         axes = (2, 1, 0)
-        eulerAxes = [
-                (0,0,1),
-                (0,1,0),
-                (1,0,0)
-            ]
+        eulerAxes = [(0, 0, 1), (0, 1, 0), (1, 0, 0)]
 
         for i, axis in enumerate(eulerAxes):
             deg = math.degrees(rotation[axes[i]])
@@ -616,14 +666,16 @@ class XPlaneBone():
             # ignore zero rotation
             if not round(deg, xplane_constants.PRECISION_KEYFRAME) == 0:
                 tab = "\t"
-                o += (f"{indent}ANIM_rotate"
-                      f"\t{tab.join(map(floatToStr,vec_b_to_x(axis)))}"
-                      f"\t{tab.join(map(floatToStr, [deg, deg]))}\n")
+                o += (
+                    f"{indent}ANIM_rotate"
+                    f"\t{tab.join(map(floatToStr,vec_b_to_x(axis)))}"
+                    f"\t{tab.join(map(floatToStr, [deg, deg]))}\n"
+                )
 
         return o
 
-    def _writeKeyframesLoop(self, dataref:str)->str:
-        o = ''
+    def _writeKeyframesLoop(self, dataref: str) -> str:
+        o = ""
 
         if dataref in self.datarefs:
             if self.datarefs[dataref].loop > 0:
@@ -631,11 +683,11 @@ class XPlaneBone():
                 o += f"{indent}\tANIM_keyframe_loop\t{self.datarefs[dataref].loop}\n"
         return o
 
-    def _writeTranslationKeyframes(self, dataref:str)->str:
+    def _writeTranslationKeyframes(self, dataref: str) -> str:
         debug = getDebug()
         keyframes = self.animations[dataref]
 
-        o = ''
+        o = ""
 
         if not self.isDataRefAnimatedForTranslation():
             return o
@@ -654,24 +706,26 @@ class XPlaneBone():
         for keyframe in keyframes:
             totalTrans += sum(map(abs, keyframe.location))
 
-            o += (f"{indent}ANIM_trans_key"
-                  f"\t{floatToStr(keyframe.dataref_value)}"
-                  f"\t{floatToStr(keyframe.location[0] * pre_scale[0])}"
-                  f"\t{floatToStr(keyframe.location[2] * pre_scale[2])}"
-                  f"\t{floatToStr(-keyframe.location[1] * pre_scale[1])}"
-                  f"\n")
+            o += (
+                f"{indent}ANIM_trans_key"
+                f"\t{floatToStr(keyframe.dataref_value)}"
+                f"\t{floatToStr(keyframe.location[0] * pre_scale[0])}"
+                f"\t{floatToStr(keyframe.location[2] * pre_scale[2])}"
+                f"\t{floatToStr(-keyframe.location[1] * pre_scale[1])}"
+                f"\n"
+            )
 
         o += self._writeKeyframesLoop(dataref)
         o += f"{indent}ANIM_trans_end\n"
 
         # do not write zero translations
         if totalTrans == 0:
-            return ''
+            return ""
 
         return o
 
-    def _writeAxisAngleRotationKeyframes(self, dataref, keyframes)->str:
-        o = ''
+    def _writeAxisAngleRotationKeyframes(self, dataref, keyframes) -> str:
+        o = ""
         indent = self.getIndent()
         totalRot = 0
 
@@ -680,15 +734,17 @@ class XPlaneBone():
 
         if len(axes) == 3:
             # decompose to eulers and return euler rotation instead
-            o = self._writeEulerRotationKeyframes(dataref,keyframes.asEuler())
+            o = self._writeEulerRotationKeyframes(dataref, keyframes.asEuler())
             return o
         elif len(axes) == 1:
             refAxis = axes[0]
 
         tab = "\t"
-        o += (f"{indent}ANIM_rotate_begin"
-              f"\t{tab.join(map(floatToStr, vec_b_to_x(refAxis)))}"
-              f"\t{dataref}\n")
+        o += (
+            f"{indent}ANIM_rotate_begin"
+            f"\t{tab.join(map(floatToStr, vec_b_to_x(refAxis)))}"
+            f"\t{dataref}\n"
+        )
 
         for keyframe in keyframes:
             deg = math.degrees(keyframe.rotation[0])
@@ -701,30 +757,33 @@ class XPlaneBone():
 
         # do not write zero rotations
         if round(totalRot, xplane_constants.PRECISION_KEYFRAME) == 0:
-            return ''
+            return ""
 
         return o
 
-    def _writeQuaternionRotationKeyframes(self, dataref, keyframes)->str:
+    def _writeQuaternionRotationKeyframes(self, dataref, keyframes) -> str:
         # Writing axis angle will automatically convert quaternions to AA and write it
         return self._writeAxisAngleRotationKeyframes(dataref, keyframes.asAA())
 
-    def _writeEulerRotationKeyframes(self, dataref, keyframes)->str:
+    def _writeEulerRotationKeyframes(self, dataref, keyframes) -> str:
         debug = getDebug()
-        o = ''
+        o = ""
         indent = self.getIndent()
         axes, final_rotation_mode = keyframes.getReferenceAxes()
         totalRot = 0
 
-        for axis,order in zip(axes,XPlaneKeyframeCollection.EULER_AXIS_ORDERING[final_rotation_mode]):
-            ao = ''
+        for axis, order in zip(
+            axes, XPlaneKeyframeCollection.EULER_AXIS_ORDERING[final_rotation_mode]
+        ):
+            ao = ""
             totalAxisRot = 0
 
             tab = "\t"
-            ao += (f"{indent}ANIM_rotate_begin"
-                  f"\t{tab.join(map(floatToStr, vec_b_to_x(axis)))}"
-                  f"\t{dataref}\n")
-
+            ao += (
+                f"{indent}ANIM_rotate_begin"
+                f"\t{tab.join(map(floatToStr, vec_b_to_x(axis)))}"
+                f"\t{dataref}\n"
+            )
 
             for keyframe in keyframes:
                 deg = math.degrees(keyframe.rotation[order])
@@ -741,14 +800,14 @@ class XPlaneBone():
 
         # do not write zero rotations
         if round(totalRot, xplane_constants.PRECISION_KEYFRAME) == 0:
-            return ''
+            return ""
 
         return o
 
-    def _writeRotationKeyframes(self, dataref)->str:
+    def _writeRotationKeyframes(self, dataref) -> str:
         debug = getDebug()
         keyframes = self.animations[dataref]
-        o = ''
+        o = ""
 
         if not self.isDataRefAnimatedForRotation():
             return o
@@ -758,17 +817,17 @@ class XPlaneBone():
 
         rotationMode = keyframes[0].rotationMode
 
-        if rotationMode == 'AXIS_ANGLE':
-            o += self._writeAxisAngleRotationKeyframes(dataref,keyframes)
-        elif rotationMode == 'QUATERNION':
-            o += self._writeQuaternionRotationKeyframes(dataref,keyframes)
+        if rotationMode == "AXIS_ANGLE":
+            o += self._writeAxisAngleRotationKeyframes(dataref, keyframes)
+        elif rotationMode == "QUATERNION":
+            o += self._writeQuaternionRotationKeyframes(dataref, keyframes)
         else:
-            o += self._writeEulerRotationKeyframes(dataref,keyframes)
+            o += self._writeEulerRotationKeyframes(dataref, keyframes)
 
         return o
 
-    def _writeAnimAttributes(self)->str:
-        o = ''
+    def _writeAnimAttributes(self) -> str:
+        o = ""
 
         if self.xplaneObject == None:
             return o
@@ -780,16 +839,17 @@ class XPlaneBone():
 
         return o
 
-    def writeAnimationSuffix(self)->str:
-        o = ''
+    def writeAnimationSuffix(self) -> str:
+        o = ""
         isAnimated = self.isAnimated()
-        hasAnimationAttributes = (self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0)
+        hasAnimationAttributes = (
+            self.xplaneObject != None and len(self.xplaneObject.animAttributes) > 0
+        )
 
         if not isAnimated and not hasAnimationAttributes:
             return o
 
-        if (isAnimated) or \
-            hasAnimationAttributes:
+        if (isAnimated) or hasAnimationAttributes:
             o += f"{self.getIndent()}ANIM_end\n"
 
         return o

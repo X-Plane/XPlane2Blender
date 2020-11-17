@@ -6,8 +6,8 @@ from .xplane_bone import XPlaneBone
 from .xplane_face import XPlaneFace
 from .xplane_keyframe import XPlaneKeyframe
 from .xplane_light import XPlaneLight
-from .xplane_vlights import XPlaneVLights
 from .xplane_material import XPlaneMaterial
+from .xplane_mesh import XPlaneMesh
 from .xplane_object import XPlaneObject
 from .xplane_primitive import XPlanePrimitive
-from .xplane_mesh import XPlaneMesh
+from .xplane_vlights import XPlaneVLights

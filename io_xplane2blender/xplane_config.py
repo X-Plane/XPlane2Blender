@@ -1,9 +1,10 @@
 # File: xplane_config.py
 # Holds config variables that are used throughout the addon.
 from typing import Tuple
+
 import bpy
-from io_xplane2blender import bl_info
-from io_xplane2blender import xplane_constants
+
+from io_xplane2blender import bl_info, xplane_constants
 
 # We make a copy here so as not to cause a circular dependency in xplane_props and other places
 CURRENT_ADDON_VERSION: Tuple[int, int, int] = bl_info["version"]
@@ -23,8 +24,10 @@ CURRENT_DATA_MODEL_VERSION = 90
 # The build number, hardcoded by the build script when there is one, otherwise it is xplane_constants.BUILD_NUMBER_NONE
 CURRENT_BUILD_NUMBER = xplane_constants.BUILD_NUMBER_NONE
 
-def getDebug()->bool:
+
+def getDebug() -> bool:
     return bpy.context.scene.xplane.debug
 
-def setDebug(debug: bool)->None:
+
+def setDebug(debug: bool) -> None:
     bpy.context.scene.xplane.debug = debug

@@ -1,6 +1,6 @@
 # Class: XPlaneFace
 # A mesh face. This class is just a data wrapper used by <XPlaneFaces>.
-class XPlaneFace():
+class XPlaneFace:
     # Property: vertices
     # list of vectors - [v1,v2,v3] The vertices forming the face.
 
@@ -17,8 +17,8 @@ class XPlaneFace():
     # bool - (default=False) True if face is smooth shaded, False if it is flat shaded.
 
     def __init__(self):
-        self.vertices = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
-        self.normals = [(0.0,0.0,0.0),(0.0,0.0,0.0),(0.0,0.0,0.0)]
-        self.indices = [0,0,0]
-        self.uvs = [(0.0,0.0),(0.0,0.0),(0.0,0.0)]
+        self.vertices = [(0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)]
+        self.normals = [(0.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)]
+        self.indices = [0, 0, 0]
+        self.uvs = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
         self.smooth = False
