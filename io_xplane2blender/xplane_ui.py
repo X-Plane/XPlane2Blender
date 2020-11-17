@@ -669,6 +669,29 @@ def mesh_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
 
 def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
     light_data = obj.data
+
+    def draw_dataref_search_window(
+        dataref_row: bpy.types.UILayout, layout: bpy.types.UILayout
+    ):
+        scene = bpy.context.scene
+        expanded = (
+            scene.xplane.dataref_search_window_state.dataref_prop_dest
+            == "bpy.context.active_object.data.xplane.dataref"
+        )
+        if expanded:
+            our_icon = "ZOOM_OUT"
+        else:
+            our_icon = "ZOOM_IN"
+        dataref_search_toggle_op = row.operator(
+            "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
+        )
+        dataref_search_toggle_op.paired_dataref_prop = (
+            "bpy.context.active_object.data.xplane.dataref"
+        )
+        # Finally, in the next row, if we are expanded, build the entire search list.
+        if expanded:
+            dataref_search_window_layout(layout)
+
     layout.row().prop(light_data.xplane, "type")
 
     if light_data.xplane.type == LIGHT_AUTOMATIC and light_data.type not in {
@@ -798,6 +821,30 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                 # try_param("param_phase", "PHASE", "Phase")
 
         draw_automatic_ui()
+    elif light_data.xplane.type == LIGHT_SPILL_CUSTOM and light_data.type not in {
+        "POINT",
+        "SPOT",
+    }:
+        layout.row().label(
+            text="Custom Spill lights must use Point or Spot Blender Lights"
+        )
+    elif light_data.xplane.type == LIGHT_SPILL_CUSTOM and light_data.type in {
+        "POINT",
+        "SPOT",
+    }:
+        layout.row().prop(light_data.xplane, "size")
+        row = layout.row()
+        row.prop(light_data.xplane, "dataref")
+        draw_dataref_search_window(row, layout)
+        debug_box = layout.box()
+        debug_box.label(text="Calculated Values")
+        if light_data.type == "POINT":
+            WIDTH_val = "Omni"
+        elif light_data.type == "SPOT":
+            WIDTH_val = round(
+                xplane_types.XPlaneLight.WIDTH_for_spill(light_data.spot_size), 5
+            )
+        debug_box.row().label(text=f"Width: {WIDTH_val}")
     elif light_data.xplane.type == LIGHT_NAMED:
         layout.row().prop(light_data.xplane, "name")
     elif light_data.xplane.type == LIGHT_PARAM:
@@ -809,24 +856,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
         layout.row().prop(light_data.xplane, "uv", text="")
         row = layout.row()
         row.prop(light_data.xplane, "dataref", text="Dataref")
-        scene = bpy.context.scene
-        expanded = (
-            scene.xplane.dataref_search_window_state.dataref_prop_dest
-            == "bpy.context.active_object.data.xplane.dataref"
-        )
-        if expanded:
-            our_icon = "ZOOM_OUT"
-        else:
-            our_icon = "ZOOM_IN"
-        dataref_search_toggle_op = row.operator(
-            "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
-        )
-        dataref_search_toggle_op.paired_dataref_prop = (
-            "bpy.context.active_object.data.xplane.dataref"
-        )
-        # Finally, in the next row, if we are expanded, build the entire search list.
-        if expanded:
-            dataref_search_window_layout(layout)
+        draw_dataref_search_window(row, layout)
 
         layout.row().prop(light_data.xplane, "enable_rgb_override")
         if light_data.xplane.enable_rgb_override:

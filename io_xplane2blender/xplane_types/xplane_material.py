@@ -143,7 +143,9 @@ class XPlaneMaterial:
                         elif xplane_blend_enum == BLEND_ON:
                             self.attributes["ATTR_blend"].setValue(True)
                         elif xplane_blend_enum == BLEND_SHADOW:
-                            self.attributes['ATTR_shadow_blend'].setValue(mat.xplane.blendRatio)
+                            self.attributes["ATTR_shadow_blend"].setValue(
+                                mat.xplane.blendRatio
+                            )
                     elif xplane_version < 1000:
                         if mat.xplane.blend:
                             self.attributes["ATTR_no_blend"].setValue(

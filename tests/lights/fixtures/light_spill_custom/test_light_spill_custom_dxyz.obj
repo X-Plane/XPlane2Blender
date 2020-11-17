@@ -1,0 +1,21 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Light: Spot_aa_backish_68.5_-.907_0,087_-.413_pink
+	# LIGHT: Spot_aa_backish_68.5_-.907_0,087_-.413_pink	weight: 10000
+	LIGHT_SPILL_CUSTOM 0 10 5 1 0 1 1 35 -0.54601967 0.35867152 0.75711119 0.92387953 
+	# 1 Light: Spot_down_0_0_0_red
+	# LIGHT: Spot_down_0_0_0_red	weight: 10000
+	LIGHT_SPILL_CUSTOM -20 10 -0 1 0 0 1 35 0 -1 -0 0.92387953 
+	# 1 Light: Spot_forward_90_0_0_blue
+	# LIGHT: Spot_forward_90_0_0_blue	weight: 10000
+	LIGHT_SPILL_CUSTOM -10 10 -0 0 0 1 1 35 0 0.00000004 -1 0.92387953 
+	# 1 Light: Spot_right_90_0_-90_green
+	# LIGHT: Spot_right_90_0_-90_green	weight: 10000
+	LIGHT_SPILL_CUSTOM 0 10 -0 0 1 0 1 35 1 0.00000004 0.00000004 0.92387953 
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+90.NO_BUILD_NUMBR

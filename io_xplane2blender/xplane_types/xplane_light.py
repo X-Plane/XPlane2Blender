@@ -1,7 +1,8 @@
 import math
 import re
 from copy import deepcopy
-from itertools import takewhile, tee, zip_longest
+from dataclasses import dataclass, field
+from itertools import chain, takewhile, tee, zip_longest
 from typing import Dict, List, Optional, Tuple, Union
 
 import bpy
@@ -15,6 +16,45 @@ from io_xplane2blender.xplane_utils import xplane_lights_txt_parser
 from ..xplane_config import getDebug
 from ..xplane_constants import *
 from ..xplane_helpers import floatToStr, logger, vec_b_to_x, vec_x_to_b
+
+
+@dataclass
+class _LightSpillCustomParams:
+    r: float
+    g: float
+    b: float
+
+    @property
+    def a(self):
+        return 1
+
+    size: float
+    dx: float
+    dy: float
+    dz: float
+    width: float
+    dataref: str
+
+    def __str__(self):
+        return " ".join(
+            chain(
+                map(
+                    floatToStr,
+                    (
+                        self.r,
+                        self.g,
+                        self.b,
+                        self.a,
+                        self.size,
+                        self.dx,
+                        self.dy,
+                        self.dz,
+                        self.width,
+                    ),
+                ),
+                (self.dataref,),
+            )
+        )
 
 
 class XPlaneLight(xplane_object.XPlaneObject):
@@ -63,6 +103,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
             self.params = {}
         elif self.lightType == LIGHT_PARAM:
             self.params = blenderObject.data.xplane.params
+        elif self.lightType == LIGHT_SPILL_CUSTOM:
+            self.params = _LightSpillCustomParams(*([0] * 8), "")
         else:
             self.params = None
 
@@ -379,7 +421,50 @@ class XPlaneLight(xplane_object.XPlaneObject):
             logger.warn(unknown_light_name_warning)
         # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
         # -------------------|------------|--------------|------------------|-------
-        # LIGHT_ old         | *          | N/A          | N/A              | Write
+        # LIGHT_SPILL_CUSTOM |"POINT/SPOT"| N/A          | N/A              | Fillout params, write
+        # LIGHT_SPILL_CUSTOM | Any others | N/A          | N/A              | Error
+        elif self.lightType == LIGHT_SPILL_CUSTOM and light_data.type not in {
+            "POINT",
+            "SPOT",
+        }:
+            logger.error(
+                f"Custom Spill lights must be a Point or Spot light, change {self.blenderObject.name}'s type or change it's X-Plane Light Type"
+            )
+            return
+        elif self.lightType == LIGHT_SPILL_CUSTOM and light_data.type in {
+            "POINT",
+            "SPOT",
+        }:
+            p = self.params
+            p.r, self.params.g, self.params.b = self.color
+            p.size = self.size
+
+            def width_param_new_value() -> float:
+                if light_data.type == "POINT":
+                    return 1
+                elif light_data.type == "SPOT":
+                    # cos(half the cone angle)
+                    return XPlaneLight.WIDTH_for_spill(light_data.spot_size)
+
+            def new_dxyz_vec_x() -> Vector:
+                """
+                Returns (potentially scaled) light direction
+                or (0, 0, 0) for omni lights in X-Plane coords
+                """
+
+                if light_data.type == "POINT":
+                    return Vector((0, 0, 0))
+                elif light_data.type == "SPOT":
+                    return vec_b_to_x(self.get_light_direction_b())
+                else:
+                    assert False, f"What is this light_data.type {light_data.type}"
+
+            p.dx, p.dy, p.dz = new_dxyz_vec_x()
+            p.width = width_param_new_value()
+            p.dataref = self.dataref
+        # X-Plane Light Type | Light Type | parsed_light | light_param_defs | Result
+        # -------------------|------------|--------------|------------------|-------
+        # LIGHT_{OLD_TYPES}  | *          | N/A          | N/A              | Write
         elif self.lightType in LIGHTS_OLD_TYPES:
             pass
         else:
@@ -587,6 +672,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 f" {' '.join(map(floatToStr,self.uv))}"
                 f" {self.dataref}\n"
             )
+        elif self.lightType == LIGHT_SPILL_CUSTOM:
+            o += f"{indent}LIGHT_SPILL_CUSTOM {translation_xp_str} {self.params}\n"
         # do not render lights with no indices
         elif self.indices[1] > self.indices[0]:
             offset = self.indices[0]

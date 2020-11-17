@@ -1,0 +1,15 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Light: Point_pink
+	# LIGHT: Point_pink	weight: 10000
+	LIGHT_SPILL_CUSTOM 5 5 -5 1 0.1 0.80000001 1 35 0 0 0 1 
+	# 1 Light: Spot_green
+	# LIGHT: Spot_green	weight: 10000
+	LIGHT_SPILL_CUSTOM -4 5 4 0 1 0.25 1 35 0 -1 -0 0.92387953 
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+90.NO_BUILD_NUMBR

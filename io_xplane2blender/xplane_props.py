@@ -1853,9 +1853,10 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
                 (LIGHT_STROBE,    "Strobe"   + " (deprecated)", "Strobe"   + " (deprecated)"),
                 (LIGHT_TRAFFIC,   "Traffic"  + " (deprecated)", "Traffic"  + " (deprecated)"),
                 (LIGHT_NAMED,     "Named"    + " (deprecated)", "Makes named and named only lights, use automatic"),
-                (LIGHT_CUSTOM,    "Custom",                     "Custom"),
+                (LIGHT_CUSTOM,    "Custom Billboard",           "Custom billboard light"),
                 (LIGHT_PARAM,     "Manual Param (deprecated)",  "Uses manual entry for parameters, not recommended"),
                 (LIGHT_AUTOMATIC, "Automatic",                  "Makes named and param lights with params taken from Blender light data"),
+                (LIGHT_SPILL_CUSTOM, "Custom Spill",            "Custom spill light, with automatic parameter detection"),
                 (LIGHT_NON_EXPORTING, "Non-Exporting", "Light will not be in the OBJ"),
         ]
     )
@@ -1880,7 +1881,7 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
 
     dataref: bpy.props.StringProperty(
         name = 'Dataref',
-        description = "A X-Plane Dataref",
+        description = "An X-Plane Dataref",
         default = ""
     )
 

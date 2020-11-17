@@ -1,0 +1,18 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Light: Spot_blank
+	# LIGHT: Spot_blank	weight: 10000
+	LIGHT_SPILL_CUSTOM 0 1 -0 1 1 1 1 15 0 1 -0.00000015 0.92387953 
+	# 1 Light: Spot_none
+	# LIGHT: Spot_none	weight: 10000
+	LIGHT_SPILL_CUSTOM 10 1 -0 1 1 1 1 15 0 1 -0.00000015 0.92387953 none
+	# 1 Light: Spot_traffic_light
+	# LIGHT: Spot_traffic_light	weight: 10000
+	LIGHT_SPILL_CUSTOM 20 1 -0 1 1 1 1 15 0 1 -0.00000015 0.92387953 sim/graphics/animation/lights/traffic_light
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+90.NO_BUILD_NUMBR

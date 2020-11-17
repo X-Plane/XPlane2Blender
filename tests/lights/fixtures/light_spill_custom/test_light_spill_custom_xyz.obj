@@ -1,0 +1,19 @@
+I
+800
+OBJ
+
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Armature: Armature
+	# ARMATURE: Armature	weight: 0
+		# 2 Bone: Bone
+			# 3 Bone: Bone.001
+				# 4 Light: Point_5_5_5
+				# LIGHT: Point_5_5_5	weight: 10000
+				LIGHT_SPILL_CUSTOM 1.3570218 14.714046 -5.7140455 1 0.82163 0.0033541408 1 35 0 0 0 1 
+				# 4 Light: Spot_-4_-4_5
+				# LIGHT: Spot_-4_-4_5	weight: 10000
+				LIGHT_SPILL_CUSTOM -2.8856175 6.2287636 2.7712367 1 0.018346181 0.028602321 1 35 -0.66666675 -0.33333337 -0.66666663 0.92387953 
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+90.NO_BUILD_NUMBR
