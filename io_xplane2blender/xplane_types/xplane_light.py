@@ -124,7 +124,9 @@ class XPlaneLight(xplane_object.XPlaneObject):
         super().collect()
 
         light_data = self.blenderObject.data
-        if not self.lightName and self.lightType in {
+        if self.lightType == LIGHT_NON_EXPORTING:
+            return
+        elif not self.lightName and self.lightType in {
             LIGHT_NAMED,
             LIGHT_PARAM,
             LIGHT_AUTOMATIC,
@@ -490,6 +492,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
     def write(self) -> None:
         debug = getDebug()
         indent = self.xplaneBone.getIndent()
+        if self.lightType == LIGHT_NON_EXPORTING:
+            return ""
         o = super().write()
 
         light_data = self.blenderObject.data

@@ -14,12 +14,16 @@ from io_xplane2blender import xplane_config, xplane_helpers
 from io_xplane2blender.tests import animation_file_mappings, test_creation_helpers
 from io_xplane2blender.xplane_config import getDebug, setDebug
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
-from io_xplane2blender.xplane_types import xplane_bone, xplane_file, xplane_primitive
+from io_xplane2blender.xplane_types import (
+    xplane_attribute,
+    xplane_bone,
+    xplane_file,
+    xplane_primitive,
+)
 
 FLOAT_TOLERANCE = 0.0001
 
 __dirname__ = os.path.dirname(__file__)
-TMP_DIR = os.path.realpath(os.path.join(__dirname__, "../../tests/tmp"))
 
 FilterLinesCallback = Callable[[List[Union[float, str]]], bool]
 
@@ -189,10 +193,10 @@ class XPlaneTestCase(unittest.TestCase):
         for a_comp, b_comp in zip(a, b):
             self.assertFloatsEqual(a_comp, b_comp, tolerance)
 
-    def parseFileToLines(self, data: str) -> List[Union[float, str]]:
+    def parseFileToLines(self, data: str) -> List[Tuple[Union[float, str]]]:
         """
-        Turns a string of \n seperated lines into a List[Union[float,str]]
-        without comments or 0 length strings. All numeric parts are converted
+        Turns a string of \n seperated lines into a list of lines
+        without comments or 0 length strings with all numeric parts are converted
         """
         lines = []  # type: List[Union[float,str]]
 
@@ -208,7 +212,7 @@ class XPlaneTestCase(unittest.TestCase):
             line = line.strip()
             if line:
                 if line.startswith("800"):
-                    lines.append(line.split())
+                    lines.append(tuple(line.split()))
                 else:
                     lines.append(tuple(map(tryToFloat, line.split())))
 
@@ -414,7 +418,7 @@ class XPlaneTestCase(unittest.TestCase):
         - layer_number starts at 0, as it used to access the scene.layers collection
         """
         # if not ('-q' in sys.argv or '--quiet' in sys.argv):
-        # print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
+        #     print("Comparing: '%s', '%s'" % (tmpFilename, fixturePath))
 
         out = self.exportExportableRoot(
             bpy.data.collections[f"Layer {layer_number + 1}"], tmpFilename
@@ -446,22 +450,26 @@ class XPlaneTestCase(unittest.TestCase):
     # asserts that an attributes object equals a dict
     def assertAttributesEqualDict(
         self,
-        attrs: List[str],
+        attrs: List[Union[str, xplane_attribute.XPlaneAttribute]],
         d: Dict[str, Any],
         floatTolerance: float = FLOAT_TOLERANCE,
     ):
-        self.assertEquals(len(d), len(attrs), "Attribute lists have different length")
+        self.assertEquals(
+            len(d),
+            len(attrs),
+            f"Attribute lists {list(d.keys())}, {list(attrs.keys())} have different length",
+        )
 
         for name in attrs:
             attr = attrs[name]
             value = attr.getValue()
             expectedValue = d[name]
 
-            if isinstance(expectedValue, list) or isinstance(expectedValue, tuple):
-                self.assertTrue(
-                    isinstance(value, list) or isinstance(value, tuple),
-                    'Attribute value for "%s" is no list or tuple but: %s'
-                    % (name, str(value)),
+            if isinstance(expectedValue, (list, tuple)):
+                self.assertIsInstance(
+                    value,
+                    (list, tuple),
+                    msg='Attribute value for "%s" is no list or tuple but: %s',
                 )
                 self.assertEquals(
                     len(expectedValue),
@@ -469,11 +477,8 @@ class XPlaneTestCase(unittest.TestCase):
                     'Attribute values for "%s" have different length' % name,
                 )
 
-                for i in range(0, len(expectedValue)):
-                    v = value[i]
-                    expectedV = expectedValue[i]
-
-                    if isinstance(expectedV, float) or isinstance(expectedV, int):
+                for i, (v, expectedV) in enumerate(zip(value, expectedValue)):
+                    if isinstance(expectedV, (float, int)):
                         self.assertFloatsEqual(expectedV, v, floatTolerance)
                     else:
                         self.assertEquals(
@@ -564,7 +569,7 @@ class XPlaneTestCase(unittest.TestCase):
         xplane_file._all_keyframe_infos.clear()
 
         if dest:
-            with open(os.path.join(TMP_DIR, dest + ".obj"), "w") as tmp_file:
+            with open(os.path.join(get_tmp_folder(), dest + ".obj"), "w") as tmp_file:
                 tmp_file.write(out)
 
         return out
@@ -640,16 +645,20 @@ class XPlaneAnimationTestCase(XPlaneTestCase):
 
 def get_source_folder() -> pathlib.Path:
     """Returns the full path to the addon folder"""
-    return os.path.dirname(pathlib.Path("..", __file__))
+    return pathlib.Path(__file__).parent
 
 
 def get_project_folder() -> pathlib.Path:
     """Returns the full path to the project folder"""
-    return os.path.dirname(pathlib.Path("..", "..", __file__))
+    return pathlib.Path(__file__).parent.parent.parent
 
 
 def get_tests_folder() -> pathlib.Path:
     return pathlib.Path(get_project_folder(), "tests")
+
+
+def get_tmp_folder() -> pathlib.Path:
+    return os.path.realpath(os.path.join(__dirname__, "../../tests/tmp"))
 
 
 def make_fixture_path(dirname, filename, sub_dir=""):

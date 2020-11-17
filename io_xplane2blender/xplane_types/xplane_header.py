@@ -9,7 +9,13 @@ import bpy
 from io_xplane2blender.xplane_constants import EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_SCENERY
 
 from ..xplane_constants import *
-from ..xplane_helpers import floatToStr, logger, resolveBlenderPath
+from ..xplane_helpers import (
+    effective_normal_metalness,
+    effective_normal_metalness_draped,
+    floatToStr,
+    logger,
+    resolveBlenderPath,
+)
 from ..xplane_image_composer import (
     combineSpecularAndNormal,
     getImageByFilepath,
@@ -113,7 +119,7 @@ class XPlaneHeader:
         # else out. -Ted, 8/9/2018
         self.attributes.add(
             XPlaneAttribute("NORMAL_METALNESS_draped_hack", None)
-        )  # NORMAL_METALNESS for draped textures
+        )  # normal_metalness for draped textures
         self.attributes.add(XPlaneAttribute("BUMP_LEVEL", None))
         self.attributes.add(XPlaneAttribute("NO_BLEND", None))
         self.attributes.add(XPlaneAttribute("SPECULAR", None))
@@ -215,35 +221,35 @@ class XPlaneHeader:
 
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= 1100:
-            mat = self.xplaneFile.referenceMaterials[0]
-            if mat:
-                self.attributes["NORMAL_METALNESS"].setValue(
-                    mat.getEffectiveNormalMetalness()
+            texture_normal = self.attributes["TEXTURE_NORMAL"].getValue()
+            normal_metalness = effective_normal_metalness(self.xplaneFile)
+            if texture_normal:
+                self.attributes["NORMAL_METALNESS"].setValue(normal_metalness)
+            elif not texture_normal and normal_metalness:
+                logger.warn(
+                    f"{self.xplaneFile.filename}: No Normal Texture found, ignoring use of Normal Metalness"
                 )
-                has_texture_normal = (
-                    self.attributes["TEXTURE_NORMAL"].getValue(0) is not None
-                )
-                if has_texture_normal:
-                    if mat.options.panel is False:
-                        self.attributes["NORMAL_METALNESS"].setValue(
-                            mat.getEffectiveNormalMetalness()
-                        )
-                elif not has_texture_normal and mat.getEffectiveNormalMetalness():
-                    logger.warn(
-                        "Material '%s' has Normal Metalness, but no Normal Texture"
-                        % mat.name
-                    )
 
         if xplane_version >= 1100:
-            if (
-                self.xplaneFile.referenceMaterials[0]
-                or self.xplaneFile.referenceMaterials[1]
-            ):
-                mat = (
-                    self.xplaneFile.referenceMaterials[0]
-                    or self.xplaneFile.referenceMaterials[1]
+
+            if self.xplaneFile.options.export_type in {
+                EXPORT_TYPE_AIRCRAFT,
+                EXPORT_TYPE_COCKPIT,
+            }:
+                self.attributes["BLEND_GLASS"].setValue(
+                    self.xplaneFile.options.blend_glass
                 )
-                self.attributes["BLEND_GLASS"].setValue(mat.getEffectiveBlendGlass())
+            elif (
+                self.xplaneFile.options.export_type
+                in {
+                    EXPORT_TYPE_INSTANCED_SCENERY,
+                    EXPORT_TYPE_SCENERY,
+                }
+                and self.xplaneFile.options.blend_glass
+            ):
+                logger.error(
+                    f"{self.xplaneFile.filename} can't use 'Blend Glass'. 'Blend Glass' is only for Aircraft and Cockpits"
+                )
 
         if canHaveDraped:
             # draped textures
@@ -270,20 +276,19 @@ class XPlaneHeader:
             if self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[1]
                 if xplane_version >= 1100:
-                    has_texture_draped_nml = (
-                        self.attributes["TEXTURE_DRAPED_NORMAL"].getValue(0) is not None
+                    texture_draped_nml = self.attributes[
+                        "TEXTURE_DRAPED_NORMAL"
+                    ].getValue()
+                    normal_metalness_draped = effective_normal_metalness_draped(
+                        self.xplaneFile
                     )
-                    if has_texture_draped_nml:
-                        if mat.options.panel is False:
-                            self.attributes["NORMAL_METALNESS_draped_hack"].setValue(
-                                mat.getEffectiveNormalMetalness()
-                            )
-                    elif (
-                        not has_texture_draped_nml and mat.getEffectiveNormalMetalness()
-                    ):
+                    if texture_draped_nml:
+                        self.attributes["NORMAL_METALNESS_draped_hack"].setValue(
+                            normal_metalness_draped
+                        )
+                    elif not texture_draped_nml and normal_metalness_draped:
                         logger.warn(
-                            "Material '%s' has Normal Metalness, but no Draped Normal Texture"
-                            % mat.name
+                            f"{self.xplaneFile.filename}: No Draped Normal Texture found, ignoring use of Normal Metalness"
                         )
 
                 # draped bump level
@@ -298,7 +303,9 @@ class XPlaneHeader:
                 mat.attributes["ATTR_no_blend"].setValue(None)
 
                 # draped specular
-                if xplane_version >= 1100 and mat.getEffectiveNormalMetalness():
+                if xplane_version >= 1100 and effective_normal_metalness_draped(
+                    self.xplaneFile
+                ):
                     # draped specular
                     self.attributes["SPECULAR"].setValue(1.0)
                 else:
@@ -307,7 +314,7 @@ class XPlaneHeader:
                         mat.attributes["ATTR_shiny_rat"].getValue()
                     )
 
-                    # prevent of writing again in material
+                # prevent of writing again in material
                 mat.attributes["ATTR_shiny_rat"].setValue(None)
             # draped LOD
             if self.xplaneFile.options.lod_draped != 0.0:
@@ -316,7 +323,7 @@ class XPlaneHeader:
                 )
 
         # set cockpit regions
-        if isCockpit:
+        if isAircraft or isCockpit:
             num_regions = int(self.xplaneFile.options.cockpit_regions)
 
             if num_regions > 0:
@@ -326,7 +333,7 @@ class XPlaneHeader:
                     self.attributes["COCKPIT_REGION"].addValue(
                         (
                             cockpit_region.left,
-                            cockpit_region.top,
+                            cockpit_region.top,  # bad name alert! Should have been "bottom"
                             cockpit_region.left + (2 ** cockpit_region.width),
                             cockpit_region.top + (2 ** cockpit_region.height),
                         )
@@ -390,7 +397,7 @@ class XPlaneHeader:
 
         if xplane_version >= 1100 and self.xplaneFile.referenceMaterials[0]:
             mat = self.xplaneFile.referenceMaterials[0]
-            if mat.getEffectiveNormalMetalness():
+            if effective_normal_metalness(self.xplaneFile):
                 self.attributes["GLOBAL_specular"].setValue(1.0)
                 self.xplaneFile.commands.written[
                     "ATTR_shiny_rat"
@@ -426,9 +433,12 @@ class XPlaneHeader:
                     self.xplaneFile.commands.written["ATTR_shiny_rat"] = attr.getValue()
 
                 # tint
-                if mat.options.tint:
+                if self.xplaneFile.options.tint:
                     self.attributes["GLOBAL_tint"].setValue(
-                        (mat.options.tint_albedo, mat.options.tint_emissive)
+                        (
+                            self.xplaneFile.options.tint_albedo,
+                            self.xplaneFile.options.tint_emissive,
+                        )
                     )
 
             if not isCockpit:
@@ -470,10 +480,9 @@ class XPlaneHeader:
                         mat.attributes["ATTR_no_shadow"].setValue(None)
 
             # cockpit_lit
-            if isCockpit and (
-                self.xplaneFile.options.cockpit_lit == True or xplane_version >= 1100
-            ):
-                self.attributes["GLOBAL_cockpit_lit"].setValue(True)
+            if isAircraft or isCockpit:
+                if self.xplaneFile.options.cockpit_lit or xplane_version >= 1100:
+                    self.attributes["GLOBAL_cockpit_lit"].setValue(True)
 
         if len(self.export_path_dirs):
             self.attributes["EXPORT"].value = [

@@ -7,7 +7,12 @@ from io_xplane2blender.xplane_types import xplane_object
 
 from ..xplane_config import getDebug
 from ..xplane_constants import *
-from ..xplane_helpers import floatToStr, logger
+from ..xplane_helpers import (
+    effective_normal_metalness,
+    effective_normal_metalness_draped,
+    floatToStr,
+    logger,
+)
 from .xplane_attribute import XPlaneAttribute
 from .xplane_attributes import XPlaneAttributes
 
@@ -72,14 +77,17 @@ class XPlaneMaterial:
         self.attributes.add(XPlaneAttribute("ATTR_no_solid_camera"))
 
         self.attributes.add(XPlaneAttribute("ATTR_light_level", None, 1000))
+        self.attributes.add(XPlaneAttribute("ATTR_light_level_reset", True, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_poly_os", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_draped", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_no_draped", True, 1000))
 
         self.cockpitAttributes = XPlaneAttributes()
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_device", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit", None, 2000))
-        self.cockpitAttributes.add(XPlaneAttribute("ATTR_no_cockpit", True, 2000))
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_lit_only", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_region", None, 2000))
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_no_cockpit", True, 2000))
 
         self.conditions = []
 
@@ -109,17 +117,21 @@ class XPlaneMaterial:
                 if mat.xplane.poly_os > 0:
                     self.attributes["ATTR_poly_os"].setValue(mat.xplane.poly_os)
 
-                if mat.xplane.panel == False:
+                if mat.xplane.cockpit_feature == COCKPIT_FEATURE_NONE:
+                    xplane_version = int(bpy.context.scene.xplane.version)
                     self.attributes["ATTR_draw_enable"].setValue(True)
-
-                    # SPECIAL CASE!
-                    if self.getEffectiveNormalMetalness() == False:
+                    eff_fn = (
+                        effective_normal_metalness_draped
+                        if mat.xplane.draped
+                        else effective_normal_metalness
+                    )
+                    xp_file = self.xplaneObject.xplaneBone.xplaneFile
+                    if not eff_fn(xp_file):
                         self.attributes["ATTR_shiny_rat"].setValue(
                             mat.specular_intensity
                         )
 
                     # blend
-                    xplane_version = int(bpy.context.scene.xplane.version)
                     if xplane_version >= 1000:
                         xplane_blend_enum = mat.xplane.blend_v1000
 
@@ -131,7 +143,9 @@ class XPlaneMaterial:
                         elif xplane_blend_enum == BLEND_ON:
                             self.attributes["ATTR_blend"].setValue(True)
                         elif xplane_blend_enum == BLEND_SHADOW:
-                            self.attributes["ATTR_shadow_blend"].setValue(True)
+                            self.attributes["ATTR_shadow_blend"].setValue(
+                                mat.xplane.blendRatio
+                            )
                     elif xplane_version < 1000:
                         if mat.xplane.blend:
                             self.attributes["ATTR_no_blend"].setValue(
@@ -196,14 +210,47 @@ class XPlaneMaterial:
                 self.attributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
 
     def collectCockpitAttributes(self, mat: bpy.types.Material) -> None:
-        if mat.xplane.panel:
-            self.cockpitAttributes["ATTR_cockpit"].setValue(True)
-            self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
-            cockpit_region = int(mat.xplane.cockpit_region)
-            if cockpit_region > 0:
-                self.cockpitAttributes["ATTR_cockpit_region"].setValue(
-                    cockpit_region - 1
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version >= 1100:
+            if mat.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+                self.cockpitAttributes["ATTR_cockpit_device"].setValue(
+                    [
+                        mat.xplane.device_name,
+                        bin(
+                            sum(
+                                getattr(mat.xplane, f"device_bus_{i}") << i
+                                for i in range(6)
+                            )
+                        )[2:],
+                        mat.xplane.device_lighting_channel,
+                        mat.xplane.device_auto_adjust,
+                    ]
                 )
+                self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+
+        if mat.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
+            xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
+            cockpit_panel_mode = xplaneFile.options.cockpit_panel_mode
+            cockpit_region = int(mat.xplane.cockpit_region)
+
+            self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+            if xplane_version >= 1110:
+                if cockpit_panel_mode == PANEL_COCKPIT:
+                    self.cockpitAttributes["ATTR_cockpit"].setValue(True)
+                elif cockpit_panel_mode == PANEL_COCKPIT_LIT_ONLY:
+                    self.cockpitAttributes["ATTR_cockpit_lit_only"].setValue(True)
+                elif cockpit_panel_mode == PANEL_COCKPIT_REGION and cockpit_region:
+                    self.cockpitAttributes["ATTR_cockpit_region"].setValue(
+                        cockpit_region - 1
+                    )
+            elif xplane_version < 1110:
+                # TODO: I believe this is wrong!
+                # This prints out ATTR_cockpit then region no matter
+                self.cockpitAttributes["ATTR_cockpit"].setValue(True)
+                if cockpit_region:
+                    self.cockpitAttributes["ATTR_cockpit_region"].setValue(
+                        cockpit_region - 1
+                    )
 
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
         if mat.xplane.lightLevel:
@@ -214,6 +261,7 @@ class XPlaneMaterial:
                     mat.xplane.lightLevel_dataref,
                 )
             )
+            self.attributes["ATTR_light_level_reset"].setValue(False)
 
     def collectConditions(self, mat: bpy.types.Material) -> None:
         if mat.xplane.conditions:
@@ -278,29 +326,3 @@ class XPlaneMaterial:
         return io_xplane2blender.xplane_types.xplane_material_utils.validate(
             self, exportType
         )
-
-    # Method: getEffectiveNormalMetalness
-    # Predicate that returns the effective value of NORMAL_METALNESS, taking into account the current xplane version
-    #
-    # Returns:
-    # bool - True or false if the version of X-Plane chosen supports NORMAL_METALNESS and what its value is,
-    # False if the current XPLane version doesn't support it
-    def getEffectiveNormalMetalness(self) -> bool:
-        if int(bpy.context.scene.xplane.version) >= 1100:
-            return self.options.normal_metalness
-        else:
-            return False
-
-    # Method: getEffectiveBlendGlass
-    # Predicate that returns the effective value of BLEND_GLASS, taking into account the current xplane version
-    #
-    # Returns:
-    # bool - True or false if the version of X-Plane chosen supports BLEND_GLASS and what its value is,
-    # False if the current XPLane version doesn't support it
-    def getEffectiveBlendGlass(self) -> bool:
-        xplane_version = int(bpy.context.scene.xplane.version)
-
-        if xplane_version >= 1100:
-            return self.options.blend_glass
-        else:
-            return False

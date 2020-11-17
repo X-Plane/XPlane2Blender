@@ -156,15 +156,20 @@ def copy_former_property_group_to_property_group(
 
 def delete_property_from_datablock(
     idprop_group: idprop.types.IDPropertyGroup, prop: str
-) -> Union[bool, int, float, str]:
+) -> Optional[Union[bool, int, float, str]]:
     """
-    Attempts to delete a property from a datablock, if not found, raise KeyError.
-    If round, return the value as reported by get #Or would getattr be better?
+    Attempts to delete an idprop from a datablock.
+    If round, return the value as reported by __getitem__,
+    else return None
     """
     try:
+        # TODO: Or would getattr() or get be better?
+        value = idprop_group[prop]
         del idprop_group[prop]
     except KeyError:
-        pass
+        return None
+    else:
+        return value
 
 
 def delete_property_from_blend_file(idprop_groups: List[Any], prop: str) -> None:

@@ -35,6 +35,7 @@ You may now proceed to the rest of the file.
 import collections
 import enum
 import functools
+import itertools
 import pprint
 import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
@@ -276,7 +277,10 @@ def _rollback_blend_glass(logger: XPlaneLogger) -> None:
         v11 = mat.xplane.get("blend_v1100")
 
         if v11 == 3:  # Aka, where BLEND_GLASS was in the enum
-            mat.xplane.blend_glass = True
+            # v4.1.0 note - we've moved blend_glass to the header
+            # but I don't want to change the rest of this function
+            # So... we fake it to match later expectations!
+            mat["xplane"]["blend_glass"] = True
 
             # This bit of code reachs around Blender's magic EnumProperty
             # stuff and get at the RNA behind it, all to find the name.
@@ -409,6 +413,103 @@ def _set_shadow_local_and_delete_global_shadow(
         )
 
 
+def _move_global_material_props(
+    logger: xplane_helpers.XPlaneLogger,
+):
+    """
+    Because it was deemed horribly annoying and bad semantics,
+    NORMAL_METALNESS, BLEND_GLASS, and GLOBAL_tint are
+    going to be moved to the OBJ settings instead.
+
+    Side Effects: The value of `Normal Metalness`, `Blend Glass`,
+    `Tint`, `Tint Albedo`, `Tint Emissive` are copied to the OBJ
+    settings with a very liberal dumb heuristic for solving
+    ambiguities and defaults given. No old data is deleted.
+
+    On Accidental Re-run: Pre-v4.1.0-alpha.1 choices would be re-applied,
+    overwriting new choices
+    """
+    default_blend_glass = False
+    default_normal_metalness = False
+    default_tint = False
+    default_tint_albedo = 0.0
+    default_tint_emissive = 0.0
+
+    for scene in bpy.data.scenes:
+        exp_collections = [
+            col
+            for col in xplane_helpers.get_collections_in_scene(scene)
+            if col.xplane.is_exportable_collection
+        ]
+        exp_objects = [o for o in scene.objects if o.xplane.isExportableRoot]
+
+        for exp in itertools.chain(exp_collections, exp_objects):
+
+            if isinstance(exp, bpy.types.Collection):
+                all_objects = exp.all_objects
+            else:
+
+                def recurse_obj_tree(obj: bpy.types.Collection):
+                    yield obj
+                    for c in obj.children:
+                        yield from recurse_obj_tree(c)
+
+                all_objects = [*recurse_obj_tree(exp)]
+
+            exp.xplane.layer.blend_glass = default_blend_glass
+            exp.xplane.layer.normal_metalness = default_normal_metalness
+
+            for m in [
+                slot.material
+                for o in all_objects
+                for slot in o.material_slots
+                if slot.material
+            ]:
+                exp.xplane.layer.blend_glass |= bool(
+                    m.xplane.get("blend_glass", default_blend_glass)
+                )
+                old_normal_metalness = bool(
+                    m.xplane.get("normal_metalness", default_normal_metalness)
+                )
+                if m.xplane.draped:
+                    exp.xplane.layer.normal_metalness_draped |= old_normal_metalness
+                else:
+                    exp.xplane.layer.normal_metalness |= old_normal_metalness
+
+                # Copying only the 1st material we see is a heuristic -
+                # Since we had no error we have no definitive answer. I'm hoping this choice
+                # which mimics picking the 1st reference material
+                # is good enough. If not... well... its a one time fix of only so many clicks.
+                # ...
+                # Right?
+                if exp.xplane.layer.get("tint") == None:
+                    exp.xplane.layer.tint = bool(m.xplane.get("tint", default_tint))
+                    exp.xplane.layer.tint_albedo = m.xplane.get(
+                        "tint_albedo", default_tint_albedo
+                    )
+                    exp.xplane.layer.tint_emissive = m.xplane.get(
+                        "tint_emissive", default_tint_emissive
+                    )
+
+
+def _panel_to_cockpit_feature(logger: xplane_helpers.XPlaneLogger):
+    for mat in bpy.data.materials:
+        mat.xplane.cockpit_feature = (
+            xplane_constants.COCKPIT_FEATURE_PANEL
+            if mat.xplane.get("panel", False)
+            else xplane_constants.COCKPIT_FEATURE_NONE
+        )
+
+
+def _regions_change_panel_mode(logger: xplane_helpers.XPlaneLogger):
+    for col in bpy.data.collections:
+        col.xplane.layer.cockpit_panel_mode = (
+            xplane_constants.PANEL_COCKPIT_REGION
+            if int(col.xplane.layer.cockpit_regions)
+            else col.xplane.layer.cockpit_panel_mode
+        )
+
+
 def update(
     last_version: xplane_helpers.VerStruct, logger: xplane_helpers.XPlaneLogger
 ) -> None:
@@ -486,11 +587,32 @@ def update(
         for light in filter(lambda l: l.xplane.get("type") is None, bpy.data.lights):
             light.xplane.type = xplane_constants.LIGHT_DEFAULT
 
+    if last_version < xplane_helpers.VerStruct.parse_version(
+        "4.1.0-alpha.1+92.20201020151500"
+    ):
+        _move_global_material_props(logger)
+    if last_version < xplane_helpers.VerStruct.parse_version(
+        "4.1.0-alpha.1+97.20201109172400"
+    ):
+        _panel_to_cockpit_feature(logger)
+    if last_version < xplane_helpers.VerStruct.parse_version(
+        "4.1.0-beta.1+100.20201117112800"
+    ):
+        _regions_change_panel_mode(logger)
+
+
+def _synchronize_last_version_across_histories(last_version: xplane_helpers.VerStruct):
+    assert last_version.is_valid(), f"last_version {last_version} isn't valid"
+
+    for scene in bpy.data.scenes:
+        xplane_helpers.VerStruct.add_to_version_history(scene, last_version)
+
 
 @persistent
 def load_handler(dummy):
     from io_xplane2blender.xplane_utils import xplane_lights_txt_parser
 
+    # --- Setup logger (Startup) ----------------------------------------------
     logger = xplane_helpers.logger
     logger.clear()
     logger.addTransport(
@@ -498,6 +620,8 @@ def load_handler(dummy):
         xplane_constants.LOGGER_LEVELS_ALL,
     )
     logger.addTransport(XPlaneLogger.ConsoleTransport())
+    # -------------------------------------------------------------------------
+    # --- Parse lights.txt file -----------------------------------------------
     try:
         xplane_lights_txt_parser.parse_lights_file()
     except (FileNotFoundError, OSError) as oe:
@@ -532,9 +656,9 @@ def load_handler(dummy):
             title="io_xplane2blender/resources/lights.txt had invalid content",
             icon="ERROR",
         )
+    # -------------------------------------------------------------------------
 
-    filepath = bpy.context.blend_data.filepath
-
+    # --- Add/Correct Layer Props ---------------------------------------------
     for layer_props in [
         has_layer_props.xplane.layer
         for has_layer_props in bpy.data.objects[:] + bpy.data.collections[:]
@@ -545,101 +669,76 @@ def load_handler(dummy):
             layer_props.lod.add()
         while len(layer_props.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
             layer_props.cockpit_region.add()
+    # -------------------------------------------------------------------------
 
     # do not update newly created files
-    if not filepath:
+    if not bpy.context.blend_data.filepath:
         return
 
-    scene = bpy.context.scene
-    current_version = xplane_helpers.VerStruct.current()
-    ver_history = scene.xplane.xplane2blender_ver_history
+    assert bpy.data.filepath, "We've missed the new file check"
+    # --- Setup logger (Updater) ----------------------------------------------
     logger.clear()
     logger.addTransport(
         xplane_helpers.XPlaneLogger.InternalTextTransport("Updater Log"),
         xplane_constants.LOGGER_LEVELS_ALL,
     )
     logger.addTransport(XPlaneLogger.ConsoleTransport())
+    # -------------------------------------------------------------------------
 
-    # Test if we're coming from a legacy build
-    # Caveats:
-    #    - New "modern" files don't touch this
-    #    - Edge case: If someone takes a modern file and saves it in a legacy version
-    #    the history will be updated (if the legacy version found is valid),
-    #    but update won't be re-run. User is on their own if they made real changes to the
-    #    data model
-    legacy_build_number_w_history = False
-    if scene.get("xplane2blender_version") != xplane_constants.DEPRECATED_XP2B_VER:
-        # "3.2.0 was the last version without an updater, so default to that."
-        # 3.20 was a mistake. If we get to a real version 3.20, we'll deprecate support for 3.2.0
-        legacy_version_str = scene.get("xplane2blender_version", "3.2.0").replace(
-            "20", "2"
-        )
-        legacy_version = xplane_helpers.VerStruct.parse_version(legacy_version_str)
-        if legacy_version is not None:
-            # Edge case: If someone creates a modern file and saves it with a legacy version
-            # (no protection against real breaking edits, however)
-            if len(ver_history) > 0:
-                logger.info(
-                    "Legacy build number, %s, found %d entries in version history. Not updating, still adding new version numbers"
-                    % (str(legacy_version), len(ver_history))
-                )
-                legacy_build_number_w_history = True
-                # Since we changed the data of this file, we still need to save the version,
-                # even if no updating gets done
-                xplane_helpers.VerStruct.add_to_version_history(legacy_version)
-                logger.info("Added %s to version history" % str(legacy_version))
+    current_version = xplane_helpers.VerStruct.current()
 
-                xplane_helpers.VerStruct.add_to_version_history(current_version)
-                logger.info("Added %s to version history" % str(current_version))
-            else:
-                xplane_helpers.VerStruct.add_to_version_history(legacy_version)
-                logger.info("Added %s to version history" % str(legacy_version))
-
-            scene["xplane2blender_version"] = xplane_constants.DEPRECATED_XP2B_VER
-        else:
-            invalid_version_error_msg = (
-                "pre-3.4.0-beta.5 file has invalid xplane2blender_version: %s."
-                " "
-                "Re-open file in a previous version and/or fix manually in Scene->Custom Properties"
-                % legacy_version_str
+    def handle_legacy_idprop(scene: bpy.types.Scene):
+        if scene.get("xplane2blender_version") != xplane_constants.DEPRECATED_XP2B_VER:
+            # "3.2.0 was the last version without an updater, so default to that."
+            # 3.20 was a mistake
+            legacy_version_str = scene.get("xplane2blender_version", "3.2.0").replace(
+                "20", "2"
             )
+            legacy_version = xplane_helpers.VerStruct.parse_version(legacy_version_str)
+            if legacy_version is not None:
+                xplane_helpers.VerStruct.add_to_version_history(scene, legacy_version)
+                logger.info(f"Added {legacy_version} to version history")
 
-            logger.error(invalid_version_error_msg)
-            logger.error("Update not performed")
-            raise Exception(invalid_version_error_msg)
+                scene["xplane2blender_version"] = xplane_constants.DEPRECATED_XP2B_VER
+            else:
+                logger.warn(
+                    f"pre-3.4.0-beta.5 file has invalid xplane2blender_version: {legacy_version_str}.\n"
+                    f"Re-open file in a previous version and/or fix manually in Scene->Custom Properties"
+                )
 
-    # We don't have to worry about ver_history for 3.4.0-beta.5 >= files since we save that on first save or it'll already be deprecated!
+    for scene in bpy.data.scenes:
+        handle_legacy_idprop(scene)
 
-    # Get the old_version (end of list, which by now is guaranteed to have something in it)
-    last_version = ver_history[-1]
+    latest_versions = sorted(
+        (
+            xplane_helpers.VerStruct.from_version_entry(
+                scene.xplane.xplane2blender_ver_history[-1]
+            )
+            for scene in bpy.data.scenes
+            if scene.xplane.xplane2blender_ver_history
+        ),
+    )
+    assert latest_versions, "Non-newly created file has no scene with version history"
+    last_version = latest_versions[-1]
 
-    # L:Compare last vs current
-    # If the version is out of date
-    #     L:Run update
-    if (
-        last_version.make_struct() < current_version
-        and legacy_build_number_w_history is False
-    ):
+    if last_version < current_version:
         logger.info(
-            "This file was created with an older XPlane2Blender version (%s) less than or equal to (%s) "
-            "and will now be updated" % (str(last_version), str(current_version))
+            f"The current addon version, '{current_version}', is greater than the previous version, '{last_version}'. The updater will run as needed."
         )
-        update(last_version.make_struct(), logger)
+        update(last_version, logger)
 
         logger.success(
-            "Your file was successfully updated to XPlane2Blender %s"
-            % str(current_version)
+            f"Your file was successfully updated to XPlane2Blender {current_version}"
         )
-    elif last_version.make_struct() > current_version:
+    elif last_version > current_version:
         logger.warn(
-            "This file was last edited by a more advanced version, %s, than the current version %s."
-            " Changes may be lost or corrupt your work!"
-            % (last_version, current_version)
+            f"DANGER: VERSION ISSUE MAY CORRUPT WORK! CHECK BLENDER AND ADDON VERSION. You have opened this file in an older version of XPlane2Blender."
+            f" If saved and opened with a later version, the updater may re-run and overwrite data."
         )
 
     # Add the current version to the history, no matter what. Just in case it means something
-    xplane_helpers.VerStruct.add_to_version_history(current_version)
-    logger.info("Added %s to version history" % str(current_version))
+    _synchronize_last_version_across_histories(current_version)
+    logger.info(f"Added '{current_version}' to version history")
 
 
 bpy.app.handlers.load_post.append(load_handler)
@@ -647,12 +746,10 @@ bpy.app.handlers.load_post.append(load_handler)
 
 @persistent
 def save_handler(dummy):
-    scene = bpy.context.scene
-    if len(scene.xplane.xplane2blender_ver_history) == 0:
-        xplane_helpers.VerStruct.add_to_version_history(
-            xplane_helpers.VerStruct.current()
-        )
+    for scene in bpy.data.scenes:
         scene["xplane2blender_version"] = xplane_constants.DEPRECATED_XP2B_VER
+    # For if you append or make a new scene
+    _synchronize_last_version_across_histories(xplane_helpers.VerStruct.current())
 
 
 bpy.app.handlers.save_pre.append(save_handler)

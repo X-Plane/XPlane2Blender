@@ -53,7 +53,7 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
         obj = context.object
         version = int(context.scene.xplane.version)
 
-        if obj.type == "MESH":
+        if obj and obj.type == "MESH":
             material_layout(self.layout, obj.active_material)
             self.layout.separator()
             cockpit_layout(self.layout, obj.active_material)
@@ -277,6 +277,12 @@ def scene_dev_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
         dev_box_column.prop(scene.xplane, "dev_export_as_dry_run")
         # Exact same operator, more convient place
         dev_box_column.operator("scene.export_to_relative_dir", icon="EXPORT")
+        op = dev_box_column.operator(
+            "scene.export_to_relative_dir",
+            text="Export to fixtures folder",
+            icon="EXPORT",
+        )
+        op.initial_dir = "fixtures"
         dev_box_column.operator("scene.dev_apply_default_material_to_all")
         dev_box_column.operator("scene.dev_root_names_from_objects")
         updater_row = dev_box_column.row()
@@ -404,43 +410,60 @@ def layer_layout(
                 layer_props, "texture_draped_normal", text="Draped Normal / Specular"
             )
 
+    global_mat_box = layout.box()
+    global_mat_box.label(text="Global Material Options")
+    if version >= 1100:
+        global_mat_box.row().prop(layer_props, "blend_glass")
+        global_mat_box.row().prop(layer_props, "normal_metalness")
+        if layer_props.export_type in {
+            EXPORT_TYPE_INSTANCED_SCENERY,
+            EXPORT_TYPE_SCENERY,
+        }:
+            global_mat_box.row().prop(layer_props, "normal_metalness_draped")
+            row = global_mat_box.row()
+            row.active = layer_props.tint
+            row.prop(layer_props, "tint")
+            if layer_props.tint:
+                row.prop(layer_props, "tint_albedo", text="Albedo", slider=True)
+                row.prop(layer_props, "tint_emissive", text="Emissive", slider=True)
+
     # cockpit regions
-    if layer_props.export_type == "cockpit":
+    if layer_props.export_type in {EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT}:
         cockpit_box = layout.box()
-        cockpit_box.label(text="Cockpits")
-        cockpit_box.prop(layer_props, "cockpit_regions", text="Regions")
-        num_regions = int(layer_props.cockpit_regions)
+        cockpit_box.label(text="Cockpit Panel Options")
+        if version >= 1110:
+            cockpit_box.row().prop(layer_props, "cockpit_panel_mode")
 
-        if num_regions > 0:
-            for i in range(0, num_regions):
-                # get cockpit region or create it if not present
-                if len(layer_props.cockpit_region) > i:
-                    cockpit_region = layer_props.cockpit_region[i]
+        if layer_props.cockpit_panel_mode == PANEL_COCKPIT:
+            pass
+        elif (
+            version >= 1110 and layer_props.cockpit_panel_mode == PANEL_COCKPIT_LIT_ONLY
+        ):
+            pass
+        elif layer_props.cockpit_panel_mode == PANEL_COCKPIT_REGION or version < 1110:
+            cockpit_box.prop(layer_props, "cockpit_regions", text="Regions")
+            for i, cockpit_region in enumerate(
+                layer_props.cockpit_region[: int(layer_props.cockpit_regions)]
+            ):
+                region_box = cockpit_box.box()
+                region_box.prop(
+                    cockpit_region,
+                    "expanded",
+                    text="Cockpit region %i" % (i + 1),
+                    expand=True,
+                    emboss=False,
+                    icon=("TRIA_DOWN" if cockpit_region.expanded else "TRIA_RIGHT"),
+                )
 
-                    if cockpit_region.expanded:
-                        expandIcon = "TRIA_DOWN"
-                    else:
-                        expandIcon = "TRIA_RIGHT"
-
-                    region_box = cockpit_box.box()
-                    region_box.prop(
-                        cockpit_region,
-                        "expanded",
-                        text="Cockpit region %i" % (i + 1),
-                        expand=True,
-                        emboss=False,
-                        icon=expandIcon,
-                    )
-
-                    if cockpit_region.expanded:
-                        region_box.prop(cockpit_region, "left")
-                        region_box.prop(cockpit_region, "top")
-                        region_split = region_box.split(factor=0.5)
-                        region_split.prop(cockpit_region, "width")
-                        region_split.label(text="= %d" % (2 ** cockpit_region.width))
-                        region_split = region_box.split(factor=0.5)
-                        region_split.prop(cockpit_region, "height")
-                        region_split.label(text="= %d" % (2 ** cockpit_region.height))
+                if cockpit_region.expanded:
+                    region_box.prop(cockpit_region, "left")
+                    region_box.prop(cockpit_region, "top")
+                    region_split = region_box.split(factor=0.5)
+                    region_split.prop(cockpit_region, "width")
+                    region_split.label(text="= %d" % (2 ** cockpit_region.width))
+                    region_split = region_box.split(factor=0.5)
+                    region_split.prop(cockpit_region, "height")
+                    region_split.label(text="= %d" % (2 ** cockpit_region.height))
 
         # v1010
         if version < 1100:
@@ -685,11 +708,9 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
         def draw_automatic_ui():
             try:
                 if light_data.xplane.name:
-                    parsed_light = (
-                        xplane_utils.xplane_lights_txt_parser.get_parsed_light(
-                            light_data.xplane.name.strip()
-                        )
-                    )
+                    # Idk why Black was fighing so much about this line
+                    gpl = xplane_utils.xplane_lights_txt_parser.get_parsed_light
+                    parsed_light = gpl(light_data.xplane.name.strip())
                     # HACK: We take this shortcut because otherwise we'd need to pretend to
                     # fill in the overload and apply the sw_callback which breaks DRY.
                     # We know exactly what happens here, and we don't need to muck with is_omni over the UI
@@ -859,17 +880,9 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
     if active_material.xplane.draw:
         draw_box_column.prop(active_material.xplane, "draped")
 
-        if version >= 1100 and not active_material.xplane.panel:
-            draw_box_column.prop(active_material.xplane, "normal_metalness")
-
         # v1000 blend / v9000 blend
         if version >= 1000:
             draw_box_column.prop(active_material.xplane, "blend_v1000")
-        else:
-            draw_box_column.prop(active_material.xplane, "blend")
-
-        if version >= 1100:
-            draw_box_column.prop(active_material.xplane, "blend_glass")
 
         if version >= 1010:
             draw_box_column.prop(active_material.xplane, "shadow_local")
@@ -880,9 +893,16 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
             blend_prop_enum = None
 
         if active_material.xplane.blend == True and version < 1000:
-            draw_box_column.prop(active_material.xplane, "blendRatio")
+            draw_box_column.prop(active_material.xplane, "blendRatio", slider=True)
         elif blend_prop_enum == BLEND_OFF and version >= 1000:
-            draw_box_column.prop(active_material.xplane, "blendRatio")
+            draw_box_column.prop(active_material.xplane, "blendRatio", slider=True)
+        elif blend_prop_enum == BLEND_SHADOW and version >= 1000:
+            draw_box_column.prop(
+                active_material.xplane,
+                "blendRatio",
+                text="Shadow Blend Ratio",
+                slider=True,
+            )
 
     surface_behavior_box = layout.box()
     surface_behavior_box.label(text="Surface Behavior")
@@ -931,15 +951,6 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
     ll_box_column.row()
 
     # instancing effects
-    instanced_box = layout.box()
-    instanced_box.label(text="Instancing Effects")
-    instanced_box_column = instanced_box.column()
-    instanced_box_column.prop(active_material.xplane, "tint")
-
-    if active_material.xplane.tint:
-        instanced_box_column.prop(active_material.xplane, "tint_albedo")
-        instanced_box_column.prop(active_material.xplane, "tint_emissive")
-
     layout.row().prop(active_material.xplane, "poly_os")
 
 
@@ -1049,10 +1060,9 @@ def animation_layout(
         dataref_search_toggle_op = subrow.operator(
             "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
         )
-        dataref_search_toggle_op.paired_dataref_prop = (
-            current_dataref_prop_template.format(index=i)
-        )
+        paired_prop = current_dataref_prop_template.format(index=i)
 
+        dataref_search_toggle_op.paired_dataref_prop = paired_prop
         # Next: "X" box to nuke the dataref - further to the right to keep from separating search from its field.
         if is_bone:
             subrow.operator(
@@ -1105,12 +1115,27 @@ def cockpit_layout(
 ) -> None:
     """Draws UI for cockpit and panel regions"""
     cockpit_box = layout.box()
-    cockpit_box.label(text="Cockpit Panel")
+    cockpit_box.label(text="Cockpit Features")
     cockpit_box_column = cockpit_box.column()
-    cockpit_box_column.prop(active_material.xplane, "panel")
+    cockpit_box_column.prop(active_material.xplane, "cockpit_feature")
 
-    if active_material.xplane.panel:
+    if active_material.xplane.cockpit_feature == COCKPIT_FEATURE_NONE:
+        pass
+    elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
         cockpit_box_column.prop(active_material.xplane, "cockpit_region")
+    elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+        device_box = cockpit_box_column.box()
+        device_box.label(text="Cockpit Device")
+        device_box.prop(active_material.xplane, "device_name")
+        if not any(
+            getattr(active_material.xplane, f"device_bus_{bus}") for bus in range(6)
+        ):
+            device_box.label(text="Select at least one bus", icon="ERROR")
+        column = device_box.column_flow(columns=2, align=True)
+        for bus in range(6):
+            column.prop(active_material.xplane, f"device_bus_{bus}")
+        device_box.prop(active_material.xplane, "device_lighting_channel")
+        device_box.prop(active_material.xplane, "device_auto_adjust")
 
 
 def axis_detent_ranges_layout(

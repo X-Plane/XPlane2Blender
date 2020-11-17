@@ -1,0 +1,29 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	6	0	0	6
+
+VT	1	0	-11	0	1	-0	1	1	# 0
+VT	1	0	-9	0	1	-0	1	0	# 1
+VT	-1	0	-9	0	1	-0	0	0	# 2
+VT	-1	0	-11	-0	1	-0	0	1	# 3
+VT	1	0	-11	-0	1	-0	1	1	# 4
+VT	-1	0	-9	-0	1	-0	0	0	# 5
+
+IDX	0
+IDX	1
+IDX	2
+IDX	3
+IDX	4
+IDX	5
+
+# 0 ROOT
+	# 1 Mesh: device_channel_5
+	# MESH: device_channel_5	weight: 5
+	# MATERIAL: device_mat_channel_5
+	ATTR_cockpit_device	GNS430_1	1	5	True
+	TRIS	0 6
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-dev.0+97.NO_BUILD_NUMBR

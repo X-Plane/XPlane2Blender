@@ -9,7 +9,7 @@ import bpy
 import mathutils
 
 import io_xplane2blender
-from io_xplane2blender import xplane_config, xplane_constants
+from io_xplane2blender import xplane_config, xplane_constants, xplane_props
 from io_xplane2blender.xplane_constants import PRECISION_OBJ_FLOAT
 
 """
@@ -61,6 +61,20 @@ def resolveBlenderPath(path: str) -> str:
         return os.path.join(blenddir, path[2:])
     else:
         return path
+
+
+def effective_normal_metalness(xp_file: "xplane_file.XPlaneFile") -> bool:
+    return (
+        int(bpy.context.scene.xplane.version) >= 1100
+        and xp_file.options.normal_metalness
+    )
+
+
+def effective_normal_metalness_draped(xp_file: "xplane_file.XPlaneFile") -> bool:
+    return (
+        int(bpy.context.scene.xplane.version) >= 1100
+        and xp_file.options.normal_metalness_draped
+    )
 
 
 def get_plugin_resources_folder() -> str:
@@ -195,11 +209,11 @@ def vec_x_to_b(v) -> mathutils.Vector:
 class VerStruct:
     def __init__(
         self,
-        addon_version: Tuple[int, int, int] = None,
-        build_type: str = None,
-        build_type_version: int = None,
-        data_model_version: int = None,
-        build_number=None,
+        addon_version: Optional[Tuple[int, int, int]] = None,
+        build_type: Optional[str] = None,
+        build_type_version: Optional[int] = None,
+        data_model_version: Optional[int] = None,
+        build_number: Optional[str] = None,
     ):
         # fmt: off
         self.addon_version      = tuple(addon_version) if addon_version      is not None else (0,0,0)
@@ -279,7 +293,7 @@ class VerStruct:
     # according to our spec
     #
     # Returns True or False
-    def is_valid(self):
+    def is_valid(self) -> bool:
         types_correct = (
             isinstance(self.addon_version, tuple)
             and len(self.addon_version) == 3
@@ -354,13 +368,17 @@ class VerStruct:
                         return True
             else:
                 print("build_type %s was not found in BUILD_TYPES" % self.build_type)
+                return False
         else:
             print("addon_version %s is invalid" % str(self.addon_version))
             return False
 
     @staticmethod
-    def add_to_version_history(version_to_add):
-        history = bpy.context.scene.xplane.xplane2blender_ver_history
+    def add_to_version_history(
+        scene: bpy.types.Scene,
+        version_to_add: Union["VerStruct", "xplane_props.XPlane2BlenderVersion"],
+    ):
+        history = scene.xplane.xplane2blender_ver_history
 
         if len(history) == 0 or history[-1].name != repr(version_to_add):
             new_hist_entry = history.add()
@@ -394,6 +412,18 @@ class VerStruct:
             xplane_config.CURRENT_BUILD_TYPE_VERSION,
             xplane_config.CURRENT_DATA_MODEL_VERSION,
             xplane_config.CURRENT_BUILD_NUMBER,
+        )
+
+    @staticmethod
+    def from_version_entry(
+        version_entry: "xplane_props.XPlane2BlenderVersion",
+    ) -> "VerStruct":
+        return VerStruct(
+            version_entry.addon_version,
+            version_entry.build_type,
+            version_entry.build_type_version,
+            version_entry.data_model_version,
+            version_entry.build_number,
         )
 
     @staticmethod

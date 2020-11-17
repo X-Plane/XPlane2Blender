@@ -418,6 +418,7 @@ IDX10	350	351	352	353	354	355	356	357	358	359
 	# 1 Mesh: cockpit_panel
 	# MESH: cockpit_panel	weight: 2
 	# MATERIAL: cockpit_panel
+	ATTR_light_level_reset
 	ATTR_cockpit
 	ATTR_cockpit_region	0
 	TRIS	72 36

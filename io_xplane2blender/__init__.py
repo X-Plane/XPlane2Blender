@@ -25,7 +25,7 @@ bl_info = {
     "name": "Export: X-Plane (.obj)",
     "description": "Export X-Plane objects/planes (.obj format)",
     "author": "Ted Greene, Ben Supnik",
-    "version": (4, 0, 0),
+    "version": (4, 1, 0),
     "blender": (2, 80, 0),
     "location": "File > Import/Export > X-Plane",
     "warning": "",

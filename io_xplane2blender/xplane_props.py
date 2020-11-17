@@ -205,7 +205,7 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
             self.build_number = build_number
             _version_safety_off = False
             if debug_add_to_history:
-                xplane_helpers.VerStruct.add_to_version_history(self)
+                xplane_helpers.VerStruct.add_to_version_history(bpy.context.scene, self)
             return True
         else:
             return False
@@ -922,7 +922,7 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
 # Defines settings for a cockpit region.
 #
 # Properties:
-#   int top - top position of the region in px
+#   int top - BAD NAME ALERT it should have been called bottom! Bottom position of the region in px
 #   int left - left position of the region in px
 #   int width - width of the region in powers of 2
 #   int height - height of the region in powers of 2
@@ -933,9 +933,12 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
         default = False
     )
 
+    # BAD NAME ALERT: Should have been called "bottom"
+    # One day we'll have nothing better to do in life than fix this
+    # see #416
     top: bpy.props.IntProperty(
-        name = "Top",
-        description = "Top",
+        name = "Bottom",
+        description = "Bottom of cockpit region",
         default = 0,
         min = 0,
         max = 2048
@@ -943,7 +946,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
 
     left: bpy.props.IntProperty(
         name = "Left",
-        description = "Left",
+        description = "Left of cockpit region",
         default = 0,
         min = 0,
         max = 2048
@@ -951,7 +954,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
 
     width: bpy.props.IntProperty(
         name = "Width",
-        description = "Width in powers of 2",
+        description = "Width of cockpit region in powers of 2",
         default = 1,
         min = 1,
         max = 11
@@ -959,7 +962,7 @@ class XPlaneCockpitRegion(bpy.types.PropertyGroup):
 
     height: bpy.props.IntProperty(
         name = "Height",
-        description = "Height in powers of 2",
+        description = "Height of cockpit region in powers of 2",
         default = 1,
         min = 1,
         max = 11
@@ -989,8 +992,6 @@ class XPlaneLOD(bpy.types.PropertyGroup):
     def __str__(self)->str:
         return f"({self.near}, {self.far})"
 
-#TODO: Maybe we should change all this "X-Plane Layer" stuff
-# to XPLaneOBJSettings or something
 class XPlaneLayer(bpy.types.PropertyGroup):
     """
     Defines settings for an OBJ file. Is was formerly tied to
@@ -1006,16 +1007,35 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     or they'll reload the file and the problem will be (hopefully solved)
     """
     def update_cockpit_regions(self, context)->None:
+        # Avoids the need for operators to increase and decrease the size of self.cockpit_region
         while len(self.cockpit_region) < xplane_constants.MAX_COCKPIT_REGIONS:
             self.cockpit_region.add()
         return None
 
     def update_lods(self, context):
+        # Avoids the need for operators to increase and decrease the size of self.lods
         #MAX_LODS also counts "None", so we have to subtract by 1
         while len(self.lod) < xplane_constants.MAX_LODS - 1:
             self.lod.add()
 
         return None
+
+    blend_glass: bpy.props.BoolProperty(
+        name = "Blend Glass",
+        description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering",
+        default = False
+    )
+
+    cockpit_panel_mode: bpy.props.EnumProperty(
+        name="Panel Texture Mode",
+        description="Panel Texture Mode, affects all Materials using Panel",
+        items=[
+            (PANEL_COCKPIT, "Default", "Full Panel Texture: Albedo, Lit, and Normal"),
+            (PANEL_COCKPIT_LIT_ONLY, "Emissive Panel Texture Only", "Only emissive panel texture will be dynamic. Great for computer displays"),
+            (PANEL_COCKPIT_REGION, "Regions", "Uses regions of panel texture"),
+        ],
+        default=PANEL_COCKPIT,
+    )
 
     expanded: bpy.props.BoolProperty(
         name = "Expanded",
@@ -1029,10 +1049,51 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         type = XPlaneExportPathDirective
     )
 
+    normal_metalness: bpy.props.BoolProperty(
+        name = "Normal Metalness",
+        description = "The normal map's blue channel will be used for base reflectance",
+        default = False
+    )
+
+    normal_metalness_draped: bpy.props.BoolProperty(
+        name = "Normal Metalness (Draped)",
+        description = "The draped normal map's blue channel will be used for base reflectance",
+        default = False
+    )
+
     particle_system_file: bpy.props.StringProperty(
         name = "Particle System Definition File",
         description = "Relative file path to a .pss that defines particles",
         subtype = "FILE_PATH"
+    )
+
+    # v1000 (only for instances)
+    tint: bpy.props.BoolProperty(
+        name = "Tint",
+        description = "If active you can set the albedo and emissive tint",
+        default = False
+    )
+
+    # v1000 (only for instances)
+    tint_albedo: bpy.props.FloatProperty(
+        name = "Albedo Tint",
+        description = "Albedo tint. 0.0 is no darkening, 1.0 is total darkening",
+        min = 0.0,
+        max = 1.0,
+        step = .01,
+        default = 0.0,
+        precision = 2
+    )
+
+    # v1000 (only for instances)
+    tint_emissive: bpy.props.FloatProperty(
+        name = "Emissive Tint",
+        description = "Emissive tint. 0.0 is no darkening, 1.0 is total darkening",
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        default = 0.0,
+        precision = 2
     )
 
     debug: bpy.props.BoolProperty(
@@ -1112,6 +1173,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = ""
     )
 
+    # BAD NAME ALERT!
+    # regions (plural) is the enum, region (singular) is the collection
     cockpit_regions: bpy.props.EnumProperty(
         name = "Cockpit Regions",
         description = "Number of Cockpit regions to use",
@@ -1132,6 +1195,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         description = "Cockpit Region"
     )
 
+    # BAD NAME ALERT!
+    # lods (plural) is the enum, lod (singular) is the collection
     lods: bpy.props.EnumProperty(
         name = "Levels of Detail",
         description = "Levels of detail",
@@ -1389,7 +1454,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 #   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
 #   bool depth - True if object will use depth culling.
 #   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
-#   bool panel - True if object is part of the cockpit panel.
 #   XPlaneManipulator manip - Manipulator settings.
 #   bool lightLevel - True if object overrides default light levels.
 #   float lightLevel_v1 - Light Level Value 1
@@ -1523,13 +1587,49 @@ class XPlaneBoneSettings(bpy.types.PropertyGroup):
 #   enum surfaceType - Surface type as defined in OBJ specs.
 #   bool blend - True if the material uses alpha cutoff.
 #   float blendRatio - Alpha cutoff ratio.
-#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
 class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     draw: bpy.props.BoolProperty(
         name = "Draw Objects With This Material",
         description = "If turned off, objects with this material won't be drawn",
         default = True
     )
+
+    # --- cockpit_device props ------------------------------------------------
+    device_name: bpy.props.EnumProperty(
+        name = "Cockpit Device Name",
+        description = "GPS device name",
+        default = DEVICE_GNS430_1,
+        items = [
+            (DEVICE_GNS430_1,    DEVICE_GNS430_1,     DEVICE_GNS430_1),
+            (DEVICE_GNS430_2,    DEVICE_GNS430_2,     DEVICE_GNS430_2),
+            (DEVICE_GNS530_1,    DEVICE_GNS530_1,     DEVICE_GNS530_1),
+            (DEVICE_GNS530_2,    DEVICE_GNS530_2,     DEVICE_GNS530_2),
+            (DEVICE_CDU739_1,    DEVICE_CDU739_1,     DEVICE_CDU739_1),
+            (DEVICE_CDU739_2,    DEVICE_CDU739_2,     DEVICE_CDU739_2),
+            (DEVICE_G1000_PFD1,  DEVICE_G1000_PFD1,   DEVICE_G1000_PFD1),
+            (DEVICE_G1000_MFD,   DEVICE_G1000_MFD,    DEVICE_G1000_MFD),
+            (DEVICE_G1000_PFD2,  DEVICE_G1000_PFD2,   DEVICE_G1000_PFD2),
+        ]
+    )
+    device_bus_0: bpy.props.BoolProperty(name="Bus 1", description="1st system bus")
+    device_bus_1: bpy.props.BoolProperty(name="Bus 2", description="2nd system bus")
+    device_bus_2: bpy.props.BoolProperty(name="Bus 3", description="3rd system bus")
+    device_bus_3: bpy.props.BoolProperty(name="Bus 4", description="4th system bus")
+    device_bus_4: bpy.props.BoolProperty(name="Bus 5", description="5th system bus")
+    device_bus_5: bpy.props.BoolProperty(name="Bus 6", description="6th system bus")
+
+    device_lighting_channel: bpy.props.IntProperty(
+        name="Rheostat Lighting Channel",
+        description="0 based index that control's screen's brightness. Not affected by 'Light Level'",
+        default=0,
+        min=0,
+    )
+    device_auto_adjust: bpy.props.BoolProperty(
+        name="Auto-adjust for daytime readability",
+        description="If true, the screen brightens automatically to be readable in the day. Otherwise it is 'washed out' in daylight",
+        default=True,
+    )
+    # -------------------------------------------------------------------------
 
     surfaceType: bpy.props.EnumProperty(
         name = 'Surface Type',
@@ -1573,11 +1673,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "If turned on the textures alpha channel will be used to cutoff areas above the Alpha cutoff ratio",
         default = False
     )
-    blend_glass: bpy.props.BoolProperty(
-        name = "Blend Glass",
-        description = "The alpha channel of the albedo (day texture) will be used to create translucent rendering",
-        default = False
-    )
 
     # v1000
     blend_v1000: bpy.props.EnumProperty(
@@ -1593,20 +1688,24 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     blendRatio: bpy.props.FloatProperty(
         name = "Alpha Cutoff Ratio",
-        description = "Alpha levels in the texture below this level are rendered as fully transparent and alpha levels above this level are fully opaque",
+        description = "Levels in the texture below this level are rendered as fully transparent and levels above this level are fully opaque",
         default = 0.5,
         step = 0.1,
         precision = 2,
+        min = 0.0,
         max = 1.0,
-        min = 0.0
     )
 
-    panel: bpy.props.BoolProperty(
-        name = "Part Of Cockpit Panel",
-        description = "If checked this object will use the panel texture and will be clickable",
-        default = False
-    )
-
+    cockpit_feature: bpy.props.EnumProperty(
+        name = "Cockpit Feature",
+        description = "What cockpit feature to enable",
+        default=COCKPIT_FEATURE_NONE,
+        items=[
+            (COCKPIT_FEATURE_NONE, "None", "Material uses no advanced cocked features"),
+            (COCKPIT_FEATURE_PANEL, "Panel Texture", "Material uses Panel Texture"),
+            (COCKPIT_FEATURE_DEVICE, "Cockpit Device", "Material uses Device Texture"),
+            ],
+        )
     cockpit_region: bpy.props.EnumProperty(
         name = "Cockpit Region",
         description = "Cockpit region to use",
@@ -1686,12 +1785,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         default = False
     )
 
-    # v1100
-    normal_metalness: bpy.props.BoolProperty(
-        name = "Normal Metalness",
-        description = "Blue channel will be used for base reflectance",
-        default = False
-        )
 
 
     # v1000 (draped only)
@@ -1703,34 +1796,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         max = 2.0
     )
 
-    # v1000 (only for instances)
-    tint: bpy.props.BoolProperty(
-        name = "Tint",
-        description = "If active you can set the albedo and emissive tint",
-        default = False
-    )
-
-    # v1000 (only for instances)
-    tint_albedo: bpy.props.FloatProperty(
-        name = "Albedo",
-        description = "Albedo tint. 0.0 no darkening, 1.0 total darkening",
-        min = 0.0,
-        max = 1.0,
-        step = .01,
-        default = 0.0,
-        precision = 2
-    )
-
-    # v1000 (only for instances)
-    tint_emissive: bpy.props.FloatProperty(
-        name = "Emissive",
-        description = "Emissive tint. 0.0 no darkening, 1.0 total darkening",
-        min = 0.0,
-        max = 1.0,
-        step = 0.01,
-        default = 0.0,
-        precision = 2
-    )
 
 
 class XPlaneLightSettings(bpy.types.PropertyGroup):
@@ -1792,6 +1857,7 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
                 (LIGHT_PARAM,     "Manual Param (deprecated)",  "Uses manual entry for parameters, not recommended"),
                 (LIGHT_AUTOMATIC, "Automatic",                  "Makes named and param lights with params taken from Blender light data"),
                 (LIGHT_SPILL_CUSTOM, "Custom Spill",            "Custom spill light, with automatic parameter detection"),
+                (LIGHT_NON_EXPORTING, "Non-Exporting", "Light will not be in the OBJ"),
         ]
     )
 
