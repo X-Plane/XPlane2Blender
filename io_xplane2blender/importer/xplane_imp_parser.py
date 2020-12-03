@@ -1,6 +1,7 @@
 """The starting point for the export process, the start of the addon"""
 import dataclasses
 import pathlib
+import re
 from pprint import pprint
 from typing import Any, Callable, Dict, List, Tuple, Union
 
@@ -97,19 +98,20 @@ def import_obj(path: pathlib.Path) -> str:
     vertices = []
     idxs = []
 
-    for lineno, line in filter(
-        lambda l: l[1] and not l[1].startswith("#"),
-        enumerate(map(str.strip, lines), start=1),
-    ):
-        directive, *components = line.split()
-        # print(lineno, directive, components)
+    pattern = re.compile("([^#]*)(#.*)?")
+    for lineno, line in enumerate(map(str.strip, lines[3:]), start=1):
+        to_parse, comment = re.match(pattern, line).groups()[0:2]
+        if not to_parse:
+            continue
+        else:
+            directive, *components = to_parse.split()
 
         # TODO: Rewrite using giant switch-ish table and functions so it is more neat
         if directive == "VT":
             components[:3] = vec_x_to_b(list(map(float, components[:3])))
             components[3:6] = vec_x_to_b(list(map(float, components[3:6])))
             components[6:8] = list(map(float, components[6:8]))
-            vertices.append(_VT(*components))
+            vertices.append(_VT(*components[:8]))
         elif directive == "IDX":
             try:
                 idx = int(*components[:1])
@@ -136,14 +138,7 @@ def import_obj(path: pathlib.Path) -> str:
             all_idxs = idxs[start : start + count]
             _build_mesh(
                 vertices=[vertices[idx] for idx in all_idxs],
-                faces=[
-                    (
-                        all_idxs[i],
-                        all_idxs[i + 1],
-                        all_idxs[i + 2],
-                    )
-                    for i in range(0, len(all_idxs), 3)
-                ],
+                faces=[all_idxs[i : i + 3] for i in range(0, len(all_idxs), 3)],
             )
         else:
             print("SKIPPING directive", directive)
