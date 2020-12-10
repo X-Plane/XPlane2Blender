@@ -23,7 +23,7 @@ class TestWhitespaceRulesCorrect(XPlaneTestCase):
                     __dirname__, "fixtures", "test_whitespace_rules_correct.obj"
                 )
             )
-        except xplane_imp_parser.UnrecoverableParseError:
+        except xplane_imp_parser.UnrecoverableParserError:
             self.fail(
                 msg="test_whitespace.test.obj should have parsed correctly but didn't"
             )

@@ -1,4 +1,5 @@
 import collections
+import inspect
 import itertools
 import os
 import pathlib
@@ -8,9 +9,11 @@ import unittest
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
+from mathutils import Vector
 
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_helpers
+from io_xplane2blender.importer import xplane_imp_parser
 from io_xplane2blender.tests import animation_file_mappings, test_creation_helpers
 from io_xplane2blender.xplane_config import getDebug, setDebug
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
@@ -118,6 +121,35 @@ class XPlaneTestCase(unittest.TestCase):
         logger.clear()
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
 
+    def assertImportSucceeds(self, filepath: Union[str, pathlib.Path], msg: str = None):
+        """
+        Tests import succeeds without syntatic or semantic errors.
+
+        If filepath is just a file name, assume a folder called 'fixtures'
+        exists in the current directory and check there as a shortcut.
+
+        Appends '.obj' as needed.
+        """
+
+        filepath = pathlib.Path(filepath).with_suffix(".obj")
+        if len(filepath.parts) == 1:
+            filepath = pathlib.Path(
+                inspect.currentframe().f_back.f_globals["__file__"]
+            ).parent / pathlib.Path("fixtures", filepath)
+
+        try:
+            result = xplane_imp_parser.import_obj(filepath)
+        except xplane_imp_parser.UnrecoverableParserError:
+            self.fail(
+                msg=msg if msg else f"Import of {filepath} did not succeed",
+            )
+        else:
+            self.assertEqual(
+                result,
+                "FINISHED",
+                msg=f"Import of {filepath} finished parsing but had semantic errors",
+            )
+
     def assertMatricesEqual(self, mA, mB, tolerance=FLOAT_TOLERANCE):
         for row_a, row_b in zip(mA, mB):
             self.assertFloatVectorsEqual(row_a, row_b, tolerance)
@@ -136,6 +168,18 @@ class XPlaneTestCase(unittest.TestCase):
             self.assertEquals(
                 xplaneFile._bl_obj_name_to_bone[name].blenderObject,
                 bpy.data.objects[name],
+            )
+
+    def assertVectorAlmostEqual(
+        self, vec_a: Vector, vec_b: Vector, places: int
+    ) -> None:
+        """Given two equal length vectors (or any iterable), ask if they are almost equal"""
+        for i, (comp_a, comp_b) in enumerate(zip(vec_a, vec_b)):
+            self.assertAlmostEqual(
+                comp_a,
+                comp_b,
+                places,
+                msg=f"{i}th component: {comp_a:.5} != {comp_b:.5}",
             )
 
     def assertXPlaneBoneTreeEqual(

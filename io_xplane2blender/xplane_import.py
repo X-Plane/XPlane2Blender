@@ -58,12 +58,12 @@ class IMPORT_OT_ImportXPlane(bpy.types.Operator, ImportHelper):
                 f"Import for {pathlib.Path(self.filepath).name}"
             )
         )
+        logger.addTransport(logger.ConsoleTransport())
         # logger.info("Begin importing")
         x = xplane_imp_parser.import_obj(self.filepath)
 
-        print("IMPORT!")
+        # print("IMPORT!")
         return {"FINISHED"}
-        # self._startLogging()
 
     def invoke(self, context, event):
         wm = context.window_manager
