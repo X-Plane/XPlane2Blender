@@ -1,12 +1,15 @@
 """The starting point for the export process, the start of the addon"""
+import collections
 import dataclasses
+import itertools
 import pathlib
 import re
 from pprint import pprint
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bmesh
 import bpy
+from mathutils import Vector
 
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_helpers import (
@@ -60,9 +63,12 @@ class _VT:
 
 def _build_mesh(
     root_collection: ExportableRoot,
-    vertices: List[_VT],
+    vt_table: List[_VT],
+    start_idx: int,
     faces: List[Tuple[int, int, int]],
 ) -> bpy.types.Mesh:
+    minus_start = lambda i: [ii - start_idx for ii in i]
+    faces = list(map(minus_start, faces))
     # print("BUILD WITH")
     # pprint([f"VT {v}" for v in vertices])
     me = bpy.data.meshes.new(f"Mesh.{len(bpy.data.meshes):03}")
@@ -70,18 +76,26 @@ def _build_mesh(
     ob.location = [0, 0, 0]
     # ob.show_name = True
     root_collection.objects.link(ob)
-    me.from_pydata([(v.x, v.y, v.z) for v in vertices], [], faces)
+    # faces definitely list of list of ints,
+
+    me.from_pydata(list((v.x, v.y, v.z) for v in vt_table), [], faces)
     uv_layer = me.uv_layers.new()
     me.update(calc_edges=True)
 
-    ret = me.validate(verbose=True)
-    # print("validate says " , ret)
-    if True:
-        for i in range(len(me.vertices)):
-            me.vertices[i].normal = vertices[i].nx, vertices[i].ny, vertices[i].nz
-            uv_layer.data[i].uv = vertices[i].s, vertices[i].t
+    if not me.validate(verbose=True):
+        print("idx")
+        i = 0
+        for idx in set(itertools.chain.from_iterable(faces)):
+            i += 1
+            me.vertices[idx].normal = (
+                vt_table[idx].nx,
+                vt_table[idx].ny,
+                vt_table[idx].nz,
+            )
+            uv_layer.data[idx].uv = vt_table[idx].s, vt_table[idx].t
+        print("done", i)
     else:
-        logger.error("Mesh was not valid")
+        logger.error("Mesh was not valid, check stdout for more")
 
     return ob
 
@@ -167,13 +181,18 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             idxs.extend(map(int, components[:11]))
         elif directive == "TRIS":
             # TODO: idx error, can't convert error, idx doesn't have that many error, wrong index error
-            start = int(components[0])
+            start_idx = int(components[0])
             count = int(components[1])
-            all_idxs = idxs[start : start + count]
-            _build_mesh(
+            all_idxs = idxs[start_idx : start_idx + count]
+            ob = _build_mesh(
                 root_collection=root_col,
-                vertices=[vertices[idx] for idx in all_idxs],
-                faces=[all_idxs[i : i + 3] for i in range(0, len(all_idxs), 3)],
+                vt_table=vertices[start_idx : start_idx + count],
+                start_idx=start_idx,
+                # Iterating backwards reverses the face windings
+                # faces=[all_idxs[i : i + 3][::-1] for i in range(0, len(all_idxs), 3)],
+                faces=[
+                    reversed(all_idxs[i : i + 3]) for i in range(0, len(all_idxs), 3)
+                ],
             )
         else:
             # print("SKIPPING directive", directive)

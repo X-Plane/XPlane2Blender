@@ -182,6 +182,26 @@ class XPlaneTestCase(unittest.TestCase):
                 msg=f"{i}th component: {comp_a:.5} != {comp_b:.5}",
             )
 
+    def assertVTTable(
+        self, object_a: bpy.types.Object, object_b: bpy.types.Object
+    ) -> None:
+        o_vt_cos = sorted(
+            set(tuple(object_a.matrix_world @ v.co) for v in object_a.data.vertices)
+        )
+        i_vt_cos = sorted(
+            set(tuple(object_b.matrix_world @ v.co) for v in object_b.data.vertices)
+        )
+        o_vt_normals = sorted(set(tuple(v.normal) for v in object_a.data.vertices))
+        i_vt_normals = sorted(set(tuple(v.normal) for v in object_b.data.vertices))
+        o_vt_uvs = sorted(set(tuple(v.uv) for v in object_a.data.uv_layers[0].data))
+        i_vt_uvs = sorted(set(tuple(v.uv) for v in object_b.data.uv_layers[0].data))
+        for i, (o_vt_co, i_vt_co) in enumerate(zip(o_vt_cos, i_vt_cos)):
+            self.assertVectorAlmostEqual(o_vt_co, i_vt_co, 1)
+        for i, (o_vt_normal, i_vt_normal) in enumerate(zip(o_vt_normals, i_vt_normals)):
+            self.assertVectorAlmostEqual(o_vt_normal, i_vt_normal, 1)
+        for i, (o_vt_uv, i_vt_uv) in enumerate(zip(o_vt_uvs, i_vt_uvs)):
+            self.assertVectorAlmostEqual(o_vt_uv, i_vt_uv, 1)
+
     def assertXPlaneBoneTreeEqual(
         self,
         file_root_bone: xplane_bone.XPlaneBone,
