@@ -85,6 +85,7 @@ def _build_mesh(
     else:
         logger.error("Mesh was not valid, check stdout for more")
 
+    test_creation_helpers.set_material(ob, "Material")
     return ob
 
 
