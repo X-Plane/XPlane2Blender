@@ -63,37 +63,25 @@ class _VT:
 
 def _build_mesh(
     root_collection: ExportableRoot,
-    vt_table: List[_VT],
-    start_idx: int,
+    vertices: List[_VT],
     faces: List[Tuple[int, int, int]],
 ) -> bpy.types.Mesh:
-    minus_start = lambda i: [ii - start_idx for ii in i]
-    faces = list(map(minus_start, faces))
-    # print("BUILD WITH")
-    # pprint([f"VT {v}" for v in vertices])
     me = bpy.data.meshes.new(f"Mesh.{len(bpy.data.meshes):03}")
     ob = bpy.data.objects.new(me.name, me)
     ob.location = [0, 0, 0]
-    # ob.show_name = True
     root_collection.objects.link(ob)
-    # faces definitely list of list of ints,
-
-    me.from_pydata(list((v.x, v.y, v.z) for v in vt_table), [], faces)
-    uv_layer = me.uv_layers.new()
+    me.from_pydata([(v.x, v.y, v.z) for v in vertices], [], faces)
     me.update(calc_edges=True)
+    uv_layer = me.uv_layers.new()
 
     if not me.validate(verbose=True):
-        print("idx")
-        i = 0
         for idx in set(itertools.chain.from_iterable(faces)):
-            i += 1
             me.vertices[idx].normal = (
-                vt_table[idx].nx,
-                vt_table[idx].ny,
-                vt_table[idx].nz,
+                vertices[idx].nx,
+                vertices[idx].ny,
+                vertices[idx].nz,
             )
-            uv_layer.data[idx].uv = vt_table[idx].s, vt_table[idx].t
-        print("done", i)
+            uv_layer.data[idx].uv = vertices[idx].s, vertices[idx].t
     else:
         logger.error("Mesh was not valid, check stdout for more")
 
@@ -129,7 +117,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         "IDX10",
         "TRIS",
     }
-    vertices = []
+    vt_table = []
     idxs = []
 
     # TODO: This should be made later. We should start with our tree of intermediate structures then eventually make that into bpy structs when we know what is valid.
@@ -159,7 +147,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             components[:3] = vec_x_to_b(list(map(float, components[:3])))
             components[3:6] = vec_x_to_b(list(map(float, components[3:6])))
             components[6:8] = list(map(float, components[6:8]))
-            vertices.append(_VT(*components[:8]))
+            vt_table.append(_VT(*components[:8]))
         elif directive == "IDX":
             try:
                 idx = int(*components[:1])
@@ -183,15 +171,14 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             # TODO: idx error, can't convert error, idx doesn't have that many error, wrong index error
             start_idx = int(components[0])
             count = int(components[1])
-            all_idxs = idxs[start_idx : start_idx + count]
+            mesh_idxs = idxs[start_idx : start_idx + count]
             ob = _build_mesh(
                 root_collection=root_col,
-                vt_table=vertices[start_idx : start_idx + count],
-                start_idx=start_idx,
-                # Iterating backwards reverses the face windings
-                # faces=[all_idxs[i : i + 3][::-1] for i in range(0, len(all_idxs), 3)],
+                vertices=vt_table[start_idx : start_idx + count],
+                # We reverse the faces to reverse the winding order
                 faces=[
-                    reversed(all_idxs[i : i + 3]) for i in range(0, len(all_idxs), 3)
+                    [*map(lambda i: i - start_idx, mesh_idxs[i : i + 3][::-1])]
+                    for i in range(0, len(mesh_idxs), 3)
                 ],
             )
         else:
