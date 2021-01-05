@@ -1,17 +1,23 @@
 """The starting point for the export process, the start of the addon"""
 import collections
-import dataclasses
 import itertools
+import math
 import pathlib
 import re
+from dataclasses import dataclass, field
 from pprint import pprint
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Euler, Vector
 
 from io_xplane2blender.tests import test_creation_helpers
+from io_xplane2blender.xplane_constants import (
+    ANIM_TYPE_HIDE,
+    ANIM_TYPE_SHOW,
+    ANIM_TYPE_TRANSFORM,
+)
 from io_xplane2blender.xplane_helpers import (
     ExportableRoot,
     floatToStr,
@@ -25,7 +31,84 @@ class UnrecoverableParserError(Exception):
     pass
 
 
-@dataclasses.dataclass
+# TODO: These names are terrible!
+# They should be related to transitions or something
+@dataclass
+class ImportedDataref:
+    anim_type: str  # Of ANIM_TYPE_*
+    loop: float
+    path: str
+    show_hide_v1: float
+    show_hide_v2: float
+    values: List[float]
+
+
+@dataclass
+class ImportedAnimation:
+    locations: List[Vector]
+    rotations: Dict[Vector, List[float]]
+    xp_datarefs: List[ImportedDataref]
+
+    def set_action(self, bl_object: bpy.types.Object):
+        def location_from_locations(i) -> Vector:
+            pass
+
+        def rotation_from_rotations(i) -> Euler:
+            # Something something something transpose data....
+            tot_rot = Vector()
+            pprint(self.rotations)
+            for axis, rads in [
+                (axis, rotations[i]) for axis, rotations in self.rotations.items()
+            ]:
+                ##TODO: Potential rounding issue
+                if axis == Vector((1, 0, 0)):
+                    tot_rot.x += rads
+                elif axis == Vector((0, 1, 0)):
+                    tot_rot.y += rads
+                elif axis == Vector((0, 0, 1)):
+                    tot_rot.z += rads
+                else:
+                    assert False, f"problem axis: {axis}"
+            print("Total Rotation", tot_rot)
+            return tot_rot
+
+        if not bl_object.animation_data:
+            bl_object.animation_data_create()
+
+        current_frame = 1
+        for xplane_dataref in self.xp_datarefs:
+            if xplane_dataref.anim_type == ANIM_TYPE_TRANSFORM:
+                keyframe_infos = []
+                for i, value in enumerate(xplane_dataref.values):
+                    keyframe_infos.append(
+                        test_creation_helpers.KeyframeInfo(
+                            idx=current_frame,
+                            dataref_path=xplane_dataref.path,
+                            dataref_value=value,
+                            dataref_anim_type=xplane_dataref.anim_type,
+                            location=self.locations[i] if self.locations else None,
+                            rotation=rotation_from_rotations(i)
+                            if self.rotations
+                            else None,
+                        )
+                    )
+                    current_frame += 1
+            else:
+                keyframe_infos = [
+                    test_creation_helpers.KeyframeInfo(
+                        idx=1,
+                        dataref_path=xplane_dataref.path,
+                        dataref_show_hide_v1=xplane_dataref.show_hide_v1,
+                        dataref_show_hide_v2=xplane_dataref.show_hide_v2,
+                        dataref_anim_type=xplane_dataref.anim_type,
+                    )
+                ]
+
+            test_creation_helpers.set_animation_data(bl_object, keyframe_infos)
+            current_frame = 1
+
+
+@dataclass
 class _VT:
     """Where xyz, nxyz are in Blender coords"""
 
@@ -117,6 +200,15 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         "IDX",
         "IDX10",
         "TRIS",
+        "ANIM_begin",
+        "ANIM_end",
+        "ANIM_trans_begin",
+        "ANIM_trans_key",
+        "ANIM_trans_end",
+        "ANIM_rotate_begin",
+        "ANIM_rotate_key",
+        "ANIM_rotate_end",
+        "ANIM_keyframe_loop",
     }
     vt_table = []
     idxs = []
@@ -128,6 +220,14 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
     )
     root_col.xplane.is_exportable_collection = True
     pattern = re.compile("([^#]*)(#.*)?")
+
+    current_animation: Optional[ImportedAnimation] = None
+    # Cases:
+    #   Empty after ANIM_end
+    #   ANIM_trans/rot_end, ANIM_trans/rot_key after ANIM_trans/rotate key or being
+    # TODO: Need FSM for what ANIM type we're expecting next
+    current_expected_animation = {""}
+    last_axis = None
     for lineno, line in enumerate(map(str.strip, lines[3:]), start=1):
         to_parse, comment = re.match(pattern, line).groups()[0:2]
         if not to_parse:
@@ -182,6 +282,55 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
                     for i in range(0, len(mesh_idxs), 3)
                 ],
             )
+            if current_animation:
+                current_animation.set_action(ob)
+        elif directive == "ANIM_begin":
+            current_animation = ImportedAnimation([], collections.defaultdict(list), [])
+        elif directive == "ANIM_end":
+            current_animation = None
+        elif directive == "ANIM_trans_begin":
+            dataref_path = components[0]
+            current_animation.xp_datarefs.append(
+                ImportedDataref(
+                    anim_type=ANIM_TYPE_TRANSFORM,
+                    loop=0,
+                    path=dataref_path,
+                    show_hide_v1=0,
+                    show_hide_v2=0,
+                    values=[],
+                )
+            )
+        elif directive == "ANIM_trans_key":
+            value = float(components[0])
+            location = vec_x_to_b(list(map(float, components[1:4])))
+            current_animation.locations.append(location)
+            current_animation.xp_datarefs[-1].values.append(value)
+        elif directive == "ANIM_trans_end":
+            pass
+        elif directive == "ANIM_rotate_begin":
+            axis = vec_x_to_b(list(map(float, components[0:3])))
+            last_axis = axis
+            dataref_path = components[3]
+            current_animation.xp_datarefs.append(
+                ImportedDataref(
+                    anim_type=ANIM_TYPE_TRANSFORM,
+                    loop=0,
+                    path=dataref_path,
+                    show_hide_v1=0,
+                    show_hide_v2=0,
+                    values=[],
+                )
+            )
+        elif directive == "ANIM_rotate_key":
+            value = float(components[0])
+            degrees = float(components[1])
+            current_animation.rotations[last_axis.freeze()].append(degrees)
+            current_animation.xp_datarefs[-1].values.append(value)
+        elif directive == "ANIM_rotate_end":
+            last_axis = None
+        elif directive == "ANIM_keyframe_loop":
+            loop = float(components[0])
+            current_animation.xp_datarefs[-1].loop = loop
         else:
             # print("SKIPPING directive", directive)
             pass
