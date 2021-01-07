@@ -1,21 +1,30 @@
 import collections
 import inspect
 import itertools
+import math
 import os
 import pathlib
+import re
 import shutil
 import sys
 import unittest
+from dataclasses import dataclass
+from pprint import pprint
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
-from mathutils import Vector
+from mathutils import Euler, Vector
 
 import io_xplane2blender
-from io_xplane2blender import xplane_config, xplane_helpers
+from io_xplane2blender import xplane_config, xplane_helpers, xplane_props
 from io_xplane2blender.importer import xplane_imp_parser
 from io_xplane2blender.tests import animation_file_mappings, test_creation_helpers
 from io_xplane2blender.xplane_config import getDebug, setDebug
+from io_xplane2blender.xplane_constants import (
+    ANIM_TYPE_HIDE,
+    ANIM_TYPE_SHOW,
+    ANIM_TYPE_TRANSFORM,
+)
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
 from io_xplane2blender.xplane_types import (
     xplane_attribute,
@@ -120,6 +129,130 @@ class XPlaneTestCase(unittest.TestCase):
 
         logger.clear()
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
+
+    def assertAction(
+        self,
+        bl_object: bpy.types.Object,
+        expected_action: xplane_imp_parser.IntermediateAnimation,
+    ):
+        """
+        Asserts that an object's action datablock matches the animation specified by the ImportedAnimation struct.
+        The action datablock must have 0 or 3 location/rotation_euler channels as is relavent.
+        There should be an even number of Blender and X-Plane keyframes.
+
+        Every keyframe
+        #TODO: Stupid? Does the importer need to be very specific? Would we have to test that spec?
+        assertAnimation expects the imported and fixture Action information to test will be fixture and counts on the action have 0 or 3 channels exactly for testing location and rotation.
+        Those channels must have the same number of keyframes. Our importer will always create 3 channels with
+        an equal number of keyframes (even if some are just 0,0,0) for simplicity
+        """
+        try:
+            action = bl_object.animation_data.action
+        except AttributeError:  # animation_data is None
+            self.fail(f"{bl_object.name} doesn't have an action to compare")
+        else:
+            # TODO: Also a bad name!
+            def action_as_struct(bl_object: bpy.types.Object):
+                real_action_struct = xplane_imp_parser.IntermediateAnimation(
+                    [], collections.defaultdict(list), []
+                )
+
+                def recombine_fcurves(
+                    action: bpy.types.Action, data_path: str
+                ) -> Union[List[Vector], Dict[Vector, float]]:
+                    try:
+                        x_comp, y_comp, z_comp = [
+                            [k.co[1] for k in f.keyframe_points]
+                            for f in action.fcurves
+                            if f.data_path == data_path
+                        ]
+                    except ValueError:  # no matching fcurves found
+                        if data_path == "location":
+                            return []
+                        elif data_path == "rotation_euler":
+                            return {}
+                    else:
+                        if data_path == "location":
+                            return [
+                                Vector((x, y, z))
+                                for x, y, z in zip(x_comp, y_comp, z_comp)
+                            ]
+                        elif data_path == "rotation_euler":
+                            return {
+                                Vector((1, 0, 0)).freeze(): list(
+                                    map(math.degrees, x_comp)
+                                ),
+                                Vector((0, 1, 0)).freeze(): list(
+                                    map(math.degrees, y_comp)
+                                ),
+                                Vector((0, 0, 1)).freeze(): list(
+                                    map(math.degrees, z_comp)
+                                ),
+                            }
+
+                real_action_struct.locations = recombine_fcurves(action, "location")
+                real_action_struct.rotations = recombine_fcurves(
+                    action, "rotation_euler"
+                )
+
+                def get_dataref_prop_from_data_path(
+                    bl_object: bpy.types.Object, data_path: str
+                ) -> xplane_props.XPlaneDataref:
+                    try:
+                        return bl_object.xplane.datarefs[
+                            int(
+                                re.match(
+                                    "xplane\.datarefs\[(\d+)\]\.value", data_path
+                                ).group(1)
+                            )
+                        ]
+                    except AttributeError:  # No match, None has no 'group'
+                        pass  # TODO: fail here? It is, after all, wrong to end up with the wrong number of datarefs
+                    # Impossible do something, this is an error?
+                    except IndexError:
+                        pass  # TODO: Do something
+
+                data_paths_to_xp_values = {
+                    f.data_path: [k.co[1] for k in f.keyframe_points]
+                    for f in action.fcurves
+                    if f.data_path.startswith("xplane.datarefs")
+                }
+
+                for dataref_prop, xp_values in [
+                    (get_dataref_prop_from_data_path(bl_object, data_path), xp_values)
+                    for data_path, xp_values in data_paths_to_xp_values.items()
+                ]:
+                    real_action_struct.xp_datarefs.append(
+                        xplane_imp_parser.IntermediateDataref(
+                            dataref_prop.anim_type,
+                            dataref_prop.loop,
+                            dataref_prop.path,
+                            dataref_prop.show_hide_v1,
+                            dataref_prop.show_hide_v2,
+                            xp_values,
+                        )
+                    )
+
+                return real_action_struct
+
+            real_action_struct = action_as_struct(bl_object)
+
+            for real_loc, expected_loc in zip(
+                real_action_struct.locations, expected_action.locations
+            ):
+                self.assertVectorAlmostEqual(real_loc, expected_loc, 1)
+
+            for real_rot_degrees, expected_rot_degrees in [
+                (real_action_struct.rotations[axis], expected_action.rotations[axis])
+                for axis in real_action_struct.rotations
+            ]:
+                for real_deg, exp_deg in zip(real_rot_degrees, expected_rot_degrees):
+                    self.assertAlmostEqual(real_deg, exp_deg, places=1)
+
+            for (real_dataref_prop, expected_dataref_prop) in zip(
+                real_action_struct.xp_datarefs, expected_action.xp_datarefs
+            ):
+                self.assertEqual(real_dataref_prop, expected_dataref_prop)
 
     def assertImportSucceeds(self, filepath: Union[str, pathlib.Path], msg: str = None):
         """

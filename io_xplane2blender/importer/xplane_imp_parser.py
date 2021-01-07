@@ -34,7 +34,13 @@ class UnrecoverableParserError(Exception):
 # TODO: These names are terrible!
 # They should be related to transitions or something
 @dataclass
-class ImportedDataref:
+class IntermediateDataref:
+    """
+    Matches xplane_props.XPlaneDataref.
+
+    Made since dataclasses are more flexible then bpy.types.PropertyGroups.
+    """
+
     anim_type: str  # Of ANIM_TYPE_*
     loop: float
     path: str
@@ -44,36 +50,35 @@ class ImportedDataref:
 
 
 @dataclass
-class ImportedAnimation:
+class IntermediateAnimation:
+    """
+    All things that define the contents of an ANIM_began_* OBJ block
+    """
+
     locations: List[Vector]
     rotations: Dict[Vector, List[float]]
-    xp_datarefs: List[ImportedDataref]
+    xp_datarefs: List[IntermediateDataref]
 
     def set_action(self, bl_object: bpy.types.Object):
-        def location_from_locations(i) -> Vector:
-            pass
+        def recompose_rotation(i) -> Vector:
+            """Recomposes the OBJ's split form into one Vector"""
 
-        def rotation_from_rotations(i) -> Euler:
-            # Something something something transpose data....
             tot_rot = Vector()
-            pprint(self.rotations)
-            for axis, rads in [
-                (axis, rotations[i]) for axis, rotations in self.rotations.items()
+            # print("Pre-combine rotations")
+            # pprint(self.rotations)
+            for axis, degrees in [
+                (axis, degrees_list[i]) for axis, degrees_list in self.rotations.items()
             ]:
-                ##TODO: Potential rounding issue
                 if axis == Vector((1, 0, 0)):
-                    tot_rot.x += rads
+                    tot_rot.x = degrees
                 elif axis == Vector((0, 1, 0)):
-                    tot_rot.y += rads
+                    tot_rot.y = degrees
                 elif axis == Vector((0, 0, 1)):
-                    tot_rot.z += rads
+                    tot_rot.z = degrees
                 else:
                     assert False, f"problem axis: {axis}"
-            print("Total Rotation", tot_rot)
+            # print("Recombined Rotation", tot_rot)
             return tot_rot
-
-        if not bl_object.animation_data:
-            bl_object.animation_data_create()
 
         current_frame = 1
         for xplane_dataref in self.xp_datarefs:
@@ -87,9 +92,7 @@ class ImportedAnimation:
                             dataref_value=value,
                             dataref_anim_type=xplane_dataref.anim_type,
                             location=self.locations[i] if self.locations else None,
-                            rotation=rotation_from_rotations(i)
-                            if self.rotations
-                            else None,
+                            rotation=recompose_rotation(i) if self.rotations else None,
                         )
                     )
                     current_frame += 1
@@ -221,7 +224,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
     root_col.xplane.is_exportable_collection = True
     pattern = re.compile("([^#]*)(#.*)?")
 
-    current_animation: Optional[ImportedAnimation] = None
+    current_animation: Optional[IntermediateAnimation] = None
     # Cases:
     #   Empty after ANIM_end
     #   ANIM_trans/rot_end, ANIM_trans/rot_key after ANIM_trans/rotate key or being
@@ -285,13 +288,15 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             if current_animation:
                 current_animation.set_action(ob)
         elif directive == "ANIM_begin":
-            current_animation = ImportedAnimation([], collections.defaultdict(list), [])
+            current_animation = IntermediateAnimation(
+                [], collections.defaultdict(list), []
+            )
         elif directive == "ANIM_end":
             current_animation = None
         elif directive == "ANIM_trans_begin":
             dataref_path = components[0]
             current_animation.xp_datarefs.append(
-                ImportedDataref(
+                IntermediateDataref(
                     anim_type=ANIM_TYPE_TRANSFORM,
                     loop=0,
                     path=dataref_path,
@@ -312,7 +317,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             last_axis = axis
             dataref_path = components[3]
             current_animation.xp_datarefs.append(
-                ImportedDataref(
+                IntermediateDataref(
                     anim_type=ANIM_TYPE_TRANSFORM,
                     loop=0,
                     path=dataref_path,
