@@ -70,5 +70,34 @@ class TestSimpleLocRot(XPlaneTestCase):
             ),
         )
 
+    def test_simple_loc_and_rot_animation(self) -> None:
+        filename = inspect.stack()[0].function
+        import_obj(make_fixture_path(__dirname__, filename))
+        self.assertAction(
+            bpy.data.collections[filename[5:]].objects[0],
+            IntermediateAnimation(
+                locations=[
+                    Vector((0, 0, 0)).freeze(),
+                    Vector((2, 0, 0)).freeze(),
+                ],
+                rotations={
+                    Vector((1, 0, 0)).freeze(): [0, 90],
+                    Vector((0, 1, 0)).freeze(): [0, 30],
+                    Vector((0, 0, 1)).freeze(): [0, 3],
+                },
+                xp_datarefs=[
+                    IntermediateDataref(
+                        anim_type=xplane_constants.ANIM_TYPE_TRANSFORM,
+                        loop=0,
+                        path="sim/graphics/animation/sin_wave_2",
+                        show_hide_v1=0,
+                        show_hide_v2=0,
+                        values=[-1, 1],
+                    )
+                ]
+                * 2,
+            ),
+        )
+
 
 runTestCases([TestSimpleLocRot])
