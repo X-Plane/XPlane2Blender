@@ -256,7 +256,7 @@ class XPlaneMaterial:
             cockpit_region = int(mat.xplane.cockpit_region)
 
             self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
-            if 1100 <= xplane_version:
+            if 1110 <= xplane_version:
                 if cockpit_panel_mode == PANEL_COCKPIT:
                     self.cockpitAttributes["ATTR_cockpit"].setValue(True)
                 elif cockpit_panel_mode == PANEL_COCKPIT_LIT_ONLY:

@@ -1707,8 +1707,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     def get_cockpit_feature_types_for_this_version(self, context) -> List[Tuple[str,str,str]]:
         features_pre_v1100_items = [
             (COCKPIT_FEATURE_NONE, "None", "Material uses no advanced cockpit features"),
-        ]
-        features_v1100_items = [
             (COCKPIT_FEATURE_PANEL, "Panel Texture", "Material uses Panel Texture"),
             (COCKPIT_FEATURE_DEVICE, "Cockpit Device", "Material uses Device Texture"),
         ]
@@ -1718,10 +1716,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version < 1100:
             return features_pre_v1100_items
-        if 1100 <= xplane_version < 1200:
-            return features_pre_v1100_items + features_v1100_items
-        elif 1200 <= xplane_version:
-            return features_pre_v1100_items + features_v1100_items + features_v1200_items
+        elif 1100 <= xplane_version:
+            return features_pre_v1100_items + features_v1200_items
 
     cockpit_feature: bpy.props.EnumProperty(
         name = "Cockpit Feature",
