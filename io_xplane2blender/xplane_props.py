@@ -8,9 +8,7 @@ import bpy
 
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_constants, xplane_helpers
-from io_xplane2blender.xplane_constants import VERSION_1100
-
-from .xplane_constants import *
+from io_xplane2blender.xplane_constants import *
 
 """
  #####     ##   ##  ##   ####  ####  ####  #
@@ -1431,7 +1429,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             (VERSION_1050, "10.5x", "10.5x"),
             (VERSION_1100, "11.0x", "11.0x"),
             (VERSION_1110, "11.1x", "11.1x"),
-            (VERSION_1130, "11.3x", "11.3x")
+            (VERSION_1130, "11.3x", "11.3x"),
+            (VERSION_1200, "12.0x", "12.0x"),
         ]
     )
 
@@ -1448,17 +1447,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         description="Every version of XPlane2Blender this .blend file has been opened with",
         type=XPlane2BlenderVersion)
 
-# Class: XPlaneObjectSettings
-#
-# Properties:
-#   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
-#   bool depth - True if object will use depth culling.
-#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
-#   XPlaneManipulator manip - Manipulator settings.
-#   bool lightLevel - True if object overrides default light levels.
-#   float lightLevel_v1 - Light Level Value 1
-#   float lightLevel_v2 - Light Level Value 2
-#   string lightLevel_dataref - Light Level Dataref
+
 class XPlaneObjectSettings(bpy.types.PropertyGroup):
     """
     Settings for Blender objects. On Blender Objects these are accessed via a
@@ -1723,6 +1712,18 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         name = "Override Light Level",
         description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
         default = False
+    )
+
+    lightLevel_photometric: bpy.props.BoolProperty(
+        name = "Use Photometric Units",
+        description = "Adjusts light level based on Brightness in nts",
+        default = False
+    )
+
+    lightLevel_brightness: bpy.props.IntProperty(
+        name = "Brightness",
+        description = "Brightness adjustment for Light Level override, in nts",
+        default = 1000
     )
 
     lightLevel_v1: bpy.props.FloatProperty(

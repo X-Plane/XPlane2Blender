@@ -77,6 +77,7 @@ class XPlaneMaterial:
         self.attributes.add(XPlaneAttribute("ATTR_no_solid_camera"))
 
         self.attributes.add(XPlaneAttribute("ATTR_light_level", None, 1000))
+        self.attributes.add(XPlaneAttribute("ATTR_light_level_photometric", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_light_level_reset", True, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_poly_os", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_draped", None, 1000))
@@ -253,14 +254,26 @@ class XPlaneMaterial:
                     )
 
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
+        xplane_version = int(bpy.context.scene.xplane.version)
         if mat.xplane.lightLevel:
-            self.attributes["ATTR_light_level"].setValue(
-                (
-                    mat.xplane.lightLevel_v1,
-                    mat.xplane.lightLevel_v2,
-                    mat.xplane.lightLevel_dataref,
+            if 1200 <= xplane_version and mat.xplane.lightLevel_photometric:
+                self.attributes["ATTR_light_level_photometric"].setValue(
+                    (
+                        mat.xplane.lightLevel_v1,
+                        mat.xplane.lightLevel_v2,
+                        mat.xplane.lightLevel_brightness,
+                        mat.xplane.lightLevel_dataref,
+                    )
                 )
-            )
+            else:
+                self.attributes["ATTR_light_level"].setValue(
+                    (
+                        mat.xplane.lightLevel_v1,
+                        mat.xplane.lightLevel_v2,
+                        mat.xplane.lightLevel_dataref,
+                    )
+                )
+
             self.attributes["ATTR_light_level_reset"].setValue(False)
 
     def collectConditions(self, mat: bpy.types.Material) -> None:

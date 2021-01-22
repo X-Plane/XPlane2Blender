@@ -358,7 +358,7 @@ class XPlaneTestCase(unittest.TestCase):
         Highly recommended, with as simple a function as possible to prevent fixture fragility.
         """
 
-        with open(fixturePath, "r") as fixtureFile:
+        with open(str(fixturePath), "r") as fixtureFile:
             fixtureOutput = fixtureFile.read()
 
         return self.assertFilesEqual(

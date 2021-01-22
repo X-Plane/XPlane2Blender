@@ -923,8 +923,15 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
     if active_material.xplane.lightLevel:
         box = ll_box_column.box()
         box.prop(active_material.xplane, "lightLevel_v1")
-        row = box.row()
-        row.prop(active_material.xplane, "lightLevel_v2")
+        box.row().prop(active_material.xplane, "lightLevel_v2")
+        if 1200 <= version:
+            row = box.row()
+            row.prop(active_material.xplane, "lightLevel_photometric")
+            #TODO: Make this into columns and make it look nice
+            row.active = active_material.xplane.lightLevel_photometric
+            if active_material.xplane.lightLevel_photometric:
+                row.prop(active_material.xplane, "lightLevel_brightness")
+
         row = box.row()
         row.prop(active_material.xplane, "lightLevel_dataref")
 

@@ -44,6 +44,7 @@ class TestMaterials(XPlaneTestCase):
             "ATTR_solid_camera": None,
             "ATTR_no_solid_camera": True,
             "ATTR_light_level": None,
+            "ATTR_light_level_photometric": None,
             "ATTR_light_level_reset": True,
             "ATTR_poly_os": None,
             "ATTR_draped": None,
@@ -72,6 +73,7 @@ class TestMaterials(XPlaneTestCase):
         cockpitAttrs["ATTR_solid_camera"] = True
         cockpitAttrs["ATTR_no_solid_camera"] = False
         cockpitAttrs["ATTR_light_level"] = [1.0, 2.0, "light-level-test"]
+        cockpitAttrs["ATTR_light_level_photometric"] = None
         cockpitAttrs["ATTR_light_level_reset"] = False
         cockpitCockpitAttrs = defaultCockpitAttrs.copy()
         cockpitCockpitAttrs["ATTR_cockpit"] = None
