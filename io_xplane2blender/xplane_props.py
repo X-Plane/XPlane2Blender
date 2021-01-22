@@ -2,7 +2,7 @@
 Defines X-Plane Properties attached to regular Blender data types.
 """
 
-from typing import List
+from typing import List, Tuple
 
 import bpy
 
@@ -1032,6 +1032,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         items=[
             (PANEL_COCKPIT, "Default", "Full Panel Texture: Albedo, Lit, and Normal"),
             (PANEL_COCKPIT_LIT_ONLY, "Emissive Panel Texture Only", "Only emissive panel texture will be dynamic. Great for computer displays"),
+            # This was necessary to decide when to show the Regions set up properties UI
             (PANEL_COCKPIT_REGION, "Regions", "Uses regions of panel texture"),
         ],
         default=PANEL_COCKPIT,
@@ -1431,7 +1432,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             (VERSION_1050, "10.5x", "10.5x"),
             (VERSION_1100, "11.0x", "11.0x"),
             (VERSION_1110, "11.1x", "11.1x"),
-            (VERSION_1130, "11.3x", "11.3x")
+            (VERSION_1130, "11.3x", "11.3x"),
+            (VERSION_1200, "12.0x", "12.0x"),
         ]
     )
 
@@ -1631,6 +1633,12 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
     # -------------------------------------------------------------------------
 
+    hud_viewing_glass: bpy.props.BoolProperty(
+        name = "HUD Viewing Glass",
+        description = "HUD instruments become visible when looked through this material",
+        default = False
+    )
+
     surfaceType: bpy.props.EnumProperty(
         name = 'Surface Type',
         description = 'Controls the bumpiness of material in X-Plane',
@@ -1696,16 +1704,30 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         max = 1.0,
     )
 
+    def get_cockpit_feature_types_for_this_version(self, context) -> List[Tuple[str,str,str]]:
+        features_pre_v1100_items = [
+            (COCKPIT_FEATURE_NONE, "None", "Material uses no advanced cockpit features"),
+        ]
+        features_v1100_items = [
+            (COCKPIT_FEATURE_PANEL, "Panel Texture", "Material uses Panel Texture"),
+            (COCKPIT_FEATURE_DEVICE, "Cockpit Device", "Material uses Device Texture"),
+        ]
+        features_v1200_items = [
+            (COCKPIT_FEATURE_HUD, "HUD Instruments", "Material creates HUD image"),
+        ]
+        xplane_version = int(bpy.context.scene.xplane.version)
+        if xplane_version < 1100:
+            return features_pre_v1100_items
+        if 1100 <= xplane_version < 1200:
+            return features_pre_v1100_items + features_v1100_items
+        elif 1200 <= xplane_version:
+            return features_pre_v1100_items + features_v1100_items + features_v1200_items
+
     cockpit_feature: bpy.props.EnumProperty(
         name = "Cockpit Feature",
         description = "What cockpit feature to enable",
-        default=COCKPIT_FEATURE_NONE,
-        items=[
-            (COCKPIT_FEATURE_NONE, "None", "Material uses no advanced cocked features"),
-            (COCKPIT_FEATURE_PANEL, "Panel Texture", "Material uses Panel Texture"),
-            (COCKPIT_FEATURE_DEVICE, "Cockpit Device", "Material uses Device Texture"),
-            ],
-        )
+        items=get_cockpit_feature_types_for_this_version,
+    )
     cockpit_region: bpy.props.EnumProperty(
         name = "Cockpit Region",
         description = "Cockpit region to use",

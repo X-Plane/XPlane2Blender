@@ -86,8 +86,12 @@ class XPlaneMaterial:
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_device", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_lit_only", None, 2000))
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_hud", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_region", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_no_cockpit", True, 2000))
+        # TODO: Should these go in here?
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_hud_glass", None, 2000))
+        self.cockpitAttributes.add(XPlaneAttribute("ATTR_hud_reset", True, 2000))
 
         self.conditions = []
 
@@ -211,8 +215,29 @@ class XPlaneMaterial:
 
     def collectCockpitAttributes(self, mat: bpy.types.Material) -> None:
         xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= 1100:
-            if mat.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+        xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
+        # cockpit_panel_feature is what Cockpit Feature is getting used, found in the Material settings
+        # cockpit_panel_mode is how 'Cockpit Feature: Panel Texture' is treated, found in the OBJ settings
+        # Cockpit Feature relies on Panel Modes, not the other way around
+        #
+        # Table:
+        # Panel Mode | Valid Cockpit Feature
+        # -----------|----------------------
+        # Default    |  None, Panel, (Regions == 0), Device, HUD
+        # Emissive   |  None, Panel, (Regions == 0), Device?, HUD
+        # Regions    |  None?, Panel?, (Regions > 0), HUD?, Device?
+        #
+        # TODO ? means "Ben must clarify what should happen here".
+        # Currently any invalid case is just ignored.
+        #
+        # The cockpit_panel_mode enum was weirdly composed thanks to the header prop like-nature of
+        # ATTR_cockpit_lit_only and a convenient way to make Regions only show up as needed.
+        # It makes the cockpit panel feature harder to understand sadly. -Ted 1/22/2021
+        # --- Cockpit Panel Mode/Feature --------------------------------------
+        cockpit_panel_mode = xplaneFile.options.cockpit_panel_mode
+        cockpit_panel_feature = mat.xplane.cockpit_feature
+        if mat.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+            if xplane_version >= 1100:
                 self.cockpitAttributes["ATTR_cockpit_device"].setValue(
                     [
                         mat.xplane.device_name,
@@ -227,14 +252,11 @@ class XPlaneMaterial:
                     ]
                 )
                 self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
-
-        if mat.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
-            xplaneFile = self.xplaneObject.xplaneBone.xplaneFile
-            cockpit_panel_mode = xplaneFile.options.cockpit_panel_mode
+        elif cockpit_panel_feature == COCKPIT_FEATURE_PANEL:
             cockpit_region = int(mat.xplane.cockpit_region)
 
             self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
-            if xplane_version >= 1110:
+            if 1100 <= xplane_version:
                 if cockpit_panel_mode == PANEL_COCKPIT:
                     self.cockpitAttributes["ATTR_cockpit"].setValue(True)
                 elif cockpit_panel_mode == PANEL_COCKPIT_LIT_ONLY:
@@ -251,6 +273,20 @@ class XPlaneMaterial:
                     self.cockpitAttributes["ATTR_cockpit_region"].setValue(
                         cockpit_region - 1
                     )
+            self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+        if cockpit_panel_feature == COCKPIT_FEATURE_HUD:
+            if cockpit_panel_mode in {PANEL_COCKPIT, PANEL_COCKPIT_LIT_ONLY}:
+                if 1200 <= xplane_version:
+                    self.cockpitAttributes["ATTR_cockpit_hud"].setValue(True)
+                    self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+            else:
+                assert False, f"Is COCKPIT_FEATURE_HUD and {cockpit_panel_mode} a valid combination?"
+        # ---------------------------------------------------------------------
+
+        if mat.xplane.hud_viewing_glass:
+            if 1200 <= xplane_version:
+                self.cockpitAttributes["ATTR_hud_glass"].setValue(True)
+                self.cockpitAttributes["ATTR_hud_reset"].setValue(False)
 
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
         if mat.xplane.lightLevel:

@@ -1119,23 +1119,28 @@ def cockpit_layout(
     cockpit_box_column = cockpit_box.column()
     cockpit_box_column.prop(active_material.xplane, "cockpit_feature")
 
-    if active_material.xplane.cockpit_feature == COCKPIT_FEATURE_NONE:
-        pass
-    elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
-        cockpit_box_column.prop(active_material.xplane, "cockpit_region")
-    elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
-        device_box = cockpit_box_column.box()
-        device_box.label(text="Cockpit Device")
-        device_box.prop(active_material.xplane, "device_name")
-        if not any(
-            getattr(active_material.xplane, f"device_bus_{bus}") for bus in range(6)
-        ):
-            device_box.label(text="Select at least one bus", icon="ERROR")
-        column = device_box.column_flow(columns=2, align=True)
-        for bus in range(6):
-            column.prop(active_material.xplane, f"device_bus_{bus}")
-        device_box.prop(active_material.xplane, "device_lighting_channel")
-        device_box.prop(active_material.xplane, "device_auto_adjust")
+    version = int(bpy.context.scene.xplane.version)
+    if version >= 1100:
+        if active_material.xplane.cockpit_feature == COCKPIT_FEATURE_NONE:
+            pass
+        elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
+            cockpit_box_column.prop(active_material.xplane, "cockpit_region")
+        elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+            device_box = cockpit_box_column.box()
+            device_box.label(text="Cockpit Device")
+            device_box.prop(active_material.xplane, "device_name")
+            if not any(
+                getattr(active_material.xplane, f"device_bus_{bus}") for bus in range(6)
+            ):
+                device_box.label(text="Select at least one bus", icon="ERROR")
+            column = device_box.column_flow(columns=2, align=True)
+            for bus in range(6):
+                column.prop(active_material.xplane, f"device_bus_{bus}")
+            device_box.prop(active_material.xplane, "device_lighting_channel")
+            device_box.prop(active_material.xplane, "device_auto_adjust")
+    if version >= 1200:
+        if active_material.xplane.cockpit_feature != COCKPIT_FEATURE_HUD:
+            cockpit_box.prop(active_material.xplane, "hud_viewing_glass")
 
 
 def axis_detent_ranges_layout(

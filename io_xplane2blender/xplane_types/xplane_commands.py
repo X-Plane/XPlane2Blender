@@ -85,7 +85,7 @@ class XPlaneCommands:
 
         self.reseters = {
             "ATTR_light_level": "ATTR_light_level_reset",
-            "ATTR_cockpit(_lit_only|_region|_device)?": "ATTR_no_cockpit",
+            "ATTR_cockpit(_hud|_lit_only|_region|_device)?": "ATTR_no_cockpit",
             "ATTR_manip_(?!none)(?!wheel)(.*)": "ATTR_manip_none",
             "ATTR_no_shadow": "ATTR_shadow",
             "ATTR_draw_disable": "ATTR_draw_enable",
@@ -94,6 +94,7 @@ class XPlaneCommands:
             "ATTR_no_blend|ATTR_shadow_blend": "ATTR_blend",
             "ATTR_draped": "ATTR_no_draped",
             "ATTR_solid_camera": "ATTR_no_solid_camera",
+            "ATTR_hud_glass":"ATTR_hud_reset"
         }
 
         # these attributes/commands are not persistant and must always be rewritten
@@ -109,6 +110,7 @@ class XPlaneCommands:
             "ATTR_draw_enable": True,
             "ATTR_no_draped": True,
             "ATTR_light_level_reset": True,
+            "ATTR_hud_reset":True,
         }
 
     def write(self, *, lod_bucket_index: Optional[int]) -> str:
@@ -332,6 +334,7 @@ class XPlaneCommands:
             "ATTR_cockpit_device",
             "ATTR_cockpit",
             "ATTR_cockpit_lit_only",
+            "ATTR_cockpit_hud",
             "ATTR_cockpit_region",
             "ATTR_no_cockpit",
             "ATTR_draw_disable",
@@ -341,6 +344,8 @@ class XPlaneCommands:
             "ATTR_hard",
             "ATTR_hard_deck",
             "ATTR_no_hard",
+            "ATTR_hud_glass",
+            "ATTR_hud_reset",
             "ATTR_no_blend",
             "ATTR_shadow_blend",
             "ATTR_blend",
@@ -379,7 +384,7 @@ class XPlaneCommands:
 
             # Now that the added white list trick is in place,
             # we'll nearly always have 2 matching attributes
-            if ("ATTR_cockpit" in matchingAttribute and len(matchingAttribute) > 4) or (
+            if ("ATTR_cockpit" in matchingAttribute and len(matchingAttribute) > 5) or (
                 "ATTR_cockpit" not in matchingAttribute and len(matchingAttribute) > 2
             ):
                 print(
