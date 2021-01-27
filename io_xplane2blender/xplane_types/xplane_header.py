@@ -105,6 +105,7 @@ class XPlaneHeader:
         self.attributes.add(XPlaneAttribute("GLOBAL_no_shadow", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_specular", None))
+        self.attributes.add(XPlaneAttribute("GLOBAL_luminance", None))
         self.attributes.add(XPlaneAttribute("BLEND_GLASS", None))
 
         # draped shader attributes
@@ -141,6 +142,7 @@ class XPlaneHeader:
         The reason is we can only tell if certain directives should be written
         after everything is collected (like GLOBALs)
         """
+        export_type = self.xplaneFile.options.export_type
         isAircraft = self.xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT
         isCockpit = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
         isInstance = (
@@ -152,6 +154,7 @@ class XPlaneHeader:
             EXPORT_TYPE_AIRCRAFT,
             EXPORT_TYPE_COCKPIT,
         ]
+        xplane_version = int(bpy.context.scene.xplane.version)
 
         # layer groups
         if self.xplaneFile.options.layer_group != LAYER_GROUP_NONE:
@@ -219,7 +222,6 @@ class XPlaneHeader:
                 )
             )
 
-        xplane_version = int(bpy.context.scene.xplane.version)
         if xplane_version >= 1100:
             texture_normal = self.attributes["TEXTURE_NORMAL"].getValue()
             normal_metalness = effective_normal_metalness(self.xplaneFile)
@@ -241,10 +243,7 @@ class XPlaneHeader:
                 )
             elif (
                 self.xplaneFile.options.export_type
-                in {
-                    EXPORT_TYPE_INSTANCED_SCENERY,
-                    EXPORT_TYPE_SCENERY,
-                }
+                in {EXPORT_TYPE_INSTANCED_SCENERY, EXPORT_TYPE_SCENERY,}
                 and self.xplaneFile.options.blend_glass
             ):
                 logger.error(
@@ -403,6 +402,14 @@ class XPlaneHeader:
                     "ATTR_shiny_rat"
                 ] = 1.0  # Here we are fooling ourselves
                 write_user_specular_values = False  # It will be skipped from now on
+
+        if xplane_version >= 1200:
+            luminance = (
+                self.xplaneFile.options.luminance
+                if self.xplaneFile.options.luminance_override
+                else None
+            )
+            self.attributes["GLOBAL_luminance"].setValue(luminance)
 
         # v1000
         if xplane_version >= 1000:

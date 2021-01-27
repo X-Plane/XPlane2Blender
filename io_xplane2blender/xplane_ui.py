@@ -415,6 +415,12 @@ def layer_layout(
     if version >= 1100:
         global_mat_box.row().prop(layer_props, "blend_glass")
         global_mat_box.row().prop(layer_props, "normal_metalness")
+    if version >= 1200:
+        row = global_mat_box.row()
+        row.active = layer_props.luminance_override
+        row.prop(layer_props, "luminance_override")
+        row.prop(layer_props, "luminance")
+    if version >= 1100:
         if layer_props.export_type in {
             EXPORT_TYPE_INSTANCED_SCENERY,
             EXPORT_TYPE_SCENERY,

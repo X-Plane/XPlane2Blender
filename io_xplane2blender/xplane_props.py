@@ -1047,6 +1047,20 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         type = XPlaneExportPathDirective
     )
 
+    luminance_override: bpy.props.BoolProperty(
+        name = "Override Luminance",
+        description = "Override baseline luminance for LIT texture",
+        default = False
+    )
+
+    luminance: bpy.props.IntProperty(
+        name = "Baseline Luminance",
+        description = "The overriden baseline luminance value for the LIT texture",
+        min = 1,
+        max = 60000,
+        default = 1000,
+    )
+
     normal_metalness: bpy.props.BoolProperty(
         name = "Normal Metalness",
         description = "The normal map's blue channel will be used for base reflectance",
