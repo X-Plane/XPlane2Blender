@@ -1737,7 +1737,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     lightLevel_brightness: bpy.props.IntProperty(
         name = "Brightness",
         description = "Brightness adjustment for Light Level override, in nts",
-        default = 1000
+        default = 1000,
+        min = 1
     )
 
     lightLevel_v1: bpy.props.FloatProperty(

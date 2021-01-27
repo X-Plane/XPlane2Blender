@@ -416,9 +416,9 @@ def layer_layout(
         global_mat_box.row().prop(layer_props, "blend_glass")
         global_mat_box.row().prop(layer_props, "normal_metalness")
     if version >= 1200:
-        row = global_mat_box.row()
+        row = global_mat_box.row(align=True)
         row.active = layer_props.luminance_override
-        row.prop(layer_props, "luminance_override")
+        row.prop(layer_props, "luminance_override", text="")
         row.prop(layer_props, "luminance")
     if version >= 1100:
         if layer_props.export_type in {
@@ -931,12 +931,10 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
         box.prop(active_material.xplane, "lightLevel_v1")
         box.row().prop(active_material.xplane, "lightLevel_v2")
         if 1200 <= version:
-            row = box.row()
-            row.prop(active_material.xplane, "lightLevel_photometric")
-            #TODO: Make this into columns and make it look nice
+            row = box.row(align=True)
             row.active = active_material.xplane.lightLevel_photometric
-            if active_material.xplane.lightLevel_photometric:
-                row.prop(active_material.xplane, "lightLevel_brightness")
+            row.prop(active_material.xplane, "lightLevel_photometric", text="")
+            row.prop(active_material.xplane, "lightLevel_brightness")
 
         row = box.row()
         row.prop(active_material.xplane, "lightLevel_dataref")
