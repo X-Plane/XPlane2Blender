@@ -17,7 +17,7 @@ from mathutils import Euler, Vector
 
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_helpers, xplane_props
-from io_xplane2blender.importer import xplane_imp_parser
+from io_xplane2blender.importer import xplane_imp_cmd_builder, xplane_imp_parser
 from io_xplane2blender.tests import animation_file_mappings, test_creation_helpers
 from io_xplane2blender.xplane_config import getDebug, setDebug
 from io_xplane2blender.xplane_constants import (
@@ -133,7 +133,7 @@ class XPlaneTestCase(unittest.TestCase):
     def assertAction(
         self,
         bl_object: bpy.types.Object,
-        expected_action: xplane_imp_parser.IntermediateAnimation,
+        expected_action_struct: xplane_imp_cmd_builder.IntermediateAnimation,
     ):
         """
         Asserts that an object's action datablock matches the animation specified by the ImportedAnimation struct.
@@ -149,10 +149,10 @@ class XPlaneTestCase(unittest.TestCase):
         try:
             action = bl_object.animation_data.action
         except AttributeError:  # animation_data is None
-            self.fail(f"{bl_object.name} doesn't have an action to compare")
+            pass
         else:
-            # TODO: Also a bad name!
-            def action_as_struct(bl_object: bpy.types.Object):
+
+            def action_as_intermediate_animation(bl_object: bpy.types.Object):
                 real_action_struct = xplane_imp_parser.IntermediateAnimation(
                     [], collections.defaultdict(list), []
                 )
@@ -190,10 +190,11 @@ class XPlaneTestCase(unittest.TestCase):
                                 ),
                             }
 
-                real_action_struct.locations = recombine_fcurves(action, "location")
-                real_action_struct.rotations = recombine_fcurves(
-                    action, "rotation_euler"
-                )
+                if action:
+                    real_action_struct.locations = recombine_fcurves(action, "location")
+                    real_action_struct.rotations = recombine_fcurves(
+                        action, "rotation_euler"
+                    )
 
                 def get_dataref_prop_from_data_path(
                     bl_object: bpy.types.Object, data_path: str
@@ -224,33 +225,51 @@ class XPlaneTestCase(unittest.TestCase):
                 ]:
                     real_action_struct.xp_datarefs.append(
                         xplane_imp_parser.IntermediateDataref(
-                            dataref_prop.anim_type,
-                            dataref_prop.loop,
-                            dataref_prop.path,
-                            dataref_prop.show_hide_v1,
-                            dataref_prop.show_hide_v2,
-                            xp_values,
+                            values=xp_values,
                         )
                     )
 
                 return real_action_struct
 
-            real_action_struct = action_as_struct(bl_object)
+            real_action_struct = action_as_intermediate_animation(bl_object)
+
+            def copy_rest_of_dref_prop(bl_object, real_action_struct):
+                # In case there was no action and we'll only have show hides
+                if not real_action_struct.xp_datarefs:
+                    real_action_struct.xp_datarefs = [
+                        xplane_imp_parser.IntermediateDataref()
+                    ] * len(bl_object.xplane.datarefs)
+
+                for bl_dref, real_xp_dataref in zip(
+                    bl_object.xplane.datarefs, real_action_struct.xp_datarefs
+                ):
+                    real_xp_dataref.anim_type = bl_dref.anim_type
+                    real_xp_dataref.loop = bl_dref.loop
+                    real_xp_dataref.path = bl_dref.path
+
+                    real_xp_dataref.show_hide_v1 = bl_dref.show_hide_v1
+                    real_xp_dataref.show_hide_v2 = bl_dref.show_hide_v2
+
+            copy_rest_of_dref_prop(bl_object, real_action_struct)
 
             for real_loc, expected_loc in zip(
-                real_action_struct.locations, expected_action.locations
+                real_action_struct.locations, expected_action_struct.locations
             ):
                 self.assertVectorAlmostEqual(real_loc, expected_loc, 1)
 
             for real_rot_degrees, expected_rot_degrees in [
-                (real_action_struct.rotations[axis], expected_action.rotations[axis])
+                (
+                    real_action_struct.rotations[axis],
+                    expected_action_struct.rotations[axis],
+                )
                 for axis in real_action_struct.rotations
             ]:
                 for real_deg, exp_deg in zip(real_rot_degrees, expected_rot_degrees):
                     self.assertAlmostEqual(real_deg, exp_deg, places=1)
 
             for (real_dataref_prop, expected_dataref_prop) in zip(
-                real_action_struct.xp_datarefs, expected_action.xp_datarefs
+                sorted(real_action_struct.xp_datarefs, key=lambda d: d.path),
+                sorted(expected_action_struct.xp_datarefs, key=lambda d: d.path),
             ):
                 self.assertEqual(real_dataref_prop, expected_dataref_prop)
 
