@@ -230,7 +230,9 @@ class ImpCommandBuilder:
                     ),
                     start_idx=start_idx,
                     count=count,
-                    animations_to_apply=[self._current_animation],
+                    animations_to_apply=[self._current_animation]
+                    if self._current_animation
+                    else [],
                 )
             )
 
@@ -323,8 +325,9 @@ class ImpCommandBuilder:
                         for i in range(0, len(mesh_idxes), 3)
                     ],
                 )
-                if self._current_animation:
-                    self._current_animation.set_action(ob)
+                for animation in block.animations_to_apply:
+                    # TODO: We really ought to change this name or where this lives
+                    animation.set_action(ob)
         return {"FINISHED"}
 
     @property

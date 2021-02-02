@@ -153,7 +153,7 @@ class XPlaneTestCase(unittest.TestCase):
         else:
 
             def action_as_intermediate_animation(bl_object: bpy.types.Object):
-                real_action_struct = xplane_imp_parser.IntermediateAnimation(
+                real_action_struct = xplane_imp_cmd_builder.IntermediateAnimation(
                     [], collections.defaultdict(list), []
                 )
 
@@ -224,7 +224,7 @@ class XPlaneTestCase(unittest.TestCase):
                     for data_path, xp_values in data_paths_to_xp_values.items()
                 ]:
                     real_action_struct.xp_datarefs.append(
-                        xplane_imp_parser.IntermediateDataref(
+                        xplane_imp_cmd_builder.IntermediateDataref(
                             values=xp_values,
                         )
                     )

@@ -128,7 +128,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             components[:3] = vec_x_to_b(list(map(float, components[:3])))
             components[3:6] = vec_x_to_b(list(map(float, components[3:6])))
             components[6:8] = list(map(float, components[6:8]))
-            builder.build_cmd(directive, *components)
+            builder.build_cmd(directive, *components[:8])
         elif directive == "IDX":
             try:
                 idx = int(*components[:1])
