@@ -9,11 +9,11 @@ from mathutils import Vector
 
 from io_xplane2blender import xplane_constants, xplane_import
 from io_xplane2blender.importer import xplane_imp_parser
-from io_xplane2blender.importer.xplane_imp_parser import (
+from io_xplane2blender.importer.xplane_imp_cmd_builder import (
     IntermediateAnimation,
     IntermediateDataref,
-    import_obj,
 )
+from io_xplane2blender.importer.xplane_imp_parser import import_obj
 from io_xplane2blender.tests import *
 from io_xplane2blender.tests import test_creation_helpers
 

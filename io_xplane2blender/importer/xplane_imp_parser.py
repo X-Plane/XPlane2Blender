@@ -99,6 +99,26 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         # TODO: Rewrite using giant switch-ish table and functions so it is more neat
         # Need scanf solution
         # scan_int, scan_float, scan_vec2, scan_vec3tobl, scan_str, scan_enum (where it scans a limited number of choices and has a mapping of strings for it)
+        """
+        def scan_int(s_itr:iter_of_enum, default=None, error_msg=None):
+            s = ""
+            try:
+                i, c = next(s_itr)
+            except StopIteration:
+                return "expected, str, found end of line"
+            while c in "-0123456789":
+                s += c
+                c = next(s_itr)
+            try:
+                return int(s)
+            except ValueError:
+                if default is not None:
+                    return default
+
+        def scan_float(s_itr:iter)
+            pass
+        """
+
         # if fails we can fallback to default value and print warning or just print a logger warning that it is skipping
         # itr = enumerate()
         # def scan_(last=False, msg_missing=f"Could not convert parameter {lineno} _true, default=None)->value:
@@ -149,7 +169,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         elif directive in {"ANIM_hide", "ANIM_show"}:
             v1, v2 = map(float, components[:2])
             dataref_path = components[2]
-            builder.build_cmd(directive, v1, v2)
+            builder.build_cmd(directive, v1, v2, dataref_path)
         elif directive == "ANIM_rotate_begin":
             axis = vec_x_to_b(list(map(float, components[0:3])))
             dataref_path = components[3]

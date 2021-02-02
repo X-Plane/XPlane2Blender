@@ -353,6 +353,11 @@ class ImpCommandBuilder:
         ):  # _current_animation is None or xp_datarefs is empty
             return None
 
+    @_current_dataref.setter
+    def _current_dataref(self, value: IntermediateDataref):
+        """TODO: This isn't really the API we want..."""
+        self._current_animation.xp_datarefs.append(value)
+
     def _next_object_name(self) -> str:
         return f"Mesh.{sum(1 for block in self.blocks if block.datablock_info.datablock_type == 'MESH'):03}"
 
