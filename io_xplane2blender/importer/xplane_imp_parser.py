@@ -88,8 +88,15 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
     pattern = re.compile("([^#]*)(#.*)?")
 
     last_axis = None
+    name_hint = ""
     for lineno, line in enumerate(map(str.strip, lines[3:]), start=1):
         to_parse, comment = re.match(pattern, line).groups()[0:2]
+        try:
+            if comment.startswith(("# 1", "# 2", "# 3", "# 4")):
+                name_hint = comment[2:]
+        except AttributeError:
+            pass
+
         if not to_parse:
             continue
         else:
@@ -151,7 +158,8 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         elif directive == "TRIS":
             start_idx = int(components[0])
             count = int(components[1])
-            builder.build_cmd(directive, start_idx, count)
+            builder.build_cmd(directive, start_idx, count, name_hint=name_hint)
+            name_hint = ""
 
         elif directive == "ANIM_begin":
             builder.build_cmd("ANIM_begin")

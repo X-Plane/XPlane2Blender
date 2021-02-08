@@ -260,7 +260,7 @@ SHOW_ANIM_FAKE_T = (
 class ParentInfo:
     def __init__(
         self,
-        parent: Optional[bpy.types.Object] = None,
+        parent: Optional[Union[bpy.types.Object, str]] = None,
         parent_type: str = _OBJECT,  # Must be "ARMATURE", "BONE", or "OBJECT"
         parent_bone: Optional[str] = None,
     ):
@@ -268,7 +268,7 @@ class ParentInfo:
             parent_type == _ARMATURE or parent_type == _BONE or parent_type == _OBJECT
         )
         if parent:
-            assert isinstance(parent, bpy.types.Object)
+            assert isinstance(parent, (bpy.types.Object, str))
 
         if parent_bone:
             assert isinstance(parent_bone, str)
@@ -480,7 +480,7 @@ def create_datablock_mesh(
         op(enter_editmode=False, location=info.location, rotation=info.rotation)
 
     ob = bpy.context.object
-    set_collection(ob, info.collection)
+    set_collection(ob, info.collection, unlink_others=True)
     ob.name = info.name if info.name is not None else ob.name
     if info.parent_info:
         set_parent(ob, info.parent_info)
@@ -624,13 +624,19 @@ def delete_all_other_scenes():
         bpy.data.scenes.remove(scene, do_unlink=True)
 
 
-def delete_all_text_files():
-    for text in bpy.data.texts:
+def delete_all_text_files(preserve_text_files: List[Union[str, bpy.types.Text]] = []):
+    """
+    Optionally pass in the names of Text Blocks
+    to keep (for instance, the name of the script you're working on in app)
+    """
+
+    preserve_text_files = [getattr(t, "name", t) for t in preserve_text_files]
+    for text in [t for t in bpy.data.texts if t.name not in preserve_text_files]:
         text.user_clear()
         bpy.data.texts.remove(text, do_unlink=True)
 
 
-def delete_everything():
+def delete_everything(preserve_text_files: List[Union[str, bpy.types.Text]] = []):
     """
     Warning! Don't call this from a Blender script!
     You'll delete the text block you're using!
@@ -638,7 +644,7 @@ def delete_everything():
     delete_all_images()
     delete_all_materials()
     delete_all_objects()
-    delete_all_text_files()
+    delete_all_text_files(preserve_text_files)
     delete_all_collections()
     delete_all_other_scenes()
 
@@ -849,16 +855,26 @@ def set_animation_data(
 
 
 def set_collection(
-    blender_object: bpy.types.Object, collection: Union[bpy.types.Collection, str]
+    blender_object: bpy.types.Object,
+    collection: Union[bpy.types.Collection, str],
+    unlink_others: bool = True,
 ) -> None:
     """
     Links a datablock in collection. If collection is a string and does not exist, one will be made.
 
-    Remember to unlink blender_objects from other collections by hand if needed
+    Use unlink_others unlinks the blender_object from all other collections (including the scene's master collection)
     """
     assert isinstance(
         blender_object, (bpy.types.Object)
     ), "collection was of type " + str(type(blender_object))
+
+    if unlink_others:
+        for coll in (
+            coll
+            for coll in xplane_helpers.get_collections_in_scene(bpy.context.scene)
+            if blender_object.name in coll.objects
+        ):
+            coll.objects.unlink(blender_object)
 
     if isinstance(collection, bpy.types.Collection):
         coll = collection
@@ -930,7 +946,11 @@ def set_material(
 def set_parent(blender_object: bpy.types.Object, parent_info: ParentInfo) -> None:
     assert isinstance(blender_object, bpy.types.Object)
 
-    blender_object.parent = parent_info.parent
+    blender_object.parent = (
+        parent_info.parent
+        if isinstance(parent_info.parent, bpy.types.Object)
+        else bpy.data.objects[parent_info.parent]
+    )
     blender_object.parent_type = parent_info.parent_type
 
     if parent_info.parent_type == _BONE:

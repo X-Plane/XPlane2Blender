@@ -64,8 +64,12 @@ class IntermediateAnimation:
             """Recomposes the OBJ's split form into one Vector"""
 
             tot_rot = Vector()
+            tot_rot.x = self.rotations[Vector((1, 0, 0)).freeze()][i]
+            tot_rot.y = self.rotations[Vector((0, 1, 0)).freeze()][i]
+            tot_rot.z = self.rotations[Vector((0, 0, 1)).freeze()][i]
             # print("Pre-combine rotations")
             # pprint(self.rotations)
+            """
             for axis, degrees in [
                 (axis, degrees_list[i]) for axis, degrees_list in self.rotations.items()
             ]:
@@ -77,7 +81,7 @@ class IntermediateAnimation:
                     tot_rot.z = degrees
                 else:
                     assert False, f"problem axis: {axis}"
-            # print("Recombined Rotation", tot_rot)
+            """
             return tot_rot
 
         current_frame = 1
@@ -118,6 +122,46 @@ class IntermediateDatablock:
     start_idx: Optional[int]
     count: Optional[int]
     animations_to_apply: List[IntermediateAnimation]
+
+    def _build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
+        start_idx = self.start_idx
+        count = self.count
+        mesh_idxes = vt_table.idxes[start_idx : start_idx + count]
+        vertices = vt_table.vertices[start_idx : start_idx + count]
+        # We reverse the faces to reverse the winding order
+        faces: List[Tuple[float, float, float]] = [
+            tuple(map(lambda i: i - start_idx, mesh_idxes[i : i + 3][::-1]))
+            for i in range(0, len(mesh_idxes), 3)
+        ]
+
+        if self.datablock_info.parent_info.parent == "ROOT":
+            # We never make ROOT, so we be sneaky and never parent it either
+            self.datablock_info.parent_info = None
+        ob = test_creation_helpers.create_datablock_mesh(self.datablock_info, "plane")
+
+        # TODO: Change to "next mesh name"
+        me = bpy.data.meshes.new(f"M.{len(bpy.data.meshes):03}")
+        me.from_pydata([(v.x, v.y, v.z) for v in vertices], [], faces)
+        me.update(calc_edges=True)
+        uv_layer = me.uv_layers.new()
+
+        if not me.validate(verbose=True):
+            for idx in set(itertools.chain.from_iterable(faces)):
+                me.vertices[idx].normal = (
+                    vertices[idx].nx,
+                    vertices[idx].ny,
+                    vertices[idx].nz,
+                )
+                uv_layer.data[idx].uv = vertices[idx].s, vertices[idx].t
+        else:
+            logger.error("Mesh was not valid, check stdout for more")
+
+        ob.data = me
+        test_creation_helpers.set_material(ob, "Material")
+        for animation in self.animations_to_apply:
+            # TODO: We really ought to change this name or where this lives
+            animation.set_action(ob)
+        return ob
 
 
 @dataclass
@@ -162,34 +206,6 @@ class VTTable:
     idxes: List[int] = field(default_factory=list)
 
 
-def _build_mesh(
-    root_collection: ExportableRoot,
-    vertices: List[VT],
-    faces: List[Tuple[int, int, int]],
-) -> bpy.types.Mesh:
-    me = bpy.data.meshes.new(f"Mesh.{len(bpy.data.meshes):03}")
-    ob = bpy.data.objects.new(me.name, me)
-    ob.location = [0, 0, 0]
-    root_collection.objects.link(ob)
-    me.from_pydata([(v.x, v.y, v.z) for v in vertices], [], faces)
-    me.update(calc_edges=True)
-    uv_layer = me.uv_layers.new()
-
-    if not me.validate(verbose=True):
-        for idx in set(itertools.chain.from_iterable(faces)):
-            me.vertices[idx].normal = (
-                vertices[idx].nx,
-                vertices[idx].ny,
-                vertices[idx].nz,
-            )
-            uv_layer.data[idx].uv = vertices[idx].s, vertices[idx].t
-    else:
-        logger.error("Mesh was not valid, check stdout for more")
-
-    test_creation_helpers.set_material(ob, "Material")
-    return ob
-
-
 class ImpCommandBuilder:
     def __init__(self, filepath: Path):
         self.root_collection = test_creation_helpers.create_datablock_collection(
@@ -197,14 +213,33 @@ class ImpCommandBuilder:
         )
         self.root_collection.xplane.is_exportable_collection = True
         self.vt_table = VTTable([], [])
-        self.blocks: List[IntermediateDatablock] = []
+
+        # Although we don't end up making this, it is useful for tree problems
+        root_intermediate_datablock = IntermediateDatablock(
+            datablock_info=DatablockInfo(
+                datablock_type="EMPTY", name="ROOT", collection=self.root_collection
+            ),
+            start_idx=None,
+            count=None,
+            animations_to_apply=[],
+        )
+        self.blocks: List[IntermediateDatablock] = [root_intermediate_datablock]
+        # Because the OBJ doesn't have a parenting abstraction, we can figure out what should be parented
+        # by two means
+        # 1. Nested ANIM_begins require the use of parents, the TRIS before an ANIM_begin is the new parent, and the ANIM_end pops
+        # 2. Indentation and comments (but this is an advanced feature coming later)
+        self.parent_stack: List[IntermediateDatablock] = collections.deque(
+            [root_intermediate_datablock]
+        )
 
         # --- Animation Builder States ----------------------------------------
         self._last_axis: Optional[Vector] = None
         self._animations = collections.deque()
         # ---------------------------------------------------------------------
 
-    def build_cmd(self, directive: str, *args: List[Union[float, int, str]]):
+    def build_cmd(
+        self, directive: str, *args: List[Union[float, int, str]], name_hint: str = ""
+    ):
         """
         Given the directive and it's arguments, correctly handle each case.
 
@@ -224,8 +259,11 @@ class ImpCommandBuilder:
                 IntermediateDatablock(
                     datablock_info=DatablockInfo(
                         datablock_type="MESH",
-                        name=self._next_object_name(),
-                        parent_info=None,
+                        name=name_hint or self._next_object_name(),
+                        # How do we keep track of this
+                        parent_info=ParentInfo(
+                            self.parent_stack[-1].datablock_info.name
+                        ),
                         collection=self.root_collection,
                     ),
                     start_idx=start_idx,
@@ -240,8 +278,16 @@ class ImpCommandBuilder:
             self._current_animation = IntermediateAnimation(
                 [], collections.defaultdict(list), []
             )
+            self.parent_stack.append(self.blocks[-1])
+            # No tree tip yet, because of empty ANIM_ case or no object yet to act as parent.
+            # This'll change when we add in empty support. This is just dumb and temporary
         elif directive == "ANIM_end":
             del self._current_animation
+            # Since we always have the ROOT datablock info as artificial_parent_marker
+            # We can't have an indexError. Unbalanced ANIM_ends would be an error, potentially
+            # triggering this
+            self.parent_stack.pop()
+
         elif directive == "ANIM_trans_begin":
             dataref_path = args[0]
             self._current_animation.xp_datarefs.append(
@@ -306,28 +352,16 @@ class ImpCommandBuilder:
         Returns a set with FINISHED or CANCELLED, matching the returns of bpy
         operators
         """
-        for block in self.blocks:
+        # Since we're using root collections mode, our ROOT empty datablock isn't made
+        # and we pretend its a collection.
+        for block in self.blocks[1:]:
             print("Name", block.datablock_info.name)
             if block.datablock_info.datablock_type == "EMPTY":
                 # Create empty
                 pass
             elif block.datablock_info.datablock_type == "MESH":
-                # Create mesh
-                start_idx = block.start_idx
-                count = block.count
-                mesh_idxes = self.vt_table.idxes[start_idx : start_idx + count]
-                ob = _build_mesh(
-                    root_collection=self.root_collection,
-                    vertices=self.vt_table.vertices[start_idx : start_idx + count],
-                    # We reverse the faces to reverse the winding order
-                    faces=[
-                        list(map(lambda i: i - start_idx, mesh_idxes[i : i + 3][::-1]))
-                        for i in range(0, len(mesh_idxes), 3)
-                    ],
-                )
-                for animation in block.animations_to_apply:
-                    # TODO: We really ought to change this name or where this lives
-                    animation.set_action(ob)
+                ob = block._build_mesh(self.vt_table)
+        bpy.context.scene.frame_current = 1
         return {"FINISHED"}
 
     @property
