@@ -52,7 +52,7 @@ def make_blend_file():
             location=location,
         )
         if datablock_type == "MESH":
-            ob = test_creation_helpers.create_datablock_mesh(db)
+            ob = test_creation_helpers.create_datablock_mesh(db, "eq-tri")
         elif datablock_type == "EMPTY":
             ob = test_creation_helpers.create_datablock_empty(db)
 
@@ -85,7 +85,7 @@ def make_blend_file():
             for i, letter in enumerate(["A", "B", "C", "D"][: level_count + 1]):
                 make_db_ob(
                     datablock_type="MESH",
-                    name="A",
+                    name=letter,
                     parent_info=ParentInfo(root_collection.objects[-1])
                     if root_collection.objects
                     else None,
@@ -96,64 +96,7 @@ def make_blend_file():
                     animated=True,
                 )
 
-    def permutations_at_2_levels():
-        """
-        Tests every combination of animated and not animated for 2 levels of nesting
-        """
-        anim_patterns = [
-            {"A": l1, "B": l2, "C": l3}
-            for l1, l2, l3 in product([True, False], repeat=3)
-        ]
-
-        for pat_num, anim_pattern in enumerate(anim_patterns):
-            l1, l2, l3 = anim_pattern.values()
-
-            root_collection = make_root_collection(
-                f"{int(l1)}{int(l2)}{int(l3)}_2_levels_combinations"
-            )
-            for i, (letter, animated) in enumerate(anim_pattern.items()):
-                make_db_ob(
-                    datablock_type="MESH",
-                    name=f"{letter}",
-                    parent_info=ParentInfo(root_collection.objects[-1])
-                    if root_collection.objects
-                    else None,
-                    root_collection=root_collection,
-                    location=Vector((i * 3, pat_num * 5, 0)),
-                    animated=animated,
-                )
-
-    def permutations_at_2_levels_empties():
-        """
-        In this, we test the permutations, but,
-        - C is always a Mesh, A and B are EMPTY
-        """
-        anim_patterns = [
-            {"A": l1, "B": l2, "C": l3}
-            for l1, l2, l3 in product([True, False], repeat=3)
-        ]
-
-        for pat_num, anim_pattern in enumerate(anim_patterns):
-            l1, l2, l3 = anim_pattern.values()
-
-            root_collection = make_root_collection(
-                f"{int(l1)}{int(l2)}{int(l3)}_2_levels_combinations_empties"
-            )
-            for i, (letter, animated) in enumerate(anim_pattern.items()):
-                make_db_ob(
-                    datablock_type="MESH" if letter == "C" else "EMPTY",
-                    name=f"{letter}",
-                    parent_info=ParentInfo(root_collection.objects[-1])
-                    if root_collection.objects
-                    else None,
-                    root_collection=root_collection,
-                    location=Vector((i * 3, pat_num * 5, 0)),
-                    animated=animated,
-                )
-
-    # nesting_test()
-    # permutations_at_2_levels()
-    permutations_at_2_levels_empties()
+    nesting_test()
 
 
 make_blend_file()

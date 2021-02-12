@@ -32,7 +32,7 @@ class TestSimpleLocRot(XPlaneTestCase):
                     Vector((2, 0, 0)).freeze(),
                 ],
                 rotations=collections.defaultdict(list),
-                xp_datarefs=[
+                xp_dataref=[
                     IntermediateDataref(
                         anim_type=xplane_constants.ANIM_TYPE_TRANSFORM,
                         loop=0,
@@ -57,7 +57,7 @@ class TestSimpleLocRot(XPlaneTestCase):
                     Vector((0, 1, 0)).freeze(): [0, 30],
                     Vector((0, 0, 1)).freeze(): [0, 3],
                 },
-                xp_datarefs=[
+                xp_dataref=[
                     IntermediateDataref(
                         anim_type=xplane_constants.ANIM_TYPE_TRANSFORM,
                         loop=0,
@@ -85,7 +85,7 @@ class TestSimpleLocRot(XPlaneTestCase):
                     Vector((0, 1, 0)).freeze(): [0, 30],
                     Vector((0, 0, 1)).freeze(): [0, 3],
                 },
-                xp_datarefs=[
+                xp_dataref=[
                     IntermediateDataref(
                         anim_type=xplane_constants.ANIM_TYPE_TRANSFORM,
                         loop=0,

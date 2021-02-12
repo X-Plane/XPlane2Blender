@@ -223,7 +223,7 @@ class XPlaneTestCase(unittest.TestCase):
                     (get_dataref_prop_from_data_path(bl_object, data_path), xp_values)
                     for data_path, xp_values in data_paths_to_xp_values.items()
                 ]:
-                    real_action_struct.xp_datarefs.append(
+                    real_action_struct.xp_dataref = (
                         xplane_imp_cmd_builder.IntermediateDataref(
                             values=xp_values,
                         )
@@ -235,13 +235,13 @@ class XPlaneTestCase(unittest.TestCase):
 
             def copy_rest_of_dref_prop(bl_object, real_action_struct):
                 # In case there was no action and we'll only have show hides
-                if not real_action_struct.xp_datarefs:
-                    real_action_struct.xp_datarefs = [
+                if not real_action_struct.xp_dataref:
+                    real_action_struct.xp_dataref = (
                         xplane_imp_parser.IntermediateDataref()
-                    ] * len(bl_object.xplane.datarefs)
+                    )
 
                 for bl_dref, real_xp_dataref in zip(
-                    bl_object.xplane.datarefs, real_action_struct.xp_datarefs
+                    bl_object.xplane.datarefs, real_action_struct.xp_dataref
                 ):
                     real_xp_dataref.anim_type = bl_dref.anim_type
                     real_xp_dataref.loop = bl_dref.loop
@@ -268,7 +268,7 @@ class XPlaneTestCase(unittest.TestCase):
                     self.assertAlmostEqual(real_deg, exp_deg, places=1)
 
             for (real_dataref_prop, expected_dataref_prop) in zip(
-                sorted(real_action_struct.xp_datarefs, key=lambda d: d.path),
+                sorted(real_action_struct.xp_dataref, key=lambda d: d.path),
                 sorted(expected_action_struct.xp_datarefs, key=lambda d: d.path),
             ):
                 self.assertEqual(real_dataref_prop, expected_dataref_prop)

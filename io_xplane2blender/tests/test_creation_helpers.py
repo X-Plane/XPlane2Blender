@@ -432,9 +432,16 @@ def create_datablock_empty(
     return ob
 
 
+From_Pydata = Tuple[
+    List[Tuple[float, float, float]],  # vertices
+    List[Tuple[int, int]],  # edges
+    List[Tuple[int, int, int]],  # faces
+]
+
+
 def create_datablock_mesh(
     info: DatablockInfo,
-    primitive_shape: str = "cube",
+    mesh_src: Union[str, bpy.types.Mesh, From_Pydata] = "cube",
     material_name: Union[bpy.types.Material, str] = "Material",
     scene: Optional[Union[bpy.types.Scene, str]] = None,
 ) -> bpy.types.Object:
@@ -442,11 +449,17 @@ def create_datablock_mesh(
     Uses the bpy.ops.mesh.primitive_*_add ops to create an Object with given
     mesh. Location and Rotation given by info.
 
-    primitive_shape must match an existing mesh op
+    mesh_data must be (listed in evaluation order)
+    - An existing mesh datablock that will be used instead
+    - An existing mesh datablock name
+    - "tri" or "eq-tri" which makes a right or equilateral triangle
+    - primative op like "cube" or "plane"
+    - Data for `from_pydata`
     """
 
     assert info.datablock_type == "MESH"
-    assert primitive_shape in {
+
+    ops = {
         "circle",
         "cone",
         "cube",
@@ -459,27 +472,64 @@ def create_datablock_mesh(
         "uv_sphere",
     }
 
-    primitive_ops: Dict[str, bpy.types.Operator] = {
-        "circle": bpy.ops.mesh.primitive_circle_add,
-        "cone": bpy.ops.mesh.primitive_cone_add,
-        "cube": bpy.ops.mesh.primitive_cube_add,
-        "cylinder": bpy.ops.mesh.primitive_cylinder_add,
-        "grid": bpy.ops.mesh.primitive_grid_add,
-        "ico_sphere": bpy.ops.mesh.primitive_ico_sphere_add,
-        "monkey": bpy.ops.mesh.primitive_monkey_add,
-        "plane": bpy.ops.mesh.primitive_plane_add,
-        "torus": bpy.ops.mesh.primitive_torus_add,
-        "uv_sphere": bpy.ops.mesh.primitive_uv_sphere_add,
-    }
+    def create_object(name, mesh):
+        ob = bpy.data.objects.new(name, object_data=mesh)
+        return ob
 
-    try:
-        op = primitive_ops[primitive_shape]
-    except KeyError:
-        assert False, f"{primitive_shape} is not a known primitive op"
-    else:
-        op(enter_editmode=False, location=info.location, rotation=info.rotation)
+    if isinstance(mesh_src, bpy.types.Mesh):
+        me = mesh_src
+        ob = create_object(info.name, me)
+    elif isinstance(mesh_src, str) and mesh_src in bpy.data.meshes:
+        me = bpy.data.meshes[mesh_src]
+        ob = create_object(info.name, me)
+    elif mesh_src in {"eq-tri", "tri"} or isinstance(mesh_src, list):
+        me = bpy.data.meshes.new(f"Mesh.{len(bpy.data.meshes)}:03")
+        if mesh_src == "tri":
+            verts = [(1.0, -1.0, 0.0), (1.0, 1.0, 0.0), (-1.0, -1.0, 0.0)]
+            from_data = [
+                verts,
+                [],
+                [(2, 1, 0)],
+            ]
+        elif mesh_src == "eq-tri":
+            verts = [
+                (1, -1, 0),
+                (0, 1, 0),
+                (-1, -1, 0),
+            ]
+            from_data = [
+                verts,
+                [],
+                [(2, 1, 0)],
+            ]
+        else:
+            from_data = mesh_src
 
-    ob = bpy.context.object
+        me.from_pydata(from_data[0], from_data[1], from_data[2])
+        me.validate()
+        ob = create_object(info.name, me)
+
+    elif mesh_src in ops:
+        primitive_ops: Dict[str, bpy.types.Operator] = {
+            "circle": bpy.ops.mesh.primitive_circle_add,
+            "cone": bpy.ops.mesh.primitive_cone_add,
+            "cube": bpy.ops.mesh.primitive_cube_add,
+            "cylinder": bpy.ops.mesh.primitive_cylinder_add,
+            "grid": bpy.ops.mesh.primitive_grid_add,
+            "ico_sphere": bpy.ops.mesh.primitive_ico_sphere_add,
+            "monkey": bpy.ops.mesh.primitive_monkey_add,
+            "plane": bpy.ops.mesh.primitive_plane_add,
+            "torus": bpy.ops.mesh.primitive_torus_add,
+            "uv_sphere": bpy.ops.mesh.primitive_uv_sphere_add,
+        }
+
+        try:
+            op = primitive_ops[mesh_src]
+        except KeyError:
+            assert False, f"{mesh_src} is not a known primitive op"
+        else:
+            op(enter_editmode=False, location=info.location, rotation=info.rotation)
+            ob = bpy.context.object
     set_collection(ob, info.collection, unlink_others=True)
     ob.name = info.name if info.name is not None else ob.name
     if info.parent_info:
