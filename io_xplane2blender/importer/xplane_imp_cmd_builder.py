@@ -57,6 +57,7 @@ class IntermediateAnimation:
     """
 
     locations: List[Vector] = field(default_factory=list)
+    # A dictionary of rotations along each X,Y,Z axis
     rotations: Dict[Vector, List[float]] = field(default_factory=list)
     xp_dataref: IntermediateDataref = IntermediateDataref()
 
@@ -64,30 +65,16 @@ class IntermediateAnimation:
         def recompose_rotation(i) -> Vector:
             """Recomposes the OBJ's split form into one Vector"""
 
+            # print("Pre-combine rotations")
+            # pprint(self.rotations)
             tot_rot = Vector()
             tot_rot.x = self.rotations[Vector((1, 0, 0)).freeze()][i]
             tot_rot.y = self.rotations[Vector((0, 1, 0)).freeze()][i]
             tot_rot.z = self.rotations[Vector((0, 0, 1)).freeze()][i]
-            # print("Pre-combine rotations")
-            # pprint(self.rotations)
-            """
-            for axis, degrees in [
-                (axis, degrees_list[i]) for axis, degrees_list in self.rotations.items()
-            ]:
-                if axis == Vector((1, 0, 0)):
-                    tot_rot.x = degrees
-                elif axis == Vector((0, 1, 0)):
-                    tot_rot.y = degrees
-                elif axis == Vector((0, 0, 1)):
-                    tot_rot.z = degrees
-                else:
-                    assert False, f"problem axis: {axis}"
-            """
-            print("Recombined Rotation", tot_rot)
+            # print("Recombined Rotation", tot_rot)
             return tot_rot
 
         current_frame = 1
-        # TODO: Does only one locations list work for this? ... I think not?
         if self.xp_dataref.anim_type == ANIM_TYPE_TRANSFORM:
             keyframe_infos = []
             for i, value in enumerate(self.xp_dataref.values):
@@ -138,9 +125,6 @@ class IntermediateDatablock:
             for i in range(0, len(mesh_idxes), 3)
         ]
 
-        if self.datablock_info.parent_info.parent == "ROOT":
-            # We never make ROOT, so we be sneaky and never parent it either
-            self.datablock_info.parent_info = None
         ob = test_creation_helpers.create_datablock_mesh(self.datablock_info, "plane")
 
         # TODO: Change to "next mesh name"
@@ -158,7 +142,7 @@ class IntermediateDatablock:
                 )
                 uv_layer.data[idx].uv = vertices[idx].s, vertices[idx].t
         else:
-            logger.error("Mesh was not valid, check stdout for more")
+            logger.error("Mesh was not valid, check console for more")
 
         ob.data = me
         test_creation_helpers.set_material(ob, "Material")
@@ -208,9 +192,9 @@ class VTTable:
 
 
 @dataclass
-class _AnimBoneStackEntry:
+class _AnimIntermediateStackEntry:
     animation: IntermediateAnimation
-    inter_datablock: Optional[IntermediateDatablock]
+    intermediate_datablock: Optional[IntermediateDatablock]
 
 
 class ImpCommandBuilder:
@@ -226,7 +210,9 @@ class ImpCommandBuilder:
         # Although we don't end up making this, it is useful for tree problems
         self.root_intermediate_datablock = IntermediateDatablock(
             datablock_info=DatablockInfo(
-                datablock_type="EMPTY", name="ROOT", collection=self.root_collection
+                datablock_type="EMPTY",
+                name="INTER_ROOT",
+                collection=self.root_collection,
             ),
             start_idx=None,
             count=None,
@@ -251,19 +237,25 @@ class ImpCommandBuilder:
         """
 
         def make_empty_as_needed() -> None:
+            # We need to make an emergency
+            # - When we have JUST handled an ANIM_begin
+            # - And we have encountered at least 1 one Dataref
+            # - And that Dataref has no associated datablock
             if (
-                self._anim_intermediate_stack
+                self._anim_count[-1] == 0
+                and self._anim_intermediate_stack
                 and not self._current_intermediate_datablock
             ):
+                if len(self._anim_intermediate_stack) == 1:
+                    parent_info = self.root_intermediate_datablock
+                elif len(self._anim_intermediate_stack) >= 2:
+                    parent_info = self._anim_intermediate_stack[-1].inter_datablock
+
                 empt = IntermediateDatablock(
                     datablock_info=DatablockInfo(
                         "EMPTY",
-                        "next_empty_name",  # self._next_empty_name(),
-                        ParentInfo(
-                            self._current_intermediate_datablock.datablock_info.name
-                            if self._current_intermediate_datablock
-                            else self.root_intermediate_datablock.datablock_info.name
-                        ),
+                        self._next_empty_name(),
+                        ParentInfo(parent_info.datablock_info.name),
                         self.root_collection,
                     ),
                     start_idx=None,
@@ -285,13 +277,16 @@ class ImpCommandBuilder:
             count = args[1]
             # Only when we have an animation stack and the top doesn't have an associated
             # intermediate_datablock do we do the pairing
-            should_apply_animation = (
-                self._current_animation and not self._current_intermediate_datablock
-            )
-            try:
-                parent = self._anim_intermediate_stack[-2].inter_datablock
-            except IndexError:
-                parent = self.root_intermediate_datablock
+            stack_size = len(self._anim_intermediate_stack)
+            current_block = self._current_intermediate_datablock
+            if stack_size == 0 or (stack_size == 1 and not current_block):
+                parent: IntermediateDatablock = self.root_intermediate_datablock
+            elif stack_size >= 1 and current_block:
+                parent: IntermediateDatablock = current_block
+            elif stack_size >= 2 and not current_block:
+                parent: IntermediateDatablock = self._anim_intermediate_stack[
+                    -2
+                ].inter_datablock
 
             inter_datablock = IntermediateDatablock(
                 datablock_info=DatablockInfo(
@@ -303,30 +298,31 @@ class ImpCommandBuilder:
                 ),
                 start_idx=start_idx,
                 count=count,
-                animations_to_apply=[self._current_animation]
-                if should_apply_animation
-                else [],
+                animations_to_apply=[],
             )
             self._blocks.append(inter_datablock)
 
-            if should_apply_animation:
+            should_change_current_datablock = (
+                self._current_animation and not self._current_intermediate_datablock
+            )
+            if should_change_current_datablock:
                 # This is triggered if this is the 1st TRIS block after the animations
                 self._current_intermediate_datablock = inter_datablock
+                self._current_intermediate_datablock.animations_to_apply.append(
+                    self._current_animation
+                )
 
         elif directive == "ANIM_begin":
-            # breakpoint()
             self._anim_count.append(0)
         elif directive == "ANIM_end":
-            # breakpoint()
             for i in range(self._anim_count.pop()):
                 self._anim_intermediate_stack.pop()
         elif directive == "ANIM_trans_begin":
-            # breakpoint()
             dataref_path = args[0]
 
             make_empty_as_needed()
             self._anim_intermediate_stack.append(
-                _AnimBoneStackEntry(IntermediateAnimation(), None)
+                _AnimIntermediateStackEntry(IntermediateAnimation(), None)
             )
             self._current_animation.xp_dataref = IntermediateDataref(
                 anim_type=ANIM_TYPE_TRANSFORM,
@@ -336,8 +332,6 @@ class ImpCommandBuilder:
                 show_hide_v2=0,
                 values=[],
             )
-            # Move this to the right place self._current_intermediate_datablock.animations_to_apply.append(self._current_animation)
-            # breakpoint()
             self._anim_count[-1] += 1
         elif directive == "ANIM_trans_key":
             value = args[0]
@@ -379,8 +373,7 @@ class ImpCommandBuilder:
             loop = args[0]
             self._current_dataref.loop = loop
         else:
-            # print("SKIPPING directive", directive)
-            pass
+            assert False, f"{directive} is not supported yet"
 
     def finalize_intermediate_blocks(self) -> Set[str]:
         """The last step after parsing, converting
@@ -389,14 +382,15 @@ class ImpCommandBuilder:
         Returns a set with FINISHED or CANCELLED, matching the returns of bpy
         operators
         """
-        # Since we're using root collections mode, our ROOT empty datablock isn't made
+        # Since we're using root collections mode, our INTER_ROOT empty datablock isn't made
         # and we pretend its a collection.
         for intermediate_block in self._blocks[1:]:
-            if intermediate_block.datablock_info.datablock_type == "EMPTY":
-                ob = test_creation_helpers.create_datablock_empty(
-                    intermediate_block.datablock_info
-                )
-            elif intermediate_block.datablock_info.datablock_type == "MESH":
+            db_info = intermediate_block.datablock_info
+            if db_info.parent_info.parent == "INTER_ROOT":
+                db_info.parent_info = None
+            if db_info.datablock_type == "EMPTY":
+                ob = test_creation_helpers.create_datablock_empty(db_info)
+            elif db_info.datablock_type == "MESH":
                 ob = intermediate_block.build_mesh(self.vt_table)
             for animation in intermediate_block.animations_to_apply:
                 animation.apply_animation(ob)
@@ -404,10 +398,10 @@ class ImpCommandBuilder:
         return {"FINISHED"}
 
     @property
-    def _current_animation(self) -> IntermediateAnimation:
+    def _current_animation(self) -> Optional[IntermediateAnimation]:
         try:
             return self._anim_intermediate_stack[-1].animation
-        except IndexError:  # stack of none
+        except IndexError:
             return None
 
     @_current_animation.setter
@@ -416,23 +410,26 @@ class ImpCommandBuilder:
 
     @property
     def _current_intermediate_datablock(self) -> Optional[IntermediateDatablock]:
-        return self._anim_intermediate_stack[-1].inter_datablock
+        try:
+            return self._anim_intermediate_stack[-1].inter_datablock
+        except IndexError:
+            return None
 
     @_current_intermediate_datablock.setter
     def _current_intermediate_datablock(self, value: IntermediateDatablock) -> None:
         self._anim_intermediate_stack[-1].inter_datablock = value
 
     @property
-    def _current_dataref(self) -> IntermediateDataref:
-        """The currenet dataref of the current animation"""
+    def _current_dataref(self) -> Optional[IntermediateDataref]:
+        """The current dataref of the current animation"""
         return self._current_animation.xp_dataref
 
     @_current_dataref.setter
-    def _current_dataref(self, value: IntermediateDataref):
+    def _current_dataref(self, value: IntermediateDataref) -> None:
         self._current_animation.xp_dataref = value
 
     def _next_object_name(self) -> str:
-        return f"Mesh.{sum(1 for block in self.blocks if block.datablock_info.datablock_type == 'MESH'):03}"
+        return f"Mesh.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'MESH'):03}"
 
     def _next_empty_name(self) -> str:
-        return f"Mesh.{sum(1 for block in self.blocks if block.datablock_info.datablock_type == 'EMPTY'):03}"
+        return f"Mesh.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'EMPTY'):03}"

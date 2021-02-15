@@ -141,11 +141,6 @@ class DatablockInfo:
 
             self.rotation = rotation
         self.scale = scale
-        self._children: Set[DatablockInfo] = {}
-
-    @property
-    def children(self) -> Set["DatablockInfo"]:
-        return self._children
 
 
 class KeyframeInfo:
