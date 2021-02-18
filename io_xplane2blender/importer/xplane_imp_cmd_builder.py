@@ -61,7 +61,9 @@ class IntermediateAnimation:
     rotations: Dict[Vector, List[float]] = field(
         default_factory=lambda: collections.defaultdict(list)
     )
-    xp_dataref: IntermediateDataref = IntermediateDataref()
+    xp_dataref: IntermediateDataref = field(
+        default_factory=lambda: IntermediateDataref()
+    )
 
     def apply_animation(self, bl_object: bpy.types.Object):
         def recompose_rotation(value_idx: int):
@@ -316,10 +318,12 @@ class ImpCommandBuilder:
         elif directive in {"ANIM_hide", "ANIM_show"}:
             v1, v2 = args[:2]
             dataref_path = args[2]
+            begin_new_frame()
             self._top_dataref.anim_type = directive.replace("ANIM_", "")
             self._top_dataref.path = dataref_path
             self._top_dataref.show_hide_v1 = v1
             self._top_dataref.show_hide_v2 = v2
+            self._anim_count[-1] += 1
         elif directive == "ANIM_rotate_begin":
             axis = args[0]
             dataref_path = args[1]
@@ -393,7 +397,6 @@ class ImpCommandBuilder:
 
     @property
     def _top_dataref(self) -> Optional[IntermediateDataref]:
-        """The currenet dataref of the current animation"""
         return self._top_animation.xp_dataref
 
     @_top_dataref.setter
