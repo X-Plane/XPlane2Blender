@@ -58,22 +58,32 @@ class IntermediateAnimation:
 
     locations: List[Vector] = field(default_factory=list)
     # A dictionary of rotations along each X,Y,Z axis, where key is "X", "Y", or "Z"
-    rotations: List[Vector] = field(default_factory=list)
+    rotations: Dict[Vector, List[float]] = field(
+        default_factory=lambda: collections.defaultdict(list)
+    )
     xp_dataref: IntermediateDataref = IntermediateDataref()
 
     def apply_animation(self, bl_object: bpy.types.Object):
+        def recompose_rotation(value_idx: int):
+            tot_rot = Vector((0, 0, 0))
+            for axis, degrees in self.rotations.items():
+                tot_rot += axis * degrees[value_idx]
+            return tot_rot
+
         current_frame = 1
         if self.xp_dataref.anim_type == ANIM_TYPE_TRANSFORM:
             keyframe_infos = []
-            for i, value in enumerate(self.xp_dataref.values):
+            for value_idx, value in enumerate(self.xp_dataref.values):
                 keyframe_infos.append(
                     test_creation_helpers.KeyframeInfo(
                         idx=current_frame,
                         dataref_path=self.xp_dataref.path,
                         dataref_value=value,
                         dataref_anim_type=self.xp_dataref.anim_type,
-                        location=self.locations[i] if self.locations else None,
-                        rotation=self.rotations[i] if self.rotations else None,
+                        location=self.locations[value_idx] if self.locations else None,
+                        rotation=recompose_rotation(value_idx)
+                        if self.rotations
+                        else None,
                     )
                 )
                 current_frame += 1
@@ -327,7 +337,7 @@ class ImpCommandBuilder:
         elif directive == "ANIM_rotate_key":
             value = args[0]
             degrees = args[1]
-            self._top_animation.rotations.append(self._last_axis * degrees)
+            self._top_animation.rotations[self._last_axis.freeze()].append(degrees)
             self._top_dataref.values.append(value)
         elif directive == "ANIM_rotate_end":
             self._last_axis = None
@@ -391,7 +401,7 @@ class ImpCommandBuilder:
         self._top_animation.xp_dataref = value
 
     def _next_object_name(self) -> str:
-        return f"ImpMesh.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'MESH'):03}"
+        return f"ImpMesh.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'MESH'):03}_{hex(hash(self.root_collection.name))[2:6]}"
 
     def _next_empty_name(self) -> str:
-        return f"ImpEmpty.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'EMPTY'):03}"
+        return f"ImpEmpty.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'EMPTY'):03}_{hex(hash(self.root_collection.name))[2:6]}"
