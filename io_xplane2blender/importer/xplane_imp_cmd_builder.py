@@ -348,6 +348,30 @@ class ImpCommandBuilder:
         elif directive == "ANIM_keyframe_loop":
             loop = args[0]
             self._top_dataref.loop = loop
+        elif directive == "ANIM_trans":
+            xyz1 = args[0]
+            xyz2 = args[1]
+            v1, v2 = args[2:4]
+            path = args[4]
+            begin_new_frame()
+            self._top_animation.locations.append(xyz1)
+            self._top_animation.locations.append(xyz2)
+            self._top_dataref.values.extend((v1, v2))
+            self._top_dataref.path = path
+
+        elif directive == "ANIM_rotate":
+            dxyz = args[0]
+            r1, r2 = args[1:3]
+            v1, v2 = args[3:5]
+            path = args[5]
+
+            begin_new_frame()
+            self._top_animation.rotations[dxyz.freeze()].append(r1)
+            self._top_animation.rotations[dxyz.freeze()].append(r2)
+            self._top_dataref.values.extend((v1, v2))
+            self._top_dataref.path = path
+            self._anim_count[-1] += 1
+
         else:
             assert False, f"{directive} is not supported yet"
 

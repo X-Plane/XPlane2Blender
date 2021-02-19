@@ -56,7 +56,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         # pprint(lines)
         pass
 
-    if lines[0:3] != ["I", "800", "OBJ"]:
+    if not (lines[0] in {"A", "I"} and lines[1:3] == ["800", "OBJ"]):
         logger.error(
             ".obj file must start with exactly the OBJ header. Check filetype and content"
         )
@@ -191,6 +191,32 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         elif directive == "ANIM_keyframe_loop":
             loop = float(components[0])
             builder.build_cmd(directive, loop)
+        elif directive == "ANIM_trans":
+            xyz1 = vec_x_to_b(list(map(float, components[:3])))
+            xyz2 = vec_x_to_b(list(map(float, components[3:6])))
+            v1, v2 = (0, 0)
+            path = ""
+
+            try:
+                v1 = float(components[5])
+                v2 = float(components[6])
+                path = components[7]
+            except IndexError:
+                pass
+            builder.build_cmd(directive, xyz1, xyz2, v1, v2, path)
+        elif directive == "ANIM_rotate":
+            dxyz = vec_x_to_b(list(map(float, components[:3])))
+            r1, r2 = map(float, components[3:5])
+            v1, v2 = (0, 0)
+            path = "none"
+
+            try:
+                v1 = float(components[5])
+                v2 = float(components[6])
+                path = components[7]
+            except IndexError:
+                pass
+            builder.build_cmd(directive, dxyz, r1, r2, v1, v2, path)
         else:
             # print("SKIPPING directive", directive)
             pass

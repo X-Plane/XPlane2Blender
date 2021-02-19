@@ -1,0 +1,23 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1
+VT	1	0	-1	-0	-1	-0	0.625	0.75
+VT	-1	0	1	-0	-1	-0	0.375	1
+
+IDX	0
+IDX	1
+IDX	2
+
+ANIM_begin
+	ATTR_shiny_rat	0.5
+    ANIM_trans 0 0 0    10 10 10
+    ANIM_rotate 0 1 0    15 90
+	TRIS	0 3
+ANIM_end
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+101.NO_BUILD_NUMBR
