@@ -11,7 +11,18 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from pprint import pprint
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import bmesh
 import bpy
@@ -115,21 +126,33 @@ class IntermediateDatablock:
     animations_to_apply: List[IntermediateAnimation]
 
     def build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
-        start_idx = self.start_idx
-        count = self.count
-        mesh_idxes = vt_table.idxes[start_idx : start_idx + count]
-        vertices = vt_table.vertices[start_idx : start_idx + count]
-        # We reverse the faces to reverse the winding order
+        mesh_idxes = vt_table.idxes[self.start_idx : self.start_idx + self.count]
+        idx_mapping: Dict[int, int] = {}
+        vertices: List[VT] = []
+
+        for mesh_idx in mesh_idxes:
+            if mesh_idx not in idx_mapping:
+                idx_mapping[mesh_idx] = len(idx_mapping)
+                vertices.append(vt_table.vertices[mesh_idx])
+
+        # Thanks senderle, https://stackoverflow.com/a/22045226
+        def chunk(it, size):
+            it = iter(it)
+            return iter(lambda: tuple(itertools.islice(it, size)), ())
+
         faces: List[Tuple[int, int, int]] = [
-            tuple(map(lambda i: i - start_idx, mesh_idxes[i : i + 3][::-1]))
-            for i in range(0, len(mesh_idxes), 3)
+            # We reverse the winding order to reverse the faces
+            [idx_mapping[idx] for idx in face][::-1]
+            for i, face in enumerate(chunk(mesh_idxes, 3))
         ]
 
-        ob = test_creation_helpers.create_datablock_mesh(self.datablock_info, "plane")
-
-        # TODO: Change to "next mesh name"
-        me = bpy.data.meshes.new(f"Mesh.{len(bpy.data.meshes):03}")
-        me.from_pydata([(v.x, v.y, v.z) for v in vertices], [], faces)
+        ob = test_creation_helpers.create_datablock_mesh(
+            self.datablock_info,
+            mesh_src=test_creation_helpers.From_PyData(
+                [(v.x, v.y, v.z) for v in vertices], [], faces
+            ),
+        )
+        me = ob.data
         me.update(calc_edges=True)
         uv_layer = me.uv_layers.new()
 
@@ -144,7 +167,6 @@ class IntermediateDatablock:
         else:
             logger.error("Mesh was not valid, check console for more")
 
-        ob.data = me
         test_creation_helpers.set_material(ob, "Material")
         return ob
 
@@ -427,8 +449,8 @@ class ImpCommandBuilder:
     def _top_dataref(self, value: IntermediateDataref) -> None:
         self._top_animation.xp_dataref = value
 
-    def _next_object_name(self) -> str:
-        return f"ImpMesh.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'MESH'):03}_{hex(hash(self.root_collection.name))[2:6]}"
-
     def _next_empty_name(self) -> str:
         return f"ImpEmpty.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'EMPTY'):03}_{hex(hash(self.root_collection.name))[2:6]}"
+
+    def _next_object_name(self) -> str:
+        return f"ImpMesh.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'MESH'):03}_{hex(hash(self.root_collection.name))[2:6]}"

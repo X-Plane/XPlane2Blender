@@ -17,6 +17,7 @@ import os.path
 import shutil
 import typing
 from collections import namedtuple
+from dataclasses import dataclass
 from typing import *
 
 import bpy
@@ -427,16 +428,16 @@ def create_datablock_empty(
     return ob
 
 
-From_Pydata = Tuple[
-    List[Tuple[float, float, float]],  # vertices
-    List[Tuple[int, int]],  # edges
-    List[Tuple[int, int, int]],  # faces
-]
+@dataclass
+class From_PyData:
+    vertices: List[Tuple[float, float, float]]
+    edges: List[Tuple[int, int]]
+    faces: List[Tuple[int, int, int]]
 
 
 def create_datablock_mesh(
     info: DatablockInfo,
-    mesh_src: Union[str, bpy.types.Mesh, From_Pydata] = "cube",
+    mesh_src: Union[str, bpy.types.Mesh, From_PyData] = "cube",
     material_name: Union[bpy.types.Material, str] = "Material",
     scene: Optional[Union[bpy.types.Scene, str]] = None,
 ) -> bpy.types.Object:
@@ -477,7 +478,7 @@ def create_datablock_mesh(
     elif isinstance(mesh_src, str) and mesh_src in bpy.data.meshes:
         me = bpy.data.meshes[mesh_src]
         ob = create_object(info.name, me)
-    elif mesh_src in {"eq-tri", "tri"} or isinstance(mesh_src, list):
+    elif isinstance(mesh_src, From_PyData) or mesh_src == "eq-tri" or mesh_src == "tri":
         me = bpy.data.meshes.new(f"Mesh.{len(bpy.data.meshes)}:03")
         if mesh_src == "tri":
             verts = [(1.0, -1.0, 0.0), (1.0, 1.0, 0.0), (-1.0, -1.0, 0.0)]
@@ -498,7 +499,7 @@ def create_datablock_mesh(
                 [(2, 1, 0)],
             ]
         else:
-            from_data = mesh_src
+            from_data = (mesh_src.vertices, mesh_src.edges, mesh_src.faces)
 
         me.from_pydata(from_data[0], from_data[1], from_data[2])
         me.validate()
@@ -525,6 +526,7 @@ def create_datablock_mesh(
         else:
             op(enter_editmode=False, location=info.location, rotation=info.rotation)
             ob = bpy.context.object
+
     set_collection(ob, info.collection, unlink_others=True)
     ob.name = info.name if info.name is not None else ob.name
     if info.parent_info:
