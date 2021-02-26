@@ -279,6 +279,7 @@ class ImpCommandBuilder:
             self._anim_intermediate_stack.append(
                 _AnimIntermediateStackEntry(IntermediateAnimation(), empt)
             )
+            self._anim_count[-1] += 1
             empt.animations_to_apply.append(self._top_animation)
 
         if directive == "VT":
@@ -329,7 +330,6 @@ class ImpCommandBuilder:
                 show_hide_v2=0,
                 values=[],
             )
-            self._anim_count[-1] += 1
         elif directive == "ANIM_trans_key":
             value = args[0]
             location = args[1]
@@ -345,7 +345,6 @@ class ImpCommandBuilder:
             self._top_dataref.path = dataref_path
             self._top_dataref.show_hide_v1 = v1
             self._top_dataref.show_hide_v2 = v2
-            self._anim_count[-1] += 1
         elif directive == "ANIM_rotate_begin":
             axis = args[0]
             dataref_path = args[1]
@@ -359,7 +358,6 @@ class ImpCommandBuilder:
                 show_hide_v2=0,
                 values=[],
             )
-            self._anim_count[-1] += 1
         elif directive == "ANIM_rotate_key":
             value = args[0]
             degrees = args[1]
@@ -392,7 +390,6 @@ class ImpCommandBuilder:
             self._top_animation.rotations[dxyz.freeze()].append(r2)
             self._top_dataref.values.extend((v1, v2))
             self._top_dataref.path = path
-            self._anim_count[-1] += 1
 
         else:
             assert False, f"{directive} is not supported yet"

@@ -195,13 +195,13 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             xyz1 = vec_x_to_b(list(map(float, components[:3])))
             xyz2 = vec_x_to_b(list(map(float, components[3:6])))
             v1, v2 = (0, 0)
-            path = ""
+            path = "none"
 
             try:
-                v1 = float(components[5])
-                v2 = float(components[6])
-                path = components[7]
-            except IndexError:
+                v1 = float(components[6])
+                v2 = float(components[7])
+                path = components[8]
+            except IndexError as e:
                 pass
             builder.build_cmd(directive, xyz1, xyz2, v1, v2, path)
         elif directive == "ANIM_rotate":
@@ -218,7 +218,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
                 pass
             builder.build_cmd(directive, dxyz, r1, r2, v1, v2, path)
         else:
-            # print("SKIPPING directive", directive)
+            # print(f"{directive} is not implemted yet")
             pass
 
     builder.finalize_intermediate_blocks()
