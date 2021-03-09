@@ -7,14 +7,17 @@ import collections
 import itertools
 import math
 import pathlib
+import random
 import re
 from dataclasses import dataclass, field
+from itertools import islice, tee
 from pathlib import Path
 from pprint import pprint
 from typing import (
     Any,
     Callable,
     Dict,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -59,6 +62,18 @@ class IntermediateDataref:
     show_hide_v2: float = 0
     values: List[float] = field(default_factory=list)
 
+    def __hash__(self):
+        return hash(
+            (
+                self.anim_type,
+                self.loop,
+                self.path,
+                self.show_hide_v1,
+                self.show_hide_v2,
+                tuple(self.values),
+            )
+        )
+
 
 @dataclass
 class IntermediateAnimation:
@@ -68,7 +83,7 @@ class IntermediateAnimation:
     """
 
     locations: List[Vector] = field(default_factory=list)
-    # A dictionary of rotations along each X,Y,Z axis, where key is "X", "Y", or "Z"
+    # A dictionary of rotations along an axis (usually X, Y, Z), and their degrees
     rotations: Dict[Vector, List[float]] = field(
         default_factory=lambda: collections.defaultdict(list)
     )
@@ -403,14 +418,109 @@ class ImpCommandBuilder:
         """
         # Since we're using root collections mode, our INTER_ROOT empty datablock isn't made
         # and we pretend its a collection.
-        for intermediate_block in self._blocks[1:]:
+        blocks_itr = iter(self._blocks[1:])
+        while True:
+            try:
+                intermediate_block = next(blocks_itr)
+            except StopIteration:
+                break
+
             db_info = intermediate_block.datablock_info
-            if db_info.parent_info.parent == "INTER_ROOT":
+            if db_info.parent_info and db_info.parent_info.parent == "INTER_ROOT":
                 db_info.parent_info = None
             if db_info.datablock_type == "EMPTY":
-                ob = test_creation_helpers.create_datablock_empty(db_info)
+                intermediate_name = db_info.name
+                intermediate_block_type = (
+                    intermediate_block.datablock_info.datablock_type
+                )
+                # Remember, we only make empties to store animations so no try needed here
+                intermediate_animation = intermediate_block.animations_to_apply[0]
+                intermediate_dataref = intermediate_animation.xp_dataref
+
+                def optimize_empty_chain(
+                    db_info: DatablockInfo, blocks_itr: Iterator[IntermediateDatablock]
+                ) -> IntermediateDatablock:
+                    """
+                    Optimizes chains of empties into one empty for test_creation_helpers to use.
+
+                    Current optimizations
+                    - For the same dataref path and values, 3 orthogonal axis in a row are merged
+                    - Duplicate location lists, rotations, and show/hides overwrite previous values
+                    - Sequential ANIM_show/hides are merged
+                    - TRIS take animations from parent empties, reducing parents
+
+                    Arbitrary rotation axis are not supported (anywhere), locations and rotations even for the same dataref path and values are not skipped
+                    """
+                    while True:
+                        peek_next_block, blocks_itr = tee(blocks_itr)
+                        try:
+                            next_block = next(peek_next_block)
+                        except StopIteration:
+                            # No next block, nothing to accumulate
+                            break
+                        else:
+                            next_name = next_block.datablock_info.name
+                            next_block_type = next_block.datablock_info.datablock_type
+                            try:
+                                next_animation = next_block.animations_to_apply[0]
+                                next_dataref = next_animation.xp_dataref
+                            except IndexError:  # next_block has no animations, must not be EMPTY
+                                next_block.animations_to_apply = (
+                                    intermediate_block.animations_to_apply
+                                )
+                                next_block.datablock_info.parent_info = (
+                                    intermediate_block.datablock_info.parent_info
+                                )
+                                return next_block
+                            else:
+                                assert {intermediate_block_type, next_block_type} == {
+                                    "EMPTY"
+                                }, f"{intermediate_name}'s and {next_name}'s type are {intermediate_block_type, next_block_type}, should be 'EMPTY'"
+                                if intermediate_dataref == next_dataref:
+                                    if next_animation.locations:
+                                        logger.warn(
+                                            f"{intermediate_name} and {next_name} have different locations for the same dataref value range. Overwriting"
+                                        )
+                                        intermediate_animation.locations = (
+                                            next_animation.locations
+                                        )
+                                    elif next_animation.rotations:
+                                        if (
+                                            intermediate_animation.rotations.keys()
+                                            & next_animation.rotations.keys()
+                                        ):
+                                            logger.warn(
+                                                f"{intermediate_name} and {next_name} have overlapping axis for the same dataref range. Using {next_name}'s values"
+                                            )
+                                        intermediate_animation.rotations.update(
+                                            next_animation.rotations
+                                        )
+                                    else:
+                                        logger.warn(
+                                            f"{intermediate_name} and {next_name} have duplicate show/hide animations, skipping block"
+                                        )
+                                elif all(
+                                    dref.anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}
+                                    for dref in [intermediate_dataref, next_dataref]
+                                ):
+                                    intermediate_block.animations_to_apply.append(
+                                        next_animation
+                                    )
+
+                                blocks_itr = peek_next_block
+
+                    return intermediate_block
+
+                block = optimize_empty_chain(db_info, blocks_itr)
+                if block.datablock_info.datablock_type == "EMPTY":
+                    ob = test_creation_helpers.create_datablock_empty(
+                        block.datablock_info
+                    )
+                elif block.datablock_info.datablock_type == "MESH":
+                    ob = block.build_mesh(self.vt_table)
             elif db_info.datablock_type == "MESH":
                 ob = intermediate_block.build_mesh(self.vt_table)
+
             for animation in intermediate_block.animations_to_apply:
                 animation.apply_animation(ob)
         bpy.context.scene.frame_current = 1
@@ -447,7 +557,17 @@ class ImpCommandBuilder:
         self._top_animation.xp_dataref = value
 
     def _next_empty_name(self) -> str:
-        return f"ImpEmpty.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'EMPTY'):03}_{hex(hash(self.root_collection.name))[2:6]}"
+        return (
+            f"ImpEmpty."
+            f"{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'EMPTY'):03}"
+            f"_{hex(hash(self.root_collection.name))[2:6]}"
+            f"_{random.randint(0,100000)}"
+        )
 
     def _next_object_name(self) -> str:
-        return f"ImpMesh.{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'MESH'):03}_{hex(hash(self.root_collection.name))[2:6]}"
+        return (
+            f"ImpMesh."
+            f"{sum(1 for block in self._blocks if block.datablock_info.datablock_type == 'MESH'):03}"
+            f"_{hex(hash(self.root_collection.name))[2:6]}"
+            f"_{random.randint(0,100000)}"
+        )
