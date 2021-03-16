@@ -118,7 +118,8 @@ class DatablockInfo:
         self.parent_info = parent_info
         self.location = location
         self.rotation_mode = rotation_mode
-        if rotation is None:
+        self.rotation = rotation
+        if self.rotation is None:
             if self.rotation_mode == "AXIS_ANGLE":
                 self.rotation = (0.0, Vector((0, 0, 0, 0)))
             elif self.rotation_mode == "QUATERNION":
@@ -134,13 +135,12 @@ class DatablockInfo:
             elif self.rotation_mode == "QUATERNION":
                 assert len(self.rotation) == 4
                 self.rotation_quaternion = rotation
-            elif set(self.rotation_mode) == {"x", "y", "z"}:
+            elif set(self.rotation_mode) == {"X", "Y", "Z"}:
                 assert len(self.rotation) == 3
                 self.rotation_euler = rotation
             else:
                 assert False, "Unsupported rotation mode: " + self.rotation_mode
 
-            self.rotation = rotation
         self.scale = scale
 
 

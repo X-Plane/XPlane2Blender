@@ -58,7 +58,8 @@ BUILD_NUMBER_NONE = "NO_BUILD_NUMBR"
 DEPRECATED_XP2B_VER = "DEPRECATED"
 
 # Used in determining whether the difference between values
-# is large enough to warrent emitting an animation
+# is large enough to warrant emitting an animation
+# or an animation is worth caring about.
 PRECISION_KEYFRAME = 5
 
 # Level of rounding before a float is written
