@@ -16,6 +16,7 @@ from pprint import pprint
 from typing import (
     Any,
     Callable,
+    Deque,
     Dict,
     Iterator,
     List,
@@ -29,7 +30,7 @@ from typing import (
 
 import bmesh
 import bpy
-from mathutils import Euler, Vector
+from mathutils import Euler, Matrix, Quaternion, Vector
 
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.tests.test_creation_helpers import DatablockInfo, ParentInfo
@@ -37,11 +38,13 @@ from io_xplane2blender.xplane_constants import (
     ANIM_TYPE_HIDE,
     ANIM_TYPE_SHOW,
     ANIM_TYPE_TRANSFORM,
+    PRECISION_KEYFRAME,
 )
 from io_xplane2blender.xplane_helpers import (
     ExportableRoot,
     floatToStr,
     logger,
+    round_vec,
     vec_b_to_x,
     vec_x_to_b,
 )
@@ -139,6 +142,7 @@ class IntermediateDatablock:
     # At the start of each IntermediateDatablock's life, this is 0 or 1.
     # During finalization of the tree, they are combined.
     animations_to_apply: List[IntermediateAnimation]
+    bake_matrix: Matrix
 
     def build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
         mesh_idxes = vt_table.idxes[self.start_idx : self.start_idx + self.count]
@@ -155,7 +159,14 @@ class IntermediateDatablock:
             it = iter(it)
             return iter(lambda: tuple(itertools.islice(it, size)), ())
 
-        faces: List[Tuple[int, int, int]] = [
+        from pprint import pprint
+
+        py_vertices = [
+            (self.bake_matrix @ Matrix.Translation(Vector((v.x, v.y, v.z)))).translation
+            for v in vertices
+        ]
+        # pprint(py_vertices)
+        py_faces: List[Tuple[int, int, int]] = [
             # We reverse the winding order to reverse the faces
             [idx_mapping[idx] for idx in face][::-1]
             for i, face in enumerate(chunk(mesh_idxes, 3))
@@ -164,7 +175,9 @@ class IntermediateDatablock:
         ob = test_creation_helpers.create_datablock_mesh(
             self.datablock_info,
             mesh_src=test_creation_helpers.From_PyData(
-                [(v.x, v.y, v.z) for v in vertices], [], faces
+                py_vertices,
+                [],
+                py_faces,
             ),
         )
         me = ob.data
@@ -253,14 +266,18 @@ class ImpCommandBuilder:
             start_idx=None,
             count=None,
             animations_to_apply=[],
+            bake_matrix=Matrix.Identity(4),
         )
 
         # --- Animation Builder States ----------------------------------------
         # Instead of build at seperate parent/child relationship in Datablock info, we just save everything we make here
         self._blocks: List[IntermediateDatablock] = [self.root_intermediate_datablock]
         self._last_axis: Optional[Vector] = None
-        self._anim_intermediate_stack = collections.deque()
+        self._anim_intermediate_stack: Deque[
+            _AnimIntermediateStackEntry
+        ] = collections.deque()
         self._anim_count: Sequence[int] = collections.deque()
+        self._bake_matrix_stack: Deque[Matrix] = collections.deque((Matrix(),))
         # ---------------------------------------------------------------------
 
     def build_cmd(
@@ -325,14 +342,17 @@ class ImpCommandBuilder:
                 start_idx=start_idx,
                 count=count,
                 animations_to_apply=[],
+                bake_matrix=self._bake_matrix_stack[-1].copy(),
             )
             self._blocks.append(intermediate_datablock)
 
         elif directive == "ANIM_begin":
             self._anim_count.append(0)
+            self._bake_matrix_stack.append(self._bake_matrix_stack[-1].copy())
         elif directive == "ANIM_end":
             for i in range(self._anim_count.pop()):
                 self._anim_intermediate_stack.pop()
+            self._bake_matrix_stack.pop()
         elif directive == "ANIM_trans_begin":
             dataref_path = args[0]
 
@@ -384,15 +404,45 @@ class ImpCommandBuilder:
             loop = args[0]
             self._top_dataref.loop = loop
         elif directive == "ANIM_trans":
-            xyz1 = args[0]
-            xyz2 = args[1]
+            xyz1, xyz2 = args[0:2]
             v1, v2 = args[2:4]
             path = args[4]
-            begin_new_frame()
-            self._top_animation.locations.append(xyz1)
-            self._top_animation.locations.append(xyz2)
-            self._top_dataref.values.extend((v1, v2))
-            self._top_dataref.path = path
+            r_xyz1, r_xyz2 = (
+                round_vec(xyz, PRECISION_KEYFRAME) for xyz in [xyz1, xyz2]
+            )
+            r_v1, r_v2 = (round(v, PRECISION_KEYFRAME) for v in [v1, v2])
+
+            def add_as_dynamic():
+                begin_new_frame()
+                self._top_animation.locations.append(xyz1)
+                self._top_animation.locations.append(xyz2)
+                self._top_dataref.values.extend((v1, v2))
+                self._top_dataref.path = path
+
+            if r_xyz1 == r_xyz2 and r_v1 == r_v2:
+                print("trans, case A")
+                self._bake_matrix_stack[-1] = self._bake_matrix_stack[
+                    -1
+                ] @ Matrix.Translation(xyz1)
+            elif r_xyz1 == r_xyz2 and r_v1 != r_v2:
+                print("trans, case B")
+                add_as_dynamic()
+            elif r_xyz1 != r_xyz2 and r_v1 == r_v2:
+                print("trans, case C")
+                add_as_dynamic()
+                # TODO: make warning
+                line = "bleh"
+                logger.warn(
+                    f"ANIM_trans"
+                    f"    {c for c in xyz1}"
+                    f"    {c for c in xyz2}"
+                    f"    {v1} {v2} {path}`"
+                    f"on line {line} has different locations but the same dataref values - it is malformed."
+                    f"Fix {self._anim_intermediate_stack[-1].intermediate_datablock}"
+                )
+            elif r_xyz1 != r_xyz2 and r_v1 != r_v2:
+                print("trans, case D")
+                add_as_dynamic()
 
         elif directive == "ANIM_rotate":
             dxyz = args[0]
@@ -400,12 +450,47 @@ class ImpCommandBuilder:
             v1, v2 = args[3:5]
             path = args[5]
 
-            begin_new_frame()
-            self._top_animation.rotations[dxyz.freeze()].append(r1)
-            self._top_animation.rotations[dxyz.freeze()].append(r2)
-            self._top_dataref.values.extend((v1, v2))
-            self._top_dataref.path = path
+            r_r1, r_r2 = (round(r, PRECISION_KEYFRAME) for r in [r1, r2])
+            r_v1, r_v2 = (round(v, PRECISION_KEYFRAME) for v in [v1, v2])
 
+            def add_as_dynamic():
+                begin_new_frame()
+                self._top_animation.rotations[dxyz.freeze()].append(r1)
+                self._top_animation.rotations[dxyz.freeze()].append(r2)
+                self._top_dataref.values.extend((v1, v2))
+                self._top_dataref.path = path
+
+            if r_r1 == r_r2 and r_v1 == r_v2:
+                print("rot case A")
+                self._bake_matrix_stack[-1] = (
+                    self._bake_matrix_stack[-1]
+                    @ Quaternion(dxyz, math.radians(r1)).to_matrix().to_4x4()
+                )
+                print(
+                    "to euler in ANIM_rotate",
+                    [math.degrees(c) for c in self._bake_matrix_stack[-1].to_euler()],
+                )
+                # breakpoint()
+            elif r_r1 == r_r2 and r_v1 != r_v2:
+                print("rot case B")
+                add_as_dynamic()
+            elif r_r1 != r_r2 and r_v1 == r_v2:
+                print("rot case C")
+                add_as_dynamic()
+                # TODO: make warning
+                line = "bleh"
+                logger.warn(
+                    f"ANIM_rotate"
+                    f"    {Vector(c for c in dxyz)}"
+                    f"    {r1} {r2}"
+                    f"    {v1} {v2}"
+                    f"    {path}"
+                    f"\nnon line {line} has different rotation but the same dataref values - it is malformed."
+                    f"Fix {self._anim_intermediate_stack[-1].intermediate_datablock}"
+                )
+            elif r_r1 != r_r2 and r_v1 != r_v2:
+                print("rot case D")
+                add_as_dynamic()
         else:
             assert False, f"{directive} is not supported yet"
 
@@ -507,11 +592,22 @@ class ImpCommandBuilder:
                                         next_animation
                                     )
 
+                                try:
+                                    next_next_block = next(tee(peek_next_block)[0])
+                                except StopIteration:
+                                    pass
+                                else:
+                                    next_next_block.datablock_info.parent_info = (
+                                        next_block.datablock_info.parent_info
+                                    )
+                                    next(peek_next_block, None)
+
                                 blocks_itr = peek_next_block
 
                     return intermediate_block
 
                 block = optimize_empty_chain(db_info, blocks_itr)
+
                 if block.datablock_info.datablock_type == "EMPTY":
                     ob = test_creation_helpers.create_datablock_empty(
                         block.datablock_info
