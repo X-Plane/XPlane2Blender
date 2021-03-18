@@ -27,7 +27,7 @@ relationships, it cannot be assumed that the XPlaneBone Tree and Blender Hierarc
 """
 
 import math
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import bpy
 import mathutils
@@ -99,9 +99,7 @@ class XPlaneBone:
             self.parent.children.append(self)
 
         # dict - The keys are the dataref paths and the values are lists of <XPlaneKeyframeCollection>.
-        self.animations = (
-            {}
-        )  # type: Dict[bpy.types.StringProperty,XPlaneKeyframeCollection]
+        self.animations: Dict[str, XPlaneKeyframeCollection] = {}
 
         # IMPORTANT NOTE: Show/Hide Datarefs and datarefs without 2 keyframes will not be included and
         # must be accessed via blenderObject.xplane.datarefs!

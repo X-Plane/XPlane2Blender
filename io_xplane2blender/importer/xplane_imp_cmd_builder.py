@@ -4,6 +4,7 @@ Statefully builds OBJ commands, including animations and materials.
 Takes in OBJ directives and their parameters and outputs at the end Blender datablocks
 """
 import collections
+import copy
 import itertools
 import math
 import pathlib
@@ -503,8 +504,9 @@ class ImpCommandBuilder:
         """
         # Since we're using root collections mode, our INTER_ROOT empty datablock isn't made
         # and we pretend its a collection.
-        blocks_itr = iter(self._blocks[1:])
+        remaining_blocks = collections.deque(self._blocks[1:])
         while True:
+            blocks_itr = iter(remaining_blocks)
             try:
                 intermediate_block = next(blocks_itr)
             except StopIteration:
@@ -523,8 +525,9 @@ class ImpCommandBuilder:
                 intermediate_dataref = intermediate_animation.xp_dataref
 
                 def optimize_empty_chain(
-                    db_info: DatablockInfo, blocks_itr: Iterator[IntermediateDatablock]
-                ) -> IntermediateDatablock:
+                    db_info: DatablockInfo,
+                    searching_itr: Iterator[IntermediateDatablock],
+                ) -> Tuple[IntermediateDatablock, Iterator[IntermediateDatablock]]:
                     """
                     Optimizes chains of empties into one empty for test_creation_helpers to use.
 
@@ -537,7 +540,7 @@ class ImpCommandBuilder:
                     Arbitrary rotation axis are not supported (anywhere), locations and rotations even for the same dataref path and values are not skipped
                     """
                     while True:
-                        peek_next_block, blocks_itr = tee(blocks_itr)
+                        peek_next_block = copy.copy(searching_itr)
                         try:
                             next_block = next(peek_next_block)
                         except StopIteration:
@@ -546,6 +549,16 @@ class ImpCommandBuilder:
                         else:
                             next_name = next_block.datablock_info.name
                             next_block_type = next_block.datablock_info.datablock_type
+                            try:
+                                next_block_parent = (
+                                    next_block.datablock_info.parent_info.parent
+                                )
+                                assert (
+                                    next_block_parent
+                                    == intermediate_block.datablock_info.name
+                                ), f"next block {next_name}'s parent is not the intermediate {next_block_parent} != {intermediate_block.datablock_info.name}"
+                            except AttributeError:
+                                next_block_parent = None
                             try:
                                 next_animation = next_block.animations_to_apply[0]
                                 next_dataref = next_animation.xp_dataref
@@ -556,7 +569,22 @@ class ImpCommandBuilder:
                                 next_block.datablock_info.parent_info = (
                                     intermediate_block.datablock_info.parent_info
                                 )
-                                return next_block
+
+                                # With intermediate_block being made irrelavent, adjust all former parentage to next_block
+                                for other_block in remaining_blocks:
+                                    if (
+                                        getattr(
+                                            other_block.datablock_info.parent_info,
+                                            "parent",
+                                            None,
+                                        )
+                                        == intermediate_name
+                                    ):
+                                        other_block.datablock_info.parent_info.parent = (
+                                            next_name
+                                        )
+
+                                return next_block, list(peek_next_block)
                             else:
                                 assert {intermediate_block_type, next_block_type} == {
                                     "EMPTY"
@@ -566,9 +594,10 @@ class ImpCommandBuilder:
                                         logger.warn(
                                             f"{intermediate_name} and {next_name} have different locations for the same dataref value range. Overwriting"
                                         )
-                                        intermediate_animation.locations = (
+                                        intermediate_animation.locations.append(
                                             next_animation.locations
                                         )
+                                    # TODO: Change to if to combine locations and all rotations!
                                     elif next_animation.rotations:
                                         if (
                                             intermediate_animation.rotations.keys()
@@ -592,22 +621,24 @@ class ImpCommandBuilder:
                                         next_animation
                                     )
 
-                                try:
-                                    next_next_block = next(tee(peek_next_block)[0])
-                                except StopIteration:
-                                    pass
-                                else:
-                                    next_next_block.datablock_info.parent_info = (
-                                        next_block.datablock_info.parent_info
+                                # With next_block being made irrelavent, adjust the parantage of any
+                                # future blocks to be next_block's parent
+                                for future_block in copy.copy(peek_next_block):
+                                    future_parent = getattr(
+                                        future_block.datablock_info.parent_info,
+                                        "parent",
+                                        None,
                                     )
-                                    next(peek_next_block, None)
+                                    if future_parent == next_name:
+                                        future_block.datablock_info.parent_info = (
+                                            next_block.datablock_info.parent_info
+                                        )
 
-                                blocks_itr = peek_next_block
+                                searching_itr = peek_next_block
 
-                    return intermediate_block
+                    return (intermediate_block, list(searching_itr))
 
-                block = optimize_empty_chain(db_info, blocks_itr)
-
+                block, remaining_blocks = optimize_empty_chain(db_info, blocks_itr)
                 if block.datablock_info.datablock_type == "EMPTY":
                     ob = test_creation_helpers.create_datablock_empty(
                         block.datablock_info
@@ -615,6 +646,7 @@ class ImpCommandBuilder:
                 elif block.datablock_info.datablock_type == "MESH":
                     ob = block.build_mesh(self.vt_table)
             elif db_info.datablock_type == "MESH":
+                remaining_blocks = list(blocks_itr)
                 ob = intermediate_block.build_mesh(self.vt_table)
 
             for animation in intermediate_block.animations_to_apply:
