@@ -197,12 +197,12 @@ def round_vec(v: mathutils.Vector, ndigits: int) -> mathutils.Vector:
 
 
 def vec_b_to_x(v) -> mathutils.Vector:
-    """Converts Vector from Blender co-ords (X, Y, Z) to X-Plane (X, Z, -Y)"""
+    """Converts Vector from Blender co-ords (X, Y, Z) to X-Plane as (X, Z, -Y)"""
     return mathutils.Vector((v[0], v[2], -v[1]))
 
 
 def vec_x_to_b(v) -> mathutils.Vector:
-    """Converts Vector from X-Plane co-ords (X, -Z, Y) to Blender (X, Y, Z)"""
+    """Converts Vector from X-Plane co-ords (X, Y, Z) to Blender as (X, -Z, Y)"""
     return mathutils.Vector((v[0], -v[2], v[1]))
 
 
