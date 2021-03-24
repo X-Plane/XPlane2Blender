@@ -529,6 +529,8 @@ def create_datablock_mesh(
 
     set_collection(ob, info.collection, unlink_others=True)
     ob.name = info.name if info.name is not None else ob.name
+    ob.location = info.location
+    set_rotation(ob, info.rotation, info.rotation_mode)
     if info.parent_info:
         set_parent(ob, info.parent_info)
     set_material(ob, material_name)

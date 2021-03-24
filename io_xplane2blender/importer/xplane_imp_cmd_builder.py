@@ -112,7 +112,9 @@ class IntermediateAnimation:
                         dataref_path=self.xp_dataref.path,
                         dataref_value=value,
                         dataref_anim_type=self.xp_dataref.anim_type,
-                        location=self.locations[value_idx] if self.locations else None,
+                        location=self.locations[value_idx] + bl_object.location
+                        if self.locations
+                        else None,
                         rotation=recompose_rotation(value_idx)
                         if self.rotations
                         else None,
@@ -160,13 +162,7 @@ class IntermediateDatablock:
             it = iter(it)
             return iter(lambda: tuple(itertools.islice(it, size)), ())
 
-        from pprint import pprint
-
-        py_vertices = [
-            (self.bake_matrix @ Matrix.Translation(Vector((v.x, v.y, v.z)))).translation
-            for v in vertices
-        ]
-        # pprint(py_vertices)
+        py_vertices = [(v.x, v.y, v.z) for v in vertices]
         py_faces: List[Tuple[int, int, int]] = [
             # We reverse the winding order to reverse the faces
             [idx_mapping[idx] for idx in face][::-1]
@@ -299,13 +295,16 @@ class ImpCommandBuilder:
             empt = IntermediateDatablock(
                 datablock_info=DatablockInfo(
                     "EMPTY",
-                    self._next_empty_name(),
-                    ParentInfo(parent.datablock_info.name),
-                    self.root_collection,
+                    name=self._next_empty_name(),
+                    parent_info=ParentInfo(parent.datablock_info.name),
+                    collection=self.root_collection,
+                    location=self._bake_matrix_stack[-1].translation.copy(),
+                    rotation=self._bake_matrix_stack[-1].to_euler("XYZ"),
                 ),
                 start_idx=None,
                 count=None,
                 animations_to_apply=[],
+                bake_matrix=self._bake_matrix_stack[-1].copy(),
             )
             self._blocks.append(empt)
 
@@ -314,6 +313,7 @@ class ImpCommandBuilder:
             )
             self._anim_count[-1] += 1
             empt.animations_to_apply.append(self._top_animation)
+            self._bake_matrix_stack[-1].identity()
 
         if directive == "VT":
             self.vt_table.vertices.append(VT(*args))
@@ -339,6 +339,8 @@ class ImpCommandBuilder:
                     # How do we keep track of this
                     parent_info=ParentInfo(parent.datablock_info.name),
                     collection=self.root_collection,
+                    location=self._bake_matrix_stack[-1].translation.copy(),
+                    rotation=self._bake_matrix_stack[-1].to_euler("XYZ"),
                 ),
                 start_idx=start_idx,
                 count=count,
@@ -372,6 +374,8 @@ class ImpCommandBuilder:
             self._top_animation.locations.append(location)
             self._top_dataref.values.append(value)
         elif directive == "ANIM_trans_end":
+            # TODO: With a normal implementation, we'd be baking locations as we go and clearing to identity here
+            # but with out implementation it happens at ANIM_*_begin, and the adjustment happens way later
             pass
         elif directive in {"ANIM_hide", "ANIM_show"}:
             v1, v2 = args[:2]
@@ -421,15 +425,15 @@ class ImpCommandBuilder:
                 self._top_dataref.path = path
 
             if r_xyz1 == r_xyz2 and r_v1 == r_v2:
-                print("trans, case A")
+                print("trans, case A - static")
                 self._bake_matrix_stack[-1] = self._bake_matrix_stack[
                     -1
                 ] @ Matrix.Translation(xyz1)
             elif r_xyz1 == r_xyz2 and r_v1 != r_v2:
-                print("trans, case B")
+                print("trans, case B - as dynamic")
                 add_as_dynamic()
             elif r_xyz1 != r_xyz2 and r_v1 == r_v2:
-                print("trans, case C")
+                print("trans, case C - as odd dynamic")
                 add_as_dynamic()
                 # TODO: make warning
                 line = "bleh"
@@ -442,7 +446,7 @@ class ImpCommandBuilder:
                     f"Fix {self._anim_intermediate_stack[-1].intermediate_datablock}"
                 )
             elif r_xyz1 != r_xyz2 and r_v1 != r_v2:
-                print("trans, case D")
+                print("trans, case D - dynamic")
                 add_as_dynamic()
 
         elif directive == "ANIM_rotate":
@@ -471,7 +475,6 @@ class ImpCommandBuilder:
                     "to euler in ANIM_rotate",
                     [math.degrees(c) for c in self._bake_matrix_stack[-1].to_euler()],
                 )
-                # breakpoint()
             elif r_r1 == r_r2 and r_v1 != r_v2:
                 print("rot case B")
                 add_as_dynamic()
@@ -538,7 +541,10 @@ class ImpCommandBuilder:
                     - TRIS take animations from parent empties, reducing parents
 
                     Arbitrary rotation axis are not supported (anywhere), locations and rotations even for the same dataref path and values are not skipped
+
                     """
+                    # TODO: Don't reduce locations when locations are different but dataref values
+                    # are the same. This case needs manual user corrections.
                     while True:
                         peek_next_block = copy.copy(searching_itr)
                         try:
@@ -583,6 +589,9 @@ class ImpCommandBuilder:
                                         other_block.datablock_info.parent_info.parent = (
                                             next_name
                                         )
+                                next_block.datablock_info.location += (
+                                    intermediate_block.datablock_info.location
+                                )
 
                                 return next_block, list(peek_next_block)
                             else:
