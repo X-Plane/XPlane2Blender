@@ -1,6 +1,7 @@
 # File: xplane_ops.py
 # Defines Operators
 import pathlib
+import shutil
 from typing import Optional
 
 import bpy
@@ -84,37 +85,143 @@ def getDatarefValuePath(index: int, bone: Optional[bpy.types.Bone] = None) -> st
         return "xplane.datarefs[" + str(index) + "].value"
 
 
-# Function: getPoseBone
-# Returns the corresponding PoseBone of a BlenderBone.
-#
-# Parameters:
-#   armature - Blender armature the bone is part of.
-#   string name - Name of the Bone.
-#
-# Returns:
-#   PoseBone - A Blender PoseBone or None if it could not be found.
-def getPoseBone(armature, name):
-    for poseBone in armature.pose.bones:
-        if poseBone.bone.name == name:
-            return poseBone
-    return None
+class OBJECT_OT_render_bake_xp(bpy.types.Operator):
+    bl_label = "XP Render bake"
+    bl_idname = "object.render_bake_xp"
+    bl_description = "Add Render Bake XP"
 
+    def execute(self, context):
+        def framefile(context, filepath, frame):
+            """
+            Set frame number to file name image.png -> image0013.png
+            """
+            if context.scene.seq_bakery.override:
+                bake_folder = os.path.dirname(filepath)
+                filename = os.path.basename(context.scene.seq_bakery.current_image_path)
+                fn, ext = os.path.splitext(filename)
+                new_filename = "%s_frame-%04d-bake%s" % (fn, frame, ext)
+                return os.path.join(bake_folder, new_filename)
+            else:
+                fn, ext = os.path.splitext(filepath)
+                return "%s%04d%s" % (fn, frame, ext)
+        is_cycles = (context.scene.render.engine == 'CYCLES')
+        scene = context.scene
 
-# Function: getPoseBoneIndex
-# Returns the index of a PoseBone
-#
-# Parameters:
-#   armature - Blender armature the bone is part of.
-#   string name - Name of the Bone.
-#
-# Returns:
-#   int - Index of the PoseBone or -1 if it could not be found.
-def getPoseBoneIndex(armature, name):
-    for i in range(0, len(armature.pose.bones)):
-        if name == armature.pose.bones[i].bone.name:
-            return i
-    return -1
+        start = 1 # scene.seq_bakery.bake_start
+        end = 4 #scene.seq_bakery.bake_end
 
+        # Check for errors before starting
+        if start >= end:
+            self.report({'ERROR'}, "Start frame must be smaller than end frame")
+            return {'CANCELLED'}
+
+        selected = context.selected_objects
+
+        # Only single object baking for now
+        print("Sel -> Active:", scene.render.bake.use_selected_to_active)
+        if scene.render.bake.use_selected_to_active:
+            print("# selected: ", len(selected))
+
+            if len(selected) > 2:
+                self.report({'ERROR'}, "Select only two objects for animated baking")
+                return {'CANCELLED'}
+        elif len(selected) > 1:
+            self.report({'ERROR'}, "Select only one object for animated baking")
+            return {'CANCELLED'}
+
+        if context.active_object.type != 'MESH':
+            self.report({'ERROR'}, "The baked object must be a mesh object")
+            return {'CANCELLED'}
+
+        if context.active_object.mode == 'EDIT':
+            self.report({'ERROR'}, "Can't bake in edit-mode")
+            return {'CANCELLED'}
+
+        img = None
+
+        # find the image that's used for rendering
+        # TODO: support multiple images per bake
+        if is_cycles:
+            # XXX This tries to mimic nodeGetActiveTexture(), but we have no access to 'texture_active' state from RNA...
+            #     IMHO, this should be a func in RNA nodetree struct anyway?
+            inactive = None
+            selected = None
+            for mat_slot in context.active_object.material_slots:
+                mat = mat_slot.material
+                if not mat or not mat.node_tree:
+                    continue
+                trees = [mat.node_tree]
+                while trees and not img:
+                    tree = trees.pop()
+                    node = tree.nodes.active
+                    if node.type in {'TEX_IMAGE', 'TEX_ENVIRONMENT'}:
+                        img = node.image
+                        break
+                    for node in tree.nodes:
+                        if node.type in {'TEX_IMAGE', 'TEX_ENVIRONMENT'} and node.image:
+                            if node.select:
+                                if not selected:
+                                    selected = node
+                            else:
+                                if not inactive:
+                                    inactive = node
+                        elif node.type == 'GROUP':
+                            trees.add(node.node_tree)
+                if img:
+                    break
+            if not img:
+                if selected:
+                    img = selected.image
+                elif inactive:
+                    img = inactive.image
+        else:
+            for uvtex in context.active_object.data.uv_textures:
+                if uvtex.active_render == True:
+                    for uvdata in uvtex.data:
+                        if uvdata.image is not None:
+                            img = uvdata.image
+                            break
+
+        if img is None:
+            self.report({'ERROR'}, "No valid image found to bake to")
+            return {'CANCELLED'}
+
+        if img.is_dirty:
+            self.report({'ERROR'}, "Save the image that's used for baking before use")
+            return {'CANCELLED'}
+
+        if img.packed_file is not None:
+            #TODO: Why? Autopack messed me up
+            self.report({'ERROR'}, "Can't animation-bake packed file")
+            return {'CANCELLED'}
+
+        # make sure we have an absolute path so that copying works for sure
+        img_filepath_abs = bpy.path.abspath(img.filepath, library=img.library)
+
+        print("Animated baking for frames (%d - %d)" % (start, end))
+
+        for cfra in range(start, end + 1):
+            print("Baking frame %d" % cfra)
+
+            # update scene to new frame and bake to template image
+            scene.frame_set(cfra)
+            if is_cycles:
+                ret = bpy.ops.object.bake(type=scene.cycles.bake_type)
+            else:
+                ret = bpy.ops.object.bake_image()
+            if 'CANCELLED' in ret:
+                return {'CANCELLED'}
+
+            # Currently the api doesn't allow img.save_as()
+            # so just save the template image as usual for
+            # every frame and copy to a file with frame specific filename
+            img.save()
+            img_filepath_new = framefile(context, img_filepath_abs, cfra)
+            shutil.copyfile(img_filepath_abs, img_filepath_new)
+            print("Saved %r" % img_filepath_new)
+
+        print("Baking done!")
+        return bpy.ops.object.sb_anim_bake_image()
 
 class OBJECT_OT_add_xplane_axis_detent_range(bpy.types.Operator):
     bl_label = "Add X-Plane Axis Detent Range"
@@ -762,6 +869,7 @@ _ops = (
     SCENE_OT_export_to_relative_dir,
     XPLANE_OT_CommandSearchToggle,
     XPLANE_OT_DatarefSearchToggle,
+    OBJECT_OT_render_bake_xp,
 )
 
 register, unregister = bpy.utils.register_classes_factory(_ops)

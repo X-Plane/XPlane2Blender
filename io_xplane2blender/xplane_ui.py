@@ -183,6 +183,9 @@ def empty_layout(layout: bpy.types.UILayout, empty_obj: bpy.types.Object):
 
 def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
+    row = layout.row()
+    #row.operator_context("INVOKE")
+    op = row.operator("object.render_bake_xp")
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "compositeTextures")
 
