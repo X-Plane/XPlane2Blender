@@ -29,7 +29,8 @@ See the [Introduction to XPlane2Blender Video](https://developer.x-plane.com/too
 
 ## Documentation Sources
 - [XPlane2Blender Manual](https://xp2b-docs.gitbook.io/xplane2blender-docs)
-- [BD-5J Microjet, a complete open source Airplane](https://forums.x-plane.org/index.php?/files/file/27269-bd-5j-microjet)
+- [The PZL-M-18, an open source aircraft](https://github.com/todirbg/PZL-M-18)
+- [The BD-5J Microjet, an open source jet](https://forums.x-plane.org/index.php?/files/file/27269-bd-5j-microjet)
 - [Dan Klaue's "Using Blender With PlaneMaker" Playlist](https://www.youtube.com/playlist?list=PLDB0F4B925CF9169C). While older it still explains many of the principles of XPlane2Blender
 - [X-Plane Scenery File Formats](http://developer.x-plane.com/docs/specs/)
 - [X-Plane.org's 3d Modeling board](https://forums.x-plane.org/index.php?/forums/forum/45-3d-modeling/)
