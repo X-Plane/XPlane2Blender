@@ -13,6 +13,7 @@ from io_xplane2blender.xplane_ops_dev import *
 from io_xplane2blender.xplane_utils import (
     xplane_commands_txt_parser,
     xplane_datarefs_txt_parser,
+    xplane_wiper_gradient,
 )
 
 
@@ -85,9 +86,9 @@ def getDatarefValuePath(index: int, bone: Optional[bpy.types.Bone] = None) -> st
         return "xplane.datarefs[" + str(index) + "].value"
 
 
-class OBJECT_OT_render_bake_xp(bpy.types.Operator):
+class XPLANE_OT_render_bake_xp(bpy.types.Operator):
     bl_label = "XP Render bake"
-    bl_idname = "object.render_bake_xp"
+    bl_idname = "xplane.render_bake_xp"
     bl_description = "Add Render Bake XP"
 
     def execute(self, context):
@@ -104,16 +105,14 @@ class OBJECT_OT_render_bake_xp(bpy.types.Operator):
             else:
                 fn, ext = os.path.splitext(filepath)
                 return "%s%04d%s" % (fn, frame, ext)
-        is_cycles = (context.scene.render.engine == 'CYCLES')
+
+        is_cycles = context.scene.render.engine == "CYCLES"
         scene = context.scene
 
-        start = 1 # scene.seq_bakery.bake_start
-        end = 4 #scene.seq_bakery.bake_end
-
         # Check for errors before starting
-        if start >= end:
-            self.report({'ERROR'}, "Start frame must be smaller than end frame")
-            return {'CANCELLED'}
+        #if self.start >= self.end:
+            #self.report({"ERROR"}, "Start frame must be less than end frame")
+            #return {"CANCELLED"}
 
         selected = context.selected_objects
 
@@ -122,20 +121,20 @@ class OBJECT_OT_render_bake_xp(bpy.types.Operator):
         if scene.render.bake.use_selected_to_active:
             print("# selected: ", len(selected))
 
-            if len(selected) > 2:
-                self.report({'ERROR'}, "Select only two objects for animated baking")
-                return {'CANCELLED'}
+            #if len(selected) > 2:
+                #self.report({"ERROR"}, "Select only two objects for animated baking")
+                #return {"CANCELLED"}
         elif len(selected) > 1:
-            self.report({'ERROR'}, "Select only one object for animated baking")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Select only one object for animated baking")
+            return {"CANCELLED"}
 
-        if context.active_object.type != 'MESH':
-            self.report({'ERROR'}, "The baked object must be a mesh object")
-            return {'CANCELLED'}
+        if context.active_object.type != "MESH":
+            self.report({"ERROR"}, "The baked object must be a mesh object")
+            return {"CANCELLED"}
 
-        if context.active_object.mode == 'EDIT':
-            self.report({'ERROR'}, "Can't bake in edit-mode")
-            return {'CANCELLED'}
+        if context.active_object.mode == "EDIT":
+            self.report({"ERROR"}, "Can't bake in edit-mode")
+            return {"CANCELLED"}
 
         img = None
 
@@ -154,18 +153,18 @@ class OBJECT_OT_render_bake_xp(bpy.types.Operator):
                 while trees and not img:
                     tree = trees.pop()
                     node = tree.nodes.active
-                    if node.type in {'TEX_IMAGE', 'TEX_ENVIRONMENT'}:
+                    if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
                         img = node.image
                         break
                     for node in tree.nodes:
-                        if node.type in {'TEX_IMAGE', 'TEX_ENVIRONMENT'} and node.image:
+                        if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"} and node.image:
                             if node.select:
                                 if not selected:
                                     selected = node
                             else:
                                 if not inactive:
                                     inactive = node
-                        elif node.type == 'GROUP':
+                        elif node.type == "GROUP":
                             trees.add(node.node_tree)
                 if img:
                     break
@@ -183,34 +182,37 @@ class OBJECT_OT_render_bake_xp(bpy.types.Operator):
                             break
 
         if img is None:
-            self.report({'ERROR'}, "No valid image found to bake to")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "No valid image found to bake to")
+            return {"CANCELLED"}
 
         if img.is_dirty:
-            self.report({'ERROR'}, "Save the image that's used for baking before use")
-            return {'CANCELLED'}
+            self.report({"ERROR"}, "Save the image that's used for baking before use")
+            return {"CANCELLED"}
 
         if img.packed_file is not None:
-            #TODO: Why? Autopack messed me up
-            self.report({'ERROR'}, "Can't animation-bake packed file")
-            return {'CANCELLED'}
+            # TODO: Why? Autopack messed me up
+            self.report({"ERROR"}, "Can't animation-bake packed file")
+            return {"CANCELLED"}
 
         # make sure we have an absolute path so that copying works for sure
         img_filepath_abs = bpy.path.abspath(img.filepath, library=img.library)
 
-        print("Animated baking for frames (%d - %d)" % (start, end))
+        print("Animated baking for frames (%d - %d)" % (self.start, self.end))
 
-        for cfra in range(start, end + 1):
+        for cfra in range(self.start, self.end + 1):
+            break
             print("Baking frame %d" % cfra)
 
             # update scene to new frame and bake to template image
             scene.frame_set(cfra)
             if is_cycles:
                 ret = bpy.ops.object.bake(type=scene.cycles.bake_type)
+                pass
             else:
                 ret = bpy.ops.object.bake_image()
-            if 'CANCELLED' in ret:
-                return {'CANCELLED'}
+                pass
+            if "CANCELLED" in ret:
+                return {"CANCELLED"}
 
             # Currently the api doesn't allow img.save_as()
             # so just save the template image as usual for
@@ -221,7 +223,8 @@ class OBJECT_OT_render_bake_xp(bpy.types.Operator):
             print("Saved %r" % img_filepath_new)
 
         print("Baking done!")
-        return bpy.ops.object.sb_anim_bake_image()
+        xplane_wiper_gradient.make_wiper_images()
+        return {"FINISHED"}
 
 class OBJECT_OT_add_xplane_axis_detent_range(bpy.types.Operator):
     bl_label = "Add X-Plane Axis Detent Range"
@@ -869,7 +872,7 @@ _ops = (
     SCENE_OT_export_to_relative_dir,
     XPLANE_OT_CommandSearchToggle,
     XPLANE_OT_DatarefSearchToggle,
-    OBJECT_OT_render_bake_xp,
+    XPLANE_OT_render_bake_xp,
 )
 
 register, unregister = bpy.utils.register_classes_factory(_ops)

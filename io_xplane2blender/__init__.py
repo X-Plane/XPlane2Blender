@@ -53,7 +53,6 @@ else:
     from . import xplane_ops_dev
     from . import xplane_config
     from . import xplane_updater
-    from . import blender_image_bakery
 
 
 # Function: menu_func
@@ -71,7 +70,6 @@ def menu_func(self, context):
 # Function: register
 # Registers the addon with all its classes and the menu function.
 def register():
-    blender_image_bakery.register()
     xplane_export.register()
     xplane_props.register()
     xplane_ops.register()
@@ -83,7 +81,6 @@ def register():
 # Function: unregister
 # Unregisters the addon and all its classes and removes the entry from the menu.
 def unregister():
-    blender_image_bakery.unregister()
     xplane_export.unregister()
     xplane_ui.unregister()
     xplane_ops.unregister()
