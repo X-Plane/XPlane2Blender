@@ -39,26 +39,22 @@ def _put_pixel(pixels: bpy.types.Image, x:int, y:int, width:int, height:int, pix
 
 import PIL.Image
 def make_wiper_images():
-    #pil_master = PIL.Image.new("RGB",(1024,1024),0)
-    t = "_rgb"
-    t = ""
     try:
         master = bpy.data.images["master"]
     except KeyError:
-        if t == "_rgb":
-            master = bpy.data.images.new("master", 5, 3, alpha=True)
-        else:
-            master = bpy.data.images.new("master", 1024, 1024, alpha=True)
+        master = bpy.data.images.new("master", 1024, 1024, alpha=True)
         master.filepath = f"//textures/wiper_gradient.png"
+    else:
+        master.pixels[:] = [0.0] * len(master.pixels)
     master_array = array.array("f", master.pixels)
     width, height = master.size
-    start = 0 if t == "_rgb" else 0
-    end =   3 if t == "_rgb" else 250
+    start =  0
+    end = 250
     time_start = time.perf_counter()
     for i in range(start, end):
         print("i", i)
         loop_start = time.perf_counter()
-        path = (f"//textures\wiper{i+1:04}{t}.png")
+        path = (f"//textures\wiper{i+1:04}.png")
         img = create_datablock_image_from_disk(path)
 
         width, height = img.size
@@ -76,10 +72,8 @@ def make_wiper_images():
                 img_pixel = _get_pixel(pixels, x, y, width, height)
                 if img_pixel[3] > 0:
                     #print(*img_pixel, f"@ ({x}, {y})")
-                    get_pixel_start = time.perf_counter()
                     m_pixel = _get_pixel(master.pixels, x, y, width, height)
                     red = i/end
-                    put_pixel_start = time.perf_counter()
                     _put_pixel(master_array, x, y, width, height, (red, *m_pixel[1:]))
 
         bpy.data.images.remove(img)

@@ -110,6 +110,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             if obj.type == "MESH":
                 mesh_layout(self.layout, obj)
                 manipulator_layout(self.layout, obj)
+
             lod_layout(self.layout, obj)
             weight_layout(self.layout, obj)
             if obj.type != "EMPTY":
@@ -181,11 +182,50 @@ def empty_layout(layout: bpy.types.UILayout, empty_obj: bpy.types.Object):
         sub_row.prop(emp.magnet_props, "magnet_type_is_flashlight")
 
 
+def rain_layout(
+    layout: bpy.types.UILayout, layer_props: bpy.types.Collection, version: int
+):
+    rain_props = layer_props.rain
+    layout.prop(rain_props, "rain_scale")
+    layout.prop(rain_props, "thermal_texture")
+    thermal_grid_flow = layout.grid_flow(row_major=True)
+
+    def thermal_layout(row, idx: int):
+        row.active = getattr(rain_props, f"thermal_source_{idx}_enabled")
+        row.prop(rain_props, f"thermal_source_{idx}_enabled", text="")
+        thermal_source = getattr(rain_props, f"thermal_source_{idx}")
+        row.prop(thermal_source, "dataref_tempurature")
+        row.prop(thermal_source, "dataref_on_off")
+
+    thermal_grid_flow.active = bool(rain_props.thermal_texture)
+    for i in range(1, 5):
+        thermal_layout(thermal_grid_flow.row(), i)
+    layout.prop(rain_props, "wiper_texture")
+    wiper_grid_flow = layout.grid_flow(row_major=False)
+
+    def wiper_layout(row, idx):
+        # TODO: something in here is slow! Active?
+        row.active = getattr(rain_props, f"wiper_{idx}_enabled")
+        row.prop(rain_props, f"wiper_{idx}_enabled", text="")
+        wiper = getattr(rain_props, f"wiper_{idx}")
+        # fmt: off
+        row.prop(wiper, "object_name", text="Object Name")
+        row.prop(wiper, "dataref",     text="Dataref")
+        row.prop(wiper, "start",       text="Start")
+        row.prop(wiper, "end",         text="End")
+        row.prop(wiper, "nominal_width")
+        # fmt: on
+
+    wiper_grid_flow.active = bool(rain_props.wiper_texture)
+    for i in range(1, 5):
+        wiper_layout(wiper_grid_flow.row(), i)
+
+
 def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
     row = layout.row()
-    #row.operator_context("INVOKE")
-    op = row.operator("object.render_bake_xp")
+    # row.operator_context("INVOKE")
+    op = row.operator("xplane.render_bake_xp")
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "compositeTextures")
 
@@ -545,6 +585,10 @@ def layer_layout(
         advanced_box.prop(
             layer_props, "particle_system_file", text="Particle System File"
         )
+
+    if version >= 1200:
+        rain_layout(advanced_box, layer_props, version)
+
     advanced_box.prop(layer_props, "slungLoadWeight")
 
     advanced_box.prop(layer_props, "debug")

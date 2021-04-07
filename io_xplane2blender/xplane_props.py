@@ -81,7 +81,7 @@ undebatable alphabetical listing.
 
 - For defaults, use the constants, not redundantly copying their values
 
-- Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
+- Don't forget to add your new PropertyGroups to _classes
 
 - Tip: If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
 """
@@ -992,10 +992,112 @@ class XPlaneLOD(bpy.types.PropertyGroup):
     def __str__(self)->str:
         return f"({self.near}, {self.far})"
 
+class XPlaneThermalSourceSettings(bpy.types.PropertyGroup):
+    dataref_tempurature: bpy.props.StringProperty(
+            name="Thermal Source Dataref",
+            description="Dataref that controls source in Celsius",
+        )
+    dataref_on_off: bpy.props.StringProperty(
+            name="Thermal On/Off Dataref",
+            description="Dataref that controls source on/off"
+        )
+
+class XPlaneWiperSettings(bpy.types.PropertyGroup):
+    object_name: bpy.props.StringProperty(
+        name="Blender Wiper Object",
+        description="Name of wiper object, used for creation of wiper gradient",
+    )
+    dataref: bpy.props.StringProperty(
+        name="Wiper animation dref",
+        description="The dataref that controls the motion of the wiper object",
+        default=""
+    )
+    start: bpy.props.FloatProperty(
+        name="Wiper Dataref Start",
+        description="Start dataref value of Wiper animation"
+    )
+    end: bpy.props.FloatProperty(
+        name="Wiper Dataref End",
+        description="End dataref value of Wiper animation"
+    )
+
+    # TODO: What is a good range to even suggest? Can it ever be negative?
+    nominal_width: bpy.props.FloatProperty(
+        name="Wiper Thickness",
+        description="Wiper thickness, however, this is not in physical units. Must be eyeballed"
+    )
+
+class XPlaneRainSettings(bpy.types.PropertyGroup):
+    rain_scale:bpy.props.FloatProperty(
+        name="Rain Scale",
+        description="Scales visual output of rain to match texture resolution",
+        default=1.0,
+        min=0.1,
+        max=1.0,
+    )
+    thermal_texture: bpy.props.StringProperty(
+        name = "Thermal Texture",
+        description = "File path to the thermal texture",
+        subtype="FILE_PATH",
+    )
+    thermal_source_1: bpy.props.PointerProperty(
+        type=XPlaneThermalSourceSettings,
+        name="Thermal Source 1",
+        description="Thermal Sources of the aircraft (max 4)"
+    )
+    thermal_source_1_enabled: bpy.props.BoolProperty(name="Enable Thermal Source 1")
+    thermal_source_2: bpy.props.PointerProperty(
+        type=XPlaneThermalSourceSettings,
+        name="Thermal Source 2",
+        description="Thermal Sources of the aircraft (max 4)"
+    )
+    thermal_source_2_enabled: bpy.props.BoolProperty(name="Enable Thermal Source 2")
+    thermal_source_3: bpy.props.PointerProperty(
+        type=XPlaneThermalSourceSettings,
+        name="Thermal Source 3",
+        description="Thermal Sources of the aircraft (max 4)"
+    )
+    thermal_source_3_enabled: bpy.props.BoolProperty(name="Enable Thermal Source 3")
+    thermal_source_4: bpy.props.PointerProperty(
+        type=XPlaneThermalSourceSettings,
+        name="Thermal Source 4",
+        description="Thermal Sources of the aircraft (max 4)"
+    )
+    thermal_source_4_enabled: bpy.props.BoolProperty(name="Enable Thermal Source 4")
+    wiper_texture: bpy.props.StringProperty(
+        name = "Wiper Gradient Texture",
+        description="File path to the wiper gradient texture (click 'Make Wiper Gradient Texture' to make",
+        subtype="FILE_PATH",
+    )
+    wiper_1: bpy.props.PointerProperty(
+        type=XPlaneWiperSettings,
+        name="Wipers 1",
+        description="Wipers parameters. Slot order determines wiper order",
+    )
+    wiper_1_enabled: bpy.props.BoolProperty(name="Wiper 1 enabled",)
+    wiper_2: bpy.props.PointerProperty(
+        type=XPlaneWiperSettings,
+        name="Wipers 2",
+        description="Wipers parameters. Slot order determines wiper order",
+    )
+    wiper_2_enabled: bpy.props.BoolProperty(name="Wiper 2 enabled",)
+    wiper_3: bpy.props.PointerProperty(
+        type=XPlaneWiperSettings,
+        name="Wiper 3",
+        description="Wipers parameters. Slot order determines wiper order",
+    )
+    wiper_3_enabled: bpy.props.BoolProperty(name="Wiper 3 enabled",)
+    wiper_4: bpy.props.PointerProperty(
+        type=XPlaneWiperSettings,
+        name="Wiper 4",
+        description="Wipers parameters. Slot order determines wiper order",
+    )
+    wiper_4_enabled: bpy.props.BoolProperty(name="Wiper 4 enabled",)
+
 class XPlaneLayer(bpy.types.PropertyGroup):
     """
     Defines settings for an OBJ file. Is was formerly tied to
-    Blender 3D-View Layers, but now is for Roots
+    Blender 3D-View Layers, but now is for Roots and Collections
     """
 
     """
@@ -1065,6 +1167,11 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Particle System Definition File",
         description = "Relative file path to a .pss that defines particles",
         subtype = "FILE_PATH"
+    )
+    rain: bpy.props.PointerProperty(
+        type=XPlaneRainSettings,
+        name="X-Plane Rain Settings",
+        description="Settings related to rain and thermal properties",
     )
 
     # v1000 (only for instances)
@@ -1431,7 +1538,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             (VERSION_1050, "10.5x", "10.5x"),
             (VERSION_1100, "11.0x", "11.0x"),
             (VERSION_1110, "11.1x", "11.1x"),
-            (VERSION_1130, "11.3x", "11.3x")
+            (VERSION_1130, "11.3x", "11.3x"),
+            (VERSION_1200, "12.0x", "12.0x"),
         ]
     )
 
@@ -1448,17 +1556,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         description="Every version of XPlane2Blender this .blend file has been opened with",
         type=XPlane2BlenderVersion)
 
-# Class: XPlaneObjectSettings
-#
-# Properties:
-#   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
-#   bool depth - True if object will use depth culling.
-#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
-#   XPlaneManipulator manip - Manipulator settings.
-#   bool lightLevel - True if object overrides default light levels.
-#   float lightLevel_v1 - Light Level Value 1
-#   float lightLevel_v2 - Light Level Value 2
-#   string lightLevel_dataref - Light Level Dataref
+
 class XPlaneObjectSettings(bpy.types.PropertyGroup):
     """
     Settings for Blender objects. On Blender Objects these are accessed via a
@@ -1497,6 +1595,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         description = "Empty Only Properties",
         type = XPlaneEmpty
     )
+
 
     manip: bpy.props.PointerProperty(
         name = "Manipulator",
@@ -1921,6 +2020,9 @@ _classes = (
     XPlaneCockpitRegion,
     XPlaneLOD,
     # complex classes, depending on basic classes
+    XPlaneThermalSourceSettings,
+    XPlaneWiperSettings,
+    XPlaneRainSettings,
     XPlaneLayer,
     XPlaneCollectionSettings,
     XPlaneObjectSettings,
