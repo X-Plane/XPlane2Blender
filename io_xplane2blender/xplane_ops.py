@@ -1,5 +1,3 @@
-# File: xplane_ops.py
-# Defines Operators
 import pathlib
 import shutil
 from typing import Optional
@@ -87,100 +85,93 @@ def getDatarefValuePath(index: int, bone: Optional[bpy.types.Bone] = None) -> st
 
 
 class XPLANE_OT_render_bake_xp(bpy.types.Operator):
-    bl_label = "XP Render bake"
+    bl_label = "Make Wiper Gradient Texture"
     bl_idname = "xplane.render_bake_xp"
-    bl_description = "Add Render Bake XP"
+    bl_description = "Makes the Wiper Gradient Texture from the Rain Settings of the active collection (may take more than 30 minutes)"
 
     def execute(self, context):
-        def framefile(context, filepath, frame):
-            """
-            Set frame number to file name image.png -> image0013.png
-            """
-            if context.scene.seq_bakery.override:
-                bake_folder = os.path.dirname(filepath)
-                filename = os.path.basename(context.scene.seq_bakery.current_image_path)
-                fn, ext = os.path.splitext(filename)
-                new_filename = "%s_frame-%04d-bake%s" % (fn, frame, ext)
-                return os.path.join(bake_folder, new_filename)
-            else:
-                fn, ext = os.path.splitext(filepath)
-                return "%s%04d%s" % (fn, frame, ext)
+        # TODO: Automate making the nodes set up?
 
         is_cycles = context.scene.render.engine == "CYCLES"
         scene = context.scene
 
-        # Check for errors before starting
-        #if self.start >= self.end:
-            #self.report({"ERROR"}, "Start frame must be less than end frame")
-            #return {"CANCELLED"}
+        debug_skip_bake = False
+        start, end = 1, 250
+        slots = [1, 2, 3, 4]
 
-        selected = context.selected_objects
+        rain = bpy.context.collection.xplane.layer.rain
+        try:
+            windshield = bpy.data.objects[rain.wiper_ext_glass_object]
+        except KeyError:
+            if rain.wiper_ext_glass_object:
+                msg = f"Cannot find objected used for exterior glass '{rain.wiper_ext_glass_object}'. Check your spelling."
+            else:
+                msg = f"Must have object name for exterior glass to bake"
 
-        # Only single object baking for now
-        print("Sel -> Active:", scene.render.bake.use_selected_to_active)
-        if scene.render.bake.use_selected_to_active:
-            print("# selected: ", len(selected))
-
-            #if len(selected) > 2:
-                #self.report({"ERROR"}, "Select only two objects for animated baking")
-                #return {"CANCELLED"}
-        elif len(selected) > 1:
-            self.report({"ERROR"}, "Select only one object for animated baking")
+            self.report({"ERROR"}, msg)
             return {"CANCELLED"}
 
-        if context.active_object.type != "MESH":
+        def find_baking_image(bake_object: bpy.types.Object):
+            img = None
+
+            # find the image that's used for rendering
+            if is_cycles:
+                # XXX This tries to mimic nodeGetActiveTexture(), but we have no access to 'texture_active' state from RNA...
+                #     IMHO, this should be a func in RNA nodetree struct anyway?
+                inactive = None
+                selected = None
+                for mat_slot in bake_object.material_slots:
+                    mat = mat_slot.material
+                    if not mat or not mat.node_tree:
+                        continue
+                    trees = [mat.node_tree]
+                    while trees and not img:
+                        tree = trees.pop()
+                        node = tree.nodes.active
+                        if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
+                            img = node.image
+                            break
+                        for node in tree.nodes:
+                            if (
+                                node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}
+                                and node.image
+                            ):
+                                if node.select:
+                                    if not selected:
+                                        selected = node
+                                else:
+                                    if not inactive:
+                                        inactive = node
+                            elif node.type == "GROUP":
+                                trees.add(node.node_tree)
+                    if img:
+                        break
+                if not img:
+                    if selected:
+                        img = selected.image
+                    elif inactive:
+                        img = inactive.image
+            else:
+                for uvtex in bake_object.data.uv_textures:
+                    if uvtex.active_render == True:
+                        for uvdata in uvtex.data:
+                            if uvdata.image is not None:
+                                img = uvdata.image
+                                break
+            return img
+
+        # --- Errors with what you're trying to bake --------------------------
+        # Only single object baking for now
+        if windshield.type != "MESH":
             self.report({"ERROR"}, "The baked object must be a mesh object")
             return {"CANCELLED"}
 
-        if context.active_object.mode == "EDIT":
+        if windshield.mode == "EDIT":
             self.report({"ERROR"}, "Can't bake in edit-mode")
             return {"CANCELLED"}
-
-        img = None
-
-        # find the image that's used for rendering
-        # TODO: support multiple images per bake
-        if is_cycles:
-            # XXX This tries to mimic nodeGetActiveTexture(), but we have no access to 'texture_active' state from RNA...
-            #     IMHO, this should be a func in RNA nodetree struct anyway?
-            inactive = None
-            selected = None
-            for mat_slot in context.active_object.material_slots:
-                mat = mat_slot.material
-                if not mat or not mat.node_tree:
-                    continue
-                trees = [mat.node_tree]
-                while trees and not img:
-                    tree = trees.pop()
-                    node = tree.nodes.active
-                    if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
-                        img = node.image
-                        break
-                    for node in tree.nodes:
-                        if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"} and node.image:
-                            if node.select:
-                                if not selected:
-                                    selected = node
-                            else:
-                                if not inactive:
-                                    inactive = node
-                        elif node.type == "GROUP":
-                            trees.add(node.node_tree)
-                if img:
-                    break
-            if not img:
-                if selected:
-                    img = selected.image
-                elif inactive:
-                    img = inactive.image
-        else:
-            for uvtex in context.active_object.data.uv_textures:
-                if uvtex.active_render == True:
-                    for uvdata in uvtex.data:
-                        if uvdata.image is not None:
-                            img = uvdata.image
-                            break
-
+        # ---------------------------------------------------------------------
+        img = find_baking_image(windshield)
+        # --- Errors with the bake image --------------------------------------
         if img is None:
             self.report({"ERROR"}, "No valid image found to bake to")
             return {"CANCELLED"}
@@ -193,38 +184,70 @@ class XPLANE_OT_render_bake_xp(bpy.types.Operator):
             # TODO: Why? Autopack messed me up
             self.report({"ERROR"}, "Can't animation-bake packed file")
             return {"CANCELLED"}
+        # ---------------------------------------------------------------------
 
-        # make sure we have an absolute path so that copying works for sure
-        img_filepath_abs = bpy.path.abspath(img.filepath, library=img.library)
+        def select_objects(slot: int) -> None:
+            for obj in bpy.context.selected_objects:
+                obj.select_set(False)
 
-        print("Animated baking for frames (%d - %d)" % (self.start, self.end))
-
-        for cfra in range(self.start, self.end + 1):
-            break
-            print("Baking frame %d" % cfra)
-
-            # update scene to new frame and bake to template image
-            scene.frame_set(cfra)
-            if is_cycles:
-                ret = bpy.ops.object.bake(type=scene.cycles.bake_type)
-                pass
+            try:
+                object_name = getattr(rain, f"wiper_{slot}").object_name
+                object_datablock = bpy.data.objects[object_name]
+            except KeyError:
+                if object_name:
+                    msg = f"Could not find '{object_name}'. Check your spelling"
+                else:
+                    msg = f"Wiper slot #{slot} must have an object name"
+                self.report({"ERROR"}, msg)
+                raise KeyError
             else:
-                ret = bpy.ops.object.bake_image()
-                pass
-            if "CANCELLED" in ret:
-                return {"CANCELLED"}
+                object_datablock.select_set(True)
+                windshield.select_set(True)
 
-            # Currently the api doesn't allow img.save_as()
-            # so just save the template image as usual for
-            # every frame and copy to a file with frame specific filename
-            img.save()
-            img_filepath_new = framefile(context, img_filepath_abs, cfra)
-            shutil.copyfile(img_filepath_abs, img_filepath_new)
-            print("Saved %r" % img_filepath_new)
+        paths = []
+        for slot in [slot for slot in slots if getattr(rain, f"wiper_{slot}_enabled")]:
+            try:
+                select_objects(slot)
+            except KeyError:
+                break
 
-        print("Baking done!")
-        xplane_wiper_gradient.make_wiper_images()
+            print("Animated baking for frames (%d - %d)" % (start, end))
+
+            for cfra in range(start, end + 1):
+                print("Baking frame %d" % cfra)
+
+                # update scene to new frame and bake to template image
+                scene.frame_set(cfra)
+                if is_cycles:
+                    if debug_skip_bake:
+                        print("Skipping baking process")
+                        ret = ""
+                    else:
+                        ret = bpy.ops.object.bake(type=scene.cycles.bake_type)
+                else:
+                    ret = bpy.ops.object.bake_image()
+                if "CANCELLED" in ret:
+                    return {"CANCELLED"}
+
+                # Currently the api has no img.save_as()
+                # !!! IMPORTANT! You must use filepath_raw! !!!
+                orig = img.filepath_raw
+                new_img_filepath = xplane_wiper_gradient.make_tmp_filepath(
+                    pathlib.Path(bpy.path.abspath(img.filepath, library=img.library)),
+                    cfra,
+                    slot,
+                )
+                img.filepath_raw = str(new_img_filepath)
+                paths.append(pathlib.Path(img.filepath_raw))
+                if not debug_skip_bake:
+                    img.save()
+                    print("Saved %r" % new_img_filepath)
+                img.filepath_raw = orig
+            print("Baking done!")
+
+        xplane_wiper_gradient.make_wiper_images(paths)
         return {"FINISHED"}
+
 
 class OBJECT_OT_add_xplane_axis_detent_range(bpy.types.Operator):
     bl_label = "Add X-Plane Axis Detent Range"
@@ -743,10 +766,8 @@ class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
             filepath = pathlib.Path(
                 xplane_helpers.get_plugin_resources_folder(), "Commands.txt"
             )
-            get_commands_txt_result = (
-                xplane_commands_txt_parser.get_commands_txt_file_content(
-                    filepath.as_posix()
-                )
+            get_commands_txt_result = xplane_commands_txt_parser.get_commands_txt_file_content(
+                filepath.as_posix()
             )
             if isinstance(get_commands_txt_result, str):
                 short_filepath = "..." + os.path.sep.join(filepath.parts[-3:])
@@ -799,10 +820,8 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
             filepath = pathlib.Path(
                 xplane_helpers.get_plugin_resources_folder(), "DataRefs.txt"
             )
-            get_datarefs_txt_result = (
-                xplane_datarefs_txt_parser.get_datarefs_txt_file_content(
-                    filepath.as_posix()
-                )
+            get_datarefs_txt_result = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(
+                filepath.as_posix()
             )
             if isinstance(get_datarefs_txt_result, str):
                 short_filepath = "..." + os.path.sep.join(filepath.parts[-3:])

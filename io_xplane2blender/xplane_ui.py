@@ -201,6 +201,7 @@ def rain_layout(
     for i in range(1, 5):
         thermal_layout(thermal_grid_flow.row(), i)
     layout.prop(rain_props, "wiper_texture")
+    layout.prop(rain_props, "wiper_ext_glass_object")
     wiper_grid_flow = layout.grid_flow(row_major=False)
 
     def wiper_layout(row, idx):

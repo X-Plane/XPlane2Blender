@@ -1005,7 +1005,7 @@ class XPlaneThermalSourceSettings(bpy.types.PropertyGroup):
 class XPlaneWiperSettings(bpy.types.PropertyGroup):
     object_name: bpy.props.StringProperty(
         name="Blender Wiper Object",
-        description="Name of wiper object, used for creation of wiper gradient",
+        description="Name of wiper object, used in creation of wiper gradient texture",
     )
     dataref: bpy.props.StringProperty(
         name="Wiper animation dref",
@@ -1021,16 +1021,19 @@ class XPlaneWiperSettings(bpy.types.PropertyGroup):
         description="End dataref value of Wiper animation"
     )
 
-    # TODO: What is a good range to even suggest? Can it ever be negative?
     nominal_width: bpy.props.FloatProperty(
         name="Wiper Thickness",
-        description="Wiper thickness, however, this is not in physical units. Must be eyeballed"
+        description="Width of wiper as the percent of wiper animation arc that is covered by the blade at rest. Start low and increase until it looks right",
+        default=0.001,
+        min=0.0,
+        max=1.0,
+        precision=3,
     )
 
 class XPlaneRainSettings(bpy.types.PropertyGroup):
     rain_scale:bpy.props.FloatProperty(
         name="Rain Scale",
-        description="Scales visual output of rain to match texture resolution",
+        description="Scales the visual output of rain to match texture resolution",
         default=1.0,
         min=0.1,
         max=1.0,
@@ -1043,56 +1046,67 @@ class XPlaneRainSettings(bpy.types.PropertyGroup):
     thermal_source_1: bpy.props.PointerProperty(
         type=XPlaneThermalSourceSettings,
         name="Thermal Source 1",
-        description="Thermal Sources of the aircraft (max 4)"
+        description="1st Thermal Source of Aircraft"
     )
-    thermal_source_1_enabled: bpy.props.BoolProperty(name="Enable Thermal Source 1")
+    thermal_source_1_enabled: bpy.props.BoolProperty(
+        name="Enable Thermal Source 1"
+    )
     thermal_source_2: bpy.props.PointerProperty(
         type=XPlaneThermalSourceSettings,
         name="Thermal Source 2",
-        description="Thermal Sources of the aircraft (max 4)"
+        description="2nd Thermal Source of Aircraft"
     )
-    thermal_source_2_enabled: bpy.props.BoolProperty(name="Enable Thermal Source 2")
+    thermal_source_2_enabled: bpy.props.BoolProperty(
+        name="Enable Thermal Source 2",
+    )
     thermal_source_3: bpy.props.PointerProperty(
         type=XPlaneThermalSourceSettings,
         name="Thermal Source 3",
-        description="Thermal Sources of the aircraft (max 4)"
+        description="3rd Thermal Source of Aircraft"
     )
-    thermal_source_3_enabled: bpy.props.BoolProperty(name="Enable Thermal Source 3")
+    thermal_source_3_enabled: bpy.props.BoolProperty(
+        name="Enable Thermal Source 3"
+    )
     thermal_source_4: bpy.props.PointerProperty(
         type=XPlaneThermalSourceSettings,
         name="Thermal Source 4",
-        description="Thermal Sources of the aircraft (max 4)"
+        description="3rd Thermal Source of Aircraft"
     )
-    thermal_source_4_enabled: bpy.props.BoolProperty(name="Enable Thermal Source 4")
+    thermal_source_4_enabled: bpy.props.BoolProperty(
+        name="Enable Thermal Source 4"
+    )
+    wiper_ext_glass_object: bpy.props.StringProperty(
+        name = "Exterior Glass Object",
+        description = "Name of Object to be used as exterior glass (such as a Windshield) by the baker",
+    )
     wiper_texture: bpy.props.StringProperty(
         name = "Wiper Gradient Texture",
-        description="File path to the wiper gradient texture (click 'Make Wiper Gradient Texture' to make",
+        description="File path to the wiper gradient texture (click 'Make Wiper Gradient Texture' to make)",
         subtype="FILE_PATH",
     )
     wiper_1: bpy.props.PointerProperty(
         type=XPlaneWiperSettings,
-        name="Wipers 1",
-        description="Wipers parameters. Slot order determines wiper order",
+        name="Wiper 1",
     )
-    wiper_1_enabled: bpy.props.BoolProperty(name="Wiper 1 enabled",)
+    wiper_1_enabled: bpy.props.BoolProperty(name="Enable Wiper 1",)
     wiper_2: bpy.props.PointerProperty(
         type=XPlaneWiperSettings,
-        name="Wipers 2",
-        description="Wipers parameters. Slot order determines wiper order",
+        name="Wiper 2",
+        description="Wiper parameters",
     )
-    wiper_2_enabled: bpy.props.BoolProperty(name="Wiper 2 enabled",)
+    wiper_2_enabled: bpy.props.BoolProperty(name="Enable Wiper 2",)
     wiper_3: bpy.props.PointerProperty(
         type=XPlaneWiperSettings,
         name="Wiper 3",
-        description="Wipers parameters. Slot order determines wiper order",
+        description="Wiper parameters",
     )
-    wiper_3_enabled: bpy.props.BoolProperty(name="Wiper 3 enabled",)
+    wiper_3_enabled: bpy.props.BoolProperty(name="Enable Wiper 3",)
     wiper_4: bpy.props.PointerProperty(
         type=XPlaneWiperSettings,
         name="Wiper 4",
-        description="Wipers parameters. Slot order determines wiper order",
+        description="Wiper parameters",
     )
-    wiper_4_enabled: bpy.props.BoolProperty(name="Wiper 4 enabled",)
+    wiper_4_enabled: bpy.props.BoolProperty(name="Enable Wiper",)
 
 class XPlaneLayer(bpy.types.PropertyGroup):
     """
