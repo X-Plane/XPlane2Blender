@@ -84,6 +84,9 @@ def getDatarefValuePath(index: int, bone: Optional[bpy.types.Bone] = None) -> st
         return "xplane.datarefs[" + str(index) + "].value"
 
 
+# This code is based off of Christian Brinkmann (p2or)
+# and Janne Karhu (jahka)'s "Sequency Bakery" Addon. It is also released under
+# the same GPL license as XPlane2Blender
 class XPLANE_OT_render_bake_xp(bpy.types.Operator):
     bl_label = "Make Wiper Gradient Texture"
     bl_idname = "xplane.render_bake_xp"
