@@ -738,17 +738,17 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         default=False,
     )
 
-    debug_start: bpy.props.IntProperty(
-        name="Debug Start",
-        description="Specifies a custom start value for debugging. Enable 'Plugin Development must be checked'",
+    start: bpy.props.IntProperty(
+        name="Start",
+        description="Specifies which frame to start baking",
         default=1,
         min=1,
         max=249,
     )
 
-    debug_end: bpy.props.IntProperty(
+    end: bpy.props.IntProperty(
         name="Debug Start",
-        description="Specifies a custom start value for debugging. Enable 'Plugin Development must be checked'",
+        description="Specifies which frame is the last frame to bake",
         default=250,
         min=2,
         max=250,
@@ -765,7 +765,13 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         scene = context.scene
         scene.render.bake.use_selected_to_active = True
 
-        start, end = self.debug_start, self.debug_end
+        if self.start >= self.end:
+            bpy.ops.xplane.msg(
+                "INVOKE_DEFAULT",
+                msg_text=f"Bake start frame '{self.start}' is greater than or equal to end frame '{self.end}'",
+            )
+            return {"CANCELLED"}
+
         if context.active_object.xplane.isExportableRoot:
             rain = context.active_object.xplane.layer.rain
         elif context.collection.xplane.is_exportable_collection:
@@ -918,9 +924,9 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
                 continue
             select_objects(wiper)
 
-            print("Animated baking for frames (%d - %d)" % (start, end))
+            print("Animated baking for frames (%d - %d)" % (self.start, self.end))
 
-            for cfra in range(start, end + 1):
+            for cfra in range(self.start, self.end + 1):
                 bake_start = time.perf_counter()
                 print("Baking frame %d" % cfra)
 

@@ -27,9 +27,10 @@ def _put_pixel(pixels: bpy.types.Image, x:int, y:int, width:int, height:int, pix
 
 def make_wiper_images(paths:List[Path], master_width:int, master_height:int)->Path:
     """
-    Produce the final wiper gradient texture from a list of paths
-    to the temporary bake files. Returns the Path of the combined texture,
-    or raises OSError if saving final_wiper_texture isn't possible
+    Using a list of paths, make the channel oriented wiper_gradient_texture.png.
+    Raises OSError is saving the texture has an issue.
+
+    Returns Path of the final wiper_gradient_texture.png
     """
     assert all(path.parent == paths[0].parent for path in paths)
 
@@ -39,28 +40,30 @@ def make_wiper_images(paths:List[Path], master_width:int, master_height:int)->Pa
     except KeyError:
         pass
     master = bpy.data.images.new(master_img_name, master_width, master_height, alpha=True)
+    master_array = array.array("f", master.pixels)
     master.filepath = f"{paths[0].parent.parent}/wiper_gradient_texture.png"
     gradient_texture_path = Path(master.filepath)
 
-    master_array = array.array("f", master.pixels)
-    width, height = master.size
-
+    offset_start, offset_end = bpy.context.scene.xplane.wiper_bake_start, bpy.context.scene.xplane.wiper_bake_end
+    # + 1 because offset_start:offset_end is inclusive
+    num_steps = (offset_end - offset_start) + 1
     time_start = time.perf_counter()
-    for i, path in enumerate(paths):
+    for step, path in enumerate(paths):
         loop_start = time.perf_counter()
         slot = int(path.name[path.name.rfind("slot")+4])
         frame = int(path.name[path.name.rfind("_")+1:path.name.rfind("_")+4])
-        img = create_datablock_image_from_disk(path)
-        pixels = array.array("f", (img.pixels))
 
-        for y in range(height-1, -1, -1):
-            for x in range(0, width):
-                img_pixel = _get_pixel(pixels, x, y, width, height)
+        img = create_datablock_image_from_disk(path)
+        pixels = array.array("f", img.pixels)
+
+        for y in range(master_height-1, -1, -1):
+            for x in range(0, master_width):
+                img_pixel = _get_pixel(pixels, x, y, master_width, master_height)
                 if img_pixel[3] > 0:
                     #print(*img_pixel, f"@ ({x}, {y})")
-                    m_pixel = _get_pixel(master_array, x, y, width, height)
-                    m_pixel[slot-1] = frame/250
-                    _put_pixel(master_array, x, y, width, height, m_pixel)
+                    m_pixel = _get_pixel(master_array, x, y, master_width, master_height)
+                    m_pixel[slot-1] = step/num_steps
+                    _put_pixel(master_array, x, y, master_width, master_height, m_pixel)
 
         bpy.data.images.remove(img)
         print(f"Processed slot{slot}_{frame} in {time.perf_counter() - loop_start}")

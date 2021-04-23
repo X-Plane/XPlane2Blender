@@ -321,6 +321,12 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
             bake_op_text = f"Bake Wiper Gradient Texture"
 
         op = row.operator("xplane.bake_wiper_gradient_texture", text=bake_op_text)
+        op.start = scene.xplane.wiper_bake_start
+        op.end = scene.xplane.wiper_bake_end
+
+        row = layout.row()
+        row.prop(scene.xplane, "wiper_bake_start")
+        row.prop(scene.xplane, "wiper_bake_end")
     draw_bake_op(advanced_column)
 
     if scene.xplane.debug:

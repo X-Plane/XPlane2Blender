@@ -17,6 +17,8 @@ class TestBakeWiperTexture(XPlaneTestCase):
     def setUp(self):
         super().setUp()
         # Just in case we forget to reset this in the .blend file
+        bpy.context.scene.xplane.wiper_bake_start = 1
+        bpy.context.scene.xplane.wiper_bake_end = 256
         bpy.data.collections[
             "four_slot_wiper_system"
         ].xplane.layer.rain.wiper_texture = ""

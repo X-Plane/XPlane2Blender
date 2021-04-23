@@ -1512,6 +1512,21 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
         default = False) # Set this to true during development to avoid re-checking it
 
+    wiper_bake_start: bpy.props.IntProperty(
+        name = "Start Frame",
+        description = "Start of keyframe range for baking wiper gradient texture",
+        min = 1,
+        default=1
+    )
+
+    wiper_bake_end: bpy.props.IntProperty(
+        name = "End Frame",
+        description = "End of keyframe range for baking wiper gradient texture",
+        min = 2,
+        default=256
+    )
+
+
     #######################################
     #TODO: Should these be in their own namespace?
     dev_enable_breakpoints: bpy.props.BoolProperty(
