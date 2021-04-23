@@ -918,6 +918,8 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
             context.view_layer.objects.active = windshield
 
         original_frame = scene.frame_current
+        original_margin = scene.render.bake.margin
+        scene.render.bake.margin = 0
         paths = []
         for slot, wiper in enumerate(wipers, start=1):
             if not self.debug_slots[slot - 1]:
@@ -972,6 +974,7 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
                 shutil.rmtree(bake_temp_folder, ignore_errors=True)
 
         scene.frame_set(original_frame)
+        scene.render.bake.margin = original_margin
         return {"FINISHED"}
 
     @classmethod
