@@ -303,6 +303,10 @@ class XPlaneHeader:
                         self.attributes["THERMAL_source"].value.append(
                             f"{thermal_source.dataref_tempurature}    {thermal_source.dataref_on_off}"
                         )
+                    else:
+                        break
+
+                for i in range(1, 5):
                     if getattr(rain_props, f"wiper_{i}_enabled"):
                         wiper = getattr(rain_props, f"wiper_{i}")
                         if not wiper.dataref:
@@ -319,6 +323,14 @@ class XPlaneHeader:
                         self.attributes["WIPER_param"].value.append(
                             f"{wiper.dataref}    {wiper.start}   {wiper.end}    {wiper.nominal_width}"
                         )
+                    else:
+                        break
+
+                if has_thermal_system and not self.attributes["THERMAL_source"].value:
+                    logger.error(f"{filename}'s Rain System must have at least 1 enabled Thermal Source")
+
+                if has_rain_system and not self.attributes["WIPER_param"].value:
+                    logger.error(f"{filename}'s Rain System must have at least 1 enabled Wiper")
 
         rain_header_attrs()
 

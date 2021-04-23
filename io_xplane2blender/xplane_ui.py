@@ -204,8 +204,10 @@ def rain_layout(
     layout.prop(rain_props, "wiper_ext_glass_object")
     wiper_grid_flow = layout.grid_flow(row_major=False)
 
-    def wiper_layout(row, idx):
-        # TODO: something in here is slow! Active?
+
+    wiper_grid_flow.active = bool(rain_props.wiper_texture)
+    def wiper_layout(idx:int):
+        row = wiper_grid_flow.row()
         row.active = getattr(rain_props, f"wiper_{idx}_enabled")
         row.prop(rain_props, f"wiper_{idx}_enabled", text="")
         wiper = getattr(rain_props, f"wiper_{idx}")
@@ -217,16 +219,19 @@ def rain_layout(
         row.prop(wiper, "nominal_width")
         # fmt: on
 
-    wiper_grid_flow.active = bool(rain_props.wiper_texture)
-    for i in range(1, 5):
-        wiper_layout(wiper_grid_flow.row(), i)
+    for prev_idx, next_idx in zip(range(1,4),range(2, 5)):
+        if prev_idx == 1:
+            wiper_layout(prev_idx)
+        prev_wiper_enabled = getattr(rain_props, f"wiper_{prev_idx}_enabled")
+        if prev_wiper_enabled:
+            wiper_layout(next_idx)
+        else:
+            break
 
 
 def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
     row = layout.row()
-    # row.operator_context("INVOKE")
-    op = row.operator("xplane.render_bake_xp")
     layout.row().prop(scene.xplane, "version")
     layout.row().prop(scene.xplane, "compositeTextures")
 
@@ -301,6 +306,22 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "optimize")
     advanced_column.prop(scene.xplane, "debug")
+    def draw_bake_op(layout:bpy.types.UILayout):
+        row = layout.row()
+        if bpy.context.active_object.xplane.isExportableRoot:
+            active_root = bpy.context.active_object
+        elif bpy.context.collection.xplane.is_exportable_collection:
+            active_root = bpy.context.collection
+        else:
+            active_root = None
+
+        if active_root and active_root.xplane.layer.export_type in {EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT}:
+            bake_op_text = f"Bake Wiper Gradient Texture For '{active_root.name}'"
+        else:
+            bake_op_text = f"Bake Wiper Gradient Texture"
+
+        op = row.operator("xplane.bake_wiper_gradient_texture", text=bake_op_text)
+    draw_bake_op(advanced_column)
 
     if scene.xplane.debug:
         debug_box = advanced_column.box()
@@ -1671,46 +1692,6 @@ class XPLANE_UL_DatarefSearchList(bpy.types.UIList):
         return flt_flags, flt_neworder
 
 
-class XPLANE_OT_XPlaneMessage(bpy.types.Operator):
-    bl_idname = "xplane.msg"
-    bl_label = "XPlane2Blender message"
-    msg_type: bpy.props.StringProperty(default="INFO")
-    msg_text: bpy.props.StringProperty(default="")
-
-    def execute(self, context):
-        self.report(self.msg_type, self.msg_text)
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.label(text=self.msg_type + ": " + self.msg_text)
-
-
-class XPLANE_OT_XPlaneError(bpy.types.Operator):
-    bl_idname = "xplane.error"
-    bl_label = "XPlane2Blender Error"
-    msg_type: bpy.props.StringProperty(default="ERROR")
-    msg_text: bpy.props.StringProperty(default="")
-    report_text: bpy.props.StringProperty(default="")
-
-    def execute(self, context):
-        self.report({self.msg_type}, self.report_text)
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=400)
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.label(text=self.msg_text, icon="ERROR")
-
 
 _XPlaneUITypes = (
     BONE_PT_xplane,
@@ -1720,8 +1701,6 @@ _XPlaneUITypes = (
     SCENE_PT_xplane,
     XPLANE_UL_CommandSearchList,
     XPLANE_UL_DatarefSearchList,
-    XPLANE_OT_XPlaneError,
-    XPLANE_OT_XPlaneMessage,
 )
 
 register, unregister = bpy.utils.register_classes_factory(_XPlaneUITypes)

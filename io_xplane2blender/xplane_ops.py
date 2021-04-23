@@ -1,12 +1,18 @@
-import pathlib
+from pathlib import Path
 import shutil
-from typing import Optional
+import time
+from typing import Any, Dict, List, Optional, Tuple
 
 import bpy
 
 from io_xplane2blender import xplane_props
 from io_xplane2blender.xplane_config import *
-from io_xplane2blender.xplane_constants import MAX_COCKPIT_REGIONS, MAX_LODS
+from io_xplane2blender.xplane_constants import (
+    MAX_COCKPIT_REGIONS,
+    MAX_LODS,
+    EXPORT_TYPE_AIRCRAFT,
+    EXPORT_TYPE_COCKPIT,
+)
 from io_xplane2blender.xplane_ops_dev import *
 from io_xplane2blender.xplane_utils import (
     xplane_commands_txt_parser,
@@ -82,174 +88,6 @@ def getDatarefValuePath(index: int, bone: Optional[bpy.types.Bone] = None) -> st
         return 'bones["%s"].xplane.datarefs[%d].value' % (bone.name, index)
     else:
         return "xplane.datarefs[" + str(index) + "].value"
-
-
-# This code is based off of Christian Brinkmann (p2or)
-# and Janne Karhu (jahka)'s "Sequency Bakery" Addon. It is also released under
-# the same GPL license as XPlane2Blender
-class XPLANE_OT_render_bake_xp(bpy.types.Operator):
-    bl_label = "Make Wiper Gradient Texture"
-    bl_idname = "xplane.render_bake_xp"
-    bl_description = "Makes the Wiper Gradient Texture from the Rain Settings of the active collection (may take more than 30 minutes)"
-
-    def execute(self, context):
-        # TODO: Automate making the nodes set up?
-
-        is_cycles = context.scene.render.engine == "CYCLES"
-        scene = context.scene
-
-        debug_skip_bake = False
-        start, end = 1, 250
-        slots = [1, 2, 3, 4]
-
-        rain = bpy.context.collection.xplane.layer.rain
-        try:
-            windshield = bpy.data.objects[rain.wiper_ext_glass_object]
-        except KeyError:
-            if rain.wiper_ext_glass_object:
-                msg = f"Cannot find objected used for exterior glass '{rain.wiper_ext_glass_object}'. Check your spelling."
-            else:
-                msg = f"Must have object name for exterior glass to bake"
-
-            self.report({"ERROR"}, msg)
-            return {"CANCELLED"}
-
-        def find_baking_image(bake_object: bpy.types.Object):
-            img = None
-
-            # find the image that's used for rendering
-            if is_cycles:
-                # XXX This tries to mimic nodeGetActiveTexture(), but we have no access to 'texture_active' state from RNA...
-                #     IMHO, this should be a func in RNA nodetree struct anyway?
-                inactive = None
-                selected = None
-                for mat_slot in bake_object.material_slots:
-                    mat = mat_slot.material
-                    if not mat or not mat.node_tree:
-                        continue
-                    trees = [mat.node_tree]
-                    while trees and not img:
-                        tree = trees.pop()
-                        node = tree.nodes.active
-                        if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
-                            img = node.image
-                            break
-                        for node in tree.nodes:
-                            if (
-                                node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}
-                                and node.image
-                            ):
-                                if node.select:
-                                    if not selected:
-                                        selected = node
-                                else:
-                                    if not inactive:
-                                        inactive = node
-                            elif node.type == "GROUP":
-                                trees.add(node.node_tree)
-                    if img:
-                        break
-                if not img:
-                    if selected:
-                        img = selected.image
-                    elif inactive:
-                        img = inactive.image
-            else:
-                for uvtex in bake_object.data.uv_textures:
-                    if uvtex.active_render == True:
-                        for uvdata in uvtex.data:
-                            if uvdata.image is not None:
-                                img = uvdata.image
-                                break
-            return img
-
-        # --- Errors with what you're trying to bake --------------------------
-        # Only single object baking for now
-        if windshield.type != "MESH":
-            self.report({"ERROR"}, "The baked object must be a mesh object")
-            return {"CANCELLED"}
-
-        if windshield.mode == "EDIT":
-            self.report({"ERROR"}, "Can't bake in edit-mode")
-            return {"CANCELLED"}
-        # ---------------------------------------------------------------------
-        img = find_baking_image(windshield)
-        # --- Errors with the bake image --------------------------------------
-        if img is None:
-            self.report({"ERROR"}, "No valid image found to bake to")
-            return {"CANCELLED"}
-
-        if img.is_dirty:
-            self.report({"ERROR"}, "Save the image that's used for baking before use")
-            return {"CANCELLED"}
-
-        if img.packed_file is not None:
-            # TODO: Why? Autopack messed me up
-            self.report({"ERROR"}, "Can't animation-bake packed file")
-            return {"CANCELLED"}
-        # ---------------------------------------------------------------------
-
-        def select_objects(slot: int) -> None:
-            for obj in bpy.context.selected_objects:
-                obj.select_set(False)
-
-            try:
-                object_name = getattr(rain, f"wiper_{slot}").object_name
-                object_datablock = bpy.data.objects[object_name]
-            except KeyError:
-                if object_name:
-                    msg = f"Could not find '{object_name}'. Check your spelling"
-                else:
-                    msg = f"Wiper slot #{slot} must have an object name"
-                self.report({"ERROR"}, msg)
-                raise KeyError
-            else:
-                object_datablock.select_set(True)
-                windshield.select_set(True)
-
-        paths = []
-        for slot in [slot for slot in slots if getattr(rain, f"wiper_{slot}_enabled")]:
-            try:
-                select_objects(slot)
-            except KeyError:
-                break
-
-            print("Animated baking for frames (%d - %d)" % (start, end))
-
-            for cfra in range(start, end + 1):
-                print("Baking frame %d" % cfra)
-
-                # update scene to new frame and bake to template image
-                scene.frame_set(cfra)
-                if is_cycles:
-                    if debug_skip_bake:
-                        print("Skipping baking process")
-                        ret = ""
-                    else:
-                        ret = bpy.ops.object.bake(type=scene.cycles.bake_type)
-                else:
-                    ret = bpy.ops.object.bake_image()
-                if "CANCELLED" in ret:
-                    return {"CANCELLED"}
-
-                # Currently the api has no img.save_as()
-                # !!! IMPORTANT! You must use filepath_raw! !!!
-                orig = img.filepath_raw
-                new_img_filepath = xplane_wiper_gradient.make_tmp_filepath(
-                    pathlib.Path(bpy.path.abspath(img.filepath, library=img.library)),
-                    cfra,
-                    slot,
-                )
-                img.filepath_raw = str(new_img_filepath)
-                paths.append(pathlib.Path(img.filepath_raw))
-                if not debug_skip_bake:
-                    img.save()
-                    print("Saved %r" % new_img_filepath)
-                img.filepath_raw = orig
-            print("Baking done!")
-
-        xplane_wiper_gradient.make_wiper_images(paths)
-        return {"FINISHED"}
 
 
 class OBJECT_OT_add_xplane_axis_detent_range(bpy.types.Operator):
@@ -766,7 +604,7 @@ class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
         command_search_window_state = context.scene.xplane.command_search_window_state
         # Load on first use
         if len(command_search_window_state.command_search_list) == 0:
-            filepath = pathlib.Path(
+            filepath = Path(
                 xplane_helpers.get_plugin_resources_folder(), "Commands.txt"
             )
             get_commands_txt_result = xplane_commands_txt_parser.get_commands_txt_file_content(
@@ -774,10 +612,8 @@ class XPLANE_OT_CommandSearchToggle(bpy.types.Operator):
             )
             if isinstance(get_commands_txt_result, str):
                 short_filepath = "..." + os.path.sep.join(filepath.parts[-3:])
-                bpy.ops.xplane.error(
-                    "INVOKE_DEFAULT",
-                    msg_text=short_filepath + " could not be parsed",
-                    report_text=get_commands_txt_result,
+                bpy.ops.xplane.msg(
+                    "INVOKE_DEFAULT", msg_text=short_filepath + " could not be parsed",
                 )
                 return {"CANCELLED"}
             else:
@@ -820,7 +656,7 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
         dataref_search_window_state = context.scene.xplane.dataref_search_window_state
         # Load on first use
         if len(dataref_search_window_state.dataref_search_list) == 0:
-            filepath = pathlib.Path(
+            filepath = Path(
                 xplane_helpers.get_plugin_resources_folder(), "DataRefs.txt"
             )
             get_datarefs_txt_result = xplane_datarefs_txt_parser.get_datarefs_txt_file_content(
@@ -828,10 +664,9 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
             )
             if isinstance(get_datarefs_txt_result, str):
                 short_filepath = "..." + os.path.sep.join(filepath.parts[-3:])
-                bpy.ops.xplane.error(
-                    "INVOKE_DEFAULT",
-                    msg_text=short_filepath + " could not be parsed",
-                    report_text=get_datarefs_txt_result,
+
+                bpy.ops.xplane.msg(
+                    "INVOKE_DEFAULT", msg_text=short_filepath + " could not be parsed",
                 )
                 return {"CANCELLED"}
             else:
@@ -858,6 +693,294 @@ class XPLANE_OT_DatarefSearchToggle(bpy.types.Operator):
             dataref_search_window_state.dataref_prop_dest = self.paired_dataref_prop
 
         return {"FINISHED"}
+
+
+class XPLANE_OT_XPlaneMessage(bpy.types.Operator):
+    bl_idname = "xplane.msg"
+    bl_label = "XPlane2Blender Message"
+
+    msg_text: bpy.props.StringProperty()
+    icon: bpy.props.StringProperty(default="ERROR")
+    # fmt: off
+    invoke_style: bpy.props.EnumProperty(
+        items=[
+            ("invoke_popup",        "Invoke Popup",        "A popup without confirm button"),
+            ("invoke_props_dialog", "Invoke Popup Dialog", "A popup with confirm button"),
+        ],
+        name="Invoke Style",
+        description="Which popup style to use",
+        default="invoke_props_dialog",
+    )
+    # fmt: on
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return getattr(wm, self.invoke_style)(self, width=500)
+
+    def draw(self, context):
+        self.layout.row().label(text=self.msg_text, icon=self.icon)
+
+
+# This code is based off of Christian Brinkmann (p2or)
+# and Janne Karhu (jahka)'s "Sequency Bakery" Addon. It is also released under
+# the same GPL license as XPlane2Blender
+class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
+    bl_label = "Make Wiper Gradient Texture"
+    bl_idname = "xplane.bake_wiper_gradient_texture"
+    bl_description = "Makes the Wiper Gradient Texture from the Rain Settings of the active collection (may take more than 30 minutes)"
+
+    debug_reuse_temps: bpy.props.BoolProperty(
+        name="Re-use Temporary Images",
+        description="Reuse temporaries instead of re-baking, temp files aren't deleted",
+        default=False,
+    )
+
+    debug_start: bpy.props.IntProperty(
+        name="Debug Start",
+        description="Specifies a custom start value for debugging. Enable 'Plugin Development must be checked'",
+        default=1,
+        min=1,
+        max=249,
+    )
+
+    debug_end: bpy.props.IntProperty(
+        name="Debug Start",
+        description="Specifies a custom start value for debugging. Enable 'Plugin Development must be checked'",
+        default=250,
+        min=2,
+        max=250,
+    )
+    debug_slots: bpy.props.BoolVectorProperty(
+        "Allow Slots",
+        description="Override OBJ header which slots to bake",
+        default=(True,) * 4,
+        size=4,
+    )
+
+    def execute(self, context):
+        is_cycles = context.scene.render.engine == "CYCLES"
+        scene = context.scene
+        scene.render.bake.use_selected_to_active = True
+
+        start, end = self.debug_start, self.debug_end
+        if context.active_object.xplane.isExportableRoot:
+            rain = context.active_object.xplane.layer.rain
+        elif context.collection.xplane.is_exportable_collection:
+            rain = context.collection.xplane.layer.rain
+
+        try:
+            windshield = bpy.data.objects[rain.wiper_ext_glass_object]
+        except KeyError:
+            if rain.wiper_ext_glass_object:
+                msg = f"Cannot find '{rain.wiper_ext_glass_object}' to be used for exterior glass. Check your spelling in the Rain Settings"
+            else:
+                msg = f"Must specify object to be used as the exterior glass. Check your Rain Settings"
+
+            bpy.ops.xplane.msg("INVOKE_DEFAULT", msg_text=msg)
+            return {"CANCELLED"}
+
+        def collect_wipers() -> List[xplane_props.XPlaneWiperSettings]:
+            wipers = []
+            for idx in range(1, 5):
+                if getattr(rain, f"wiper_{idx}_enabled"):
+                    wiper = getattr(rain, f"wiper_{idx}")
+                    try:
+                        object_name = wiper.object_name
+                        object_datablock = bpy.data.objects[object_name]
+                    except KeyError:
+                        if object_name:
+                            msg = f"Could not find '{object_name}'. Check your spelling"
+                        else:
+                            msg = f"Wiper slot #{idx} must have an object name"
+                        bpy.ops.xplane.msg("INVOKE_DEFAULT", msg_text=msg)
+                        raise
+                    else:
+                        wipers.append(wiper)
+                else:
+                    break
+            return wipers
+
+        try:
+            wipers = collect_wipers()
+        except KeyError:
+            # collect_wipers ensures object_names are given and correct
+            return {"CANCELLED"}
+        else:
+            if not wipers:
+                bpy.ops.xplane.msg(
+                    "INVOKE_DEFAULT", msg_text="Must have at least 1 wiper enabled"
+                )
+                return {"CANCELLED"}
+
+        def find_baking_image(bake_object: bpy.types.Object):
+            img = None
+
+            # find the image that's used for rendering
+            if is_cycles:
+                # XXX This tries to mimic nodeGetActiveTexture(), but we have no access to 'texture_active' state from RNA...
+                #     IMHO, this should be a func in RNA nodetree struct anyway?
+                inactive = None
+                selected = None
+                for mat_slot in bake_object.material_slots:
+                    mat = mat_slot.material
+                    if not mat or not mat.node_tree:
+                        continue
+                    trees = [mat.node_tree]
+                    while trees and not img:
+                        tree = trees.pop()
+                        node = tree.nodes.active
+                        if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
+                            img = node.image
+                            break
+                        for node in tree.nodes:
+                            if (
+                                node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}
+                                and node.image
+                            ):
+                                if node.select:
+                                    if not selected:
+                                        selected = node
+                                else:
+                                    if not inactive:
+                                        inactive = node
+                            elif node.type == "GROUP":
+                                trees.add(node.node_tree)
+                    if img:
+                        break
+                if not img:
+                    if selected:
+                        img = selected.image
+                    elif inactive:
+                        img = inactive.image
+            else:
+                for uvtex in bake_object.data.uv_textures:
+                    if uvtex.active_render == True:
+                        for uvdata in uvtex.data:
+                            if uvdata.image is not None:
+                                img = uvdata.image
+                                break
+            return img
+
+        # --- Errors with what you're trying to bake --------------------------
+        # Only single object baking for now
+        if windshield.type != "MESH":
+            bpy.ops.xplane.msg(
+                "INVOKE_DEFAULT",
+                msg_text=f"The baked object must be a mesh object, is {windshield.type.title()}",
+            )
+            return {"CANCELLED"}
+
+        if windshield.mode == "EDIT":
+            bpy.ops.xplane.msg("INVOKE_DEFAULT", msg_text="Can't bake in edit-mode")
+            return {"CANCELLED"}
+        # ---------------------------------------------------------------------
+        img = find_baking_image(windshield)
+        img_filepath = Path(bpy.path.abspath(img.filepath, library=img.library))
+        bake_temp_folder = img_filepath.parent / Path("_tmp_bake_images")
+        bake_temp_folder.mkdir(exist_ok=True)
+        # --- Errors with the bake image --------------------------------------
+        if img is None:
+            bpy.ops.xplane.msg(
+                "INVOKE_DEFAULT", msg_text="No valid image found to bake to"
+            )
+            return {"CANCELLED"}
+
+        if img.is_dirty:
+            bpy.ops.xplane.msg(
+                "INVOKE_DEFAULT",
+                msg_text="Save the image that's used for baking before use",
+            )
+            return {"CANCELLED"}
+
+        if img.packed_file is not None:
+            bpy.ops.xplane.msg(
+                "INVOKE_DEFAULT", msg_text="Can't animation-bake packed file"
+            )
+            return {"CANCELLED"}
+        # ---------------------------------------------------------------------
+
+        def select_objects(wiper: xplane_props.XPlaneWiperSettings) -> None:
+            """Select Wiper Object (already guaranteed to exist) then Windshield"""
+            for obj in context.selected_objects:
+                obj.select_set(False)
+            object_datablock = bpy.data.objects[wiper.object_name]
+            object_datablock.select_set(True)
+            windshield.select_set(True)
+            context.view_layer.objects.active = windshield
+
+        original_frame = scene.frame_current
+        paths = []
+        for slot, wiper in enumerate(wipers, start=1):
+            if not self.debug_slots[slot - 1]:
+                continue
+            select_objects(wiper)
+
+            print("Animated baking for frames (%d - %d)" % (start, end))
+
+            for cfra in range(start, end + 1):
+                bake_start = time.perf_counter()
+                print("Baking frame %d" % cfra)
+
+                # update scene to new frame and bake to template image
+                scene.frame_set(cfra)
+                if not self.debug_reuse_temps or not bake_temp_folder.exists():
+                    if is_cycles:
+                        ret = bpy.ops.object.bake(type=scene.cycles.bake_type)
+                    else:
+                        ret = bpy.ops.object.bake_image()
+                else:
+                    ret = {}
+
+                if "CANCELLED" in ret:
+                    return {"CANCELLED"}
+                print("Bake time:", time.perf_counter() - bake_start)
+
+                # Currently the api has no img.save_as()
+                orig = img.filepath_raw
+                new_img_filepath = bake_temp_folder / Path(
+                    f"{img_filepath.stem}_slot{slot}_{cfra:03}.png"
+                )
+                # !!! IMPORTANT! You must use filepath_raw! !!!
+                img.filepath_raw = str(new_img_filepath)
+                paths.append(Path(img.filepath_raw))
+                if not self.debug_reuse_temps:
+                    img.save()
+                    print("Saved %r" % new_img_filepath)
+                img.filepath_raw = orig
+            print("Baking done!")
+
+        try:
+            final_texture_path = xplane_wiper_gradient.make_wiper_images(
+                paths, *img.size
+            )
+        except OSError as e:
+            bpy.ops.xplane.msg("INVOKE_DEFAULT", e)
+            return {"CANCELLED"}
+        else:
+            rain.wiper_texture = bpy.path.relpath(str(final_texture_path)).replace("\\","/")
+            print("RAIN", rain.wiper_texture)
+            if not self.debug_reuse_temps:
+                shutil.rmtree(bake_temp_folder, ignore_errors=True)
+
+        scene.frame_set(original_frame)
+        return {"FINISHED"}
+
+    @classmethod
+    def poll(cls, context):
+        if context.active_object.xplane.isExportableRoot:
+            active_root = context.active_object
+        elif context.collection.xplane.is_exportable_collection:
+            active_root = context.collection
+        else:
+            active_root = None
+
+        return active_root and active_root.xplane.layer.export_type in {
+            EXPORT_TYPE_AIRCRAFT,
+            EXPORT_TYPE_COCKPIT,
+        }
 
 
 _ops = (
@@ -894,7 +1017,8 @@ _ops = (
     SCENE_OT_export_to_relative_dir,
     XPLANE_OT_CommandSearchToggle,
     XPLANE_OT_DatarefSearchToggle,
-    XPLANE_OT_render_bake_xp,
+    XPLANE_OT_XPlaneMessage,
+    XPLANE_OT_bake_wiper_gradient_texture,
 )
 
 register, unregister = bpy.utils.register_classes_factory(_ops)

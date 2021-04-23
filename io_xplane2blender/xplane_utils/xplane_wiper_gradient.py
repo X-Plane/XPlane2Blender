@@ -24,33 +24,31 @@ def _put_pixel(pixels: bpy.types.Image, x:int, y:int, width:int, height:int, pix
     pixels[i+2] = pixel[2]
     pixels[i+3] = pixel[3]
 
-def make_tmp_filepath(temp_img_path:Path, frame:int, slot:int)->Path:
-    """
-    Temp image path are in the form of 'parent_folder/bake_image_name_slot[1-4]_001.png' etc
-    """
-    return Path(f"{temp_img_path.parent}", f"{temp_img_path.stem}_slot{slot}_{frame:03}.png")
 
-def make_wiper_images(paths:List[Path]):
+def make_wiper_images(paths:List[Path], master_width:int, master_height:int)->Path:
     """
-    It is assumed all paths come in the proper format
-    and share the same parent folder
+    Produce the final wiper gradient texture from a list of paths
+    to the temporary bake files. Returns the Path of the combined texture,
+    or raises OSError if saving final_wiper_texture isn't possible
     """
     assert all(path.parent == paths[0].parent for path in paths)
 
+    master_img_name = "master_wiper_gradient"
     try:
-        master = bpy.data.images["master"]
+        bpy.data.images.remove(bpy.data.images[master_img_name])
     except KeyError:
-        master = bpy.data.images.new("master", 1024, 1024, alpha=True)
-        master.filepath = f"{paths[0].parent}/wiper_gradient.png"
-    else:
-        master.pixels[:] = [0.0] * len(master.pixels)
+        pass
+    master = bpy.data.images.new(master_img_name, master_width, master_height, alpha=True)
+    master.filepath = f"{paths[0].parent.parent}/wiper_gradient_texture.png"
+    gradient_texture_path = Path(master.filepath)
+
     master_array = array.array("f", master.pixels)
     width, height = master.size
 
     time_start = time.perf_counter()
     for i, path in enumerate(paths):
         loop_start = time.perf_counter()
-        slot = int(path.name[path.name.find("slot")+4])
+        slot = int(path.name[path.name.rfind("slot")+4])
         frame = int(path.name[path.name.rfind("_")+1:path.name.rfind("_")+4])
         img = create_datablock_image_from_disk(path)
         pixels = array.array("f", (img.pixels))
@@ -65,14 +63,16 @@ def make_wiper_images(paths:List[Path]):
                     _put_pixel(master_array, x, y, width, height, m_pixel)
 
         bpy.data.images.remove(img)
-        print(f"Processed temp {i} in {time.perf_counter() - loop_start}")
+        print(f"Processed slot{slot}_{frame} in {time.perf_counter() - loop_start}")
     try:
-        print("Saving file")
+        print("Saving", master.filepath)
         master.pixels[:] = master_array
         master.save()
-        print("Total time end:", time.perf_counter() - time_start  )
+        print("Saved")
+        print("Total time end:", time.perf_counter() - time_start)
     except OSError:
         raise
     else:
-        print("Saved")
-    return {"SUCCESS"}
+        bpy.data.images.remove(master)
+
+    return gradient_texture_path

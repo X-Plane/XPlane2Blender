@@ -29,7 +29,7 @@ class TestRainHeaderProps(XPlaneTestCase):
                     root_object=root_name,
                     fixturePath=filepath,
                     filterCallback={"RAIN_SCALE", "THERMAL", "WIPER"},
-                    tmpFilename=filepath.name,
+                    tmpFilename=filepath.stem,
                 )
 
     def test_no_options(self) -> None:
@@ -49,7 +49,7 @@ class TestRainHeaderProps(XPlaneTestCase):
                     root_object=root_name,
                     fixturePath=filepath,
                     filterCallback={"RAIN_SCALE", "THERMAL", "WIPER"},
-                    tmpFilename=filepath.name,
+                    tmpFilename=filepath.stem,
                 )
 
     def test_errors(self) -> None:

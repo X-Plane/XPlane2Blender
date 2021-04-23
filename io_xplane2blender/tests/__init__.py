@@ -1,3 +1,4 @@
+import array
 import collections
 import itertools
 import os
@@ -5,6 +6,7 @@ import pathlib
 import shutil
 import sys
 import unittest
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import bpy
@@ -117,6 +119,41 @@ class XPlaneTestCase(unittest.TestCase):
 
         logger.clear()
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
+
+    def assertImagesEqual(self, img_a:Union[bpy.types.Image, Path, str], img_b:Union[bpy.types.Image, Path, str], channels=0b1111):
+        """Asserts two images are equal by comparing their pixel buffers.
+
+        If img_a/b are Paths, they will be loaded as Image blocks (check_existing=True) and removed later
+        The specified channels of each image's pixel buffers will be compared to x places
+        """
+        # Thank you once again senderle!, https://stackoverflow.com/a/22045226
+        def chunk(it, size):
+            it = iter(it)
+            return iter(lambda: tuple(itertools.islice(it, size)), ())
+        try:
+            if isinstance(img_a, (Path, str)):
+                cmp_img_a =  test_creation_helpers.create_datablock_image_from_disk(img_a)
+            if isinstance(img_b, (Path, str)):
+                cmp_img_b = test_creation_helpers.create_datablock_image_from_disk(img_b)
+            self.assertEqual(cmp_img_a.size[:], cmp_img_b.size[:], msg=f"Images must be same size, are {cmp_img_a.size} and {cmp_img_b.size}")
+            self.assertNotEqual(cmp_img_a.size, (0,0), msg=f"Image data for {cmp_img_a.name} could not be loaded")
+            self.assertNotEqual(cmp_img_b.size, (0,0), msg=f"Image data for {cmp_img_b.name} could not be loaded")
+
+            a_pixels = chunk(array.array("f",cmp_img_a.pixels), 4)
+            b_pixels = chunk(array.array("f",cmp_img_b.pixels), 4)
+        finally:
+            bpy.data.images.remove(cmp_img_a)
+            bpy.data.images.remove(cmp_img_b)
+
+        for (a_pixel), (b_pixel) in zip(a_pixels, b_pixels):
+            if 0b1000 & channels:
+                self.assertEqual(a_pixel[0], b_pixel[0], msg=f"Red not equal {a_pixel[0]} {b_pixel[0]}")
+            if 0b0100 & channels:
+                self.assertEqual(a_pixel[1], b_pixel[1], msg=f"Green not equal {a_pixel[1]} {b_pixel[1]}")
+            if 0b0010 & channels:
+                self.assertEqual(a_pixel[2], b_pixel[2], msg=f"Blue  not equal {a_pixel[2]} {b_pixel[2]}")
+            if 0b0001 & channels:
+                self.assertEqual(a_pixel[3], b_pixel[3], msg=f"Alpha not equal {a_pixel[3]} {b_pixel[3]}")
 
     def assertMatricesEqual(self, mA, mB, tolerance=FLOAT_TOLERANCE):
         for row_a, row_b in zip(mA, mB):
