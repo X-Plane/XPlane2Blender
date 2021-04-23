@@ -934,7 +934,12 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
 
                 # update scene to new frame and bake to template image
                 scene.frame_set(cfra)
-                if not self.debug_reuse_temps or not bake_temp_folder.exists():
+                new_img_filepath = bake_temp_folder / Path(
+                    f"{img_filepath.stem}_slot{slot}_{cfra:03}.png"
+                )
+                if not self.debug_reuse_temps or (
+                    self.debug_reuse_temps and not new_img_filepath.exists()
+                ):
                     if is_cycles:
                         ret = bpy.ops.object.bake(type=scene.cycles.bake_type)
                     else:
@@ -948,9 +953,6 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
 
                 # Currently the api has no img.save_as()
                 orig = img.filepath_raw
-                new_img_filepath = bake_temp_folder / Path(
-                    f"{img_filepath.stem}_slot{slot}_{cfra:03}.png"
-                )
                 # !!! IMPORTANT! You must use filepath_raw! !!!
                 img.filepath_raw = str(new_img_filepath)
                 paths.append(Path(img.filepath_raw))
@@ -968,7 +970,9 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
             bpy.ops.xplane.msg("INVOKE_DEFAULT", e)
             return {"CANCELLED"}
         else:
-            rain.wiper_texture = bpy.path.relpath(str(final_texture_path)).replace("\\","/")
+            rain.wiper_texture = bpy.path.relpath(str(final_texture_path)).replace(
+                "\\", "/"
+            )
             print("RAIN", rain.wiper_texture)
             if not self.debug_reuse_temps:
                 shutil.rmtree(bake_temp_folder, ignore_errors=True)
