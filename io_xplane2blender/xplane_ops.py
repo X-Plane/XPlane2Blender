@@ -743,7 +743,6 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         description="Specifies which frame to start baking",
         default=1,
         min=1,
-        max=249,
     )
 
     end: bpy.props.IntProperty(
@@ -751,7 +750,6 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         description="Specifies which frame is the last frame to bake",
         default=250,
         min=2,
-        max=250,
     )
     debug_slots: bpy.props.BoolVectorProperty(
         "Allow Slots",
@@ -769,6 +767,13 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
             bpy.ops.xplane.msg(
                 "INVOKE_DEFAULT",
                 msg_text=f"Bake start frame '{self.start}' is greater than or equal to end frame '{self.end}'",
+            )
+            return {"CANCELLED"}
+
+        if (self.end - self.start) + 1 > 255:
+            bpy.ops.xplane.msg(
+                "INVOKE_DEFAULT",
+                msg_text=f"Wiper animation range must be a maximum of 255 frames",
             )
             return {"CANCELLED"}
 
@@ -917,6 +922,7 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
             windshield.select_set(True)
             context.view_layer.objects.active = windshield
 
+        original_active_object = context.active_object
         original_frame = scene.frame_current
         original_margin = scene.render.bake.margin
         scene.render.bake.margin = 0
@@ -964,7 +970,7 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
 
         try:
             final_texture_path = xplane_wiper_gradient.make_wiper_images(
-                paths, *img.size
+                paths, *img.size, self.start, self.end
             )
         except OSError as e:
             bpy.ops.xplane.msg("INVOKE_DEFAULT", e)
@@ -977,6 +983,9 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
             if not self.debug_reuse_temps:
                 shutil.rmtree(bake_temp_folder, ignore_errors=True)
 
+        for obj in context.selected_objects:
+            obj.select_set(False)
+        context.view_layer.objects.active = original_active_object
         scene.frame_set(original_frame)
         scene.render.bake.margin = original_margin
         return {"FINISHED"}

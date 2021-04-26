@@ -1523,7 +1523,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         name = "End Frame",
         description = "End of keyframe range for baking wiper gradient texture",
         min = 2,
-        default=256
+        default=255
     )
 
 
