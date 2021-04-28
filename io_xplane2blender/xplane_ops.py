@@ -745,12 +745,6 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         min=1,
     )
 
-    end: bpy.props.IntProperty(
-        name="Debug Start",
-        description="Specifies which frame is the last frame to bake",
-        default=250,
-        min=2,
-    )
     debug_slots: bpy.props.BoolVectorProperty(
         "Allow Slots",
         description="Override OBJ header which slots to bake",
@@ -762,20 +756,6 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         is_cycles = context.scene.render.engine == "CYCLES"
         scene = context.scene
         scene.render.bake.use_selected_to_active = True
-
-        if self.start >= self.end:
-            bpy.ops.xplane.msg(
-                "INVOKE_DEFAULT",
-                msg_text=f"Bake start frame '{self.start}' is greater than or equal to end frame '{self.end}'",
-            )
-            return {"CANCELLED"}
-
-        if (self.end - self.start) + 1 > 255:
-            bpy.ops.xplane.msg(
-                "INVOKE_DEFAULT",
-                msg_text=f"Wiper animation range must be a maximum of 255 frames",
-            )
-            return {"CANCELLED"}
 
         if context.active_object.xplane.isExportableRoot:
             rain = context.active_object.xplane.layer.rain
@@ -932,9 +912,9 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
                 continue
             select_objects(wiper)
 
-            print("Animated baking for frames (%d - %d)" % (self.start, self.end))
+            print("Animated baking for frames (%d - %d)" % (self.start, self.start+255))
 
-            for cfra in range(self.start, self.end + 1):
+            for cfra in range(self.start, self.start + (255 + 1)):
                 bake_start = time.perf_counter()
                 print("Baking frame %d" % cfra)
 
@@ -969,17 +949,17 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
             print("Baking done!")
 
         try:
-            final_texture_path = xplane_wiper_gradient.make_wiper_images(
-                paths, *img.size, self.start, self.end
+            master_filepath = img_filepath.parent/Path("wiper_gradient_texture.png")
+            xplane_wiper_gradient.make_wiper_images(
+                paths, *img.size, master_filepath
             )
         except OSError as e:
             bpy.ops.xplane.msg("INVOKE_DEFAULT", e)
             return {"CANCELLED"}
         else:
-            rain.wiper_texture = bpy.path.relpath(str(final_texture_path)).replace(
+            rain.wiper_texture = bpy.path.relpath(str(master_filepath)).replace(
                 "\\", "/"
             )
-            print("RAIN", rain.wiper_texture)
             if not self.debug_reuse_temps:
                 shutil.rmtree(bake_temp_folder, ignore_errors=True)
 

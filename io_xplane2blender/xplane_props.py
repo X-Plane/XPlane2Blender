@@ -1519,14 +1519,6 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         default=1
     )
 
-    wiper_bake_end: bpy.props.IntProperty(
-        name = "End Frame",
-        description = "End of keyframe range for baking wiper gradient texture",
-        min = 2,
-        default=255
-    )
-
-
     #######################################
     #TODO: Should these be in their own namespace?
     dev_enable_breakpoints: bpy.props.BoolProperty(

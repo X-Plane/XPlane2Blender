@@ -34,40 +34,43 @@ def _put_pixel(
 
 
 def make_wiper_images(
-    paths: List[Path],
+    img_paths: List[Path],
     master_width: int,
     master_height: int,
-    wiper_bake_start: int,
-    wiper_bake_end: int,
+    master_filepath: Path
 ) -> Path:
     """
     Using a list of paths, make the channel oriented wiper_gradient_texture.png.
     Raises OSError is saving the texture has an issue.
 
-    Returns Path of the final wiper_gradient_texture.png
-    """
-    assert all(path.parent == paths[0].parent for path in paths)
+    Paths must be less than 255 entries long (useful for debugging)
 
-    master_img_name = "master_wiper_gradient"
+    master_width, master_height must match the dimensions of the images referenced
+    by the paths.
+
+    master_filepath is the absolute path of the final wiper gradient, filename must be
+    'wiper_gradient_texture.png'
+
+    These are passed by hand so we can do less work with image data blocks in here.
+    """
+    assert len(img_paths) <= (255 * 4), f"{len(img_paths)} is > 255"
+
     try:
-        bpy.data.images.remove(bpy.data.images[master_img_name])
+        bpy.data.images.remove(bpy.data.images[master_filepath.stem])
     except KeyError:
         pass
     finally:
         master = bpy.data.images.new(
-            master_img_name, master_width, master_height, alpha=True
+            master_filepath.stem, master_width, master_height, alpha=True
         )
         master_array = array.array(
             "f", (0.0 for _ in range(master_width * master_height * 4))
         )
-        master.filepath = f"{paths[0].parent.parent}/wiper_gradient_texture.png"
-        gradient_texture_path = Path(master.filepath)
+        master.filepath = str(master_filepath)
 
-    # + 1 because wiper_bake_start:offset_bake_end is inclusive
-    num_steps = (wiper_bake_end - wiper_bake_start) + 1
     time_start = time.perf_counter()
-    for i, path in enumerate(paths):
-        step = (i % num_steps) + 1
+    for i, path in enumerate(img_paths):
+        step = (i % 255) + 1
         loop_start = time.perf_counter()
         slot = int(path.name[path.name.rfind("slot") + 4])
         frame = int(path.name[path.name.rfind("_") + 1 : path.name.rfind("_") + 4])
@@ -82,12 +85,12 @@ def make_wiper_images(
                     m_pixel = _get_pixel(
                         master_array, x, y, master_width, master_height
                     )
-                    m_pixel[slot - 1] = step / num_steps
+                    m_pixel[slot - 1] = step / 255
 
                     _put_pixel(master_array, x, y, master_width, master_height, m_pixel)
 
         bpy.data.images.remove(img)
-        print(f"Processed slot{slot}_{frame} in {time.perf_counter() - loop_start}")
+        print(f"Processed slot{slot}_{frame:03} in {time.perf_counter() - loop_start}")
     try:
         print("Saving", master.filepath)
         master.pixels[:] = master_array
@@ -98,5 +101,3 @@ def make_wiper_images(
         raise
     else:
         bpy.data.images.remove(master)
-
-    return gradient_texture_path

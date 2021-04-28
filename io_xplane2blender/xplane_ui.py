@@ -204,9 +204,9 @@ def rain_layout(
     layout.prop(rain_props, "wiper_ext_glass_object")
     wiper_grid_flow = layout.grid_flow(row_major=False)
 
-
     wiper_grid_flow.active = bool(rain_props.wiper_texture)
-    def wiper_layout(idx:int):
+
+    def wiper_layout(idx: int):
         row = wiper_grid_flow.row()
         row.active = getattr(rain_props, f"wiper_{idx}_enabled")
         row.prop(rain_props, f"wiper_{idx}_enabled", text="")
@@ -219,7 +219,7 @@ def rain_layout(
         row.prop(wiper, "nominal_width")
         # fmt: on
 
-    for prev_idx, next_idx in zip(range(1,4),range(2, 5)):
+    for prev_idx, next_idx in zip(range(1, 4), range(2, 5)):
         if prev_idx == 1:
             wiper_layout(prev_idx)
         prev_wiper_enabled = getattr(rain_props, f"wiper_{prev_idx}_enabled")
@@ -306,7 +306,8 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "optimize")
     advanced_column.prop(scene.xplane, "debug")
-    def draw_bake_op(layout:bpy.types.UILayout):
+
+    def draw_bake_op(layout: bpy.types.UILayout):
         row = layout.row()
         if bpy.context.active_object.xplane.isExportableRoot:
             active_root = bpy.context.active_object
@@ -315,18 +316,21 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
         else:
             active_root = None
 
-        if active_root and active_root.xplane.layer.export_type in {EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT}:
+        if active_root and active_root.xplane.layer.export_type in {
+            EXPORT_TYPE_AIRCRAFT,
+            EXPORT_TYPE_COCKPIT,
+        }:
             bake_op_text = f"Bake Wiper Gradient Texture For '{active_root.name}'"
         else:
             bake_op_text = f"Bake Wiper Gradient Texture"
 
         op = row.operator("xplane.bake_wiper_gradient_texture", text=bake_op_text)
         op.start = scene.xplane.wiper_bake_start
-        op.end = scene.xplane.wiper_bake_end
 
         row = layout.row()
         row.prop(scene.xplane, "wiper_bake_start")
-        row.prop(scene.xplane, "wiper_bake_end")
+        row.label(text=f"End Frame: {scene.xplane.wiper_bake_start + 254}")
+
     draw_bake_op(advanced_column)
 
     if scene.xplane.debug:
@@ -613,11 +617,10 @@ def layer_layout(
         advanced_box.prop(
             layer_props, "particle_system_file", text="Particle System File"
         )
+    advanced_box.prop(layer_props, "slungLoadWeight")
 
     if version >= 1200:
         rain_layout(advanced_box, layer_props, version)
-
-    advanced_box.prop(layer_props, "slungLoadWeight")
 
     advanced_box.prop(layer_props, "debug")
 
@@ -1696,7 +1699,6 @@ class XPLANE_UL_DatarefSearchList(bpy.types.UIList):
                 flt_flags.append(0 << 0)
 
         return flt_flags, flt_neworder
-
 
 
 _XPlaneUITypes = (
