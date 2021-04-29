@@ -619,8 +619,10 @@ def layer_layout(
         )
     advanced_box.prop(layer_props, "slungLoadWeight")
 
-    if version >= 1200:
-        rain_layout(advanced_box, layer_props, version)
+    if version >= 1200 and layer_props.export_type in {EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT}:
+        rain_box = advanced_box.box()
+        rain_box.label(text="Rain Options")
+        rain_layout(rain_box, layer_props, version)
 
     advanced_box.prop(layer_props, "debug")
 

@@ -34,10 +34,7 @@ def _put_pixel(
 
 
 def make_wiper_images(
-    img_paths: List[Path],
-    master_width: int,
-    master_height: int,
-    master_filepath: Path
+    img_paths: List[Path], master_width: int, master_height: int, master_filepath: Path
 ) -> Path:
     """
     Using a list of paths, make the channel oriented wiper_gradient_texture.png.
@@ -53,20 +50,19 @@ def make_wiper_images(
 
     These are passed by hand so we can do less work with image data blocks in here.
     """
-    assert len(img_paths) <= (255 * 4), f"{len(img_paths)} is > 255"
+    assert (
+        len(img_paths) and len(img_paths) % 255 == 0
+    ), f"{len(img_paths)} is not a multiple of 255"
+    assert len(img_paths) <= (255 * 4), f"{len(img_paths)} is > {255*4}"
 
     try:
         bpy.data.images.remove(bpy.data.images[master_filepath.stem])
     except KeyError:
         pass
     finally:
-        master = bpy.data.images.new(
-            master_filepath.stem, master_width, master_height, alpha=True
-        )
         master_array = array.array(
             "f", (0.0 for _ in range(master_width * master_height * 4))
         )
-        master.filepath = str(master_filepath)
 
     time_start = time.perf_counter()
     for i, path in enumerate(img_paths):
@@ -92,6 +88,10 @@ def make_wiper_images(
         bpy.data.images.remove(img)
         print(f"Processed slot{slot}_{frame:03} in {time.perf_counter() - loop_start}")
     try:
+        master = bpy.data.images.new(
+            master_filepath.stem, master_width, master_height, alpha=True
+        )
+        master.filepath = str(master_filepath)
         print("Saving", master.filepath)
         master.pixels[:] = master_array
         master.save()
