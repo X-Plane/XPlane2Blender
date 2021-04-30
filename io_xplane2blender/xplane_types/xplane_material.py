@@ -283,7 +283,7 @@ class XPlaneMaterial:
                 assert False, f"Is COCKPIT_FEATURE_HUD and {cockpit_panel_mode} a valid combination?"
         # ---------------------------------------------------------------------
 
-        if mat.xplane.hud_viewing_glass:
+        if mat.xplane.hud_viewing_glass and cockpit_panel_feature != COCKPIT_FEATURE_HUD:
             if 1200 <= xplane_version:
                 self.cockpitAttributes["ATTR_hud_glass"].setValue(True)
                 self.cockpitAttributes["ATTR_hud_reset"].setValue(False)

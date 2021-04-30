@@ -474,7 +474,7 @@ class XPlaneTestCase(unittest.TestCase):
         layer_number: int,
         fixturePath: str,
         filterCallback: Union[FilterLinesCallback, List[str]],
-        tmpFilename: Optional[str] = None,
+        tmpFilename: Optional[Union[Path,str]] = None,
         floatTolerance: float = FLOAT_TOLERANCE,
     ) -> None:
         """
@@ -580,7 +580,7 @@ class XPlaneTestCase(unittest.TestCase):
         return xp_file
 
     def exportLayer(
-        self, layer_number: int, dest: Optional[str] = None, force_visible=True
+        self, layer_number: int, dest: Optional[Union[Path,str]] = None, force_visible=True
     ) -> str:
         """
         DEPRECATED: New unit tests should not use this!
@@ -595,7 +595,7 @@ class XPlaneTestCase(unittest.TestCase):
     def exportExportableRoot(
         self,
         potential_root: Union[xplane_helpers.PotentialRoot, str],
-        dest: Optional[str] = None,
+        dest: Optional[Union[Path, str]] = None,
         force_visible=True,
         view_layer: Optional[bpy.types.ViewLayer] = None,
     ) -> str:
@@ -634,7 +634,7 @@ class XPlaneTestCase(unittest.TestCase):
         xplane_file._all_keyframe_infos.clear()
 
         if dest:
-            with open(os.path.join(get_tmp_folder(), dest + ".obj"), "w") as tmp_file:
+            with open(get_tmp_folder()/Path(dest).with_suffix(".obj"), "w") as tmp_file:
                 tmp_file.write(out)
 
         return out

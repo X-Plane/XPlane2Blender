@@ -10,38 +10,42 @@ from io_xplane2blender import xplane_config
 from io_xplane2blender.tests import *
 from io_xplane2blender.tests import test_creation_helpers
 
-__dirname__ = os.path.dirname(__file__)
+__dirname__ = Path(__file__).parent
 
 
 class TestCockpitHudAndGlass(XPlaneTestCase):
     def test_good_hud_glass_cases(self)->None:
-        files = [
-            "test_good_HUD_and_glass",
-            "test_good_HUD_and_glass_also",
+        filenames = [
+            "test_good_HUD_and_glass.obj",
+            "test_good_HUD_and_glass_also.obj",
         ]
-        for filename in [
-            Path(__dirname__, "fixtures", f"{filename}") for filename in files
+        for filepath in [
+            (__dirname__ / Path("fixtures", filename)) for filename in filenames
         ]:
-            with self.subTest(filename=filename):
-                filename = filename.name
+            with self.subTest(filename=filepath.name):
                 self.assertExportableRootExportEqualsFixture(
-                    filename[5:],
-                    os.path.join(__dirname__, "fixtures", f"{filename}.obj"),
+                    filepath.stem[5:],
+                    filepath,
                     {"ATTR_hud", "ATTR_cockpit"},
-                    filename,
+                    filepath.name,
                 )
 
-    @unittest.skip
-    def test_bad_hud_glass_cases(self)->None:
-        collections = [
-            "test_bad_HUD_used_in_scenery",
-            "test_bad_HUD_used_in_inst_scenery",
-            "bad_viewing_glass_in_scenery",
-            "bad_viewing_glass_in_inst_scenery",
+    def test_ignored_hud_glass_cases(self)->None:
+        filenames = [
+            'test_ignored_HUD_used_in_inst_scenery.obj',
+            'test_ignored_HUD_used_in_scenery.obj',
+            'test_ignored_viewing_glass_used_in_inst_scenery.obj',
+            'test_ignored_viewing_glass_used_in_scenery.obj',
         ]
-        for collection_name in collections:
-            with self.subTest(collection_name=collection_name):
-                out = self.exportExportableRoot(collection_name)
-                self.assertLoggerErrors(1)
+        for filepath in [
+            (__dirname__ / Path("fixtures", filename)) for filename in filenames
+        ]:
+            with self.subTest(filename=filepath.name):
+                self.assertExportableRootExportEqualsFixture(
+                    filepath.stem[5:],
+                    filepath,
+                    {"ATTR_hud", "ATTR_cockpit"},
+                    filepath.name,
+                )
 
 runTestCases([TestCockpitHudAndGlass])
