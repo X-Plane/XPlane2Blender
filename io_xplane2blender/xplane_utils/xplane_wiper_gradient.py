@@ -64,10 +64,8 @@ def make_wiper_images(
             "f", (0.0 for _ in range(master_width * master_height * 4))
         )
 
-    time_start = time.perf_counter()
     for i, path in enumerate(img_paths):
         step = (i % 255) + 1
-        loop_start = time.perf_counter()
         slot = int(path.name[path.name.rfind("slot") + 4])
         frame = int(path.name[path.name.rfind("_") + 1 : path.name.rfind("_") + 4])
 
@@ -86,7 +84,6 @@ def make_wiper_images(
                     _put_pixel(master_array, x, y, master_width, master_height, m_pixel)
 
         bpy.data.images.remove(img)
-        print(f"Processed slot{slot}_{frame:03} in {time.perf_counter() - loop_start}")
     try:
         master = bpy.data.images.new(
             master_filepath.stem, master_width, master_height, alpha=True
@@ -96,7 +93,6 @@ def make_wiper_images(
         master.pixels[:] = master_array
         master.save()
         print("Saved")
-        print("Total time end:", time.perf_counter() - time_start)
     except OSError:
         raise
     else:
