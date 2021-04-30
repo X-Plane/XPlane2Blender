@@ -101,6 +101,18 @@ class XPlaneHeader:
         self.attributes.add(
             XPlaneAttribute("NORMAL_METALNESS", None)
         )  # NORMAL_METALNESS for textures
+
+        # rain, thermal, wiper settings
+        rain_header_attrs = [
+            "RAIN_SCALE",
+            "THERMAL_texture",
+            "WIPER_texture",
+        ]
+        for rain_header_attr in rain_header_attrs:
+            self.attributes.add(XPlaneAttribute(rain_header_attr))
+        self.attributes.add(XPlaneAttribute("THERMAL_source"))
+        self.attributes.add(XPlaneAttribute("WIPER_param"))
+
         self.attributes.add(XPlaneAttribute("GLOBAL_no_blend", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_no_shadow", None))
         self.attributes.add(XPlaneAttribute("GLOBAL_shadow_blend", None))
@@ -112,7 +124,7 @@ class XPlaneHeader:
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED_NORMAL", None))
 
         # This is a hack to get around duplicate keynames!
-        # There is no NORMAL_METALNESS_draped_hack,
+        # There is no NORMAL_METALNESS_draped_hack in the OBJ spec,
         # self.write will check later for draped_hack and remove it
         #
         # If later on we have more duplicate keynames we'll figure something
@@ -141,6 +153,7 @@ class XPlaneHeader:
         The reason is we can only tell if certain directives should be written
         after everything is collected (like GLOBALs)
         """
+        filename = self.xplaneFile.filename
         isAircraft = self.xplaneFile.options.export_type == EXPORT_TYPE_AIRCRAFT
         isCockpit = self.xplaneFile.options.export_type == EXPORT_TYPE_COCKPIT
         isInstance = (
@@ -230,6 +243,97 @@ class XPlaneHeader:
                     f"{self.xplaneFile.filename}: No Normal Texture found, ignoring use of Normal Metalness"
                 )
 
+        def rain_header_attrs():
+            rain_props = self.xplaneFile.options.rain
+            has_wipers = any(
+                getattr(rain_props, f"wiper_{i}_enabled") for i in range(1, 5)
+            )
+            has_wiper_system = rain_props.wiper_texture and has_wipers
+
+            has_thermal_sources = any(
+                getattr(rain_props, f"thermal_source_{i}_enabled") for i in range(1, 5)
+            )
+            has_thermal_system = rain_props.thermal_texture and has_thermal_sources
+            has_rain_system = has_wiper_system or has_thermal_system
+            if xplane_version >= 1200 and (isAircraft or isCockpit):
+                if has_thermal_sources and not rain_props.thermal_texture:
+                    logger.warn(
+                        f"{filename}: Must have Thermal Texture to use Thermal Sources"
+                    )
+                if has_wipers and not rain_props.wiper_texture:
+                    logger.warn(f"{filename}: Must have Wiper Texture to use Wipers")
+
+            if (
+                xplane_version >= 1200 and (isAircraft or isCockpit) and has_rain_system
+            ):
+                v = {
+                    "RAIN_SCALE": rain_props.rain_scale
+                    if round(rain_props.rain_scale, PRECISION_OBJ_FLOAT) < 1.0
+                    else None,
+                    "THERMAL_texture": self.getPathRelativeToOBJ(
+                        rain_props.thermal_texture, exportdir, blenddir
+                    )
+                    if rain_props.thermal_texture
+                    else None,
+                    "WIPER_texture": self.getPathRelativeToOBJ(
+                        rain_props.wiper_texture, exportdir, blenddir
+                    )
+                    if rain_props.wiper_texture
+                    else None,
+                }
+
+                for attr, value in v.items():
+                    self.attributes[attr].setValue(value)
+
+                for i in range(1, 5):
+                    if getattr(rain_props, f"thermal_source_{i}_enabled"):
+                        thermal_source = getattr(rain_props, f"thermal_source_{i}")
+                        if not thermal_source.dataref_tempurature:
+                            logger.error(
+                                f"{filename}'s Thermal Source #{i} has no tempurature dataref"
+                            )
+                        if not thermal_source.dataref_on_off:
+                            logger.error(
+                                f"{filename}'s Thermal Source #{i} has no on/off dataref"
+                            )
+
+                        # STUPID HACK ALERT! The XPlaneAttribute API is stupid
+                        if self.attributes["THERMAL_source"].value[0] == None:
+                            del self.attributes["THERMAL_source"].value[0]
+                        self.attributes["THERMAL_source"].value.append(
+                            f"{thermal_source.dataref_tempurature}    {thermal_source.dataref_on_off}"
+                        )
+                    else:
+                        break
+
+                for i in range(1, 5):
+                    if getattr(rain_props, f"wiper_{i}_enabled"):
+                        wiper = getattr(rain_props, f"wiper_{i}")
+                        if not wiper.dataref:
+                            logger.error(f"{filename}'s Wiper #{i} has no dataref")
+
+                        if wiper.start >= wiper.end:
+                            logger.error(
+                                f"{filename}'s Wiper #{i} dataref start value ({wiper.start}) is greater than or equal to it's end ({wiper.end})"
+                            )
+
+                        # STUPID HACK ALERT! The XPlaneAttribute API is stupid
+                        if self.attributes["WIPER_param"].value[0] == None:
+                            del self.attributes["WIPER_param"].value[0]
+                        self.attributes["WIPER_param"].value.append(
+                            f"{wiper.dataref}    {wiper.start}   {wiper.end}    {wiper.nominal_width}"
+                        )
+                    else:
+                        break
+
+                if has_thermal_system and not self.attributes["THERMAL_source"].value:
+                    logger.error(f"{filename}'s Rain System must have at least 1 enabled Thermal Source")
+
+                if has_rain_system and not self.attributes["WIPER_param"].value:
+                    logger.error(f"{filename}'s Rain System must have at least 1 enabled Wiper")
+
+        rain_header_attrs()
+
         if xplane_version >= 1100:
 
             if self.xplaneFile.options.export_type in {
@@ -241,10 +345,7 @@ class XPlaneHeader:
                 )
             elif (
                 self.xplaneFile.options.export_type
-                in {
-                    EXPORT_TYPE_INSTANCED_SCENERY,
-                    EXPORT_TYPE_SCENERY,
-                }
+                in {EXPORT_TYPE_INSTANCED_SCENERY, EXPORT_TYPE_SCENERY,}
                 and self.xplaneFile.options.blend_glass
             ):
                 logger.error(

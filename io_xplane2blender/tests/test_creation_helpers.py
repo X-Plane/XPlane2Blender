@@ -17,6 +17,7 @@ import os.path
 import shutil
 import typing
 from collections import namedtuple
+from pathlib import Path
 from typing import *
 
 import bpy
@@ -400,8 +401,7 @@ def create_datablock_armature(
 
 
 def create_datablock_empty(
-    info: DatablockInfo,
-    scene: Optional[Union[bpy.types.Scene, str]] = None,
+    info: DatablockInfo, scene: Optional[Union[bpy.types.Scene, str]] = None,
 ) -> bpy.types.Object:
     """
     Creates a datablock empty and links it to a scene and collection.
@@ -513,23 +513,18 @@ def create_datablock_light(
     return ob
 
 
-def create_image_from_disk(
-    filename: str, filepath: str = "//tex/{}"
-) -> bpy.types.Image:
+def create_datablock_image_from_disk(filepath: Union[Path, str]) -> bpy.types.Image:
     """
-    Create an image from a .png file on disk.
-    Returns image or raises OSError
+    Create an image from a file on disk or re-uses it if possible.
+    Returns bpy.types.Image or raises OSError
     """
-    assert os.path.splitext(filename)[1] == ".png"
-    # Load image file. Change here if the snippet folder is
-    # not located in you home directory.
-    realpath = bpy.path.abspath(filepath.format(filename))
+
     try:
-        img = bpy.data.images.load(realpath)
-        img.filepath = bpy.path.relpath(realpath)
+        real_path = bpy.path.abspath(str(filepath))
+        img = bpy.data.images.load(real_path, check_existing=True)
         return img
     except (RuntimeError, ValueError):  # Couldn't load or make relative path
-        raise OSError("Cannot load image %s" % realpath)
+        raise OSError(f"Cannot load image {real_path}")
 
 
 def create_material(material_name: str):
