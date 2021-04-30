@@ -1,0 +1,18 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+RAIN_SCALE	0.31
+WIPER_texture	textures/wiper_gradient.png
+WIPER_param	dref1    -1.0   1.0    0.6599998474121094
+WIPER_param	dref2    -2.0   2.0    2.129999876022339
+WIPER_param	dref3    -3.0   3.0    2.549999952316284
+WIPER_param	dref4    -4.0   4.0    4.319999694824219
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Empty: Dummy
+	# EMPTY: Dummy	weight: 0
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+102.NO_BUILD_NUMBR

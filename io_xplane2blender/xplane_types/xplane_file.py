@@ -228,7 +228,7 @@ class XPlaneFile:
         self.mesh = XPlaneMesh()
         self._bl_obj_name_to_bone: Dict[str, XPlaneBone] = {}
 
-        # materials representing the reference for export
+        # Materials to be used for writing the header directives, a list of 2
         self.referenceMaterials: List[xplane_material.XPlaneMaterial] = None
 
         # the root bone: origin for all animations/objects
@@ -740,11 +740,17 @@ class XPlaneFile:
         """
         self.mesh.collectXPlaneObjects(self.get_xplane_objects())
 
-        # validate materials
+        # - validateMaterials() > every object's material's XPlaneMaterial.isValid > xplane_material_utils.validate
+        # - getReferenceMaterials can end up revalidating all of self.getMaterials
+        # - compareMaterials compares all materials in the OBJ are consistent
+        #
+        # We validate all material's internal state, then ensure they all match with each other. This way XPlane2Blender
+        # always acts consistently. Nothing mysteriously works based on co-incidence or superstition
+        # and no "reference material" can be used without all materials being consistenly correct.
+        # The downside is tediousness when one material is slightly wrong
         if not self.validateMaterials():
             return ""
 
-        # detect reference materials
         self.referenceMaterials = xplane_material_utils.getReferenceMaterials(
             self.getMaterials(), self.options.export_type
         )
@@ -754,9 +760,6 @@ class XPlaneFile:
             "Using the following reference materials: %s" % ", ".join(refMatNames)
         )
 
-        # validation was successful
-        # retrieve reference materials
-        # and compare all materials against reference materials
         # TODO: One day we'll have a autodetect feature again
         # if self.options.autodetectTextures == False:
         #    logger.info('Autodetect textures overridden for file %s: not fully checking manually entered textures against Blender-based reference materials\' textures' % (self.filename))
