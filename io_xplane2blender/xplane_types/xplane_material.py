@@ -292,24 +292,10 @@ class XPlaneMaterial:
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
         xplane_version = int(bpy.context.scene.xplane.version)
         if mat.xplane.lightLevel:
+            ll_values = [mat.xplane.lightLevel_v1, mat.xplane.lightLevel_v2, mat.xplane.lightLevel_dataref]
             if 1200 <= xplane_version and mat.xplane.lightLevel_photometric:
-                self.attributes["ATTR_light_level_photometric"].setValue(
-                    (
-                        mat.xplane.lightLevel_v1,
-                        mat.xplane.lightLevel_v2,
-                        mat.xplane.lightLevel_brightness,
-                        mat.xplane.lightLevel_dataref,
-                    )
-                )
-            else:
-                self.attributes["ATTR_light_level"].setValue(
-                    (
-                        mat.xplane.lightLevel_v1,
-                        mat.xplane.lightLevel_v2,
-                        mat.xplane.lightLevel_dataref,
-                    )
-                )
-
+                ll_values.append(mat.xplane.lightLevel_brightness)
+            self.attributes["ATTR_light_level"].setValue(tuple(ll_values))
             self.attributes["ATTR_light_level_reset"].setValue(False)
 
     def collectConditions(self, mat: bpy.types.Material) -> None:

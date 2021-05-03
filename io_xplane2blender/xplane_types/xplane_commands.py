@@ -84,7 +84,7 @@ class XPlaneCommands:
         self.xplaneFile = xplaneFile
 
         self.reseters = {
-            "ATTR_light_level(_photometric)?": "ATTR_light_level_reset",
+            "ATTR_light_level": "ATTR_light_level_reset",
             "ATTR_cockpit(_hud|_lit_only|_region|_device)?": "ATTR_no_cockpit",
             "ATTR_manip_(?!none)(?!wheel)(.*)": "ATTR_manip_none",
             "ATTR_no_shadow": "ATTR_shadow",
