@@ -330,7 +330,6 @@ class XPlaneCommands:
 
         WHITE_LIST = {
             "ATTR_light_level",
-            "ATTR_light_level_photometric",
             "ATTR_light_level_reset",
             "ATTR_cockpit_device",
             "ATTR_cockpit",

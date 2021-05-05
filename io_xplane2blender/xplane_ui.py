@@ -1230,8 +1230,15 @@ def cockpit_layout(
             device_box.prop(active_material.xplane, "device_lighting_channel")
             device_box.prop(active_material.xplane, "device_auto_adjust")
     if version >= 1200:
-        if active_material.xplane.cockpit_feature != COCKPIT_FEATURE_HUD:
+        if active_material.xplane.cockpit_feature in {COCKPIT_FEATURE_PANEL, COCKPIT_FEATURE_DEVICE}:
+            use_luminance = active_material.xplane.cockpit_feature_use_luminance
+            row = cockpit_box.row()
+            row.active = use_luminance
+            row.prop(active_material.xplane,"cockpit_feature_use_luminance")
+            row.prop(active_material.xplane,"cockpit_feature_luminance")
+        elif active_material.xplane.cockpit_feature != COCKPIT_FEATURE_HUD:
             cockpit_box.prop(active_material.xplane, "hud_viewing_glass")
+
 
 
 def axis_detent_ranges_layout(

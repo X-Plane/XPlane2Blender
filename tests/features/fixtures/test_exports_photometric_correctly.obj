@@ -30,7 +30,7 @@ IDX	8
 	# MESH: has_light_level_photometric	weight: 0
 	# MATERIAL: has_light_level_photometric
 	ATTR_shiny_rat	0.5
-	ATTR_light_level_photometric	0.25	0.75	5678	sim/graphics/animation/sin_wave_2
+	ATTR_light_level	0.25	0.75	sim/graphics/animation/sin_wave_2	5678
 	TRIS	0 3
 		# 2 Mesh: no_light_level
 		# MESH: no_light_level	weight: 2
@@ -38,4 +38,4 @@ IDX	8
 		ATTR_light_level_reset
 		TRIS	3 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+102.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+111.NO_BUILD_NUMBR

@@ -1868,6 +1868,19 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         ]
     )
 
+    cockpit_feature_use_luminance: bpy.props.BoolProperty(
+        name="Use Cockpit Panel Luminance",
+        description="Use cockpit panel luminance feature"
+    )
+
+    cockpit_feature_luminance: bpy.props.IntProperty(
+        name="Cockpit Panel Baseline Luminance",
+        description="Real world maximum brightness of the panel, in nts",
+        min=1,
+        max=60000,
+        default=1000,
+    )
+
     lightLevel: bpy.props.BoolProperty(
         name = "Override Light Level",
         description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
@@ -1876,13 +1889,13 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     lightLevel_photometric: bpy.props.BoolProperty(
         name = "Use Photometric Units",
-        description = "Adjusts light level based on Brightness in nts",
+        description = "Use brightness in nts in to change the _LIT texture",
         default = False
     )
 
     lightLevel_brightness: bpy.props.IntProperty(
         name = "Brightness",
-        description = "Brightness adjustment for Light Level override, in nts",
+        description = "The brightness in nts of your _LIT texture at its brightness",
         default = 1000,
         min = 0
     )

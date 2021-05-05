@@ -77,7 +77,6 @@ class XPlaneMaterial:
         self.attributes.add(XPlaneAttribute("ATTR_no_solid_camera"))
 
         self.attributes.add(XPlaneAttribute("ATTR_light_level", None, 1000))
-        self.attributes.add(XPlaneAttribute("ATTR_light_level_photometric", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_light_level_reset", True, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_poly_os", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_draped", None, 1000))
@@ -237,10 +236,13 @@ class XPlaneMaterial:
         # --- Cockpit Panel Mode/Feature --------------------------------------
         cockpit_panel_mode = xplaneFile.options.cockpit_panel_mode
         cockpit_panel_feature = mat.xplane.cockpit_feature
+        if mat.xplane.cockpit_feature != COCKPIT_FEATURE_NONE:
+            self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+
         if mat.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+            attr = self.cockpitAttributes["ATTR_cockpit_device"]
             if xplane_version >= 1100:
-                self.cockpitAttributes["ATTR_cockpit_device"].setValue(
-                    [
+                value = [
                         mat.xplane.device_name,
                         bin(
                             sum(
@@ -251,21 +253,39 @@ class XPlaneMaterial:
                         mat.xplane.device_lighting_channel,
                         mat.xplane.device_auto_adjust,
                     ]
-                )
-                self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
+                if xplane_version >= 1200 and mat.xplane.cockpit_feature_use_luminance:
+                    value.append(
+                        mat.xplane.cockpit_feature_luminance
+                    )
+                attr.value[0] = value.copy()
+
         elif cockpit_panel_feature == COCKPIT_FEATURE_PANEL:
             cockpit_region = int(mat.xplane.cockpit_region)
 
-            self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
             if 1110 <= xplane_version:
-                if cockpit_panel_mode == PANEL_COCKPIT:
-                    self.cockpitAttributes["ATTR_cockpit"].setValue(True)
-                elif cockpit_panel_mode == PANEL_COCKPIT_LIT_ONLY:
-                    self.cockpitAttributes["ATTR_cockpit_lit_only"].setValue(True)
-                elif cockpit_panel_mode == PANEL_COCKPIT_REGION and cockpit_region:
-                    self.cockpitAttributes["ATTR_cockpit_region"].setValue(
-                        cockpit_region - 1
-                    )
+                # fmt: off
+                ckpt_attrs = self.cockpitAttributes
+                attr = {
+                    PANEL_COCKPIT:          ckpt_attrs["ATTR_cockpit"],
+                    PANEL_COCKPIT_LIT_ONLY: ckpt_attrs["ATTR_cockpit_lit_only"],
+                    PANEL_COCKPIT_REGION:   ckpt_attrs["ATTR_cockpit_region"],
+                }[cockpit_panel_mode]
+                value = []
+                # fmt: on
+                if cockpit_panel_mode == PANEL_COCKPIT_REGION and cockpit_region:
+                    value.append(cockpit_region - 1)
+
+                if (
+                    1200 <= xplane_version
+                    and cockpit_panel_mode in {PANEL_COCKPIT, PANEL_COCKPIT_REGION}
+                    and mat.xplane.cockpit_feature_use_luminance
+                ):
+                    value.append(mat.xplane.cockpit_feature_luminance)
+
+                if value:
+                    attr.value[0] = value.copy()
+                else:
+                    attr.value = [True]
             elif xplane_version < 1110:
                 # TODO: I believe this is wrong!
                 # This prints out ATTR_cockpit then region no matter
@@ -274,17 +294,20 @@ class XPlaneMaterial:
                     self.cockpitAttributes["ATTR_cockpit_region"].setValue(
                         cockpit_region - 1
                     )
-            self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
-        if cockpit_panel_feature == COCKPIT_FEATURE_HUD:
+        elif cockpit_panel_feature == COCKPIT_FEATURE_HUD:
             if cockpit_panel_mode in {PANEL_COCKPIT, PANEL_COCKPIT_LIT_ONLY}:
                 if 1200 <= xplane_version:
                     self.cockpitAttributes["ATTR_cockpit_hud"].setValue(True)
-                    self.cockpitAttributes["ATTR_no_cockpit"].setValue(None)
             else:
-                assert False, f"Is COCKPIT_FEATURE_HUD and {cockpit_panel_mode} a valid combination?"
+                assert (
+                    False
+                ), f"Is COCKPIT_FEATURE_HUD and {cockpit_panel_mode} a valid combination?"
         # ---------------------------------------------------------------------
 
-        if mat.xplane.hud_viewing_glass and cockpit_panel_feature != COCKPIT_FEATURE_HUD:
+        if (
+            mat.xplane.hud_viewing_glass
+            and cockpit_panel_feature != COCKPIT_FEATURE_HUD
+        ):
             if 1200 <= xplane_version:
                 self.cockpitAttributes["ATTR_hud_glass"].setValue(True)
                 self.cockpitAttributes["ATTR_hud_reset"].setValue(False)
@@ -292,7 +315,11 @@ class XPlaneMaterial:
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
         xplane_version = int(bpy.context.scene.xplane.version)
         if mat.xplane.lightLevel:
-            ll_values = [mat.xplane.lightLevel_v1, mat.xplane.lightLevel_v2, mat.xplane.lightLevel_dataref]
+            ll_values = [
+                mat.xplane.lightLevel_v1,
+                mat.xplane.lightLevel_v2,
+                mat.xplane.lightLevel_dataref,
+            ]
             if 1200 <= xplane_version and mat.xplane.lightLevel_photometric:
                 ll_values.append(mat.xplane.lightLevel_brightness)
             self.attributes["ATTR_light_level"].setValue(tuple(ll_values))

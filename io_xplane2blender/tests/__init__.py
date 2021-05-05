@@ -1,8 +1,10 @@
 import array
 import collections
+import io
 import itertools
 import os
 import pathlib
+from pprint import pprint
 import shutil
 import sys
 import unittest
@@ -495,8 +497,8 @@ class XPlaneTestCase(unittest.TestCase):
     def assertExportableRootExportEqualsFixture(
         self,
         root_object: Union[bpy.types.Collection, bpy.types.Object, str],
-        fixturePath: str,
-        filterCallback: [Union[FilterLinesCallback, List[str]]],
+        fixturePath: Union[Path,str],
+        filterCallback: Union[FilterLinesCallback, List[str]],
         tmpFilename: Optional[str] = None,
         floatTolerance: float = FLOAT_TOLERANCE,
     ) -> None:
@@ -519,10 +521,16 @@ class XPlaneTestCase(unittest.TestCase):
         d: Dict[str, Any],
         floatTolerance: float = FLOAT_TOLERANCE,
     ):
+        with io.StringIO() as s_buf:
+            pprint(list(d.keys()), s_buf)
+            d_pp_str = s_buf.getvalue()
+        with io.StringIO() as s_buf:
+            pprint(list(attrs.keys()), s_buf)
+            attrs_pp_str = s_buf.getvalue()
         self.assertEquals(
             len(d),
             len(attrs),
-            f"Attribute lists {list(d.keys())}, {list(attrs.keys())} have different length",
+            f"Attribute lists {d_pp_str}, {attrs_pp_str} have different length.\nDifferences are {set(d.keys()) ^ set(attrs.keys())}",
         )
 
         for name in attrs:
