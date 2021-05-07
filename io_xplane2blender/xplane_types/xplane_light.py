@@ -166,7 +166,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             and not parsed_light.light_param_def
         ):
             self.record_completed = parsed_light.best_overload()
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
         elif self.lightType == LIGHT_NAMED and not parsed_light:
             logger.warn(unknown_light_name_warning)
@@ -234,7 +234,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     except ValueError:
                         continue
 
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
             # The only prototypes without DXYZ are SPILL_GND/_REV (of which there are no parameters)
@@ -393,7 +393,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # Leaving DXYZ in a record's arguments is okay
             # - It doesn't affect any sw_callbacks (as of 4/19/2020)
             # - We'll be filling in instead of autocorrecting
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
             try:

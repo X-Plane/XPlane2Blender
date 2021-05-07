@@ -82,6 +82,7 @@ To deal with these extreme subtleties follow these rules while writing code:
 """
 import collections
 import copy
+import enum
 import os
 import re
 from dataclasses import dataclass
@@ -102,94 +103,176 @@ OVERLOAD_TYPES = {
     "SPILL_SW",
 }
 
+SIZE_AS_INTENSITY = {
+    "airplane_landing_bb",
+    "airplane_landing_pm",
+    "airplane_taxi_bb",
+    "airplane_taxi_pm",
+    "airplane_spot_bb",
+    "airplane_spot_pm",
+    "airplane_generic_bb",
+    "airplane_generic_pm",
+    "airplane_nav_bb",
+    "airplane_nav_pm",
+    "airplane_strobe_bb",
+    "airplane_strobe_pm",
+    "airplane_beacon_bb",
+    "airplane_beacon_pm",
+}
 
-def get_overload_column_info(overload_type: str) -> Dict[str, bool]:
-    """
-    Returns a Dict[ColumnName, IsParameterizable].
-    The keys of this dict are the overload prototype.
 
-    Raises KeyError if overload_type isn't found.
+class ColumnName(enum.Enum):
+    """ColumnName are labels for the OVERLOAD_TYPE's columns.
+
+    Columns in the lights.txt file are named differently for
+    each OVERLOAD_TYPE. In BILLBOARD_HW, the 1st column is 'R'.
+    In SPILL_GND it is 'SIZE'. It is easier to understand the
+    use of a light overload by talking about labels instead
+    of column numbers.
+
+    These are the standard names, as well as a function to handle
+    special cases.
     """
+
+    R = "R"
+    G = "G"
+    B = "B"
+    A = "A"
+    SIZE = "SIZE"
+    CELL_SIZE = "CELL_SIZE"
+    CELL_ROW = "CELL_ROW"
+    CELL_COL = "CELL_COL"
+    DX = "DX"
+    DY = "DY"
+    DZ = "DZ"
+    WIDTH = "WIDTH"
+    FREQ = "FREQ"
+    PHASE = "PHASE"
+    AMP = "AMP"
+    DAY = "DAY"
+    DREF = "DREF"
+
+    @classmethod
+    def param_to_canonical_column_name(
+        cls, light_name: Optional[str], param_name: Union["ColumnName", str ]
+    ) -> "ColumnName":
+        """Returns the canonical ColumnName based on
+        light_name, param_name (probably from a ParsedLight's light_param_def, or
+        an unreplaced argument)
+
+        light_name can be empty to only test param_name
+
+        Throws ValueError if no translation could be found"""
+        try:
+            if isinstance(param_name, ColumnName):
+                return param_name
+            else:
+                return cls[param_name]
+        except KeyError:
+            if param_name == "INDEX":
+                column_name = cls.A
+            elif param_name == "INTENSITY" and light_name in SIZE_AS_INTENSITY:
+                column_name = cls.SIZE
+            elif param_name == "DIR_MAG" and light_name in {"airplane_nav_tail_size"}:
+                column_name = cls.B
+            elif param_name == "DIR_MAG" and light_name in {
+                "airplane_nav_left_size",
+                "airplane_nav_right_size",
+            }:
+                column_name = cls.R
+            else:  # including "UNUSED"
+                raise ValueError(f"{param_name} has no canonical column name")
+            return column_name
+
+
+def get_overload_column_info(overload_type: str) -> Dict[ColumnName, bool]:
+    """
+    They keys of the returned Dict[ColumnName, IsParameterizable]
+    match the overload_type's column order.
+    """
+    assert overload_type in OVERLOAD_TYPES
+
+    # Raises KeyError if overload_type isn't found.
     return {
         "BILLBOARD_HW": {
-            "R": True,
-            "G": True,
-            "B": True,
-            "A": False,
-            "SIZE": True,
-            "CELL_SIZE": False,
-            "CELL_ROW": False,
-            "CELL_COL": False,
-            "DX": True,
-            "DY": True,
-            "DZ": True,
-            "WIDTH": True,
-            "FREQ": True,
-            "PHASE": True,
-            "AMP": False,
-            "DAY": False,
+            ColumnName.R: True,
+            ColumnName.G: True,
+            ColumnName.B: True,
+            ColumnName.A: False,
+            ColumnName.SIZE: True,
+            ColumnName.CELL_SIZE: False,
+            ColumnName.CELL_ROW: False,
+            ColumnName.CELL_COL: False,
+            ColumnName.DX: True,
+            ColumnName.DY: True,
+            ColumnName.DZ: True,
+            ColumnName.WIDTH: True,
+            ColumnName.FREQ: True,
+            ColumnName.PHASE: True,
+            ColumnName.AMP: False,
+            ColumnName.DAY: False,
         },
         "BILLBOARD_SW": {
-            "R": True,
-            "G": True,
-            "B": True,
-            "A": True,
-            "SIZE": True,
-            "CELL_SIZE": False,
-            "CELL_ROW": False,
-            "CELL_COL": False,
-            "DX": True,
-            "DY": True,
-            "DZ": True,
-            "WIDTH": True,
-            "DREF": False,
+            ColumnName.R: True,
+            ColumnName.G: True,
+            ColumnName.B: True,
+            ColumnName.A: True,
+            ColumnName.SIZE: True,
+            ColumnName.CELL_SIZE: False,
+            ColumnName.CELL_ROW: False,
+            ColumnName.CELL_COL: False,
+            ColumnName.DX: True,
+            ColumnName.DY: True,
+            ColumnName.DZ: True,
+            ColumnName.WIDTH: True,
+            ColumnName.DREF: False,
         },
         "SPILL_GND": {
-            "SIZE": True,
-            "CELL_SIZE": False,
-            "CELL_ROW": False,
-            "CELL_COL": False,
+            ColumnName.SIZE: True,
+            ColumnName.CELL_SIZE: False,
+            ColumnName.CELL_ROW: False,
+            ColumnName.CELL_COL: False,
         },
         "SPILL_GND_REV": {
-            "SIZE": True,
-            "CELL_SIZE": False,
-            "CELL_ROW": False,
-            "CELL_COL": False,
+            ColumnName.SIZE: True,
+            ColumnName.CELL_SIZE: False,
+            ColumnName.CELL_ROW: False,
+            ColumnName.CELL_COL: False,
         },
         "SPILL_HW_DIR": {
-            "R": True,
-            "G": True,
-            "B": True,
-            "A": True,
-            "SIZE": True,
-            "DX": True,
-            "DY": True,
-            "DZ": True,
-            "WIDTH": True,
-            "DAY": False,
+            ColumnName.R: True,
+            ColumnName.G: True,
+            ColumnName.B: True,
+            ColumnName.A: True,
+            ColumnName.SIZE: True,
+            ColumnName.DX: True,
+            ColumnName.DY: True,
+            ColumnName.DZ: True,
+            ColumnName.WIDTH: True,
+            ColumnName.DAY: False,
         },
         "SPILL_HW_FLA": {
-            "R": True,
-            "G": True,
-            "B": True,
-            "A": True,
-            "SIZE": True,
-            "FREQ": True,
-            "PHASE": True,
-            "AMP": False,
-            "DAY": False,
+            ColumnName.R: True,
+            ColumnName.G: True,
+            ColumnName.B: True,
+            ColumnName.A: True,
+            ColumnName.SIZE: True,
+            ColumnName.FREQ: True,
+            ColumnName.PHASE: True,
+            ColumnName.AMP: False,
+            ColumnName.DAY: False,
         },
         "SPILL_SW": {
-            "R": True,
-            "G": True,
-            "B": True,
-            "A": True,
-            "SIZE": True,
-            "DX": True,
-            "DY": True,
-            "DZ": True,
-            "WIDTH": True,
-            "DREF": False,
+            ColumnName.R: True,
+            ColumnName.G: True,
+            ColumnName.B: True,
+            ColumnName.A: True,
+            ColumnName.SIZE: True,
+            ColumnName.DX: True,
+            ColumnName.DY: True,
+            ColumnName.DZ: True,
+            ColumnName.WIDTH: True,
+            ColumnName.DREF: False,
         },
     }[overload_type]
 
@@ -310,68 +393,54 @@ class ParsedLightOverload:
     arguments: List[Union[float, str]]
 
     def __contains__(self, item: str) -> bool:
-        """For ParsedLightOverloads, 'contains' means 'this overload contain this column'"""
-        return item in get_overload_column_info(self.overload_type)
+        """For ParsedLightOverloads, 'contains' means 'this overload contains this column'"""
+        return ColumnName.param_to_canonical_column_name(
+            self.name, item
+        ) in get_overload_column_info(self.overload_type)
 
-    def __getitem__(self, key: Union[int, str]) -> Union[float, str]:
+    def __getitem__(self, key: Union[ColumnName, int, str]) -> Union[float, str]:
         """
-        Passing in an int will get you the index in the list of arguments,
-        passing in a key will get you the contents of that column of the
-        prototype
-        Raises IndexError index out of range or KeyError if param is not in overload
+        key:ColumnName -> content of arguments at column name's column in the overload_type
+        key:int -> content of arguments at key or IndexError
+        key:str -> content of arguments at column name's column in the overload_type or KeyError
+        key:Anything Else -> assert False
         """
-        prototype = get_overload_column_info(self.overload_type)
         if isinstance(key, int):
             return self.arguments[key]
-        elif isinstance(key, str):
-            if key.startswith("UNUSED"):
-                raise KeyError(
-                    f"{key} cannot represent a real index in the argument's list"
-                )
+        elif isinstance(key, (ColumnName, str)):
             try:
-                if key == "INDEX":
-                    key = "A"
-                elif key == "DIR_MAG" and self.name in {"airplane_nav_tail_size"}:
-                    key = "B"
-                elif key == "DIR_MAG" and self.name in {
-                    "airplane_nav_left_size",
-                    "airplane_nav_right_size",
-                }:
-                    key = "R"
-                return self.arguments[tuple(prototype).index(key)]
-            except ValueError as ve:
-                raise KeyError(
-                    f"{key} not found in \"{self.name}\"'s overload's {self.overload_type} prototype"
-                ) from ve
+                key = ColumnName.param_to_canonical_column_name(self.name, key)
+            except ValueError as e:
+                raise
+            else:
+                try:
+                    prototype = get_overload_column_info(self.overload_type)
+                    return self.arguments[tuple(prototype).index(key)]
+                except ValueError as ve:
+                    raise KeyError(
+                        f"{key} not found in \"{self.name}\"'s overload's {self.overload_type} prototype"
+                    ) from ve
+        else:
+            assert False, f"{key}'s type {type(key)} is not supported"
 
-    def __setitem__(self, key: Union[int, str], value: float) -> None:
+    def __setitem__(self, key: Union[ColumnName, int, str], value: float) -> None:
         """Sets a record's argument by column number or column ID from it's prototype"""
-        prototype = get_overload_column_info(self.overload_type)
         if isinstance(key, int):
             try:
                 self.arguments[key] = value
             except IndexError:
                 raise
-        elif isinstance(key, str):
-            if key.startswith("UNUSED"):
-                raise KeyError(
-                    f"{key} cannot represent a real index in the argument's list"
-                )
+        elif isinstance(key, (ColumnName, str)):
             try:
-                if key == "INDEX":
-                    key = "A"
-                elif key == "DIR_MAG" and self.name in {"airplane_nav_tail_size"}:
-                    key = "B"
-                elif key == "DIR_MAG" and self.name in {
-                    "airplane_nav_left_size",
-                    "airplane_nav_right_size",
-                }:
-                    key = "R"
+                key = ColumnName.param_to_canonical_column_name(self.name, key)
+                prototype = get_overload_column_info(self.overload_type)
                 self.arguments[tuple(prototype).index(key)] = value
             except ValueError as ve:
                 raise KeyError(
                     f"{key} not found in overload's {self.overload_type} prototype"
                 ) from ve
+        else:
+            assert False, f"{key}'s type {type(key)} is not supported"
 
     def __str__(self) -> str:
         return f"{self.overload_type} {self.name} {self.arguments}"
@@ -631,25 +700,12 @@ def parse_lights_file():
         raise FileNotFoundError
 
     def is_allowed_param(p: str) -> bool:
-        return (
-            p
-            in {
-                "R",
-                "G",
-                "B",
-                "A",
-                "SIZE",
-                "DX",
-                "DY",
-                "DZ",
-                "WIDTH",
-                "FREQ",
-                "PHASE",
-                "INDEX",
-                "DIR_MAG",
-            }
-            or p.startswith(("UNUSED", "NEG_ONE", "ZERO", "ONE"))
-        )
+        try:
+            ColumnName.param_to_canonical_column_name(light_name=None, param_name=p)
+        except ValueError:
+            return p.startswith(("UNUSED", "NEG_ONE", "ZERO", "ONE", "INDEX", "INTENSITY", "DIR_MAG"))
+        else:
+            return True
 
     with open(LIGHTS_FILEPATH, "r") as f:
         lines = [
