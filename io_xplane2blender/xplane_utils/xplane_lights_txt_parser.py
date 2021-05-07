@@ -4,7 +4,7 @@ The main class for parsing and interpring the contents of lights.txt.
 First parse the file, then get ParsedLights via get_parsed_light and the light name.
 
 These tell you information about the name, any parameters, and its overloads.
-Use it's best_overload function to get get valuable information about how X-Plane will end up
+Use it's best_overload function to get valuable information about how X-Plane will end up
 using this light
 """
 
@@ -77,10 +77,8 @@ To deal with these extreme subtleties follow these rules while writing code:
     It captures edge cases and is easier to read
 4. Talk about the UI as little as possible
     POINT is synonymous with "Omni" only because of a properly implemented spec and we got lucky with how Blender's UI works
-5. Again, talk about "WIDTH" columns, datarefs, and edge cases as much as possible
-    This is how X-Plane thinks, and fixing special rules will come from XPlane2Blender discovering more about X-Plane, not the other way around
-
-Hopefully this guide will help you avoid nasty edge cases and read the sometimes obtuse sounding logic
+5. Again, don't talk about "WIDTH" columns, datarefs, and edge cases as much as possible
+    Working with this type of data is extremely complicated. Use APIs first and quickly wrap edge cases in APIs.
 """
 import collections
 import copy

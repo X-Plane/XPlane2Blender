@@ -1986,6 +1986,14 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         min = 0.0,
     )
 
+    param_intensity: bpy.props.IntProperty(
+        name = "Intensity",
+        description="Total light output in a specific direction, in candela",
+        min=1,
+        max=1000000,
+        default=20000,
+    )
+
     param_index: bpy.props.IntProperty(
         name = "Dataref Index",
         description = "Index in light's associated array dataref",

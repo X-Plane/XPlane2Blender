@@ -355,6 +355,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
                     "SIZE": light_data.xplane.param_size,
+                    "INTENSITY": light_data.xplane.param_intensity,
                     "DX": dxyz_values_x[0],
                     "DY": dxyz_values_x[1],
                     "DZ": dxyz_values_x[2],
@@ -545,10 +546,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             try:
                 return (
                     self.lightType
-                    in {
-                        xplane_constants.LIGHT_NAMED,
-                        xplane_constants.LIGHT_PARAM,
-                    }
+                    in {xplane_constants.LIGHT_NAMED, xplane_constants.LIGHT_PARAM,}
                     and not self.record_completed.is_omni()
                     # Yes, '!= "POINT"' matters for historical reasons
                     and light_data.type != "POINT"
@@ -658,10 +656,17 @@ class XPlaneLight(xplane_object.XPlaneObject):
         elif self.lightType == LIGHT_PARAM or (
             self.lightType == LIGHT_AUTOMATIC and parsed_light.light_param_def
         ):
+            if self.lightType == LIGHT_AUTOMATIC:
+                param_output = " ".join(
+                    f"{floatToStr(v)}{'' if param != 'INTENSITY' else 'cd'}"
+                    for param, v in self.params.items()
+                )
+            else:
+                param_output = self.params
             o += (
                 f"{indent}LIGHT_PARAM\t{self.lightName}"
                 f" {translation_xp_str}"
-                f" {' '.join(map(floatToStr,self.params.values())) if self.lightType == LIGHT_AUTOMATIC else self.params}"
+                f" {param_output}"
                 f"\n"
             )
         elif self.lightType == LIGHT_CUSTOM:
