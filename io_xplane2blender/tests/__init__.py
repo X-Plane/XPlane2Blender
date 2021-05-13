@@ -2,6 +2,7 @@ import collections
 import itertools
 import os
 import pathlib
+import pprint
 import shutil
 import sys
 import unittest
@@ -451,7 +452,7 @@ class XPlaneTestCase(unittest.TestCase):
     # asserts that an attributes object equals a dict
     def assertAttributesEqualDict(
         self,
-        attrs: xplane_attributes.XPlaneAttributes,
+        real_attrs: xplane_attributes.XPlaneAttributes,
         expected_attrs: Dict[
             str,
             Union[
@@ -463,40 +464,41 @@ class XPlaneTestCase(unittest.TestCase):
     ):
         self.assertEquals(
             len(expected_attrs),
-            len(attrs),
-            f"Attribute lists {list(expected_attrs.keys())}, {list(attrs.keys())} have different length",
+            len(real_attrs),
+            f"Attribute lists {list(expected_attrs.keys())}, {list(real_attrs.keys())} have different length",
         )
 
-        attr_names = tuple(attrs.keys())
-        attr_values = tuple((v.getValue() for v in attrs.values()))
-        for name, (value, expected_value) in zip(
-            attr_names, zip(attr_values, expected_attrs.values())
-        ):
-
+        # Yes, the [name] is needed. It lets us be flexible about
+        # dict order incase .items() != .items()
+        names = list(real_attrs.keys())
+        values = list(
+            ((real_attrs[name].getValue(), expected_attrs[name]) for name in names)
+        )
+        for name, (real_value, expected_value) in zip(names, values):
             if isinstance(expected_value, (list, tuple)):
                 self.assertIsInstance(
-                    value,
+                    real_value,
                     (list, tuple),
-                    msg='Attribute value for "%s" is no list or tuple but: %s',
+                    msg=f"Real value type for {name} should be 'list' or 'tuple', is '{type(real_value)}'",
                 )
                 self.assertEquals(
+                    len(real_value),
                     len(expected_value),
-                    len(value),
-                    'Attribute values for "%s" have different length' % name,
+                    msg=f"'{name}' real value and expected value are different lengths",
                 )
 
-                for i, (v, expectedV) in enumerate(zip(value, expected_value)):
-                    if isinstance(expectedV, (float, int)):
-                        self.assertFloatsEqual(expectedV, v, floatTolerance)
+                for i, (v, expected_v) in enumerate(zip(real_value, expected_value)):
+                    if isinstance(expected_v, (float, int)):
+                        self.assertFloatsEqual(v, expected_v, floatTolerance)
                     else:
                         self.assertEquals(
-                            expectedV,
-                            v,
-                            'Attribute list value %d for "%s" is different' % (i, name),
+                            v, expected_v, f"Values at {i} in {name} are different"
                         )
             else:
                 self.assertEquals(
-                    expected_value, value, 'Attribute "%s" is not equal' % name
+                    real_value,
+                    expected_value,
+                    msg=f"{name}'s real vs expected value are different",
                 )
 
     def createXPlaneFileFromPotentialRoot(
