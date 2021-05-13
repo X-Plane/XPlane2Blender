@@ -2,7 +2,7 @@
 Defines X-Plane Properties attached to regular Blender data types.
 """
 
-from typing import List
+from typing import Callable, List
 
 import bpy
 
@@ -254,23 +254,27 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
 # fmt: off
 class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
     start: bpy.props.FloatProperty(
-            name = "Start",
-            description = "Start value (from Dataref 1) of the detent region",
-            default=0.0,
-            precision = 3)
+        name = "Start",
+        description = "Start value (from Dataref 1) of the detent region",
+        default=0.0,
+        precision = 3,
+    )
     end: bpy.props.FloatProperty(
-            name = "End",
-            description = "End value (from Dataref 1) of the detent region",
-            default=0.0,
-            precision = 3)
+        name = "End",
+        description = "End value (from Dataref 1) of the detent region",
+        default=0.0,
+        precision = 3,
+    )
+
     height: bpy.props.FloatProperty(
-            name = "Height",
-            description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
-            default=0.0,
-            precision = 3)
+        name = "Height",
+        description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
+        default=0.0,
+        precision = 3,
+    )
 
     def __str__(self):
-       return "({0},{1},{2})".format(self.start,self.end,self.height)
+        return f"({self.start:.3f}, {self.end:.3f}, {self.height:.3f})"
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
