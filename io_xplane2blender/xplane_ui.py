@@ -872,6 +872,69 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
 #   Material active_material - The active_material of a mesh
 def material_layout(layout: UILayout, active_material: bpy.types.Material) -> None:
     version = int(bpy.context.scene.xplane.version)
+
+    def show_specular_warning():
+        """
+        If the user has hidden the EEVEE old style Specular value, display
+        a warning that the EEVEE one will still be used.
+
+        If they've accidentally started using the nodes version, a more
+        in depth explanation is show.
+        """
+
+        render_engine = bpy.context.scene.render.engine.replace("BLENDER_", "")
+
+        def rnd_cmp_eq(a, b, ndigits=3):
+            return round(a, ndigits) == round(b, ndigits)
+
+        try:
+            output_node = active_material.node_tree.get_output_node(render_engine)
+            surface_shader_node = output_node.inputs["Surface"].links[0].from_node
+            if surface_shader_node.type != "BSDF_PRINCIPLED":
+                raise TypeError
+        # No link back to BSDF, wrong output mode, or wrong surface shader type
+        except (IndexError, TypeError) as e:
+            is_spec_hidden = True
+        else:
+            # CYCLES will always hide our 'specular_intensity'
+            if render_engine == "CYCLES" or (
+                render_engine == "EEVEE" and active_material.use_nodes
+            ):
+                is_spec_hidden = True
+
+                node_specular = surface_shader_node.inputs["Specular"].default_value
+                # Potential default values. Hopefully we get no false positives.
+                node_specular_at_default = any(
+                    (rnd_cmp_eq(node_specular, d) for d in [0.0, 0.5])
+                )
+                node_spec_changed_msg = "".join(
+                    (
+                        "Addon uses EEVEE non-Node 'Specular'. ",
+                        "Use EEVEE and turn " if render_engine == "CYCLES" else "Turn ",
+                        "off 'Uses Nodes' to reveal.",
+                    )
+                )
+                if not node_specular_at_default:
+                    layout.label(
+                        text=node_spec_changed_msg,
+                        icon="ERROR",
+                    )
+            else:
+                is_spec_hidden = False
+        if is_spec_hidden and not rnd_cmp_eq(active_material.specular_intensity, 0.5):
+            msg = "".join(
+                (
+                    "Using EEVEE non-Node 'Specular', despite it being hide",
+                    " and using Cycles." if render_engine == "CYCLES" else ".",
+                )
+            )
+
+            layout.label(
+                text=msg,
+                icon="INFO",
+            )
+
+    show_specular_warning()
     draw_box = layout.box()
     draw_box.label(text="Draw Settings")
     draw_box_column = draw_box.column()
