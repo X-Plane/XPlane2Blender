@@ -924,8 +924,8 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
         if is_spec_hidden and not rnd_cmp_eq(active_material.specular_intensity, 0.5):
             msg = "".join(
                 (
-                    "Using EEVEE non-Node 'Specular', despite it being hide",
-                    " and using Cycles." if render_engine == "CYCLES" else ".",
+                    "Using EEVEE non-Node 'Specular', despite it being hid",
+                    "den and using Cycles." if render_engine == "CYCLES" else ".",
                 )
             )
 
