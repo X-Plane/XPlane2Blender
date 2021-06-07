@@ -83,6 +83,7 @@ class XPlaneCommands:
     def __init__(self, xplaneFile) -> None:
         self.xplaneFile = xplaneFile
 
+        # WARNING: This MUST be bijective!
         self.reseters = {
             "ATTR_light_level": "ATTR_light_level_reset",
             "ATTR_cockpit(_lit_only|_region|_device)?": "ATTR_no_cockpit",
@@ -99,7 +100,8 @@ class XPlaneCommands:
         # these attributes/commands are not persistant and must always be rewritten
         self.inpersistant = {"ATTR_axis_detent_range", "ATTR_manip_wheel"}
 
-        # add default X-Plane states to presve writing them in the obj
+        # Initializes the state machine to match X-Plane's defaults
+        # thus preventing unneeded ATTRs
         self.written = {
             "ATTR_no_hard": True,
             "ATTR_blend": True,

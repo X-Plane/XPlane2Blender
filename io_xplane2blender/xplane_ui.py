@@ -82,6 +82,43 @@ class SCENE_PT_xplane(bpy.types.Panel):
 
 
 # Adds X-Plane settings to the object tab. Uses <mesh_layout>, <cockpit_layout>, <manipulator_layout> and <custom_layout>.
+def light_level_layout(layout, has_ll):
+    ll_box = layout.box()
+    ll_box.label(text="Light Levels")
+    ll_box_column = ll_box.column()
+    ll_box_column.prop(has_ll.xplane, "lightLevel")
+
+    if has_ll.xplane.lightLevel:
+        box = ll_box_column.box()
+        box.prop(has_ll.xplane, "lightLevel_v1")
+        box.row().prop(has_ll.xplane, "lightLevel_v2")
+        box.row().prop(has_ll.xplane, "lightLevel_dataref")
+
+        """
+        scene = bpy.context.scene
+        expanded = (
+            scene.xplane.dataref_search_window_state.dataref_prop_dest
+            == "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
+        )
+        if expanded:
+            our_icon = "ZOOM_OUT"
+        else:
+            our_icon = "ZOOM_IN"
+        dataref_search_toggle_op = row.operator(
+            "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
+        )
+        dataref_search_toggle_op.paired_dataref_prop = (
+            "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
+        )
+
+        # Finally, in the next row, if we are expanded, build the entire search list.
+        if expanded:
+            dataref_search_window_layout(box)
+            """
+
+    ll_box_column.row()
+
+
 class OBJECT_PT_xplane(bpy.types.Panel):
     """XPlane Object Panel"""
 
@@ -112,6 +149,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
                 manipulator_layout(self.layout, obj)
             lod_layout(self.layout, obj)
             weight_layout(self.layout, obj)
+            light_level_layout(self.layout, obj)
             if obj.type != "EMPTY":
                 custom_layout(self.layout, obj)
 

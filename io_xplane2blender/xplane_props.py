@@ -1486,6 +1486,33 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         type = XPlaneDataref
     )
 
+    # --- Light Level Override (Mesh Specific) -------------------------------
+    lightLevel: bpy.props.BoolProperty(
+        name = "Override Light Level (This Mesh Only)",
+        description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
+        default = False
+    )
+
+    lightLevel_v1: bpy.props.FloatProperty(
+        name = "Value 1",
+        description = "Value 1 for light level",
+        default = 0.0,
+        precision = 2
+    )
+
+    lightLevel_v2: bpy.props.FloatProperty(
+        name = "Value 2",
+        description = "Value 2 for light level",
+        default = 1.0,
+        precision = 2
+    )
+
+    lightLevel_dataref: bpy.props.StringProperty(
+        name = "Dataref",
+        description = "The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped",
+        default = ""
+    )
+    # --------------------------------------------------------------------------
     override_lods: bpy.props.BoolProperty(
         name = "Override LODs",
         description = "Overrides any parent's LOD buckets for this object and its children",
@@ -1725,7 +1752,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     lightLevel: bpy.props.BoolProperty(
         name = "Override Light Level",
-        description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
+        description = "If checked values will change the brightness of the _LIT texture for objects with this material. This overrides the sim's decision about object lighting",
         default = False
     )
 

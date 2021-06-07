@@ -37,9 +37,7 @@ class XPlaneObject:
         self.attributes = XPlaneAttributes()
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
-        self.conditions = (
-            []
-        )  # type: List[io_xplane2blender.xplane_props.XPlaneCondition]
+        self.conditions: List[io_xplane2blender.xplane_props.XPlaneCondition] = []
 
         # This represents all specializations of lods, on this subject,
         # including it's parents. Set in XPlaneBone's constructor

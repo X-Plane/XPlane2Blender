@@ -30,6 +30,8 @@ class XPlanePrimitive(XPlaneObject):
     def __init__(self, blenderObject: bpy.types.Object):
         assert blenderObject.type == "MESH"
         super().__init__(blenderObject)
+        self.attributes.add(XPlaneAttribute("ATTR_light_level", None, 1000))
+        self.attributes.add(XPlaneAttribute("ATTR_light_level_reset", True, 1000))
         # Starting end ending indices for this object.
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
@@ -63,9 +65,22 @@ class XPlanePrimitive(XPlaneObject):
 
         # need reordering again as manipulator attributes may have been added
         self.cockpitAttributes.order()
+        self.collectLightLevelAttributes()
 
         if self.material:
             self.material.collect()
+
+    def collectLightLevelAttributes(self) -> None:
+        bl_obj = self.blenderObject
+        if bl_obj and bl_obj.xplane.lightLevel:
+            self.attributes["ATTR_light_level"].setValue(
+                (
+                    bl_obj.xplane.lightLevel_v1,
+                    bl_obj.xplane.lightLevel_v2,
+                    bl_obj.xplane.lightLevel_dataref,
+                )
+            )
+            self.material.attributes["ATTR_light_level_reset"].setValue(False)
 
     def write(self) -> str:
         debug = getDebug()

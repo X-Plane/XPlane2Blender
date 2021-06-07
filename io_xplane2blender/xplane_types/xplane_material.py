@@ -253,7 +253,10 @@ class XPlaneMaterial:
                     )
 
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
-        if mat.xplane.lightLevel:
+        if (
+            mat.xplane.lightLevel
+            and not self.xplaneObject.blenderObject.xplane.lightLevel
+        ):
             self.attributes["ATTR_light_level"].setValue(
                 (
                     mat.xplane.lightLevel_v1,
