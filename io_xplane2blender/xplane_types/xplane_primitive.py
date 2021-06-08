@@ -72,7 +72,8 @@ class XPlanePrimitive(XPlaneObject):
 
     def collectLightLevelAttributes(self) -> None:
         bl_obj = self.blenderObject
-        if bl_obj and bl_obj.xplane.lightLevel:
+        if bl_obj.xplane.lightLevel:
+
             self.attributes["ATTR_light_level"].setValue(
                 (
                     bl_obj.xplane.lightLevel_v1,
