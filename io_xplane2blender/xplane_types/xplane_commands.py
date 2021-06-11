@@ -94,7 +94,6 @@ class XPlaneCommands:
             "ATTR_no_blend|ATTR_shadow_blend": "ATTR_blend",
             "ATTR_draped": "ATTR_no_draped",
             "ATTR_solid_camera": "ATTR_no_solid_camera",
-            "ATTR_hud_glass":"ATTR_hud_reset"
         }
 
         # these attributes/commands are not persistant and must always be rewritten
@@ -110,7 +109,6 @@ class XPlaneCommands:
             "ATTR_draw_enable": True,
             "ATTR_no_draped": True,
             "ATTR_light_level_reset": True,
-            "ATTR_hud_reset":True,
         }
 
     def write(self, *, lod_bucket_index: Optional[int]) -> str:
@@ -334,8 +332,8 @@ class XPlaneCommands:
             "ATTR_cockpit_device",
             "ATTR_cockpit",
             "ATTR_cockpit_lit_only",
-            "ATTR_cockpit_hud",
             "ATTR_cockpit_region",
+            "ATTR_cockpit_hud",
             "ATTR_no_cockpit",
             "ATTR_draw_disable",
             "ATTR_draw_enable",
@@ -344,8 +342,6 @@ class XPlaneCommands:
             "ATTR_hard",
             "ATTR_hard_deck",
             "ATTR_no_hard",
-            "ATTR_hud_glass",
-            "ATTR_hud_reset",
             "ATTR_no_blend",
             "ATTR_shadow_blend",
             "ATTR_blend",

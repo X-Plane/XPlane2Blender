@@ -15,7 +15,7 @@ import collections
 import dataclasses
 import itertools
 import operator
-import pprint
+from pprint import pprint
 from typing import Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import bpy

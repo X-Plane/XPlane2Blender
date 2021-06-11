@@ -625,7 +625,10 @@ def layer_layout(
         )
     advanced_box.prop(layer_props, "slungLoadWeight")
 
-    if version >= 1200 and layer_props.export_type in {EXPORT_TYPE_AIRCRAFT, EXPORT_TYPE_COCKPIT}:
+    if version >= 1200 and layer_props.export_type in {
+        EXPORT_TYPE_AIRCRAFT,
+        EXPORT_TYPE_COCKPIT,
+    }:
         rain_box = advanced_box.box()
         rain_box.label(text="Rain Options")
         rain_layout(rain_box, layer_props, version)
@@ -845,6 +848,14 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                     "PHASE": "param_phase",
                     "SIZE": "param_size",
                 }.items():
+                    if (
+                        param == "SIZE"
+                        and xplane_lights_txt_parser.uses_size_as_intensity(
+                            parsed_light.name
+                        )
+                    ):
+                        prop_name = "param_intensity"
+
                     if param in parsed_light.light_param_def:
                         layout.row().prop(light_data.xplane, prop_name)
 
@@ -1230,15 +1241,15 @@ def cockpit_layout(
             device_box.prop(active_material.xplane, "device_lighting_channel")
             device_box.prop(active_material.xplane, "device_auto_adjust")
     if version >= 1200:
-        if active_material.xplane.cockpit_feature in {COCKPIT_FEATURE_PANEL, COCKPIT_FEATURE_DEVICE}:
+        if active_material.xplane.cockpit_feature in {
+            COCKPIT_FEATURE_PANEL,
+            COCKPIT_FEATURE_DEVICE,
+        }:
             use_luminance = active_material.xplane.cockpit_feature_use_luminance
             row = cockpit_box.row()
             row.active = use_luminance
-            row.prop(active_material.xplane,"cockpit_feature_use_luminance")
-            row.prop(active_material.xplane,"cockpit_feature_luminance")
-        elif active_material.xplane.cockpit_feature != COCKPIT_FEATURE_HUD:
-            cockpit_box.prop(active_material.xplane, "hud_viewing_glass")
-
+            row.prop(active_material.xplane, "cockpit_feature_use_luminance")
+            row.prop(active_material.xplane, "cockpit_feature_luminance")
 
 
 def axis_detent_ranges_layout(
