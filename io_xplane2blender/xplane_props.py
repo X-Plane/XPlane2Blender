@@ -1764,12 +1764,6 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
     # -------------------------------------------------------------------------
 
-    hud_viewing_glass: bpy.props.BoolProperty(
-        name = "HUD Viewing Glass",
-        description = "HUD instruments become visible when looked through this material",
-        default = False
-    )
-
     surfaceType: bpy.props.EnumProperty(
         name = 'Surface Type',
         description = 'Controls the bumpiness of material in X-Plane',

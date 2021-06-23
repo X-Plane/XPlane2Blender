@@ -850,9 +850,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                 }.items():
                     if (
                         param == "SIZE"
-                        and xplane_lights_txt_parser.uses_size_as_intensity(
-                            parsed_light.name
-                        )
+                        and parsed_light.name in xplane_lights_txt_parser.SIZE_AS_INTENSITY
                     ):
                         prop_name = "param_intensity"
 

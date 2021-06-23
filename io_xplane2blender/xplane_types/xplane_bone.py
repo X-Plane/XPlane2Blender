@@ -27,7 +27,7 @@ relationships, it cannot be assumed that the XPlaneBone Tree and Blender Hierarc
 """
 
 import math
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import bpy
 import mathutils

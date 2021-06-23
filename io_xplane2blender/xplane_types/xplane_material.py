@@ -89,9 +89,6 @@ class XPlaneMaterial:
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_hud", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_cockpit_region", None, 2000))
         self.cockpitAttributes.add(XPlaneAttribute("ATTR_no_cockpit", True, 2000))
-        # TODO: Should these go in here?
-        self.cockpitAttributes.add(XPlaneAttribute("ATTR_hud_glass", None, 2000))
-        self.cockpitAttributes.add(XPlaneAttribute("ATTR_hud_reset", True, 2000))
 
         self.conditions = []
 
@@ -298,19 +295,12 @@ class XPlaneMaterial:
             if cockpit_panel_mode in {PANEL_COCKPIT, PANEL_COCKPIT_LIT_ONLY}:
                 if 1200 <= xplane_version:
                     self.cockpitAttributes["ATTR_cockpit_hud"].setValue(True)
+                    print(self.cockpitAttributes["ATTR_cockpit_hud"].value)
             else:
                 assert (
                     False
                 ), f"Is COCKPIT_FEATURE_HUD and {cockpit_panel_mode} a valid combination?"
         # ---------------------------------------------------------------------
-
-        if (
-            mat.xplane.hud_viewing_glass
-            and cockpit_panel_feature != COCKPIT_FEATURE_HUD
-        ):
-            if 1200 <= xplane_version:
-                self.cockpitAttributes["ATTR_hud_glass"].setValue(True)
-                self.cockpitAttributes["ATTR_hud_reset"].setValue(False)
 
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
         xplane_version = int(bpy.context.scene.xplane.version)
