@@ -72,49 +72,49 @@ IDX	53
 
 # 0 ROOT
 	# 1 Mesh: device_name_CDU739_1
-	# MESH: device_name_CDU739_1	weight: 3
+	# MESH: device_name_CDU739_1	weight: 5
 	# MATERIAL: device_mat_CDU739_1
-	ATTR_cockpit_device	CDU739_1	1	0	True
+	ATTR_cockpit_device	CDU739_1	1	0	1
 	TRIS	0 6
 	# 1 Mesh: device_name_CDU739_2
-	# MESH: device_name_CDU739_2	weight: 4
+	# MESH: device_name_CDU739_2	weight: 6
 	# MATERIAL: device_mat_CDU739_2
-	ATTR_cockpit_device	CDU739_2	1	0	True
+	ATTR_cockpit_device	CDU739_2	1	0	1
 	TRIS	6 6
 	# 1 Mesh: device_name_G1000_MFD
-	# MESH: device_name_G1000_MFD	weight: 6
+	# MESH: device_name_G1000_MFD	weight: 8
 	# MATERIAL: device_mat_G1000_MFD
-	ATTR_cockpit_device	G1000_MFD	1	0	True
+	ATTR_cockpit_device	G1000_MFD	1	0	1
 	TRIS	12 6
 	# 1 Mesh: device_name_G1000_PFD1
-	# MESH: device_name_G1000_PFD1	weight: 7
+	# MESH: device_name_G1000_PFD1	weight: 9
 	# MATERIAL: device_mat_G1000_PFD1
-	ATTR_cockpit_device	G1000_PFD1	1	0	True
+	ATTR_cockpit_device	G1000_PFD1	1	0	1
 	TRIS	18 6
 	# 1 Mesh: device_name_G1000_PFD2
-	# MESH: device_name_G1000_PFD2	weight: 8
+	# MESH: device_name_G1000_PFD2	weight: 10
 	# MATERIAL: device_mat_G1000_PFD2
-	ATTR_cockpit_device	G1000_PFD2	1	0	True
+	ATTR_cockpit_device	G1000_PFD2	1	0	1
 	TRIS	24 6
 	# 1 Mesh: device_name_GNS430_1
-	# MESH: device_name_GNS430_1	weight: 9
+	# MESH: device_name_GNS430_1	weight: 11
 	# MATERIAL: device_mat_GNS430_1
-	ATTR_cockpit_device	GNS430_1	1	0	True
+	ATTR_cockpit_device	GNS430_1	1	0	1
 	TRIS	30 6
 	# 1 Mesh: device_name_GNS430_2
-	# MESH: device_name_GNS430_2	weight: 10
+	# MESH: device_name_GNS430_2	weight: 12
 	# MATERIAL: device_mat_GNS430_2
-	ATTR_cockpit_device	GNS430_2	1	0	True
+	ATTR_cockpit_device	GNS430_2	1	0	1
 	TRIS	36 6
 	# 1 Mesh: device_name_GNS530_1
-	# MESH: device_name_GNS530_1	weight: 11
+	# MESH: device_name_GNS530_1	weight: 13
 	# MATERIAL: device_mat_GNS530_1
-	ATTR_cockpit_device	GNS530_1	1	0	True
+	ATTR_cockpit_device	GNS530_1	1	0	1
 	TRIS	42 6
 	# 1 Mesh: device_name_GNS530_2
-	# MESH: device_name_GNS530_2	weight: 12
+	# MESH: device_name_GNS530_2	weight: 14
 	# MATERIAL: device_mat_GNS530_2
-	ATTR_cockpit_device	GNS530_2	1	0	True
+	ATTR_cockpit_device	GNS530_2	1	0	1
 	TRIS	48 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-dev.0+97.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+111.NO_BUILD_NUMBR

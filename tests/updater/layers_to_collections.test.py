@@ -63,6 +63,16 @@ class TestLayersToCollections(XPlaneTestCase):
                         correct_values[prop.identifier],
                     ):
                         assert_recursive(collection_member, collection_value)
+                elif prop.type == "POINTER":
+                    # TODO: I'm sorry, I just don't have the time to deal with this
+                    # right now. Lets just hope the updater doesn't mess things up
+                    # for nested POINTERs like our new 'rain'.
+                    #
+                    # Whoever has to look at this comment next, I hope your day
+                    # isn't too terrible right now.
+                    # - Ted, 4/30/21
+                    pass
+
                 else:
                     if prop.identifier == "name" and not isinstance(
                         real_prop_group, XPlaneLayer
@@ -79,7 +89,7 @@ class TestLayersToCollections(XPlaneTestCase):
             prop.identifier: prop.default
             for prop in XPlaneLayer.bl_rna.properties
             if prop.identifier not in {"rna_type", "index", "expanded"}
-            and prop.type != "COLLECTION"
+            and prop.type not in {"COLLECTION", "POINTER"}
         }
         defaults["cockpit_region"] = [
             {"expanded": False, "top": 0, "left": 0, "width": 1, "height": 1}
@@ -87,6 +97,56 @@ class TestLayersToCollections(XPlaneTestCase):
         defaults["customAttributes"] = []
         defaults["export_path_directives"] = []
         defaults["lod"] = [{"expanded": False, "near": 0, "far": 0}]
+        defaults["rain"] = {}
+        """
+        TODO: We need to make POINTER properties assert recursively
+        defaults["rain"] = {
+            "rain_scale": 1.0,
+            "thermal_texture": "",
+            "thermal_source_1": {"dataref_tempurature": "", "dataref_on_off": ""},
+            "thermal_source_1_enabled": False,
+            "thermal_source_2": {"dataref_tempurature": "", "dataref_on_off": ""},
+            "thermal_source_2_enabled": False,
+            "thermal_source_3": {"dataref_tempurature": "", "dataref_on_off": ""},
+            "thermal_source_3_enabled": False,
+            "thermal_source_4": {"dataref_tempurature": "", "dataref_on_off": ""},
+            "thermal_source_4_enabled": False,
+            "wiper_texture": "",
+            "wiper_1": {
+                "object_name": "",
+                "dataref": "",
+                "start": 0.0,
+                "end": 0.0,
+                "nominal_width": 0.001,
+            },
+            "wiper_1_enabled": False,
+            "wiper_2": {
+                "object_name": "",
+                "dataref": "",
+                "start": 0.0,
+                "end": 0.0,
+                "nominal_width": 0.001,
+            },
+            "wiper_2_enabled": False,
+            "wiper_3": {
+                "object_name": "",
+                "dataref": "",
+                "start": 0.0,
+                "end": 0.0,
+                "nominal_width": 0.001,
+            },
+            "wiper_3_enabled": False,
+            "wiper_4": {
+                "object_name": "",
+                "dataref": "",
+                "start": 0.0,
+                "end": 0.0,
+                "nominal_width": 0.001,
+            },
+            "wiper_4_enabled": False,
+        }
+        """
+
         return defaults
 
     # When the "layers" prop was deleted, this got messed up
@@ -320,9 +380,7 @@ class TestLayersToCollections(XPlaneTestCase):
         ].xplane.layer
         d = self.get_default_xplane_layer_props_dict()
         d.update(
-            {
-                "name": "second_scene_only_has_nondefault",
-            }
+            {"name": "second_scene_only_has_nondefault",}
         )
         self.assertXPlaneLayerEqual(layer_second_only, d)
 
@@ -332,9 +390,7 @@ class TestLayersToCollections(XPlaneTestCase):
         ].xplane.layer
         d = self.get_default_xplane_layer_props_dict()
         d.update(
-            {
-                "name": "layer_10_content_in_Scene_second_copy",
-            }
+            {"name": "layer_10_content_in_Scene_second_copy",}
         )
         self.assertXPlaneLayerEqual(layer_second_only, d)
 
@@ -342,9 +398,7 @@ class TestLayersToCollections(XPlaneTestCase):
         layer_fourth = bpy.data.collections["Layer 10_Scene_fourth"].xplane.layer
         d = self.get_default_xplane_layer_props_dict()
         d.update(
-            {
-                "name": "layer_10_content_in_Scene_fourth",
-            }
+            {"name": "layer_10_content_in_Scene_fourth",}
         )
         self.assertXPlaneLayerEqual(layer_fourth, d)
 
@@ -354,9 +408,7 @@ class TestLayersToCollections(XPlaneTestCase):
         d.update(
             {
                 "name": "still_copied_in_root_mode_has_object",
-                "lod": [
-                    {"near": 0, "far": 100},
-                ],
+                "lod": [{"near": 0, "far": 100},],
             }
         )
 

@@ -166,7 +166,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             and not parsed_light.light_param_def
         ):
             self.record_completed = parsed_light.best_overload()
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
         elif self.lightType == LIGHT_NAMED and not parsed_light:
             logger.warn(unknown_light_name_warning)
@@ -234,7 +234,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     except ValueError:
                         continue
 
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
             # The only prototypes without DXYZ are SPILL_GND/_REV (of which there are no parameters)
@@ -355,6 +355,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
                     "SIZE": light_data.xplane.param_size,
+                    "INTENSITY": light_data.xplane.param_intensity,
                     "DX": dxyz_values_x[0],
                     "DY": dxyz_values_x[1],
                     "DZ": dxyz_values_x[2],
@@ -392,7 +393,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # Leaving DXYZ in a record's arguments is okay
             # - It doesn't affect any sw_callbacks (as of 4/19/2020)
             # - We'll be filling in instead of autocorrecting
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
             try:
@@ -545,10 +546,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             try:
                 return (
                     self.lightType
-                    in {
-                        xplane_constants.LIGHT_NAMED,
-                        xplane_constants.LIGHT_PARAM,
-                    }
+                    in {xplane_constants.LIGHT_NAMED, xplane_constants.LIGHT_PARAM,}
                     and not self.record_completed.is_omni()
                     # Yes, '!= "POINT"' matters for historical reasons
                     and light_data.type != "POINT"
@@ -658,10 +656,17 @@ class XPlaneLight(xplane_object.XPlaneObject):
         elif self.lightType == LIGHT_PARAM or (
             self.lightType == LIGHT_AUTOMATIC and parsed_light.light_param_def
         ):
+            if self.lightType == LIGHT_AUTOMATIC:
+                param_output = " ".join(
+                    f"{floatToStr(v)}{'' if param != 'INTENSITY' else 'cd'}"
+                    for param, v in self.params.items()
+                )
+            else:
+                param_output = self.params
             o += (
                 f"{indent}LIGHT_PARAM\t{self.lightName}"
                 f" {translation_xp_str}"
-                f" {' '.join(map(floatToStr,self.params.values())) if self.lightType == LIGHT_AUTOMATIC else self.params}"
+                f" {param_output}"
                 f"\n"
             )
         elif self.lightType == LIGHT_CUSTOM:

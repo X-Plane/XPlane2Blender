@@ -2,6 +2,7 @@ I
 800
 OBJ
 
+GLOBAL_cockpit_lit
 POINT_COUNTS	144	0	1	144
 
 VT	-1	1	-1	-1	-0	0	0	0	# 0
@@ -168,7 +169,8 @@ IDX	141
 IDX	142
 IDX	143
 
-VLIGHT	0	0	0	1	1	1
+VLIGHT	0	0	-0	1	1	1
+
 # 0 Empty: HiddenInViewport
 # EMPTY: HiddenInViewport	weight: 0
 	# 1 Armature: Armature_hidden_static
@@ -178,32 +180,34 @@ VLIGHT	0	0	0	1	1	1
 			# MATERIAL: Material
 			ATTR_shiny_rat	0.5
 			TRIS	108 36
+	# 1 Mesh: Cube_manip_hidden_static
 	# 1 Mesh: Cube_visible_parent
 	# MESH: Cube_visible_parent	weight: 0
 	# MATERIAL: Material
 	TRIS	72 36
-		# 2 Empty: Empty_hidden_child_animation_only
-		ANIM_begin
-		# translation keyframes
-		ANIM_trans_begin	test
-		ANIM_trans_key	0	9	0	0
-		ANIM_trans_key	1	9	0	-3
-		ANIM_trans_end
-			# 3 Light: Point_default_visible_child_affected
-			# LIGHT: Point_default_visible_child_affected	weight: 10000
-			LIGHTS	0 1
-		ANIM_end
 		# 2 Mesh: Cube_hidden_child_static
 			# 3 Mesh: Cube_visible_child_static
 			# MESH: Cube_visible_child_static	weight: 0
 			# MATERIAL: Material
 			TRIS	36 36
-	# 1 Mesh: Cube_manip_hidden_static
+		# 2 Empty: Empty_hidden_child_animation_only
+		ANIM_begin
+		# static rotation
+		# translation keyframes
+		ANIM_trans_begin	test
+		ANIM_trans_key	0	9	0	-0
+		ANIM_trans_key	1	9	0	-3
+		ANIM_trans_end
+			# 3 Light: Point_default_visible_child_affected
+			# LIGHT: Point_default_visible_child_affected	weight: 0
+			LIGHTS	0 1
+		ANIM_end
 	# 1 Light: Spot_named_hidden_animation_only
 	ANIM_begin
+	# static rotation
 	# translation keyframes
 	ANIM_trans_begin	test
-	ANIM_trans_key	0	0	0	0
+	ANIM_trans_key	0	0	0	-0
 	ANIM_trans_key	1	0	0	-3
 	ANIM_trans_end
 		# 2 Mesh: Cube_visible_affected
@@ -212,4 +216,4 @@ VLIGHT	0	0	0	1	1	1
 		TRIS	0 36
 	ANIM_end
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+75.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+114.NO_BUILD_NUMBR

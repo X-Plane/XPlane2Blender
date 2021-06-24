@@ -1,0 +1,23 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1	# 0
+VT	1	0	-1	-0	-1	-0	0.625	0.75	# 1
+VT	-1	0	1	-0	-1	-0	0.375	1	# 2
+
+IDX	0
+IDX	1
+IDX	2
+
+# 0 ROOT
+	# 1 Mesh: Plane.003
+	# MESH: Plane.003	weight: 0
+	# MATERIAL: Material_use_luminance_pane_lit_only
+	ATTR_cockpit_lit_only	2000
+	TRIS	0 3
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+114.NO_BUILD_NUMBR

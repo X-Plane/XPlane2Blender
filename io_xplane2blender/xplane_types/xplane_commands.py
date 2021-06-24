@@ -86,7 +86,7 @@ class XPlaneCommands:
         # WARNING: This MUST be bijective!
         self.reseters = {
             "ATTR_light_level": "ATTR_light_level_reset",
-            "ATTR_cockpit(_lit_only|_region|_device)?": "ATTR_no_cockpit",
+            "ATTR_cockpit(_hud|_lit_only|_region|_device)?": "ATTR_no_cockpit",
             "ATTR_manip_(?!none)(?!wheel)(.*)": "ATTR_manip_none",
             "ATTR_no_shadow": "ATTR_shadow",
             "ATTR_draw_disable": "ATTR_draw_enable",
@@ -335,6 +335,7 @@ class XPlaneCommands:
             "ATTR_cockpit",
             "ATTR_cockpit_lit_only",
             "ATTR_cockpit_region",
+            "ATTR_cockpit_hud",
             "ATTR_no_cockpit",
             "ATTR_draw_disable",
             "ATTR_draw_enable",
@@ -381,7 +382,7 @@ class XPlaneCommands:
 
             # Now that the added white list trick is in place,
             # we'll nearly always have 2 matching attributes
-            if ("ATTR_cockpit" in matchingAttribute and len(matchingAttribute) > 4) or (
+            if ("ATTR_cockpit" in matchingAttribute and len(matchingAttribute) > 5) or (
                 "ATTR_cockpit" not in matchingAttribute and len(matchingAttribute) > 2
             ):
                 print(

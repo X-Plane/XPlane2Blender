@@ -364,7 +364,7 @@ def main(argv=None):
         argv, test_args = _make_parser().parse_known_args()
 
     # This script requires the git directory and the tests directory
-    if os.path.split(os.getcwd())[1] != "XPlane2Blender":
+    if "XPlane2Blender" not in str(Path(os.getcwd()).name):
         print(
             os.path.split(__file__)[1]
             + " must be run in the XPlane2Blender folder! Current directory is {}".format(

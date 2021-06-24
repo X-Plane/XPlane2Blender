@@ -7,6 +7,7 @@ import mathutils
 from io_xplane2blender.xplane_config import getDebug
 from io_xplane2blender.xplane_constants import *
 from io_xplane2blender.xplane_helpers import *
+from io_xplane2blender.xplane_props import XPlaneCondition
 from io_xplane2blender.xplane_types import xplane_bone
 from io_xplane2blender.xplane_types.xplane_attribute import XPlaneAttribute
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
@@ -32,12 +33,12 @@ class XPlaneObject:
         self.name = blenderObject.name  # type: str
         self.type = self.blenderObject.type  # type: str
         self.datarefs = {}  # type: Dict[str,str]
-        self.bakeMatrix = None  # type: Optional[mathutils.Matrix]
+        self.bakeMatrix: Optional[mathutils.Matrix] = None
 
         self.attributes = XPlaneAttributes()
         self.cockpitAttributes = XPlaneAttributes()
         self.animAttributes = XPlaneAttributes()
-        self.conditions: List[io_xplane2blender.xplane_props.XPlaneCondition] = []
+        self.conditions: List[XPlaneCondition] = []
 
         # This represents all specializations of lods, on this subject,
         # including it's parents. Set in XPlaneBone's constructor
@@ -45,6 +46,7 @@ class XPlaneObject:
         for i, dataref in self.blenderObject.xplane.datarefs.items():
             self.datarefs[dataref.path] = dataref
 
+        self.weight = 0
         self.setWeight()
 
     def __str__(self):
@@ -57,6 +59,26 @@ class XPlaneObject:
                 f"Weight: {self.weight}",
             )
         )
+
+    def setWeight(self, defaultWeight: int = 0) -> None:
+        """Weight will be 0, the value of defaultWeight,
+        or the summation of the previous weight and all attribute's weight
+        """
+        override = self.blenderObject.xplane.override_weight
+        w = self.blenderObject.xplane.weight
+        if override:
+            self.weight = self.blenderObject.xplane.weight
+        else:
+            self.weight += max(
+                [
+                    attr.weight
+                    for attr in itertools.chain(
+                        self.attributes.values(), self.cockpitAttributes.values()
+                    )
+                ],
+                key=lambda x: x,
+                default=0,
+            )
 
     def collect(self) -> None:
         assert self.xplaneBone is not None, "xplaneBone must not be None!"
@@ -109,33 +131,6 @@ class XPlaneObject:
                 name = "ANIM_" + dataref.anim_type
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
-
-    def setWeight(self, defaultWeight: int = 0):
-        """
-        Sets the weight of the object, if overriden, based
-        its weight and the weight of its attributes
-        """
-        weight = defaultWeight
-
-        if (
-            hasattr(self.blenderObject.xplane, "override_weight")
-            and self.blenderObject.xplane.override_weight
-        ):
-            weight = self.blenderObject.xplane.weight
-        else:
-            try:
-                weight += max(
-                    [
-                        attr.weight
-                        for attr in itertools.chain(
-                            self.attributes.values(), self.cockpitAttributes.values()
-                        )
-                    ]
-                )
-            except ValueError:
-                pass
-
-        self.weight = weight
 
     def collectConditions(self):
         if self.blenderObject.xplane.conditions:
