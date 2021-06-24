@@ -274,7 +274,7 @@ class XPlaneMaterial:
 
                 if (
                     1200 <= xplane_version
-                    and cockpit_panel_mode in {PANEL_COCKPIT, PANEL_COCKPIT_REGION}
+                    and cockpit_panel_mode in {PANEL_COCKPIT, PANEL_COCKPIT_LIT_ONLY, PANEL_COCKPIT_REGION}
                     and mat.xplane.cockpit_feature_use_luminance
                 ):
                     value.append(mat.xplane.cockpit_feature_luminance)
