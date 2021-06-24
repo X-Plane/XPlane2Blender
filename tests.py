@@ -60,7 +60,8 @@ def _make_argparse():
             default="blender",# Use the blender in the system path
             type=str,
             help="Provide alternative path to Blender executable")
-    blender_options .add_argument("--force-blender-debug",
+
+    blender_options.add_argument("--force-blender-debug",
             help="Turn on Blender's --debug flag",
             action="store_true")
     blender_options.add_argument("-n", "--no-factory-startup",

@@ -56,8 +56,6 @@ class TestMaterials(XPlaneTestCase):
             "ATTR_cockpit_hud": None,
             "ATTR_cockpit_region": None,
             "ATTR_no_cockpit": True,
-            "ATTR_hud_glass": None,
-            "ATTR_hud_reset": True,
         }
 
         redAttrs = defaultAttrs.copy()

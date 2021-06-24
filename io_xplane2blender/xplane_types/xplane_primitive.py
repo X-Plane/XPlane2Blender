@@ -58,7 +58,7 @@ class XPlanePrimitive(XPlaneObject):
                 for i, mat in enumerate(bpy.data.materials):
                     if ref_mat == mat:
                         weight = i
-            self.weight += weight
+            self.weight += defaultWeight
 
     def collect(self) -> None:
         super().collect()

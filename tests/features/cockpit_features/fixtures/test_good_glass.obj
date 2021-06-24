@@ -35,19 +35,21 @@ IDX	16
 IDX	17
 
 # 0 ROOT
+	# 1 Mesh: 01_viewing_glass
+	# MESH: 01_viewing_glass	weight: 0
+	# MATERIAL: viewing_glass
+	ATTR_cockpit_hud
+	TRIS	0 6
 	# 1 Mesh: 02_no_glass
 	# MESH: 02_no_glass	weight: 0
 	# MATERIAL: Material
 	ATTR_shiny_rat	0.5
+	ATTR_no_cockpit
 	TRIS	6 6
-	# 1 Mesh: 01_viewing_glass
-	# MESH: 01_viewing_glass	weight: 1
+	# 1 Mesh: 03_viewing_glass
+	# MESH: 03_viewing_glass	weight: 0
 	# MATERIAL: viewing_glass
 	ATTR_cockpit_hud
-	TRIS	0 6
-	# 1 Mesh: 03_viewing_glass
-	# MESH: 03_viewing_glass	weight: 1
-	# MATERIAL: viewing_glass
 	TRIS	12 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+113.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+114.NO_BUILD_NUMBR

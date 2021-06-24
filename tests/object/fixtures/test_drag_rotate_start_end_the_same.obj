@@ -3155,8 +3155,25 @@ IDX	2854
 IDX	2855
 
 # 0 ROOT
+	# 1 Mesh: Cone_full_rotation_AA_0_0_0
+	ANIM_begin
+	# static rotation
+	# rotation keyframes
+	ANIM_rotate_begin	-1	0	-0	sim/cockpit2/engine/actuators/throttle_ratio_all
+	ANIM_rotate_key	0	-1439.9999
+	ANIM_rotate_key	0.47333333	-115.09061
+	ANIM_rotate_key	1	1439.9999
+	ANIM_rotate_end
+	# MESH: Cone_full_rotation_AA_0_0_0	weight: 0
+	# MATERIAL: Material.001
+	ATTR_shiny_rat	0.5
+	ATTR_manip_drag_rotate	hand	0	0	-0	-1	0	-0	-1439.9999	1439.9999	0	0	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio_all	none	
+	ATTR_manip_keyframe	0.47333333	-115.09061
+	TRIS	186 186
+	ANIM_end
 	# 1 Empty: Empty
 	# EMPTY: Empty	weight: 0
+	ATTR_manip_none
 		# 2 Mesh: Cone_full_rotation_AA_-.5_.5_-707
 		ANIM_begin
 		# static translation
@@ -3174,7 +3191,6 @@ IDX	2855
 		ANIM_rotate_end
 		# MESH: Cone_full_rotation_AA_-.5_.5_-707	weight: 0
 		# MATERIAL: Material
-		ATTR_shiny_rat	0.5
 		ATTR_manip_drag_rotate	hand	3	0	-0	0	1	-0	-360.00027	360.00027	0	0	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio_all	none	
 		ATTR_manip_keyframe	0.47297296	0
 		TRIS	0 186
@@ -3236,20 +3252,5 @@ IDX	2855
 	ATTR_manip_keyframe	0.5	0
 	TRIS	2028 828
 	ANIM_end
-	# 1 Mesh: Cone_full_rotation_AA_0_0_0
-	ANIM_begin
-	# static rotation
-	# rotation keyframes
-	ANIM_rotate_begin	-1	0	-0	sim/cockpit2/engine/actuators/throttle_ratio_all
-	ANIM_rotate_key	0	-1439.9999
-	ANIM_rotate_key	0.47333333	-115.09061
-	ANIM_rotate_key	1	1439.9999
-	ANIM_rotate_end
-	# MESH: Cone_full_rotation_AA_0_0_0	weight: 1
-	# MATERIAL: Material.001
-	ATTR_manip_drag_rotate	hand	0	0	-0	-1	0	-0	-1439.9999	1439.9999	0	0	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio_all	none	
-	ATTR_manip_keyframe	0.47333333	-115.09061
-	TRIS	186 186
-	ANIM_end
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+88.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+114.NO_BUILD_NUMBR
