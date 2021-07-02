@@ -1567,7 +1567,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
     version: bpy.props.EnumProperty(
         name = "X-Plane Version",
-        default = VERSION_1130,
+        default = VERSION_1200,
         items = [
             (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
@@ -1623,6 +1623,19 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         name = "Override Light Level (This Mesh Only)",
         description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
         default = False
+    )
+
+    lightLevel_photometric: bpy.props.BoolProperty(
+        name = "Use Photometric Units",
+        description = "Use brightness in nts in to change the _LIT texture",
+        default = False
+    )
+
+    lightLevel_brightness: bpy.props.IntProperty(
+        name = "Brightness",
+        description = "The brightness in nts of your _LIT texture at its brightness",
+        default = 1000,
+        min = 0
     )
 
     lightLevel_v1: bpy.props.FloatProperty(

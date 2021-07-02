@@ -76,16 +76,17 @@ class XPlanePrimitive(XPlaneObject):
             self.material.collect()
 
     def collectLightLevelAttributes(self) -> None:
+        xplane_version = int(bpy.context.scene.xplane.version)
         bl_obj = self.blenderObject
         if bl_obj.xplane.lightLevel:
-
-            self.attributes["ATTR_light_level"].setValue(
-                (
-                    bl_obj.xplane.lightLevel_v1,
-                    bl_obj.xplane.lightLevel_v2,
-                    bl_obj.xplane.lightLevel_dataref,
-                )
-            )
+            ll_values = [
+                bl_obj.xplane.lightLevel_v1,
+                bl_obj.xplane.lightLevel_v2,
+                bl_obj.xplane.lightLevel_dataref,
+            ]
+            if 1200 <= xplane_version and bl_obj.xplane.lightLevel_photometric:
+                ll_values.append(bl_obj.xplane.lightLevel_brightness)
+            self.attributes["ATTR_light_level"].setValue(tuple(ll_values))
             self.material.attributes["ATTR_light_level_reset"].setValue(False)
 
     def write(self) -> str:

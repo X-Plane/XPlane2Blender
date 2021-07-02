@@ -65,7 +65,6 @@ class XPlaneObject:
         or the summation of the previous weight and all attribute's weight
         """
         override = self.blenderObject.xplane.override_weight
-        w = self.blenderObject.xplane.weight
         if override:
             self.weight = self.blenderObject.xplane.weight
         else:
@@ -77,7 +76,7 @@ class XPlaneObject:
                     )
                 ],
                 key=lambda x: x,
-                default=0,
+                default=defaultWeight,
             )
 
     def collect(self) -> None:
