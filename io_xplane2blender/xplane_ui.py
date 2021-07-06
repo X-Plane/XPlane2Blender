@@ -831,7 +831,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
         "POINT",
         "SPOT",
     }:
-        layout.row().label(text="Automatic lights must use spot lights")
+        layout.row().label(text="Automatic lights must use point or spot lights")
     elif light_data.xplane.type == LIGHT_AUTOMATIC and light_data.type in {
         "POINT",
         "SPOT",
@@ -856,13 +856,13 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                     omni_conclusively_known = True
                 else:
                     return
-            except KeyError:
+            except KeyError: # light name not found by get_parsed_light
                 layout.row().label(
                     text="Unknown Light Name: check spelling or update lights.txt",
                     icon="ERROR",
                 )
                 return
-            except ValueError:
+            except ValueError: # is_omni finds "WIDTH" column is unreplaced, covered by no edge case
                 is_omni = False
                 omni_conclusively_known = False
 
@@ -1111,12 +1111,11 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
 
     surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
 
-    if active_material.xplane.lightLevel:
-        light_level_layout(
-            layout,
-            active_material,
-            paired_dataref_prop="bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref",
-        )
+    light_level_layout(
+        layout,
+        active_material,
+        paired_dataref_prop="bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref",
+    )
 
     # instancing effects
     layout.row().prop(active_material.xplane, "poly_os")

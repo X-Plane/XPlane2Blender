@@ -1,0 +1,31 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	0	0	0	0
+
+# 0 ROOT
+	# 1 Light: 01_airplane_landing_pm
+	# LIGHT: 01_airplane_landing_pm	weight: 10000
+	LIGHT_PARAM	airplane_landing_pm 5 0 -1 1 1 1 0 10000cd 0 0.00000004 1 0.92387953
+	# 1 Light: 03_airplane_taxi_pm
+	# LIGHT: 03_airplane_taxi_pm	weight: 10000
+	LIGHT_PARAM	airplane_taxi_pm 15.027178 0 -1 1 1 1 0 30000cd -0.70710677 0.00000004 -0.70710677 0.92387953
+	# 1 Light: 05_airplane_spot_pm
+	# LIGHT: 05_airplane_spot_pm	weight: 10000
+	LIGHT_PARAM	airplane_spot_pm 25 0 -0 1 1 1 0 50000cd 0 1 0.00000009 0.92387953
+	# 1 Light: 07_airplane_generic_pm
+	# LIGHT: 07_airplane_generic_pm	weight: 10000
+	LIGHT_PARAM	airplane_generic_pm 35 0 -0 1 1 1 0 70000cd 0 -0.00000001 1 0.92387953
+	# 1 Light: 09_airplane_nav_pm
+	# LIGHT: 09_airplane_nav_pm	weight: 10000
+	LIGHT_PARAM	airplane_nav_pm 45 0 -0 1 1 1 0 90000cd 1 0.00000004 0.00000004 0.92387953
+	# 1 Light: 11_airplane_strobe_pm
+	# LIGHT: 11_airplane_strobe_pm	weight: 10000
+	LIGHT_PARAM	airplane_strobe_pm 55 0 -0 1 1 1 0 110000cd 0 0.00000004 -1 0.92387953
+	# 1 Light: 13_airplane_beacon_pm
+	# LIGHT: 13_airplane_beacon_pm	weight: 10000
+	LIGHT_PARAM	airplane_beacon_pm 65 0 -0 1 1 1 0 130000cd 0 0.00000004 -1 0.92387953
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+116.NO_BUILD_NUMBR
