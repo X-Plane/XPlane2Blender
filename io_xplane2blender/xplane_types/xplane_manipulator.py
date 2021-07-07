@@ -5,8 +5,9 @@ Created on Jan 30, 2018
 """
 
 import collections
+import decimal
 import typing
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import bpy
 from mathutils import Vector
@@ -1334,7 +1335,40 @@ class XPlaneManipulator:
         if attr is not None:
             # Order in OBJ (only added if applicable)
             # 1. "ATTR_manip_"+type
-            self.xplanePrimative.cockpitAttributes.add(XPlaneAttribute(attr, value))
+            def fmt_value(
+                value: Union[float, int, str], manip_type: str
+            ) -> Tuple[str, ...]:
+                """We format carefully to avoid rounding any MANIP_DRAG_*'s vector content"""
+                fmt_values = []
+                if (
+                    manip_type == MANIP_DRAG_AXIS
+                    and self.manip.autodetect_settings_opt_in
+                    or manip_type
+                    in {
+                        MANIP_DRAG_AXIS_DETENT,
+                        MANIP_DRAG_ROTATE,
+                        MANIP_DRAG_ROTATE_DETENT,
+                    }
+                ):
+                    skip_formatting = [1, 2, 3]
+                elif manip_type in {MANIP_DRAG_ROTATE_DETENT}:
+                    skip_formatting = [1, 2, 3, 4, 5, 6]
+                else:
+                    skip_formatting = []
+
+                for i, v in enumerate(value):
+                    if i in skip_formatting:
+                        fmt_values.append(v)
+                    elif isinstance(v, float):
+                        fmt_values.append(f"{v:.3f}")
+                    else:
+                        fmt_values.append(v)
+
+                return tuple(fmt_values)
+
+            self.xplanePrimative.cockpitAttributes.add(
+                XPlaneAttribute(attr, fmt_value(value, self.type))
+            )
 
             ver_ge_1100 = int(bpy.context.scene.xplane.version) >= int(VERSION_1110)
 
@@ -1377,8 +1411,12 @@ class XPlaneManipulator:
 
                 # List[AxisDetentRange] -> bool
                 def validate_axis_detent_ranges(
-                    axis_detent_ranges, translation_bone, v1_min, v1_max, lift_at_max
-                ):
+                    axis_detent_ranges: List[XPlaneAxisDetentRange],
+                    translation_bone: XPlaneBone,
+                    v1_min: float,
+                    v1_max: float,
+                    lift_at_max: float,
+                ) -> bool:
                     """
                     Rules for Axis Detent Ranges
 
@@ -1397,6 +1435,14 @@ class XPlaneManipulator:
                     - A pit can be the first or last detent range, but never the only one
                     - Stop pegs, where height is equal to or greater than it's neighbor's height, are never allowed
                     """
+
+                    def D(v) -> decimal.Decimal:
+                        """Returns a GUI matching Decimal"""
+                        return decimal.Decimal(f"{v:.3f}")
+
+                    dec_v1_min = D(v1_min)
+                    dec_v1_max = D(v1_max)
+                    dec_lift_at_max = D(lift_at_max)
                     if not len(axis_detent_ranges) > 0:
                         logger.error(
                             "Must {} have axis detent range if manipulator type is {}".format(
@@ -1406,23 +1452,25 @@ class XPlaneManipulator:
                         )
                         return False
 
-                    if not axis_detent_ranges[0].start == v1_min:
+                    dec_1st_start = D(axis_detent_ranges[0].start)
+                    if not dec_1st_start == dec_v1_min:
                         logger.error(
                             "Axis detent range list for {} must start at Dataref 1's minimum value {}".format(
-                                translation_bone.getBlenderName(), v1_min
+                                translation_bone.getBlenderName(), dec_v1_min
                             )
                         )
                         return False
 
-                    if not axis_detent_ranges[-1].end == v1_max:
+                    dec_last_end = D(axis_detent_ranges[-1].end)
+                    if not dec_last_end == dec_v1_max:
                         logger.error(
                             "Axis detent range list for {} must end at Dataref 1's maximum value {}".format(
-                                translation_bone.getBlenderName(), v1_max
+                                translation_bone.getBlenderName(), dec_v1_max
                             )
                         )
                         return False
 
-                    if len({range.height for range in axis_detent_ranges}) == 1:
+                    if len({D(range_.height) for range_ in axis_detent_ranges}) == 1:
                         logger.warn(
                             "All axis detent ranges for {} have the same height. Check your entered data".format(
                                 translation_bone.getBlenderName()
@@ -1431,7 +1479,15 @@ class XPlaneManipulator:
 
                     for i in range(len(axis_detent_ranges)):
                         detent_range = axis_detent_ranges[i]
-                        if not detent_range.start <= detent_range.end:
+                        dec_detent_range_start = D(detent_range.start)
+                        dec_detent_range_end = D(detent_range.end)
+                        dec_detent_range_height = D(detent_range.height)
+                        dec_detent_range = (
+                            dec_detent_range_start,
+                            dec_detent_range_end,
+                            dec_detent_range_height,
+                        )
+                        if not dec_detent_range_start <= dec_detent_range_end:
                             logger.error(
                                 "The start of axis detent range {} on {} must be less than or equal to its end".format(
                                     detent_range, translation_bone.getBlenderName()
@@ -1439,12 +1495,12 @@ class XPlaneManipulator:
                             )
                             return False
 
-                        if not 0.0 <= detent_range.height <= lift_at_max:
+                        if not D(0.0) <= dec_detent_range_height <= dec_lift_at_max:
                             logger.error(
                                 "Height in axis detent range {} on {} must be between 0.0 and the maximum lift height ({})".format(
                                     detent_range,
                                     translation_bone.getBlenderName(),
-                                    lift_at_max,
+                                    dec_lift_at_max,
                                 )
                             )
                             return False
@@ -1452,7 +1508,7 @@ class XPlaneManipulator:
                         # Pit detection portion
                         if (
                             len(axis_detent_ranges) == 1
-                            and detent_range.start == detent_range.end
+                            and dec_detent_range_start == dec_detent_range_end
                         ):
                             logger.error(
                                 "Axis detent range on {} cannot have stop pit with only one detent".format(
@@ -1471,20 +1527,28 @@ class XPlaneManipulator:
                                 detent_range.end, v1_max, float("inf")
                             )
 
-                        if not detent_range.end == detent_range_next.start:
+                        dec_detent_range_next_start = D(detent_range_next.start)
+                        dec_detent_range_next_end = D(detent_range_next.end)
+                        dec_detent_range_next_height = D(detent_range_next.height)
+                        dec_detent_range_next = (
+                            dec_detent_range_next_start,
+                            dec_detent_range_next_end,
+                            dec_detent_range_next_height,
+                        )
+
+                        if not dec_detent_range_end == dec_detent_range_next_start:
                             logger.error(
-                                "In {}'s axis detent range list, the start of a detent range must be the end of the previous detent range {},{}".format(
+                                "In {}'s axis detent range list, the start of a detent range must be the end of the previous detent range ({},{},{}), ({},{},{})".format(
                                     translation_bone.getBlenderName(),
-                                    detent_range,
-                                    (
-                                        detent_range_next.start,
-                                        detent_range_next.end,
-                                        detent_range.height,
-                                    ),
+                                    dec_detent_range_start,
+                                    dec_detent_range_end,
+                                    dec_detent_range_height,
+                                    dec_detent_range_next_start,
+                                    dec_detent_range_next_end,
+                                    dec_detent_range_next_height,
                                 )
                             )
                             return False
-
                         try:
                             detent_range_prev = (
                                 axis_detent_ranges[i - 1]
@@ -1498,26 +1562,29 @@ class XPlaneManipulator:
                                 v1_min, detent_range.start, float("inf")
                             )
 
+                        dec_detent_range_prev_start = D(detent_range_prev.start)
+                        dec_detent_range_prev_end = D(detent_range_prev.end)
+                        dec_detent_range_prev_height = D(detent_range_prev.height)
                         if (
-                            detent_range.start == detent_range.end
-                            and not detent_range_prev.height
-                            > detent_range.height
-                            < detent_range_next.height
+                            dec_detent_range_start == dec_detent_range_end
+                            and not dec_detent_range_prev_height
+                            > dec_detent_range_height
+                            < dec_detent_range_next_height
                         ):
                             logger.error(
                                 "Stop pit created by {}'s detent range {} must be lower than"
                                 " previous {} and next detent ranges {}".format(
                                     translation_bone.getBlenderName(),
-                                    (detent_range),
+                                    (dec_detent_range),
                                     (
-                                        detent_range_prev.start,
-                                        detent_range_prev.end,
-                                        detent_range.height,
+                                        dec_detent_range_prev_start,
+                                        dec_detent_range_prev_end,
+                                        dec_detent_range_height,
                                     ),
                                     (
-                                        detent_range_next.start,
-                                        detent_range_next.end,
-                                        detent_range_next.height,
+                                        dec_detent_range_next_start,
+                                        dec_detent_range_next_end,
+                                        dec_detent_range_next_height,
                                     ),
                                 )
                             )
@@ -1528,23 +1595,29 @@ class XPlaneManipulator:
                 if len(self.manip.axis_detent_ranges) > 0:
                     if self.type == MANIP_DRAG_AXIS_DETENT:
                         translation_bone = detent_axis_bone
-                    if not validate_axis_detent_ranges(
-                        self.manip.axis_detent_ranges,
-                        translation_bone,
-                        v1_min,
-                        v1_max,
-                        lift_at_max,
-                    ):
-                        return
+                    with decimal.localcontext(decimal.DefaultContext) as ctx:
+                        if not validate_axis_detent_ranges(
+                            self.manip.axis_detent_ranges,
+                            translation_bone,
+                            v1_min,
+                            v1_max,
+                            lift_at_max,
+                        ):
+                            return
 
                 for axis_detent_range in self.manip.axis_detent_ranges:
                     self.xplanePrimative.cockpitAttributes.add(
                         XPlaneAttribute(
                             "ATTR_axis_detent_range",
-                            (
-                                axis_detent_range.start,
-                                axis_detent_range.end,
-                                axis_detent_range.height,
+                            tuple(
+                                map(
+                                    lambda v: f"{v:.3f}",
+                                    (
+                                        axis_detent_range.start,
+                                        axis_detent_range.end,
+                                        axis_detent_range.height,
+                                    ),
+                                )
                             ),
                         )
                     )
@@ -1566,5 +1639,5 @@ class XPlaneManipulator:
                 and self.manip.wheel_delta != 0
             ):
                 self.xplanePrimative.cockpitAttributes.add(
-                    XPlaneAttribute("ATTR_manip_wheel", self.manip.wheel_delta)
+                    XPlaneAttribute("ATTR_manip_wheel", f"{self.manip.wheel_delta:.3f}")
                 )

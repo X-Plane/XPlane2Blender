@@ -81,7 +81,48 @@ class SCENE_PT_xplane(bpy.types.Panel):
         scene_layout(self.layout, scene)
 
 
-# Adds X-Plane settings to the object tab. Uses <mesh_layout>, <cockpit_layout>, <manipulator_layout> and <custom_layout>.
+def light_level_layout(layout, prop_group_w_ll:bpy.types.PropertyGroup, paired_dataref_prop:str):
+    version = int(bpy.context.scene.xplane.version)
+    ll_box = layout.box()
+    ll_box.label(text="Light Levels")
+    ll_box_column = ll_box.column()
+    ll_box_column.prop(prop_group_w_ll.xplane, "lightLevel")
+
+    if prop_group_w_ll.xplane.lightLevel:
+        box = ll_box_column.box()
+        box.prop(prop_group_w_ll.xplane, "lightLevel_v1")
+        box.row().prop(prop_group_w_ll.xplane, "lightLevel_v2")
+
+        if 1200 <= version:
+            row = box.row(align=True)
+            row.active = prop_group_w_ll.xplane.lightLevel_photometric
+            row.prop(prop_group_w_ll.xplane, "lightLevel_photometric", text="")
+            row.prop(prop_group_w_ll.xplane, "lightLevel_brightness")
+
+        row = box.row()
+        row.prop(prop_group_w_ll.xplane, "lightLevel_dataref")
+
+        scene = bpy.context.scene
+        expanded = (
+            scene.xplane.dataref_search_window_state.dataref_prop_dest
+            == paired_dataref_prop
+        )
+        if expanded:
+            our_icon = "ZOOM_OUT"
+        else:
+            our_icon = "ZOOM_IN"
+        dataref_search_toggle_op = row.operator(
+            "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
+        )
+        dataref_search_toggle_op.paired_dataref_prop = paired_dataref_prop
+
+        # Finally, in the next row, if we are expanded, build the entire search list.
+        if expanded:
+            dataref_search_window_layout(box)
+
+    ll_box_column.row()
+
+
 class OBJECT_PT_xplane(bpy.types.Panel):
     """XPlane Object Panel"""
 
@@ -113,6 +154,9 @@ class OBJECT_PT_xplane(bpy.types.Panel):
 
             lod_layout(self.layout, obj)
             weight_layout(self.layout, obj)
+            light_level_layout(
+                self.layout, obj, "bpy.context.active_object.xplane.lightLevel_dataref"
+            )
             if obj.type != "EMPTY":
                 custom_layout(self.layout, obj)
 
@@ -787,7 +831,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
         "POINT",
         "SPOT",
     }:
-        layout.row().label(text="Automatic lights must use spot lights")
+        layout.row().label(text="Automatic lights must use point or spot lights")
     elif light_data.xplane.type == LIGHT_AUTOMATIC and light_data.type in {
         "POINT",
         "SPOT",
@@ -812,13 +856,13 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                     omni_conclusively_known = True
                 else:
                     return
-            except KeyError:
+            except KeyError: # light name not found by get_parsed_light
                 layout.row().label(
                     text="Unknown Light Name: check spelling or update lights.txt",
                     icon="ERROR",
                 )
                 return
-            except ValueError:
+            except ValueError: # is_omni finds "WIDTH" column is unreplaced, covered by no edge case
                 is_omni = False
                 omni_conclusively_known = False
 
@@ -844,6 +888,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
             elif parsed_light.light_param_def:
                 for param, prop_name in {
                     "INDEX": "param_index",
+                    "INTENSITY": "param_intensity",
                     "FREQ": "param_freq",
                     "PHASE": "param_phase",
                     "SIZE": "param_size",
@@ -967,6 +1012,67 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
 #   Material active_material - The active_material of a mesh
 def material_layout(layout: UILayout, active_material: bpy.types.Material) -> None:
     version = int(bpy.context.scene.xplane.version)
+
+    def show_specular_warning():
+        """
+        If the user has hidden the EEVEE old style Specular value, display
+        a warning that the EEVEE one will still be used.
+
+        If they've accidentally started using the nodes version, a more
+        in depth explanation is show.
+        """
+
+        render_engine = bpy.context.scene.render.engine.replace("BLENDER_", "")
+
+        def rnd_cmp_eq(a, b, ndigits=3):
+            return round(a, ndigits) == round(b, ndigits)
+
+        try:
+            output_node = active_material.node_tree.get_output_node(render_engine)
+            surface_shader_node = output_node.inputs["Surface"].links[0].from_node
+            if surface_shader_node.type != "BSDF_PRINCIPLED":
+                raise TypeError
+        # No link back to BSDF, wrong output mode, or wrong surface shader type
+        except (IndexError, TypeError) as e:
+            is_spec_hidden = True
+        else:
+            # CYCLES will always hide our 'specular_intensity'
+            if render_engine == "CYCLES" or (
+                render_engine == "EEVEE" and active_material.use_nodes
+            ):
+                is_spec_hidden = True
+
+                node_specular = surface_shader_node.inputs["Specular"].default_value
+                # Potential default values. Hopefully we get no false positives.
+                node_specular_at_default = any(
+                    (rnd_cmp_eq(node_specular, d) for d in [0.0, 0.5])
+                )
+                node_spec_changed_msg = "".join(
+                    (
+                        "Addon uses EEVEE non-Node 'Specular'. ",
+                        "Use EEVEE and turn " if render_engine == "CYCLES" else "Turn ",
+                        "off 'Uses Nodes' to reveal.",
+                    )
+                )
+                if not node_specular_at_default:
+                    layout.label(
+                        text=node_spec_changed_msg, icon="ERROR",
+                    )
+            else:
+                is_spec_hidden = False
+        if is_spec_hidden and not rnd_cmp_eq(active_material.specular_intensity, 0.5):
+            msg = "".join(
+                (
+                    "Using EEVEE non-Node 'Specular', despite it being hid",
+                    "den and using Cycles." if render_engine == "CYCLES" else ".",
+                )
+            )
+
+            layout.label(
+                text=msg, icon="INFO",
+            )
+
+    show_specular_warning()
     draw_box = layout.box()
     draw_box.label(text="Draw Settings")
     draw_box_column = draw_box.column()
@@ -1010,45 +1116,12 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
         )
 
     surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
-    ll_box = layout.box()
-    ll_box.label(text="Light Levels")
-    ll_box_column = ll_box.column()
-    ll_box_column.prop(active_material.xplane, "lightLevel")
 
-    if active_material.xplane.lightLevel:
-        box = ll_box_column.box()
-        box.prop(active_material.xplane, "lightLevel_v1")
-        box.row().prop(active_material.xplane, "lightLevel_v2")
-        if 1200 <= version:
-            row = box.row(align=True)
-            row.active = active_material.xplane.lightLevel_photometric
-            row.prop(active_material.xplane, "lightLevel_photometric", text="")
-            row.prop(active_material.xplane, "lightLevel_brightness")
-
-        row = box.row()
-        row.prop(active_material.xplane, "lightLevel_dataref")
-
-        scene = bpy.context.scene
-        expanded = (
-            scene.xplane.dataref_search_window_state.dataref_prop_dest
-            == "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
-        )
-        if expanded:
-            our_icon = "ZOOM_OUT"
-        else:
-            our_icon = "ZOOM_IN"
-        dataref_search_toggle_op = row.operator(
-            "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
-        )
-        dataref_search_toggle_op.paired_dataref_prop = (
-            "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
-        )
-
-        # Finally, in the next row, if we are expanded, build the entire search list.
-        if expanded:
-            dataref_search_window_layout(box)
-
-    ll_box_column.row()
+    light_level_layout(
+        layout,
+        active_material,
+        paired_dataref_prop="bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref",
+    )
 
     # instancing effects
     layout.row().prop(active_material.xplane, "poly_os")
@@ -1248,8 +1321,6 @@ def cockpit_layout(
             row.active = use_luminance
             row.prop(active_material.xplane, "cockpit_feature_use_luminance")
             row.prop(active_material.xplane, "cockpit_feature_luminance")
-        elif active_material.xplane.cockpit_feature != COCKPIT_FEATURE_HUD:
-            cockpit_box.prop(active_material.xplane, "hud_viewing_glass")
 
 
 def axis_detent_ranges_layout(

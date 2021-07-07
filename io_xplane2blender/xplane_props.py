@@ -2,7 +2,7 @@
 Defines X-Plane Properties attached to regular Blender data types.
 """
 
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 import bpy
 
@@ -252,23 +252,27 @@ class XPlane2BlenderVersion(bpy.types.PropertyGroup):
 # fmt: off
 class XPlaneAxisDetentRange(bpy.types.PropertyGroup):
     start: bpy.props.FloatProperty(
-            name = "Start",
-            description = "Start value (from Dataref 1) of the detent region",
-            default=0.0,
-            precision = 3)
+        name = "Start",
+        description = "Start value (from Dataref 1) of the detent region",
+        default=0.0,
+        precision = 3,
+    )
     end: bpy.props.FloatProperty(
-            name = "End",
-            description = "End value (from Dataref 1) of the detent region",
-            default=0.0,
-            precision = 3)
+        name = "End",
+        description = "End value (from Dataref 1) of the detent region",
+        default=0.0,
+        precision = 3,
+    )
+
     height: bpy.props.FloatProperty(
-            name = "Height",
-            description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
-            default=0.0,
-            precision = 3)
+        name = "Height",
+        description = "The height (in units of Dataref 2) the user must drag to overcome the detent",
+        default=0.0,
+        precision = 3,
+    )
 
     def __str__(self):
-       return "({0},{1},{2})".format(self.start,self.end,self.height)
+        return f"({self.start:.3f}, {self.end:.3f}, {self.height:.3f})"
 
 # Class: XPlaneCustomAttribute
 # A custom attribute.
@@ -1563,7 +1567,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
     version: bpy.props.EnumProperty(
         name = "X-Plane Version",
-        default = VERSION_1130,
+        default = VERSION_1200,
         items = [
             (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
@@ -1614,6 +1618,46 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         type = XPlaneDataref
     )
 
+    # --- Light Level Override (Mesh Specific) -------------------------------
+    lightLevel: bpy.props.BoolProperty(
+        name = "Override Light Level (This Mesh Only)",
+        description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
+        default = False
+    )
+
+    lightLevel_photometric: bpy.props.BoolProperty(
+        name = "Use Photometric Units",
+        description = "Use brightness in nts in to change the _LIT texture",
+        default = False
+    )
+
+    lightLevel_brightness: bpy.props.IntProperty(
+        name = "Brightness",
+        description = "The brightness in nts of your _LIT texture at its brightness",
+        default = 1000,
+        min = 0
+    )
+
+    lightLevel_v1: bpy.props.FloatProperty(
+        name = "Value 1",
+        description = "Value 1 for light level",
+        default = 0.0,
+        precision = 2
+    )
+
+    lightLevel_v2: bpy.props.FloatProperty(
+        name = "Value 2",
+        description = "Value 2 for light level",
+        default = 1.0,
+        precision = 2
+    )
+
+    lightLevel_dataref: bpy.props.StringProperty(
+        name = "Dataref",
+        description = "The dataref is interpreted as a value between v1 and v2. Values outside v1 and v2 are clamped",
+        default = ""
+    )
+    # --------------------------------------------------------------------------
     override_lods: bpy.props.BoolProperty(
         name = "Override LODs",
         description = "Overrides any parent's LOD buckets for this object and its children",
@@ -1877,7 +1921,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     lightLevel: bpy.props.BoolProperty(
         name = "Override Light Level",
-        description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
+        description = "If checked values will change the brightness of the _LIT texture for objects with this material. This overrides the sim's decision about object lighting",
         default = False
     )
 

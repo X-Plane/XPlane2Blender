@@ -304,7 +304,10 @@ class XPlaneMaterial:
 
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:
         xplane_version = int(bpy.context.scene.xplane.version)
-        if mat.xplane.lightLevel:
+        if (
+            mat.xplane.lightLevel
+            and not self.xplaneObject.blenderObject.xplane.lightLevel
+        ):
             ll_values = [
                 mat.xplane.lightLevel_v1,
                 mat.xplane.lightLevel_v2,

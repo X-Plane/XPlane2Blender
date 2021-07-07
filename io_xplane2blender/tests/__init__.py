@@ -20,6 +20,7 @@ from io_xplane2blender.xplane_config import getDebug, setDebug
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
 from io_xplane2blender.xplane_types import (
     xplane_attribute,
+    xplane_attributes,
     xplane_bone,
     xplane_file,
     xplane_primitive,
@@ -517,8 +518,14 @@ class XPlaneTestCase(unittest.TestCase):
     # asserts that an attributes object equals a dict
     def assertAttributesEqualDict(
         self,
-        attrs: List[Union[str, xplane_attribute.XPlaneAttribute]],
-        d: Dict[str, Any],
+        attrs: xplane_attributes.XPlaneAttributes,
+        expected_attrs: Dict[
+            str,
+            Union[
+                xplane_attribute.AttributeValueType,
+                xplane_attribute.AttributeValueTypeList,
+            ],
+        ],
         floatTolerance: float = FLOAT_TOLERANCE,
     ):
         with io.StringIO() as s_buf:
@@ -528,29 +535,30 @@ class XPlaneTestCase(unittest.TestCase):
             pprint(list(attrs.keys()), s_buf)
             attrs_pp_str = s_buf.getvalue()
         self.assertEquals(
-            len(d),
+            len(expected_attrs),
             len(attrs),
-            f"Attribute lists {d_pp_str}, {attrs_pp_str} have different length.\nDifferences are {set(d.keys()) ^ set(attrs.keys())}",
+            f"Attribute lists {list(expected_attrs.keys())}, {list(attrs.keys())} have different length",
         )
 
-        for name in attrs:
-            attr = attrs[name]
-            value = attr.getValue()
-            expectedValue = d[name]
+        attr_names = tuple(attrs.keys())
+        attr_values = tuple((v.getValue() for v in attrs.values()))
+        for name, (value, expected_value) in zip(
+            attr_names, zip(attr_values, expected_attrs.values())
+        ):
 
-            if isinstance(expectedValue, (list, tuple)):
+            if isinstance(expected_value, (list, tuple)):
                 self.assertIsInstance(
                     value,
                     (list, tuple),
                     msg='Attribute value for "%s" is no list or tuple but: %s',
                 )
                 self.assertEquals(
-                    len(expectedValue),
+                    len(expected_value),
                     len(value),
                     'Attribute values for "%s" have different length' % name,
                 )
 
-                for i, (v, expectedV) in enumerate(zip(value, expectedValue)):
+                for i, (v, expectedV) in enumerate(zip(value, expected_value)):
                     if isinstance(expectedV, (float, int)):
                         self.assertFloatsEqual(expectedV, v, floatTolerance)
                     else:
@@ -561,7 +569,7 @@ class XPlaneTestCase(unittest.TestCase):
                         )
             else:
                 self.assertEquals(
-                    expectedValue, value, 'Attribute "%s" is not equal' % name
+                    expected_value, value, 'Attribute "%s" is not equal' % name
                 )
 
     def createXPlaneFileFromPotentialRoot(

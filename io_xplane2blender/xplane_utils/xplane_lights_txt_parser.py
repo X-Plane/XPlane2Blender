@@ -120,6 +120,15 @@ SIZE_AS_INTENSITY = {
     "airplane_beacon_pm",
 }
 
+BILLBOARD_USES_SPILL_DXYZ = {
+    "airplane_landing_bb",
+    "airplane_taxi_bb",
+    "airplane_spot_bb",
+    "airplane_generic_bb",
+    "airplane_nav_bb",
+    "airplane_strobe_bb",
+    "airplane_beacon_bb",
+}
 
 class ColumnName(enum.Enum):
     """ColumnName are labels for the OVERLOAD_TYPE's columns.

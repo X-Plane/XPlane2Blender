@@ -320,11 +320,13 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 "is this omni". This is just what we're replacing WIDTH with,
                 and other things can change it
                 """
+                overload_type = parsed_light.best_overload().overload_type
+                is_v12_bb = parsed_light.name in xplane_lights_txt_parser.BILLBOARD_USES_SPILL_DXYZ
                 if light_data.type == "POINT":
                     return 1
-                elif "BILLBOARD" in parsed_light.best_overload().overload_type:
+                elif "BILLBOARD" in overload_type and not is_v12_bb:
                     return XPlaneLight.WIDTH_for_billboard(light_data.spot_size)
-                elif "SPILL" in parsed_light.best_overload().overload_type:
+                elif "SPILL" in overload_type or is_v12_bb:
                     # cos(half the cone angle)
                     return XPlaneLight.WIDTH_for_spill(light_data.spot_size)
 
@@ -333,16 +335,18 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 Returns (potentially scaled) light direction
                 or (0, 0, 0) for omni lights in X-Plane coords
                 """
+                overload_type = parsed_light.best_overload().overload_type
+                is_v12_bb = parsed_light.name in xplane_lights_txt_parser.BILLBOARD_USES_SPILL_DXYZ
 
                 if light_data.type == "POINT":
                     return Vector((0, 0, 0))
-                elif "BILLBOARD" in parsed_light.best_overload().overload_type:
+                elif "BILLBOARD" in overload_type and not is_v12_bb:
                     # Works for DIR_MAG as well, but we'll probably never have a case for that
                     scale = 1 - XPlaneLight.WIDTH_for_billboard(light_data.spot_size)
                     dir_vec_b_norm = self.get_light_direction_b()
                     scaled_vec_b = dir_vec_b_norm * scale
                     return vec_b_to_x(scaled_vec_b)
-                elif "SPILL" in parsed_light.best_overload().overload_type:
+                elif "SPILL" in overload_type or is_v12_bb:
                     return vec_b_to_x(self.get_light_direction_b())
 
             dxyz_values_x = new_dxyz_vec_x()

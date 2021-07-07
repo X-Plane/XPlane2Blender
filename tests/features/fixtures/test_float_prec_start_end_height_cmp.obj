@@ -41,23 +41,35 @@ IDX	20
 IDX	22
 
 # 0 ROOT
-	# 1 Empty: override_autodetect_datarefs_drag_axis
-	# EMPTY: override_autodetect_datarefs_drag_axis	weight: 0
-		# 2 Mesh: Cube_define_drag_axis
+	# 1 Empty: Empty_define_drag_axis.009
+	ANIM_begin
+	# static rotation
+	# translation keyframes
+	ANIM_trans_begin	sim/cockpit2/controls/flap_ratio
+	ANIM_trans_key	-999	0	0	-0
+	ANIM_trans_key	0	0	0	-0
+	ANIM_trans_key	1	2	0	-0
+	ANIM_trans_key	999	2	0	-0
+	ANIM_trans_end
+	# EMPTY: Empty_define_drag_axis.009	weight: 0
+		# 2 Mesh: Cube_define_detent_axis
 		ANIM_begin
 		# static rotation
 		# translation keyframes
 		ANIM_trans_begin	sim/weapons/x[0]
 		ANIM_trans_key	-999	0	0	-0
 		ANIM_trans_key	0	0	0	-0
-		ANIM_trans_key	5	0	0	-0.80000001
-		ANIM_trans_key	999	0	0	-0.80000001
+		ANIM_trans_key	5	0	0	-0.82999998
+		ANIM_trans_key	999	0	0	-0.82999998
 		ANIM_trans_end
-		# MESH: Cube_define_drag_axis	weight: 0
-		# MATERIAL: Material.002
+		# MESH: Cube_define_detent_axis	weight: 0
+		# MATERIAL: Material
 		ATTR_shiny_rat	0.5
-		ATTR_manip_drag_axis	hand	0	0	-0.80000001	0.000	5.000	override_activated	Test Tooltip
+		ATTR_manip_drag_axis	hand	2	0	-0	0.000	1.000	sim/cockpit2/controls/flap_ratio	Test Tooltip
+		ATTR_axis_detented	0	0	-0.82999998	0	5	sim/weapons/x[0]
+		ATTR_axis_detent_range	-0.000	1.000	0.830
 		TRIS	0 36
 		ANIM_end
+	ANIM_end
 
 # Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+102.NO_BUILD_NUMBR

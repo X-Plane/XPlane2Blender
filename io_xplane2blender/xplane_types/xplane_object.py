@@ -46,6 +46,7 @@ class XPlaneObject:
         for i, dataref in self.blenderObject.xplane.datarefs.items():
             self.datarefs[dataref.path] = dataref
 
+        self.weight = 0
         self.setWeight()
 
     def __str__(self):
@@ -63,27 +64,20 @@ class XPlaneObject:
         """Weight will be 0, the value of defaultWeight,
         or the summation of the previous weight and all attribute's weight
         """
-        weight = defaultWeight
-
-        if (
-            hasattr(self.blenderObject.xplane, "override_weight")
-            and self.blenderObject.xplane.override_weight
-        ):
-            weight = self.blenderObject.xplane.weight
+        override = self.blenderObject.xplane.override_weight
+        if override:
+            self.weight = self.blenderObject.xplane.weight
         else:
-            try:
-                weight += max(
-                    [
-                        attr.weight
-                        for attr in itertools.chain(
-                            self.attributes.values(), self.cockpitAttributes.values()
-                        )
-                    ]
-                )
-            except ValueError:
-                pass
-
-        self.weight = weight
+            self.weight += max(
+                [
+                    attr.weight
+                    for attr in itertools.chain(
+                        self.attributes.values(), self.cockpitAttributes.values()
+                    )
+                ],
+                key=lambda x: x,
+                default=defaultWeight,
+            )
 
     def collect(self) -> None:
         assert self.xplaneBone is not None, "xplaneBone must not be None!"
