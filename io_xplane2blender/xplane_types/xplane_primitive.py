@@ -36,7 +36,7 @@ class XPlanePrimitive(XPlaneObject):
         self.manipulator = XPlaneManipulator(self)
         self.setWeight()
 
-    def setWeight(self, defaultWeight:int = 0)->None:
+    def setWeight(self, defaultWeight: int = 0) -> None:
         """
         If not default, weight will 0 if no materials
         given, or it will be the index of the last matching material
@@ -44,21 +44,21 @@ class XPlanePrimitive(XPlaneObject):
         weight.
         """
         super().setWeight(defaultWeight)
-        if self.blenderObject.xplane.override_weight:
-            self.weight = self.blenderObject.xplane.weight
-        else:
-            try:
-                ref_mat = self.blenderObject.data.materials[0]
-                if ref_mat is None:
-                    raise TypeError
-            except (IndexError, TypeError):
-                pass
-            else:
-                weight = 0
-                for i, mat in enumerate(bpy.data.materials):
-                    if ref_mat == mat:
-                        weight = i
-            self.weight += defaultWeight
+
+        if (
+            not hasattr(self.blenderObject.xplane, "override_weight")
+            or not self.blenderObject.xplane.override_weight
+        ):
+            mat_weight = 0
+
+            for i in range(0, len(bpy.data.materials)):
+                if (
+                    len(self.blenderObject.data.materials) > 0
+                    and self.blenderObject.data.materials[0] == bpy.data.materials[i]
+                ):
+                    mat_weight = i
+
+            self.weight += mat_weight
 
     def collect(self) -> None:
         super().collect()
