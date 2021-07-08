@@ -233,7 +233,7 @@ def main(argv=None) -> int:
                         "DAG zero",
                         "found bundled python",
                         "Read new prefs",
-                        "ID user decrement error",
+                        ".*ID user decrement error",
                         "Smart Projection time",
                         "WARNING.*has no UV-Map.",
                         "ERROR.*wrong user count in old ID",
@@ -250,7 +250,8 @@ def main(argv=None) -> int:
             testsRun, errors, failures, skipped = (0,) * 4
             try:
                 results = re.search(TEST_RESULTS_REGEX, out)
-            except:
+            except Exception as e:
+                print(e)
                 # Oh goodie, more string matching!
                 # I'm sure this won't ever come back to bite us!
                 # If we're ever using assertRaises,
@@ -261,12 +262,17 @@ def main(argv=None) -> int:
                 total_errors += 1
                 errors = 1
             else:
-                testsRun, errors, failures, skipped = (
-                    int(results.group("testsRun")),
-                    int(results.group("errors")),
-                    int(results.group("failures")),
-                    int(results.group("skipped")),
-                )
+                try:
+                    testsRun, errors, failures, skipped = (
+                        int(results.group("testsRun")),
+                        int(results.group("errors")),
+                        int(results.group("failures")),
+                        int(results.group("skipped")),
+                    )
+                except AttributeError as e:
+                    # For some reason, there was no results
+                    # - perhaps the no unit test was run
+                    testsRun, errors, failures, skipped = (1, 0, 0, 0)
 
                 total_testsCompleted += testsRun
                 total_errors += errors

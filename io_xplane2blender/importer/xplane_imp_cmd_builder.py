@@ -86,6 +86,19 @@ class IntermediateAnimation:
     the static version). An IntermediateDatablock may have 0 or more of these.
     """
 
+    # Always
+    # - You will have one of (type == "TRANSFORM" and (locations xor rotations) or (type == "SHOW"/"HIDE")
+    # - locations cannot be "merged" for the same set of values, they are replaced instead
+    # - rotations axis will be unit length Vector of the co-ordinate axis
+    # TODO: Support AxisAngle representation, must have test_Creation_helper use AxisAngle since we kind of already have AxisAngle?......
+    # Prior to any optimization
+    # - rotations will have a length of 0 or 1
+    # After optimization
+    # - rotations dict may have 0-3 entries
+
+    # Locations and rotations will have only one entry unless
+    # they are being gathered together as part of the minimization process
+    # locations and each axis's degrees list must equal the dataref's values list
     locations: List[Vector] = field(default_factory=list)
     # A dictionary of rotations along an axis (usually X, Y, Z), and their degrees
     rotations: Dict[Vector, List[float]] = field(
@@ -99,7 +112,7 @@ class IntermediateAnimation:
         def recompose_rotation(value_idx: int):
             tot_rot = Vector((0, 0, 0))
             for axis, degrees in self.rotations.items():
-                tot_rot += axis * degrees[value_idx]
+                tot_rot += axis * math.radians(degrees[value_idx])
             return tot_rot
 
         current_frame = 1
@@ -135,6 +148,21 @@ class IntermediateAnimation:
         test_creation_helpers.set_animation_data(bl_object, keyframe_infos)
         current_frame = 1
 
+    def is_valid(self) -> bool:
+        if self.xp_dataref.anim_type == ANIM_TYPE_TRANSFORM:
+            exclusive_use = (self.locations and not self.rotations) or (
+                not self.locations and self.rotations
+            )
+            # TODO: Support AngleAxis
+            axis_orthogonal = next(self.rotations.keys()).freeze() in {
+                Vector((1, 0, 0)).freeze(),
+                Vector((0, 1, 0)).freeze(),
+                Vector((0, 0, 1)).freeze(),
+            }
+            return exclusive_use and axis_orthogonal
+        else:
+            return not self.locations and not self.rotations
+
 
 @dataclass
 class IntermediateDatablock:
@@ -142,10 +170,16 @@ class IntermediateDatablock:
     # If Datablock is a MESH, these will correspond to (hopefully valid) entries in the idx table and _VT table
     start_idx: Optional[int]
     count: Optional[int]
-    # At the start of each IntermediateDatablock's life, this is 0 or 1.
-    # During finalization of the tree, they are combined.
+    # In general, 1st animation represents locations or rotations, Empty if not animated, the 1st animation will
+    # represent locations or rotations, 2nd and on are SHOW/HIDEs
+    # During finalization as much of these are combined
     animations_to_apply: List[IntermediateAnimation]
     bake_matrix: Matrix
+
+    # Why here? DatablockInfos are meant to be isolated structs as much as possible
+    # and we're interested in the relationship between IntermediateDatablocks
+    # and their animations which isn't data a DatablockInfo has
+    children: List["IntermediateDatablock"] = field(default_factory=list)
 
     def build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
         mesh_idxes = vt_table.idxes[self.start_idx : self.start_idx + self.count]
@@ -179,21 +213,42 @@ class IntermediateDatablock:
         )
         me = ob.data
         me.update(calc_edges=True)
-        uv_layer = me.uv_layers.new()
+        uv_layer = me.uv_layers[0]  # .new()
 
+        i = 0
         if not me.validate(verbose=True):
-            for idx in set(itertools.chain.from_iterable(faces)):
-                me.vertices[idx].normal = (
-                    vertices[idx].nx,
-                    vertices[idx].ny,
-                    vertices[idx].nz,
-                )
-                uv_layer.data[idx].uv = vertices[idx].s, vertices[idx].t
+            for face in py_faces:
+                for idx in face:
+                    me.vertices[idx].normal = (
+                        vertices[idx].nx,
+                        vertices[idx].ny,
+                        vertices[idx].nz,
+                    )
+                    uv_layer.data[idx].uv = vertices[idx].s, vertices[idx].t
+                    if "body" in ob.name:
+                        # print(i, "uv", uv_layer.data[idx].uv)
+                        pass
+                    i += 1
         else:
             logger.error("Mesh was not valid, check console for more")
 
         test_creation_helpers.set_material(ob, "Material")
         return ob
+
+    @property
+    def name(self) -> str:
+        return self.datablock_info.name
+
+    @property
+    def parent(self) -> Optional[str]:
+        try:
+            return self.datablock_info.parent_info.parent
+        except AttributeError:
+            return None
+
+    @parent.setter
+    def parent(self, value: str) -> None:
+        self.datablock_info.parent_info.parent = value
 
 
 @dataclass
@@ -292,27 +347,26 @@ class ImpCommandBuilder:
             else:
                 parent = self._top_intermediate_datablock
 
-            empt = IntermediateDatablock(
+            empty = IntermediateDatablock(
                 datablock_info=DatablockInfo(
                     "EMPTY",
                     name=self._next_empty_name(),
                     parent_info=ParentInfo(parent.datablock_info.name),
                     collection=self.root_collection,
-                    location=self._bake_matrix_stack[-1].translation.copy(),
-                    rotation=self._bake_matrix_stack[-1].to_euler("XYZ"),
                 ),
                 start_idx=None,
                 count=None,
                 animations_to_apply=[],
                 bake_matrix=self._bake_matrix_stack[-1].copy(),
             )
-            self._blocks.append(empt)
+            self._blocks.append(empty)
+            parent.children.append(empty)
 
             self._anim_intermediate_stack.append(
-                _AnimIntermediateStackEntry(IntermediateAnimation(), empt)
+                _AnimIntermediateStackEntry(IntermediateAnimation(), empty)
             )
             self._anim_count[-1] += 1
-            empt.animations_to_apply.append(self._top_animation)
+            empty.animations_to_apply.append(self._top_animation)
             self._bake_matrix_stack[-1].identity()
 
         if directive == "VT":
@@ -339,8 +393,6 @@ class ImpCommandBuilder:
                     # How do we keep track of this
                     parent_info=ParentInfo(parent.datablock_info.name),
                     collection=self.root_collection,
-                    location=self._bake_matrix_stack[-1].translation.copy(),
-                    rotation=self._bake_matrix_stack[-1].to_euler("XYZ"),
                 ),
                 start_idx=start_idx,
                 count=count,
@@ -348,6 +400,7 @@ class ImpCommandBuilder:
                 bake_matrix=self._bake_matrix_stack[-1].copy(),
             )
             self._blocks.append(intermediate_datablock)
+            parent.children.append(intermediate_datablock)
 
         elif directive == "ANIM_begin":
             self._anim_count.append(0)
@@ -377,7 +430,7 @@ class ImpCommandBuilder:
             # TODO: With a normal implementation, we'd be baking locations as we go and clearing to identity here
             # but with out implementation it happens at ANIM_*_begin, and the adjustment happens way later
             pass
-        elif directive in {"ANIM_hide", "ANIM_show"}:
+        elif directive in {"ANIM_show", "ANIM_hide"}:
             v1, v2 = args[:2]
             dataref_path = args[2]
             begin_new_frame()
@@ -505,34 +558,61 @@ class ImpCommandBuilder:
         Returns a set with FINISHED or CANCELLED, matching the returns of bpy
         operators
         """
+
+        def reparent_children_to_new_block(
+            current_parent_block: IntermediateDatablock,
+            new_parent_block: IntermediateDatablock,
+        ):
+            for child in current_parent_block.children:
+                print(
+                    f"{child.datablock_info.name}'s Parent before: {child.datablock_info.parent_info.parent}"
+                )
+                child.datablock_info.parent_info.parent = (
+                    new_parent_block.datablock_info.name
+                )
+                print(
+                    f"{child.datablock_info.name}'s Parent after: {child.datablock_info.parent_info.parent}"
+                )
+            current_parent_block.children.clear()
+
         # Since we're using root collections mode, our INTER_ROOT empty datablock isn't made
         # and we pretend its a collection.
-        remaining_blocks = collections.deque(self._blocks[1:])
+        blocks_rem_itr = islice(self._blocks, 1, len(self._blocks))
         while True:
-            blocks_itr = iter(remaining_blocks)
             try:
-                intermediate_block = next(blocks_itr)
+                intermediate_block = next(blocks_rem_itr)
             except StopIteration:
                 break
-
-            db_info = intermediate_block.datablock_info
-            if db_info.parent_info and db_info.parent_info.parent == "INTER_ROOT":
-                db_info.parent_info = None
-            if db_info.datablock_type == "EMPTY":
-                intermediate_name = db_info.name
+            else:
+                intermediate_name = intermediate_block.datablock_info.name
                 intermediate_block_type = (
                     intermediate_block.datablock_info.datablock_type
                 )
+                intermediate_parent = intermediate_block.parent
+                if intermediate_block.parent == "INTER_ROOT":
+                    intermediate_block.datablock_info.parent_info = None
+                intermediate_parent_info = intermediate_block.datablock_info.parent_info
+
+            print(
+                f"Deciding {intermediate_block.name}" f", parent {intermediate_parent}"
+            )
+
+            if intermediate_block_type == "EMPTY":
                 # Remember, we only make empties to store animations so no try needed here
                 intermediate_animation = intermediate_block.animations_to_apply[0]
                 intermediate_dataref = intermediate_animation.xp_dataref
+                intermediate_path = intermediate_dataref.path
+                is_interm_loc_anim = bool(intermediate_animation.locations)
+                is_interm_rot_anim = bool(intermediate_animation.rotations)
 
                 def optimize_empty_chain(
-                    db_info: DatablockInfo,
+                    in_block: IntermediateDatablock,
                     searching_itr: Iterator[IntermediateDatablock],
                 ) -> Tuple[IntermediateDatablock, Iterator[IntermediateDatablock]]:
                     """
-                    Optimizes chains of empties into one empty for test_creation_helpers to use.
+                    Cleans and optimizes IntermediateDatablocks to produce the final blocks to be created.
+
+                    Returns next block to be created and an iterator to keep searching.
 
                     Current optimizations
                     - For the same dataref path and values, 3 orthogonal axis in a row are merged
@@ -542,59 +622,116 @@ class ImpCommandBuilder:
 
                     Arbitrary rotation axis are not supported (anywhere), locations and rotations even for the same dataref path and values are not skipped
 
+                    Not Optimized
+                    - Optimize out duplicate Show/Hide
+
+                    TODO Algorithms
+                    - Don't reduce locations when locations are different but dataref values are same.
+                    This requires user attention to fix
                     """
-                    # TODO: Don't reduce locations when locations are different but dataref values
-                    # are the same. This case needs manual user corrections.
+                    i = -1
                     while True:
-                        peek_next_block = copy.copy(searching_itr)
+                        i += 1
+                        searching_itr, peek_next_block_itr = itertools.tee(
+                            searching_itr
+                        )
+
                         try:
-                            next_block = next(peek_next_block)
+                            next_block = next(peek_next_block_itr)
                         except StopIteration:
+                            # TODO: Wait! What about self optimizations!
                             # No next block, nothing to accumulate
                             break
                         else:
-                            next_name = next_block.datablock_info.name
+                            next_name = next_block.name
                             next_block_type = next_block.datablock_info.datablock_type
-                            try:
-                                next_block_parent = (
-                                    next_block.datablock_info.parent_info.parent
-                                )
+                            breakpoint()
+                            if next_block_type == "MESH":
+                                # TODO: Needs unit test showing replacement happens only with 1 child mesh
+                                # multiple child meshes or mixed child meshes and empties doesn't work
+                                def replace_intermediate_with_child_mesh():
+                                    next_block.animations_to_apply = copy.copy(
+                                        intermediate_block.animations_to_apply
+                                    )
+                                    next_block.datablock_info.parent_info = copy.copy(
+                                        intermediate_parent_info
+                                    )
+
+                                if len(intermediate_block.children) == 1:
+                                    replace_intermediate_with_child_mesh()
+                                return next_block, peek_next_block_itr
+                            elif next_block_type == "EMPTY":
                                 assert (
-                                    next_block_parent
-                                    == intermediate_block.datablock_info.name
-                                ), f"next block {next_name}'s parent is not the intermediate {next_block_parent} != {intermediate_block.datablock_info.name}"
-                            except AttributeError:
-                                next_block_parent = None
-                            try:
-                                next_animation = next_block.animations_to_apply[0]
+                                    next_block.animations_to_apply
+                                ), f"{next_name} is EMPTY and must have animations"
+                                next_animations = next_block.animations_to_apply
+                                next_animation = next_animations[0]
+                                # This is not to say it is a __valid__ animation
+                                is_loc_anim = bool(next_animation.locations)
+                                is_rot_anim = bool(next_animation.rotations)
                                 next_dataref = next_animation.xp_dataref
-                            except IndexError:  # next_block has no animations, must not be EMPTY
-                                next_block.animations_to_apply = (
-                                    intermediate_block.animations_to_apply
-                                )
-                                next_block.datablock_info.parent_info = (
-                                    intermediate_block.datablock_info.parent_info
-                                )
+                                next_path = next_dataref.path
+                                next_block_parent = next_block.parent
 
-                                # With intermediate_block being made irrelavent, adjust all former parentage to next_block
-                                for other_block in remaining_blocks:
-                                    if (
-                                        getattr(
-                                            other_block.datablock_info.parent_info,
-                                            "parent",
-                                            None,
-                                        )
-                                        == intermediate_name
+                                def merge_orthogonal_rotation_axis():
+                                    for (
+                                        axis,
+                                        degrees,
+                                    ) in next_animation.rotations.items():
+                                        if round_vec(
+                                            axis, PRECISION_KEYFRAME
+                                        ).freeze() in {
+                                            Vector((1, 0, 0)).freeze(),
+                                            Vector((0, 1, 0)).freeze(),
+                                            Vector((0, 0, 1)).freeze(),
+                                        }:
+                                            intermediate_animation.rotations[
+                                                axis
+                                            ] = degrees
+                                    # We don't know actually what optimizations to apply yet and what the effects should be
+                                    reparent_children_to_new_block(
+                                        next_block,
+                                        intermediate_block,
+                                    )
+
+                                    return intermediate_block
+
+                                if is_interm_rot_anim:
+                                    in_block = merge_orthogonal_rotation_axis()
+
+                                # Merge Show/Hides
+                                def merge_show_hide_animations():
+                                    """
+                                    If the next EMPTY is simply a show/hide,
+                                    absorb it's animations
+                                    """
+                                    for next_anim in (
+                                        next_anim
+                                        for next_anim in next_animations
+                                        if next_anim.anim_type
+                                        in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}
                                     ):
-                                        other_block.datablock_info.parent_info.parent = (
-                                            next_name
+                                        print(
+                                            f"{intermediate_name} from show/hide from {next_name}"
                                         )
-                                next_block.datablock_info.location += (
-                                    intermediate_block.datablock_info.location
-                                )
+                                        intermediate_block.animations_to_apply.append(
+                                            next_anim
+                                        )
+                                    reparent_children_to_new_block(
+                                        next_block,
+                                        intermediate_block,
+                                    )
 
-                                return next_block, list(peek_next_block)
-                            else:
+                                if not (is_loc_anim or is_rot_anim):
+                                    merge_show_hide_animations()
+
+                            searching_itr = peek_next_block_itr
+                            # What we need: Big if statement to collect optimizations to run, in what order, what should be done to the intermediate block, if you're getting rid of it who to reparent to, what shuold happen to the next block. We need a big ordered table.
+
+                            # TODO: We only stop optimizing when we get to a TRIS.
+                            # If we somehow made empties and didn't get to a TRIS we've either corrupted the TREE
+                            # or made empties for no animation which should be gotten rid of
+                            if False:
                                 assert {intermediate_block_type, next_block_type} == {
                                     "EMPTY"
                                 }, f"{intermediate_name}'s and {next_name}'s type are {intermediate_block_type, next_block_type}, should be 'EMPTY'"
@@ -630,9 +767,9 @@ class ImpCommandBuilder:
                                         next_animation
                                     )
 
-                                # With next_block being made irrelavent, adjust the parantage of any
+                                # With next_block being made irrelevant, adjust the parentage of any
                                 # future blocks to be next_block's parent
-                                for future_block in copy.copy(peek_next_block):
+                                for future_block in copy.copy(peek_next_block_itr):
                                     future_parent = getattr(
                                         future_block.datablock_info.parent_info,
                                         "parent",
@@ -643,24 +780,39 @@ class ImpCommandBuilder:
                                             next_block.datablock_info.parent_info
                                         )
 
-                                searching_itr = peek_next_block
+                                searching_itr = peek_next_block_itr
+                            # end elif next_block_type == "EMPTY":
+                    # end while
 
-                    return (intermediate_block, list(searching_itr))
+                    return (intermediate_block, searching_itr)
 
-                block, remaining_blocks = optimize_empty_chain(db_info, blocks_itr)
-                if block.datablock_info.datablock_type == "EMPTY":
+                print(f"IN {intermediate_block.name}")
+                out_block, blocks_rem_itr = optimize_empty_chain(
+                    intermediate_block, blocks_rem_itr
+                )
+                print(
+                    f"OUT {out_block.name}, parent: {out_block.parent}, type: {out_block.datablock_info.datablock_type}"
+                )
+                if out_block.datablock_info.datablock_type == "EMPTY":
                     ob = test_creation_helpers.create_datablock_empty(
-                        block.datablock_info
+                        out_block.datablock_info
                     )
-                elif block.datablock_info.datablock_type == "MESH":
-                    ob = block.build_mesh(self.vt_table)
-            elif db_info.datablock_type == "MESH":
-                remaining_blocks = list(blocks_itr)
+                elif out_block.datablock_info.datablock_type == "MESH":
+                    ob = out_block.build_mesh(self.vt_table)
+            elif intermediate_block_type == "MESH":
                 ob = intermediate_block.build_mesh(self.vt_table)
 
+            ob.matrix_local = intermediate_block.bake_matrix.copy()
             for animation in intermediate_block.animations_to_apply:
                 animation.apply_animation(ob)
-        bpy.context.scene.frame_current = 1
+
+        # TODO: Unit test, and what about a bunch of animations that get optimized out with not TRIS blocks?
+        # Put this later
+        if not bpy.data.objects:
+            logger.warn(".obj had no real blocks to create")
+            return {"CANCELLED"}
+
+        bpy.context.scene.frame_set(1)
         return {"FINISHED"}
 
     @property

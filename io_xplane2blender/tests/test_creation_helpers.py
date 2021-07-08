@@ -60,6 +60,12 @@ _BONE = "BONE"
 _OBJECT = "OBJECT"
 
 
+@dataclass
+class AxisAngle:
+    axis: Vector
+    angle: float
+
+
 class AxisDetentRangeInfo:
     def __init__(self, start: float, end: float, height: float):
         self.start = start
@@ -155,8 +161,16 @@ class KeyframeInfo:
         dataref_anim_type: str = xplane_constants.ANIM_TYPE_TRANSFORM,  # Must be xplane_constants.ANIM_TYPE_*
         location: Optional[Vector] = None,
         rotation_mode: str = "XYZ",
-        rotation: Optional[Union[Tuple[float, Vector], Euler, Quaternion]] = None,
+        rotation: Optional[
+            Union[AxisAngle, Euler, Tuple[float, float, float], Quaternion]
+        ] = None,
     ):
+        """
+        Everything needed to automate setting Object Location/Rotation and
+        XPlane2Blender Dataref props, then making a keyframe.
+
+        When rotation is a tuple, it is converted to radians, then into a Euler
+        """
         self.idx = idx
         self.dataref_path = dataref_path
         self.dataref_value = dataref_value
@@ -165,11 +179,15 @@ class KeyframeInfo:
         self.dataref_anim_type = dataref_anim_type
         self.location = location
         self.rotation_mode = rotation_mode
-        self.rotation = rotation
+        self.rotation = (
+            Euler(map(math.radians, rotation), rotation_mode)
+            if isinstance(rotation, tuple)
+            else rotation
+        )
 
         if self.rotation:
             if self.rotation_mode == "AXIS_ANGLE":
-                assert len(self.rotation[1]) == 3
+                assert len(self.rotation.axis) == 3
             elif self.rotation_mode == "QUATERNION":
                 assert len(self.rotation) == 4
             elif {*self.rotation_mode} == {"X", "Y", "Z"}:
@@ -178,7 +196,13 @@ class KeyframeInfo:
                 assert False, "Unsupported rotation mode: " + self.rotation_mode
 
     def __str__(self) -> str:
-        return f"({self.idx}, {self.dataref_path}, {self.dataref_value}, {self.dataref_show_hide_v1}, {self.dataref_show_hide_v2}, {self.dataref_anim_type}, {self.location}, {self.rotation_mode}, {self.rotation})"
+        """For ease of debugging, rotation is always converted to degrees"""
+        s = f"({self.idx}, {self.dataref_path}, {self.dataref_value}, {self.dataref_show_hide_v1}, {self.dataref_show_hide_v2}, {self.dataref_anim_type}, {self.location}, {self.rotation_mode}, "
+        if {*self.rotation_mode} == {"X", "Y", "Z"}:
+            s += f"{tuple(map(math.degrees, self.rotation))})"
+        else:
+            s += f"{self.rotation})"
+        return s
 
 
 # Common presets for animations
@@ -271,6 +295,9 @@ class ParentInfo:
         self.parent = parent
         self.parent_type = parent_type
         self.parent_bone = parent_bone
+
+    def __str__(self):
+        return f"Parent: {self.parent}, Parent Type: {self.parent_type}, Parent Bone: {self.parent_bone}"
 
 
 def create_bone(armature: bpy.types.Object, bone_info: BoneInfo) -> str:
@@ -877,16 +904,14 @@ def set_animation_data(
 
             if kf_info.rotation_mode == "AXIS_ANGLE":
                 blender_struct.rotation_axis_angle = (
-                    kf_info.rotation[0],
-                    *kf_info.rotation[1],
+                    kf_info.rotation.angle,
+                    *kf_info.rotation.axis,
                 )
             elif kf_info.rotation_mode == "QUATERNION":
                 blender_struct.rotation_quaternion = kf_info.rotation[:]
             else:
                 data_path = "rotation_euler"
-                blender_struct.rotation_euler = [
-                    math.radians(r) for r in kf_info.rotation[:]
-                ]
+                blender_struct.rotation_euler = kf_info.rotation
             blender_struct.keyframe_insert(
                 data_path=data_path,
                 group=blender_bone.name if struct_is_bone else "Rotation",
@@ -1020,7 +1045,7 @@ def set_rotation(
     """
     if rotation_mode == "AXIS_ANGLE":
         assert len(rotation[1]) == 3
-        blender_object.rotation_axis_angle = rotation
+        blender_object.rotation_axis_angle = (rotation.angle, rotation.axis)
     elif rotation_mode == "QUATERNION":
         assert len(rotation) == 4
         blender_object.rotation_quaternion = rotation
