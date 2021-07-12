@@ -81,7 +81,9 @@ class SCENE_PT_xplane(bpy.types.Panel):
         scene_layout(self.layout, scene)
 
 
-def light_level_layout(layout, prop_group_w_ll:bpy.types.PropertyGroup, paired_dataref_prop:str):
+def light_level_layout(
+    layout, prop_group_w_ll: bpy.types.PropertyGroup, paired_dataref_prop: str
+):
     version = int(bpy.context.scene.xplane.version)
     ll_box = layout.box()
     ll_box.label(text="Light Levels")
@@ -856,13 +858,13 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                     omni_conclusively_known = True
                 else:
                     return
-            except KeyError: # light name not found by get_parsed_light
+            except KeyError:  # light name not found by get_parsed_light
                 layout.row().label(
                     text="Unknown Light Name: check spelling or update lights.txt",
                     icon="ERROR",
                 )
                 return
-            except ValueError: # is_omni finds "WIDTH" column is unreplaced, covered by no edge case
+            except ValueError:  # is_omni finds "WIDTH" column is unreplaced, covered by no edge case
                 is_omni = False
                 omni_conclusively_known = False
 
@@ -895,7 +897,8 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                 }.items():
                     if (
                         param == "SIZE"
-                        and parsed_light.name in xplane_lights_txt_parser.SIZE_AS_INTENSITY
+                        and parsed_light.name
+                        in xplane_lights_txt_parser.SIZE_AS_INTENSITY
                     ):
                         prop_name = "param_intensity"
 
@@ -929,18 +932,22 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                     elif is_omni and not omni_conclusively_known:
                         assert False, "is_omni can't be True and not conclusively known"
                     elif not is_omni:
+                        overload_type = parsed_light.best_overload().overload_type
+                        is_bb = "BILLBOARD" in overload_type
+                        is_sp = "SPILL" in overload_type
+                        is_v12_bb = (
+                            parsed_light.name
+                            in xplane_lights_txt_parser.BILLBOARD_USES_SPILL_DXYZ
+                        )
                         if has_width:
-                            if (
-                                "BILLBOARD"
-                                in parsed_light.best_overload().overload_type
-                            ):
+                            if is_bb and not is_v12_bb:
                                 WIDTH_val = round(
                                     xplane_types.XPlaneLight.WIDTH_for_billboard(
                                         light_data.spot_size
                                     ),
                                     5,
                                 )
-                            elif "SPILL" in parsed_light.best_overload().overload_type:
+                            elif is_sp or is_v12_bb:
                                 WIDTH_val = round(
                                     xplane_types.XPlaneLight.WIDTH_for_spill(
                                         light_data.spot_size
