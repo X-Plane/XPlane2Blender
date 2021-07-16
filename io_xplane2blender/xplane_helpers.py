@@ -7,6 +7,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 import bpy
 import mathutils
+from mathutils import Euler, Matrix, Quaternion, Vector
 
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_constants, xplane_props
@@ -164,6 +165,21 @@ def get_exportable_roots_in_scene(
             itertools.chain(get_collections_in_scene(scene), scene.objects),
         )
     ]
+
+
+def is_vector_axis_aligned(
+    vector: Union[Vector, Tuple[float, float, float]],
+    ndigits: float = 5,
+) -> bool:
+    """
+    Returns true if a vector is along one of the standard cartesian axes.
+    It does not test that the magnitude is 1, however.
+    """
+    vector = Vector(map(abs, vector)).normalized()
+    return any(
+        int(round(vector.dot(Vector(v)), ndigits)) == 1
+        for v in {*itertools.permutations([1, 0, 0])}
+    )
 
 
 def is_visible_in_viewport(

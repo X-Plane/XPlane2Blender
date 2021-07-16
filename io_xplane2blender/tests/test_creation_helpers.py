@@ -62,8 +62,26 @@ _OBJECT = "OBJECT"
 
 @dataclass
 class AxisAngle:
+    """AA class with named members. angle is in radians"""
+
     axis: Vector
     angle: float
+
+    def to_object_rotation_axis_angle(self) -> Tuple[float, float, float, float]:
+        """For use with an object's rotation_axis_angle member"""
+        return (self.angle, *self.axis)
+
+    def to_euler(
+        self, order: str = "XYZ", euler_compat: Optional[Euler] = None
+    ) -> Euler:
+        return self.to_quaternion().to_euler(order, euler_compat)
+
+    def to_quaternion(self) -> Quaternion:
+        return Quaternion(self.axis, self.angle)
+
+
+# This API uses AA, Euler, a tuple of 3 degrees to be converted to Euler, and Quaternion
+RotationType = Union[AxisAngle, Euler, Tuple[float, float, float], Quaternion]
 
 
 class AxisDetentRangeInfo:
@@ -107,7 +125,7 @@ class DatablockInfo:
         collection: Optional[Union[str, bpy.types.Collection]] = None,
         location: Vector = Vector((0, 0, 0)),
         rotation_mode: str = "XYZ",
-        rotation: Optional[Union[bpy.types.bpy_prop_array, Euler, Quaternion]] = None,
+        rotation: Optional[RotationType] = None,
         scale: Vector = Vector((1, 1, 1)),
     ):
         self.datablock_type = datablock_type
@@ -127,11 +145,11 @@ class DatablockInfo:
         self.rotation = rotation
         if self.rotation is None:
             if self.rotation_mode == "AXIS_ANGLE":
-                self.rotation = (0.0, Vector((0, 0, 0, 0)))
+                self.rotation = AxisAngle()
             elif self.rotation_mode == "QUATERNION":
                 self.rotation = Quaternion()
             elif set(self.rotation_mode) == {"X", "Y", "Z"}:
-                self.rotation = Vector()
+                self.rotation = Euler()
             else:
                 assert False, "Unsupported rotation mode: " + self.rotation_mode
         else:
@@ -141,9 +159,16 @@ class DatablockInfo:
             elif self.rotation_mode == "QUATERNION":
                 assert len(self.rotation) == 4
                 self.rotation_quaternion = rotation
-            elif set(self.rotation_mode) == {"X", "Y", "Z"}:
+            elif set(self.rotation_mode) == {"X", "Y", "Z"} and isinstance(
+                rotation, Euler
+            ):
                 assert len(self.rotation) == 3
                 self.rotation_euler = rotation
+            elif set(self.rotation_mode) == {"X", "Y", "Z"} and isinstance(
+                rotation, tuple
+            ):
+                assert len(self.rotation) == 3
+                self.rotation_euler = Euler(map(math.radians, rotation), rotation_mode)
             else:
                 assert False, "Unsupported rotation mode: " + self.rotation_mode
 
@@ -161,9 +186,7 @@ class KeyframeInfo:
         dataref_anim_type: str = xplane_constants.ANIM_TYPE_TRANSFORM,  # Must be xplane_constants.ANIM_TYPE_*
         location: Optional[Vector] = None,
         rotation_mode: str = "XYZ",
-        rotation: Optional[
-            Union[AxisAngle, Euler, Tuple[float, float, float], Quaternion]
-        ] = None,
+        rotation: Optional[RotationType] = None,
     ):
         """
         Everything needed to automate setting Object Location/Rotation and
@@ -900,18 +923,14 @@ def set_animation_data(
             )
         if kf_info.rotation:
             blender_struct.rotation_mode = kf_info.rotation_mode
-            data_path = "rotation_{}".format(kf_info.rotation_mode.lower())
 
-            if kf_info.rotation_mode == "AXIS_ANGLE":
-                blender_struct.rotation_axis_angle = (
-                    kf_info.rotation.angle,
-                    *kf_info.rotation.axis,
-                )
-            elif kf_info.rotation_mode == "QUATERNION":
-                blender_struct.rotation_quaternion = kf_info.rotation[:]
-            else:
+            if set(kf_info.rotation_mode) == {"X", "Y", "Z"}:
                 data_path = "rotation_euler"
-                blender_struct.rotation_euler = kf_info.rotation
+            else:
+                data_path = "rotation_{}".format(kf_info.rotation_mode.lower())
+
+            set_rotation(blender_struct, kf_info.rotation, kf_info.rotation_mode)
+
             blender_struct.keyframe_insert(
                 data_path=data_path,
                 group=blender_bone.name if struct_is_bone else "Rotation",
@@ -1037,23 +1056,29 @@ def set_parent(blender_object: bpy.types.Object, parent_info: ParentInfo) -> Non
 
 
 def set_rotation(
-    blender_object: bpy.types.Object, rotation: Any, rotation_mode: str
+    blender_object: bpy.types.Object, rotation: RotationType, rotation_mode: str
 ) -> None:
     """
     Sets the rotation of a Blender Object and takes care of picking which
     rotation type to give the value to
     """
     if rotation_mode == "AXIS_ANGLE":
-        assert len(rotation[1]) == 3
-        blender_object.rotation_axis_angle = (rotation.angle, rotation.axis)
+        assert isinstance(
+            rotation, AxisAngle
+        ), f"type is {type(rotation)}, should be AxisAngle"
+        blender_object.rotation_axis_angle = rotation.to_object_rotation_axis_angle()
     elif rotation_mode == "QUATERNION":
         assert len(rotation) == 4
         blender_object.rotation_quaternion = rotation
-    elif set(rotation_mode) == {"X", "Y", "Z"}:
+    elif set(rotation_mode) == {"X", "Y", "Z"} and isinstance(rotation, Euler):
         assert len(rotation) == 3
         blender_object.rotation_euler = rotation
+    elif set(rotation_mode) == {"X", "Y", "Z"} and isinstance(rotation, tuple):
+        assert len(rotation) == 3
+        blender_object.rotation_euler = Euler(map(math.radians, rotation))
     else:
         assert False, "Unsupported rotation mode: " + blender_object.rotation_mode
+    blender_object.rotation_mode = rotation_mode
 
 
 def set_xplane_layer(

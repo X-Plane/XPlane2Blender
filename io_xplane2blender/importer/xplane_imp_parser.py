@@ -89,11 +89,14 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
 
     last_axis = None
     name_hint = ""
+    skip = False
     for lineno, line in enumerate(map(str.strip, lines[3:]), start=1):
         to_parse, comment = re.match(pattern, line).groups()[0:2]
         try:
-            if comment.startswith(("# 1", "# 2", "# 3", "# 4")):
-                name_hint = comment[2:]
+            if comment.startswith("# name_hint:"):
+                name_hint = comment[12:].strip()
+            elif comment.startswith(("# 1", "# 2", "# 3", "# 4")):
+                name_hint = comment[2:].strip()
         except AttributeError:
             pass
 
@@ -101,6 +104,15 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             continue
         else:
             directive, *components = to_parse.split()
+
+        if directive == "SKIP":
+            skip = not skip
+        if directive == "STOP":
+            break
+
+        if skip:
+            continue
+
             # print(lineno, directive, components)
 
         # TODO: Rewrite using giant switch-ish table and functions so it is more neat
