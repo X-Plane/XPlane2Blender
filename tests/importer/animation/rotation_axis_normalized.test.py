@@ -14,7 +14,6 @@ from io_xplane2blender.tests import *
 from io_xplane2blender.tests import test_creation_helpers
 from io_xplane2blender.xplane_constants import PRECISION_KEYFRAME, PRECISION_OBJ_FLOAT
 
-
 __dirname__ = Path(__file__).parent
 
 
