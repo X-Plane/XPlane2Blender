@@ -91,8 +91,11 @@ class IntermediateAnimation:
     the static version). An IntermediateDatablock may have 0 or more of these.
     """
 
+    # TODO: We need to keep track of dataref values and rotations degrees or locations in pairs
+    # Order and keyframe count cannot be guaranteed
     locations: List[Vector] = field(default_factory=list)
-    # A dictionary of rotations along an axis (usually X, Y, Z), and their degrees
+    # A dictionary of rotations along an axis (usually X, Y, Z), and their degrees.
+    # Meaningless without rotation_mode
     rotations: Dict[Vector, List[float]] = field(
         default_factory=lambda: collections.defaultdict(list)
     )
@@ -122,25 +125,34 @@ class IntermediateAnimation:
                 return AxisAngle(axis, math.radians(rotations[keyframe_idx]))
             else:
 
-                tot_rot = Euler((0, 0, 0), "XYZ")
-                order = ""
-                for axis, degrees in self.rotations.items():
-                    r_axis = tuple(map(lambda c: abs(int(c)), axis.normalized()))
-                    order += ["X", "Y", "Z"][r_axis.index(1)]
-                    print("order", order)
+                def axis_to_label(axis):
+                    r_axis = tuple(
+                        map(lambda c: abs(int(round(c, PRECISION_KEYFRAME))), axis)
+                    )
+                    return {
+                        (1, 0, 0): "X",
+                        (0, 1, 0): "Y",
+                        (0, 0, 1): "Z",
+                    }[r_axis]
 
-                    print("axis", axis, "degrees", degrees[keyframe_idx])
-                    print("r_axis index lk", r_axis.index(1))
-                    tot_rot[r_axis.index(1)] = math.radians(degrees[keyframe_idx])
-                    print("tot_rot", tot_rot)
+                # With this we become immune to any mutations to self.rotations order, but instead rely that
+                # rotation_mode is absolutely right
+                rotations = {
+                    axis_to_label(axis): (axis, degrees)
+                    for axis, degrees in self.rotations.items()
+                }
+                euler_components = {"X": 0, "Y": 0, "Z": 0}
+                for axis_label, (axis, degrees) in rotations.items():
+                    r_axis = tuple(
+                        map(lambda c: bool(round(c, PRECISION_KEYFRAME)), axis)
+                    )
 
-                try:
-                    # These assumptions are based off of X-Plane's
-                    # interpretation of Eulers
-                    tot_rot.order = {"YX": "ZYX", "ZY": "ZYX", "ZX": "ZYX",}[order]
-                except KeyError:
-                    tot_rot.order = "XYZ"
+                    # Remember, all axis are normalized, so we're okay
+                    euler_components[axis_label] = axis[
+                        r_axis.index(True)
+                    ] * math.radians(degrees[keyframe_idx])
 
+                tot_rot = Euler(euler_components.values(), rotation_mode)
                 return tot_rot
 
         current_frame = 1
@@ -213,7 +225,9 @@ class IntermediateDatablock:
     # In general, 1st animation represents locations or rotations, Empty if not animated, the 1st animation will
     # represent locations or rotations, 2nd and on are SHOW/HIDEs
     # During finalization as much of these are combined
-    animations_to_apply: List[IntermediateAnimation]
+    transform_animation: Optional[IntermediateAnimation]
+    show_hide_animations: List[IntermediateAnimation]
+
     bake_matrix: Matrix
 
     # Why here? DatablockInfos are meant to be isolated structs as much as possible
@@ -245,7 +259,11 @@ class IntermediateDatablock:
 
         ob = test_creation_helpers.create_datablock_mesh(
             self.datablock_info,
-            mesh_src=test_creation_helpers.From_PyData(py_vertices, [], py_faces,),
+            mesh_src=test_creation_helpers.From_PyData(
+                py_vertices,
+                [],
+                py_faces,
+            ),
         )
         me = ob.data
         me.update(calc_edges=True)
@@ -291,12 +309,34 @@ class IntermediateDatablock:
         return self.datablock_info.datablock_type
 
     @property
+    def is_animated(self) -> bool:
+        return self.transform_animation or self.show_hide_animations
+
+    @property
     def rotation_mode(self) -> str:
         """
         Calculates the final rotation_mode based on
         the back matrix and any animations it has.
         """
-        pass
+        # If its rotation or one of its animated rotations (if applicable)
+        # is not axis_aligned, our Object will have Axis Angle rotation mode
+        is_axis_aligned = is_vector_axis_aligned(
+            self.bake_matrix.to_quaternion().to_axis_angle()[0]
+        )
+        if not self.transform_animation and is_axis_aligned:
+            rotation_mode = "XYZ"
+        elif not self.transform_animation and not is_axis_aligned:
+            rotation_mode = "AXIS_ANGLE"
+        elif any(
+            not is_vector_axis_aligned(axis)
+            for axis in self.transform_animation.rotations
+        ):
+            rotation_mode = "AXIS_ANGLE"
+        else:
+            # This is already figured out in finalize_intermediate_blocks
+            rotation_mode = self.datablock_info.rotation_mode
+
+        return rotation_mode
 
 
 @dataclass
@@ -365,12 +405,13 @@ class ImpCommandBuilder:
             ),
             start_idx=None,
             count=None,
-            animations_to_apply=[],
+            transform_animation=None,
+            show_hide_animations=[],
             bake_matrix=Matrix.Identity(4),
         )
 
         # --- Animation Builder States ----------------------------------------
-        # Instead of build at seperate parent/child relationship in Datablock info, we just save everything we make here
+        # Instead of build at separate parent/child relationship in Datablock info, we just save everything we make here
         self._blocks: List[IntermediateDatablock] = [self.root_intermediate_datablock]
         self._last_axis: Optional[Vector] = None
         self._anim_intermediate_stack: Deque[
@@ -404,7 +445,8 @@ class ImpCommandBuilder:
                 ),
                 start_idx=None,
                 count=None,
-                animations_to_apply=[],
+                transform_animation=None,
+                show_hide_animations=[],
                 bake_matrix=self._bake_matrix_stack[-1].copy(),
             )
             self._blocks.append(empty)
@@ -414,7 +456,7 @@ class ImpCommandBuilder:
                 _AnimIntermediateStackEntry(IntermediateAnimation(), empty)
             )
             self._anim_count[-1] += 1
-            empty.animations_to_apply.append(self._top_animation)
+            empty.transform_animation = self._top_animation
             self._bake_matrix_stack[-1].identity()
 
         if directive == "VT":
@@ -444,7 +486,8 @@ class ImpCommandBuilder:
                 ),
                 start_idx=start_idx,
                 count=count,
-                animations_to_apply=[],
+                transform_animation=None,
+                show_hide_animations=[],
                 bake_matrix=self._bake_matrix_stack[-1].copy(),
             )
             self._blocks.append(intermediate_datablock)
@@ -475,8 +518,6 @@ class ImpCommandBuilder:
             self._top_animation.locations.append(location)
             self._top_dataref.values.append(value)
         elif directive == "ANIM_trans_end":
-            # TODO: With a normal implementation, we'd be baking locations as we go and clearing to identity here
-            # but with out implementation it happens at ANIM_*_begin, and the adjustment happens way later
             pass
         elif directive in {"ANIM_show", "ANIM_hide"}:
             v1, v2 = args[:2]
@@ -528,15 +569,15 @@ class ImpCommandBuilder:
                 self._top_dataref.path = path
 
             if r_xyz1 == r_xyz2 and r_v1 == r_v2:
-                print("trans, case A - static")
+                # print("trans, case A - static")
                 self._bake_matrix_stack[-1] = self._bake_matrix_stack[
                     -1
                 ] @ Matrix.Translation(xyz1)
             elif r_xyz1 == r_xyz2 and r_v1 != r_v2:
-                print("trans, case B - as dynamic")
+                # print("trans, case B - as dynamic")
                 add_as_dynamic()
             elif r_xyz1 != r_xyz2 and r_v1 == r_v2:
-                print("trans, case C - as odd dynamic")
+                # print("trans, case C - as odd dynamic")
                 add_as_dynamic()
                 # TODO: make warning
                 line = "bleh"
@@ -549,7 +590,7 @@ class ImpCommandBuilder:
                     f"Fix {self._anim_intermediate_stack[-1].intermediate_datablock}"
                 )
             elif r_xyz1 != r_xyz2 and r_v1 != r_v2:
-                print("trans, case D - dynamic")
+                # print("trans, case D - dynamic")
                 add_as_dynamic()
 
         elif directive == "ANIM_rotate":
@@ -570,7 +611,7 @@ class ImpCommandBuilder:
                 self._top_dataref.path = path
 
             if r_r1 == r_r2 and r_v1 == r_v2:
-                print("rot case A")
+                # print("rot, case A - static")
                 self._bake_matrix_stack[-1] = (
                     self._bake_matrix_stack[-1]
                     @ Quaternion(dxyz, math.radians(r1)).to_matrix().to_4x4()
@@ -583,10 +624,10 @@ class ImpCommandBuilder:
                     ],
                 )
             elif r_r1 == r_r2 and r_v1 != r_v2:
-                print("rot case B")
+                # print("rot, case B - as dynamic")
                 add_as_dynamic()
             elif r_r1 != r_r2 and r_v1 == r_v2:
-                print("rot case C")
+                # print("rot, case C - as odd dynamic")
                 add_as_dynamic()
                 # TODO: make warning
                 line = "bleh"
@@ -600,8 +641,7 @@ class ImpCommandBuilder:
                     f"Fix {self._anim_intermediate_stack[-1].intermediate_datablock}"
                 )
             elif r_r1 != r_r2 and r_v1 != r_v2:
-                print("rot case D")
-                print(r_r1, r_r2, r_v1, r_v2)
+                # print("rot, case D - dynamic")
                 add_as_dynamic()
         else:
             assert False, f"{directive} is not supported yet"
@@ -619,14 +659,8 @@ class ImpCommandBuilder:
             new_parent_block: IntermediateDatablock,
         ):
             for child in current_parent_block.children:
-                print(
-                    # f"{child.datablock_info.name}'s Parent before: {child.datablock_info.parent_info.parent}"
-                )
                 child.datablock_info.parent_info.parent = (
                     new_parent_block.datablock_info.name
-                )
-                print(
-                    # f"{child.datablock_info.name}'s Parent after: {child.datablock_info.parent_info.parent}"
                 )
             current_parent_block.children.clear()
 
@@ -680,7 +714,7 @@ class ImpCommandBuilder:
                     i = -1
                     while True:
                         in_block_type = in_block.datablock_type
-                        in_block_animation = in_block.animations_to_apply[0]
+                        in_block_animation = in_block.transform_animation
                         in_block_dataref = in_block_animation.xp_dataref
                         in_block_path = in_block_dataref.path
                         is_in_block_loc_anim = bool(in_block_animation.locations)
@@ -703,8 +737,11 @@ class ImpCommandBuilder:
                                 # TODO: Needs unit test showing replacement happens only with 1 child mesh
                                 # multiple child meshes or mixed child meshes and empties doesn't work
                                 if len(in_block.children) == 1:
-                                    next_block.animations_to_apply = copy.copy(
-                                        in_block.animations_to_apply
+                                    next_block.transform_animation = copy.copy(
+                                        in_block.transform_animation
+                                    )
+                                    next_block.show_hide_animations = copy.copy(
+                                        in_block.show_hide_animations
                                     )
                                     next_block.datablock_info.parent_info = copy.copy(
                                         in_block.datablock_info.parent_info
@@ -712,10 +749,12 @@ class ImpCommandBuilder:
                                 return next_block, peek_next_block_itr
                             elif next_block_type == "EMPTY":
                                 assert (
-                                    next_block.animations_to_apply
+                                    next_block.is_animated
                                 ), f"{next_name} is EMPTY and must have animations"
-                                next_animations = next_block.animations_to_apply
-                                next_animation = next_animations[0]
+                                next_show_hide_animations = (
+                                    next_block.show_hide_animations
+                                )
+                                next_animation = next_block.transform_animation
                                 # This is not to say it is a __valid__ animation
                                 is_loc_anim = bool(next_animation.locations)
                                 is_rot_anim = bool(next_animation.rotations)
@@ -730,9 +769,7 @@ class ImpCommandBuilder:
                                     This indicates its time to finish off and make in_block
                                     """
                                     merge_count = 0
-                                    rotations = in_block.animations_to_apply[
-                                        0
-                                    ].rotations
+                                    rotations = in_block.transform_animation.rotations
                                     for (
                                         axis,
                                         degrees,
@@ -757,7 +794,8 @@ class ImpCommandBuilder:
 
                                     if merge_count:
                                         reparent_children_to_new_block(
-                                            next_block, in_block,
+                                            next_block,
+                                            in_block,
                                         )
                                     else:
                                         raise ValueError
@@ -785,9 +823,10 @@ class ImpCommandBuilder:
                                         print(
                                             f"{in_block.name} from show/hide from {next_name}"
                                         )
-                                        in_block.animations_to_apply.append(next_anim)
+                                        in_block.show_hide_animations.append(next_anim)
                                     reparent_children_to_new_block(
-                                        next_block, in_block,
+                                        next_block,
+                                        in_block,
                                     )
 
                                 if not (is_loc_anim or is_rot_anim):
@@ -831,7 +870,7 @@ class ImpCommandBuilder:
                                     dref.anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}
                                     for dref in [in_block_dataref, next_dataref]
                                 ):
-                                    in_block.animations_to_apply.append(next_animation)
+                                    in_block.show_hide_animations.append(next_animation)
 
                                 # With next_block being made irrelevant, adjust the parentage of any
                                 # future blocks to be next_block's parent
@@ -857,11 +896,103 @@ class ImpCommandBuilder:
                 out_block, blocks_rem_itr = optimize_empty_chain(
                     intermediate_block, blocks_rem_itr
                 )
+
                 print(
                     f"OUT {out_block.name}, parent: {out_block.parent}, type: {out_block.datablock_type}"
                 )
             elif intermediate_block_type == "MESH":
                 out_block = intermediate_block
+
+            def fill_in_eulers(
+                block_to_fill: IntermediateDatablock,
+            ) -> Tuple[Dict[Vector, List[float]], str]:
+                """
+                Returns Euler rotations as a complete 3 entry dictionary, any holes filled in,
+                and its accompanying rotation_mode.
+
+                block_to_fill must be animated for rotation with
+                axis-aligned vectors only.
+                """
+
+                degrees = [0.0] * len(
+                    block_to_fill.transform_animation.xp_dataref.values
+                )
+                filled_rotations = {
+                    "X": [Vector((1, 0, 0)).freeze(), degrees.copy()],
+                    "Y": [Vector((0, 1, 0)).freeze(), degrees.copy()],
+                    "Z": [Vector((0, 0, 1)).freeze(), degrees.copy()],
+                }
+
+                in_order = ""
+                for (
+                    axis,
+                    degrees,
+                ) in block_to_fill.transform_animation.rotations.items():
+                    r_axis = tuple(
+                        map(lambda c: bool(round(c, PRECISION_KEYFRAME)), axis)
+                    )
+                    axis_label = ["X", "Y", "Z"][r_axis.index(True)]
+                    filled_rotations[axis_label] = [
+                        axis.freeze(),
+                        degrees,
+                    ]
+                    in_order += axis_label
+                # If not all axis of an apparent Euler rotation
+                # were given in the OBJ, we fix the rotation mode
+                # based on some assumptions of what would have been good for
+                # X-Plane
+                if len(in_order) == 1:
+                    corrected_order = "ZYX"
+                elif len(in_order) == 2:
+                    corrected_order = {
+                        "XY": "XYZ",
+                        "YZ": "XYZ",
+                        "XZ": "XYZ",
+                        "YX": "ZYX",
+                        "ZY": "ZYX",
+                        "ZX": "ZYX",
+                    }[in_order]
+
+                elif len(in_order) == 3:
+                    corrected_order = in_order
+
+                # Any good exporter would take XYZ and write
+                # it as X-Plane's ZYX. The importer goes in
+                # reverse
+                rotation_mode = {
+                    "XYZ": "ZYX",
+                    "YXZ": "ZXY",
+                    "XZY": "YZX",
+                    "ZXY": "YXZ",
+                    "YZX": "XZY",
+                    "ZYX": "XYZ",
+                }[corrected_order]
+
+                # Sorting the dictionary is added only as a debugging convenience
+                return (
+                    {
+                        axis: degrees
+                        for axis_label, (axis, degrees) in sorted(
+                            filled_rotations.items(),
+                            key=lambda kv: rotation_mode.index(kv[0]),
+                        )
+                    },
+                    rotation_mode,
+                )
+
+            try:
+                is_all_euler = out_block.transform_animation.rotations and all(
+                    is_vector_axis_aligned(axis)
+                    for axis in out_block.transform_animation.rotations
+                )
+            except AttributeError:  # No transform_animation
+                pass
+            else:
+                if is_all_euler:
+                    (
+                        out_block.transform_animation.rotations,
+                        out_block.datablock_info.rotation_mode,
+                    ) = fill_in_eulers(out_block)
 
             if out_block.datablock_type == "EMPTY":
                 ob = test_creation_helpers.create_datablock_empty(
@@ -870,30 +1001,17 @@ class ImpCommandBuilder:
             elif out_block.datablock_type == "MESH":
                 ob = out_block.build_mesh(self.vt_table)
 
-            ob.matrix_local = intermediate_block.bake_matrix.copy()
+            ob.matrix_local = out_block.bake_matrix.copy()
             bpy.context.view_layer.update()
 
-            # If its rotation or one of its animated rotations (if applicable)
-            # is not cartesian, our Object will have Axis Angle rotation mode
-            is_axis_aligned = is_vector_axis_aligned(
-                ob.matrix_local.to_quaternion().to_axis_angle()[0]
-            )
-            if not out_block.animations_to_apply and is_axis_aligned:
-                rotation_mode = "XYZ"
-            elif not out_block.animations_to_apply and not is_axis_aligned:
-                rotation_mode = "AXIS_ANGLE"
-            elif any(
-                not is_vector_axis_aligned(axis)
-                for animation in out_block.animations_to_apply
-                for axis in animation.rotations.keys()
-            ):
-                rotation_mode = "AXIS_ANGLE"
-            else:
-                rotation_mode = "XYZ"
+            ob.rotation_mode = out_block.rotation_mode
 
-            ob.rotation_mode = rotation_mode
+            try:
+                out_block.transform_animation.apply_animation(ob)
+            except AttributeError:  # No transform animation
+                pass
 
-            for animation in intermediate_block.animations_to_apply:
+            for animation in out_block.show_hide_animations:
                 animation.apply_animation(ob)
 
         # end while for searching remaining blocks

@@ -10,7 +10,7 @@ import sys
 import unittest
 from dataclasses import dataclass
 from pprint import pprint
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import bpy
 from mathutils import Euler, Vector
@@ -323,7 +323,10 @@ class XPlaneTestCase(unittest.TestCase):
             )
 
     def assertVectorAlmostEqual(
-        self, vec_a: Vector, vec_b: Vector, places: int
+        self,
+        vec_a: Union[Iterable, Vector],
+        vec_b: Union[Iterable, Vector],
+        places: int,
     ) -> None:
         """Given two equal length vectors (or any iterable), ask if they are almost equal"""
         for i, (comp_a, comp_b) in enumerate(zip(vec_a, vec_b)):
@@ -331,7 +334,7 @@ class XPlaneTestCase(unittest.TestCase):
                 comp_a,
                 comp_b,
                 places,
-                msg=f"{i}th component: {comp_a:.5} != {comp_b:.5}",
+                msg=f"{i}th component: {comp_a:.5f} != {comp_b:.5f}",
             )
 
     def assertVTTable(
