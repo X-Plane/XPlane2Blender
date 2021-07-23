@@ -61,7 +61,7 @@ class TestRotationAxisNormalized(XPlaneTestCase):
 
         self.assertVectorAlmostEqual(
             bpy.data.objects["anim_rotate_begin_axis_aligned"].rotation_euler,
-            deg_euler((0, 0, 80)),
+            deg_euler((0, 0, -80)),
             places=PRECISION_KEYFRAME,
         )
 

@@ -56,7 +56,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         # pprint(lines)
         pass
 
-    if not (lines[0] in {"A", "I"} and lines[1:3] == ["800", "OBJ"]):
+    if not lines or not (lines[0] in {"A", "I"} and lines[1:3] == ["800", "OBJ"]):
         logger.error(
             ".obj file must start with exactly the OBJ header. Check filetype and content"
         )
