@@ -94,8 +94,10 @@ class IntermediateAnimation:
     # TODO: We need to keep track of dataref values and rotations degrees or locations in pairs
     # Order and keyframe count cannot be guaranteed
     locations: List[Vector] = field(default_factory=list)
-    # A dictionary of rotations along an axis (usually X, Y, Z), and their degrees.
-    # Meaningless without rotation_mode
+    # Axis of rotations and the degrees of rotation along them.
+    # - Will be empty, have 1 Off Axis Axis Angle, or 1 to 3 Axis Aligned Axis (
+    # interpreted as a Euler)
+    # - Must be paired with rotation_mode to have meaning
     rotations: Dict[Vector, List[float]] = field(
         default_factory=lambda: collections.defaultdict(list)
     )
@@ -193,7 +195,7 @@ class IntermediateAnimation:
     # Always
     # - You will have one of (type == "TRANSFORM" and (locations xor rotations) or (type == "SHOW"/"HIDE")
     # - locations cannot be "merged" for the same set of values, they are replaced instead, TODO: Is that true? "translations can dance around each other in each 'room'"
-    # - rotations axis will be unit length Vector
+    # - All axis in rotations will be unit length
     # - locations and each axis's degrees list must equal the dataref's values list
     def is_valid_prior_optimization(self) -> bool:
         # - rotations will have a length of 0 or 1
@@ -206,7 +208,7 @@ class IntermediateAnimation:
         else:
             return not self.locations and not self.rotations
     def is_valid_post_optimization(self)-> bool:
-        # - rotations dict may have 0-3 entries, according to rules of being AA or Euler
+        # - rotations dict may have 0-3 entries, See doc for rotations according to rules of being AA or Euler
     """
 
 
@@ -327,6 +329,8 @@ class IntermediateDatablock:
             rotation_mode = "XYZ"
         elif not self.transform_animation and not is_axis_aligned:
             rotation_mode = "AXIS_ANGLE"
+        # This is a very generalized check. See the rules for the rotations dict
+        # in its definition
         elif any(
             not is_vector_axis_aligned(axis)
             for axis in self.transform_animation.rotations
@@ -704,8 +708,9 @@ class ImpCommandBuilder:
 
                     Arbitrary rotation axis are not supported (anywhere), locations and rotations even for the same dataref path and values are not skipped
 
-                    Not Optimized
+                    Not Optimized (Yet!)
                     - Optimize out duplicate Show/Hide
+                    - Sequential Axis Angle dynamic rotations with the same axis and dataref are merged into one
 
                     TODO Algorithms
                     - Don't reduce locations when locations are different but dataref values are same.
