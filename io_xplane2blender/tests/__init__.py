@@ -24,6 +24,8 @@ from io_xplane2blender.xplane_constants import (
     ANIM_TYPE_HIDE,
     ANIM_TYPE_SHOW,
     ANIM_TYPE_TRANSFORM,
+    PRECISION_KEYFRAME,
+    PRECISION_OBJ_FLOAT,
 )
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
 from io_xplane2blender.xplane_types import (
@@ -130,42 +132,50 @@ class XPlaneTestCase(unittest.TestCase):
         logger.clear()
         logger.addTransport(XPlaneLogger.ConsoleTransport(), logLevels)
 
-    def assertAction(
+
+    def assertTransformAction(
         self,
         bl_object: bpy.types.Object,
-        expected_action_struct: xplane_imp_cmd_builder.IntermediateAnimation,
+        expected_inter_anim: xplane_imp_cmd_builder.IntermediateAnimation,
     ):
         """
         Asserts that an object's action datablock matches the animation specified by the ImportedAnimation struct.
-        The action datablock must have 0 or 3 location/rotation_euler channels as is relavent.
-        There should be an even number of Blender and X-Plane keyframes.
 
-        Every keyframe
-        #TODO: Stupid? Does the importer need to be very specific? Would we have to test that spec?
-        assertAnimation expects the imported and fixture Action information to test will be fixture and counts on the action have 0 or 3 channels exactly for testing location and rotation.
-        Those channels must have the same number of keyframes. Our importer will always create 3 channels with
-        an equal number of keyframes (even if some are just 0,0,0) for simplicity
+        Assumes
+            - bl_object has an action with `location` or `rotation` (in XYZ Eulers), **exclusively**
+            - Tests 1 dataref path at a time
         """
         try:
             action = bl_object.animation_data.action
         except AttributeError:  # animation_data is None
-            pass
+            assert False
         else:
 
-            def action_as_intermediate_animation(bl_object: bpy.types.Object):
-                real_action_struct = xplane_imp_cmd_builder.IntermediateAnimation(
-                    [], collections.defaultdict(list), []
+            def action_as_intermediate_animation(
+                bl_object: bpy.types.Object,
+            ) -> xplane_imp_cmd_builder.IntermediateAnimation:
+                """
+                Convert a bl_object's action into an IntermediateAnimation
+                """
+
+                action_as_intermediate_animation = (
+                    xplane_imp_cmd_builder.IntermediateAnimation()
                 )
 
                 def recombine_fcurves(
                     action: bpy.types.Action, data_path: str
-                ) -> Union[List[Vector], Dict[Vector, float]]:
+                ) -> Union[List[Vector], Euler]:
+                    """
+                    Turns an FCurve's Location and Rotation into lists of Vectors or Eulers
+
+                    TODO: Cannot handle missing channels or an object with location and rotation
+                    """
                     try:
-                        x_comp, y_comp, z_comp = [
+                        x_comp, y_comp, z_comp = (
                             [k.co[1] for k in f.keyframe_points]
                             for f in action.fcurves
                             if f.data_path == data_path
-                        ]
+                        )
                     except ValueError:  # no matching fcurves found
                         if data_path == "location":
                             return []
@@ -178,100 +188,92 @@ class XPlaneTestCase(unittest.TestCase):
                                 for x, y, z in zip(x_comp, y_comp, z_comp)
                             ]
                         elif data_path == "rotation_euler":
-                            return {
-                                Vector((1, 0, 0)).freeze(): list(
-                                    map(math.degrees, x_comp)
-                                ),
-                                Vector((0, 1, 0)).freeze(): list(
-                                    map(math.degrees, y_comp)
-                                ),
-                                Vector((0, 0, 1)).freeze(): list(
-                                    map(math.degrees, z_comp)
-                                ),
-                            }
+                            return Euler((x_comp, y_comp, z_comp))
 
-                if action:
-                    real_action_struct.locations = recombine_fcurves(action, "location")
-                    real_action_struct.rotations = recombine_fcurves(
-                        action, "rotation_euler"
-                    )
+                action_as_intermediate_animation.locations = recombine_fcurves(
+                    bl_object.animation_data.action, "location"
+                )
+                action_as_intermediate_animation.rotations = recombine_fcurves(
+                    bl_object.animation_data.action, "rotation_euler"
+                )
+                # ---end recombine_fcurves-------------------------------------
 
                 def get_dataref_prop_from_data_path(
-                    bl_object: bpy.types.Object, data_path: str
-                ) -> xplane_props.XPlaneDataref:
-                    try:
-                        return bl_object.xplane.datarefs[
-                            int(
+                    bl_object: bpy.types.Object, expected_path: str
+                ) -> Tuple[bpy.types.FCurve, xplane_props.XPlaneDataref]:
+                    for fcurve in (
+                        fcurve
+                        for fcurve in bl_object.animation_data.action.fcurves
+                        if fcurve.data_path.startswith("xplane.datarefs[")
+                    ):
+                        try:
+                            data_path_idx = int(
                                 re.match(
-                                    "xplane\.datarefs\[(\d+)\]\.value", data_path
+                                    "xplane\.datarefs\[(\d+)\]\.value", fcurve.data_path
                                 ).group(1)
                             )
-                        ]
-                    except AttributeError:  # No match, None has no 'group'
-                        pass  # TODO: fail here? It is, after all, wrong to end up with the wrong number of datarefs
-                    # Impossible do something, this is an error?
-                    except IndexError:
-                        pass  # TODO: Do something
+                        except AttributeError:
+                            # We expect tests to be so simple that they only have 1 dataref,
+                            # but in case they have multiple...
+                            pass
+                        except IndexError:  # Is this actually impossible?
+                            assert (
+                                False
+                            ), f"{bl_object.name} has data_path as out of index: {expected_path}"
+                        else:
+                            # Unit tests are so carefuly authored
+                            # we don't need error handling here.
+                            # fcurves and datarefs will be 1:1
+                            dataref_prop = bl_object.xplane.datarefs[data_path_idx]
+                            if dataref_prop.path == expected_path:
+                                return (fcurve, dataref_prop)
+                    else:  # no early return
+                        assert (
+                            False
+                        ), f"{expected_path} was not found in {bl_object.name}"
 
-                data_paths_to_xp_values = {
-                    f.data_path: [k.co[1] for k in f.keyframe_points]
-                    for f in action.fcurves
-                    if f.data_path.startswith("xplane.datarefs")
-                }
+                # ----end get_dataref_prop_from_data_path----------------------
 
-                for dataref_prop, xp_values in [
-                    (get_dataref_prop_from_data_path(bl_object, data_path), xp_values)
-                    for data_path, xp_values in data_paths_to_xp_values.items()
-                ]:
-                    real_action_struct.xp_dataref = (
-                        xplane_imp_cmd_builder.IntermediateDataref(
-                            values=xp_values,
-                        )
-                    )
+                expected_path = expected_inter_anim.xp_dataref.path
+                xp_fcurve, dataref_prop = get_dataref_prop_from_data_path(
+                    bl_object, expected_path
+                )
+                xp_values: List[float] = [k.co[1] for k in xp_fcurve.keyframe_points]
+                action_as_intermediate_animation.xp_dataref = xplane_imp_cmd_builder.IntermediateDataref(
+                    anim_type=dataref_prop.anim_type,
+                    loop=dataref_prop.loop,
+                    path=dataref_prop.path,
+                    # Why? The importer tracks these seperately to make optimzations
+                    # XPlane2Blender will have the data on one "time line" only
+                    location_values=xp_values,
+                    rotation_values=xp_values,
+                )
 
-                return real_action_struct
+                return action_as_intermediate_animation
 
+            # fmt: off
             real_action_struct = action_as_intermediate_animation(bl_object)
-
-            def copy_rest_of_dref_prop(bl_object, real_action_struct):
-                # In case there was no action and we'll only have show hides
-                if not real_action_struct.xp_dataref:
-                    real_action_struct.xp_dataref = (
-                        xplane_imp_parser.IntermediateDataref()
-                    )
-
-                for bl_dref, real_xp_dataref in zip(
-                    bl_object.xplane.datarefs, real_action_struct.xp_dataref
-                ):
-                    real_xp_dataref.anim_type = bl_dref.anim_type
-                    real_xp_dataref.loop = bl_dref.loop
-                    real_xp_dataref.path = bl_dref.path
-
-                    real_xp_dataref.show_hide_v1 = bl_dref.show_hide_v1
-                    real_xp_dataref.show_hide_v2 = bl_dref.show_hide_v2
-
-            copy_rest_of_dref_prop(bl_object, real_action_struct)
+            self.assertEqual(real_action_struct.xp_dataref.anim_type,    expected_inter_anim.xp_dataref.anim_type)
+            self.assertAlmostEqual(real_action_struct.xp_dataref.loop,   expected_inter_anim.xp_dataref.loop, places=1)
+            self.assertEqual(real_action_struct.xp_dataref.path,         expected_inter_anim.xp_dataref.path)
+            self.assertAlmostEqual(real_action_struct.xp_dataref.show_hide_v1, expected_inter_anim.xp_dataref.show_hide_v1, places=PRECISION_OBJ_FLOAT)
+            self.assertAlmostEqual(real_action_struct.xp_dataref.show_hide_v2, expected_inter_anim.xp_dataref.show_hide_v2, places=PRECISION_OBJ_FLOAT)
+            # fmt: on
 
             for real_loc, expected_loc in zip(
-                real_action_struct.locations, expected_action_struct.locations
+                real_action_struct.locations, expected_inter_anim.locations
             ):
                 self.assertVectorAlmostEqual(real_loc, expected_loc, 1)
 
             for real_rot_degrees, expected_rot_degrees in [
                 (
                     real_action_struct.rotations[axis],
-                    expected_action_struct.rotations[axis],
+                    expected_inter_anim.rotations[axis],
                 )
                 for axis in real_action_struct.rotations
             ]:
                 for real_deg, exp_deg in zip(real_rot_degrees, expected_rot_degrees):
                     self.assertAlmostEqual(real_deg, exp_deg, places=1)
-
-            for (real_dataref_prop, expected_dataref_prop) in zip(
-                sorted(real_action_struct.xp_dataref, key=lambda d: d.path),
-                sorted(expected_action_struct.xp_datarefs, key=lambda d: d.path),
-            ):
-                self.assertEqual(real_dataref_prop, expected_dataref_prop)
 
     def assertImportSucceeds(self, filepath: Union[str, pathlib.Path], msg: str = None):
         """
@@ -292,9 +294,7 @@ class XPlaneTestCase(unittest.TestCase):
         try:
             result = xplane_imp_parser.import_obj(filepath)
         except xplane_imp_parser.UnrecoverableParserError:
-            self.fail(
-                msg=msg if msg else f"Import of {filepath} did not succeed",
-            )
+            self.fail(msg=msg if msg else f"Import of {filepath} did not succeed",)
         else:
             self.assertEqual(
                 result,

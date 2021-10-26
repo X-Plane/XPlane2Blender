@@ -183,6 +183,7 @@ class KeyframeInfo:
         dataref_value: Optional[float] = None,
         dataref_show_hide_v1: Optional[float] = None,
         dataref_show_hide_v2: Optional[float] = None,
+        dataref_loop: Optional[float] = None,
         dataref_anim_type: str = xplane_constants.ANIM_TYPE_TRANSFORM,  # Must be xplane_constants.ANIM_TYPE_*
         location: Optional[Vector] = None,
         rotation_mode: str = "XYZ",
@@ -199,6 +200,7 @@ class KeyframeInfo:
         self.dataref_value = dataref_value
         self.dataref_show_hide_v1 = dataref_show_hide_v1
         self.dataref_show_hide_v2 = dataref_show_hide_v2
+        self.dataref_loop = dataref_loop
         self.dataref_anim_type = dataref_anim_type
         self.location = location
         self.rotation_mode = rotation_mode
@@ -911,6 +913,8 @@ def set_animation_data(
             dataref_prop.show_hide_v2 = kf_info.dataref_show_hide_v2
         else:
             dataref_prop.value = kf_info.dataref_value
+            # Multiple assignment isn't harmful
+            dataref_prop.loop = kf_info.dataref_loop
 
         if not kf_info.location and not kf_info.rotation:
             continue

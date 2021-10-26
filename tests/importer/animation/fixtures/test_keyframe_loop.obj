@@ -1,0 +1,47 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1	# 0
+VT	1	0	-1	-0	-1	-0	0.625	0.75	# 1
+VT	-1	0	1	-0	-1	-0	0.375	1	# 2
+
+IDX	0
+IDX	1
+IDX	2
+
+# Unit Test Overview
+#
+# This tests that keyframe_loop is properly imported,
+# and incidentally that empty_2 is optimized out and
+# it is given to mesh_2.5.
+#
+# THe object names are the loop values
+
+# 0 ROOT
+	# 1 Mesh: Cube
+	ANIM_begin
+	# static rotation
+	# translation keyframes
+    # name_hint: empty_1.1
+	ANIM_trans_begin	dref_1
+	ANIM_trans_key	0	0	0	-0
+	ANIM_trans_key	1	2	0	-0
+		ANIM_keyframe_loop	1.1
+	ANIM_trans_end
+	# translation keyframes
+    # name_hint: empty_2
+	ANIM_trans_begin	dref_2
+	ANIM_trans_key	0	0	0	-0
+	ANIM_trans_key	1	2	0	-0
+		ANIM_keyframe_loop	2.5
+	ANIM_trans_end
+    # name_hint: mesh_2.5
+	ATTR_shiny_rat	0.5
+	TRIS	0 3
+	ANIM_end
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+101.NO_BUILD_NUMBR

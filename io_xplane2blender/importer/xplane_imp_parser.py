@@ -174,12 +174,12 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             name_hint = ""
 
         elif directive == "ANIM_begin":
-            builder.build_cmd("ANIM_begin")
+            builder.build_cmd("ANIM_begin", name_hint=name_hint)
         elif directive == "ANIM_end":
             builder.build_cmd("ANIM_end")
         elif directive == "ANIM_trans_begin":
             dataref_path = components[0]
-            builder.build_cmd("ANIM_trans_begin", dataref_path)
+            builder.build_cmd("ANIM_trans_begin", dataref_path, name_hint=name_hint)
         elif directive == "ANIM_trans_key":
             value = float(components[0])
             location = vec_x_to_b(list(map(float, components[1:4])))
@@ -193,7 +193,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         elif directive == "ANIM_rotate_begin":
             axis = vec_x_to_b(list(map(float, components[0:3])))
             dataref_path = components[3]
-            builder.build_cmd(directive, axis, dataref_path)
+            builder.build_cmd(directive, axis, dataref_path, name_hint=name_hint)
         elif directive == "ANIM_rotate_key":
             value = float(components[0])
             degrees = float(components[1])
@@ -215,7 +215,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
                 path = components[8]
             except IndexError as e:
                 pass
-            builder.build_cmd(directive, xyz1, xyz2, v1, v2, path)
+            builder.build_cmd(directive, xyz1, xyz2, v1, v2, path, name_hint=name_hint)
         elif directive == "ANIM_rotate":
             dxyz = vec_x_to_b(list(map(float, components[:3])))
             r1, r2 = map(float, components[3:5])
@@ -228,7 +228,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
                 path = components[7]
             except IndexError:
                 pass
-            builder.build_cmd(directive, dxyz, r1, r2, v1, v2, path)
+            builder.build_cmd(directive, dxyz, r1, r2, v1, v2, path, name_hint=name_hint)
         else:
             # print(f"{directive} is not implemted yet")
             pass
