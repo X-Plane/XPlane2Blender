@@ -113,7 +113,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         if skip:
             continue
 
-            # print(lineno, directive, components)
+        # print(lineno, directive, components)
 
         # TODO: Rewrite using giant switch-ish table and functions so it is more neat
         # Need scanf solution

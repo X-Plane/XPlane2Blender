@@ -238,58 +238,59 @@ class IntermediateDatablock:
     children: List["IntermediateDatablock"] = field(default_factory=list)
 
     def build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
+        """
+        Builds a mesh from the OBJ's VT Table, raises ValueError if
+        an object with that mesh couldn't be built
+        """
         mesh_idxes = vt_table.idxes[self.start_idx : self.start_idx + self.count]
-        idx_mapping: Dict[int, int] = {}
-        vertices: List[VT] = []
-
-        for mesh_idx in mesh_idxes:
-            if mesh_idx not in idx_mapping:
-                idx_mapping[mesh_idx] = len(idx_mapping)
-                vertices.append(vt_table.vertices[mesh_idx])
 
         # Thanks senderle, https://stackoverflow.com/a/22045226
         def chunk(it, size):
             it = iter(it)
             return iter(lambda: tuple(itertools.islice(it, size)), ())
 
-        py_vertices = [(v.x, v.y, v.z) for v in vertices]
+        py_vertices = [(v.x, v.y, v.z) for v in vt_table.vertices]
         py_faces: List[Tuple[int, int, int]] = [
             # We reverse the winding order to reverse the faces
-            [idx_mapping[idx] for idx in face][::-1]
-            for i, face in enumerate(chunk(mesh_idxes, 3))
+            face[::-1]
+            for face in chunk(mesh_idxes, 3)
         ]
 
-        ob = test_creation_helpers.create_datablock_mesh(
-            self.datablock_info,
-            mesh_src=test_creation_helpers.From_PyData(
-                py_vertices,
-                [],
-                py_faces,
-            ),
-        )
-        me = ob.data
-        me.update(calc_edges=True)
-        uv_layer = me.uv_layers[0]  # .new()
+        normals = [(v.nx, v.ny, v.nz) for v in vt_table.vertices]
+        uvs = [(v.s, v.t) for v in vt_table.vertices]
 
-        i = 0
-        if not me.validate(verbose=True):
-            for face in py_faces:
-                for idx in face:
-                    me.vertices[idx].normal = (
-                        vertices[idx].nx,
-                        vertices[idx].ny,
-                        vertices[idx].nz,
-                    )
-                    uv_layer.data[idx].uv = vertices[idx].s, vertices[idx].t
-                    if "body" in ob.name:
-                        # print(i, "uv", uv_layer.data[idx].uv)
-                        pass
-                    i += 1
+        print(f"len(py_vertices)", len(py_vertices))
+        print(f"len(py_faces)", len(py_faces))
+
+        me = bpy.data.meshes.new(self.name)
+        me.from_pydata(py_vertices, [], py_faces)
+
+        if True or not me.validate(verbose=True):
+            # Thanks Dave Prue and their "Import X-Plane Object" addon for the API example
+            me.uv_layers.new()
+            me.uv_layers[-1].data.foreach_set(
+                "uv",
+                [uv for pair in [uvs[l.vertex_index] for l in me.loops] for uv in pair],
+            )
+
+            # Is this right?
+            for i, vertex in enumerate(me.vertices):
+                vertex.normal = normals[i]
+
+            me.calc_normals()
+            me.update(calc_edges=True)
+            ob = test_creation_helpers.create_datablock_mesh(
+                self.datablock_info,
+                mesh_src=me,
+            )
+            test_creation_helpers.set_material(ob, "Material")
+
+            return ob
         else:
-            logger.error("Mesh was not valid, check console for more")
-
-        test_creation_helpers.set_material(ob, "Material")
-        return ob
+            logger.error(
+                f"Mesh was not valid, object '{self.name}' not made, check console for more"
+            )
+            raise ValueError
 
     @property
     def name(self) -> str:
@@ -898,9 +899,10 @@ class ImpCommandBuilder:
 
                 # end def optimize_empty_chain
                 print(f"IN {intermediate_block.name}")
-                out_block, blocks_rem_itr = optimize_empty_chain(
-                    intermediate_block, blocks_rem_itr
-                )
+                out_block = intermediate_block
+                # out_block, blocks_rem_itr = optimize_empty_chain(
+                # intermediate_block, blocks_rem_itr
+                # )
 
                 print(
                     f"OUT {out_block.name}, parent: {out_block.parent}, type: {out_block.datablock_type}"
@@ -1004,20 +1006,24 @@ class ImpCommandBuilder:
                     out_block.datablock_info
                 )
             elif out_block.datablock_type == "MESH":
-                ob = out_block.build_mesh(self.vt_table)
+                try:
+                    ob = out_block.build_mesh(self.vt_table)
+                except ValueError:
+                    ob = None
 
-            ob.matrix_local = out_block.bake_matrix.copy()
-            bpy.context.view_layer.update()
+            if ob:
+                ob.matrix_local = out_block.bake_matrix.copy()
+                bpy.context.view_layer.update()
 
-            ob.rotation_mode = out_block.rotation_mode
+                ob.rotation_mode = out_block.rotation_mode
 
-            try:
-                out_block.transform_animation.apply_animation(ob)
-            except AttributeError:  # No transform animation
-                pass
+                try:
+                    out_block.transform_animation.apply_animation(ob)
+                except AttributeError:  # No transform animation
+                    pass
 
-            for animation in out_block.show_hide_animations:
-                animation.apply_animation(ob)
+                for animation in out_block.show_hide_animations:
+                    animation.apply_animation(ob)
 
         # end while for searching remaining blocks
         # TODO: Unit test, and what about a bunch of animations that get optimized out with not TRIS blocks?
