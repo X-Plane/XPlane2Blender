@@ -585,7 +585,8 @@ def create_datablock_mesh(
         set_parent(ob, info.parent_info)
     set_material(ob, material_name)
 
-    ob.data.uv_layers.new()
+    if not ob.data.uv_layers:
+        ob.data.uv_layers.new()
 
     return ob
 

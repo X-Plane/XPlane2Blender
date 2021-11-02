@@ -244,36 +244,40 @@ class IntermediateDatablock:
         """
         mesh_idxes = vt_table.idxes[self.start_idx : self.start_idx + self.count]
 
+        vertex_map_old_to_new = {}
+        vertices = []
+        for idx in mesh_idxes:
+            if idx not in vertex_map_old_to_new:
+                vertices.append(vt_table.vertices[idx])
+                vertex_map_old_to_new[idx] = len(vertices) - 1
+            else:
+                pass
+        idxes = [vertex_map_old_to_new[idx] for idx in mesh_idxes]
+        normals = [(v.nx, v.ny, v.nz) for v in vertices]
+        uvs = [Vector((v.s, v.t)) for v in vertices]
+
         # Thanks senderle, https://stackoverflow.com/a/22045226
         def chunk(it, size):
             it = iter(it)
             return iter(lambda: tuple(itertools.islice(it, size)), ())
 
-        py_vertices = [(v.x, v.y, v.z) for v in vt_table.vertices]
+        py_vertices = [(v.x, v.y, v.z) for v in vertices]
         py_faces: List[Tuple[int, int, int]] = [
             # We reverse the winding order to reverse the faces
             face[::-1]
-            for face in chunk(mesh_idxes, 3)
+            for face in chunk(idxes, 3)
         ]
-
-        normals = [(v.nx, v.ny, v.nz) for v in vt_table.vertices]
-        uvs = [(v.s, v.t) for v in vt_table.vertices]
-
-        print(f"len(py_vertices)", len(py_vertices))
-        print(f"len(py_faces)", len(py_faces))
 
         me = bpy.data.meshes.new(self.name)
         me.from_pydata(py_vertices, [], py_faces)
 
-        if True or not me.validate(verbose=True):
+        if not me.validate(verbose=True):
             # Thanks Dave Prue and their "Import X-Plane Object" addon for the API example
             me.uv_layers.new()
-            me.uv_layers[-1].data.foreach_set(
-                "uv",
-                [uv for pair in [uvs[l.vertex_index] for l in me.loops] for uv in pair],
-            )
 
-            # Is this right?
+            for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
+                mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
+
             for i, vertex in enumerate(me.vertices):
                 vertex.normal = normals[i]
 
