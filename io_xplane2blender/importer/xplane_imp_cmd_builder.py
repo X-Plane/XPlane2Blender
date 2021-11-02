@@ -69,7 +69,8 @@ class IntermediateDataref:
     path: str = ""
     show_hide_v1: float = 0
     show_hide_v2: float = 0
-    values: List[float] = field(default_factory=list)
+    location_values: List[float] = field(default_factory=list)
+    rotation_values: List[float] = field(default_factory=list)
 
     def __hash__(self):
         return hash(
@@ -79,7 +80,8 @@ class IntermediateDataref:
                 self.path,
                 self.show_hide_v1,
                 self.show_hide_v2,
-                tuple(self.values),
+                tuple(self.location_values),
+                tuple(self.rotation_values),
             )
         )
 
@@ -91,13 +93,15 @@ class IntermediateAnimation:
     the static version). An IntermediateDatablock may have 0 or more of these.
     """
 
-    # TODO: We need to keep track of dataref values and rotations degrees or locations in pairs
-    # Order and keyframe count cannot be guaranteed
+    # Blender Locations, pair with location_values
+    # in xp_dataref
     locations: List[Vector] = field(default_factory=list)
+
     # Axis of rotations and the degrees of rotation along them.
     # - Will be empty, have 1 Off Axis Axis Angle, or 1 to 3 Axis Aligned Axis (
     # interpreted as a Euler)
     # - Must be paired with rotation_mode to have meaning
+    # - Pairs perfectly with rotation_values in xp_dataref
     rotations: Dict[Vector, List[float]] = field(
         default_factory=lambda: collections.defaultdict(list)
     )
@@ -157,19 +161,33 @@ class IntermediateAnimation:
                 tot_rot = Euler(euler_components.values(), rotation_mode)
                 return tot_rot
 
-        current_frame = 1
         if self.xp_dataref.anim_type == ANIM_TYPE_TRANSFORM:
             keyframe_infos = []
-            for value_idx, value in enumerate(self.xp_dataref.values):
+            current_frame = 1
+            for value_idx, value in enumerate(self.xp_dataref.location_values):
                 keyframe_infos.append(
                     test_creation_helpers.KeyframeInfo(
                         idx=current_frame,
                         dataref_path=self.xp_dataref.path,
                         dataref_value=value,
+                        dataref_loop=self.xp_dataref.loop,
                         dataref_anim_type=self.xp_dataref.anim_type,
                         location=self.locations[value_idx] + bl_object.location
                         if self.locations
                         else None,
+                    )
+                )
+                current_frame += 1
+            current_frame = 1
+            for value_idx, value in enumerate(self.xp_dataref.rotation_values):
+                keyframe_infos.append(
+                    test_creation_helpers.KeyframeInfo(
+                        idx=current_frame,
+                        dataref_path=self.xp_dataref.path,
+                        dataref_value=value,
+                        dataref_loop=self.xp_dataref.loop,
+                        dataref_anim_type=self.xp_dataref.anim_type,
+                        location=None,
                         rotation=recompose_rotation(bl_object.rotation_mode, value_idx)
                         if self.rotations
                         else None,
@@ -190,6 +208,14 @@ class IntermediateAnimation:
 
         test_creation_helpers.set_animation_data(bl_object, keyframe_infos)
         current_frame = 1
+
+    @property
+    def is_animated_location(self) -> bool:
+        return self.locations and self.xp_dataref.location_values
+
+    @property
+    def is_animated_rotation(self) -> bool:
+        return self.rotations and self.xp_dataref.rotation_values
 
     """
     # Always
@@ -224,9 +250,6 @@ class IntermediateDatablock:
     # If Datablock is a MESH, these will correspond to (hopefully valid) entries in the idx table and _VT table
     start_idx: Optional[int]
     count: Optional[int]
-    # In general, 1st animation represents locations or rotations, Empty if not animated, the 1st animation will
-    # represent locations or rotations, 2nd and on are SHOW/HIDEs
-    # During finalization as much of these are combined
     transform_animation: Optional[IntermediateAnimation]
     show_hide_animations: List[IntermediateAnimation]
 
@@ -448,7 +471,7 @@ class ImpCommandBuilder:
             empty = IntermediateDatablock(
                 datablock_info=DatablockInfo(
                     "EMPTY",
-                    name=self._next_empty_name(),
+                    name=name_hint or self._next_empty_name(),
                     parent_info=ParentInfo(parent.datablock_info.name),
                     collection=self.root_collection,
                 ),
@@ -519,13 +542,14 @@ class ImpCommandBuilder:
                 path=dataref_path,
                 show_hide_v1=0,
                 show_hide_v2=0,
-                values=[],
+                location_values=[],
+                rotation_values=[],
             )
         elif directive == "ANIM_trans_key":
             value = args[0]
             location = args[1]
             self._top_animation.locations.append(location)
-            self._top_dataref.values.append(value)
+            self._top_dataref.location_values.append(value)
         elif directive == "ANIM_trans_end":
             pass
         elif directive in {"ANIM_show", "ANIM_hide"}:
@@ -549,13 +573,14 @@ class ImpCommandBuilder:
                 path=dataref_path,
                 show_hide_v1=0,
                 show_hide_v2=0,
-                values=[],
+                location_values=[],
+                rotation_values=[],
             )
         elif directive == "ANIM_rotate_key":
             value = args[0]
             degrees = args[1]
             self._top_animation.rotations[self._last_axis.freeze()].append(degrees)
-            self._top_dataref.values.append(value)
+            self._top_dataref.rotation_values.append(value)
         elif directive == "ANIM_rotate_end":
             self._last_axis = None
         elif directive == "ANIM_keyframe_loop":
@@ -574,7 +599,7 @@ class ImpCommandBuilder:
                 begin_new_frame()
                 self._top_animation.locations.append(xyz1)
                 self._top_animation.locations.append(xyz2)
-                self._top_dataref.values.extend((v1, v2))
+                self._top_dataref.location_values.extend((v1, v2))
                 self._top_dataref.path = path
 
             if r_xyz1 == r_xyz2 and r_v1 == r_v2:
@@ -616,7 +641,7 @@ class ImpCommandBuilder:
                 begin_new_frame()
                 self._top_animation.rotations[dxyz.freeze()].append(r1)
                 self._top_animation.rotations[dxyz.freeze()].append(r2)
-                self._top_dataref.values.extend((v1, v2))
+                self._top_dataref.rotation_values.extend((v1, v2))
                 self._top_dataref.path = path
 
             if r_r1 == r_r2 and r_v1 == r_v2:
@@ -625,13 +650,13 @@ class ImpCommandBuilder:
                     self._bake_matrix_stack[-1]
                     @ Quaternion(dxyz, math.radians(r1)).to_matrix().to_4x4()
                 )
-                print(
-                    "to euler in ANIM_rotate",
-                    [
-                        f"{math.degrees(c):.8f}"
-                        for c in self._bake_matrix_stack[-1].to_euler()
-                    ],
-                )
+                # print(
+                #     "to euler in ANIM_rotate",
+                #     [
+                #         f"{math.degrees(c):.8f}"
+                #         for c in self._bake_matrix_stack[-1].to_euler()
+                #     ],
+                # )
             elif r_r1 == r_r2 and r_v1 != r_v2:
                 # print("rot, case B - as dynamic")
                 add_as_dynamic()
@@ -706,6 +731,13 @@ class ImpCommandBuilder:
                     Returns next block to be created and an iterator to keep searching.
 
                     Current optimizations
+                    Optimization                   | Requires...                                      | next_block
+                    -------------------------------|--------------------------------------------------|-----------
+                    merge_dref_trans_table         | is_in_block_loc_anim and is_next_block_loc_anim  |
+                    add_trans_table                | both loc_anim, same rotation dref values         |
+                    merge_orthogonal_rotation_axis | both rot_anim, same xp_dataref.rotation_values   | reparent children
+                    take_next_block_rotations      | not in_block rot_anim, is_next_block_rot_anim    | reparent children
+                    # merge_show_hide_animations   | not (is_loc_anim or is_rot_anim)                 | reparent children
                     - For the same dataref path and values, 3 orthogonal axis in a row are merged
                     - Duplicate location lists, rotations, and show/hides overwrite previous values
                     - Sequential ANIM_show/hides are merged
@@ -742,7 +774,22 @@ class ImpCommandBuilder:
                             break
                         else:
                             next_name = next_block.name
+                            print("next name ", next_name)
                             next_block_type = next_block.datablock_type
+                            next_block_parent = next_block.parent
+                            next_show_hide_animations = next_block.show_hide_animations
+                            next_animation = next_block.transform_animation
+                            try:
+                                next_dataref = next_animation.xp_dataref
+                                next_block_path = next_dataref.path
+                                is_next_block_loc_anim = bool(next_animation.locations)
+                                is_next_block_rot_anim = bool(next_animation.rotations)
+                            except AttributeError:
+                                next_dataref = None
+                                next_block_path = None
+                                is_next_block_loc_anim = False
+                                is_next_block_rot_anim = False
+
                             if next_block_type == "MESH":
                                 # TODO: Needs unit test showing replacement happens only with 1 child mesh
                                 # multiple child meshes or mixed child meshes and empties doesn't work
@@ -757,26 +804,89 @@ class ImpCommandBuilder:
                                         in_block.datablock_info.parent_info
                                     )
                                 return next_block, peek_next_block_itr
-                            elif next_block_type == "EMPTY":
+                            elif (
+                                next_block_type == "EMPTY"
+                                and in_block_path == next_block_path
+                            ):
+                                assert "" not in {
+                                    in_block_path,
+                                    next_block_path,
+                                }, "EMPTY cannot have no dataref"
+                                # WHEN DO WE SKIP THEN NEXT BLOCK?
                                 assert (
                                     next_block.is_animated
                                 ), f"{next_name} is EMPTY and must have animations"
-                                next_show_hide_animations = (
-                                    next_block.show_hide_animations
-                                )
-                                next_animation = next_block.transform_animation
-                                # This is not to say it is a __valid__ animation
-                                is_loc_anim = bool(next_animation.locations)
-                                is_rot_anim = bool(next_animation.rotations)
-                                next_dataref = next_animation.xp_dataref
-                                next_path = next_dataref.path
-                                next_block_parent = next_block.parent
 
+                                def merge_dref_trans_table() -> IntermediateDatablock:
+                                    """
+                                    Merges the translation tables of in_block and next_block,
+                                    returning an altered in_block and reparenting next_block's children
+                                    to in_block
+
+                                    Covers cases like
+
+                                    ANIM_trans VecA VecB   0 1  dref1
+                                    ANIM_trans VecC VecD   3 4  dref1
+                                    ANIM_trans VecE VecF   -2 2 dref1
+                                    TRIS 3 3
+
+                                    dref1, 6 frames
+                                    Frame | Value | Vector
+                                    ------|-------|-------
+                                    1     | -2    | VecE
+                                    2     | 0     | VecA
+                                    3     | 1     | VecB
+                                    4     | 2     | VecF
+                                    5     | 3     | VecC
+                                    6     | 4     | VecD
+
+                                    This is not necissarily the end of optimizations. In this example TRIS gets this table
+                                    """
+                                    merged_locations = collections.defaultdict(list)
+                                    for location, dref_value in itertools.chain(
+                                        in_block_animation.locations,
+                                        next_animation.locations,
+                                    ):
+                                        r_location = round_vec(
+                                            location, PRECISION_KEYFRAME
+                                        )
+                                        # if
+                                        # merged_locations[round_vec(location, PRECISION_KEYFRAME)].append(dref_value
+
+                                if is_in_block_loc_anim and is_next_block_loc_anim:
+                                    # TODO:
+                                    # in_block = merge_dref_trans_table()
+                                    # searching_itr = peek_next_block_itr
+                                    pass
+
+                                def add_overlaping_tables():
+                                    """
+
+                                    ANIM_trans    VecA VecB   0 1 dref1
+                                    ANIM_trans    VecC VecD   0 1 dref1
+                                    ANIM_trans_begin dref1
+                                        ANIM_trans 0  VecE
+                                        ANIM_trans 2 VecF
+                                    ANIM_trans_end
+
+                                    In this case a new table is produced
+                                    ANIM_trans    VecA+VecC VecB+VecD    0 1 dref1
+                                    ANIM_trans_begin dref1
+                                        ANIM_trans 0 VecA+VecC+VecE
+                                        ANIM_trans 1 VecB+VecD
+                                        ANIM_trans 2 VecF
+                                    ANIM_trans_end
+                                    """
+                                    pass
+
+                                # TODO: Assumes dataref ranges are the same
                                 def merge_orthogonal_rotation_axis() -> IntermediateDatablock:
+                                    print("merge orthogonal axis")
                                     """
                                     Attempts to merge any mergable rotations of the next_block into
                                     the in_block. Raises ValueError if next_block has nothing to merge.
-                                    This indicates its time to finish off and make in_block
+
+                                    Assumes that the dataref ranges are the same
                                     """
                                     merge_count = 0
                                     rotations = in_block.transform_animation.rotations
@@ -791,15 +901,15 @@ class ImpCommandBuilder:
                                             == round_vec(vec, PRECISION_KEYFRAME)
                                             for vec in rotations
                                         )
-                                        print("is_axis_aligned:", is_axis_aligned)
-                                        print("already_used:", already_used)
+                                        # print("is_axis_aligned:", is_axis_aligned)
+                                        # print("already_used:", already_used)
 
                                         if is_axis_aligned and not already_used:
-                                            print("merging: ", axis)
+                                            # print("merging: ", axis)
                                             in_block_animation.rotations[axis] = degrees
                                             merge_count += 1
                                         else:
-                                            print("not merging: ", axis)
+                                            # print("not merging: ", axis)
                                             pass
 
                                     if merge_count:
@@ -812,11 +922,46 @@ class ImpCommandBuilder:
 
                                     return in_block
 
-                                if is_in_block_rot_anim:
+                                if is_in_block_rot_anim and is_next_block_rot_anim:
+                                    print(
+                                        " rea if is_in_block_rot_anim and is_next_block_rot_anim:"
+                                    )
+                                    # First we see if we can do our special extra
+                                    # smart merge_orthogonal_rotation_axis merge,
+                                    # Otherwise we just copy and reparent the next block's
                                     try:
-                                        in_block = merge_orthogonal_rotation_axis()
+                                        if (
+                                            in_block_animation.xp_dataref.rotation_values
+                                            == next_animation.xp_dataref.rotation_values
+                                        ):
+                                            in_block = merge_orthogonal_rotation_axis()
+                                            searching_itr = peek_next_block_itr
+                                        else:
+                                            raise ValueError
                                     except ValueError:
-                                        return (in_block, searching_itr)
+                                        pass
+
+                                def take_next_block_rotations():
+                                    in_block_animation.rotations = copy.copy(
+                                        next_animation.rotations
+                                    )
+                                    in_block_animation.xp_dataref.rotation_values = (
+                                        copy.copy(
+                                            next_animation.xp_dataref.rotation_values
+                                        )
+                                    )
+                                    reparent_children_to_new_block(next_block, in_block)
+
+                                    return in_block
+
+                                if (
+                                    not in_block_animation.is_animated_rotation
+                                    and in_block_dataref.rotation_values
+                                    == next_dataref.rotation_values
+                                ):
+                                    # TODO: What the heck is this?
+                                    in_block = take_next_block_rotations()
+                                    searching_itr = peek_next_block_itr
 
                                 # Merge Show/Hides
                                 def merge_show_hide_animations():
@@ -826,7 +971,7 @@ class ImpCommandBuilder:
                                     """
                                     for next_anim in (
                                         next_anim
-                                        for next_anim in next_animations
+                                        for next_anim in next_show_hide_animations
                                         if next_anim.anim_type
                                         in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}
                                     ):
@@ -834,71 +979,39 @@ class ImpCommandBuilder:
                                             f"{in_block.name} from show/hide from {next_name}"
                                         )
                                         in_block.show_hide_animations.append(next_anim)
-                                    reparent_children_to_new_block(
-                                        next_block,
-                                        in_block,
-                                    )
 
-                                if not (is_loc_anim or is_rot_anim):
+                                if next_show_hide_animations:
+                                    show_hide_count = len(in_block.show_hide_animations)
                                     merge_show_hide_animations()
+                                    if (
+                                        len(in_block.show_hide_animations)
+                                        - show_hide_count
+                                    ):
+                                        reparent_children_to_new_block(
+                                            next_block,
+                                            in_block,
+                                        )
+                                        searching_itr = peek_next_block_itr
+                                # We have no more optimizations to apply to two blocks with
+                                # the same dataref paths, move iterator
+                                # next(searching_itr)
+                                print("normal searching)itr = peeknextblock")
+                            # --- end next empty with same dataref -------------
+                            elif (
+                                next_block_type == "EMPTY"
+                                and in_block_path != next_block_path
+                            ):
+                                # Different dataref = search complete.
+                                # outer loop will advance itr
+                                return (in_block, searching_itr)
 
-                            searching_itr = peek_next_block_itr
+                            else:
+                                assert False, f"{next_block_type} is not yet supported"
+
                             # What we need: Big if statement to collect optimizations to run, in what order, what should be done to the intermediate block, if you're getting rid of it who to reparent to, what shuold happen to the next block. We need a big ordered table.
 
-                            # TODO: We only stop optimizing when we get to a TRIS.
-                            # If we somehow made empties and didn't get to a TRIS we've either corrupted the TREE
-                            # or made empties for no animation which should be gotten rid of
-                            if False:
-                                assert {in_block_type, next_block_type} == {
-                                    "EMPTY"
-                                }, f"{in_block.name}'s and {next_name}'s type are {in_block_type, next_block_type}, should be 'EMPTY'"
-                                if in_block_dataref == next_dataref:
-                                    if next_animation.locations:
-                                        logger.warn(
-                                            f"{in_block.name} and {next_name} have different locations for the same dataref value range. Overwriting"
-                                        )
-                                        in_block_animation.locations.append(
-                                            next_animation.locations
-                                        )
-                                    # TODO: Change to if to combine locations and all rotations!
-                                    elif next_animation.rotations:
-                                        if (
-                                            in_block_animation.rotations.keys()
-                                            & next_animation.rotations.keys()
-                                        ):
-                                            logger.warn(
-                                                f"{in_block.name} and {next_name} have overlapping axis for the same dataref range. Using {next_name}'s values"
-                                            )
-                                        in_block_animation.rotations.update(
-                                            next_animation.rotations
-                                        )
-                                    else:
-                                        logger.warn(
-                                            f"{in_block.name} and {next_name} have duplicate show/hide animations, skipping block"
-                                        )
-                                elif all(
-                                    dref.anim_type in {ANIM_TYPE_SHOW, ANIM_TYPE_HIDE}
-                                    for dref in [in_block_dataref, next_dataref]
-                                ):
-                                    in_block.show_hide_animations.append(next_animation)
-
-                                # With next_block being made irrelevant, adjust the parentage of any
-                                # future blocks to be next_block's parent
-                                for future_block in copy.copy(peek_next_block_itr):
-                                    future_parent = getattr(
-                                        future_block.datablock_info.parent_info,
-                                        "parent",
-                                        None,
-                                    )
-                                    if future_parent == next_name:
-                                        future_block.datablock_info.parent_info = (
-                                            next_block.datablock_info.parent_info
-                                        )
-
-                                searching_itr = peek_next_block_itr
-                            # end elif next_block_type == "EMPTY":
+                            # end if False
                     # end while
-
                     return (in_block, searching_itr)
 
                 # end def optimize_empty_chain
@@ -907,6 +1020,14 @@ class ImpCommandBuilder:
                 # out_block, blocks_rem_itr = optimize_empty_chain(
                 # intermediate_block, blocks_rem_itr
                 # )
+                #                print(
+                #                    "location values",
+                #                    out_block.transform_animation.xp_dataref.location_values,
+                #                )
+                #                print(
+                #                    "rotation values",
+                #                    out_block.transform_animation.xp_dataref.rotation_values,
+                #                )
 
                 print(
                     f"OUT {out_block.name}, parent: {out_block.parent}, type: {out_block.datablock_type}"
@@ -926,7 +1047,7 @@ class ImpCommandBuilder:
                 """
 
                 degrees = [0.0] * len(
-                    block_to_fill.transform_animation.xp_dataref.values
+                    block_to_fill.transform_animation.xp_dataref.rotation_values
                 )
                 filled_rotations = {
                     "X": [Vector((1, 0, 0)).freeze(), degrees.copy()],
@@ -1033,7 +1154,7 @@ class ImpCommandBuilder:
         # TODO: Unit test, and what about a bunch of animations that get optimized out with not TRIS blocks?
         # Put this later
         if not bpy.data.objects:
-            logger.warn(".obj had no real blocks to create")
+            logger.warn(".obj had no real datablocks to create")
             return {"CANCELLED"}
 
         bpy.context.scene.frame_set(1)
