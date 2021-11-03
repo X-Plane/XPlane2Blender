@@ -310,7 +310,6 @@ class IntermediateDatablock:
                 self.datablock_info,
                 mesh_src=me,
             )
-            test_creation_helpers.set_material(ob, "Material")
 
             return ob
         else:
@@ -427,6 +426,9 @@ class ImpCommandBuilder:
 
         self.root_collection.xplane.is_exportable_collection = True
         self.vt_table = VTTable([], [])
+        self.texture: Optional[Path] = None
+        # self.texture_lit:Optional[Path] = Path()
+        # self.texture_normal:Optiona[Path] = Path()
 
         # Although we don't end up making this, it is useful for tree problems
         self.root_intermediate_datablock = IntermediateDatablock(
@@ -1128,13 +1130,19 @@ class ImpCommandBuilder:
 
             if out_block.datablock_type == "EMPTY":
                 ob = test_creation_helpers.create_datablock_empty(
-                    out_block.datablock_info
+                    out_block.datablock_info,
+                    empty_display_size=0.05,
                 )
             elif out_block.datablock_type == "MESH":
                 try:
                     ob = out_block.build_mesh(self.vt_table)
                 except ValueError:
                     ob = None
+                else:
+                    if self.texture:
+                        test_creation_helpers.set_material(
+                            ob, "Material", texture_image=self.texture
+                        )
 
             if ob:
                 ob.matrix_local = out_block.bake_matrix.copy()

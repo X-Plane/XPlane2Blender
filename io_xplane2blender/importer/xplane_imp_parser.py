@@ -11,6 +11,7 @@ import math
 import pathlib
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from pprint import pprint
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -143,7 +144,17 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         # def scan_(last=False, msg_missing=f"Could not convert parameter {lineno} _true, default=None)->value:
         # Throws parser error if needed
         # def _try to swallow all exceptions if the only thing that should happen is the line getting ignored on bad data. Otherwise we can go into more crazy exception hanlding cases
-        if directive == "VT":
+        if directive == "TEXTURE":
+            try:
+                texture_path = (filepath.parent / Path(components[0])).resolve()
+            except IndexError:
+                logger.warn(f"TEXTURE directive given but was empty")
+            else:
+                if texture_path.exists():
+                    builder.texture = texture_path
+                else:
+                    logger.warn(f"'{str(texture_path)}' is not a real file")
+        elif directive == "VT":
             components[:3] = vec_x_to_b(list(map(float, components[:3])))
             components[3:6] = vec_x_to_b(list(map(float, components[3:6])))
             components[6:8] = list(map(float, components[6:8]))

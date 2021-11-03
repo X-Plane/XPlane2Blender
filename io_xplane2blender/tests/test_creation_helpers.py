@@ -18,6 +18,7 @@ import shutil
 import typing
 from collections import namedtuple
 from dataclasses import dataclass
+from pathlib import Path
 from typing import *
 
 import bpy
@@ -455,6 +456,8 @@ def create_datablock_armature(
 def create_datablock_empty(
     info: DatablockInfo,
     scene: Optional[Union[bpy.types.Scene, str]] = None,
+    empty_display_type: str = "PLAIN_AXES",
+    empty_display_size=1,
 ) -> bpy.types.Object:
     """
     Creates a datablock empty and links it to a scene and collection.
@@ -468,7 +471,8 @@ def create_datablock_empty(
         scene = bpy.context.scene
     set_collection(ob, info.collection)
 
-    ob.empty_display_type = "PLAIN_AXES"
+    ob.empty_display_type = empty_display_type
+    ob.empty_display_size = empty_display_size
     ob.location = info.location
     ob.rotation_mode = info.rotation_mode
     set_rotation(ob, info.rotation, info.rotation_mode)
@@ -620,30 +624,38 @@ def create_datablock_light(
     return ob
 
 
-def create_image_from_disk(
-    filename: str, filepath: str = "//tex/{}"
-) -> bpy.types.Image:
+def create_image_from_disk(filepath: Union[Path, str]) -> bpy.types.Image:
     """
     Create an image from a .png file on disk.
+
     Returns image or raises OSError
     """
-    assert os.path.splitext(filename)[1] == ".png"
+    filepath = str(filepath)
+    assert os.path.splitext(filepath)[1] in {".dds", ".png"}
     # Load image file. Change here if the snippet folder is
     # not located in you home directory.
-    realpath = bpy.path.abspath(filepath.format(filename))
+    realpath = bpy.path.abspath(filepath.format(filepath))
     try:
-        img = bpy.data.images.load(realpath)
+        img = bpy.data.images.load(realpath, check_existing=True)
         img.filepath = bpy.path.relpath(realpath)
         return img
     except (RuntimeError, ValueError):  # Couldn't load or make relative path
         raise OSError("Cannot load image %s" % realpath)
 
 
-def create_material(material_name: str):
+def create_material(
+    material_name: str,
+    texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
+):
+    """
+    Create a material and optionally give it a texture
+    """
     try:
-        return bpy.data.materials[material_name]
-    except:
-        return bpy.data.materials.new(material_name)
+        mat = get_material(material_name)
+    except KeyError:
+        mat = bpy.data.materials.new(material_name)
+
+    return mat
 
 
 def create_material_default() -> bpy.types.Material:
@@ -664,6 +676,10 @@ def create_scene(name: str) -> bpy.types.Scene:
 def get_image(name: str) -> Optional[bpy.types.Image]:
     """
     New images will be created in //tex and will be a .png
+
+    TODO: This API is incomplete, what if None found? What should happen?
+    Creating a new image is almost never what you want, unlike creating a bland cube
+    I vote KeyError which makes this a useless wrapper
     """
     return bpy.data.images.get(name)
 
@@ -915,7 +931,8 @@ def set_animation_data(
         else:
             dataref_prop.value = kf_info.dataref_value
             # Multiple assignment isn't harmful
-            dataref_prop.loop = kf_info.dataref_loop
+            if kf_info.dataref_loop is not None:
+                dataref_prop.loop = kf_info.dataref_loop
 
         if not kf_info.location and not kf_info.rotation:
             continue
@@ -1027,18 +1044,41 @@ def set_manipulator_settings(
 def set_material(
     blender_object: bpy.types.Object,
     material_name: str = "Material",
-    material_props: Optional[Dict[str, Any]] = None,
-    create_missing: bool = True,
+    texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
 ):
+    """
+    Sets blender_object's 1st material slot to 'material_name'.
+
+    Optionally a texture_image is used to  set up a basic
+    shader with Base Color set to Image Texture
+
+    Raises OSError if texture_image is a path and not a real image
+    """
 
     mat = create_material(material_name)
     try:
         blender_object.material_slots[0].material = mat
     except IndexError:
         blender_object.data.materials.append(mat)
-    if material_props:
-        for prop, value in material_props.items():
-            setattr(mat.xplane.manip, prop, value)
+
+    if texture_image:
+        mat.use_nodes = True
+        tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+        if isinstance(texture_image, bpy.types.Image):
+            tex_node.image = texture_image
+        elif isinstance(texture_image, Path) or texture_image.endswith(
+            (".png", ".dds")
+        ):
+            tex_node.image = create_image_from_disk(texture_image)
+        else:
+            tex_node.image = get_image(texture_image)
+
+        bsdf_node = mat.node_tree.nodes["Principled BSDF"]
+
+        # TODO: We should make it nice and move it so it isn't overlapping
+        mat.node_tree.links.new(
+            tex_node.outputs["Color"], bsdf_node.inputs["Base Color"]
+        )
 
 
 def set_parent(blender_object: bpy.types.Object, parent_info: ParentInfo) -> None:
