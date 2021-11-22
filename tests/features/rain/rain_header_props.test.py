@@ -28,7 +28,7 @@ class TestRainHeaderProps(XPlaneTestCase):
                 self.assertExportableRootExportEqualsFixture(
                     root_object=root_name,
                     fixturePath=filepath,
-                    filterCallback={"RAIN_SCALE", "THERMAL", "WIPER"},
+                    filterCallback={"RAIN_scale", "THERMAL", "WIPER"},
                     tmpFilename=filepath.stem,
                 )
 
@@ -48,7 +48,7 @@ class TestRainHeaderProps(XPlaneTestCase):
                 self.assertExportableRootExportEqualsFixture(
                     root_object=root_name,
                     fixturePath=filepath,
-                    filterCallback={"RAIN_SCALE", "THERMAL", "WIPER"},
+                    filterCallback={"RAIN_scale", "THERMAL", "WIPER"},
                     tmpFilename=filepath.stem,
                 )
 

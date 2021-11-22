@@ -104,7 +104,7 @@ class XPlaneHeader:
 
         # rain, thermal, wiper settings
         rain_header_attrs = [
-            "RAIN_SCALE",
+            "RAIN_scale",
             "THERMAL_texture",
             "WIPER_texture",
         ]
@@ -269,7 +269,7 @@ class XPlaneHeader:
                 xplane_version >= 1200 and (isAircraft or isCockpit) and has_rain_system
             ):
                 v = {
-                    "RAIN_SCALE": rain_props.rain_scale
+                    "RAIN_scale": rain_props.rain_scale
                     if round(rain_props.rain_scale, PRECISION_OBJ_FLOAT) < 1.0
                     else None,
                     "THERMAL_texture": self.getPathRelativeToOBJ(
