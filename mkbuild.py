@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 from collections import namedtuple
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 
@@ -315,7 +316,7 @@ def _make_and_place_zip(new_version: VerData, tmp_build_folder: str, dest_folder
     zip_name = (
         "io_xplane2blender_{major}_{minor}_{revision}-"
         "{build_type}_{build_type_version}-"
-        "{data_model_version}_{build_number}"
+        "{data_model_version}_{build_number}-v12"
     ).format(
         major=new_version.addon_version[0],
         minor=new_version.addon_version[1],

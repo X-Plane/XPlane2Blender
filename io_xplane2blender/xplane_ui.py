@@ -62,7 +62,6 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
             if version >= 1000:
                 conditions_layout(self.layout, obj.active_material)
 
-
 # Adds X-Plane Layer settings to the scene tab. Uses <scene_layout>.
 class SCENE_PT_xplane(bpy.types.Panel):
     """XPlane Scene Panel"""
