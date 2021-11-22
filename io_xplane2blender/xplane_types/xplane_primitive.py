@@ -30,8 +30,12 @@ class XPlanePrimitive(XPlaneObject):
     def __init__(self, blenderObject: bpy.types.Object):
         assert blenderObject.type == "MESH"
         super().__init__(blenderObject)
-        self.attributes.add(XPlaneAttribute("ATTR_light_level", None, 1000))
-        self.attributes.add(XPlaneAttribute("ATTR_light_level_reset", True, 1000))
+
+        self.attributes.add(XPlaneAttribute("ATTR_hud_glass"))
+        self.attributes.add(XPlaneAttribute("ATTR_hud_reset"))
+        self.attributes.add(XPlaneAttribute("ATTR_light_level"))
+        self.attributes.add(XPlaneAttribute("ATTR_light_level_reset"))
+
         # Starting end ending indices for this object.
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
@@ -64,6 +68,12 @@ class XPlanePrimitive(XPlaneObject):
 
     def collect(self) -> None:
         super().collect()
+        xplane_version = int(bpy.context.scene.xplane.version)
+        bl_obj = self.blenderObject
+        if 1200 >= xplane_version and bl_obj.xplane.hud_glass:
+            self.attributes["ATTR_hud_glass"].setValue(True)
+            self.attributes["ATTR_hud_reset"].setValue(False)
+            pass
 
         # add manipulator attributes
         self.manipulator.collect()

@@ -1176,7 +1176,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     luminance: bpy.props.IntProperty(
         name = "Baseline Luminance",
-        description = "The overriden baseline luminance value for the LIT texture",
+        description = "The overriden baseline luminance value for the LIT texture, in nts",
         min = 1,
         max = 60000,
         default = 1000,
@@ -1618,6 +1618,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         type = XPlaneDataref
     )
 
+    hud_glass: bpy.props.BoolProperty(
+        name = "HUD Glass",
+        description = "Object is the glass of a HUD display",
+        default = False
+    )
+
     # --- Light Level Override (Mesh Specific) -------------------------------
     lightLevel: bpy.props.BoolProperty(
         name = "Override Light Level (This Mesh Only)",
@@ -1633,7 +1639,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
 
     lightLevel_brightness: bpy.props.IntProperty(
         name = "Brightness",
-        description = "The brightness in nts of your _LIT texture at its brightness",
+        description = "The brightness in nts of your _LIT texture at its brightest",
         default = 1000,
         min = 0
     )
@@ -1879,14 +1885,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
             (COCKPIT_FEATURE_PANEL, "Panel Texture", "Material uses Panel Texture"),
             (COCKPIT_FEATURE_DEVICE, "Cockpit Device", "Material uses Device Texture"),
         ]
-        features_v1200_items = [
-            (COCKPIT_FEATURE_HUD, "HUD Instruments", "Material creates HUD image"),
-        ]
-        xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version < 1100:
-            return features_pre_v1100_items
-        elif 1100 <= xplane_version:
-            return features_pre_v1100_items + features_v1200_items
+        return features_pre_v1100_items
 
     cockpit_feature: bpy.props.EnumProperty(
         name = "Cockpit Feature",

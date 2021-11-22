@@ -18,10 +18,12 @@ class XPlaneAttribute:
         self, name: str, value: Optional[AttributeValueType] = None, weight: int = 0
     ):
         """
-        weight indicates where the attribute should be in the OBJ File
+        name - OBJ directive name, usually starts with 'ATTR_'
+        value - Directive value, False and None prevent the atttribute from writing. Use "True"/"False" as a str if needed
+        weight - Indicates where the attribute should be in the OBJ File
         """
         self.name = name
-        self.value = [value]  # type: AttributeValueTypeList
+        self.value: AttributeValueTypeList = [value]
         self.weight = weight
 
     def addValue(self, value: Optional[AttributeValueType]) -> None:

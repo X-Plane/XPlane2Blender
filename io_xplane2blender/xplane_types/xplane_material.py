@@ -220,9 +220,9 @@ class XPlaneMaterial:
         # Table:
         # Panel Mode | Valid Cockpit Feature
         # -----------|----------------------
-        # Default    |  None, Panel, (Regions == 0), Device, HUD
-        # Emissive   |  None, Panel, (Regions == 0), Device?, HUD
-        # Regions    |  None?, Panel?, (Regions > 0), HUD?, Device?
+        # Default    |  None, Panel, (Regions == 0), Device
+        # Emissive   |  None, Panel, (Regions == 0), Device?
+        # Regions    |  None?, Panel?, (Regions > 0), Device?
         #
         # TODO ? means "Ben must clarify what should happen here".
         # Currently any invalid case is just ignored.
@@ -291,15 +291,6 @@ class XPlaneMaterial:
                     self.cockpitAttributes["ATTR_cockpit_region"].setValue(
                         cockpit_region - 1
                     )
-        elif cockpit_panel_feature == COCKPIT_FEATURE_HUD:
-            if cockpit_panel_mode in {PANEL_COCKPIT, PANEL_COCKPIT_LIT_ONLY}:
-                if 1200 <= xplane_version:
-                    self.cockpitAttributes["ATTR_cockpit_hud"].setValue(True)
-                    print(self.cockpitAttributes["ATTR_cockpit_hud"].value)
-            else:
-                assert (
-                    False
-                ), f"Is COCKPIT_FEATURE_HUD and {cockpit_panel_mode} a valid combination?"
         # ---------------------------------------------------------------------
 
     def collectLightLevelAttributes(self, mat: bpy.types.Material) -> None:

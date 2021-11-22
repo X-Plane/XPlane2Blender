@@ -10,20 +10,11 @@ class XPlaneAttributes(OrderedDict):
     def __init__(self):
         super(XPlaneAttributes, self).__init__()
 
-    # Method: order
-    # Sorts items by weight.
     def order(self):
-        max_weight = 0
-
-        # this prevents the OrderedDict to be mutated during iteration
-        names = []
-        for name in self:
-            names.append(name)
-
-        for name in names:
-            if self[name].weight > max_weight:
-                self.move_to_end(name, True)
-                max_weight = self[name].weight
+        """Sorts dict by attribute weight"""
+        for k, v in dict(sorted(self.items(), key=lambda item: item[1].weight)).items():
+            self[k] = v
+        return
 
     def add(self, attr: XPlaneAttribute):
         if attr.name in self:

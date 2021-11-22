@@ -159,6 +159,10 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             light_level_layout(
                 self.layout, obj, "bpy.context.active_object.xplane.lightLevel_dataref"
             )
+            if version >= 1200:
+                box = self.layout.box()
+                box.label(text="Advanced")
+                box.prop(obj.xplane, "hud_glass")
             if obj.type != "EMPTY":
                 custom_layout(self.layout, obj)
 

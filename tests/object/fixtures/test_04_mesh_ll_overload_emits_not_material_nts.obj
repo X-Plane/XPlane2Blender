@@ -21,10 +21,10 @@ IDX	5
 
 # 0 ROOT
 	# 1 Mesh: Plane.002
-	# MESH: Plane.002	weight: 1000
+	# MESH: Plane.002	weight: 0
 	ATTR_light_level	0	1	mesh_only_w_nts	9001
 	# MATERIAL: Material_ll_w_nts
 	ATTR_shiny_rat	0.5
 	TRIS	0 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+116.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+117.NO_BUILD_NUMBR
