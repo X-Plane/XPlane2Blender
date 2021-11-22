@@ -529,7 +529,7 @@ class XPlaneTestCase(unittest.TestCase):
         floatTolerance: float = FLOAT_TOLERANCE,
     ):
         with io.StringIO() as s_buf:
-            pprint(list(d.keys()), s_buf)
+            pprint(list(expected_attrs.keys()), s_buf)
             d_pp_str = s_buf.getvalue()
         with io.StringIO() as s_buf:
             pprint(list(attrs.keys()), s_buf)

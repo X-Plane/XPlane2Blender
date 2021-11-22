@@ -27,7 +27,7 @@ class TestHudGlass(XPlaneTestCase):
                 self.assertExportableRootExportEqualsFixture(
                     filepath.stem[5:],
                     filepath,
-                    {},
+                    {"ATTR_hud", "ATTR_cockpit", "TRIS"},
                     filepath.name,
                 )
 

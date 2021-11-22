@@ -3191,7 +3191,7 @@ IDX	2855
 		ANIM_rotate_end
 		# MESH: Cone_full_rotation_AA_-.5_.5_-707	weight: 0
 		# MATERIAL: Material
-		ATTR_manip_drag_rotate	hand	3	0	-0	0	1	-0	-360.00027	360.00027	0	0	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio_all	none	
+		ATTR_manip_drag_rotate	hand	3	0	-0	0	1	-0	-360.0	360.0	0	0	1	0	0	sim/cockpit2/engine/actuators/throttle_ratio_all	none	
 		ATTR_manip_keyframe	0.47297296	0
 		TRIS	0 186
 		ANIM_end
