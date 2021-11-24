@@ -2,6 +2,7 @@
 
 # Introduction
 This addon for Blender 2.80 and up makes it possible to export models made in Blender to the X-Plane object format (.obj). 
+An experimental importer has been added in 4.2.0-Alpha 1 and can be found here: https://github.com/X-Plane/XPlane2Blender/releases/tag/v4.2.0-alpha.1 
 
 ## Contact Us
 The best way to contact us is through [a bug report](https://github.com/X-Plane/XPlane2Blender/issues). Otherwise, e-mail **ted at x-plane dot com**, especially if you're worried about the security of your models while we debug them.
