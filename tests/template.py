@@ -18,6 +18,7 @@
 import inspect
 import os
 import sys
+from pathlib import Path
 from typing import Tuple
 
 import bpy
@@ -26,7 +27,7 @@ from io_xplane2blender import xplane_config
 from io_xplane2blender.tests import *
 from io_xplane2blender.tests import test_creation_helpers
 
-__dirname__ = os.path.dirname(__file__)
+__dirname__ = Path(__file__).parent
 
 #TI filter obj output. Define above or in the class level
 #def filterLines(line:Tuple[str])->bool:

@@ -1,0 +1,27 @@
+I
+800
+OBJ
+
+TEXTURE	../../tex.png
+TEXTURE_LIT	none
+TEXTURE_NORMAL	none
+GLOBAL_specular	0.5
+TEXTURE_DRAPED	textures/tex.png
+TEXTURE_DRAPED_NORMAL	1.0 tex.png
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1	# 0
+VT	1	0	-1	-0	-1	-0	0.625	0.75	# 1
+VT	-1	0	1	-0	-1	-0	0.375	1	# 2
+
+IDX	0
+IDX	1
+IDX	2
+
+# 0 ROOT
+	# 1 Mesh: Plane.001
+	# MESH: Plane.001	weight: 1000
+	# MATERIAL: Material
+	TRIS	0 3
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+103.NO_BUILD_NUMBR
