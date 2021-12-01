@@ -540,11 +540,10 @@ class XPlaneTestCase(unittest.TestCase):
             f"Attribute lists {list(expected_attrs.keys())}, {list(attrs.keys())} have different length",
         )
 
-        attr_names = tuple(attrs.keys())
-        attr_values = tuple((v.getValue() for v in attrs.values()))
-        for name, (value, expected_value) in zip(
-            attr_names, zip(attr_values, expected_attrs.values())
-        ):
+        for name in attrs:
+            attr = attrs[name]
+            value = attr.getValue()
+            expected_value = expected_attrs[name]
 
             if isinstance(expected_value, (list, tuple)):
                 self.assertIsInstance(
