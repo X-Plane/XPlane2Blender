@@ -830,7 +830,7 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
                     while trees and not img:
                         tree = trees.pop()
                         node = tree.nodes.active
-                        if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
+                        if node and node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
                             img = node.image
                             break
                         for node in tree.nodes:
