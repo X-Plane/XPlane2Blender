@@ -17,12 +17,6 @@ from ..xplane_helpers import (
     logger,
     resolveBlenderPath,
 )
-from ..xplane_image_composer import (
-    combineSpecularAndNormal,
-    getImageByFilepath,
-    normalWithoutAlpha,
-    specularToGrayscale,
-)
 from .xplane_attribute import XPlaneAttribute
 from .xplane_attributes import XPlaneAttributes
 
@@ -507,88 +501,6 @@ class XPlaneHeader:
 
         for attr in self.xplaneFile.options.customAttributes:
             self.attributes.add(XPlaneAttribute(attr.name, attr.value))
-
-    def _compositeNormalTextureNeedsRecompile(self, compositePath, sourcePaths):
-        compositePath = resolveBlenderPath(compositePath)
-
-        if not os.path.exists(compositePath):
-            return True
-        else:
-            compositeTime = os.path.getmtime(compositePath)
-
-            for sourcePath in sourcePaths:
-                sourcePath = resolveBlenderPath(sourcePath)
-
-                if os.path.exists(sourcePath):
-                    sourceTime = os.path.getmtime(sourcePath)
-
-                    if sourceTime > compositeTime:
-                        return True
-
-        return False
-
-    def _getCompositeNormalTexture(self, textureNormal, textureSpecular):
-        normalImage = None
-        specularImage = None
-        texture = None
-        image = None
-        filepath = None
-        channels = 4
-
-        if textureNormal:
-            normalImage = getImageByFilepath(textureNormal)
-
-        if textureSpecular:
-            specularImage = getImageByFilepath(textureSpecular)
-
-        # only normals, no specular
-        if normalImage and not specularImage:
-            filename, extension = os.path.splitext(textureNormal)
-            filepath = texture = filename + "_nm" + extension
-            channels = 3
-
-            if self._compositeNormalTextureNeedsRecompile(filepath, (textureNormal)):
-                image = normalWithoutAlpha(normalImage, normalImage.name + "_nm")
-
-        # normal + specular
-        elif normalImage and specularImage:
-            filename, extension = os.path.splitext(textureNormal)
-            filepath = texture = filename + "_nm_spec" + extension
-            channels = 4
-
-            if self._compositeNormalTextureNeedsRecompile(
-                filepath, (textureNormal, textureSpecular)
-            ):
-                image = combineSpecularAndNormal(
-                    specularImage, normalImage, normalImage.name + "_nm_spec"
-                )
-
-        # specular only
-        elif not normalImage and specularImage:
-            filename, extension = os.path.splitext(textureSpecular)
-            filepath = texture = filename + "_spec" + extension
-            channels = 1
-
-            if self._compositeNormalTextureNeedsRecompile(filepath, (textureSpecular)):
-                image = specularToGrayscale(specularImage, specularImage.name + "_spec")
-
-        if image:
-            savepath = resolveBlenderPath(filepath)
-
-            color_mode = bpy.context.scene.render.image_settings.color_mode
-            if channels == 4:
-                bpy.context.scene.render.image_settings.color_mode = "RGBA"
-            elif channels == 3:
-                bpy.context.scene.render.image_settings.color_mode = "RGB"
-            elif channels == 1:
-                bpy.context.scene.render.image_settings.color_mode = "BW"
-            image.save_render(savepath, bpy.context.scene)
-            image.filepath = filepath
-
-            # restore color_mode
-            bpy.context.scene.render.image_settings.color_mode = color_mode
-
-        return texture
 
     def get_path_relative_to_dir(self, res_path: str, export_dir: str) -> str:
         """

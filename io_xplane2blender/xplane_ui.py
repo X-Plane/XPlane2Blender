@@ -222,7 +222,6 @@ def empty_layout(layout: bpy.types.UILayout, empty_obj: bpy.types.Object):
 def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
     layout.row().prop(scene.xplane, "version")
-    layout.row().prop(scene.xplane, "compositeTextures")
 
     xp2b_ver = xplane_helpers.VerStruct.current()
     if (
