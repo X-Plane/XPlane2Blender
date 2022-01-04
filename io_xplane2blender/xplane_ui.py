@@ -1277,7 +1277,8 @@ def manipulator_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> Non
         manipType = obj.xplane.manip.type
 
         box.prop(obj.xplane.manip, "cursor", text="Cursor")
-        box.prop(obj.xplane.manip, "tooltip", text="Tooltip")
+        if manipType != MANIP_NOOP:
+            box.prop(obj.xplane.manip, "tooltip", text="Tooltip")
 
         def show_command_search_window_pairing(
             box, command_prop_name: str, prop_text: Optional[str] = None
@@ -1448,7 +1449,7 @@ def manipulator_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> Non
         # fmt: off
         props =  collections.OrderedDict() # type: Dict[str,Tuple[Callable[[str],bool],Optional[Callable[[str],bool]]]]
         props['autodetect_datarefs'] = (lambda manip_type: should_show_autodetect_dataref(manip_type), None)
-        props['dataref1'] = (lambda manip_type: manip_type in MANIPULATORS_ALL - MANIPULATORS_COMMAND and\
+        props['dataref1'] = (lambda manip_type: manip_type in MANIPULATORS_ALL - MANIPULATORS_COMMAND - {MANIP_NOOP} and\
                 should_show_dataref(manip_type), lambda manip_type: get_dataref_title(manip_type,1))
         props['dataref2'] =\
             lambda manip_type: manip_type in {MANIP_DRAG_XY} | {MANIP_DRAG_AXIS_DETENT, MANIP_DRAG_ROTATE_DETENT} and should_show_dataref(manip_type),\

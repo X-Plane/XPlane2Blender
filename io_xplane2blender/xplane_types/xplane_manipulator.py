@@ -1323,7 +1323,7 @@ class XPlaneManipulator:
                     self.manip.tooltip,
                 )
             elif self.type == MANIP_NOOP:
-                value = (self.manip.dataref1, self.manip.tooltip)
+                value = ()
             else:
                 msg = "Manipulator type %s is unknown or unimplemented" % self.type
                 logger.error(msg)

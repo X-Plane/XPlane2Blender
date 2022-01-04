@@ -608,8 +608,6 @@ IDX	524
 IDX	526
 
 	ATTR_draw_disable
-	ATTR_manip_axis_knob	rotate_large	1.000	2.000	3.000	4.000	dataref	this should be the tooltip
-	TRIS	0 36
 	ATTR_manip_drag_xy	hand	1.000	2.000	3.000	4.000	5.000	6.000	dataref1	dataref2	this should be the tooltip
 	ATTR_manip_wheel	1.000
 	TRIS	396 36
@@ -634,7 +632,8 @@ IDX	526
 	ATTR_manip_toggle	rotate_medium_right	1.000	2.000	dataref	this should be the tooltip
 	ATTR_manip_wheel	1.000
 	TRIS	576 36
-	ATTR_manip_noop	dataref	this should be the tooltip
+	ATTR_manip_none
+	ATTR_manip_noop	
 	TRIS	468 36
 	ATTR_manip_drag_axis_pix	rotate_large_left	1.000	2.000	3.000	4.000	5.000	dataref	this should be the tooltip
 	ATTR_manip_wheel	1.000
@@ -651,5 +650,7 @@ IDX	526
 	TRIS	36 36
 	ATTR_manip_none
 	TRIS	432 36
+	ATTR_manip_axis_knob	rotate_large	1.000	2.000	3.000	4.000	dataref	this should be the tooltip
+	TRIS	0 36
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+102.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+103.NO_BUILD_NUMBR
