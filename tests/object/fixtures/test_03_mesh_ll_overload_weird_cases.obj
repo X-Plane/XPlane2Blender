@@ -54,38 +54,34 @@ IDX	35
 
 # 0 ROOT
 	# 1 Mesh: Plane.002_ME_on_MA_on
-	# MESH: Plane.002_ME_on_MA_on	weight: 1000
+	# MESH: Plane.002_ME_on_MA_on	weight: 0
 	ATTR_light_level	0	1	mesh_only
 	# MATERIAL: Material_ll
 	ATTR_shiny_rat	0.5
 	TRIS	30 6
 		# 2 Mesh: Plane.002_ME_on_MA_off.001
-		# MESH: Plane.002_ME_on_MA_off.001	weight: 1001
-		ATTR_light_level_reset
+		# MESH: Plane.002_ME_on_MA_off.001	weight: 1
 		ATTR_light_level	0	2	mesh_only
 		# MATERIAL: Material_no_ll
 		TRIS	24 6
 			# 3 Mesh: Plane.002_ME_off_MA_off
-			# MESH: Plane.002_ME_off_MA_off	weight: 1001
-			ATTR_light_level_reset
+			# MESH: Plane.002_ME_off_MA_off	weight: 1
 			# MATERIAL: Material_no_ll
+			ATTR_light_level_reset
 			TRIS	0 6
 				# 4 Mesh: Plane.002_ME_off_MA_on_v33
-				# MESH: Plane.002_ME_off_MA_on_v33	weight: 1002
+				# MESH: Plane.002_ME_off_MA_on_v33	weight: 2
 				# MATERIAL: Material_v33
 				ATTR_light_level	3	3	v3_3_mat_ll
 				TRIS	6 6
 					# 5 Mesh: Plane.002_ME_off_MA_on_v33.001
-					# MESH: Plane.002_ME_off_MA_on_v33.001	weight: 1002
-					ATTR_light_level_reset
+					# MESH: Plane.002_ME_off_MA_on_v33.001	weight: 2
 					# MATERIAL: Material_v33
-					ATTR_light_level	3	3	v3_3_mat_ll
 					TRIS	12 6
 						# 6 Mesh: Plane.002_ME_on_MA_off
-						# MESH: Plane.002_ME_on_MA_off	weight: 1001
-						ATTR_light_level_reset
+						# MESH: Plane.002_ME_on_MA_off	weight: 1
 						ATTR_light_level	0	5	mesh_only
 						# MATERIAL: Material_no_ll
 						TRIS	18 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+103.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+104.NO_BUILD_NUMBR

@@ -76,6 +76,7 @@ class XPlaneMaterial:
         self.attributes.add(XPlaneAttribute("ATTR_solid_camera"))
         self.attributes.add(XPlaneAttribute("ATTR_no_solid_camera"))
 
+        # These weights are hueristics
         self.attributes.add(XPlaneAttribute("ATTR_light_level", None, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_light_level_reset", True, 1000))
         self.attributes.add(XPlaneAttribute("ATTR_poly_os", None, 1000))

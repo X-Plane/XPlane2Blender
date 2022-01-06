@@ -30,8 +30,9 @@ class XPlanePrimitive(XPlaneObject):
     def __init__(self, blenderObject: bpy.types.Object):
         assert blenderObject.type == "MESH"
         super().__init__(blenderObject)
-        self.attributes.add(XPlaneAttribute("ATTR_light_level", None, 1000))
-        self.attributes.add(XPlaneAttribute("ATTR_light_level_reset", True, 1000))
+        # TODO: Do these weights make sense?
+        self.attributes.add(XPlaneAttribute("ATTR_light_level"))
+        self.attributes.add(XPlaneAttribute("ATTR_light_level_reset"))
         # Starting end ending indices for this object.
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
