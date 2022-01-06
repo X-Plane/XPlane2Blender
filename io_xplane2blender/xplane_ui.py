@@ -17,7 +17,7 @@ from .xplane_props import *
 
 
 class DATA_PT_xplane(bpy.types.Panel):
-    """XPlane Empty/Light Data Panel"""
+    """X-Plane Empty/Light Data Panel"""
 
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
@@ -37,7 +37,7 @@ class DATA_PT_xplane(bpy.types.Panel):
 
 # Adds X-Plane Material settings to the material tab. Uses <material_layout> and <custom_layout>.
 class MATERIAL_PT_xplane(bpy.types.Panel):
-    """XPlane Material Panel"""
+    """X-Plane Material Panel"""
 
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
@@ -62,9 +62,51 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
             if version >= 1000:
                 conditions_layout(self.layout, obj.active_material)
 
+
+class RENDER_PT_xplane(bpy.types.Panel):
+    """X-Plane Render Panel"""
+
+    bl_label = "X-Plane"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+
+    @classmethod
+    def poll(self, context):
+        return int(context.scene.xplane.version) >= 1200
+
+    def draw(self, context):
+        def draw_bake_op(layout: bpy.types.UILayout):
+            scene = context.scene
+            row = layout.row()
+            if context.active_object.xplane.isExportableRoot:
+                active_root = context.active_object
+            elif context.collection.xplane.is_exportable_collection:
+                active_root = context.collection
+            else:
+                active_root = None
+
+            if active_root and active_root.xplane.layer.export_type in {
+                EXPORT_TYPE_AIRCRAFT,
+                EXPORT_TYPE_COCKPIT,
+            }:
+                bake_op_text = f"Bake Wiper Gradient Texture For '{active_root.name}'"
+            else:
+                bake_op_text = f"Bake Wiper Gradient Texture"
+
+            op = row.operator("xplane.bake_wiper_gradient_texture", text=bake_op_text)
+            op.start = scene.xplane.wiper_bake_start
+
+            row = layout.row()
+            row.prop(scene.xplane, "wiper_bake_start")
+            row.label(text=f"End Frame: {scene.xplane.wiper_bake_start + 254}")
+
+        draw_bake_op(self.layout)
+
+
 # Adds X-Plane Layer settings to the scene tab. Uses <scene_layout>.
 class SCENE_PT_xplane(bpy.types.Panel):
-    """XPlane Scene Panel"""
+    """X-Plane Scene Panel"""
 
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
@@ -355,32 +397,6 @@ def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     advanced_column = advanced_box.column()
     advanced_column.prop(scene.xplane, "optimize")
     advanced_column.prop(scene.xplane, "debug")
-
-    def draw_bake_op(layout: bpy.types.UILayout):
-        row = layout.row()
-        if bpy.context.active_object.xplane.isExportableRoot:
-            active_root = bpy.context.active_object
-        elif bpy.context.collection.xplane.is_exportable_collection:
-            active_root = bpy.context.collection
-        else:
-            active_root = None
-
-        if active_root and active_root.xplane.layer.export_type in {
-            EXPORT_TYPE_AIRCRAFT,
-            EXPORT_TYPE_COCKPIT,
-        }:
-            bake_op_text = f"Bake Wiper Gradient Texture For '{active_root.name}'"
-        else:
-            bake_op_text = f"Bake Wiper Gradient Texture"
-
-        op = row.operator("xplane.bake_wiper_gradient_texture", text=bake_op_text)
-        op.start = scene.xplane.wiper_bake_start
-
-        row = layout.row()
-        row.prop(scene.xplane, "wiper_bake_start")
-        row.label(text=f"End Frame: {scene.xplane.wiper_bake_start + 254}")
-
-    draw_bake_op(advanced_column)
 
     if scene.xplane.debug:
         debug_box = advanced_column.box()
@@ -1823,6 +1839,7 @@ _XPlaneUITypes = (
     DATA_PT_xplane,
     MATERIAL_PT_xplane,
     OBJECT_PT_xplane,
+    RENDER_PT_xplane,
     SCENE_PT_xplane,
     XPLANE_UL_CommandSearchList,
     XPLANE_UL_DatarefSearchList,
