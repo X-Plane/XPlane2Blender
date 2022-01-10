@@ -47,6 +47,8 @@ class TestColumnName(XPlaneTestCase):
 
         self.assertEqual(ColumnName.A, ptc(None, "INDEX"))
         self.assertEqual(ColumnName.SIZE, ptc("airplane_landing_pm", "INTENSITY"))
+        self.assertEqual(ColumnName.SIZE,ptc("flood_merc_XYZTSB", "LEGACY_SIZE", "BILLBOARD_HW"))
+        self.assertEqual(ColumnName.SIZE,ptc("flood_LPS_XYZTSB", "LEGACY_SIZE", "BILLBOARD_HW"))
         self.assertEqual(ColumnName.B, ptc("airplane_nav_tail_size", "DIR_MAG"))
         self.assertEqual(ColumnName.R, ptc("airplane_nav_left_size", "DIR_MAG"))
         self.assertEqual(ColumnName.R, ptc("airplane_nav_right_size", "DIR_MAG"))

@@ -130,6 +130,7 @@ BILLBOARD_USES_SPILL_DXYZ = {
     "airplane_beacon_bb",
 }
 
+
 class ColumnName(enum.Enum):
     """ColumnName are labels for the OVERLOAD_TYPE's columns.
 
@@ -163,7 +164,10 @@ class ColumnName(enum.Enum):
 
     @classmethod
     def param_to_canonical_column_name(
-        cls, light_name: Optional[str], param_name: Union["ColumnName", str ]
+        cls,
+        light_name: Optional[str],
+        param_name: Union["ColumnName", str],
+        overload_type: Optional[str] = None,
     ) -> "ColumnName":
         """Returns the canonical ColumnName based on
         light_name, param_name (probably from a ParsedLight's light_param_def, or
@@ -171,7 +175,10 @@ class ColumnName(enum.Enum):
 
         light_name can be empty to only test param_name
 
+        overload_type must be one of OVERLOAD_TYPES or None
+
         Throws ValueError if no translation could be found"""
+        assert overload_type is None or overload_type in OVERLOAD_TYPES
         try:
             if isinstance(param_name, ColumnName):
                 return param_name
@@ -181,6 +188,12 @@ class ColumnName(enum.Enum):
             if param_name == "INDEX":
                 column_name = cls.A
             elif param_name == "INTENSITY" and light_name in SIZE_AS_INTENSITY:
+                column_name = cls.SIZE
+            elif (
+                param_name == "LEGACY_SIZE"
+                and light_name in {"flood_merc_XYZTSB", "flood_LPS_XYZTSB"}
+                and overload_type == "BILLBOARD_HW"
+            ):
                 column_name = cls.SIZE
             elif param_name == "DIR_MAG" and light_name in {"airplane_nav_tail_size"}:
                 column_name = cls.B
@@ -404,7 +417,7 @@ class ParsedLightOverload:
     def __contains__(self, item: str) -> bool:
         """For ParsedLightOverloads, 'contains' means 'this overload contains this column'"""
         return ColumnName.param_to_canonical_column_name(
-            self.name, item
+            self.name, item, self.overload_type
         ) in get_overload_column_info(self.overload_type)
 
     def __getitem__(self, key: Union[ColumnName, int, str]) -> Union[float, str]:
@@ -418,7 +431,9 @@ class ParsedLightOverload:
             return self.arguments[key]
         elif isinstance(key, (ColumnName, str)):
             try:
-                key = ColumnName.param_to_canonical_column_name(self.name, key)
+                key = ColumnName.param_to_canonical_column_name(
+                    self.name, key, self.overload_type
+                )
             except ValueError as e:
                 raise
             else:
@@ -441,7 +456,9 @@ class ParsedLightOverload:
                 raise
         elif isinstance(key, (ColumnName, str)):
             try:
-                key = ColumnName.param_to_canonical_column_name(self.name, key)
+                key = ColumnName.param_to_canonical_column_name(
+                    self.name, key, self.overload_type
+                )
                 prototype = get_overload_column_info(self.overload_type)
                 self.arguments[tuple(prototype).index(key)] = value
             except ValueError as ve:
@@ -712,7 +729,18 @@ def parse_lights_file():
         try:
             ColumnName.param_to_canonical_column_name(light_name=None, param_name=p)
         except ValueError:
-            return p.startswith(("UNUSED", "NEG_ONE", "ZERO", "ONE", "INDEX", "INTENSITY", "DIR_MAG"))
+            return p.startswith(
+                (
+                    "UNUSED",
+                    "NEG_ONE",
+                    "ZERO",
+                    "ONE",
+                    "INDEX",
+                    "INTENSITY",
+                    "DIR_MAG",
+                    "LEGACY_SIZE",
+                )
+            )
         else:
             return True
 
@@ -725,6 +753,15 @@ def parse_lights_file():
 
         for line_num, line in lines:
             # print(line)
+            try:
+                comment = line[line.index("#") :]
+                line = line[: line.index("#")]
+            except ValueError:
+                comment = ""
+
+            if comment:
+                # print("line", line.split()[1], "comment", comment)
+                pass
             try:
                 overload_type, light_name, *light_args = line.split()
                 if not light_args:

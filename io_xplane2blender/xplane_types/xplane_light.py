@@ -359,6 +359,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
                     "SIZE": light_data.xplane.param_size,
+                    "LEGACY_SIZE": 0, # Another UNUSED - we don't autocorrect with it at all
                     "INTENSITY": light_data.xplane.param_intensity,
                     "DX": dxyz_values_x[0],
                     "DY": dxyz_values_x[1],
@@ -642,7 +643,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             ), f"One of {self.lightName} parameters did not get replaced in collect or write: {self.params}"
         if self.record_completed:
             assert all(
-                isinstance(c, (float, int)) or c.startswith(("NOOP", "sim"))
+                isinstance(c, (float, int)) or c.startswith(("NOOP", "sim")) or c.endswith("cd")
                 for c in self.record_completed
             ), f"record_completed is not complete {self.record_completed}"
 
