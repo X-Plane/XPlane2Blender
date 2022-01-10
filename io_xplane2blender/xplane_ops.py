@@ -762,6 +762,7 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
     def execute(self, context):
         is_cycles = context.scene.render.engine == "CYCLES"
         scene = context.scene
+        scene.render.bake.use_clear = True
         scene.render.bake.use_selected_to_active = True
 
         if context.active_object.xplane.isExportableRoot:
