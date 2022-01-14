@@ -221,13 +221,15 @@ def main(argv=None)->int:
             testsRun, errors, failures, skipped = (0,) * 4
             try:
                 results = re.search(TEST_RESULTS_REGEX, out)
+                if not results:
+                    raise Exception
             except:
                 # Oh goodie, more string matching!
                 # I'm sure this won't ever come back to bite us!
                 # If we're ever using assertRaises,
                 # hopefully we'll figure out something better! -Ted, 8/14/18
-                assert results is not None or "Traceback" in out, \
-                        "Test runner must print correct results string at end or have suffered an unrecoverable error"
+                if results is not None or "Traceback" in out:
+                    print("Test runner must print correct results string at end or have suffered an unrecoverable error")
                 total_errors += 1
                 errors = 1
             else:

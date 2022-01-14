@@ -899,6 +899,13 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
                 "INVOKE_DEFAULT", msg_text="Can't animation-bake packed file"
             )
             return {"CANCELLED"}
+
+        if img.depth != 32:
+            bpy.ops.xplane.msg(
+                "INVOKE_DEFAULT",
+                msg_text="Bake image must be a PNG with an alpha channel"
+            )
+            return {"CANCELLED"}
         # ---------------------------------------------------------------------
 
         def select_objects(wiper: xplane_props.XPlaneWiperSettings) -> None:
