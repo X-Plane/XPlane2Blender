@@ -373,9 +373,12 @@ def create_datablock_collection(
         scene: bpy.types.Scene = bpy.data.scenes[scene]
     except (KeyError, TypeError):  # scene is str and not found or is None
         scene: bpy.types.Scene = bpy.context.scene
+
     try:
-        parent: bpy.types.Collection = bpy.data.collections[parent]
-    except (KeyError, TypeError):  # parent is str and not found or is Collection
+        parent: bpy.types.Collection = bpy.data.collections[
+            parent.name if isinstance(parent, bpy.types.Collection) else parent
+        ]
+    except (KeyError, TypeError):  # parent is None or not found
         parent: bpy.types.Collection = scene.collection
 
     if coll.name not in parent.children:

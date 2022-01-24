@@ -68,6 +68,7 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
         "IDX",
         "IDX10",
         "TRIS",
+        "ATTR_LOD",
         "ANIM_begin",
         "ANIM_end",
         "ANIM_trans_begin",
@@ -183,6 +184,10 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             count = int(components[1])
             builder.build_cmd(directive, start_idx, count, name_hint=name_hint)
             name_hint = ""
+        elif directive == "ATTR_LOD":
+            near = int(components[0])
+            far = int(components[1])
+            builder.build_cmd(directive, near, far)
 
         elif directive == "ANIM_begin":
             builder.build_cmd("ANIM_begin", name_hint=name_hint)
@@ -247,4 +252,11 @@ def import_obj(filepath: Union[pathlib.Path, str]) -> str:
             pass
 
     builder.finalize_intermediate_blocks()
+    if builder.encountered_ranges:
+        root_layer = builder.root_collection.xplane.layer
+        root_layer.lods = str(len(builder.encountered_ranges))
+
+        for i, lod_range in enumerate(builder.encountered_ranges):
+            r = root_layer.lod[i]
+            r.near, r.far = lod_range
     return "FINISHED"

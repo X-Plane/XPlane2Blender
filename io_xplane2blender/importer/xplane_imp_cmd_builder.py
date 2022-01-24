@@ -10,6 +10,7 @@ import math
 import pathlib
 import random
 import re
+from collections import namedtuple
 from dataclasses import dataclass, field
 from itertools import islice, tee
 from pathlib import Path
@@ -238,6 +239,9 @@ class IntermediateAnimation:
     """
 
 
+LODRange = namedtuple("LODRange", ["near", "far"], defaults=[0, 0])
+
+
 @dataclass
 class IntermediateDatablock:
 
@@ -259,6 +263,10 @@ class IntermediateDatablock:
     # and we're interested in the relationship between IntermediateDatablocks
     # and their animations which isn't data a DatablockInfo has
     children: List["IntermediateDatablock"] = field(default_factory=list)
+
+    bins: Tuple[bool, bool, bool, bool] = field(
+        default_factory=lambda: (False, False, False, False)
+    )
 
     def build_mesh(self, vt_table: "VTTable") -> bpy.types.Mesh:
         """
@@ -310,6 +318,10 @@ class IntermediateDatablock:
                 self.datablock_info,
                 mesh_src=me,
             )
+            ob.xplane.override_lods = any(self.bins)
+            if ob.xplane.override_lods:
+                for i, enabled in enumerate(self.bins):
+                    ob.xplane.lod[i] = enabled
 
             return ob
         else:
@@ -425,6 +437,9 @@ class ImpCommandBuilder:
         )
 
         self.root_collection.xplane.is_exportable_collection = True
+
+        # If ATTR_LOD is used this becomes the LOD sub collections
+        self.parent_collection = self.root_collection
         self.vt_table = VTTable([], [])
         self.texture: Optional[Path] = None
         # self.texture_lit:Optional[Path] = Path()
@@ -435,7 +450,7 @@ class ImpCommandBuilder:
             datablock_info=DatablockInfo(
                 datablock_type="EMPTY",
                 name="INTER_ROOT",
-                collection=self.root_collection,
+                collection=self.parent_collection,
             ),
             start_idx=None,
             count=None,
@@ -444,6 +459,11 @@ class ImpCommandBuilder:
             bake_matrix=Matrix.Identity(4),
         )
 
+        # --- LODS -------------------------------------------------------------
+        self.lod_mode: Optional[None] = None
+        self.current_bins = (False, False, False, False)
+        self.encountered_ranges: List[LODRange] = []
+        # ---------------------------------------------------------------------
         # --- Animation Builder States ----------------------------------------
         # Instead of build at separate parent/child relationship in Datablock info, we just save everything we make here
         self._blocks: List[IntermediateDatablock] = [self.root_intermediate_datablock]
@@ -475,13 +495,15 @@ class ImpCommandBuilder:
                     "EMPTY",
                     name=name_hint or self._next_empty_name(),
                     parent_info=ParentInfo(parent.datablock_info.name),
-                    collection=self.root_collection,
+                    collection=self.parent_collection,
                 ),
                 start_idx=None,
                 count=None,
                 transform_animation=None,
                 show_hide_animations=[],
                 bake_matrix=self._bake_matrix_stack[-1].copy(),
+                children=[],
+                bins=tuple(self.current_bins),
             )
             self._blocks.append(empty)
             parent.children.append(empty)
@@ -516,16 +538,41 @@ class ImpCommandBuilder:
                     name=name_hint or self._next_object_name(),
                     # How do we keep track of this
                     parent_info=ParentInfo(parent.datablock_info.name),
-                    collection=self.root_collection,
+                    collection=self.parent_collection,
                 ),
                 start_idx=start_idx,
                 count=count,
                 transform_animation=None,
                 show_hide_animations=[],
                 bake_matrix=self._bake_matrix_stack[-1].copy(),
+                children=[],
+                bins=tuple(self.current_bins),
             )
             self._blocks.append(intermediate_datablock)
             parent.children.append(intermediate_datablock)
+        elif directive == "ATTR_LOD":
+            near, far = args[:2]
+            self.parent_collection = test_creation_helpers.create_datablock_collection(
+                f"LOD_{near}_{far}", parent=self.root_collection
+            )
+            if self.lod_mode == None:
+                # TODO: X-Plane default?
+                self.lod_mode = "selective"
+            if not self.encountered_ranges:
+                self.current_bins = [True, False, False, False]
+            elif near == self.encountered_ranges[-1].far:
+                self.lod_mode = "selective"
+                # TODO: too many ranges bug
+                self.current_bins = [False, False, False, False]
+                self.current_bins[len(self.encountered_ranges)] = True
+            elif self.encountered_ranges[-1].near == 0:
+                self.lod_mode = "additive"
+                # TODO : too many ranges bug still
+                self.current_bins = ([True] * (len(self.encountered_ranges) + 1)) + (
+                    [False] * (4 - len(self.encountered_ranges) - 1)
+                )
+            assert len(self.current_bins) == 4, f"{self.current_bins}"
+            self.encountered_ranges.append(LODRange(near, far))
 
         elif directive == "ANIM_begin":
             self._anim_count.append(0)
@@ -1202,7 +1249,7 @@ class ImpCommandBuilder:
         return (
             f"ImpEmpty."
             f"{sum(1 for block in self._blocks if block.datablock_type == 'EMPTY'):03}"
-            f"_{hex(hash(self.root_collection.name))[2:6]}"
+            f"_{hex(hash(self.parent_collection.name))[2:6]}"
             f"_{random.randint(0,100000)}"
         )
 
@@ -1210,6 +1257,6 @@ class ImpCommandBuilder:
         return (
             f"ImpMesh."
             f"{sum(1 for block in self._blocks if block.datablock_type == 'MESH'):03}"
-            f"_{hex(hash(self.root_collection.name))[2:6]}"
+            f"_{hex(hash(self.parent_collection.name))[2:6]}"
             f"_{random.randint(0,100000)}"
         )
