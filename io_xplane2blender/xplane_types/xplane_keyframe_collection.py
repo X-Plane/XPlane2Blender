@@ -1,7 +1,7 @@
 import copy
 import math
-from collections import Iterable, namedtuple
-from collections.abc import MutableSequence
+from collections import namedtuple
+from collections.abc import MutableSequence, Iterable
 from typing import List, Tuple
 
 import bpy
