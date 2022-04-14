@@ -879,7 +879,7 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         img = find_baking_image(windshield)
         img_filepath = Path(bpy.path.abspath(img.filepath, library=img.library))
         bake_temp_folder = img_filepath.parent / Path("_tmp_bake_images")
-        bake_temp_folder.mkdir(exist_ok=True)
+        bake_temp_folder.mkdir(parents=True, exist_ok=True)
         # --- Errors with the bake image --------------------------------------
         if img is None:
             bpy.ops.xplane.msg(
