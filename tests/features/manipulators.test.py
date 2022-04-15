@@ -34,7 +34,6 @@ class TestMaterials(XPlaneTestCase):
                 "ATTR_manip_wheel": "1.000",
             },
         )
-        print("okay!")
 
         drag_axis = xplaneFile._bl_obj_name_to_bone["drag_axis"].xplaneObject
         self.assertAttributesEqualDict(
@@ -160,9 +159,13 @@ class TestMaterials(XPlaneTestCase):
         )
 
         noop = xplaneFile._bl_obj_name_to_bone["noop"].xplaneObject
+        self.assertEqual(bpy.data.objects["noop"].xplane.manip.dataref1, "dataref")
+        self.assertEqual(
+            bpy.data.objects["noop"].xplane.manip.tooltip, "this should be the tooltip"
+        )
         self.assertAttributesEqualDict(
             noop.cockpitAttributes,
-            {"ATTR_manip_noop": ("dataref", "this should be the tooltip")},
+            {"ATTR_manip_noop": ()},
         )
 
         drag_axis_pix = xplaneFile._bl_obj_name_to_bone["drag_axis_pix"].xplaneObject

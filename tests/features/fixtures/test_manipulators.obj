@@ -610,46 +610,46 @@ IDX	526
 	ATTR_draw_disable
 	ATTR_manip_axis_knob	rotate_large	1.000	2.000	3.000	4.000	dataref	this should be the tooltip
 	TRIS	0 36
-	ATTR_manip_drag_xy	hand	1.000	2.000	3.000	4.000	5.000	6.000	dataref1	dataref2	this should be the tooltip
-	ATTR_manip_wheel	1.000
-	TRIS	396 36
-	ATTR_manip_drag_axis	four_arrows	1.000	2.000	3.000	4.000	5.000	dataref	this should be the tooltip
-	TRIS	324 36
+	ATTR_manip_axis_switch_left_right	rotate_large_left	4.000	5.000	1.000	0.500	dataref	this should be the tooltip
+	TRIS	36 36
+	ATTR_manip_axis_switch_up_down	rotate_large_left	4.000	5.000	1.000	0.500	dataref	this should be the tooltip
+	TRIS	72 36
 	ATTR_manip_command	button	the_command	this should be the tooltip
 	TRIS	108 36
 	ATTR_manip_command_axis	rotate_small	1.000	2.000	3.000	pos_command	neg_command	this should be the tooltip
 	TRIS	144 36
+	ATTR_manip_command_knob	rotate_large_left	pos_command	neg_command	this should be the tooltip
+	TRIS	180 36
+	ATTR_manip_command_switch_left_right	rotate_large_left	pos_command	neg_command	this should be the tooltip
+	TRIS	216 36
+	ATTR_manip_command_switch_up_down	rotate_large_left	pos_command	neg_command	this should be the tooltip
+	TRIS	252 36
+	ATTR_manip_delta	rotate_medium	1.000	2.000	3.000	4.000	dataref	this should be the tooltip
+	ATTR_manip_wheel	1.000
+	TRIS	288 36
+	ATTR_manip_drag_axis	four_arrows	1.000	2.000	3.000	4.000	5.000	dataref	this should be the tooltip
+	TRIS	324 36
+	ATTR_manip_drag_axis_pix	rotate_large_left	1.000	2.000	3.000	4.000	5.000	dataref	this should be the tooltip
+	ATTR_manip_wheel	1.000
+	TRIS	360 36
+	ATTR_manip_drag_xy	hand	1.000	2.000	3.000	4.000	5.000	6.000	dataref1	dataref2	this should be the tooltip
+	ATTR_manip_wheel	1.000
+	TRIS	396 36
+	ATTR_manip_none
+	TRIS	432 36
+	ATTR_manip_noop	
+	TRIS	468 36
 	ATTR_manip_push	rotate_small_left	1.000	2.000	dataref	this should be the tooltip
 	ATTR_manip_wheel	1.000
 	TRIS	504 36
 	ATTR_manip_radio	rotate_small_right	1.000	dataref	this should be the tooltip
 	ATTR_manip_wheel	1.000
 	TRIS	540 36
-	ATTR_manip_delta	rotate_medium	1.000	2.000	3.000	4.000	dataref	this should be the tooltip
-	ATTR_manip_wheel	1.000
-	TRIS	288 36
-	ATTR_manip_wrap	rotate_medium_left	1.000	2.000	3.000	4.000	dataref	this should be the tooltip
-	ATTR_manip_wheel	1.000
-	TRIS	612 36
 	ATTR_manip_toggle	rotate_medium_right	1.000	2.000	dataref	this should be the tooltip
 	ATTR_manip_wheel	1.000
 	TRIS	576 36
-	ATTR_manip_noop	dataref	this should be the tooltip
-	TRIS	468 36
-	ATTR_manip_drag_axis_pix	rotate_large_left	1.000	2.000	3.000	4.000	5.000	dataref	this should be the tooltip
+	ATTR_manip_wrap	rotate_medium_left	1.000	2.000	3.000	4.000	dataref	this should be the tooltip
 	ATTR_manip_wheel	1.000
-	TRIS	360 36
-	ATTR_manip_command_knob	rotate_large_left	pos_command	neg_command	this should be the tooltip
-	TRIS	180 36
-	ATTR_manip_command_switch_up_down	rotate_large_left	pos_command	neg_command	this should be the tooltip
-	TRIS	252 36
-	ATTR_manip_command_switch_left_right	rotate_large_left	pos_command	neg_command	this should be the tooltip
-	TRIS	216 36
-	ATTR_manip_axis_switch_up_down	rotate_large_left	4.000	5.000	1.000	0.500	dataref	this should be the tooltip
-	TRIS	72 36
-	ATTR_manip_axis_switch_left_right	rotate_large_left	4.000	5.000	1.000	0.500	dataref	this should be the tooltip
-	TRIS	36 36
-	ATTR_manip_none
-	TRIS	432 36
+	TRIS	612 36
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+102.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+104.NO_BUILD_NUMBR

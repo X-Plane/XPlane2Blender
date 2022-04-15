@@ -540,21 +540,20 @@ class XPlaneTestCase(unittest.TestCase):
             f"Attribute lists {list(expected_attrs.keys())}, {list(attrs.keys())} have different length",
         )
 
-        for name in attrs:
-            attr = attrs[name]
-            value = attr.getValue()
+        for name in attrs.keys():
+            value = attrs[name].getValue()
             expected_value = expected_attrs[name]
 
             if isinstance(expected_value, (list, tuple)):
                 self.assertIsInstance(
                     value,
                     (list, tuple),
-                    msg='Attribute value for "%s" is no list or tuple but: %s',
+                    msg='Attribute value for "{value}" is a {type(value)}, not a list or tuple',
                 )
                 self.assertEquals(
                     len(expected_value),
                     len(value),
-                    'Attribute values for "%s" have different length' % name,
+                    'Attribute value list for "{name}" have different length',
                 )
 
                 for i, (v, expectedV) in enumerate(zip(value, expected_value)):
@@ -564,11 +563,11 @@ class XPlaneTestCase(unittest.TestCase):
                         self.assertEquals(
                             expectedV,
                             v,
-                            'Attribute list value %d for "%s" is different' % (i, name),
                         )
             else:
                 self.assertEquals(
-                    expected_value, value, 'Attribute "%s" is not equal' % name
+                    expected_value,
+                    value,
                 )
 
     def createXPlaneFileFromPotentialRoot(

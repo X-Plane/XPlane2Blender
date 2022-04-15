@@ -2,6 +2,7 @@ import os
 import platform
 import re
 from collections import OrderedDict
+from pathlib import Path
 from typing import List
 
 import bpy
@@ -15,12 +16,6 @@ from ..xplane_helpers import (
     floatToStr,
     logger,
     resolveBlenderPath,
-)
-from ..xplane_image_composer import (
-    combineSpecularAndNormal,
-    getImageByFilepath,
-    normalWithoutAlpha,
-    specularToGrayscale,
 )
 from .xplane_attribute import XPlaneAttribute
 from .xplane_attributes import XPlaneAttributes
@@ -215,25 +210,34 @@ class XPlaneHeader:
 
         # standard textures
         if self.xplaneFile.options.texture != "":
-            self.attributes["TEXTURE"].setValue(
-                self.getPathRelativeToOBJ(
-                    self.xplaneFile.options.texture, exportdir, blenddir
+            try:
+                self.attributes["TEXTURE"].setValue(
+                    self.get_path_relative_to_dir(
+                        self.xplaneFile.options.texture, exportdir
+                    )
                 )
-            )
+            except (OSError, ValueError):
+                pass
 
         if self.xplaneFile.options.texture_lit != "":
-            self.attributes["TEXTURE_LIT"].setValue(
-                self.getPathRelativeToOBJ(
-                    self.xplaneFile.options.texture_lit, exportdir, blenddir
+            try:
+                self.attributes["TEXTURE_LIT"].setValue(
+                    self.get_path_relative_to_dir(
+                        self.xplaneFile.options.texture_lit, exportdir
+                    )
                 )
-            )
+            except (OSError, ValueError):
+                pass
 
         if self.xplaneFile.options.texture_normal != "":
-            self.attributes["TEXTURE_NORMAL"].setValue(
-                self.getPathRelativeToOBJ(
-                    self.xplaneFile.options.texture_normal, exportdir, blenddir
+            try:
+                self.attributes["TEXTURE_NORMAL"].setValue(
+                    self.get_path_relative_to_dir(
+                        self.xplaneFile.options.texture_normal, exportdir
+                    )
                 )
-            )
+            except (OSError, ValueError):
+                pass
 
         if xplane_version >= 1100:
             texture_normal = self.attributes["TEXTURE_NORMAL"].getValue()
@@ -272,13 +276,13 @@ class XPlaneHeader:
                     "RAIN_scale": rain_props.rain_scale
                     if round(rain_props.rain_scale, PRECISION_OBJ_FLOAT) < 1.0
                     else None,
-                    "THERMAL_texture": self.getPathRelativeToOBJ(
-                        rain_props.thermal_texture, exportdir, blenddir
+                    "THERMAL_texture": self.get_path_relative_to_dir(
+                        rain_props.thermal_texture, exportdir
                     )
                     if rain_props.thermal_texture
                     else None,
-                    "WIPER_texture": self.getPathRelativeToOBJ(
-                        rain_props.wiper_texture, exportdir, blenddir
+                    "WIPER_texture": self.get_path_relative_to_dir(
+                        rain_props.wiper_texture, exportdir
                     )
                     if rain_props.wiper_texture
                     else None,
@@ -357,24 +361,29 @@ class XPlaneHeader:
         if canHaveDraped:
             # draped textures
             if self.xplaneFile.options.texture_draped != "":
-                self.attributes["TEXTURE_DRAPED"].setValue(
-                    self.getPathRelativeToOBJ(
-                        self.xplaneFile.options.texture_draped, exportdir, blenddir
+                try:
+                    self.attributes["TEXTURE_DRAPED"].setValue(
+                        self.get_path_relative_to_dir(
+                            self.xplaneFile.options.texture_draped, exportdir
+                        )
                     )
-                )
+                except (OSError, ValueError):
+                    pass
 
             if self.xplaneFile.options.texture_draped_normal != "":
                 # Special "1.0" required by X-Plane
                 # "That's the scaling factor for the normal map available ONLY for the draped info. Without that , it can't find the texture.
                 # That makes a non-fatal error in x-plane. Without the normal map, the metalness directive is ignored" -Ben Supnik, 07/06/17 8:35pm
-                self.attributes["TEXTURE_DRAPED_NORMAL"].setValue(
-                    "1.0 "
-                    + self.getPathRelativeToOBJ(
-                        self.xplaneFile.options.texture_draped_normal,
-                        exportdir,
-                        blenddir,
+                try:
+                    self.attributes["TEXTURE_DRAPED_NORMAL"].setValue(
+                        "1.0 "
+                        + self.get_path_relative_to_dir(
+                            self.xplaneFile.options.texture_draped_normal,
+                            exportdir,
+                        )
                     )
-                )
+                except (OSError, ValueError):
+                    pass
 
             if self.xplaneFile.referenceMaterials[1]:
                 mat = self.xplaneFile.referenceMaterials[1]
@@ -443,10 +452,14 @@ class XPlaneHeader:
                     )
 
         if xplane_version >= 1130:
-            if self.xplaneFile.options.particle_system_file:
-                blenddir = os.path.dirname(bpy.context.blend_data.filepath)
+            try:
+                pss = self.get_path_relative_to_dir(
+                    self.xplaneFile.options.particle_system_file, exportdir
+                )
+            except (OSError, ValueError):
+                pss = None
 
-                # normalize the exporpath
+            if self.xplaneFile.options.particle_system_file and pss:
                 if os.path.isabs(self.xplaneFile.filename):
                     exportdir = os.path.dirname(
                         os.path.normpath(self.xplaneFile.filename)
@@ -459,9 +472,6 @@ class XPlaneHeader:
                             )
                         )
                     )
-                pss = self.getPathRelativeToOBJ(
-                    self.xplaneFile.options.particle_system_file, exportdir, blenddir
-                )
 
                 objs = self.xplaneFile.get_xplane_objects()
 
@@ -603,112 +613,80 @@ class XPlaneHeader:
         for attr in self.xplaneFile.options.customAttributes:
             self.attributes.add(XPlaneAttribute(attr.name, attr.value))
 
-    def _compositeNormalTextureNeedsRecompile(self, compositePath, sourcePaths):
-        compositePath = resolveBlenderPath(compositePath)
+    def get_path_relative_to_dir(self, res_path: str, export_dir: str) -> str:
+        """
+        Returns the resource path relative to the exported OBJ
 
-        if not os.path.exists(compositePath):
-            return True
+        res_path   - The relative or absolute resource path (such as .png, .dds, or .pss)
+                  as found in an RNA field
+        export_dir - Absolute path to directory of OBJ export
+
+        Raises ValueError or OSError for invalid paths or use of `//` not at the start of the respath
+        """
+        res_path = res_path.strip()
+        if res_path.startswith("./") or res_path.startswith(".\\"):
+            res_path = res_path.replace("./", "//").replace(".\\", "//").strip()
+
+        # 9. '//', or none means "none", empty is not written -> str.replace
+        if res_path == "":
+            raise ValueError
+        elif res_path == "//" or res_path == "none":
+            return "none"
+        # 2. '//' is the .blend folder or CWD if not saved, -> bpy.path.abspath if bpy.data.filename else cwd
+        elif res_path.startswith("//") and bpy.data.filepath:
+            res_path = Path(bpy.path.abspath(res_path))
+        elif res_path.startswith("//") and not bpy.data.filepath:
+            res_path = Path(".") / Path(res_path[2:])
+        # 7. Invalid paths are a validation error -> Path.resolve throws OSError
+        elif "//" in res_path and not res_path.startswith("//"):
+            logger.error(f"'//' is used not at the start of the path '{res_path}'")
+            raise ValueError
+        elif not Path(res_path).suffix:
+            logger.error(
+                f"Resource path '{res_path}' must be a supported file type, has no extension"
+            )
+            raise ValueError
+        elif Path(res_path).suffix.lower() not in {".png", ".dds", ".pss"}:
+            logger.error(
+                f"Resource path '{res_path}' must be a supported file type, is {Path(res_path).suffix}"
+            )
+            raise ValueError
         else:
-            compositeTime = os.path.getmtime(compositePath)
+            res_path = Path(res_path)
 
-            for sourcePath in sourcePaths:
-                sourcePath = resolveBlenderPath(sourcePath)
-
-                if os.path.exists(sourcePath):
-                    sourceTime = os.path.getmtime(sourcePath)
-
-                    if sourceTime > compositeTime:
-                        return True
-
-        return False
-
-    def _getCompositeNormalTexture(self, textureNormal, textureSpecular):
-        normalImage = None
-        specularImage = None
-        texture = None
-        image = None
-        filepath = None
-        channels = 4
-
-        if textureNormal:
-            normalImage = getImageByFilepath(textureNormal)
-
-        if textureSpecular:
-            specularImage = getImageByFilepath(textureSpecular)
-
-        # only normals, no specular
-        if normalImage and not specularImage:
-            filename, extension = os.path.splitext(textureNormal)
-            filepath = texture = filename + "_nm" + extension
-            channels = 3
-
-            if self._compositeNormalTextureNeedsRecompile(filepath, (textureNormal)):
-                image = normalWithoutAlpha(normalImage, normalImage.name + "_nm")
-
-        # normal + specular
-        elif normalImage and specularImage:
-            filename, extension = os.path.splitext(textureNormal)
-            filepath = texture = filename + "_nm_spec" + extension
-            channels = 4
-
-            if self._compositeNormalTextureNeedsRecompile(
-                filepath, (textureNormal, textureSpecular)
-            ):
-                image = combineSpecularAndNormal(
-                    specularImage, normalImage, normalImage.name + "_nm_spec"
-                )
-
-        # specular only
-        elif not normalImage and specularImage:
-            filename, extension = os.path.splitext(textureSpecular)
-            filepath = texture = filename + "_spec" + extension
-            channels = 1
-
-            if self._compositeNormalTextureNeedsRecompile(filepath, (textureSpecular)):
-                image = specularToGrayscale(specularImage, specularImage.name + "_spec")
-
-        if image:
-            savepath = resolveBlenderPath(filepath)
-
-            color_mode = bpy.context.scene.render.image_settings.color_mode
-            if channels == 4:
-                bpy.context.scene.render.image_settings.color_mode = "RGBA"
-            elif channels == 3:
-                bpy.context.scene.render.image_settings.color_mode = "RGB"
-            elif channels == 1:
-                bpy.context.scene.render.image_settings.color_mode = "BW"
-            image.save_render(savepath, bpy.context.scene)
-            image.filepath = filepath
-
-            # restore color_mode
-            bpy.context.scene.render.image_settings.color_mode = color_mode
-
-        return texture
-
-    # Method: getPathRelativeToOBJ
-    # Returns the resource path relative to the exported OBJ
-    #
-    # Parameters:
-    #   string respath - the relative or absolute resource path (such as a texture or .pss file) as chosen by the user
-    #   string exportdir - the absolute export directory
-    #   string blenddir - the absolute path to the directory the blend is in
-    #
-    # Returns:
-    #   string - the resource path relative to the exported OBJ
-    def getPathRelativeToOBJ(self, respath: str, exportdir: str, blenddir: str) -> str:
-        # blender stores relative paths on UNIX with leading double slash
-        if respath[0:2] == "//":
-            respath = respath[2:]
-
-        if os.path.isabs(respath):
-            respath = os.path.abspath(os.path.normpath(respath))
+        old_cwd = os.getcwd()
+        if bpy.data.filepath:
+            # This makes '.' the .blend file directory
+            os.chdir(Path(bpy.data.filepath).parent)
         else:
-            respath = os.path.abspath(os.path.normpath(os.path.join(blenddir, respath)))
+            os.chdir(Path(export_dir))
 
-        respath = os.path.relpath(respath, exportdir)
-
-        # Replace any \ separators if you're on Windows. For other platforms this does nothing
-        return respath.replace("\\", "/")
+        try:
+            # 1. '.' is CWD -> Path.resolve
+            # 3. All paths are given '/' sperators -> Path.resolve
+            # 4. '..'s are resolved, '.' is a no-op -> Path.resolve
+            # 5. All paths must be relative to the OBJ -> Path.relative_to(does order of args matter)?
+            # 7. Invalid paths are a validation error -> Path.resolve throws OSError
+            # 8. Paths are minimal, "./path/tex.png" is "path/tex.png" -> Path.resolve
+            # 10. Absolute paths are okay as long as we can make a relative path os.path.relpath
+            rel_path = os.path.relpath(res_path.resolve(), export_dir).replace(
+                "\\", "/"
+            )
+        except OSError:
+            logger.error(f"Path '{res_path}' is invalid")
+            os.chdir(old_cwd)
+            raise
+        except ValueError:
+            logger.error(
+                f"Cannot make relative path across disk drives for path '{res_path}'"
+            )
+            # 6. If not possible (different drive letter), validation error Path.relative_to ValueError
+            # 7. Invalid paths are a validation error -> Path.resolve throws OSError
+            os.chdir(old_cwd)
+            raise
+        else:
+            os.chdir(old_cwd)
+            return rel_path
 
     # Method: _getCanonicalTexturePath
     # Returns normalized (canonical) path to texture

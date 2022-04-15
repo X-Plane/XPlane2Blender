@@ -621,6 +621,13 @@ def load_handler(dummy):
     )
     logger.addTransport(XPlaneLogger.ConsoleTransport())
     # -------------------------------------------------------------------------
+    for scene in bpy.data.scenes:
+        # _search_list_idx is not updated because it would call onclick_dataref
+        # and is always changed on click. Stale data shouldn't be a problem.
+        scene.xplane.command_search_window_state.command_search_list.clear()
+        scene.xplane.command_search_window_state.command_prop_dest = ""
+        scene.xplane.dataref_search_window_state.dataref_search_list.clear()
+        scene.xplane.dataref_search_window_state.dataref_prop_dest = ""
     # --- Parse lights.txt file -----------------------------------------------
     try:
         xplane_lights_txt_parser.parse_lights_file()
