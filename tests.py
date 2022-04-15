@@ -194,8 +194,13 @@ def main(argv=None)->int:
                 # to be able to easily re-run it manually to get better error output
                 print(' '.join(blender_args))
 
+            # Environment variables - in order for --addons to work, we need to have OUR folder
+            # exist, and we need to have "addons/modules" simlink BACK to us to create the illusion
+            # of the directory structure Blender expects.
+            enviro={"BLENDER_USER_SCRIPTS": os.path.dirname(os.path.realpath(__file__))}
+
             #Run Blender, normalize output line endings because Windows is dumb
-            out = subprocess.check_output(blender_args, stderr = subprocess.STDOUT, universal_newlines=True) # type: str
+            out = subprocess.check_output(blender_args, stderr = subprocess.STDOUT, universal_newlines=True, env=enviro) # type: str
             if not argv.force_blender_debug:
                 # Ignore the junk!
                 pattern = "^(%s)" % "|".join(
