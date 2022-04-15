@@ -47,6 +47,12 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         default="",
     )
 
+    only_selected_roots: bpy.props.BoolProperty(
+        name = "Only Selected Roots",
+        description = "If true, only valid selected roots will be exported",
+        default=False
+    )
+
     export_is_relative: bpy.props.BoolProperty(
         name="Export Is Relative",
         description="Set to true when starting the export via the button (with or without the GUI on in case of unit testing)",
@@ -93,7 +99,9 @@ class EXPORT_OT_ExportXPlane(bpy.types.Operator, ExportHelper):
         bpy.context.view_layer.update()
 
         xplaneFiles = xplane_file.createFilesFromBlenderRootObjects(
-            bpy.context.scene, bpy.context.view_layer
+            bpy.context.scene, 
+            bpy.context.view_layer,
+            self.only_selected_roots            
         )
         for xplaneFile in xplaneFiles:
             if not self._writeXPlaneFile(xplaneFile, export_directory):
