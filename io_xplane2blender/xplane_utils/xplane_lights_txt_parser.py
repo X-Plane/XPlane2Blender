@@ -751,7 +751,8 @@ def parse_lights_file():
             if l.startswith((*OVERLOAD_TYPES, "LIGHT_PARAM_DEF"))
         ]
 
-        for line_num, line in lines:
+        for line_num_zero_based, line in lines:
+            line_num = line_num_zero_based+1       # artists expect to see one-based line numbers for fixing errors
             # print(line)
             try:
                 comment = line[line.index("#") :]
