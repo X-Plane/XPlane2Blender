@@ -149,6 +149,7 @@ class ColumnName(enum.Enum):
     B = "B"
     A = "A"
     SIZE = "SIZE"
+    THROW = "THROW"
     CELL_SIZE = "CELL_SIZE"
     CELL_ROW = "CELL_ROW"
     CELL_COL = "CELL_COL"
@@ -860,7 +861,7 @@ def parse_lights_file():
                         except KeyError:
                             return False
                         else:
-                            if (arg == "NOOP" or arg.startswith("sim/")) and i == len(
+                            if (arg == "NULL" or arg.startswith("sim/")) and i == len(
                                 light_args
                             ) - 1:
                                 return True
