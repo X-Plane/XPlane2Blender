@@ -116,7 +116,7 @@ def _make_parser() -> argparse.ArgumentParser:
     build_process_group.add_argument(
         "--keep-files",
         type=str,
-        default="not-ignored",
+        default="only-tracked",
         choices=["only-tracked", "not-ignored"],
         help="Select only tracked files (enforced for build-type='rc') or any not-ignored file",
     )
@@ -137,7 +137,7 @@ def _make_parser() -> argparse.ArgumentParser:
     test_args_group.add_argument(
         "--test-level",
         type=str,
-        default="all",
+        default="none",
         choices=["none", "all"],
         help="What parts of the test suite to run",
     )

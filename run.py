@@ -67,8 +67,8 @@ def main(argv=None) -> int:
     enviro={"BLENDER_USER_SCRIPTS": os.path.dirname(os.path.realpath(__file__))}
 
     # Run Blender, normalize output line endings because Windows is dumb
-    out = subprocess.check_output(
-        blender_args, stderr=subprocess.STDOUT, universal_newlines=True, env=enviro
+    out = subprocess.run(
+        blender_args, universal_newlines=True, env=enviro
     )  # type: str
 
 
