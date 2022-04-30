@@ -32,7 +32,7 @@ class TestParamLightParams(XPlaneTestCase):
 
     def test_unused_param_fail(self):
         out = self.exportLayer(3)
-        self.assertLoggerErrors(2)
+        self.assertLoggerErrors(1)
 
 runTestCases([TestParamLightParams])
 

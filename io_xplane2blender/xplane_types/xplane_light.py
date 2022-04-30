@@ -386,8 +386,26 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 for param in parsed_light.light_param_def
             }
             self.record_completed = parsed_light.best_overload()
+            
+            def is_number_ish(arg):
+                if not isinstance(arg, str):
+                    return True
+                if len(arg) >= 3:
+                    if arg[-2:] == "cd":
+                        try:
+                            int(arg[:-2])
+                            return True
+                        except ValueError:
+                            return False
+                else:
+                    try:
+                        int(arg[:-2])
+                        return True
+                    except ValueError:
+                        return False
+            
             for p_arg in filter(
-                lambda arg: isinstance(arg, str)
+                lambda arg: not is_number_ish(arg)
                 and not arg.startswith(("NOOP", "sim")),
                 self.record_completed,
             ):
@@ -718,4 +736,4 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
     @staticmethod
     def WIDTH_for_spill(spot_size: float):
-        return math.cos(spot_size * 0.5)
+        return max(0.0,math.cos(spot_size * 0.5))

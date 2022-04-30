@@ -7,9 +7,6 @@ POINT_COUNTS	0	0	0	0
 # 0 ROOT
 	# 1 Empty: unused_param_pass
 	# EMPTY: unused_param_pass	weight: 0
-		# 2 Light: 08_flood_merc_XYZTSB
-		# LIGHT: 08_flood_merc_XYZTSB	weight: 10000
-		LIGHT_PARAM	flood_merc_XYZTSB 0 0 -0 1 2 3    4   5.123  6
 		# 2 Light: 10_sodium_flood_XYZBTSS
 		# LIGHT: 10_sodium_flood_XYZBTSS	weight: 10000
 		LIGHT_PARAM	sodium_flood_XYZBTSS 0 0 -0 1 2 3    4   5  6    7.123

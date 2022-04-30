@@ -128,8 +128,14 @@ BILLBOARD_USES_SPILL_DXYZ = {
     "airplane_nav_bb",
     "airplane_strobe_bb",
     "airplane_beacon_bb",
+    "spot_params_bb_pm",
+    "spot_params_bb_day_pm"
 }
 
+BAD_LIGHTS = { 
+    "flood_merc_XYZTSB", 
+    "flood_LPS_XYZTSB"
+}
 
 class ColumnName(enum.Enum):
     """ColumnName are labels for the OVERLOAD_TYPE's columns.
@@ -149,7 +155,6 @@ class ColumnName(enum.Enum):
     B = "B"
     A = "A"
     SIZE = "SIZE"
-    THROW = "THROW"
     CELL_SIZE = "CELL_SIZE"
     CELL_ROW = "CELL_ROW"
     CELL_COL = "CELL_COL"
@@ -774,6 +779,9 @@ def parse_lights_file():
                 )
                 continue
 
+            if light_name in BAD_LIGHTS:
+                continue
+
             if not re.match("[A-Za-z0-9_]+", light_name):
                 logger.error(
                     f"{line_num}: Light name '{light_name}' must be upper/lower case letters, numbers, or underscores only"
@@ -861,7 +869,7 @@ def parse_lights_file():
                         except KeyError:
                             return False
                         else:
-                            if (arg == "NULL" or arg.startswith("sim/")) and i == len(
+                            if (arg == "NULL" or arg == "NOOP" or arg.startswith("sim/")) and i == len(
                                 light_args
                             ) - 1:
                                 return True

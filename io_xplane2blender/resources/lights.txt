@@ -137,30 +137,41 @@ BILLBOARD_HW	Tug_taillight		0.9		0.06	0.0		1		1500cd		1 7 6	0		0.5		-0.86	-0.4	0
 SPILL_HW_DIR	Tug_taillight		0.9		0.06	0.0		1.0		1500cd				0		-0.5	-0.86	0.7								0
 
 
-BILLBOARD_HW	headlight			0.95	0.95	1.0		0.9		40000cd		1 0 4	0		0		-0.7	0.3		0		0		0		0
+BILLBOARD_HW	headlight			0.95	0.95	1.0		0.9		40000cd		1 0 4	0		0		-1.0	0.3		0		0		0		0
 SPILL_HW_DIR	headlight			0.95	0.95	1.0		1.0		40000cd				0.087	-0.087	-0.992	0.965							0
 
-BILLBOARD_HW	headlight2			1.0	0.941	0.875		0.9		30000cd		1 1 0	0		0		-0.7	0.3		0		0		0		0
+BILLBOARD_HW	headlight2			1.0	0.941	0.875		0.9		30000cd		1 1 0	0		0		-1.0	0.3		0		0		0		0
 SPILL_HW_DIR	headlight2			1.0	0.941	0.875		1.0		30000cd				0.087	-0.087	-0.992	0.965							0
 
-BILLBOARD_HW	headlight3			0.9	0.941	0.875		0.9		35000cd		1 1 0	0		0		-0.7	0.3		0		0		0		0
+BILLBOARD_HW	headlight3			0.9	0.941	0.875		0.9		35000cd		1 1 0	0		0		-1.0	0.3		0		0		0		0
 SPILL_HW_DIR	headlight3			0.9	0.941	0.875		1.0		35000cd				0.087	-0.087	-0.992	0.965							0
 
 
-BILLBOARD_HW	HGV_headlight		1.0		0.95	0.9		1.0		32000cd		1 1 0	0		0		-0.7	0.3		0		0		0		0
+BILLBOARD_HW	HGV_headlight		1.0		0.95	0.9		1.0		32000cd		1 1 0	0		0		-1.0	0.3		0		0		0		0
 SPILL_HW_DIR	HGV_headlight		1.0		0.95	0.9		1.0		32000cd				0.087	-0.087	-0.992	0.965							0
 
-BILLBOARD_HW	Tug_headlight		1.0		0.95	0.9		1.0		28000cd		1 1 0	0		0		0.7		0.3		0		0		0		0
-SPILL_HW_DIR	Tug_headlight		1.0		0.95	0.9		1.0		28000cd				0.087	-0.087	0.992	0.965							0
+BILLBOARD_HW	Tug_headlight		1.0		0.95	0.9		1.0		35000cd		1 1 0	0		0		-1.0	0.3		0		0		0		0
+SPILL_HW_DIR	Tug_headlight		1.0		0.95	0.9		1.0		35000cd				0		-0.126	-0.992	0.965							0
 
-BILLBOARD_HW	train_headlight		0.95	0.95	0.8		1		65000cd		1 1 0	0		0.0		-1.5	-0.4	0		0		0		0
+BILLBOARD_HW	HGV_worklight		1.0		0.95	0.9		1.0		450cd		1 1 0	0		0		-1.0	0.15	0		0		0		0
+SPILL_HW_DIR	HGV_worklight		1.0		0.95	0.9		1.0		450cd				0		0		-1.0	0.15							0
+
+BILLBOARD_HW	HGV_roto_beacon_fwd	0.95	0.32	0.078	1.0		20000cd		1 1 0	0		0		-1		0.6		0		0		0		1	
+SPILL_HW_DIR	HGV_roto_beacon_fwd	0.95	0.32	0.078	0.8		10000cd				0		0		-1		0.6								1
+
+BILLBOARD_HW	HGV_roto_beacon_aft	0.95	0.32	0.078	1.0		20000cd		1 1 0	0		0		1		0.6		0		0		0		1
+SPILL_HW_DIR	HGV_roto_beacon_aft	0.95	0.32	0.078	0.8		10000cd				0		0		1		0.6								1
+
+BILLBOARD_HW	train_headlight		0.95	0.95	0.8		1		65000cd		1 1 0	0		0.0		-1		-0.4	0		0		0		0
 SPILL_HW_DIR	train_headlight		0.95	0.95	0.8		1.0		65000cd				0.0		-0.087	-0.992	0.965							0
 
-BILLBOARD_HW	HGV_roof_fwd		0.95	0.42	0.078	1		1300cd		1 5 1	0		0.5		-0.86	-0.5	0		0		0		0
-BILLBOARD_HW	HGV_roof_fwd_PB		0.95	0.42	0.078	1		1300cd		1 4 2	0		0.5		-0.86	-0.5	0		0		0		0
+BILLBOARD_HW	HGV_roof_fwd		0.95	0.32	0.078	1		1300cd		1 5 1	0		0.5		-0.86	-0.5	0		0		0		0
+BILLBOARD_HW	HGV_roof_fwd_PB		0.95	0.32	0.078	1		1300cd		1 4 2	0		0.5		-0.86	-0.5	0		0		0		0
 BILLBOARD_HW	HGV_roof_aft		0.90	0.06	0.0		1		1300cd		1 7 2	0		0.5		0.86	-0.5	0		0		0		0
-BILLBOARD_HW	HGV_roof_left		0.95	0.42	0.078	1		1300cd		1 5 1	-0.86	0		-0.5	-0.5	0		0		0		0
-BILLBOARD_HW	HGV_roof_right		0.95	0.42	0.078	1		1300cd		1 5 1	0.86	0		-0.5	-0.5	0		0		0		0
+BILLBOARD_HW	HGV_roof_left		0.95	0.32	0.078	1		1300cd		1 5 1	-0.86	0		-0.5	-0.5	0		0		0		0
+BILLBOARD_HW	HGV_roof_right		0.95	0.32	0.078	1		1300cd		1 5 1	0.86	0		-0.5	-0.5	0		0		0		0
+
+
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # V12 AIRPLANE LIGHTS
@@ -344,30 +355,32 @@ BILLBOARD_SW	airplane_nav_right		1	1	1	1	0.7	1	6	7	0	0	0	1	sim/graphics/animatio
 # STATIC aircraft NAV lights
 # heavy
 
-#			Name								R		G		B		A		Size	Cell		Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
+#			Name									R		G		B		A		Size	Cell		Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
-SPILL_HW_DIR	airplane_nav_tail_static_h		1		1		0.8		1.0		6000cd				0		0		1		0.2								0
-BILLBOARD_HW	airplane_nav_tail_static_h		1		1		0.8		1.0		6000cd	1 5	7		0		0		1		0.2		0		0		0		1
+SPILL_HW_DIR		airplane_nav_tail_static_h		1		1		0.8		1.0		6000cd				0		0		1		0.2								0
+BILLBOARD_HW		airplane_nav_tail_static_h		1		1		0.8		1.0		6000cd	1 5	7		0		0		1		0.2		0		0		0		1
 
-SPILL_HW_DIR	airplane_nav_left_static_h		0.9		0.1		0		1.0		6000cd				-0.95	0		-0.31	0.2								0
-BILLBOARD_HW	airplane_nav_left_static_h		0.9		0.1		0		1.0		6000cd	1 7	7		-0.95	0		-0.31	0.2		0		0		0		1
+SPILL_HW_DIR		airplane_nav_left_static_h		0.9		0.1		0		1.0		6000cd				-0.95	0		-0.31	0.2								0
+BILLBOARD_HW		airplane_nav_left_static_h		0.9		0.1		0		1.0		6000cd	1 7	7		-0.95	0		-0.31	0.2		0		0		0		1
 
 
-SPILL_HW_DIR	airplane_nav_right_static_h		0.02	0.74	0.36	1.0		6000cd				0.95	0		-0.31	0.2								0
-BILLBOARD_HW	airplane_nav_right_static_h		0.02	0.74	0.36	1.0		6000cd	1 6	7		0.95	0		-0.31	0.2		0		0		0		1
+SPILL_HW_DIR		airplane_nav_right_static_h		0.02	0.74	0.36	1.0		6000cd				0.95	0		-0.31	0.2								0
+BILLBOARD_HW		airplane_nav_right_static_h		0.02	0.74	0.36	1.0		6000cd	1 6	7		0.95	0		-0.31	0.2		0		0		0		1
 
 # normal
 
-SPILL_HW_DIR	airplane_nav_tail_static		1		1		0.8		1.0		3000cd				0		0		1		0.2								0
-BILLBOARD_HW	airplane_nav_tail_static		1		1		0.8		1.0		3000cd	1 5	7		0		0		1		0.2		0		0		0		1
+SPILL_HW_DIR		airplane_nav_tail_static		1		1		0.8		1.0		3000cd				0		0		1		0.2								0
+BILLBOARD_HW		airplane_nav_tail_static		1		1		0.8		1.0		3000cd	1 5	7		0		0		1		0.2		0		0		0		1
 
-SPILL_HW_DIR	airplane_nav_left_static		0.9		0.1		0		1.0		3000cd				-0.95	0		-0.31	0.2								0
-BILLBOARD_HW	airplane_nav_left_static		0.9		0.1		0		1.0		3000cd	1 7	7		-0.95	0		-0.31	0.2		0		0		0		1
+SPILL_HW_DIR		airplane_nav_left_static		0.9		0.1		0		1.0		3000cd				-0.95	0		-0.31	0.2								0
+BILLBOARD_HW		airplane_nav_left_static		0.9		0.1		0		1.0		3000cd	1 7	7		-0.95	0		-0.31	0.2		0		0		0		1
 
-SPILL_HW_DIR	airplane_nav_right_static		0.02	0.74	0.36	1.0		3000cd				0.95	0		-0.31	0.2								0
-BILLBOARD_HW	airplane_nav_right_static		0.02	0.74	0.36	1.0		3000cd	1 6	7		0.95	0		-0.31	0.2		0		0		0		1
+SPILL_HW_DIR		airplane_nav_right_static		0.02	0.74	0.36	1.0		3000cd				0.95	0		-0.31	0.2								0
+BILLBOARD_HW		airplane_nav_right_static		0.02	0.74	0.36	1.0		3000cd	1 6	7		0.95	0		-0.31	0.2		0		0		0		1
 
-
+LIGHT_PARAM_DEF		airplane_generic_static		8	R		G		B				INTENSITY 			DX		DY		DZ		WIDTH
+BILLBOARD_HW		airplane_generic_static			R		G		B		1.0		INTENSITY	1 6 5	DX		DY		DZ		WIDTH	0		0		0		0
+SPILL_HW_DIR		airplane_generic_static			R		G		B		1.0		INTENSITY			DX		DY		DZ		WIDTH							0
 
 
 #
@@ -383,9 +396,9 @@ SPILL_SW	airplane_inst_sp		R	G	B	INDEX	SIZE	DX	DY	DZ	WIDTH	sim/graphics/animatio
 # plugin system -- if it tries to draw the very complex lights above, it won't work.  So Plane-Maker users these instead.
 #
 BILLBOARD_SW	PLN_airplane_landing		1	1	1	1	2.5	1	1	7	0	0	0	1	sim/graphics/animation/lights/airplane_landing_light
-BILLBOARD_SW	PLN_airplane_taxi		1	1	1	1	2	1	0	7	0	0	0	1	sim/graphics/animation/lights/airplane_taxi_light
-BILLBOARD_SW	PLN_airplane_beacon		1	0	0	1	1.0	1	7	7	0	0	0	1	sim/graphics/animation/lights/airplane_beacon_light
-BILLBOARD_SW	PLN_airplane_strobe		1	1	1	1	1	1	3	7	0	0	0	1	sim/graphics/animation/lights/airplane_strobe_light
+BILLBOARD_SW	PLN_airplane_taxi			1	1	1	1	2	1	0	7	0	0	0	1	sim/graphics/animation/lights/airplane_taxi_light
+BILLBOARD_SW	PLN_airplane_beacon			1	0	0	1	1.0	1	7	7	0	0	0	1	sim/graphics/animation/lights/airplane_beacon_light
+BILLBOARD_SW	PLN_airplane_strobe			1	1	1	1	1	1	3	7	0	0	0	1	sim/graphics/animation/lights/airplane_strobe_light
 BILLBOARD_SW	PLN_airplane_nav_tail		1	1	1	1	1	1	5	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light
 BILLBOARD_SW	PLN_airplane_nav_left		1	0	0	1	1.0	1	7	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light
 BILLBOARD_SW	PLN_airplane_nav_right		0	1	0	1	1.0	1	6	7	0	0	0	1	sim/graphics/animation/lights/airplane_navigation_light
@@ -462,18 +475,15 @@ BILLBOARD_HW	apt_beacon_yellow_glow		1.0		0.55	0.1		1.0		3			2 5	2	0		4		-56		-5
 BILLBOARD_HW	apt_beacon_yellow_glow		1.0		0.55	0.1		1.0		3			2 5	2	0		-4		-56		-55		0		0		0		0
 
 
-BILLBOARD_SW	VASI		100	-99	0.0	0.0	0.7	1	4	0	0	0	0	1	sim/graphics/animation/lights/vasi_papi
-## for this dataref:						R_white	G_white B_white	M	Size	Cell	R_red	G_red	B_red	K		(M is the rescale multiplier, K is the rescale constant)
-BILLBOARD_SW	VASI		0.8	0.75	1.0	1000	2.0	2	7	1	1.0	0.2	0.3	-998.8	sim/graphics/animation/lights/vasi_papi_tint
-
-BILLBOARD_SW	VASI3		1.8	-0.9	0.5	0.5	1.2	1	6	0	0	0	0	1	sim/graphics/animation/lights/vasi3
+BILLBOARD_SW	VASI					1		1		1		1		50000cd			1 4 0	0		0		0		1										sim/graphics/animation/lights/vasi_papi
+BILLBOARD_SW	VASI3					1		1		1		1		50000cd			1 6 0	0		0		0		1										sim/graphics/animation/lights/vasi3
 
 # Ben - a good colour for strobe spill is RGBA=0.745, 0.725, 1.0, 0.1.  size = 5.0,  width = 0.  (big area, low level).
 
 #				Name					R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
-BILLBOARD_SW	appch_rabbit_o			0.99	0.97	1.33	1		100000cd		1 2	6	0		0		0		1										sim/graphics/animation/lights/rabbit
-SPILL_SW		appch_rabbit_o			0.99	0.97	1.33	0.9		100000cd				0		0		0		1										sim/graphics/animation/lights/rabbit
+BILLBOARD_SW	appch_rabbit_o			0.99	0.97	1.33	1		100000cd	1 2	6	0		0		0		1										sim/graphics/animation/lights/rabbit
+SPILL_SW		appch_rabbit_o			0.99	0.97	1.33	0.9		100000cd			0		0		0		1										sim/graphics/animation/lights/rabbit
 
 BILLBOARD_SW	appch_rabbit_u			0.99	0.97	1.33	1		300000cd	1 2	6	0		0.071	0.991	0.92									sim/graphics/animation/lights/rabbit
 SPILL_SW		appch_rabbit_u			0.99	0.97	1.33	0.9		300000cd			0		0.071	0.991	0.92									sim/graphics/animation/lights/rabbit
@@ -510,9 +520,9 @@ BILLBOARD_HW	appch_r				3.61	0.31	0.14	1		20000cd		1 3	6	0		0		1		0.85	0		0		0		
 SPILL_HW_DIR	appch_r				3.61	0.31	0.14	1		20000cd				0		0		1		0.85							1
 
 BILLBOARD_HW	inset_appch_w		1.36	0.92	0.78	1		87500cd		1 5	2	0		-0.118	0.993	0.924	0		0		0		1
-SPILL_HW_DIR	inset_appch_w_sp	1.36	0.92	0.78	0.4		87500cd				0		-0.118	0.993	0.924							1
+SPILL_HW_DIR	inset_appch_w_sp	1.36	0.92	0.78	0.5		87500cd				0		-0.118	0.993	0.924							1
 BILLBOARD_HW	inset_appch_r		3.61	0.31	0.14	1		87500cd		1 7	2	0		-0.118	0.993	0.924	0		0		0		1
-SPILL_HW_DIR	inset_appch_r_sp	3.61	0.31	0.14	0.4		87500cd				0		-0.118	0.993	0.924							1
+SPILL_HW_DIR	inset_appch_r_sp	3.61	0.31	0.14	0.5		87500cd				0		-0.118	0.993	0.924							1
 
 SPILL_GND		inset_appch_w_halo		1	1	4	4
 SPILL_GND		inset_appch_r_halo		1	1	6	4
@@ -520,19 +530,19 @@ SPILL_GND		inset_appch_r_halo		1	1	6	4
 #				Name			R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
 BILLBOARD_HW	edge_w			1.39	0.91	0.77	1		10000cd		1 0 5	0		0.071	0.991	0.278	0		0		0		1
-SPILL_HW_DIR	edge_w			1.39	0.91	0.77	0.8		10000cd				0		0.071	0.991	0.278							1
+SPILL_HW_DIR	edge_w			1.39	0.91	0.77	0.85	10000cd				0		0.071	0.991	0.278							1
 BILLBOARD_HW	edge_w_rev		1.39	0.91	0.77	1		10000cd		1 0 5	0		0.071	-0.991	0.278	0		0		0		1	
-SPILL_HW_DIR	edge_w_rev		1.39	0.91	0.77	0.8		10000cd				0		0.071	-0.991	0.278							1
+SPILL_HW_DIR	edge_w_rev		1.39	0.91	0.77	0.85	10000cd				0		0.071	-0.991	0.278							1
 
 BILLBOARD_HW	edge_y			1.75	0.88	0.0		1		5000cd		1 1	5	0		0.071	0.991	0.278	0		0		0		1
-SPILL_HW_DIR	edge_y			1.75	0.88	0.0		0.8		5000cd				0		0.071	0.991	0.278							1
+SPILL_HW_DIR	edge_y			1.75	0.88	0.0		0.85	5000cd				0		0.071	0.991	0.278							1
 BILLBOARD_HW	edge_y_rev		1.75	0.88	0.0		1		5000cd		1 1 5	0		0.071	-0.991	0.278	0		0		0		1
-SPILL_HW_DIR	edge_y_rev		1.75	0.88	0.0		0.8		5000cd				0		0.071	-0.991	0.278							1
+SPILL_HW_DIR	edge_y_rev		1.75	0.88	0.0		0.85	5000cd				0		0.071	-0.991	0.278							1
 
 BILLBOARD_HW	edge_r			4.62	0.0		0.24	1		2000cd		1 2 5	0		0.071	0.991	0.278	0		0		0		1
-SPILL_HW_DIR	edge_r			4.62	0.0		0.24	0.8		2000cd				0		0.071	0.991	0.278							1
+SPILL_HW_DIR	edge_r			4.62	0.0		0.24	0.85	2000cd				0		0.071	0.991	0.278							1
 BILLBOARD_HW	edge_r_rev		4.62	0.0		0.24	1		2000cd		1 2 5	0		-0.071	-0.991	0.278	0		0		0		1
-SPILL_HW_DIR	edge_r_rev		4.62	0.0		0.24	0.8		2000cd				0		-0.071	-0.991	0.278							1
+SPILL_HW_DIR	edge_r_rev		4.62	0.0		0.24	0.85	2000cd				0		-0.071	-0.991	0.278							1
 
 SPILL_GND		edge_ww_halo		1	1	0	3
 SPILL_GND		edge_yy_halo		1	1	1	3
@@ -544,19 +554,19 @@ SPILL_GND		edge_r_halo			1	1	2	4
 #				Name				R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
 BILLBOARD_HW	inset_edge_w		1.36	0.92	0.78	1.0		10000cd		1 5	2	0.0		0.12	0.989	0.82	0		0		0		1
-SPILL_HW_DIR	inset_edge_w_sp		1.36	0.92	0.78	0.8		10000cd				0.0		0.12	0.989	0.82							1
+SPILL_HW_DIR	inset_edge_w_sp		1.36	0.92	0.78	0.85	10000cd				0.0		0.12	0.989	0.82							1
 BILLBOARD_HW	inset_edge_w_rev	1.36	0.92	0.78	1.0		10000cd		1 5	2	0		0.12	-0.989	0.82	0		0		0		1
-SPILL_HW_DIR	inset_edge_w_rev_sp	1.36	0.92	0.78	0.8		10000cd				0.0		0.12	-0.989	0.82							1
+SPILL_HW_DIR	inset_edge_w_rev_sp	1.36	0.92	0.78	0.85	10000cd				0.0		0.12	-0.989	0.82							1
 
 BILLBOARD_HW	inset_edge_y		1.67	0.90	0.0		1.0		5000cd		1 5 1	0		0.12	0.989	0.82	0		0		0		1
-SPILL_HW_DIR	inset_edge_y_sp		1.67	0.90	0.0		0.8		5000cd				0.0		0.12	0.989	0.82							1
+SPILL_HW_DIR	inset_edge_y_sp		1.67	0.90	0.0		0.85	5000cd				0.0		0.12	0.989	0.82							1
 BILLBOARD_HW	inset_edge_y_rev	1.67	0.90	0.0		1.0		5000cd		1 5 1	0		0.12	-0.989	0.82	0		0		0		1
-SPILL_HW_DIR	inset_edge_y_rev_sp	1.67	0.90	0.0		0.8		5000cd				0.0		0.12	-0.989	0.82							1
+SPILL_HW_DIR	inset_edge_y_rev_sp	1.67	0.90	0.0		0.85	5000cd				0.0		0.12	-0.989	0.82							1
 
 BILLBOARD_HW	inset_edge_r		3.61	0.31	0.14	1.0		1500cd		1 7	2	0		0.12	0.989	0.82	0		0		0		1
-SPILL_HW_DIR	inset_edge_r_sp		3.61	0.31	0.14	0.8		1500cd				0.0		0.12	0.989	0.82							1
+SPILL_HW_DIR	inset_edge_r_sp		3.61	0.31	0.14	0.85	1500cd				0.0		0.12	0.989	0.82							1
 BILLBOARD_HW	inset_edge_r_rev	3.61	0.31	0.14	1.0		1500cd		1 7	2	0		0.12	-0.989	0.82	0		0		0		1
-SPILL_HW_DIR	inset_edge_r_rev_sp	3.61	0.31	0.14	0.8		1500cd				0.0		0.12	-0.989	0.82							1
+SPILL_HW_DIR	inset_edge_r_rev_sp	3.61	0.31	0.14	0.85	1500cd				0.0		0.12	-0.989	0.82							1
 
 SPILL_GND		inset_edge_w_halo			1	1	4	4
 SPILL_GND_REV	inset_edge_w_rev_halo		1	1	4	4
@@ -586,22 +596,22 @@ SPILL_GND_REV	RCLS_r_rev_halo		1	1	6	4
 #				Name			R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
 BILLBOARD_HW	taxi_b			0.42	0.42	8.43	1.0		60cd		1 3 5	0.0		0.0		0.0		1.0		0		0		0		1
-SPILL_HW_DIR	taxi_b			0.42	0.42	8.43	0.4		60cd				0.0		0.0		0.0		1.0								1
+SPILL_HW_DIR	taxi_b			0.42	0.42	8.43	0.5		60cd				0.0		0.0		0.0		1.0								1
 BILLBOARD_HW	taxi_r			3.61	0.31	0.14	1.0		300cd		1 2	5	0.0		0.0		0.0		1.0		0		0		0		1
-SPILL_HW_DIR	taxi_r			3.61	0.31	0.14	0.6		300cd				0.0		0.0		0.0		1.0								1
+SPILL_HW_DIR	taxi_r			3.61	0.31	0.14	0.7		300cd				0.0		0.0		0.0		1.0								1
 
 SPILL_GND		taxi_b_halo		1	1	3	3
 SPILL_GND		taxi_r_halo		1	1	2	3
 
 BILLBOARD_HW	taxi_g			0.0		1.27	1.27	1.0		200cd		1 7	1	0.0		0.087	0.996	0.866	0		0		0		1
-SPILL_HW_DIR	taxi_g_sp		0.0		1.27	1.27	0.3		200cd				0.0		0.087	0.996	0.866							1
+SPILL_HW_DIR	taxi_g_sp		0.0		1.27	1.27	0.4		200cd				0.0		0.087	0.996	0.866							1
 BILLBOARD_HW	taxi_g_rev		0.0		1.27	1.27	1.0		200cd		1 7	1	0.0		0.087	-0.996	0.866	0		0		0		1
-SPILL_HW_DIR	taxi_g_rev_sp	0.0		1.27	1.27	0.3		200cd				0.0		0.087	-0.996	0.866							1
+SPILL_HW_DIR	taxi_g_rev_sp	0.0		1.27	1.27	0.4		200cd				0.0		0.087	-0.996	0.866							1
 
 BILLBOARD_HW	taxi_y			1.56	0.93	0.0		1.0		200cd		1 5 1	0.0		0.087	0.996	0.866	0		0		0		1
-SPILL_HW_DIR	taxi_y_sp		1.56	0.93	0.0		0.3		200cd				0.0		0.087	0.996	0.866							1
+SPILL_HW_DIR	taxi_y_sp		1.56	0.93	0.0		0.4		200cd				0.0		0.087	0.996	0.866							1
 BILLBOARD_HW	taxi_y_rev		1.56	0.93	0.0		1.0		200cd		1 5	1	0.0		0.087	-0.996	0.866	0		0		0		1
-SPILL_HW_DIR	taxi_y_rev_sp	1.56	0.93	0.0		0.3		200cd				0.0		0.087	-0.996	0.866							1
+SPILL_HW_DIR	taxi_y_rev_sp	1.56	0.93	0.0		0.4		200cd				0.0		0.087	-0.996	0.866							1
 
 SPILL_GND		taxi_g_halo			0.7	1	5	4
 SPILL_GND		taxi_y_halo			0.7	1	7	4
@@ -639,41 +649,49 @@ SPILL_SW		hold_short_y2	1.99	0.80	0.10	1.0		1000cd				0.0		0.174	0.985	0.45					
 
 ------
 
-BILLBOARD_HW	heli_y		1.0	1.0	1.0	1	0.7	1	1	5	0.0	0.0	0.0	1.0	0	0	0	1
-SPILL_HW_DIR	heli_y		1.0	0.65	0.0	0.6	1.5	0	1	0	1.0	1
-SPILL_GND		heli_y_halo		1	1	1	3
+BILLBOARD_HW	heli_y					1.48	0.96	0.0		1.0		200cd		1 1	5	0.0		0.0		0.0		1.0		0		0		0		0
+SPILL_HW_DIR	heli_y					1.48	0.96	0.0		1.0		67cd				0.0		0.0		0.0		1.0								0
+SPILL_GND		heli_y_halo				1	1	1	3
 
-BILLBOARD_HW	inset_heli_g		1.0	1.0	1.0	1	0.7	1	6	2	0.0	0.5	0.0	0.5	0	0	0	0
-SPILL_HW_DIR	inset_heli_g		0.224	0.90	0.39	1.0	2.0	0	1	0	1.0	0
+BILLBOARD_HW	inset_heli_y			1.46	0.96	0.0		1.0		200cd		1 3	0	0.0		0.0		0.0		1.0		0		0		0		0
+SPILL_HW_DIR	inset_heli_y			1.46	0.96	0.0		1.0		67cd				0.0		0.0		0		1.0								0
 
-BILLBOARD_HW	heli_g		1.0	1.0	1.0	1	0.7	1	5	5	0.0	0.0	0.0	1.0	0	0	0	0
-SPILL_HW_DIR	heli_g		0.224	0.90	0.5	0.5	1.5	0	1	0	1.0	0
+BILLBOARD_HW	heli_g					0.31	1.24	0.69	1.0		175cd		1 5	5	0.0		0.0		0.0		1.0		0		0		0		0
+SPILL_HW_DIR	heli_g					0.31	1.24	0.69	1.0		35cd				0.0		0.0		0.0		1.0								0
 
-BILLBOARD_HW	inset_heli_y		1.0	1.0	1.0	1	0.7	1	3	0	0.0	0.5	0.0	0.5	0	0	0	0
-SPILL_HW_DIR	inset_heli_y		1.0	0.66	0.0	1.0	2.0	0	1	0	1.0	0
+BILLBOARD_HW	inset_heli_g			0.31	1.25	0.54	1.0		175cd		1 6	2	0.0		0.0		0.0		1.0		0		0		0		0
+SPILL_HW_DIR	inset_heli_g			0.31	1.25	0.54	1.0		35cd				0.0		0.0		0.0		1.0								0
 
-BILLBOARD_HW	hospital_helipad_blue		1.0	1.0	1.0	1.0	0.6	1	3	5	0	0	0	1.0	0	0	0	0
-SPILL_HW_DIR	hospital_helipad_blue		0.1	0.1	1.0	1.0	0.8	0.0	1.0	0.0	1.0	0
+BILLBOARD_HW	hospital_helipad_blue	0.61	0.61	6.06	1.0		75cd		1 3	5	0.0		0.0		0.0		1.0		0		0		0		0
+SPILL_HW_DIR	hospital_helipad_blue	0.61	0.61	6.06	1.0		15cd				0.0		0.0		0.0		1.0								0
 
-BILLBOARD_HW	inset_heli_b		1.0	1.0	1.0	1	0.5	1	3	5	0.0	0.5	0.0	0.5	0	0	0	0
-SPILL_HW_DIR	inset_heli_b		0.1	0.1	1.0	1.0	1.0	0.0	1.0	0.0	1.0	0
+BILLBOARD_HW	inset_heli_b			0.61	0.61	6.06	1.0		75cd		1 3	5	0.0		0.0		0.0		1.0		0		0		0		0
+SPILL_HW_DIR	inset_heli_b			0.61	0.61	6.06	1.0		15cd				0.0		0.0		0.0		1.0								0
+
+LIGHT_PARAM_DEF	helipad_flood_pm		5	INTENSITY	DX	DY	DZ	WIDTH
+SPILL_HW_DIR	helipad_flood_pm		0.996	0.945	0.882	1.0		INTENSITY			DX		DY		DZ		WIDTH							0
+BILLBOARD_HW	helipad_flood_pm		0.996	0.945	0.882	1.0		INTENSITY	1 2	6	DX		DY		DZ		WIDTH	0		0		0		0
+
+# LEGACY
+
+LIGHT_PARAM_DEF	helipad_flood_bb		4	DX	DY	DZ	WIDTH
+BILLBOARD_HW	helipad_flood_bb		1		1		1		1		0.5			1 2	6	DX		DY		DZ		WIDTH	0		0		0		0
 
 LIGHT_PARAM_DEF	helipad_flood_sp		6	A	SIZE	DX	DY	DZ	WIDTH
 SPILL_HW_DIR	helipad_flood_sp		0.996	0.945	0.882	A	SIZE	DX	DY	DZ	WIDTH	0
-LIGHT_PARAM_DEF	helipad_flood_bb		4	DX	DY	DZ	WIDTH
-BILLBOARD_HW	helipad_flood_bb		1	1	1	1	0.5	1	2	6	DX	DY	DZ	WIDTH	0	0	0	0
+
 
 #				Name			R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
-BILLBOARD_HW	thresh_r		1.0		0.086	0.039	1		2500cd		1 3	6	0		0		1		0.9		0		0		0		1
-SPILL_HW_DIR	thresh_r		1.0		0.086	0.039	0.5		2500cd				0		0		1		0.9								1
-BILLBOARD_HW	thresh_r_rev	1.0		0.086	0.039	1		2500cd		1 3	6	0		0		-1		0.9		0		0		0		1
-SPILL_HW_DIR	thresh_r_rev	1.0		0.086	0.039	0.5		2500cd				0		0		-1		0.9								1
+BILLBOARD_HW	thresh_r		3.61	0.31	0.14	1		2500cd		1 3	6	0		0		1		0.9		0		0		0		1
+SPILL_HW_DIR	thresh_r		3.61	0.31	0.14	0.5		2500cd				0		0		1		0.9								1
+BILLBOARD_HW	thresh_r_rev	3.61	0.31	0.14	1		2500cd		1 3	6	0		0		-1		0.9		0		0		0		1
+SPILL_HW_DIR	thresh_r_rev	3.61	0.31	0.14	0.5		2500cd				0		0		-1		0.9								1
 
-BILLBOARD_HW	thresh_g		0.06	0.9		1.0		1		3200cd		1 5	6	0		0		1		0.9		0		0		0		1
-SPILL_HW_DIR	thresh_g		0.06	0.9		1.0		0.5		3200cd				0		0		1		0.9								1
-BILLBOARD_HW	thresh_g_rev	0.06	0.9		1.0		1		3200cd		1 5	6	0		0		-1		0.9		0		0		0		1
-SPILL_HW_DIR	thresh_g_rev	0.06	0.9		1.0		0.5		3200cd				0		0		-1		0.9								1	
+BILLBOARD_HW	thresh_g		0.21	1.29	0.51	1		3200cd		1 5	6	0		0		1		0.9		0		0		0		1
+SPILL_HW_DIR	thresh_g		0.21	1.29	0.51	0.5		3200cd				0		0		1		0.9								1
+BILLBOARD_HW	thresh_g_rev	0.21	1.29	0.51	1		3200cd		1 5	6	0		0		-1		0.9		0		0		0		1
+SPILL_HW_DIR	thresh_g_rev	0.21	1.29	0.51	0.5		3200cd				0		0		-1		0.9								1	
 
 SPILL_GND		thresh_g_halo		1	1	1	4
 SPILL_GND_REV	thresh_g_rev_halo	1	1	1	4
@@ -684,15 +702,15 @@ SPILL_GND		thresh_rr_halo		1	1	2	3
 
 #				Name					R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
-BILLBOARD_HW	inset_thresh_r			1.0		0.0		0.051	1		2500cd		1 7 2	0		-0.0127	0.993	0.831	0		0		0		1
-SPILL_HW_DIR	inset_thresh_r_sp		1.0		0.0		0.051	0.5		2500cd				0		-0.0127	0.993	0.831							1
-BILLBOARD_HW	inset_thresh_r_rev		1.0		0.0		0.051	1		2500cd		1 7	2	0		-0.0127	-0.993	0.831	0		0		0		1
-SPILL_HW_DIR	inset_thresh_r_rev_sp	1.0		0.0		0.051	0.5		2500cd				0		-0.0127	-0.993	0.831							1
+BILLBOARD_HW	inset_thresh_r			4.62	0.0		0.24	1		2500cd		1 7 2	0		-0.0127	0.993	0.831	0		0		0		1
+SPILL_HW_DIR	inset_thresh_r_sp		4.62	0.0		0.24	0.5		2500cd				0		-0.0127	0.993	0.831							1
+BILLBOARD_HW	inset_thresh_r_rev		4.62	0.0		0.24	1		2500cd		1 7	2	0		-0.0127	-0.993	0.831	0		0		0		1
+SPILL_HW_DIR	inset_thresh_r_rev_sp	4.62	0.0		0.24	0.5		2500cd				0		-0.0127	-0.993	0.831							1
 
-BILLBOARD_HW	inset_thresh_g			0.0		1.0		1.0		1		3300cd		1 7	1	0		-0.0127	0.993	0.831	0		0		0		1
-SPILL_HW_DIR	inset_thresh_g_sp		0.0		1.0		1.0		0.5		3300cd				0		-0.0127	0.993	0.831							1
-BILLBOARD_HW	inset_thresh_g_rev		0.0		1.0		1.0		1		3300cd		1 7	1	0		-0.0127	-0.993	0.831	0		0		0		1
-SPILL_HW_DIR	inset_thresh_g_rev_sp	0.0		1.0		1.0		0.5		3300cd				0		-0.0127	-0.993	0.831							1
+BILLBOARD_HW	inset_thresh_g			0.0		1.29	1.09	1		3300cd		1 7	1	0		-0.0127	0.993	0.831	0		0		0		1
+SPILL_HW_DIR	inset_thresh_g_sp		0.0		1.29	1.09	0.5		3300cd				0		-0.0127	0.993	0.831							1
+BILLBOARD_HW	inset_thresh_g_rev		0.0		1.29	1.09	1		3300cd		1 7	1	0		-0.0127	-0.993	0.831	0		0		0		1
+SPILL_HW_DIR	inset_thresh_g_rev_sp	0.0		1.29	1.09	0.5		3300cd				0		-0.0127	-0.993	0.831							1
 
 SPILL_GND		inset_thresh_g_halo			1	1	5	4
 SPILL_GND_REV	inset_thresh_g_rev_halo		1	1	5	4
@@ -700,78 +718,155 @@ SPILL_GND		inset_thresh_r_halo			1	1	6	4
 SPILL_GND_REV	inset_thresh_r_rev_halo		1	1	6	4
 
 ## These are for the wind turbine landing pad:
-BILLBOARD_SW	pad_SGSI_lo		140	220	-4	2.5	1	1	5	0	0	0	0	1	sim/graphics/animation/lights/fresnel_horizontal
-BILLBOARD_SW	pad_SGSI_on		140	220	2.5	3.5	1	1	6	0	0	0	0	1	sim/graphics/animation/lights/fresnel_horizontal
-BILLBOARD_SW	pad_SGSI_hi		140	220	3.5	5	1	1	7	0	0	0	0	1	sim/graphics/animation/lights/fresnel_horizontal
-SPILL_HW_DIR	pad_flood		1.0	0.95	0.95	0.5	10	0	-0.05	0.99	0.7	0
+BILLBOARD_SW	pad_SGSI_lo				1.8		0.16	0		0		10000cd		1 5	0	0		0		0		1										sim/graphics/animation/lights/fresnel_horizontal
+BILLBOARD_SW	pad_SGSI_on				1.5		0.6		0		1		10000cd		1 6	0	0		0		0		1										sim/graphics/animation/lights/fresnel_horizontal
+BILLBOARD_SW	pad_SGSI_hi				0.11	1.35	0.11	2		10000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_horizontal
+SPILL_HW_DIR	pad_flood				1.0		0.95	0.95	0.5		10					0		-0.05	0.99	0.7								0
 
 ## Flashing morse "H" white heliport beacon (four flashes at 0.1333 second intervals, repeating every 2 seconds):
 
-BILLBOARD_HW	heli_morse_beacon		1	1	1	1	1.4	2	6	1	0	0	0	1	0.5	0.0	20	1
-BILLBOARD_HW	heli_morse_beacon		1	1	1	1	1.4	2	6	1	0	0	0	1	0.5	0.133	20	1
-BILLBOARD_HW	heli_morse_beacon		1	1	1	1	1.4	2	6	1	0	0	0	1	0.5	0.266	20	1
-BILLBOARD_HW	heli_morse_beacon		1	1	1	1	1.4	2	6	1	0	0	0	1	0.5	0.400	20	1
+#				Name					R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
-SPILL_HW_FLA	heli_morse_beacon		1	1	1	0.2	1.0	0.5	0.0	20	1
-SPILL_HW_FLA	heli_morse_beacon		1	1	1	0.2	1.0	0.5	0.133	20	1
-SPILL_HW_FLA	heli_morse_beacon		1	1	1	0.2	1.0	0.5	0.266	20	1
-SPILL_HW_FLA	heli_morse_beacon		1	1	1	0.2	1.0	0.5	0.400	20	1
+BILLBOARD_HW	heli_morse_beacon		0.99	0.97	1.33	1		12000cd		2 6 1	0		0		0		1		0.5		0.0		20		1
+BILLBOARD_HW	heli_morse_beacon		0.99	0.97	1.33	1		12000cd		2 6	1	0		0		0		1		0.5		0.133	20		1
+BILLBOARD_HW	heli_morse_beacon		0.99	0.97	1.33	1		12000cd		2 6	1	0		0		0		1		0.5		0.266	20		1
+BILLBOARD_HW	heli_morse_beacon		0.99	0.97	1.33	1		12000cd		2 6	1	0		0		0		1		0.5		0.400	20		1
+
+SPILL_HW_FLA	heli_morse_beacon		0.99	0.97	1.33	0.2		12000cd												0.5		0.0		20		1
+SPILL_HW_FLA	heli_morse_beacon		0.99	0.97	1.33	0.2		12000cd												0.5		0.133	20		1
+SPILL_HW_FLA	heli_morse_beacon		0.99	0.97	1.33	0.2		12000cd												0.5		0.266	20		1
+SPILL_HW_FLA	heli_morse_beacon		0.99	0.97	1.33	0.2		12000cd												0.5		0.400	20		1
 
 ## Three colour, single-lamp heliport beacon (all LED, no moving parts, white - yellow - green))
-LIGHT_PARAM_DEF	heli_3_col_beacon		2	SIZE	UNUSED
-# core:
-BILLBOARD_HW	heli_3_col_beacon		1	1	1	1	0.7	1	4	0	0	0	0	1	0.2	0.0	1240	1
-BILLBOARD_HW	heli_3_col_beacon		1.0	1	1	1	0.7	1	7	0	0	0	0	1	0.2	3.333	1240	1
-BILLBOARD_HW	heli_3_col_beacon		1	1	1	1	0.7	1	6	0	0	0	0	1	0.2	1.666	1240	1
+LIGHT_PARAM_DEF	heli_3_col_beacon_pm	2	INTENSITY	UNUSED
 
-SPILL_HW_FLA	heli_3_col_beacon		1	1	1	0.3	SIZE	0.2	0.0	1240	1
-SPILL_HW_FLA	heli_3_col_beacon		1.0	0.73	0.0	0.4	SIZE	0.2	3.333	1240	1
-SPILL_HW_FLA	heli_3_col_beacon		0.224	0.90	0.39	0.4	SIZE	0.2	1.666	1240	1
+BILLBOARD_HW	heli_3_col_beacon_pm	0.99	0.97	1.33	1		INTENSITY	1 4	0	0		0		0		1		0.2		0.0		1240	1
+BILLBOARD_HW	heli_3_col_beacon_pm	1.36	0.99	0.0		1		INTENSITY	1 7	0	0		0		0		1		0.2		3.333	1240	1
+BILLBOARD_HW	heli_3_col_beacon_pm	0.31	1.25	0.54	1		INTENSITY	1 6	0	0		0		0		1		0.2		1.666	1240	1
+
+SPILL_HW_FLA	heli_3_col_beacon_pm	0.99	0.97	1.33	0.3		INTENSITY											0.2		0.0		1240	1
+SPILL_HW_FLA	heli_3_col_beacon_pm	1.36	0.99	0.0		0.3		INTENSITY											0.2		3.333	1240	1
+SPILL_HW_FLA	heli_3_col_beacon_pm	0.31	1.25	0.54	0.3		INTENSITY											0.2		1.666	1240	1
+
+# LEGACY
+
+LIGHT_PARAM_DEF	heli_3_col_beacon		2	SIZE	UNUSED
+
+BILLBOARD_HW	heli_3_col_beacon		1		1		1		1		0.7			1 4	0	0		0		0		1		0.2		0.0		1240	1
+BILLBOARD_HW	heli_3_col_beacon		1		1		1		1		0.7			1 7	0	0		0		0		1		0.2		3.333	1240	1
+BILLBOARD_HW	heli_3_col_beacon		1		1		1		1		0.7			1 6	0	0		0		0		1		0.2		1.666	1240	1
+
+SPILL_HW_FLA	heli_3_col_beacon		1		1		1		0.3		SIZE												0.2		0.0		1240	1
+SPILL_HW_FLA	heli_3_col_beacon		1.0		0.73	0.0		0.4		SIZE												0.2		3.333	1240	1
+SPILL_HW_FLA	heli_3_col_beacon		0.224	0.90	0.39	0.4		SIZE												0.2		1.666	1240	1
 
 ## Airport Beacon Lights, white, green, and yellow. The combination of lights is managed in object.
 
 
-
-
-
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # SHIPS AND SAILBOATS
-#			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
+#			Name						R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # LANDING LIGHTS AND TAXI LIGHTS - BIG BRIGHT AND DIRECTIONAL!
 # http://www.boat-ed.com/pa/course/p3-5_navigationlights.htm
-BILLBOARD_HW	ship_nav_left		1	1	1	1	1.5	1	5	3	-0.86	0	-0.5	0	0	0	0	1
-BILLBOARD_HW	ship_nav_right		1	1	1	1	1.5	1	6	1	0.86	0	-0.5	0	0	0	0	1
-BILLBOARD_HW	ship_mast_obs		1	1	1	1	1.1	1	7	3	0	0	0	1	0	0	0	1
-BILLBOARD_HW	ship_mast_grn		1	1	1	1	1.4	1	6	3	0	0	0	1	0	0	0	1
-BILLBOARD_HW	ship_nav_tail		1	1	1	1	1.0	1	0	5	0	0.05	0.99	0	0	0	0	1
-BILLBOARD_HW	ship_mast_powered		1	1	1	1	1.7	1	0	5	0	0	-0.5	0.5	0	0	0	1
 
-BILLBOARD_SW	carrier_datum		140	210	-10	10	0.5	1	6	0	0	0	0	1	sim/graphics/animation/lights/fresnel_vertical
-BILLBOARD_SW	carrier_waveoff		1	1	1	1	1.0	1	5	0	0	0	0	1	sim/graphics/animation/lights/carrier_waveoff
-BILLBOARD_SW	carrier_meatball1		140	210	0.0	3.25	1.1	1	5	0	0	0	0	1	sim/graphics/animation/lights/fresnel_vertical
-BILLBOARD_SW	carrier_meatball2		140	210	3.25	3.75	1.1	1	7	0	0	0	0	1	sim/graphics/animation/lights/fresnel_vertical
-BILLBOARD_SW	carrier_meatball3		140	210	3.75	4.25	1.1	1	7	0	0	0	0	1	sim/graphics/animation/lights/fresnel_vertical
-BILLBOARD_SW	carrier_meatball4		140	210	4.25	4.75	1.1	1	7	0	0	0	0	1	sim/graphics/animation/lights/fresnel_vertical
-BILLBOARD_SW	carrier_meatball5		140	210	4.75	10	1.1	1	7	0	0	0	0	1	sim/graphics/animation/lights/fresnel_vertical
-BILLBOARD_HW	carrier_mast_strobe		1	1	0.5	1	1.5	2	6	1	0	0	0	1	1	0	10	1
-BILLBOARD_HW	carrier_deck_blue_s		1	1	1	1	0.5	1	4	1	0	0	-0.9	0.1	0	0	0	1
-BILLBOARD_HW	carrier_deck_blue_w		1	1	1	1	0.5	1	4	1	0.9	0	0	0.1	0	0	0	1
-BILLBOARD_HW	carrier_deck_blue_n		1	1	1	1	0.5	1	4	1	0	0	0.9	0.1	0	0	0	1
-BILLBOARD_HW	carrier_deck_blue_e		1	1	1	1	0.5	1	4	1	-0.9	0	0	0.1	0	0	0	1
-BILLBOARD_HW	carrier_pitch_lights		1	1	1	1	2	1	7	7	0	0	50	-49	0	0	0	1
-BILLBOARD_HW	carrier_foul_line_red		1.0	1.0	1.0	1	0.8	1	7	2	0	0.5	9.9	-9	0	0	0	1
-BILLBOARD_HW	carrier_foul_line_white		1.0	1.0	1.0	1	0.8	1	5	2	0	0.5	9.9	-9	0	0	0	1
-BILLBOARD_HW	carrier_center_white		1.0	1.0	1.0	1	0.8	1	5	2	0	0.5	9.9	-9	0	0	0	1
-BILLBOARD_HW	carrier_edge_white		1.0	1.0	1.0	1	0.8	1	5	2	0	0.5	9.9	-9	0	0	0	1
-BILLBOARD_HW	carrier_thresh_white		1.0	1.0	1.0	1	0.8	1	5	2	0	0.5	9.9	-9	0	0	0	1
+BILLBOARD_HW	ship_nav_left			3.61	0.31	0.14	1		2500cd		1 5	3	-0.831	0		-0.556	0.238	0		0		0		1
+BILLBOARD_HW	ship_nav_right			0.11	1.35	0.17	1		2500cd		1 6	1	0.831	0		-0.556	0.238	0		0		0		1
+BILLBOARD_HW	ship_mast_obs			3.61	0.31	0.14	1		3000cd		1 7	3	0		0		0		1		0		0		0		1
+BILLBOARD_HW	ship_mast_grn			0.11	1.35	0.17	1		3000cd		1 6	3	0		0		0		1		0		0		0		1
+BILLBOARD_HW	ship_nav_tail			1.62	0.83	0.90	1		2500cd		1 0	5	0		0.05	0.99	0.044	0		0		0		1
+BILLBOARD_HW	ship_mast_powered		1.62	0.83	0.90	1		4000cd		1 0	5	0		0		-1		-0.676	0		0		0		1
 
-BILLBOARD_SW	frigate_SGSI_lo		140	220	-4	2.5	1.2	1	5	0	0	0	0	1	sim/graphics/animation/lights/fresnel_horizontal
-BILLBOARD_SW	frigate_SGSI_on		140	220	2.5	3.5	1.2	1	6	0	0	0	0	1	sim/graphics/animation/lights/fresnel_horizontal
-BILLBOARD_SW	frigate_SGSI_hi		140	220	3.5	5	1.2	1	7	0	0	0	0	1	sim/graphics/animation/lights/fresnel_horizontal
-BILLBOARD_HW	frigate_deck_green		1	1	1	1	0.8	1	7	1	0	0.05	0.99	0	0	0	0	1
+SPILL_HW_DIR	ship_nav_left			3.61	0.31	0.14	1		500cd				-0.831	0		-0.556	0.238							1
+SPILL_HW_DIR	ship_nav_right			0.11	1.35	0.17	1		500cd				0.831	0		-0.556	0.238							1
+SPILL_HW_DIR	ship_mast_obs			3.61	0.31	0.14	0.5		500cd				0		0		0		1								1
+SPILL_HW_DIR	ship_mast_grn			0.11	1.35	0.17	0.5		1500cd				0		0		0		1								1
+SPILL_HW_DIR	ship_nav_tail			1.62	0.83	0.90	1		1500cd				0		0.05	0.99	0.044							1
+SPILL_HW_DIR	ship_mast_powered		1.62	0.83	0.90	0.5		1000cd				0		0		0		1								1
 
-BILLBOARD_HW	oilrig_deck_blue		1	1	1	1	0.6	1	4	1	0	0	0	1	0	0	0	1
+## CARRIER
+
+BILLBOARD_SW	carrier_datum			0.11	1.35	0.17	0		6000cd		1 6	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_datum_2			0.11	1.35	0.17	6		6000cd		1 6	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_waveoff			1.8		0.16	0		1		15000cd		1 5	0	0.160	0.065	0.985	0.5										sim/graphics/animation/lights/carrier_waveoff
+BILLBOARD_SW	carrier_meatball1		1.8		0.16	0		1		30000cd		1 5	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2		1.5		0.6		0		2		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball3		1.5		0.6		0		3		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball4		1.5		0.6		0		4		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball5		1.5		0.6		0		5		30000cd		1 7 0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+
+## HIGH RESOLUTION MEATBALL
+
+BILLBOARD_SW	carrier_meatball2_1		1.8		0.16	0		7		30000cd		1 5	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_2		1.8		0.16	0		8		30000cd		1 5	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_3		1.5		0.6		0		9		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_4		1.5		0.6		0		10		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_5		1.5		0.6		0		11		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_6		1.5		0.6		0		12		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_7		1.5		0.6		0		13		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_8		1.5		0.6		0		14		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_9		1.5		0.6		0		15		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_10	1.5		0.6		0		16		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_11	1.5		0.6		0		17		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+BILLBOARD_SW	carrier_meatball2_12	1.5		0.6		0		18		30000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_vertical
+
+
+BILLBOARD_SW	carrier_mast_strobe		0.99	0.97	1.33	1		5000cd		2 6 1	0		0		0		1										sim/graphics/animation/lights/carrier_mast_strobe
+SPILL_SW		carrier_mast_strobe		0.99	0.97	1.33	1		5000cd				0		0		0		1										sim/graphics/animation/lights/carrier_mast_strobe
+
+BILLBOARD_HW	carrier_deck_blue_s		0.42	0.42	8.43	1		40cd		1 4 1	0		0		-1.0	0.3	0		0		0		1
+BILLBOARD_HW	carrier_deck_blue_w		0.42	0.42	8.43	1		40cd		1 4 1	1.0		0		0		0.3	0		0		0		1
+BILLBOARD_HW	carrier_deck_blue_n		0.42	0.42	8.43	1		40cd		1 4 1	0		0		1.0		0.3	0		0		0		1
+BILLBOARD_HW	carrier_deck_blue_e		0.42	0.42	8.43	1		40cd		1 4 1	-1.0	0		0		0.3	0		0		0		1
+
+SPILL_HW_DIR	carrier_deck_blue_s		0.42	0.42	8.43	1		20cd				0		0		-1.0	0.9							1
+SPILL_HW_DIR	carrier_deck_blue_w		0.42	0.42	8.43	1		20cd				1.0		0		0		0.9							1
+SPILL_HW_DIR	carrier_deck_blue_n		0.42	0.42	8.43	1		20cd				0		0		1.0		0.9							1
+SPILL_HW_DIR	carrier_deck_blue_e		0.42	0.42	8.43	1		20cd				-1.0	0		0		0.9							1
+
+
+BILLBOARD_HW	carrier_pitch_lights	1.8		0.16	0		1		800cd		1 7 7	0.160	0.065	0.985	0.92	0		0		0		1
+BILLBOARD_HW	carrier_pitch_lights	1.8		0.16	0		1		1200cd		1 7 7	0.160	0.065	0.985	0.9998	0		0		0		1
+
+BILLBOARD_HW	carrier_foul_line_red	1.8		0.16	0		1		100cd		1 7 2	0.160	0.065	0.985	0.90	0		0		0		1
+BILLBOARD_HW	carrier_foul_line_white	1.53	0.90	0.46	1		100cd		1 5 2	0.160	0.065	0.985	0.90	0		0		0		1
+
+BILLBOARD_HW	carrier_center_white	1.53	0.90	0.46	1		1000cd		1 5 2	0.160	0.065	0.985	0.88	0		0		0		1
+BILLBOARD_HW	carrier_center_white	1.53	0.90	0.46	1		1500cd		1 5 2	0.160	0.065	0.985	0.9998	0		0		0		1
+
+BILLBOARD_HW	carrier_edge_white		1.53	0.90	0.46	1		350cd		1 5 2	0.160	0.065	0.985	0.94	0		0		0		1
+BILLBOARD_HW	carrier_edge_white		1.53	0.90	0.46	1		525cd		1 5 2	0.160	0.065	0.985	0.9998	0		0		0		1
+
+BILLBOARD_HW	carrier_thresh_white	1.53	0.90	0.46	1		800cd		1 5 2	0.160	0.065	0.985	0.80	0		0		0		1
+BILLBOARD_HW	carrier_thresh_white	1.53	0.90	0.46	1		1200cd		1 5 2	0.160	0.065	0.985	0.9998	0		0		0		1
+
+SPILL_HW_DIR	carrier_pitch_lights	1.8		0.16	0		1.0		800cd				0.160	0.065	0.985	0.92							1
+SPILL_HW_DIR	carrier_foul_line_red	1.8		0.16	0		1.0		100cd				0.160	0.065	0.985	0.90							1
+SPILL_HW_DIR	carrier_foul_line_white	1.53	0.90	0.46	1.0		100cd				0.160	0.065	0.985	0.90							1
+
+SPILL_HW_DIR	carrier_center_white	1.53	0.90	0.46	1.0		1000cd				0.160	0.065	0.985	0.88							1
+SPILL_HW_DIR	carrier_edge_white		1.53	0.90	0.46	1.0		400cd				0.160	0.065	0.985	0.94							1
+SPILL_HW_DIR	carrier_thresh_white	1.53	0.90	0.46	1.0		800cd				0.160	0.065	0.985	0.80							1
+
+## CARRIER PULSED CENTERLINE
+#			Name						R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
+
+LIGHT_PARAM_DEF	carrier_center_pulse	1		INDEX
+SPILL_SW		carrier_center_pulse	1.53	0.90	0.46	INDEX	400cd				0.160	0.065	0.985	0.88									sim/graphics/animation/lights/carrier_centerline_pulse												
+BILLBOARD_SW	carrier_center_pulse	1.53	0.90	0.46	INDEX	8000cd		1 5 2	0.160	0.065	0.985	0.88									sim/graphics/animation/lights/carrier_centerline_pulse
+
+
+## FRIGATE
+
+BILLBOARD_SW	frigate_SGSI_lo			1.8		0.16	0		0		18000cd		1 5	0	0		0		0		1										sim/graphics/animation/lights/fresnel_horizontal
+BILLBOARD_SW	frigate_SGSI_on			1.5		0.6		0		1		18000cd		1 6	0	0		0		0		1										sim/graphics/animation/lights/fresnel_horizontal
+BILLBOARD_SW	frigate_SGSI_hi			0.11	1.35	0.17	2		18000cd		1 7	0	0		0		0		1										sim/graphics/animation/lights/fresnel_horizontal
+
+BILLBOARD_HW	frigate_deck_green		0.31	1.24	0.69	1.0		75cd		1 7	1	0		0		0		1		0		0		0		1
+SPILL_HW_DIR	frigate_deck_green		0.31	1.24	0.69	1.0		100cd				0		0		0		1								1
+
+BILLBOARD_HW	oilrig_deck_blue		0.42	0.42	8.43	1		75cd		1 4 1	0		0		0		1		0		0		0		1
+SPILL_HW_DIR	oilrig_deck_blue		0.42	0.42	8.43	1		100cd				0		0		0		1								1
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # OLD OBJECTS
@@ -779,7 +874,7 @@ BILLBOARD_HW	oilrig_deck_blue		1	1	1	1	0.6	1	4	1	0	0	0	1	0	0	0	1
 # further customizes its params on the fly.  Really only the cell can be sanely edited here.
 #			Name					R	G	B	A	Size	Cell	Dx	Dy	Dz	Width	Frq	Phase	Amp	Day	Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-BILLBOARD_SW	object_v7		1	1	1	1	2	1	0	0	0	0	0	1	NOOP
+BILLBOARD_SW	object_v7		1	1	1	1	2	1	0	0	0	0	0	1	NULL
 BILLBOARD_HW	oz_lite			1	1	1	1	1	1	3	7	0	0	0	1	0	0	0	1
 SPILL_HW_DIR	oz_spill		1	1	1	1	50	0	0	-1	0.85	1
 
@@ -789,212 +884,252 @@ SPILL_HW_DIR	oz_spill		1	1	1	1	50	0	0	-1	0.85	1
 # Plus Kriss' lights for EU-buildings
 #			Name						R		G		B		A	Size/Int	Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-BILLBOARD_HW	town_light_60			1		1		1		1		2		1 0	0	0		-7.5	0		-6.5	0		0		0		1
-BILLBOARD_HW	town_light_90			1		1		1		1		2		1 0	0	0		-3.41	0		-2.41	0		0		0		1
-BILLBOARD_HW	town_light_150			1		1		1		1		2		1 0	0	0		-1.35	0		-0.35	0		0		0		1
-BILLBOARD_HW	town_light_180			1		1		1		1		2		1 0	0	0		-1		0		0		0		0		0		1
-BILLBOARD_HW	town_light_220			1		1		1		1		2		1 0	0	0		-0.75	0		0.25	0		0		0		1
-BILLBOARD_HW	town_light_280			1		1		1		1		2		1 0	0	0		-0.57	0		0.43	0		0		0		1
-BILLBOARD_HW	town_light_330			1		1		1		1		2		1 0	0	0		-0.51	0		0.49	0		0		0		1
-BILLBOARD_HW	town_light_350			1		1		1		1		2		1 0	0	0		-0.5	0		0.5		0		0		0		1
-BILLBOARD_HW	town_light_omni			1		1		1		1		2		1 0	0	0		0		0		1		0		0		0		1
+BILLBOARD_HW	town_light_60			1		1		1		1		1000cd	1 0	0	0		-1		0		0.866	0		0		0		1
+BILLBOARD_HW	town_light_90			1		1		1		1		1000cd	1 0	0	0		-1		0		0.707	0		0		0		1
+BILLBOARD_HW	town_light_150			1		1		1		1		1000cd	1 0	0	0		-1		0		0.259	0		0		0		1
+BILLBOARD_HW	town_light_180			1		1		1		1		1000cd	1 0	0	0		-1		0		0		0		0		0		1
+BILLBOARD_HW	town_light_220			1		1		1		1		1000cd	1 0	0	0		-1		0		-0.342	0		0		0		1
+BILLBOARD_HW	town_light_280			1		1		1		1		1000cd	1 0	0	0		-1		0		-0.766	0		0		0		1
+BILLBOARD_HW	town_light_330			1		1		1		1		1000cd	1 0	0	0		-1		0		-0.966	0		0		0		1
+BILLBOARD_HW	town_light_350			1		1		1		1		1000cd	1 0	0	0		-1		0		-0.996	0		0		0		1
+BILLBOARD_HW	town_light_omni			1		1		1		1		1000cd	1 0	0	0		0		0		1		0		0		0		1
 
-BILLBOARD_HW	town_tiny_light_60		1		1		1		1		1		1 0	0	0		-7.5	0		-6.5	0		0		0		1
-BILLBOARD_HW	town_tiny_light_90		1		1		1		1		1		1 0	0	0		-3.41	0		-2.41	0		0		0		1
-BILLBOARD_HW	town_tiny_light_150		1		1		1		1		1		1 0	0	0		-1.35	0		-0.35	0		0		0		1
-BILLBOARD_HW	town_tiny_light_180		1		1		1		1		1		1 0	0	0		-1		0		0		0		0		0		1
-BILLBOARD_HW	town_tiny_light_220		1		1		1		1		1		1 0	0	0		-0.75	0		0.25	0		0		0		1
-BILLBOARD_HW	town_tiny_light_280		1		1		1		1		1		1 0	0	0		-0.57	0		0.43	0		0		0		1
-BILLBOARD_HW	town_tiny_light_330		1		1		1		1		1		1 0	0	0		-0.51	0		0.49	0		0		0		1
-BILLBOARD_HW	town_tiny_light_350		1		1		1		1		1		1 0	0	0		-0.5	0		0.5		0		0		0		1
-BILLBOARD_HW	town_tiny_light_omni	1		1		1		1		1		1 0	0	0		0		0		1		0		0		0		1
+BILLBOARD_HW	town_tiny_light_60		1		1		1		1		500cd	1 0	0	0		-1		0		0.866	0		0		0		1
+BILLBOARD_HW	town_tiny_light_90		1		1		1		1		500cd	1 0	0	0		-1		0		0.707	0		0		0		1
+BILLBOARD_HW	town_tiny_light_150		1		1		1		1		500cd	1 0	0	0		-1		0		0.259	0		0		0		1
+BILLBOARD_HW	town_tiny_light_180		1		1		1		1		500cd	1 0	0	0		-1		0		0		0		0		0		1
+BILLBOARD_HW	town_tiny_light_220		1		1		1		1		500cd	1 0	0	0		-1		0		-0.342	0		0		0		1
+BILLBOARD_HW	town_tiny_light_280		1		1		1		1		500cd	1 0	0	0		-1		0		-0.766	0		0		0		1
+BILLBOARD_HW	town_tiny_light_330		1		1		1		1		500cd	1 0	0	0		-1		0		-0.966	0		0		0		1
+BILLBOARD_HW	town_tiny_light_350		1		1		1		1		500cd	1 0	0	0		-1		0		-0.996	0		0		0		1
+BILLBOARD_HW	town_tiny_light_omni	1		1		1		1		500cd	1 0	0	0		0		0		1		0		0		0		1
 
-BILLBOARD_HW	obs_strobe_day			1		1		1		1		3		1 3	7	0		0		0		1		1		0		10		1
-BILLBOARD_HW	obs_strobe_night		1		1		1		1		3		1 3	7	0		0		0		1		1		0		10		0
-BILLBOARD_HW	obs_red_day				1		1		1		1		0.7		1 4	3	0		0		0		1		0.6		0		1		1
-BILLBOARD_HW	obs_red_night			1		1		1		1		0.7		1 4	3	0		0		0		1		0.6		0		1		0
-SPILL_HW_FLA	obs_red_night			1.0		0.086	0.039	0.7		2				0.6		0		1										0
-BILLBOARD_HW	obs_red_night_sml		1		1		1		1		0.7		1 4	5	0		0		0		1		0.7		0		1		0
-SPILL_HW_FLA	obs_red_night_sml		1.0		0.086	0.039	0.4		1				0.7		0		1										0
+BILLBOARD_HW	obs_strobe_day			0.99	0.97	1.33	1		20000cd	1 3	7	0		0		0		1		1		0		10		1
+SPILL_HW_FLA	obs_strobe_day			0.99	0.97	1.33	1		20000cd											1		0		10		1
+
+BILLBOARD_HW	obs_strobe_night		0.99	0.97	1.33	1		3000cd	1 3	7	0		0		0		1		1		0		10		0
+SPILL_HW_FLA	obs_strobe_night		0.99	0.97	1.33	1		3000cd											1		0		10		0
+
+BILLBOARD_HW	obs_red_day				3.61	0.31	0.14	1		3000cd	1 4	3	0		0		0		1		0.5		0		1		1
+SPILL_HW_FLA	obs_red_day				3.61	0.31	0.14	1		3000cd											0.5		0		1		1
+
+BILLBOARD_HW	obs_red_night			3.61	0.31	0.14	1		3000cd	1 4	3	0		0		0		1		0.5		0		1		0
+SPILL_HW_FLA	obs_red_night			3.61	0.31	0.14	0.7		3000cd											0.5		0		1		0
 
 
+BILLBOARD_HW	obs_red_night_sml		3.61	0.31	0.14	1		500cd	1 4	5	0		0		0		1		0.5		0		1		0
+SPILL_HW_FLA	obs_red_night_sml		3.61	0.31	0.14	0.4		500cd											0.5		0		1		0
 
 SPILL_HW_DIR	apt_light_halo_test		1.0		1.0		0.7		1		0.1				0		-1		0		0.5								1
 
-#LIGHT_PARAM_DEF full_custom_halo	9	R		G		B		A		S				X		Y		Z		F
-#SPILL_HW_DIR	full_custom_halo		R		G		B		A		S				X		Y		Z		F
-#SPILL_HW_DIR	full_custom_halo		1.0		0.0		0.0		1		50				0.241	-0.939	0.2408	0.5
-#SPILL_HW_DIR	full_custom_halo		0.0		1.0		0.0		1		30				0.241	-0.939	0.2408	1.0								1
-
-LIGHT_PARAM_DEF	full_custom_halo	9	R		G		B		A		SIZE			DX		DY		DZ		WIDTH
-SPILL_HW_DIR	full_custom_halo		R		G		B		A		SIZE			DX		DY		DZ		WIDTH							1
-LIGHT_PARAM_DEF	full_custom_halo_	9	R		G		B		A		SIZE			DX		DY		DZ		WIDTH
-SPILL_HW_DIR	full_custom_halo_		R		G		B		A		SIZE			DX		DY		DZ		WIDTH							1
-LIGHT_PARAM_DEF	full_custom_halo_night 9 R		G		B		A		SIZE			DX		DY		DZ		WIDTH
-SPILL_HW_DIR	full_custom_halo_night	R		G		B		A		SIZE			DX		DY		DZ		WIDTH							0
-
 ###### APRON LIGHTS UPDATED TO V12 USING INTENSITY ### (just one obj located in Resources/default scenery/sim objects/landscape) ######
-SPILL_HW_DIR	apron_light_N			1.0		0.90	0.8		0.2		400000cd		0.0		-0.766	-0.642	0.60							0
-SPILL_HW_DIR	apron_light_E			1.0		0.90	0.8		0.2		400000cd		0.642	-0.766	0.00	0.60							0
-SPILL_HW_DIR	apron_light_S			1.0		0.90	0.8		0.2		400000cd		0.0		-0.766	0.642	0.60							0
-SPILL_HW_DIR	apron_light_W			1.0		0.90	0.8		0.2		400000cd		-0.642	-0.766	0.00	0.60							0
+SPILL_HW_DIR	apron_light_N			1.0		0.90	0.8		0.4		400000cd		0.0		-0.766	-0.642	0.60							0
+SPILL_HW_DIR	apron_light_E			1.0		0.90	0.8		0.4		400000cd		0.642	-0.766	0.00	0.60							0
+SPILL_HW_DIR	apron_light_S			1.0		0.90	0.8		0.4		400000cd		0.0		-0.766	0.642	0.60							0
+SPILL_HW_DIR	apron_light_W			1.0		0.90	0.8		0.4		400000cd		-0.642	-0.766	0.00	0.60							0
 
-SPILL_HW_DIR	apron_light_uni			1.0		0.90	0.8		0.2		500000cd		0.0		-0.819	-0.3	0.5								0
+SPILL_HW_DIR	apron_light_uni			1.0		0.90	0.8		0.4		500000cd		0.0		-0.819	-0.3	0.5								0
 
 LIGHT_PARAM_DEF	apron_light_billboard 5	DX	DY	DZ	WIDTH	INTENSITY	# <--- params order inside the obj
 BILLBOARD_HW	apron_light_billboard	1.0		0.90	0.8		1		INTENSITY 4 2 0	DX		DY		DZ		WIDTH	0		0		0		1
 #######################################################################################################################################
 
-SPILL_HW_DIR	wall_flood_lite_N		1.0		1.0		1.0		1.0		10				0.0		-1		-0.44	0.4								0
-SPILL_HW_DIR	wall_flood_lite_E		1.0		1.0		1.0		1.0		10				0.44	-1		0.00	0.4								0
-SPILL_HW_DIR	wall_flood_lite_S		1.0		1.0		1.0		1.0		10				0.0		-1		0.44	0.4								0
-SPILL_HW_DIR	wall_flood_lite_W		1.0		1.0		1.0		1.0		10				-0.44	-1		0.00	0.4								0
+SPILL_HW_DIR	wall_flood_lite_N		1.0		1.0		1.0		1.0		5000cd			0.0		-0.9	-0.44	0.4								0
+SPILL_HW_DIR	wall_flood_lite_E		1.0		1.0		1.0		1.0		5000cd			0.44	-0.9	0.00	0.4								0
+SPILL_HW_DIR	wall_flood_lite_S		1.0		1.0		1.0		1.0		5000cd			0.0		-0.9	0.44	0.4								0
+SPILL_HW_DIR	wall_flood_lite_W		1.0		1.0		1.0		1.0		5000cd			-0.44	-0.9	0.00	0.4								0
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Alex's scenery lights - various.
 #			Name						R		G		B		A		Size/Int	Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-BILLBOARD_HW	PD_ltbar_1w				1		1		1		1		1			1 0	1	0		0		0		1		3		0		4		1
-BILLBOARD_HW	PD_ltbar_1a				1		1		1		1		1			1 3	1	0		0		0		1		3		0.33	4		1
-BILLBOARD_HW	PD_ltbar_1r				1		1		1		1		1			1 2	1	0		0		0		1		3		0.66	4		1
+BILLBOARD_HW	PD_ltbar_1w				1.05	1.0		0.89	1		12000cd		1 0	1	0		0		0		1		3		0		4		1
+BILLBOARD_HW	PD_ltbar_1a				2.04	0.78	0.15	1		12000cd		1 3	1	0		0		0		1		3		0.33	4		1
+BILLBOARD_HW	PD_ltbar_1r				4.62	0.0		0.23	1		12000cd		1 2	1	0		0		0		1		3		0.66	4		1
 
-BILLBOARD_HW	PD_ltbar_2w				1		1		1		1		1			1 0	1	0		0		0		1		3		0.1		3		1
-BILLBOARD_HW	PD_ltbar_2r				1		1		1		1		1			1 2	1	0		0		0		1		3.7		0.15	3		1
-BILLBOARD_HW	PD_ltbar_2b				1		1		1		1		1			1 1	1	0		0		0		1		4.1		0.23	3		1
+SPILL_HW_FLA	PD_ltbar_1w				1.05	1.0		0.89	1		7500cd												3		0		4		1
+SPILL_HW_FLA	PD_ltbar_1a				2.04	0.78	0.15	1		7500cd												3		0.33	4		1
+SPILL_HW_FLA	PD_ltbar_1r				4.62	0.0		0.23	1		7500cd												3		0.66	4		1
 
-BILLBOARD_HW	PD_ltbar_3w				1		1		1		1		1			1 0	1	0		0		0		1		2.7		0		4		1
-BILLBOARD_HW	PD_ltbar_3a				1		1		1		1		1			1 3	1	0		0		0		1		2.7		0.33	4		1
-BILLBOARD_HW	PD_ltbar_3r				1		1		1		1		1			1 2	1	0		0		0		1		2.7		0.66	4		1
+##
 
-BILLBOARD_HW	PD_ltbar_4w				1		1		1		1		1			1 0	1	0		0		0		1		3.93	0.1		3		1
-BILLBOARD_HW	PD_ltbar_4r				1		1		1		1		1			1 2	1	0		0		0		1		4.22	0.15	3		1
-BILLBOARD_HW	PD_ltbar_4b				1		1		1		1		1			1 1	1	0		0		0		1		3.55	0.23	3		1
+BILLBOARD_HW	PD_ltbar_2w				1.05	1.0		0.89	1		12000cd		1 0	1	0		0		0		1		3		0.1		3		1
+BILLBOARD_HW	PD_ltbar_2r				4.62	0.0		0.23	1		12000cd		1 2	1	0		0		0		1		3.7		0.15	3		1
+BILLBOARD_HW	PD_ltbar_2b				0.61	0.61	6.06	1		12000cd		1 1	1	0		0		0		1		4.1		0.23	3		1
 
-BILLBOARD_HW	PD_grille_1L			1		1		1		1		0.75		1 1	1	0		0		0		1		1.7		0.0		1.0		1
-BILLBOARD_HW	PD_grille_1R			1		1		1		1		0.75		1 1	1	0		0		0		1		1.7		0.5		1.0		1
-BILLBOARD_HW	PD_grille_2L			1		1		1		1		0.75		1 1	1	0		0		0		1		1.8		0.0		1.0		1
-BILLBOARD_HW	PD_grille_2R			1		1		1		1		0.75		1 1	1	0		0		0		1		1.8		0.5		1.0		1
-BILLBOARD_HW	PD_grille_3L			1		1		1		1		0.75		1 1	1	0		0		0		1		1.9		0.0		1.0		1
-BILLBOARD_HW	PD_grille_3R			1		1		1		1		0.75		1 1	1	0		0		0		1		1.9		0.5		1.0		1
-BILLBOARD_HW	PD_grille_4L			1		1		1		1		0.75		1 1	1	0		0		0		1		2.1		0.0		1.0		1
-BILLBOARD_HW	PD_grille_4R			1		1		1		1		0.75		1 1	1	0		0		0		1		2.1		0.5		1.0		1
+SPILL_HW_FLA	PD_ltbar_2w				1.05	1.0		0.89	1		7500cd												3		0.1		3		1
+SPILL_HW_FLA	PD_ltbar_2r				4.62	0.0		0.23	1		7500cd												3.7		0.15	3		1
+SPILL_HW_FLA	PD_ltbar_2b				0.61	0.61	6.06	1		7500cd												4.1		0.23	3		1
 
-BILLBOARD_HW	camera_flash			1		1		1		1		3			1 3	7	0		0		-1		0		0		0		0		1
-SPILL_HW_DIR	camera_flash			1		1		1		1		50					0 		0		-1		0.8								1
+##
 
-SPILL_HW_FLA	wind_turbine_obs		1.0		0.1		0.0		1.0		5.0					0.25	0.0		1.0										1
-BILLBOARD_HW	wind_turbine_obs		1		1		1		1.0		2			1 4	5	0		0		0		1		0.25	0.0		1.0		1
+BILLBOARD_HW	PD_ltbar_3w				1.05	1.0		0.89	1		12000cd		1 0	1	0		0		0		1		2.7		0		4		1
+BILLBOARD_HW	PD_ltbar_3a				2.04	0.78	0.15	1		12000cd		1 3	1	0		0		0		1		2.7		0.33	4		1
+BILLBOARD_HW	PD_ltbar_3r				4.62	0.0		0.23	1		12000cd		1 2	1	0		0		0		1		2.7		0.66	4		1
 
-SPILL_HW_FLA	smokestack_obs			1.0		0.0		0.0		1		5					0.25	0.0		1.0										1
-BILLBOARD_HW	smokestack_obs			1		1		1		1		1.5			1 6	6	0		0		0		1		0.25	0		1.0		1
+SPILL_HW_FLA	PD_ltbar_3w				1.05	1.0		0.89	1		7500cd												2.7		0		4		1
+SPILL_HW_FLA	PD_ltbar_3a				2.04	0.78	0.15	1		7500cd												2.7		0.33	4		1
+SPILL_HW_FLA	PD_ltbar_3r				4.62	0.0		0.23	1		7500cd												2.7		0.66	4		1
+
+##
+
+BILLBOARD_HW	PD_ltbar_4w				1.05	1.0		0.89	1		12000cd		1 0	1	0		0		0		1		3.93	0.1		3		1
+BILLBOARD_HW	PD_ltbar_4r				4.62	0.0		0.23	1		12000cd		1 2	1	0		0		0		1		4.22	0.15	3		1
+BILLBOARD_HW	PD_ltbar_4b				0.61	0.61	6.06	1		12000cd		1 1	1	0		0		0		1		3.55	0.23	3		1
+
+SPILL_HW_FLA	PD_ltbar_4w				1.05	1.0		0.89	1		7500cd												3.93	0.1		3		1
+SPILL_HW_FLA	PD_ltbar_4r				4.62	0.0		0.23	1		7500cd												4.22	0.15	3		1
+SPILL_HW_FLA	PD_ltbar_4b				0.61	0.61	6.06	1		7500cd												3.55	0.23	3		1
+
+##
+
+BILLBOARD_HW	PD_grille_1L			0.61	0.61	6.06	1		4000cd		1 1	1	0		0		0		1		1.7		0.0		1.0		1
+BILLBOARD_HW	PD_grille_1R			0.61	0.61	6.06	1		4000cd		1 1	1	0		0		0		1		1.7		0.5		1.0		1
+BILLBOARD_HW	PD_grille_2L			0.61	0.61	6.06	1		4000cd		1 1	1	0		0		0		1		1.8		0.0		1.0		1
+BILLBOARD_HW	PD_grille_2R			0.61	0.61	6.06	1		4000cd		1 1	1	0		0		0		1		1.8		0.5		1.0		1
+BILLBOARD_HW	PD_grille_3L			0.61	0.61	6.06	1		4000cd		1 1	1	0		0		0		1		1.9		0.0		1.0		1
+BILLBOARD_HW	PD_grille_3R			0.61	0.61	6.06	1		4000cd		1 1	1	0		0		0		1		1.9		0.5		1.0		1
+BILLBOARD_HW	PD_grille_4L			0.61	0.61	6.06	1		4000cd		1 1	1	0		0		0		1		2.1		0.0		1.0		1
+BILLBOARD_HW	PD_grille_4R			0.61	0.61	6.06	1		4000cd		1 1	1	0		0		0		1		2.1		0.5		1.0		1
+
+SPILL_HW_FLA	PD_grille_1L			0.61	0.61	6.06	1		1250cd												1.7		0.0		1.0		1
+SPILL_HW_FLA	PD_grille_1R			0.61	0.61	6.06	1		1250cd												1.7		0.5		1.0		1
+SPILL_HW_FLA	PD_grille_2L			0.61	0.61	6.06	1		1250cd												1.8		0.0		1.0		1
+SPILL_HW_FLA	PD_grille_2R			0.61	0.61	6.06	1		1250cd												1.8		0.5		1.0		1
+SPILL_HW_FLA	PD_grille_3L			0.61	0.61	6.06	1		1250cd												1.9		0.0		1.0		1
+SPILL_HW_FLA	PD_grille_3R			0.61	0.61	6.06	1		1250cd												1.9		0.5		1.0		1
+SPILL_HW_FLA	PD_grille_4L			0.61	0.61	6.06	1		1250cd												2.1		0.0		1.0		1
+SPILL_HW_FLA	PD_grille_4R			0.61	0.61	6.06	1		1250cd												2.1		0.5		1.0		1
+
+##
+
+BILLBOARD_HW	camera_flash			0.99	0.97	1.33	1		150000cd	1 3	7	0		0		-1		0.9		0		0		0		1
+SPILL_HW_DIR	camera_flash			0.99	0.97	1.33	1		150000cd			0 		0		-1		0.9								1
+
+SPILL_HW_FLA	wind_turbine_obs		4.55	0.00	0.45	1.0		3000cd												0.5		0.0		11.0	1
+BILLBOARD_HW	wind_turbine_obs		4.55	0.00	0.45	1.0		3000cd		1 4	5	0		0		0		1		0.5		0.0		11.0	1
+
+SPILL_HW_FLA	smokestack_obs			3.61	0.31	0.14	1		2500cd												0.45	0.0		1.0		1
+BILLBOARD_HW	smokestack_obs			3.61	0.31	0.14	1		2500cd		1 6	6	0		0		0		1		0.45	0.0		1.0		1
 
 LIGHT_PARAM_DEF	radio_obs_flash	3															DX		DY		DZ
-SPILL_HW_FLA	radio_obs_flash			1.0		0.1		0.1		1		5					0.25	0.0		1.5										1
-BILLBOARD_HW	radio_obs_flash			1		0.8		0.8		1		1.5			1 4	5	DX		DY		DZ		0.5		0.25	0		1.5		1
+SPILL_HW_FLA	radio_obs_flash			3.61	0.31	0.14	1		2500cd												0.54	0.0		1.5		1
+BILLBOARD_HW	radio_obs_flash			3.61	0.31	0.14	1		2500cd		1 4	5	DX		DY		DZ		0.5		0.54	0.0		1.5		1
 
 LIGHT_PARAM_DEF	radio_obs_const_sp	3														DX		DY		DZ
-SPILL_HW_DIR	radio_obs_const_sp		1.0		0.1		0.1		1		3					DX		DY		DZ		0.5								1
+SPILL_HW_DIR	radio_obs_const_sp		3.61	0.31	0.14	1		250cd				DX		DY		DZ		0.5								1
 LIGHT_PARAM_DEF	radio_obs_const_bb	3														DX		DY		DZ
-BILLBOARD_HW	radio_obs_const_bb		1		0.8		0.8		1		1.2			1 4	5	DX		DY		DZ		0.5		0		0		0		1
+BILLBOARD_HW	radio_obs_const_bb		3.61	0.31	0.14	1		250cd		1 4	5	DX		DY		DZ		0.5		0		0		0		1
+
+LIGHT_PARAM_DEF	spot_params_sp_pm	9	R		G		B		A		INTENSITY			DX		DY		DZ		WIDTH
+SPILL_HW_DIR	spot_params_sp_pm		R		G		B		A		INTENSITY			DX		DY		DZ		WIDTH							0
+LIGHT_PARAM_DEF	spot_params_bb_pm	8	R		G		B				INTENSITY			DX		DY		DZ		WIDTH
+BILLBOARD_HW	spot_params_bb_pm		R		G		B		1.0		INTENSITY	2 5	2	DX		DY		DZ		WIDTH	0		0		0		0
+
+LIGHT_PARAM_DEF	spot_params_sp_day_pm		9	R	G	B		A		INTENSITY			DX		DY		DZ		WIDTH
+SPILL_HW_DIR	spot_params_sp_day_pm			R	G	B		A		INTENSITY			DX		DY		DZ		WIDTH							1
+LIGHT_PARAM_DEF	spot_params_bb_day_pm		8	R	G	B				INTENSITY			DX		DY		DZ		WIDTH
+BILLBOARD_HW	spot_params_bb_day_pm			R	G	B		1.0		INTENSITY	2 5	2	DX		DY		DZ		WIDTH	0		0		0		1
+
+SPILL_HW_DIR	bldg_uplight_sp1		1.52	0.91	0.30	1.0		20000cd				-0.15	0.889	0.434	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp2		1.52	0.91	0.30	1.0		20000cd				0.15	0.889	0.434	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp3		1.52	0.91	0.30	1.0		20000cd				-0.15	0.889	-0.434	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp4		1.52	0.91	0.30	1.0		20000cd				0.15	0.889	-0.434	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp5		1.52	0.91	0.30	1.0		20000cd				-0.605	0.781	-0.165	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp6		1.52	0.91	0.30	1.0		20000cd				-0.605	0.781	0.165	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp7		1.52	0.91	0.30	1.0		20000cd				0.605	0.781	0.165	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp8		1.52	0.91	0.30	1.0		20000cd				0.605	0.781	-0.165	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp9		1.52	0.91	0.30	1.0		20000cd				-0.085	0.973	0.223	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp10		1.52	0.91	0.30	1.0		20000cd				0.085	0.973	0.223	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp11		1.52	0.91	0.30	1.0		20000cd				0.085	0.973	-0.223	0.5								0
+SPILL_HW_DIR	bldg_uplight_sp12		1.52	0.91	0.30	1.0		20000cd				-0.085	0.973	-0.223	0.5								0
 
 
-LIGHT_PARAM_DEF	spot_params_sp	9		R		G		B		A		SIZE				DX		DY		DZ		WIDTH
-SPILL_HW_DIR	spot_params_sp			R		G		B		A		SIZE				DX		DY		DZ		WIDTH							0
-LIGHT_PARAM_DEF	spot_params_bb	8		R		G		B				SIZE				DX		DY		DZ		WIDTH
-BILLBOARD_HW	spot_params_bb			R		G		B		1.0		SIZE		2 5	2	DX		DY		DZ		WIDTH	0		0		0		0
+BILLBOARD_HW	flood_N_45dn			1.0		1.0		0.7		1.0		2000cd		1 0	0	0		-0.707	-0.707	0.6		0		0		0		0
+SPILL_HW_DIR	flood_N_45dn			1.0		1.0		0.7		1.0		2000cd				0		-0.707	-0.707	0.6								0
 
-SPILL_HW_DIR	bldg_uplight_sp1		1.0		0.6		0.2		1.0		60					-0.15	0.889	0.434	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp2		1.0		0.6		0.2		1.0		60					0.15	0.889	0.434	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp3		1.0		0.6		0.2		1.0		60					-0.15	0.889	-0.434	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp4		1.0		0.6		0.2		1.0		60					0.15	0.889	-0.434	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp5		1.0		0.6		0.2		1.0		60					-0.605	0.781	-0.165	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp6		1.0		0.6		0.2		1.0		60					-0.605	0.781	0.165	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp7		1.0		0.6		0.2		1.0		60					0.605	0.781	0.165	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp8		1.0		0.6		0.2		1.0		60					0.605	0.781	-0.165	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp9		1.0		0.6		0.2		1.0		60					-0.085	0.973	0.223	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp10		1.0		0.6		0.2		1.0		60					0.085	0.973	0.223	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp11		1.0		0.6		0.2		1.0		60					0.085	0.973	-0.223	0.5								0
-SPILL_HW_DIR	bldg_uplight_sp12		1.0		0.6		0.2		1.0		60					-0.085	0.973	-0.223	0.5								0
+BILLBOARD_HW	flood_dn_wide			0.95	0.95	1.0		1.0		1000cd		1 0	0	0		-1.0	0.0		0.6		0		0		0		0
+SPILL_HW_DIR	flood_dn_wide			0.95	0.95	1.0		1.0		1000cd				0		-1.0	0.0		0.6								0
 
+LIGHT_PARAM_DEF	flood_merc_XYZTSB_pm	5	DX	DY		DZ		A		INTENSITY	# <--- params order inside the obj
+BILLBOARD_HW	flood_merc_XYZTSB_pm	0.78	0.83	1.0		1.0		INTENSITY	1 0	6	DX		DY		DZ		0.5		0		0		0		0
+SPILL_HW_DIR	flood_merc_XYZTSB_pm	0.78	0.83	1.0		A		INTENSITY			DX		DY		DZ		0.35							0
 
-BILLBOARD_HW	flood_N_45dn			1		1		1		1		2			1 0	0	0		-1.414	-1.414	-1.0	0		0		0		0
-SPILL_HW_DIR	flood_N_45dn			1.0		1.0		0.7		0.5		20					0		-0.707	-0.707	0.6								0
+LIGHT_PARAM_DEF	flood_LPS_XYZTSB_pm		5	DX	DY		DZ		A		INTENSITY	# <--- params order inside the obj
+BILLBOARD_HW	flood_LPS_XYZTSB_pm		1.0		0.45	0.09	1.0		INTENSITY	1 2	7	DX		DY		DZ		0.5		0		0		0		0
+SPILL_HW_DIR	flood_LPS_XYZTSB_pm		1.0		0.45	0.09	A		INTENSITY			DX		DY		DZ		0.30							0
 
-BILLBOARD_HW	flood_dn_wide			1		1		1		1		1.5			1 0	0	0		-0.7	0		0.43	0		0		0		0
-SPILL_HW_DIR	flood_dn_wide			0.95	0.95	1.0		0.5		10					0		-1.0	0.0		0.6								0
+BILLBOARD_HW	sodium_street_light_1	1.0		0.53	0.09	1		10000cd		1 1	5	0		-1		0		-0.866	0		0		0		0
+SPILL_HW_DIR	sodium_street_light_1	1.0		0.53	0.09	1		6000cd				0		0		0		1								0
 
-LIGHT_PARAM_DEF	flood_merc_XYZTSB	6	DX	DY	DZ	SIZE	LEGACY_SIZE	A	# <--- params order inside the obj
-BILLBOARD_HW	flood_merc_XYZTSB		1.0		1.0		1.0		1.0		LEGACY_SIZE		1 0	6	DX		DY		DZ		0.5		0		0		0		0
-SPILL_HW_DIR	flood_merc_XYZTSB		0.78	0.83	1.0		A		SIZE				DX		DY		DZ		0.35							0
+BILLBOARD_HW	sodium_street_light_2	1.0		0.50	0.00	1		7500cd		1 1	5	0		-1		0		-0.866	0		0		0		0
+SPILL_HW_DIR	sodium_street_light_2	1.0		0.50	0.00	1		4000cd				0		0		0		1								0
 
-LIGHT_PARAM_DEF	flood_LPS_XYZTSB	6	DX	DY	DZ	SIZE	LEGACY_SIZE	A	# <--- params order inside the obj
-BILLBOARD_HW	flood_LPS_XYZTSB		0.9		1.0		1.0		1		LEGACY_SIZE		1 2	7	DX		DY		DZ		0.5		0.0		0		0		0
-SPILL_HW_DIR	flood_LPS_XYZTSB		1.0		0.45	0.09	A		SIZE				DX		DY		DZ		0.30							0
-
-BILLBOARD_HW	sodium_street_light_1	1		1		1		1		3			1 1	5	0		-0.45	0		0.55	0		0		0		0
-BILLBOARD_HW	sodium_street_light_2	1		1		1		1		3			1 1	5	0		-0.45	0		0.55	0		0		0		0
 
 # Orange residential street light
 
-BILLBOARD_HW	LPS_street_light		1.0		1.0		1.0		1		1.3			1 2	7	0		-1.494	-0.131	1.5		0.0		0		0		0
-SPILL_HW_DIR	LPS_street_light		1.0		0.53	0.09	0.22	24					0		0		0		1								0
+#			Name						R		G		B		A		Size/Int	Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 
-BILLBOARD_HW	LPS_street_light2		0.95	1.0		1.0		1.0		1.25		1 2	7	0		-1.494	-0.131	1.5		0.0		0		0		0
-SPILL_HW_DIR	LPS_street_light2		1.0		0.53	0.09	0.20	22					0		0		0		1								0
 
-BILLBOARD_HW	LPS_street_light3		1.0		0.95	1.0		1.0		1.2			1 2	7	0		-1.494	-0.131	1.5		0.0		0		0		0
-SPILL_HW_DIR	LPS_street_light3		1.0		0.53	0.09	0.15	22					0		0		0		1								0
+BILLBOARD_HW	LPS_street_light		1.0		0.53	0.09	1.0		13500cd		1 2	7	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	LPS_street_light		1.0		0.53	0.09	1.0		10000cd				0		0		0		1								0
+
+BILLBOARD_HW	LPS_street_light2		1.0		0.53	0.09	1.0		13000cd		1 2	7	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	LPS_street_light2		1.0		0.53	0.09	0.98	9500cd				0		0		0		1								0
+
+BILLBOARD_HW	LPS_street_light3		1.0		0.53	0.09	1.0		12500cd		1 2	7	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	LPS_street_light3		1.0		0.53	0.09	0.95	9000cd				0		0		0		1								0
 
 # Amber residential street light (version 1 is bright, 2 is dimmer and slightly less yellow)
 
-BILLBOARD_HW	amb_street_light		1.0		1.0		1.0		1.0		1.4			1 1	6	0		-1.494	-0.131	1.5		0.0		0		0		0
-SPILL_HW_DIR	amb_street_light		1.0		0.541	0.230	0.20	23					0		0.0		0		1.0								0
+BILLBOARD_HW	amb_street_light		1.0		0.541	0.230	1.0		14000cd		1 1	6	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	amb_street_light		1.0		0.541	0.230	1.0		10000cd				0		0.0		0		1.0								0
 
-BILLBOARD_HW	amb_street_light2		1.0		0.95	0.95	0.9		1.3			1 1	6	0		-1.494	-0.131	1.5		0.0		0		0		0
-SPILL_HW_DIR	amb_street_light2		1.0		0.521	0.216	0.15	22					0		0.0		0		1.0								0
+BILLBOARD_HW	amb_street_light2		1.0		0.521	0.216	1.0		13500cd		1 1	6	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	amb_street_light2		1.0		0.521	0.216	0.95	9500cd				0		0.0		0		1.0								0
 
 # Amber primary street light (bigger and brighter than the previous one)
 
-BILLBOARD_HW	amb_street_light3		1.0		1.0		1.0		1		1.5			1 1	6	0		-1.6	-0.18	1.5		0.0		0		0		0
-SPILL_HW_DIR	amb_street_light3		1.0		0.541	0.230	0.3		28					0		0		0		1								0
+BILLBOARD_HW	amb_street_light3		1.0		0.541	0.230	1.0		17500cd		1 1	6	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	amb_street_light3		1.0		0.541	0.230	1.0		12500cd				0		0		0		1.0								0
 
-BILLBOARD_HW	amb_street_light4		1.0		1.0		1.0		1.0		1.45		1 1	6	0		-1.6	-0.18	1.5		0.0		0		0		0
-SPILL_HW_DIR	amb_street_light4		1.0		0.541	0.22	0.30	26					0		0		0		1								0
+BILLBOARD_HW	amb_street_light4		1.0		0.541	0.22	1.0		17500cd		1 1	6	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	amb_street_light4		1.0		0.541	0.22	1.0		12500cd				0		0		0		1.0								0
 
 # Lantern-style residential street light
 
-BILLBOARD_HW	lantern_street_light	1.0		0.8		0.6		1		1.25		1 1	6	0		-3		0		2.0		0.0		0		0		0
-SPILL_HW_DIR	lantern_street_light	1.0		0.66	0.35	0.2		20					0		0		0		1								0
+BILLBOARD_HW	lantern_street_light	1.0		0.66	0.35	1.0		12500cd		1 1	6	0		-1		0		-0.707	0.0		0		0		0
+SPILL_HW_DIR	lantern_street_light	1.0		0.66	0.35	0.95	9000cd				0		0		0		1								0
 
 # Bluish White residential street light (metal halide).
 
-BILLBOARD_HW	white_street_light		1.0		1.0		1.0		1		1.4			1 0	6	0		-1.494	-0.131	1.4		0		0		0		0
-SPILL_HW_DIR	white_street_light		0.949	0.988	1.0		0.3		26					0		0.0		0		1.0								0
+BILLBOARD_HW	white_street_light		0.949	0.988	1.0		1.0		17500cd		1 0	6	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	white_street_light		0.949	0.988	1.0		1.0		12500cd				0		0.0		0		1.0								0
 
-BILLBOARD_HW	MH_street_light1		1.0		1.0		1.0		1		1.50		1 0	6	0		-1.494	-0.131	1.4		0		0		0		0
-SPILL_HW_DIR	MH_street_light1		0.95	0.988	1.0		0.3		26					0		0.0		0		1.0								0
-BILLBOARD_HW	MH_street_light2		1.0		1.0		1.0		1.0		1.55		1 0	6	0		-1.494	-0.131	1.4		0		0		0		0
-SPILL_HW_DIR	MH_street_light2		0.95	0.988	1.0		0.28	24					0		0.0		0		1.0								0
+BILLBOARD_HW	MH_street_light1		0.95	0.988	1.0		1.0		22000cd		1 0	6	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	MH_street_light1		0.95	0.988	1.0		1.0		15000cd				0		0.0		0		1.0								0
+BILLBOARD_HW	MH_street_light2		0.95	0.988	1.0		1.0		21000cd		1 0	6	0		-0.996	-0.088	-0.866	0.0		0		0		0
+SPILL_HW_DIR	MH_street_light2		0.95	0.988	1.0		0.95	14000cd				0		0.0		0		1.0								0
 
 # Area lights
 
-BILLBOARD_HW	Hg_area_lt_sml_bb		1		1		1.0		1.0		1.6			1 0	6	0		-0.866	-0.5	0.7		0		0		0		0
-SPILL_HW_DIR	Hg_area_lt_sml_sp		0.78	0.83	1.0		0.4		40					0		-0.866	-0.5	0.40							0
+BILLBOARD_HW	Hg_area_lt_sml_bb		0.78	0.83	1.0		1.0		40000cd		1 0	6	0		-0.866	-0.5	0.7		0		0		0		0
+SPILL_HW_DIR	Hg_area_lt_sml_sp		0.78	0.83	1.0		1.0		40000cd				0		-0.866	-0.5	0.40							0
 
-BILLBOARD_HW	area_lt_sml_bb			1		0.91	0.86	1.0		1.6			2 4	2	0		-0.866	-0.5	0.7		0		0		0		0
-SPILL_HW_DIR	area_lt_sml_sp			1.0		0.8		0.8		0.5		40					0		-0.866	-0.5	0.40							0
+BILLBOARD_HW	area_lt_sml_bb			1.0		0.8		0.8		1.0		60000cd		2 4	2	0		-0.866	-0.5	0.7		0		0		0		0
+SPILL_HW_DIR	area_lt_sml_sp			1.0		0.8		0.8		1.0		60000cd				0		-0.866	-0.5	0.40							0
 
-BILLBOARD_HW	area_lt_med_bb			1		0.91	0.86	1.0		1.8			2 4	2	0		-0.866	-0.5	0.7		0		0		0		0
-SPILL_HW_DIR	area_lt_med_sp			1.0		0.8		0.9		0.6		60					0		-0.866	-0.5	0.40							0
+BILLBOARD_HW	area_lt_med_bb			1.0		0.8		0.9		1.0		80000cd		2 4	2	0		-0.866	-0.5	0.7		0		0		0		0
+SPILL_HW_DIR	area_lt_med_sp			1.0		0.8		0.9		1.0		80000cd				0		-0.866	-0.5	0.40							0
 
-BILLBOARD_HW	area_lt_lrg_bb			1		0.76	0.97	1.0		2.2			2 5	2	0		-0.766	-0.642	0.80	0		0		0		0
-SPILL_HW_DIR	area_lt_lrg_sp			0.85	0.75	1.0		0.7		85					0.0		-0.707	-0.707	0.5								0
+BILLBOARD_HW	area_lt_lrg_bb			0.85	0.75	1.0		1.0		100000cd	2 5	2	0		-0.766	-0.642	0.8		0		0		0		0
+SPILL_HW_DIR	area_lt_lrg_sp			0.85	0.75	1.0		1.0		100000cd			0.0		-0.707	-0.707	0.50							0
 
 LIGHT_PARAM_DEF	area_lt_param_bb	3														DX		DY		DZ
 BILLBOARD_HW	area_lt_param_bb		1.0		0.76	0.97	1.0		2.2			2 5	2	DX		DY		DZ		0.7		0		0		0		0
 LIGHT_PARAM_DEF	area_lt_param_sp	4	DX	DY	DZ	SIZE	# <--- params order inside the obj
-SPILL_HW_DIR	area_lt_param_sp		0.85	0.75	1.0		0.6		SIZE				DX		DY		DZ		0.3								0
+SPILL_HW_DIR	area_lt_param_sp		0.85	0.75	1.0		1.0		SIZE				DX		DY		DZ		0.3								0
 
 #######################################################################################################################################################################
 # UPDATED TO V12 PHOTOMETRIC
@@ -1004,49 +1139,49 @@ SPILL_HW_DIR	area_lt_param_sp		0.85	0.75	1.0		0.6		SIZE				DX		DY		DZ		0.3						
 
 #			Name						R		G		B		A		Size/Int	Cell	Dx		Dy		Dz			Width	Frq		Phase	Amp		Day		Dataref
 
-BILLBOARD_HW	Hwy10Deg1_var1			1.0		0.541	0.230	1.0		80000cd		2 6 2	0		-0.968	-0.25		-0.2	0		0		0		0
-BILLBOARD_HW	Hwy10Deg1_var2			1.0		0.541	0.230	1.0		75000cd		2 6 2	0		-0.968	-0.25		-0.2	0		0		0		0
-BILLBOARD_HW	Hwy10Deg1_var3			1.0		0.541	0.230	1.0		70000cd		2 6 2	0		-0.968	-0.25		-0.2	0		0		0		0
+BILLBOARD_HW	Hwy10Deg1_var1			1.62	0.88	0.37	1.0		50000cd		2 6 2	0		-0.968	-0.25		-0.5	0		0		0		0
+BILLBOARD_HW	Hwy10Deg1_var2			1.62	0.88	0.37	1.0		45000cd		2 6 2	0		-0.968	-0.25		-0.5	0		0		0		0
+BILLBOARD_HW	Hwy10Deg1_var3			1.62	0.88	0.37	1.0		40000cd		2 6 2	0		-0.968	-0.25		-0.5	0		0		0		0
 
-SPILL_HW_DIR	Hwy10Deg1_var1			1.0		0.541	0.230	0.9		40000cd				0		-0.968	-0.25		0.383							0
-SPILL_HW_DIR	Hwy10Deg1_var2			1.0		0.541	0.230	0.9		37500cd				0		-0.968	-0.25		0.383							0
-SPILL_HW_DIR	Hwy10Deg1_var3			1.0		0.541	0.230	0.9		35000cd				0		-0.968	-0.25		0.383							0
+SPILL_HW_DIR	Hwy10Deg1_var1			1.62	0.88	0.37	0.9		25000cd				0		-0.968	-0.25		0.383							0
+SPILL_HW_DIR	Hwy10Deg1_var2			1.62	0.88	0.37	0.9		22500cd				0		-0.968	-0.25		0.383							0
+SPILL_HW_DIR	Hwy10Deg1_var3			1.62	0.88	0.37	0.9		20000cd				0		-0.968	-0.25		0.383							0
 
-BILLBOARD_HW	Rmp10Deg1_var1			1.0		0.541	0.230	1.0		95000cd		2 6	2	0		-0.9848	-0.1736		-0.2	0		0		0		0
-BILLBOARD_HW	Rmp10Deg1_var2			1.0		0.541	0.230	1.0		100000cd	2 6	2	0		-0.9848	-0.1736		-0.2	0		0		0		0
-SPILL_HW_DIR	Rmp10Deg1_var1			1.0		0.541	0.230	0.9		47500cd				0		-0.9848	-0.1736		0.643							0
-SPILL_HW_DIR	Rmp10Deg1_var2			1.0		0.541	0.230	0.8		50000cd				0		-0.9848	-0.1736		0.643							0
+BILLBOARD_HW	Rmp10Deg1_var1			1.62	0.88	0.37	1.0		60000cd		2 6	2	0		-0.9848	-0.1736		-0.5	0		0		0		0
+BILLBOARD_HW	Rmp10Deg1_var2			1.62	0.88	0.37	1.0		64000cd		2 6	2	0		-0.9848	-0.1736		-0.5	0		0		0		0
+SPILL_HW_DIR	Rmp10Deg1_var1			1.62	0.88	0.37	0.9		30000cd				0		-0.9848	-0.1736		0.643							0
+SPILL_HW_DIR	Rmp10Deg1_var2			1.62	0.88	0.37	0.8		32000cd				0		-0.9848	-0.1736		0.643							0
 
 # LPS (yellow-orange) highway streetlights, various intensities:
 # Hwy versions have cantilever arm and wide spill cone, Rmp versions have the light fixed to the top of the pole, and a narrower beam width to light a single lane
 
-BILLBOARD_HW	Hwy20Deg1_var1			1		0.385	0.015	1.0		100000cd	2 7 2	0		-0.968	-0.25		-0.2	0		0		0		0
-BILLBOARD_HW	Hwy20Deg1_var2			0.947	0.373	0.015	1.0		96000cd		2 7 2	0		-0.968	-0.25		-0.2	0		0		0		0
-BILLBOARD_HW	Hwy20Deg1_var3			0.947	0.363	0.015	1.0		92000cd		2 7	2	0		-0.968	-0.25		-0.2	0		0		0		0
+BILLBOARD_HW	Hwy20Deg1_var1			2.04	0.79	0.03	1.0		50000cd		2 7 2	0		-0.968	-0.25		-0.5	0		0		0		0
+BILLBOARD_HW	Hwy20Deg1_var2			2.02	0.79	0.03	1.0		45000cd		2 7 2	0		-0.968	-0.25		-0.5	0		0		0		0
+BILLBOARD_HW	Hwy20Deg1_var3			2.05	0.79	0.03	1.0		42000cd		2 7	2	0		-0.968	-0.25		-0.5	0		0		0		0
 
-SPILL_HW_DIR	Hwy20Deg1_var1			1		0.385	0.015	0.95	50000cd				0		-0.968	-0.25		0.383							0
-SPILL_HW_DIR	Hwy20Deg1_var2			0.947	0.373	0.015	0.9		48000cd				0		-0.968	-0.25		0.383							0
-SPILL_HW_DIR	Hwy20Deg1_var3			0.947	0.363	0.015	0.85	46000cd				0		-0.968	-0.25		0.383							0
+SPILL_HW_DIR	Hwy20Deg1_var1			2.04	0.79	0.03	0.95	25000cd				0		-0.968	-0.25		0.383							0
+SPILL_HW_DIR	Hwy20Deg1_var2			2.02	0.79	0.03	0.9		22500cd				0		-0.968	-0.25		0.383							0
+SPILL_HW_DIR	Hwy20Deg1_var3			2.05	0.79	0.03	0.85	21000cd				0		-0.968	-0.25		0.383							0
 
-BILLBOARD_HW	Rmp20Deg1_var1			0.947	0.363	0.015	1.0		120000cd	2 7	2	0		-0.9848	-0.1736		-0.2	0		0		0		0
-BILLBOARD_HW	Rmp20Deg1_var2			0.947	0.363	0.015	1.0		128000cd	2 7	2	0		-0.9848	-0.1736		-0.2	0		0		0		0
-SPILL_HW_DIR	Rmp20Deg1_var1			0.947	0.355	0.015	0.85	60000cd				0		-0.9848	-0.1736		0.643							0
-SPILL_HW_DIR	Rmp20Deg1_var2			0.947	0.363	0.015	0.95	64000cd				0		-0.9848	-0.1736		0.643							0
+BILLBOARD_HW	Rmp20Deg1_var1			2.05	0.79	0.03	1.0		55000cd		2 7	2	0		-0.9848	-0.1736		-0.5	0		0		0		0
+BILLBOARD_HW	Rmp20Deg1_var2			2.05	0.79	0.03	1.0		60000cd		2 7	2	0		-0.9848	-0.1736		-0.5	0		0		0		0
+SPILL_HW_DIR	Rmp20Deg1_var1			2.05	0.79	0.03	0.85	27500cd				0		-0.9848	-0.1736		0.643							0
+SPILL_HW_DIR	Rmp20Deg1_var2			2.05	0.79	0.03	0.95	30000cd				0		-0.9848	-0.1736		0.643							0
 
-BILLBOARD_HW	HwyLPSHighMast			0.947	0.363	0.015	1.0		160000cd	2 7	2	0		-0.968	-0.25		-0.2	0		0		0		0
-SPILL_HW_DIR	HwyLPSHighMast			0.947	0.363	0.015	0.9		80000cd				0		-0.968	-0.25		0.5								0
+BILLBOARD_HW	HwyLPSHighMast			2.05	0.79	0.03	1.0		100000cd	2 7	2	0		-0.968	-0.25		-0.5	0		0		0		0
+SPILL_HW_DIR	HwyLPSHighMast			2.05	0.79	0.03	0.9		50000cd				0		-0.968	-0.25		0.5								0
 
 #######################################################################################################################################################################
 
 # Road bridge deck lighting (vertical, relatively narrow streetlight, suspended from the bridge girders or towers). Front and axial billboards plus spill:
 
 BILLBOARD_HW	RoadBridgeDeck_var1		0.992	0.938	0.898	1.0		-2			1 2	0	0		-1.0	0.0		1.0		0		0		0		0
-SPILL_HW_DIR	RoadBridgeDeck_var1		0.992	0.938	0.898	0.55	25					0		-1.0	-0.0	0.50							0
+SPILL_HW_DIR	RoadBridgeDeck_var1		0.992	0.938	0.898	1.0		25					0		-1.0	0.0		0.50							0
 
 # Always on, parameterized LPS spill for tunnels:
 
-LIGHT_PARAM_DEF	LPS_param_sp	6		DX	DY	DZ	A	SIZE	WIDTH	# <--- params order inside the obj
-SPILL_HW_DIR	LPS_param_sp			0.947	0.373	0.015	A		SIZE				DX		DY		DZ		WIDTH							1
+LIGHT_PARAM_DEF	LPS_param_sp_pm	6		DX		DY		DZ		A		INTENSITY									WIDTH	# <--- params order inside the obj
+SPILL_HW_DIR	LPS_param_sp_pm			0.947	0.373	0.015	A		INTENSITY			DX		DY		DZ		WIDTH							1
 
 # Road sign lights
 
@@ -1055,17 +1190,26 @@ BILLBOARD_HW	sign_bridge				1.0		1.0		1.0		1		1.0			1 0	5	0.0		0.258	-0.429	0.5	
 
 # Highway hazard wigwags
 
-BILLBOARD_HW	hwy_hzd_red_S1			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		3		-2		1.2		0.0		1.5		0
-BILLBOARD_HW	hwy_hzd_red_S2			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		3		-2		1.2		0.5		1.5		0
+BILLBOARD_HW	hwy_hzd_red_S1			1.0		0.1		0.1		1.0		4000cd		1 0	0	0		0		1		0.643	1.2		0.0		1.5		0
+BILLBOARD_HW	hwy_hzd_red_S2			1.0		0.1		0.1		1.0		4000cd		1 0	0	0		0		1		0.643	1.2		0.5		1.5		0
+SPILL_HW_FLA	hwy_hzd_red_S1			1.0		0.1		0.1		1.0		40cd												1.2		0.0		1.5		0
+SPILL_HW_FLA	hwy_hzd_red_S2			1.0		0.1		0.1		1.0		40cd												1.2		0.5		1.5		0
 
 # Level Crossing Lights
 
-BILLBOARD_HW	LevelCrossN1			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		-3		-2		1.0		0.0		1.5		1
-BILLBOARD_HW	LevelCrossN2			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		-3		-2		1.0		0.5		1.5		1
-BILLBOARD_HW	LevelCrossNCnst			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		-3		-2		0.0		0.0		0.0		1
-BILLBOARD_HW	LevelCrossS1			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		3		-2		1.0		0.0		1.5		1
-BILLBOARD_HW	LevelCrossS2			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		3		-2		1.0		0.5		1.5		1
-BILLBOARD_HW	LevelCrossSCnst			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		3		-2		0.0		0.0		0.0		1
+BILLBOARD_HW	LevelCrossN1			1.0		0.1		0.1		1.0		4500cd		1 0	0	0		0		-1		0.643	1.0		0.0		1.5		1
+BILLBOARD_HW	LevelCrossN2			1.0		0.1		0.1		1.0		4500cd		1 0	0	0		0		-1		0.643	1.0		0.5		1.5		1
+BILLBOARD_HW	LevelCrossNCnst			1.0		0.1		0.1		1.0		4500cd		1 0	0	0		0		-1		0.643	0.0		0.0		0.0		1
+BILLBOARD_HW	LevelCrossS1			1.0		0.1		0.1		1.0		4500cd		1 0	0	0		0		1		0.643	1.0		0.0		1.5		1
+BILLBOARD_HW	LevelCrossS2			1.0		0.1		0.1		1.0		4500cd		1 0	0	0		0		1		0.643	1.0		0.5		1.5		1
+BILLBOARD_HW	LevelCrossSCnst			1.0		0.1		0.1		1.0		4500cd		1 0	0	0		0		1		0.643	0.0		0.0		0.0		1
+
+SPILL_HW_FLA	LevelCrossN1			1.0		0.1		0.1		1.0		45cd												1.0		0.0		1.5		1
+SPILL_HW_FLA	LevelCrossN2			1.0		0.1		0.1		1.0		45cd												1.0		0.5		1.5		1
+SPILL_HW_FLA	LevelCrossNCnst			1.0		0.1		0.1		1.0		45cd												0.0		0.0		0.0		1
+SPILL_HW_FLA	LevelCrossS1			1.0		0.1		0.1		1.0		45cd												1.0		0.0		1.5		1
+SPILL_HW_FLA	LevelCrossS2			1.0		0.1		0.1		1.0		45cd												1.0		0.5		1.5		1
+SPILL_HW_FLA	LevelCrossSCnst			1.0		0.1		0.1		1.0		45cd												0.0		0.0		0.0		1
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #	Name								R		G		B		A	Size/Int	Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
@@ -1075,30 +1219,57 @@ BILLBOARD_HW	LevelCrossSCnst			1.0		0.1		0.1		1.0		1.2			1 0	0	0		0		3		-2		0.0	
 # Four sets of traffic lights, pointing respectively north, south, east and west in OBJ space. Opposing sets are in phase with each other. N & S are out of phase with E & W.
 # Note: two amber bilboards are needed per pair in order to get the timing right. Only one per pair needs to be added to the OBJ.
 
-BILLBOARD_HW	traffic_red_N			0.997	0.0		0.05	1		0.8		1 4	7	0		0		-3		-2		0.02	0.0		1600	1
-BILLBOARD_HW	traffic_amber_N			0.978	0.772	0.071	1		0.8		1 4	7	0		0		-3		-2		0.02	0.57	1030	1
-BILLBOARD_HW	traffic_amber_N			0.978	0.772	0.071	1		0.8		1 4	7	0		0		-3		-2		0.02	0.94	1060	1
-BILLBOARD_HW	traffic_green_N			0.015	0.983	0.966	1		0.8		1 4	7	0		0		-3		-2		0.02	0.6		1340	1
+BILLBOARD_HW	traffic_red_N			0.997	0.05	0.05	1	4000cd		1 4	7	0		0		-1		0.68	0.02	0.0		1600	1
+BILLBOARD_HW	traffic_amber_N			1.0		0.272	0.071	1	4000cd		1 4	7	0		0		-1		0.68	0.02	0.57	1030	1
+BILLBOARD_HW	traffic_amber_N			1.0		0.272	0.071	1	4000cd		1 4	7	0		0		-1		0.68	0.02	0.94	1060	1
+BILLBOARD_HW	traffic_green_N			0.015	0.983	0.566	1	4000cd		1 4	7	0		0		-1		0.68	0.02	0.6		1340	1
 
-BILLBOARD_HW	traffic_red_S			0.997	0.0		0.05	1		0.8		1 4	7	0		0		3		-2		0.02	0.0		1600	1
-BILLBOARD_HW	traffic_amber_S			0.978	0.772	0.071	1		0.8		1 4	7	0		0		3		-2		0.02	0.57	1030	1
-BILLBOARD_HW	traffic_amber_S			0.978	0.772	0.071	1		0.8		1 4	7	0		0		3		-2		0.02	0.94	1060	1
-BILLBOARD_HW	traffic_green_S			0.015	0.983	0.966	1		0.8		1 4	7	0		0		3		-2		0.02	0.6		1340	1
+BILLBOARD_HW	traffic_red_S			0.997	0.05	0.05	1	4000cd		1 4	7	0		0		1		0.68	0.02	0.0		1600	1
+BILLBOARD_HW	traffic_amber_S			1.0		0.272	0.071	1	4000cd		1 4	7	0		0		1		0.68	0.02	0.57	1030	1
+BILLBOARD_HW	traffic_amber_S			1.0		0.272	0.071	1	4000cd		1 4	7	0		0		1		0.68	0.02	0.94	1060	1
+BILLBOARD_HW	traffic_green_S			0.015	0.983	0.566	1	4000cd		1 4	7	0		0		1		0.68	0.02	0.6		1340	1
 
-BILLBOARD_HW	traffic_red_E			0.997	0.0		0.05	1		0.8		1 4	7	3		0		0		-2		0.02	0.5		1600	1
-BILLBOARD_HW	traffic_amber_E			0.978	0.772	0.071	1		0.8		1 4	7	3		0		0		-2		0.02	0.07	1030	1
-BILLBOARD_HW	traffic_amber_E			0.978	0.772	0.071	1		0.8		1 4	7	3		0		0		-2		0.02	0.44	1060	1
-BILLBOARD_HW	traffic_green_E			0.015	0.983	0.966	1		0.8		1 4	7	3		0		0		-2		0.02	0.1		1340	1
+BILLBOARD_HW	traffic_red_E			0.997	0.05	0.05	1	4000cd		1 4	7	1		0		0		0.68	0.02	0.5		1600	1
+BILLBOARD_HW	traffic_amber_E			1.0		0.272	0.071	1	4000cd		1 4	7	1		0		0		0.68	0.02	0.07	1030	1
+BILLBOARD_HW	traffic_amber_E			1.0		0.272	0.071	1	4000cd		1 4	7	1		0		0		0.68	0.02	0.44	1060	1
+BILLBOARD_HW	traffic_green_E			0.015	0.983	0.566	1	4000cd		1 4	7	1		0		0		0.68	0.02	0.1		1340	1
 
-BILLBOARD_HW	traffic_red_W			0.997	0.0		0.05	1		0.8		1 4	7	-3		0		0		-2		0.02	0.5		1600	1
-BILLBOARD_HW	traffic_amber_W			0.978	0.772	0.071	1		0.8		1 4	7	-3		0		0		-2		0.02	0.07	1030	1
-BILLBOARD_HW	traffic_amber_W			0.978	0.772	0.071	1		0.8		1 4	7	-3		0		0		-2		0.02	0.44	1060	1
-BILLBOARD_HW	traffic_green_W			0.015	0.983	0.966	1		0.8		1 4	7	-3		0		0		-2		0.02	0.1		1340	1
+BILLBOARD_HW	traffic_red_W			0.997	0.05	0.05	1	4000cd		1 4	7	-1		0		0		0.68	0.02	0.5		1600	1
+BILLBOARD_HW	traffic_amber_W			1.0		0.272	0.071	1	4000cd		1 4	7	-1		0		0		0.68	0.02	0.07	1030	1
+BILLBOARD_HW	traffic_amber_W			1.0		0.272	0.071	1	4000cd		1 4	7	-1		0		0		0.68	0.02	0.44	1060	1
+BILLBOARD_HW	traffic_green_W			0.015	0.983	0.566	1	4000cd		1 4	7	-1		0		0		0.68	0.02	0.1		1340	1
 
-BILLBOARD_HW	traffic_green_N_static	0.015	0.983	0.966	1		0.8		1 4	7	0		0		-3		-2		0		0		0		1
-BILLBOARD_HW	traffic_green_S_static	0.015	0.983	0.966	1		0.8		1 4	7	0		0		3		-2		0		0		0		1
-BILLBOARD_HW	traffic_green_E_static	0.015	0.983	0.966	1		0.8		1 4	7	3		0		0		-2		0		0		0		1
-BILLBOARD_HW	traffic_green_W_static	0.015	0.983	0.966	1		0.8		1 4	7	-3		0		0		-2		0		0		0		1
+BILLBOARD_HW	traffic_green_N_static	0.015	0.983	0.566	1	4000cd		1 4	7	0		0		-1		0.68	0		0		0		1
+BILLBOARD_HW	traffic_green_S_static	0.015	0.983	0.566	1	4000cd		1 4	7	0		0		1		0.68	0		0		0		1
+BILLBOARD_HW	traffic_green_E_static	0.015	0.983	0.566	1	4000cd		1 4	7	1		0		0		0.68	0		0		0		1
+BILLBOARD_HW	traffic_green_W_static	0.015	0.983	0.566	1	4000cd		1 4	7	-1		0		0		0.68	0		0		0		1
+
+
+SPILL_HW_FLA	traffic_red_N			0.997	0.05	0.05	1	40cd												0.02	0.0		1600	1
+SPILL_HW_FLA	traffic_amber_N			1.0		0.272	0.071	1	40cd												0.02	0.57	1030	1
+SPILL_HW_FLA	traffic_amber_N			1.0		0.272	0.071	1	40cd												0.02	0.94	1060	1
+SPILL_HW_FLA	traffic_green_N			0.015	0.983	0.566	1	40cd												0.02	0.6		1340	1
+
+SPILL_HW_FLA	traffic_red_S			0.997	0.05	0.05	1	40cd												0.02	0.0		1600	1
+SPILL_HW_FLA	traffic_amber_S			1.0		0.272	0.071	1	40cd												0.02	0.57	1030	1
+SPILL_HW_FLA	traffic_amber_S			1.0		0.272	0.071	1	40cd												0.02	0.94	1060	1
+SPILL_HW_FLA	traffic_green_S			0.015	0.983	0.566	1	40cd												0.02	0.6		1340	1
+
+SPILL_HW_FLA	traffic_red_E			0.997	0.05	0.05	1	40cd												0.02	0.5		1600	1
+SPILL_HW_FLA	traffic_amber_E			1.0		0.272	0.071	1	40cd												0.02	0.07	1030	1
+SPILL_HW_FLA	traffic_amber_E			1.0		0.272	0.071	1	40cd												0.02	0.44	1060	1
+SPILL_HW_FLA	traffic_green_E			0.015	0.983	0.566	1	40cd												0.02	0.1		1340	1
+
+SPILL_HW_FLA	traffic_red_W			0.997	0.05	0.05	1	40cd												0.02	0.5		1600	1
+SPILL_HW_FLA	traffic_amber_W			1.0		0.272	0.071	1	40cd												0.02	0.07	1030	1
+SPILL_HW_FLA	traffic_amber_W			1.0		0.272	0.071	1	40cd												0.02	0.44	1060	1
+SPILL_HW_FLA	traffic_green_W			0.015	0.983	0.566	1	40cd												0.02	0.1		1340	1
+
+SPILL_HW_DIR	traffic_green_N_static	0.015	0.983	0.566	1	40cd				0		0		0		1								1
+SPILL_HW_DIR	traffic_green_S_static	0.015	0.983	0.566	1	40cd				0		0		0		1								1
+SPILL_HW_DIR	traffic_green_E_static	0.015	0.983	0.566	1	40cd				0		0		0		1								1
+SPILL_HW_DIR	traffic_green_W_static	0.015	0.983	0.566	1	40cd				0		0		0		1								1
+
 
 
 # Railway Signals:
@@ -1112,28 +1283,51 @@ BILLBOARD_HW	traffic_green_W_static	0.015	0.983	0.966	1		0.8		1 4	7	-3		0		0		-2
 #	TR					*					*
 #	BC	*					*
 ## CPL (color position lights)
-BILLBOARD_HW	CPL_r					1.0		1.0		1.0		1		0.8		1 3	6	0		0.0		2.5		-1.5	0.004	0.0		1200	1
-BILLBOARD_HW	CPL_y					1.0		0.8		0.2		1		0.8		1 2	6	0		0.0		2.5		-1.5	0.004	0.2		1200	1
-BILLBOARD_HW	CPL_g					1.0		1.0		1.0		1		0.8		1 5	6	0		0.0		2.0		-1		0.004	0.4		1600	1
+BILLBOARD_HW	CPL_r					0.997	0.05	0.05	1		4500cd	1 3	6	0		0.0		1.0		0.58	0.004	0.0		1200	1
+BILLBOARD_HW	CPL_y					1.0		0.272	0.071	1		4500cd	1 2	6	0		0.0		1.0		0.58	0.004	0.2		1200	1
+BILLBOARD_HW	CPL_g					0.015	0.983	0.566	1		4500cd	1 5	6	0		0.0		1.0		0.5		0.004	0.4		1600	1
 
-BILLBOARD_HW	CPL_r_small				1.0		1.0		1.0		1		0.6		1 3	6	0		0.0		2.5		-1.5	0.004	0.0		1200	1
-BILLBOARD_HW	CPL_y_small				1.0		0.8		0.2		1		0.6		1 2	6	0		0.0		2.5		-1.5	0.004	0.2		1200	1
-BILLBOARD_HW	CPL_g_small				1.0		1.0		1.0		1		0.6		1 5	6	0		0.0		2.0		-1		0.004	0.4		1600	1
+SPILL_HW_FLA	CPL_r					0.997	0.05	0.05	1		45cd											0.004	0.0		1200	1
+SPILL_HW_FLA	CPL_y					1.0		0.272	0.071	1		45cd											0.004	0.2		1200	1
+SPILL_HW_FLA	CPL_g					0.015	0.983	0.566	1		45cd											0.004	0.4		1600	1
 
-BILLBOARD_HW	CPL_marker_w_TL			1.0		1.0		1.0		1		0.8		1 2	6	0		0.0		2.5		-1.5	0.008	0.6		1200	1
-BILLBOARD_HW	CPL_marker_w_TC			1.0		1.0		1.0		1		0.8		1 2	6	0		0.0		2.5		-1.5	0.008	0.2		1400	1
-BILLBOARD_HW	CPL_marker_y_TR			1.0		0.8		0.2		1		0.8		1 2	6	0		0.0		2.5		-1.5	0.008	0.8		1200	1
-BILLBOARD_HW	CPL_marker_w_BC			1.0		1.0		1.0		1		0.8		1 2	6	0		0.0		2.5		-1.5	0.008	0.0		1200	1
+BILLBOARD_HW	CPL_r_small				0.997	0.05	0.05	1		3000cd	1 3	6	0		0.0		1.0		0.58	0.004	0.0		1200	1
+BILLBOARD_HW	CPL_y_small				1.0		0.272	0.071	1		3000cd	1 2	6	0		0.0		1.0		0.58	0.004	0.2		1200	1
+BILLBOARD_HW	CPL_g_small				0.015	0.983	0.566	1		3000cd	1 5	6	0		0.0		1.0		0.5		0.004	0.4		1600	1
+
+SPILL_HW_FLA	CPL_r_small				0.997	0.05	0.05	1		40cd											0.004	0.0		1200	1
+SPILL_HW_FLA	CPL_y_small				1.0		0.272	0.071	1		40cd											0.004	0.2		1200	1
+SPILL_HW_FLA	CPL_g_small				0.015	0.983	0.566	1		40cd											0.004	0.4		1600	1
+
+BILLBOARD_HW	CPL_marker_w_TL			1.36	0.92	0.78	1		4500cd	1 2	6	0		0.0		1.0		0.58	0.008	0.6		1200	1
+BILLBOARD_HW	CPL_marker_w_TC			1.36	0.92	0.78	1		4500cd	1 2	6	0		0.0		1.0		0.58	0.008	0.2		1400	1
+BILLBOARD_HW	CPL_marker_y_TR			1.0		0.272	0.071	1		4500cd	1 2	6	0		0.0		1.0		0.58	0.008	0.8		1200	1
+BILLBOARD_HW	CPL_marker_w_BC			1.36	0.92	0.78	1		4500cd	1 2	6	0		0.0		1.0		0.58	0.008	0.0		1200	1
+
+SPILL_HW_FLA	CPL_marker_w_TL			1.36	0.92	0.78	1		45cd											0.008	0.6		1200	1
+SPILL_HW_FLA	CPL_marker_w_TC			1.36	0.92	0.78	1		45cd											0.008	0.2		1400	1
+SPILL_HW_FLA	CPL_marker_y_TR			1.0		0.272	0.071	1		45cd											0.008	0.8		1200	1
+SPILL_HW_FLA	CPL_marker_w_BC			1.36	0.92	0.78	1		45cd											0.008	0.0		1200	1
 
 ## CL (color lights)
-BILLBOARD_HW	CL_g_1					1.0		1.0		1.0		1		0.8		1 5	6	0		0.0		3.5		-2.5	0.004	0.5		1500	1
-BILLBOARD_HW	CL_y_1					1.0		0.8		0.2		1		0.8		1 2	6	0		0.0		3.5		-2.5	0.004	0.25	1250	1
-BILLBOARD_HW	CL_r_1					1.0		1.0		1.0		1		0.8		1 3	6	0		0.0		3.5		-2.5	0.004	0.0		1250	1
-BILLBOARD_HW	CL_g_2					1.0		1.0		1.0		1		0.8		1 5	6	0		0.0		3.5		-2.5	0.006	0.5		1500	1
-BILLBOARD_HW	CL_y_2					1.0		0.8		0.2		1		0.8		1 2	6	0		0.0		3.5		-2.5	0.006	0.25	1250	1
-BILLBOARD_HW	CL_r_2					1.0		1.0		1.0		1		0.8		1 3	6	0		0.0		3.5		-2.5	0.006	0.0		1250	1
-BILLBOARD_HW	CL_g_3					1.0		1.0		1.0		1		0.8		1 5	6	0		0.0		3.5		-2.5	0.008	0.0		1250	1
-BILLBOARD_HW	CL_r_3					1.0		1.0		1.0		1		0.8		1 3	6	0		0.0		3.5		-2.5	0.008	0.25	1750	1
+
+BILLBOARD_HW	CL_g_1					0.015	0.983	0.566	1		4500cd	1 5	6	0		0.0		1.0		0.707	0.004	0.5		1500	1
+BILLBOARD_HW	CL_y_1					1.0		0.272	0.071	1		4500cd	1 2	6	0		0.0		1.0		0.707	0.004	0.25	1250	1
+BILLBOARD_HW	CL_r_1					0.997	0.05	0.05	1		4500cd	1 3	6	0		0.0		1.0		0.707	0.004	0.0		1250	1
+BILLBOARD_HW	CL_g_2					0.015	0.983	0.566	1		4500cd	1 5	6	0		0.0		1.0		0.707	0.006	0.5		1500	1
+BILLBOARD_HW	CL_y_2					1.0		0.272	0.071	1		4500cd	1 2	6	0		0.0		1.0		0.707	0.006	0.25	1250	1
+BILLBOARD_HW	CL_r_2					0.997	0.05	0.05	1		4500cd	1 3	6	0		0.0		1.0		0.707	0.006	0.0		1250	1
+BILLBOARD_HW	CL_g_3					0.015	0.983	0.566	1		4500cd	1 5	6	0		0.0		1.0		0.707	0.008	0.0		1250	1
+BILLBOARD_HW	CL_r_3					0.997	0.05	0.05	1		4500cd	1 3	6	0		0.0		1.0		0.707	0.008	0.25	1750	1
+
+SPILL_HW_FLA	CL_g_1					0.015	0.983	0.566	1		45cd											0.004	0.5		1500	1
+SPILL_HW_FLA	CL_y_1					1.0		0.272	0.071	1		45cd											0.004	0.25	1250	1
+SPILL_HW_FLA	CL_r_1					0.997	0.05	0.05	1		45cd											0.004	0.0		1250	1
+SPILL_HW_FLA	CL_g_2					0.015	0.983	0.566	1		45cd											0.006	0.5		1500	1
+SPILL_HW_FLA	CL_y_2					1.0		0.272	0.071	1		45cd											0.006	0.25	1250	1
+SPILL_HW_FLA	CL_r_2					0.997	0.05	0.05	1		45cd											0.006	0.0		1250	1
+SPILL_HW_FLA	CL_g_3					0.015	0.983	0.566	1		45cd											0.008	0.0		1250	1
+SPILL_HW_FLA	CL_r_3					0.997	0.05	0.05	1		45cd											0.008	0.25	1750	1
 
 
 
@@ -1143,31 +1337,31 @@ BILLBOARD_HW	CL_r_3					1.0		1.0		1.0		1		0.8		1 3	6	0		0.0		3.5		-2.5	0.008	0.2
 SPILL_HW_DIR	test_amb_sp				1.0		0.8		0.67	0.2		30				0.0		0.0		-1.0	0.85							0
 # warm yellow, tungsten domestic light, three brightness/size options:
 LIGHT_PARAM_DEF	amb_tungsten_1_sp	3													DX		DY		DZ
-SPILL_HW_DIR	amb_tungsten_1_sp		0.992	0.835	0.675	0.25	35				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_tungsten_1_sp		0.992	0.835	0.675	0.25	15000cd			DX		DY		DZ		0.85							0
 LIGHT_PARAM_DEF	amb_tungsten_2_sp	3													DX		DY		DZ
-SPILL_HW_DIR	amb_tungsten_2_sp		0.992	0.835	0.675	0.3		40				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_tungsten_2_sp		0.992	0.835	0.675	0.3		20000cd			DX		DY		DZ		0.85							0
 LIGHT_PARAM_DEF	amb_tungsten_3_sp	3													DX		DY		DZ
-SPILL_HW_DIR	amb_tungsten_3_sp		0.992	0.835	0.675	0.30	45				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_tungsten_3_sp		0.992	0.835	0.675	0.30	25000cd			DX		DY		DZ		0.85							0
 
 LIGHT_PARAM_DEF	tungsten_omni_sp	3													DX		DY		DZ
-SPILL_HW_DIR	tungsten_omni_sp		0.992	0.835	0.675	0.3		60				DX		DY		DZ		1								0
+SPILL_HW_DIR	tungsten_omni_sp		0.992	0.835	0.675	0.3		30000cd			DX		DY		DZ		1								0
 
 
 # standard fluorescent (typical of stores):
 LIGHT_PARAM_DEF	amb_std_fl_1_sp		3													DX		DY		DZ
-SPILL_HW_DIR	amb_std_fl_1_sp			0.957	1.000	0.980	0.2		30				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_std_fl_1_sp			0.957	1.000	0.980	0.2		15000cd			DX		DY		DZ		0.85							0
 LIGHT_PARAM_DEF	amb_std_fl_2_sp		3													DX		DY		DZ
-SPILL_HW_DIR	amb_std_fl_2_sp			0.957	1.000	0.980	0.3		30				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_std_fl_2_sp			0.957	1.000	0.980	0.3		15000cd			DX		DY		DZ		0.85							0
 LIGHT_PARAM_DEF	amb_std_fl_3_sp		3													DX		DY		DZ
-SPILL_HW_DIR	amb_std_fl_3_sp			0.957	1.000	0.980	0.4		40				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_std_fl_3_sp			0.957	1.000	0.980	0.4		20000cd			DX		DY		DZ		0.85							0
 
 # cool fluorescent (typical of offices):
 LIGHT_PARAM_DEF	amb_cool_fl_1_sp	3													DX		DY		DZ
-SPILL_HW_DIR	amb_cool_fl_1_sp		0.835	0.925	0.996	0.2		30				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_cool_fl_1_sp		0.835	0.925	0.996	0.2		15000cd			DX		DY		DZ		0.85							0
 LIGHT_PARAM_DEF	amb_cool_fl_2_sp	3													DX		DY		DZ
-SPILL_HW_DIR	amb_cool_fl_2_sp		0.835	0.925	0.996	0.3		40				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_cool_fl_2_sp		0.835	0.925	0.996	0.3		20000cd			DX		DY		DZ		0.85							0
 LIGHT_PARAM_DEF	amb_cool_fl_3_sp	3													DX		DY		DZ
-SPILL_HW_DIR	amb_cool_fl_3_sp		0.835	0.925	0.996	0.4		50				DX		DY		DZ		0.85							0
+SPILL_HW_DIR	amb_cool_fl_3_sp		0.835	0.925	0.996	0.4		25000cd			DX		DY		DZ		0.85							0
 
 LIGHT_PARAM_DEF	lights_fx1_sp		1							INDEX
 SPILL_SW		lights_fx1_sp			0		0		0		INDEX	50.0			0.0		0.0		1.0		0.7										sim/graphics/animation/lights_fx_1_spill
@@ -1184,7 +1378,7 @@ BILLBOARD_HW	srgb_test2				1.0		1.0		1.0		1		1.0		2 6	3	0		0.0		0		1		0		0		0		1
 BILLBOARD_HW	srgb_test3				1.0		1.0		1.0		1		1.0		2 6	1	0		0.0		0		1		0		0		0		1
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  Tom Kyler's Lights for scenery - Updated to V12 using INTENSITY (they are in Resources/default scenery/airport scenery/Common_Elements/Lighting)
-#			Name						R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
+#			Name								R		G		B		A		Size		Cell	Dx		Dy		Dz		Width	Frq		Phase	Amp		Day		Dataref
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # V12 PHOTOMETRIC
@@ -1206,3 +1400,28 @@ BILLBOARD_HW	sodium_flood_XYZBTSS			1.0		0.6		0.2		1.0		4		4 2	0	DX	DY	DZ		0			0
 LIGHT_PARAM_DEF	sodium_flood_BB				4	DX		DY		DZ		SIZE
 BILLBOARD_HW	sodium_flood_BB					1.0		0.6		0.2		1.0		4		4 2	0	DX	DY	DZ		0			0		0		0		0
 
+LIGHT_PARAM_DEF	spot_params_sp			9		R		G		B		A		SIZE				DX		DY		DZ		WIDTH
+SPILL_HW_DIR	spot_params_sp					R		G		B		A		SIZE				DX		DY		DZ		WIDTH							0
+LIGHT_PARAM_DEF	spot_params_bb			8		R		G		B				SIZE				DX		DY		DZ		WIDTH
+BILLBOARD_HW	spot_params_bb					R		G		B		1.0		SIZE		2 5	2	DX		DY		DZ		WIDTH	0		0		0		0
+
+LIGHT_PARAM_DEF	flood_merc_XYZTSB	6	DX	DY	DZ	THROW	SIZE	A	# <--- params order inside the obj
+BILLBOARD_HW	flood_merc_XYZTSB		1.0		1.0		1.0		1.0		SIZE		1 0	6	DX		DY		DZ		0.5		0		0		0		0
+SPILL_HW_DIR	flood_merc_XYZTSB		0.78	0.83	1.0		A		THROW				DX		DY		DZ		0.35							0
+
+LIGHT_PARAM_DEF	flood_LPS_XYZTSB	6	DX	DY	DZ	THROW	SIZE	A	# <--- params order inside the obj
+BILLBOARD_HW	flood_LPS_XYZTSB		0.9		1.0		1.0		1		SIZE		1 2	7	DX		DY		DZ		0.5		0.0		0		0		0
+SPILL_HW_DIR	flood_LPS_XYZTSB		1.0		0.45	0.09	A		THROW				DX		DY		DZ		0.30							0
+
+BILLBOARD_HW	sodium_street_light_1	1		1		1		1		3			1 1	5	0		-0.45	0		0.55	0		0		0		0
+BILLBOARD_HW	sodium_street_light_2	1		1		1		1		3			1 1	5	0		-0.45	0		0.55	0		0		0		0
+
+LIGHT_PARAM_DEF	LPS_param_sp	6		DX		DY		DZ		A		SIZE	WIDTH	# <--- params order inside the obj
+SPILL_HW_DIR	LPS_param_sp			0.947	0.373	0.015	A		SIZE				DX		DY		DZ		WIDTH							1
+
+LIGHT_PARAM_DEF	full_custom_halo	9	R		G		B		A		SIZE			DX		DY		DZ		WIDTH
+SPILL_HW_DIR	full_custom_halo		R		G		B		A		SIZE			DX		DY		DZ		WIDTH							1
+LIGHT_PARAM_DEF	full_custom_halo_	9	R		G		B		A		SIZE			DX		DY		DZ		WIDTH
+SPILL_HW_DIR	full_custom_halo_		R		G		B		A		SIZE			DX		DY		DZ		WIDTH							1
+LIGHT_PARAM_DEF	full_custom_halo_night 9 R		G		B		A		SIZE			DX		DY		DZ		WIDTH
+SPILL_HW_DIR	full_custom_halo_night	R		G		B		A		SIZE			DX		DY		DZ		WIDTH							0
