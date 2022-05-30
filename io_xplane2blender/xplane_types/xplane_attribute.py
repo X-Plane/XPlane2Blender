@@ -1,11 +1,11 @@
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Callable
 
 from io_xplane2blender.xplane_helpers import floatToStr
 
 # TODO: This API is either redundent or self.value should be private.
 
-AttributeValueType = Union[bool, float, int, str]
-AttributeValueTypeList = List[Optional[AttributeValueType]]
+AttributeValueType = Union[bool, float, int, str, List["AttributeValueType"]]
+AttributeValueTypeList = List[AttributeValueType]
 
 
 class XPlaneAttribute:
@@ -18,10 +18,12 @@ class XPlaneAttribute:
         self, name: str, value: Optional[AttributeValueType] = None, weight: int = 0
     ):
         """
-        weight indicates where the attribute should be in the OBJ File
+        name - OBJ directive name, usually starts with 'ATTR_'
+        value - Directive value, False and None prevent the atttribute from writing. Use "True"/"False" as a str if needed
+        weight - Indicates where the attribute should be in the OBJ File
         """
         self.name = name
-        self.value = [value]  # type: AttributeValueTypeList
+        self.value: AttributeValueTypeList = [value]
         self.weight = weight
 
     def addValue(self, value: Optional[AttributeValueType]) -> None:
@@ -56,32 +58,39 @@ class XPlaneAttribute:
         Gets the value of value[i] as a formatted string.
         If self.value[i] is a list, the list's string representation
         will be seperated with '\t's instead of ','s
+
+        None -> ""
+        bool (True) -> ""
+        float -> floatToStr(value)
+        int -> str(value)
+        list -> for each member, bool->int(bool), float and int see above
+        str -> str
+
+        XPlaneAttribute.setValue(True/False) is used to indicate to activate
+        this or not, boolean values in a sub-list are treated as OBJ 0 or 1
         """
+        fmt_type:Dict[Union[bool, float, int, str], Callable] = {
+                type(None): lambda v: "",
+                bool: lambda v: str(int(v)), # Used in list convertion only
+                float: lambda v: floatToStr(v),
+                int: lambda v: str(int(v)),
+                str: lambda v: v,
+            }
         value = self.getValue(i)
 
-        if value is None:
-            return ""
-
-        # convert floats to strings
-        if isinstance(value, float):
-            value = floatToStr(value)
-        # convert ints to strings
-        elif isinstance(value, int):
-            value = str(value)
-        # convert lists to strings
-        elif isinstance(value, list) or isinstance(value, tuple) and len(value) > 0:
-            value = tuple(value)  # satisfies pylint "value is unsubscriptable"
-            _value = []
-            for i in range(0, len(value)):
-                # convert floats to strings
-                if isinstance(value[i], float):
-                    _value.append(floatToStr(value[i]))
-                else:
-                    _value.append(str(value[i]))
-
-            value = "\t".join(_value)
-        elif not isinstance(value, str):
+        if isinstance(value, bool):
+            # setValue(True/False) is used as activation, not a value
             value = ""
+        elif isinstance(value, (list, tuple)):
+            try:
+                value = "\t".join(fmt_type[type(v)](v) for v in value)
+            except KeyError:
+                assert False, f"{self.name}, {self.value}: Has value that cannot be convereted to string"
+        else:
+            try:
+                value = fmt_type[type(value)](value)
+            except KeyError:
+                assert False, f"{self.name}, {self.value}: Has value that cannot be converted to a string"
 
         return value
 

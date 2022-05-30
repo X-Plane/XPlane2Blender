@@ -74,23 +74,23 @@ IDX	53
 	# 1 Mesh: cockpit_device_1
 	# MESH: cockpit_device_1	weight: 0
 	# MATERIAL: device_mat_1
-	ATTR_cockpit_device	GNS430_1	1	0	True
+	ATTR_cockpit_device	GNS430_1	1	0	1
 	TRIS	0 6
 		# 2 Mesh: panel
-		# MESH: panel	weight: 15
+		# MESH: panel	weight: 16
 		# MATERIAL: panel
 		ATTR_cockpit
 		TRIS	12 6
 			# 3 Mesh: cockpit_device_2
 			# MESH: cockpit_device_2	weight: 0
 			# MATERIAL: device_mat_1
-			ATTR_cockpit_device	GNS430_1	1	0	True
+			ATTR_cockpit_device	GNS430_1	1	0	1
 			TRIS	6 6
 				# 4 Mesh: regular
-				# MESH: regular	weight: 16
+				# MESH: regular	weight: 17
 				# MATERIAL: regular
 				ATTR_shiny_rat	0.5
 				ATTR_no_cockpit
 				TRIS	18 36
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-dev.0+97.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+111.NO_BUILD_NUMBR

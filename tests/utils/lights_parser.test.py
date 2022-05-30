@@ -89,7 +89,7 @@ class TestLightsParser(XPlaneTestCase):
         xplane_lights_txt_parser.parse_lights_file()
         self.assertLoggerErrors(0)
         num_lights = len(xplane_lights_txt_parser._parsed_lights_txt_content)
-        expected_lights = 429 # You'll probably need to update this every time lights.txt is replaced
+        expected_lights = 470 # You'll probably need to update this every time lights.txt is replaced
         self.assertEqual(len(xplane_lights_txt_parser._parsed_lights_txt_content), expected_lights, msg=f"Found {num_lights}, expected {expected_lights}. Did you forget to update this after updating lights.txt?")
 
     #@unittest.skip
@@ -99,6 +99,14 @@ class TestLightsParser(XPlaneTestCase):
 LIGHT_PARAM_DEF 12 ZERO ZERO_ ZERO__ NEG_ONE NEG_ONE_ NEG_ONE__ ONE ONE_ ONE__ UNUSED UNUSED_ UNUSED__
 #            R    G     B      A       SIZE           DX        DY  DZ   WIDTH FREQ   PHASE
 BILLBOARD_HW ZERO ZERO_ ZERO__ NEG_ONE NEG_ONE_ 1 1 1 NEG_ONE__ ONE ONE_ ONE__ UNUSED_ UNUSED__ NOOP
+"""
+        self._test(s, 0)
+
+    #@unittest.skip
+    def test_light_nonstandard_params_parse(self)->None:
+        s = """
+LIGHT_PARAM_DEF INTENSITY DIR_MAG LEGACY_SIZE
+BILLBOARD_HW 1 0 0 1   1      1 0 6      1 0 0    .5    0    0    0    0
 """
         self._test(s, 0)
     #-------------------------------------------------------------------------

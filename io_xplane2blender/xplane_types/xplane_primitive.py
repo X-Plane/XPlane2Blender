@@ -30,36 +30,50 @@ class XPlanePrimitive(XPlaneObject):
     def __init__(self, blenderObject: bpy.types.Object):
         assert blenderObject.type == "MESH"
         super().__init__(blenderObject)
-        # TODO: Do these weights make sense?
+
+        self.attributes.add(XPlaneAttribute("ATTR_hud_glass"))
+        self.attributes.add(XPlaneAttribute("ATTR_hud_reset"))
         self.attributes.add(XPlaneAttribute("ATTR_light_level"))
         self.attributes.add(XPlaneAttribute("ATTR_light_level_reset"))
+
         # Starting end ending indices for this object.
         self.indices = [0, 0]
         self.material = XPlaneMaterial(self)
         self.manipulator = XPlaneManipulator(self)
-
         self.setWeight()
 
-    def setWeight(self, defaultWeight=0) -> None:
+    def setWeight(self, defaultWeight:int = 0)->None:
+        """
+        If not default, weight will 0 if no materials
+        given, or it will be the index of the last matching material
+        in the bpy.data.materials array + XPlaneObject's
+        weight.
+        """
         super().setWeight(defaultWeight)
-
-        if (
-            not hasattr(self.blenderObject.xplane, "override_weight")
-            or not self.blenderObject.xplane.override_weight
-        ):
-            mat_weight = 0
-
-            for i in range(0, len(bpy.data.materials)):
-                if (
-                    len(self.blenderObject.data.materials) > 0
-                    and self.blenderObject.data.materials[0] == bpy.data.materials[i]
-                ):
-                    mat_weight = i
-
-            self.weight += mat_weight
+        if self.blenderObject.xplane.override_weight:
+            self.weight = self.blenderObject.xplane.weight
+        else:
+            try:
+                ref_mat = self.blenderObject.data.materials[0]
+                if ref_mat is None:
+                    raise TypeError
+            except (IndexError, TypeError):
+                pass
+            else:
+                weight = 0
+                for i, mat in enumerate(bpy.data.materials):
+                    if ref_mat == mat:
+                        weight = i
+            self.weight += defaultWeight
 
     def collect(self) -> None:
         super().collect()
+        xplane_version = int(bpy.context.scene.xplane.version)
+        bl_obj = self.blenderObject
+        if 1200 >= xplane_version and bl_obj.xplane.hud_glass:
+            self.attributes["ATTR_hud_glass"].setValue(True)
+            self.attributes["ATTR_hud_reset"].setValue(False)
+            pass
 
         # add manipulator attributes
         self.manipulator.collect()
@@ -72,16 +86,17 @@ class XPlanePrimitive(XPlaneObject):
             self.material.collect()
 
     def collectLightLevelAttributes(self) -> None:
+        xplane_version = int(bpy.context.scene.xplane.version)
         bl_obj = self.blenderObject
         if bl_obj.xplane.lightLevel:
-
-            self.attributes["ATTR_light_level"].setValue(
-                (
-                    bl_obj.xplane.lightLevel_v1,
-                    bl_obj.xplane.lightLevel_v2,
-                    bl_obj.xplane.lightLevel_dataref,
-                )
-            )
+            ll_values = [
+                bl_obj.xplane.lightLevel_v1,
+                bl_obj.xplane.lightLevel_v2,
+                bl_obj.xplane.lightLevel_dataref,
+            ]
+            if 1200 <= xplane_version and bl_obj.xplane.lightLevel_photometric:
+                ll_values.append(bl_obj.xplane.lightLevel_brightness)
+            self.attributes["ATTR_light_level"].setValue(tuple(ll_values))
             self.material.attributes["ATTR_light_level_reset"].setValue(False)
 
     def write(self) -> str:

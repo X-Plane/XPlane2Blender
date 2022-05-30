@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 from collections import namedtuple
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 
@@ -115,7 +116,7 @@ def _make_parser() -> argparse.ArgumentParser:
     build_process_group.add_argument(
         "--keep-files",
         type=str,
-        default="not-ignored",
+        default="only-tracked",
         choices=["only-tracked", "not-ignored"],
         help="Select only tracked files (enforced for build-type='rc') or any not-ignored file",
     )
@@ -136,7 +137,7 @@ def _make_parser() -> argparse.ArgumentParser:
     test_args_group.add_argument(
         "--test-level",
         type=str,
-        default="all",
+        default="none",
         choices=["none", "all"],
         help="What parts of the test suite to run",
     )
@@ -315,7 +316,7 @@ def _make_and_place_zip(new_version: VerData, tmp_build_folder: str, dest_folder
     zip_name = (
         "io_xplane2blender_{major}_{minor}_{revision}-"
         "{build_type}_{build_type_version}-"
-        "{data_model_version}_{build_number}"
+        "{data_model_version}_{build_number}-v12"
     ).format(
         major=new_version.addon_version[0],
         minor=new_version.addon_version[1],
@@ -364,7 +365,7 @@ def main(argv=None):
         argv, test_args = _make_parser().parse_known_args()
 
     # This script requires the git directory and the tests directory
-    if os.path.split(os.getcwd())[1] != "XPlane2Blender":
+    if "XPlane2Blender" not in str(Path(os.getcwd()).name):
         print(
             os.path.split(__file__)[1]
             + " must be run in the XPlane2Blender folder! Current directory is {}".format(

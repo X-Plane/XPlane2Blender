@@ -166,7 +166,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             and not parsed_light.light_param_def
         ):
             self.record_completed = parsed_light.best_overload()
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
         elif self.lightType == LIGHT_NAMED and not parsed_light:
             logger.warn(unknown_light_name_warning)
@@ -234,7 +234,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     except ValueError:
                         continue
 
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
             # The only prototypes without DXYZ are SPILL_GND/_REV (of which there are no parameters)
@@ -320,11 +320,13 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 "is this omni". This is just what we're replacing WIDTH with,
                 and other things can change it
                 """
+                overload_type = parsed_light.best_overload().overload_type
+                is_v12_bb = parsed_light.name in xplane_lights_txt_parser.BILLBOARD_USES_SPILL_DXYZ
                 if light_data.type == "POINT":
                     return 1
-                elif "BILLBOARD" in parsed_light.best_overload().overload_type:
+                elif "BILLBOARD" in overload_type and not is_v12_bb:
                     return XPlaneLight.WIDTH_for_billboard(light_data.spot_size)
-                elif "SPILL" in parsed_light.best_overload().overload_type:
+                elif "SPILL" in overload_type or is_v12_bb:
                     # cos(half the cone angle)
                     return XPlaneLight.WIDTH_for_spill(light_data.spot_size)
 
@@ -333,16 +335,18 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 Returns (potentially scaled) light direction
                 or (0, 0, 0) for omni lights in X-Plane coords
                 """
+                overload_type = parsed_light.best_overload().overload_type
+                is_v12_bb = parsed_light.name in xplane_lights_txt_parser.BILLBOARD_USES_SPILL_DXYZ
 
                 if light_data.type == "POINT":
                     return Vector((0, 0, 0))
-                elif "BILLBOARD" in parsed_light.best_overload().overload_type:
+                elif "BILLBOARD" in overload_type and not is_v12_bb:
                     # Works for DIR_MAG as well, but we'll probably never have a case for that
                     scale = 1 - XPlaneLight.WIDTH_for_billboard(light_data.spot_size)
                     dir_vec_b_norm = self.get_light_direction_b()
                     scaled_vec_b = dir_vec_b_norm * scale
                     return vec_b_to_x(scaled_vec_b)
-                elif "SPILL" in parsed_light.best_overload().overload_type:
+                elif "SPILL" in overload_type or is_v12_bb:
                     return vec_b_to_x(self.get_light_direction_b())
 
             dxyz_values_x = new_dxyz_vec_x()
@@ -355,6 +359,8 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "A": 1,
                     "INDEX": light_data.xplane.param_index,
                     "SIZE": light_data.xplane.param_size,
+                    "LEGACY_SIZE": 0, # Another UNUSED - we don't autocorrect with it at all
+                    "INTENSITY": light_data.xplane.param_intensity,
                     "DX": dxyz_values_x[0],
                     "DY": dxyz_values_x[1],
                     "DZ": dxyz_values_x[2],
@@ -380,8 +386,26 @@ class XPlaneLight(xplane_object.XPlaneObject):
                 for param in parsed_light.light_param_def
             }
             self.record_completed = parsed_light.best_overload()
+            
+            def is_number_ish(arg):
+                if not isinstance(arg, str):
+                    return True
+                if len(arg) >= 3:
+                    if arg[-2:] == "cd":
+                        try:
+                            int(arg[:-2])
+                            return True
+                        except ValueError:
+                            return False
+                else:
+                    try:
+                        int(arg[:-2])
+                        return True
+                    except ValueError:
+                        return False
+            
             for p_arg in filter(
-                lambda arg: isinstance(arg, str)
+                lambda arg: not is_number_ish(arg)
                 and not arg.startswith(("NOOP", "sim")),
                 self.record_completed,
             ):
@@ -392,7 +416,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             # Leaving DXYZ in a record's arguments is okay
             # - It doesn't affect any sw_callbacks (as of 4/19/2020)
             # - We'll be filling in instead of autocorrecting
-            if "DREF" in self.record_completed.prototype():
+            if xplane_lights_txt_parser.ColumnName.DREF in self.record_completed.prototype():
                 self.record_completed.apply_sw_callback()
 
             try:
@@ -545,10 +569,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             try:
                 return (
                     self.lightType
-                    in {
-                        xplane_constants.LIGHT_NAMED,
-                        xplane_constants.LIGHT_PARAM,
-                    }
+                    in {xplane_constants.LIGHT_NAMED, xplane_constants.LIGHT_PARAM,}
                     and not self.record_completed.is_omni()
                     # Yes, '!= "POINT"' matters for historical reasons
                     and light_data.type != "POINT"
@@ -640,7 +661,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
             ), f"One of {self.lightName} parameters did not get replaced in collect or write: {self.params}"
         if self.record_completed:
             assert all(
-                isinstance(c, (float, int)) or c.startswith(("NOOP", "sim"))
+                isinstance(c, (float, int)) or c.startswith(("NOOP", "sim")) or c.endswith("cd")
                 for c in self.record_completed
             ), f"record_completed is not complete {self.record_completed}"
 
@@ -658,10 +679,17 @@ class XPlaneLight(xplane_object.XPlaneObject):
         elif self.lightType == LIGHT_PARAM or (
             self.lightType == LIGHT_AUTOMATIC and parsed_light.light_param_def
         ):
+            if self.lightType == LIGHT_AUTOMATIC:
+                param_output = " ".join(
+                    f"{floatToStr(v)}{'' if param != 'INTENSITY' else 'cd'}"
+                    for param, v in self.params.items()
+                )
+            else:
+                param_output = self.params
             o += (
                 f"{indent}LIGHT_PARAM\t{self.lightName}"
                 f" {translation_xp_str}"
-                f" {' '.join(map(floatToStr,self.params.values())) if self.lightType == LIGHT_AUTOMATIC else self.params}"
+                f" {param_output}"
                 f"\n"
             )
         elif self.lightType == LIGHT_CUSTOM:
@@ -708,4 +736,4 @@ class XPlaneLight(xplane_object.XPlaneObject):
 
     @staticmethod
     def WIDTH_for_spill(spot_size: float):
-        return math.cos(spot_size * 0.5)
+        return max(0.0,math.cos(spot_size * 0.5))

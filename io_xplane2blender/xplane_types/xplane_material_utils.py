@@ -318,36 +318,33 @@ def getFirstMatchingMaterial(
     return None
 
 
-# Method: getReferenceMaterials
-# Returns a list of one or materials, the first valid ones it finds. The content of the slots has meaning based on
-# What the current export type is
-#
-# Aircraft:  [0] is the aircraft material, [1] is the (optional) panel material
-# Cockpit:   [0] is the cockpit material,  [1] is the (optional) panel material
-# Instanced: [0] is the instanced scenery, [1] is the (optional) draped material
-# Scenery:   [0] is the scenery material,  [1] is the (optional) draped material
-#
-# Parameters:
-#    List<XPlaneMaterial> - A list of materials found in an object
-#    string exportType - The export type given by xplane_file.options.export_type
-#
-#    Returns list of 1 or more reference materials
 def getReferenceMaterials(
     materials: XPlaneMaterial, exportType: str
-) -> List[XPlaneMaterial]:
-    refMats = []
+) -> Tuple[Optional[XPlaneMaterial], Optional[XPlaneMaterial]]:
+    """Attempts to find two valid reference materials for use in writing the header
+    properties. The return is based on export type:
+
+    Export Type | 1st Slot                   | 2nd Optional Slot
+    ------------|----------------------------|------------------
+    Aircraft    | Aircraft material          | Panel material
+    Cockpit     | Cockpit material           | Panel material
+    Instanced   | Instanced scenery material | Draped material
+    Scenery     | Scenery material           | Draped material
+    """
+
+    refMats = [None, None]
 
     if exportType == EXPORT_TYPE_COCKPIT:
-        refMats.append(getFirstMatchingMaterial(materials, validateCockpit))
-        refMats.append(getFirstMatchingMaterial(materials, validatePanel))
+        refMats[0] = getFirstMatchingMaterial(materials, validateCockpit)
+        refMats[1] = getFirstMatchingMaterial(materials, validatePanel)
     elif exportType == EXPORT_TYPE_AIRCRAFT:
-        refMats.append(getFirstMatchingMaterial(materials, validateAircraft))
-        refMats.append(getFirstMatchingMaterial(materials, validatePanel))
+        refMats[0] = getFirstMatchingMaterial(materials, validateAircraft)
+        refMats[1] = getFirstMatchingMaterial(materials, validatePanel)
     elif exportType == EXPORT_TYPE_SCENERY:
-        refMats.append(getFirstMatchingMaterial(materials, validateScenery))
-        refMats.append(getFirstMatchingMaterial(materials, validateDraped))
+        refMats[0] = getFirstMatchingMaterial(materials, validateScenery)
+        refMats[1] = getFirstMatchingMaterial(materials, validateDraped)
     elif exportType == EXPORT_TYPE_INSTANCED_SCENERY:
-        refMats.append(getFirstMatchingMaterial(materials, validateInstanced))
-        refMats.append(getFirstMatchingMaterial(materials, validateDraped))
+        refMats[0] = getFirstMatchingMaterial(materials, validateInstanced)
+        refMats[1] = getFirstMatchingMaterial(materials, validateDraped)
 
-    return refMats
+    return tuple(refMats)

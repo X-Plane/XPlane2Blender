@@ -2,6 +2,7 @@ I
 800
 OBJ
 
+GLOBAL_cockpit_lit
 POINT_COUNTS	144	0	0	144
 
 VT	-1	1	-4	-1	-0	0	0	0	# 0
@@ -172,9 +173,10 @@ IDX	143
 # EMPTY: DisabledInViewport	weight: 0
 	# 1 Mesh: Cube_hidden_animation_only.002
 	ANIM_begin
+	# static rotation
 	# translation keyframes
 	ANIM_trans_begin	test
-	ANIM_trans_key	0	0	0	0
+	ANIM_trans_key	0	0	0	-0
 	ANIM_trans_key	1	0	0	-3
 	ANIM_trans_end
 		# 2 Mesh: Cube_visible_affected.002
@@ -189,8 +191,8 @@ IDX	143
 		# MATERIAL: Material
 		TRIS	108 36
 	# 1 Light: Point_named_visible.002
-	# LIGHT: Point_named_visible.002	weight: 10000
-	LIGHT_NAMED	visible 6 0 0
+	# LIGHT: Point_named_visible.002	weight: 0
+	LIGHT_NAMED	visible 6 0 -0
 		# 2 Mesh: Cube_hidden_child_animation_only.002
 			# 3 Mesh: Cube_visible_child_affected.002
 			# MESH: Cube_visible_child_affected.002	weight: 0
@@ -202,4 +204,4 @@ IDX	143
 			# MATERIAL: Material
 			TRIS	72 36
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+75.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+114.NO_BUILD_NUMBR

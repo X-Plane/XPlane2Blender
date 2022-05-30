@@ -21,9 +21,9 @@ IDX	5
 
 # 0 ROOT
 	# 1 Mesh: debice_aa_on
-	# MESH: debice_aa_on	weight: 0
+	# MESH: debice_aa_on	weight: 1
 	# MATERIAL: device_mat_aa_off
-	ATTR_cockpit_device	GNS430_1	1	0	False
+	ATTR_cockpit_device	GNS430_1	1	0	0
 	TRIS	0 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-dev.0+97.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+111.NO_BUILD_NUMBR

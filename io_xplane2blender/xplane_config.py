@@ -14,12 +14,12 @@ CURRENT_BUILD_TYPE = xplane_constants.BUILD_TYPE_RC
 
 # The current build type version, must be > 0
 # if not BUILD_TYPE_DEV or BULD_TYPE_LEGACY
-CURRENT_BUILD_TYPE_VERSION = 1
+CURRENT_BUILD_TYPE_VERSION = 2
 
 # The current data model version, incrementing every time xplane_constants, xplane_props, or xplane_updater
 # changes. Builds earlier than 3.4.0-beta.5 have and a version of 0.
 # When merging, take the higher data model version of the two branches and add one
-CURRENT_DATA_MODEL_VERSION = 104
+CURRENT_DATA_MODEL_VERSION = 117
 
 # The build number, hardcoded by the build script when there is one, otherwise it is xplane_constants.BUILD_NUMBER_NONE
 CURRENT_BUILD_NUMBER = xplane_constants.BUILD_NUMBER_NONE

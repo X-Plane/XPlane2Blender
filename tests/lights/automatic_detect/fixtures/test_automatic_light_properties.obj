@@ -2,6 +2,7 @@ I
 800
 OBJ
 
+GLOBAL_cockpit_lit
 POINT_COUNTS	0	0	0	0
 
 # 0 ROOT
@@ -22,8 +23,8 @@ POINT_COUNTS	0	0	0	0
 	# LIGHT: taxi_y_spaces_stripped	weight: 10000
 	ANIM_begin
 	# static rotation
-	ANIM_rotate	0.99999994	0	-0	44.999998	44.999998
+	ANIM_rotate	1	0	-0	94.992111	94.992111
 	LIGHT_NAMED	taxi_y 0 0 -0
 	ANIM_end
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+89.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.4+117.NO_BUILD_NUMBR

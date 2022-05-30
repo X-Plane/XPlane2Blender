@@ -3,54 +3,43 @@ I
 OBJ
 
 GLOBAL_cockpit_lit
-POINT_COUNTS	36	0	0	36
+POINT_COUNTS	28	0	0	42
 
-VT	1	0	-1	0	1	-0	1	1	# 0
-VT	1	0	1	0	1	-0	1	0	# 1
-VT	-1	0	1	0	1	-0	0	0	# 2
-VT	-1	0	-1	-0	1	-0	0	1	# 3
-VT	1	0	-1	-0	1	-0	1	1	# 4
-VT	-1	0	1	-0	1	-0	0	0	# 5
-VT	1	0	-1	0	1	-0	1	1	# 6
-VT	1	0	1	0	1	-0	1	0	# 7
-VT	-1	0	1	0	1	-0	0	0	# 8
-VT	-1	0	-1	-0	1	-0	0	1	# 9
-VT	1	0	-1	-0	1	-0	1	1	# 10
-VT	-1	0	1	-0	1	-0	0	0	# 11
-VT	1	0	-1	0	1	-0	1	1	# 12
-VT	1	0	1	0	1	-0	1	0	# 13
-VT	-1	0	1	0	1	-0	0	0	# 14
-VT	-1	0	-1	-0	1	-0	0	1	# 15
-VT	1	0	-1	-0	1	-0	1	1	# 16
-VT	-1	0	1	-0	1	-0	0	0	# 17
-VT	1	0	-1	0	1	-0	1	1	# 18
-VT	1	0	1	0	1	-0	1	0	# 19
-VT	-1	0	1	0	1	-0	0	0	# 20
-VT	-1	0	-1	-0	1	-0	0	1	# 21
-VT	1	0	-1	-0	1	-0	1	1	# 22
-VT	-1	0	1	-0	1	-0	0	0	# 23
-VT	1	0	-1	0	1	-0	1	1	# 24
-VT	1	0	1	0	1	-0	1	0	# 25
-VT	-1	0	1	0	1	-0	0	0	# 26
-VT	-1	0	-1	-0	1	-0	0	1	# 27
-VT	1	0	-1	-0	1	-0	1	1	# 28
-VT	-1	0	1	-0	1	-0	0	0	# 29
-VT	1	0	-1	0	1	-0	1	1	# 30
-VT	1	0	1	0	1	-0	1	0	# 31
-VT	-1	0	1	0	1	-0	0	0	# 32
-VT	-1	0	-1	-0	1	-0	0	1	# 33
-VT	1	0	-1	-0	1	-0	1	1	# 34
-VT	-1	0	1	-0	1	-0	0	0	# 35
+VT	7	0	-1	0	1	-0	1	1	# 0
+VT	7	0	1	0	1	-0	1	0	# 1
+VT	5	0	1	0	1	-0	0	0	# 2
+VT	5	0	-1	-0	1	-0	0	1	# 3
+VT	10	0	-1	0	1	-0	1	1	# 4
+VT	10	0	1	0	1	-0	1	0	# 5
+VT	8	0	1	0	1	-0	0	0	# 6
+VT	8	0	-1	-0	1	-0	0	1	# 7
+VT	13	0	-1	0	1	-0	1	1	# 8
+VT	13	0	1	0	1	-0	1	0	# 9
+VT	11	0	1	0	1	-0	0	0	# 10
+VT	11	0	-1	-0	1	-0	0	1	# 11
+VT	18.839638	0	-0.96623921	0	1	-0	1	1	# 12
+VT	18.839638	0	1.0337608	0	1	-0	1	0	# 13
+VT	16.839638	0	1.0337608	0	1	-0	0	0	# 14
+VT	16.839638	0	-0.96623921	-0	1	-0	0	1	# 15
+VT	4	0	-1	0	1	-0	1	1	# 16
+VT	4	0	1	0	1	-0	1	0	# 17
+VT	2	0	1	0	1	-0	0	0	# 18
+VT	2	0	-1	-0	1	-0	0	1	# 19
+VT	1	0	-1	0	1	-0	1	1	# 20
+VT	1	0	1	0	1	-0	1	0	# 21
+VT	-1	0	1	0	1	-0	0	0	# 22
+VT	-1	0	-1	-0	1	-0	0	1	# 23
+VT	16	0	-1	0	1	-0	1	1	# 24
+VT	16	0	1	0	1	-0	1	0	# 25
+VT	14	0	1	0	1	-0	0	0	# 26
+VT	14	0	-1	-0	1	-0	0	1	# 27
 
-IDX10	0	1	2	3	4	5	6	7	8	9
-IDX10	10	11	12	13	14	15	16	17	18	19
-IDX10	20	21	22	23	24	25	26	27	28	29
-IDX	30
-IDX	31
-IDX	32
-IDX	33
-IDX	34
-IDX	35
+IDX10	0	1	2	3	0	2	4	5	6	7
+IDX10	4	6	8	9	10	11	8	10	12	13
+IDX10	14	15	12	14	16	17	18	19	16	18
+IDX10	20	21	22	23	20	22	24	25	26	27
+IDX	24
+IDX	26
 
 # 0 ROOT
 	# 1 Mesh: Plane.002_ME_on_MA_on
@@ -60,28 +49,32 @@ IDX	35
 	ATTR_shiny_rat	0.5
 	TRIS	30 6
 		# 2 Mesh: Plane.002_ME_on_MA_off.001
-		# MESH: Plane.002_ME_on_MA_off.001	weight: 1
+		# MESH: Plane.002_ME_on_MA_off.001	weight: 0
 		ATTR_light_level	0	2	mesh_only
 		# MATERIAL: Material_no_ll
 		TRIS	24 6
 			# 3 Mesh: Plane.002_ME_off_MA_off
-			# MESH: Plane.002_ME_off_MA_off	weight: 1
+			# MESH: Plane.002_ME_off_MA_off	weight: 0
 			# MATERIAL: Material_no_ll
 			ATTR_light_level_reset
 			TRIS	0 6
 				# 4 Mesh: Plane.002_ME_off_MA_on_v33
-				# MESH: Plane.002_ME_off_MA_on_v33	weight: 2
+				# MESH: Plane.002_ME_off_MA_on_v33	weight: 0
 				# MATERIAL: Material_v33
 				ATTR_light_level	3	3	v3_3_mat_ll
 				TRIS	6 6
 					# 5 Mesh: Plane.002_ME_off_MA_on_v33.001
-					# MESH: Plane.002_ME_off_MA_on_v33.001	weight: 2
+					# MESH: Plane.002_ME_off_MA_on_v33.001	weight: 0
 					# MATERIAL: Material_v33
 					TRIS	12 6
-						# 6 Mesh: Plane.002_ME_on_MA_off
-						# MESH: Plane.002_ME_on_MA_off	weight: 1
-						ATTR_light_level	0	5	mesh_only
-						# MATERIAL: Material_no_ll
-						TRIS	18 6
+						# 6 Mesh: Plane.002_ME_on_MA_on_v33
+						# MESH: Plane.002_ME_on_MA_on_v33	weight: 0
+						# MATERIAL: Material_ll
+						TRIS	36 6
+							# 7 Mesh: Plane.002_ME_on_MA_off
+							# MESH: Plane.002_ME_on_MA_off	weight: 0
+							ATTR_light_level	0	5	mesh_only
+							# MATERIAL: Material_no_ll
+							TRIS	18 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+104.NO_BUILD_NUMBR
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.2+117.NO_BUILD_NUMBR

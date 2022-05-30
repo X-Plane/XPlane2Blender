@@ -17,7 +17,7 @@ from .xplane_props import *
 
 
 class DATA_PT_xplane(bpy.types.Panel):
-    """XPlane Empty/Light Data Panel"""
+    """X-Plane Empty/Light Data Panel"""
 
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
@@ -37,7 +37,7 @@ class DATA_PT_xplane(bpy.types.Panel):
 
 # Adds X-Plane Material settings to the material tab. Uses <material_layout> and <custom_layout>.
 class MATERIAL_PT_xplane(bpy.types.Panel):
-    """XPlane Material Panel"""
+    """X-Plane Material Panel"""
 
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
@@ -63,9 +63,50 @@ class MATERIAL_PT_xplane(bpy.types.Panel):
                 conditions_layout(self.layout, obj.active_material)
 
 
+class RENDER_PT_xplane(bpy.types.Panel):
+    """X-Plane Render Panel"""
+
+    bl_label = "X-Plane"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+
+    @classmethod
+    def poll(self, context):
+        return int(context.scene.xplane.version) >= 1200
+
+    def draw(self, context):
+        def draw_bake_op(layout: bpy.types.UILayout):
+            scene = context.scene
+            row = layout.row()
+            if context.active_object.xplane.isExportableRoot:
+                active_root = context.active_object
+            elif context.collection.xplane.is_exportable_collection:
+                active_root = context.collection
+            else:
+                active_root = None
+
+            if active_root and active_root.xplane.layer.export_type in {
+                EXPORT_TYPE_AIRCRAFT,
+                EXPORT_TYPE_COCKPIT,
+            }:
+                bake_op_text = f"Bake Wiper Gradient Texture For '{active_root.name}'"
+            else:
+                bake_op_text = f"Bake Wiper Gradient Texture"
+
+            op = row.operator("xplane.bake_wiper_gradient_texture", text=bake_op_text)
+            op.start = scene.xplane.wiper_bake_start
+
+            row = layout.row()
+            row.prop(scene.xplane, "wiper_bake_start")
+            row.label(text=f"End Frame: {scene.xplane.wiper_bake_start + 254}")
+
+        draw_bake_op(self.layout)
+
+
 # Adds X-Plane Layer settings to the scene tab. Uses <scene_layout>.
 class SCENE_PT_xplane(bpy.types.Panel):
-    """XPlane Scene Panel"""
+    """X-Plane Scene Panel"""
 
     bl_label = "X-Plane"
     bl_space_type = "PROPERTIES"
@@ -81,24 +122,33 @@ class SCENE_PT_xplane(bpy.types.Panel):
         scene_layout(self.layout, scene)
 
 
-# Adds X-Plane settings to the object tab. Uses <mesh_layout>, <cockpit_layout>, <manipulator_layout> and <custom_layout>.
-def light_level_layout(layout, has_ll):
+def light_level_layout(
+    layout, prop_group_w_ll: bpy.types.PropertyGroup, paired_dataref_prop: str
+):
+    version = int(bpy.context.scene.xplane.version)
     ll_box = layout.box()
     ll_box.label(text="Light Levels")
     ll_box_column = ll_box.column()
-    ll_box_column.prop(has_ll.xplane, "lightLevel")
+    ll_box_column.prop(prop_group_w_ll.xplane, "lightLevel")
 
-    if has_ll.xplane.lightLevel:
+    if prop_group_w_ll.xplane.lightLevel:
         box = ll_box_column.box()
-        box.prop(has_ll.xplane, "lightLevel_v1")
-        box.row().prop(has_ll.xplane, "lightLevel_v2")
-        box.row().prop(has_ll.xplane, "lightLevel_dataref")
+        box.prop(prop_group_w_ll.xplane, "lightLevel_v1")
+        box.row().prop(prop_group_w_ll.xplane, "lightLevel_v2")
 
-        """
+        if 1200 <= version:
+            row = box.row(align=True)
+            row.active = prop_group_w_ll.xplane.lightLevel_photometric
+            row.prop(prop_group_w_ll.xplane, "lightLevel_photometric", text="")
+            row.prop(prop_group_w_ll.xplane, "lightLevel_brightness")
+
+        row = box.row()
+        row.prop(prop_group_w_ll.xplane, "lightLevel_dataref")
+
         scene = bpy.context.scene
         expanded = (
             scene.xplane.dataref_search_window_state.dataref_prop_dest
-            == "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
+            == paired_dataref_prop
         )
         if expanded:
             our_icon = "ZOOM_OUT"
@@ -107,14 +157,11 @@ def light_level_layout(layout, has_ll):
         dataref_search_toggle_op = row.operator(
             "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
         )
-        dataref_search_toggle_op.paired_dataref_prop = (
-            "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
-        )
+        dataref_search_toggle_op.paired_dataref_prop = paired_dataref_prop
 
         # Finally, in the next row, if we are expanded, build the entire search list.
         if expanded:
             dataref_search_window_layout(box)
-            """
 
     ll_box_column.row()
 
@@ -147,9 +194,16 @@ class OBJECT_PT_xplane(bpy.types.Panel):
             if obj.type == "MESH":
                 mesh_layout(self.layout, obj)
                 manipulator_layout(self.layout, obj)
+
             lod_layout(self.layout, obj)
             weight_layout(self.layout, obj)
-            light_level_layout(self.layout, obj)
+            light_level_layout(
+                self.layout, obj, "bpy.context.active_object.xplane.lightLevel_dataref"
+            )
+            if version >= 1200:
+                box = self.layout.box()
+                box.label(text="Advanced")
+                box.prop(obj.xplane, "hud_glass")
             if obj.type != "EMPTY":
                 custom_layout(self.layout, obj)
 
@@ -219,8 +273,56 @@ def empty_layout(layout: bpy.types.UILayout, empty_obj: bpy.types.Object):
         sub_row.prop(emp.magnet_props, "magnet_type_is_flashlight")
 
 
+def rain_layout(
+    layout: bpy.types.UILayout, layer_props: bpy.types.Collection, version: int
+):
+    rain_props = layer_props.rain
+    layout.prop(rain_props, "rain_scale")
+    layout.prop(rain_props, "thermal_texture")
+    thermal_grid_flow = layout.grid_flow(row_major=True)
+
+    def thermal_layout(row, idx: int):
+        row.active = getattr(rain_props, f"thermal_source_{idx}_enabled")
+        row.prop(rain_props, f"thermal_source_{idx}_enabled", text="")
+        thermal_source = getattr(rain_props, f"thermal_source_{idx}")
+        row.prop(thermal_source, "dataref_tempurature")
+        row.prop(thermal_source, "dataref_on_off")
+
+    thermal_grid_flow.active = bool(rain_props.thermal_texture)
+    for i in range(1, 5):
+        thermal_layout(thermal_grid_flow.row(), i)
+    layout.prop(rain_props, "wiper_texture")
+    layout.prop(rain_props, "wiper_ext_glass_object")
+    wiper_grid_flow = layout.grid_flow(row_major=False)
+
+    wiper_grid_flow.active = bool(rain_props.wiper_texture)
+
+    def wiper_layout(idx: int):
+        row = wiper_grid_flow.row()
+        row.active = getattr(rain_props, f"wiper_{idx}_enabled")
+        row.prop(rain_props, f"wiper_{idx}_enabled", text="")
+        wiper = getattr(rain_props, f"wiper_{idx}")
+        # fmt: off
+        row.prop(wiper, "object_name", text="Object Name")
+        row.prop(wiper, "dataref",     text="Dataref")
+        row.prop(wiper, "start",       text="Start")
+        row.prop(wiper, "end",         text="End")
+        row.prop(wiper, "nominal_width")
+        # fmt: on
+
+    for prev_idx, next_idx in zip(range(1, 4), range(2, 5)):
+        if prev_idx == 1:
+            wiper_layout(prev_idx)
+        prev_wiper_enabled = getattr(rain_props, f"wiper_{prev_idx}_enabled")
+        if prev_wiper_enabled:
+            wiper_layout(next_idx)
+        else:
+            break
+
+
 def scene_layout(layout: bpy.types.UILayout, scene: bpy.types.Scene):
     layout.row().operator("scene.export_to_relative_dir", icon="EXPORT")
+    row = layout.row()
     layout.row().prop(scene.xplane, "version")
 
     xp2b_ver = xplane_helpers.VerStruct.current()
@@ -452,6 +554,12 @@ def layer_layout(
     if version >= 1100:
         global_mat_box.row().prop(layer_props, "blend_glass")
         global_mat_box.row().prop(layer_props, "normal_metalness")
+    if version >= 1200:
+        row = global_mat_box.row(align=True)
+        row.active = layer_props.luminance_override
+        row.prop(layer_props, "luminance_override", text="")
+        row.prop(layer_props, "luminance")
+    if version >= 1100:
         if layer_props.export_type in {
             EXPORT_TYPE_INSTANCED_SCENERY,
             EXPORT_TYPE_SCENERY,
@@ -580,6 +688,14 @@ def layer_layout(
             layer_props, "particle_system_file", text="Particle System File"
         )
     advanced_box.prop(layer_props, "slungLoadWeight")
+
+    if version >= 1200 and layer_props.export_type in {
+        EXPORT_TYPE_AIRCRAFT,
+        EXPORT_TYPE_COCKPIT,
+    }:
+        rain_box = advanced_box.box()
+        rain_box.label(text="Rain Options")
+        rain_layout(rain_box, layer_props, version)
 
     advanced_box.prop(layer_props, "debug")
 
@@ -735,7 +851,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
         "POINT",
         "SPOT",
     }:
-        layout.row().label(text="Automatic lights must use spot lights")
+        layout.row().label(text="Automatic lights must use point or spot lights")
     elif light_data.xplane.type == LIGHT_AUTOMATIC and light_data.type in {
         "POINT",
         "SPOT",
@@ -760,13 +876,13 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                     omni_conclusively_known = True
                 else:
                     return
-            except KeyError:
+            except KeyError:  # light name not found by get_parsed_light
                 layout.row().label(
                     text="Unknown Light Name: check spelling or update lights.txt",
                     icon="ERROR",
                 )
                 return
-            except ValueError:
+            except ValueError:  # is_omni finds "WIDTH" column is unreplaced, covered by no edge case
                 is_omni = False
                 omni_conclusively_known = False
 
@@ -792,10 +908,18 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
             elif parsed_light.light_param_def:
                 for param, prop_name in {
                     "INDEX": "param_index",
+                    "INTENSITY": "param_intensity",
                     "FREQ": "param_freq",
                     "PHASE": "param_phase",
                     "SIZE": "param_size",
                 }.items():
+                    if (
+                        param == "SIZE"
+                        and parsed_light.name
+                        in xplane_lights_txt_parser.SIZE_AS_INTENSITY
+                    ):
+                        prop_name = "param_intensity"
+
                     if param in parsed_light.light_param_def:
                         layout.row().prop(light_data.xplane, prop_name)
 
@@ -826,18 +950,22 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                     elif is_omni and not omni_conclusively_known:
                         assert False, "is_omni can't be True and not conclusively known"
                     elif not is_omni:
+                        overload_type = parsed_light.best_overload().overload_type
+                        is_bb = "BILLBOARD" in overload_type
+                        is_sp = "SPILL" in overload_type
+                        is_v12_bb = (
+                            parsed_light.name
+                            in xplane_lights_txt_parser.BILLBOARD_USES_SPILL_DXYZ
+                        )
                         if has_width:
-                            if (
-                                "BILLBOARD"
-                                in parsed_light.best_overload().overload_type
-                            ):
+                            if is_bb and not is_v12_bb:
                                 WIDTH_val = round(
                                     xplane_types.XPlaneLight.WIDTH_for_billboard(
                                         light_data.spot_size
                                     ),
                                     5,
                                 )
-                            elif "SPILL" in parsed_light.best_overload().overload_type:
+                            elif is_sp or is_v12_bb:
                                 WIDTH_val = round(
                                     xplane_types.XPlaneLight.WIDTH_for_spill(
                                         light_data.spot_size
@@ -953,8 +1081,7 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
                 )
                 if not node_specular_at_default:
                     layout.label(
-                        text=node_spec_changed_msg,
-                        icon="ERROR",
+                        text=node_spec_changed_msg, icon="ERROR",
                     )
             else:
                 is_spec_hidden = False
@@ -967,8 +1094,7 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
             )
 
             layout.label(
-                text=msg,
-                icon="INFO",
+                text=msg, icon="INFO",
             )
 
     show_specular_warning()
@@ -1015,40 +1141,12 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
         )
 
     surface_behavior_box_column.prop(active_material.xplane, "solid_camera")
-    ll_box = layout.box()
-    ll_box.label(text="Light Levels")
-    ll_box_column = ll_box.column()
-    ll_box_column.prop(active_material.xplane, "lightLevel")
 
-    if active_material.xplane.lightLevel:
-        box = ll_box_column.box()
-        box.prop(active_material.xplane, "lightLevel_v1")
-        row = box.row()
-        row.prop(active_material.xplane, "lightLevel_v2")
-        row = box.row()
-        row.prop(active_material.xplane, "lightLevel_dataref")
-
-        scene = bpy.context.scene
-        expanded = (
-            scene.xplane.dataref_search_window_state.dataref_prop_dest
-            == "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
-        )
-        if expanded:
-            our_icon = "ZOOM_OUT"
-        else:
-            our_icon = "ZOOM_IN"
-        dataref_search_toggle_op = row.operator(
-            "xplane.dataref_search_toggle", text="", emboss=False, icon=our_icon
-        )
-        dataref_search_toggle_op.paired_dataref_prop = (
-            "bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref"
-        )
-
-        # Finally, in the next row, if we are expanded, build the entire search list.
-        if expanded:
-            dataref_search_window_layout(box)
-
-    ll_box_column.row()
+    light_level_layout(
+        layout,
+        active_material,
+        paired_dataref_prop="bpy.context.active_object.data.materials[0].xplane.lightLevel_dataref",
+    )
 
     # instancing effects
     layout.row().prop(active_material.xplane, "poly_os")
@@ -1219,23 +1317,35 @@ def cockpit_layout(
     cockpit_box_column = cockpit_box.column()
     cockpit_box_column.prop(active_material.xplane, "cockpit_feature")
 
-    if active_material.xplane.cockpit_feature == COCKPIT_FEATURE_NONE:
-        pass
-    elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
-        cockpit_box_column.prop(active_material.xplane, "cockpit_region")
-    elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
-        device_box = cockpit_box_column.box()
-        device_box.label(text="Cockpit Device")
-        device_box.prop(active_material.xplane, "device_name")
-        if not any(
-            getattr(active_material.xplane, f"device_bus_{bus}") for bus in range(6)
-        ):
-            device_box.label(text="Select at least one bus", icon="ERROR")
-        column = device_box.column_flow(columns=2, align=True)
-        for bus in range(6):
-            column.prop(active_material.xplane, f"device_bus_{bus}")
-        device_box.prop(active_material.xplane, "device_lighting_channel")
-        device_box.prop(active_material.xplane, "device_auto_adjust")
+    version = int(bpy.context.scene.xplane.version)
+    if version >= 1100:
+        if active_material.xplane.cockpit_feature == COCKPIT_FEATURE_NONE:
+            pass
+        elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_PANEL:
+            cockpit_box_column.prop(active_material.xplane, "cockpit_region")
+        elif active_material.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+            device_box = cockpit_box_column.box()
+            device_box.label(text="Cockpit Device")
+            device_box.prop(active_material.xplane, "device_name")
+            if not any(
+                getattr(active_material.xplane, f"device_bus_{bus}") for bus in range(6)
+            ):
+                device_box.label(text="Select at least one bus", icon="ERROR")
+            column = device_box.column_flow(columns=2, align=True)
+            for bus in range(6):
+                column.prop(active_material.xplane, f"device_bus_{bus}")
+            device_box.prop(active_material.xplane, "device_lighting_channel")
+            device_box.prop(active_material.xplane, "device_auto_adjust")
+    if version >= 1200:
+        if active_material.xplane.cockpit_feature in {
+            COCKPIT_FEATURE_PANEL,
+            COCKPIT_FEATURE_DEVICE,
+        }:
+            use_luminance = active_material.xplane.cockpit_feature_use_luminance
+            row = cockpit_box.row()
+            row.active = use_luminance
+            row.prop(active_material.xplane, "cockpit_feature_use_luminance")
+            row.prop(active_material.xplane, "cockpit_feature_luminance")
 
 
 def axis_detent_ranges_layout(
@@ -1724,57 +1834,15 @@ class XPLANE_UL_DatarefSearchList(bpy.types.UIList):
         return flt_flags, flt_neworder
 
 
-class XPLANE_OT_XPlaneMessage(bpy.types.Operator):
-    bl_idname = "xplane.msg"
-    bl_label = "XPlane2Blender message"
-    msg_type: bpy.props.StringProperty(default="INFO")
-    msg_text: bpy.props.StringProperty(default="")
-
-    def execute(self, context):
-        self.report(self.msg_type, self.msg_text)
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_popup(self)
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.label(text=self.msg_type + ": " + self.msg_text)
-
-
-class XPLANE_OT_XPlaneError(bpy.types.Operator):
-    bl_idname = "xplane.error"
-    bl_label = "XPlane2Blender Error"
-    msg_type: bpy.props.StringProperty(default="ERROR")
-    msg_text: bpy.props.StringProperty(default="")
-    report_text: bpy.props.StringProperty(default="")
-
-    def execute(self, context):
-        self.report({self.msg_type}, self.report_text)
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=400)
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-        row.label(text=self.msg_text, icon="ERROR")
-
-
 _XPlaneUITypes = (
     BONE_PT_xplane,
     DATA_PT_xplane,
     MATERIAL_PT_xplane,
     OBJECT_PT_xplane,
+    RENDER_PT_xplane,
     SCENE_PT_xplane,
     XPLANE_UL_CommandSearchList,
     XPLANE_UL_DatarefSearchList,
-    XPLANE_OT_XPlaneError,
-    XPLANE_OT_XPlaneMessage,
 )
 
 register, unregister = bpy.utils.register_classes_factory(_XPlaneUITypes)

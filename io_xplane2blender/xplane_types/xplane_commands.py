@@ -85,6 +85,7 @@ class XPlaneCommands:
 
         # WARNING: This MUST be bijective!
         self.reseters = {
+            "ATTR_hud_glass": "ATTR_hud_reset",
             "ATTR_light_level": "ATTR_light_level_reset",
             "ATTR_cockpit(_lit_only|_region|_device)?": "ATTR_no_cockpit",
             "ATTR_manip_(?!none)(?!wheel)(.*)": "ATTR_manip_none",
@@ -103,6 +104,7 @@ class XPlaneCommands:
         # Initializes the state machine to match X-Plane's defaults
         # thus preventing unneeded ATTRs
         self.written = {
+            "ATTR_hud_reset" : True,
             "ATTR_no_hard": True,
             "ATTR_blend": True,
             "ATTR_no_cockpit": True,
@@ -329,6 +331,8 @@ class XPlaneCommands:
                 attributes.add(xplaneObject.cockpitAttributes[attr])
 
         WHITE_LIST = {
+            "ATTR_hud_glass",
+            "ATTR_hud_reset",
             "ATTR_light_level",
             "ATTR_light_level_reset",
             "ATTR_cockpit_device",
@@ -381,7 +385,7 @@ class XPlaneCommands:
 
             # Now that the added white list trick is in place,
             # we'll nearly always have 2 matching attributes
-            if ("ATTR_cockpit" in matchingAttribute and len(matchingAttribute) > 4) or (
+            if ("ATTR_cockpit" in matchingAttribute and len(matchingAttribute) > 5) or (
                 "ATTR_cockpit" not in matchingAttribute and len(matchingAttribute) > 2
             ):
                 print(

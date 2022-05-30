@@ -53,6 +53,7 @@ class TestMaterials(XPlaneTestCase):
             "ATTR_cockpit_device": None,
             "ATTR_cockpit": None,
             "ATTR_cockpit_lit_only": None,
+            "ATTR_cockpit_hud": None,
             "ATTR_cockpit_region": None,
             "ATTR_no_cockpit": True,
         }
@@ -89,6 +90,7 @@ class TestMaterials(XPlaneTestCase):
         cockpitPanelCockpitAttrs = defaultCockpitAttrs.copy()
         cockpitPanelCockpitAttrs["ATTR_cockpit"] = True
         cockpitPanelCockpitAttrs["ATTR_cockpit_lit_only"] = None
+        cockpitPanelCockpitAttrs["ATTR_cockpit_hud"] = None
         cockpitPanelCockpitAttrs["ATTR_cockpit_region"] = 0
         cockpitPanelCockpitAttrs["ATTR_no_cockpit"] = None
 

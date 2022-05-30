@@ -26,3 +26,7 @@ builds/*
 io_xplane2blender_build/*
 
 tests/object/config_blends/*
+
+*_tmp_bake_images*
+tests/features/rain/two_slot_textures/wiper_gradient_texture.png
+tests/features/rain/four_slot_textures/wiper_gradient_texture.png

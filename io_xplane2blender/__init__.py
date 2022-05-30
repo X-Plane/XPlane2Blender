@@ -1,6 +1,3 @@
-# File: __init__.py
-# Needed for python to register this folder as a module and for blender to register/unregister the addon.
-
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
@@ -18,14 +15,14 @@
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
+import bpy
 
-# Variable: bl_info
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
     "name": "Export: X-Plane (.obj)",
     "description": "Export X-Plane objects/planes (.obj format)",
     "author": "Ted Greene, Ben Supnik",
-    "version": (4, 1, 0),
+    "version": (4, 2, 0),
     "blender": (2, 80, 0),
     "location": "File > Import/Export > X-Plane",
     "warning": "",
@@ -34,18 +31,8 @@ bl_info = {
     "category": "Import-Export",
 }
 
-if "bpy" in locals():
-    import imp
+if "" not in locals():
 
-    imp.reload(xplane_ui)
-    imp.reload(xplane_props)
-    imp.reload(xplane_export)
-    imp.reload(xplane_ops)
-    imp.reload(xplane_ops_dev)
-    imp.reload(xplane_config)
-    imp.reload(xplane_updater)
-else:
-    import bpy
     from . import xplane_ui
     from . import xplane_props
     from . import xplane_export
@@ -53,6 +40,19 @@ else:
     from . import xplane_ops_dev
     from . import xplane_config
     from . import xplane_updater
+    from .xplane_utils import xplane_lights_txt_parser
+    from .xplane_utils import xplane_wiper_gradient
+else:
+    import importlib
+    xplane_ui      = importlib.reload(xplane_ui)
+    xplane_props   = importlib.reload(xplane_props)
+    xplane_export  = importlib.reload(xplane_export)
+    xplane_ops     = importlib.reload(xplane_ops)
+    xplane_ops_dev = importlib.reload(xplane_ops_dev)
+    xplane_config  = importlib.reload(xplane_config)
+    xplane_updater = importlib.reload(xplane_updater)
+    xplane_lights_txt_parser = importlib.reload(xplane_lights_txt_parser)
+    xplane_wiper_gradient = importlib.reload(xplane_wiper_gradient)
 
 
 # Function: menu_func

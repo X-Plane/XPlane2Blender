@@ -2,15 +2,13 @@
 Defines X-Plane Properties attached to regular Blender data types.
 """
 
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 import bpy
 
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_constants, xplane_helpers
-from io_xplane2blender.xplane_constants import VERSION_1100
-
-from .xplane_constants import *
+from io_xplane2blender.xplane_constants import *
 
 """
  #####     ##   ##  ##   ####  ####  ####  #
@@ -81,7 +79,7 @@ undebatable alphabetical listing.
 
 - For defaults, use the constants, not redundantly copying their values
 
-- Don't forget to add your new prop to addXPlaneRNA and removeXPlaneRNA!
+- Don't forget to add your new PropertyGroups to _classes
 
 - Tip: If you've invented a new PropertyGroup, you must wrap it in a PointerProperty or use it in a CollectionProperty
 """
@@ -996,10 +994,126 @@ class XPlaneLOD(bpy.types.PropertyGroup):
     def __str__(self)->str:
         return f"({self.near}, {self.far})"
 
+class XPlaneThermalSourceSettings(bpy.types.PropertyGroup):
+    dataref_tempurature: bpy.props.StringProperty(
+            name="Thermal Source Dataref",
+            description="Dataref that controls source in Celsius",
+        )
+    dataref_on_off: bpy.props.StringProperty(
+            name="Thermal On/Off Dataref",
+            description="Dataref that controls source on/off"
+        )
+
+class XPlaneWiperSettings(bpy.types.PropertyGroup):
+    object_name: bpy.props.StringProperty(
+        name="Blender Wiper Object",
+        description="Name of wiper object, used in creation of wiper gradient texture",
+    )
+    dataref: bpy.props.StringProperty(
+        name="Wiper animation dref",
+        description="The dataref that controls the motion of the wiper object",
+        default=""
+    )
+    start: bpy.props.FloatProperty(
+        name="Wiper Dataref Start",
+        description="Start dataref value of Wiper animation"
+    )
+    end: bpy.props.FloatProperty(
+        name="Wiper Dataref End",
+        description="End dataref value of Wiper animation"
+    )
+
+    nominal_width: bpy.props.FloatProperty(
+        name="Wiper Thickness",
+        description="Width of wiper as the percent of wiper animation arc that is covered by the blade at rest. Start low and increase until it looks right",
+        default=0.001,
+        min=0.0,
+        max=1.0,
+        precision=3,
+    )
+
+class XPlaneRainSettings(bpy.types.PropertyGroup):
+    rain_scale:bpy.props.FloatProperty(
+        name="Rain Scale",
+        description="Scales the visual output of rain to match texture resolution",
+        default=1.0,
+        min=0.1,
+        max=1.0,
+    )
+    thermal_texture: bpy.props.StringProperty(
+        name = "Thermal Texture",
+        description = "File path to the thermal texture",
+        subtype="FILE_PATH",
+    )
+    thermal_source_1: bpy.props.PointerProperty(
+        type=XPlaneThermalSourceSettings,
+        name="Thermal Source 1",
+        description="1st Thermal Source of Aircraft"
+    )
+    thermal_source_1_enabled: bpy.props.BoolProperty(
+        name="Enable Thermal Source 1"
+    )
+    thermal_source_2: bpy.props.PointerProperty(
+        type=XPlaneThermalSourceSettings,
+        name="Thermal Source 2",
+        description="2nd Thermal Source of Aircraft"
+    )
+    thermal_source_2_enabled: bpy.props.BoolProperty(
+        name="Enable Thermal Source 2",
+    )
+    thermal_source_3: bpy.props.PointerProperty(
+        type=XPlaneThermalSourceSettings,
+        name="Thermal Source 3",
+        description="3rd Thermal Source of Aircraft"
+    )
+    thermal_source_3_enabled: bpy.props.BoolProperty(
+        name="Enable Thermal Source 3"
+    )
+    thermal_source_4: bpy.props.PointerProperty(
+        type=XPlaneThermalSourceSettings,
+        name="Thermal Source 4",
+        description="3rd Thermal Source of Aircraft"
+    )
+    thermal_source_4_enabled: bpy.props.BoolProperty(
+        name="Enable Thermal Source 4"
+    )
+    wiper_ext_glass_object: bpy.props.StringProperty(
+        name = "Exterior Glass Object",
+        description = "Name of Object to be used as exterior glass (such as a Windshield) by the baker",
+    )
+    wiper_texture: bpy.props.StringProperty(
+        name = "Wiper Gradient Texture",
+        description="File path to the wiper gradient texture (click 'Make Wiper Gradient Texture' to make)",
+        subtype="FILE_PATH",
+    )
+    wiper_1: bpy.props.PointerProperty(
+        type=XPlaneWiperSettings,
+        name="Wiper 1",
+    )
+    wiper_1_enabled: bpy.props.BoolProperty(name="Enable Wiper 1",)
+    wiper_2: bpy.props.PointerProperty(
+        type=XPlaneWiperSettings,
+        name="Wiper 2",
+        description="Wiper parameters",
+    )
+    wiper_2_enabled: bpy.props.BoolProperty(name="Enable Wiper 2",)
+    wiper_3: bpy.props.PointerProperty(
+        type=XPlaneWiperSettings,
+        name="Wiper 3",
+        description="Wiper parameters",
+    )
+    wiper_3_enabled: bpy.props.BoolProperty(name="Enable Wiper 3",)
+    wiper_4: bpy.props.PointerProperty(
+        type=XPlaneWiperSettings,
+        name="Wiper 4",
+        description="Wiper parameters",
+    )
+    wiper_4_enabled: bpy.props.BoolProperty(name="Enable Wiper",)
+
 class XPlaneLayer(bpy.types.PropertyGroup):
     """
     Defines settings for an OBJ file. Is was formerly tied to
-    Blender 3D-View Layers, but now is for Roots
+    Blender 3D-View Layers, but now is for Roots and Collections
     """
 
     """
@@ -1036,6 +1150,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         items=[
             (PANEL_COCKPIT, "Default", "Full Panel Texture: Albedo, Lit, and Normal"),
             (PANEL_COCKPIT_LIT_ONLY, "Emissive Panel Texture Only", "Only emissive panel texture will be dynamic. Great for computer displays"),
+            # This was necessary to decide when to show the Regions set up properties UI
             (PANEL_COCKPIT_REGION, "Regions", "Uses regions of panel texture"),
         ],
         default=PANEL_COCKPIT,
@@ -1051,6 +1166,20 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Export Directives for OBJ",
         description = "A collection of export paths intended for an OBJ's EXPORT directives",
         type = XPlaneExportPathDirective
+    )
+
+    luminance_override: bpy.props.BoolProperty(
+        name = "Override Luminance",
+        description = "Override baseline luminance for LIT texture",
+        default = False
+    )
+
+    luminance: bpy.props.IntProperty(
+        name = "Baseline Luminance",
+        description = "The overriden baseline luminance value for the LIT texture, in nts",
+        min = 1,
+        max = 60000,
+        default = 1000,
     )
 
     normal_metalness: bpy.props.BoolProperty(
@@ -1069,6 +1198,11 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         name = "Particle System Definition File",
         description = "Relative file path to a .pss that defines particles",
         subtype = "FILE_PATH"
+    )
+    rain: bpy.props.PointerProperty(
+        type=XPlaneRainSettings,
+        name="X-Plane Rain Settings",
+        description="Settings related to rain and thermal properties",
     )
 
     # v1000 (only for instances)
@@ -1395,6 +1529,13 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         description = "A selection of tools and options for plugin developers to write and debug XPlane2Blender. You are unlikely to find these useful",
         default = False) # Set this to true during development to avoid re-checking it
 
+    wiper_bake_start: bpy.props.IntProperty(
+        name = "Start Frame",
+        description = "Start of keyframe range for baking wiper gradient texture",
+        min = 1,
+        default=1
+    )
+
     #######################################
     #TODO: Should these be in their own namespace?
     dev_enable_breakpoints: bpy.props.BoolProperty(
@@ -1426,7 +1567,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
     version: bpy.props.EnumProperty(
         name = "X-Plane Version",
-        default = VERSION_1130,
+        default = VERSION_1200,
         items = [
             (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
@@ -1435,7 +1576,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             (VERSION_1050, "10.5x", "10.5x"),
             (VERSION_1100, "11.0x", "11.0x"),
             (VERSION_1110, "11.1x", "11.1x"),
-            (VERSION_1130, "11.3x", "11.3x")
+            (VERSION_1130, "11.3x", "11.3x"),
+            (VERSION_1200, "12.0x", "12.0x"),
         ]
     )
 
@@ -1446,17 +1588,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
         description="Every version of XPlane2Blender this .blend file has been opened with",
         type=XPlane2BlenderVersion)
 
-# Class: XPlaneObjectSettings
-#
-# Properties:
-#   datarefs - Collection of <XPlaneDatarefs>. X-Plane Datarefs
-#   bool depth - True if object will use depth culling.
-#   customAttributes - Collection of <XPlaneCustomAttributes>. Custom X-Plane attributes
-#   XPlaneManipulator manip - Manipulator settings.
-#   bool lightLevel - True if object overrides default light levels.
-#   float lightLevel_v1 - Light Level Value 1
-#   float lightLevel_v2 - Light Level Value 2
-#   string lightLevel_dataref - Light Level Dataref
+
 class XPlaneObjectSettings(bpy.types.PropertyGroup):
     """
     Settings for Blender objects. On Blender Objects these are accessed via a
@@ -1480,11 +1612,30 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         type = XPlaneDataref
     )
 
+    hud_glass: bpy.props.BoolProperty(
+        name = "HUD Glass",
+        description = "Object is the glass of a HUD display",
+        default = False
+    )
+
     # --- Light Level Override (Mesh Specific) -------------------------------
     lightLevel: bpy.props.BoolProperty(
         name = "Override Light Level (This Mesh Only)",
         description = "If checked values will change the brightness of the _LIT texture for the object. This overrides the sim's decision about object lighting",
         default = False
+    )
+
+    lightLevel_photometric: bpy.props.BoolProperty(
+        name = "Use Photometric Units",
+        description = "Use brightness in nts in to change the _LIT texture",
+        default = False
+    )
+
+    lightLevel_brightness: bpy.props.IntProperty(
+        name = "Brightness",
+        description = "The brightness in nts of your _LIT texture at its brightest",
+        default = 1000,
+        min = 0
     )
 
     lightLevel_v1: bpy.props.FloatProperty(
@@ -1522,6 +1673,7 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         description = "Empty Only Properties",
         type = XPlaneEmpty
     )
+
 
     manip: bpy.props.PointerProperty(
         name = "Manipulator",
@@ -1721,16 +1873,19 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         max = 1.0,
     )
 
+    def get_cockpit_feature_types_for_this_version(self, context) -> List[Tuple[str,str,str]]:
+        features_pre_v1100_items = [
+            (COCKPIT_FEATURE_NONE, "None", "Material uses no advanced cockpit features"),
+            (COCKPIT_FEATURE_PANEL, "Panel Texture", "Material uses Panel Texture"),
+            (COCKPIT_FEATURE_DEVICE, "Cockpit Device", "Material uses Device Texture"),
+        ]
+        return features_pre_v1100_items
+
     cockpit_feature: bpy.props.EnumProperty(
         name = "Cockpit Feature",
         description = "What cockpit feature to enable",
-        default=COCKPIT_FEATURE_NONE,
-        items=[
-            (COCKPIT_FEATURE_NONE, "None", "Material uses no advanced cocked features"),
-            (COCKPIT_FEATURE_PANEL, "Panel Texture", "Material uses Panel Texture"),
-            (COCKPIT_FEATURE_DEVICE, "Cockpit Device", "Material uses Device Texture"),
-            ],
-        )
+        items=get_cockpit_feature_types_for_this_version,
+    )
     cockpit_region: bpy.props.EnumProperty(
         name = "Cockpit Region",
         description = "Cockpit region to use",
@@ -1744,10 +1899,36 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         ]
     )
 
+    cockpit_feature_use_luminance: bpy.props.BoolProperty(
+        name="Use Cockpit Panel Luminance",
+        description="Use cockpit panel luminance feature"
+    )
+
+    cockpit_feature_luminance: bpy.props.IntProperty(
+        name="Cockpit Panel Baseline Luminance",
+        description="Real world maximum brightness of the panel, in nts",
+        min=1,
+        max=60000,
+        default=1000,
+    )
+
     lightLevel: bpy.props.BoolProperty(
         name = "Override Light Level",
         description = "If checked values will change the brightness of the _LIT texture for objects with this material. This overrides the sim's decision about object lighting",
         default = False
+    )
+
+    lightLevel_photometric: bpy.props.BoolProperty(
+        name = "Use Photometric Units",
+        description = "Use brightness in nts in to change the _LIT texture",
+        default = False
+    )
+
+    lightLevel_brightness: bpy.props.IntProperty(
+        name = "Brightness",
+        description = "The brightness in nts of your _LIT texture at its brightness",
+        default = 1000,
+        min = 0
     )
 
     lightLevel_v1: bpy.props.FloatProperty(
@@ -1834,6 +2015,14 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         name = "Flash Frequency",
         description = "The number of light flashes per second",
         min = 0.0,
+    )
+
+    param_intensity: bpy.props.IntProperty(
+        name = "Intensity",
+        description="Total light output in a specific direction, in candela",
+        min=1,
+        max=1000000,
+        default=20000,
     )
 
     param_index: bpy.props.IntProperty(
@@ -1946,6 +2135,9 @@ _classes = (
     XPlaneCockpitRegion,
     XPlaneLOD,
     # complex classes, depending on basic classes
+    XPlaneThermalSourceSettings,
+    XPlaneWiperSettings,
+    XPlaneRainSettings,
     XPlaneLayer,
     XPlaneCollectionSettings,
     XPlaneObjectSettings,

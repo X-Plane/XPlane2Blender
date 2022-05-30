@@ -1,0 +1,18 @@
+01234567890123456789012345678901234567890123456789012345678901234567890123456789
+This directory and the symlink "modules" exist in this repo to work around a 
+problem: while the code has the Blender add-on (io_xplane2blender) in the root
+of the GIT repository, Blender in headless mode will only load add-ons for an
+arbitrary path by looking in the subdirectory addons/modules.
+
+In other words, if we do
+
+BLENDER_USER_CONFIG=/home/bartsimpson/my_crud blender -b \
+   --addons wicked_addon -P some_script.py
+
+Blender will look in /home/bartsimpson/my_crud/addons/modules/ to find
+"wicked_addon".  
+
+Since our repo isn't structured that way, modules is a symlink that points back
+a directory, making <git root>/addons/modules the smae as <git root> and
+allowing our script to work.
+

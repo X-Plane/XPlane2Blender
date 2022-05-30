@@ -43,5 +43,15 @@ class TestObjectLLOverride(XPlaneTestCase):
             filename,
         )
 
+    def test_04_mesh_ll_overload_emits_not_material_nts(self)->None:
+        filename = inspect.stack()[0].function
+
+        self.assertExportableRootExportEqualsFixture(
+            filename[5:],
+            os.path.join(__dirname__, "fixtures", f"{filename}.obj"),
+            {"TRIS", "ATTR_light_level"},
+            filename,
+        )
+
 
 runTestCases([TestObjectLLOverride])
