@@ -19,8 +19,8 @@ import bpy
 
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
-    "name": "Export: X-Plane (.obj)",
-    "description": "Export X-Plane objects/planes (.obj format)",
+    "name": "Import-Export: X-Plane (.obj)",
+    "description": "Import and Export X-Plane objects/planes (.obj format)",
     "author": "Ted Greene, Ben Supnik",
     "version": (4, 2, 0),
     "blender": (2, 80, 0),
@@ -35,6 +35,7 @@ if "" not in locals():
 
     from . import xplane_ui
     from . import xplane_props
+    from . import xplane_import
     from . import xplane_export
     from . import xplane_ops
     from . import xplane_ops_dev
@@ -47,6 +48,7 @@ else:
     xplane_ui      = importlib.reload(xplane_ui)
     xplane_props   = importlib.reload(xplane_props)
     xplane_export  = importlib.reload(xplane_export)
+    xplane_import  = improtlib.reload(xplane_import)
     xplane_ops     = importlib.reload(xplane_ops)
     xplane_ops_dev = importlib.reload(xplane_ops_dev)
     xplane_config  = importlib.reload(xplane_config)
@@ -61,9 +63,15 @@ else:
 # Parameters:
 #   self - Instance to something
 #   context - The Blender context object
-def menu_func(self, context):
+def menu_func_export(self, context):
     self.layout.operator(
         xplane_export.EXPORT_OT_ExportXPlane.bl_idname, text="X-Plane Object (.obj)"
+    )
+
+
+def menu_func_import(self, context):
+    self.layout.operator(
+        xplane_import.IMPORT_OT_ImportXPlane.bl_idname, text="X-Plane Object (.obj)"
     )
 
 
@@ -71,22 +79,26 @@ def menu_func(self, context):
 # Registers the addon with all its classes and the menu function.
 def register():
     xplane_export.register()
+    xplane_import.register()
     xplane_props.register()
     xplane_ops.register()
     xplane_ops_dev.register()
     xplane_ui.register()
-    bpy.types.TOPBAR_MT_file_export.append(menu_func)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
 
 # Function: unregister
 # Unregisters the addon and all its classes and removes the entry from the menu.
 def unregister():
     xplane_export.unregister()
+    xplane_import.unregister()
     xplane_ui.unregister()
     xplane_ops.unregister()
     xplane_ops_dev.unregister()
     xplane_props.unregister()
-    bpy.types.TOPBAR_MT_file_export.remove(menu_func)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
 
 if __name__ == "__main__":

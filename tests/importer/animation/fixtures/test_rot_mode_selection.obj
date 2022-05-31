@@ -1,0 +1,70 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1	# 0
+VT	1	0	-1	-0	-1	-0	0.625	0.75	# 1
+VT	-1	0	1	-0	-1	-0	0.375	1	# 2
+
+IDX	0
+IDX	1
+IDX	2
+
+# Unit Test Overview:
+#     This tests that rotation mode is correct given some set of inputs
+#     - euler_from_no_rotation
+#     - euler_from_static_rotation
+#     - euler_from_dynamic_rotation_ZYX
+#     - aa_from_static_rotation
+#     - aa_from_dynamic_rotation
+
+
+# 0 ROOT
+	ANIM_begin
+    ANIM_trans  0 0 0    0 0 0
+	# name_hint: euler_from_no_rotation
+	TRIS	0 3
+	ANIM_end
+	ANIM_begin
+    ANIM_trans  5 0 0    5 0 0
+    ANIM_rotate 0 1 0    30 30    0 0       euler_from_static_rotation
+	# name_hint: euler_from_static_rotation
+	TRIS	0 3
+	ANIM_end
+    ANIM_begin
+    ANIM_trans  10 0 0   10 0 0
+    ANIM_rotate 1 0 0    0 44     0 1       euler_from_dynamic_rotation_ZYX # order_xz_as_xyz_ZYX
+    ANIM_rotate 0 1 0    0 200    0 1       euler_from_dynamic_rotation_ZYX # order_xz_as_xyz_ZYX
+    # name_hint: euler_from_dynamic_rotation_ZYX
+    TRIS    0 3
+    ANIM_end
+
+	ANIM_begin
+    ANIM_trans  15 0 0    15 0 0
+    ANIM_rotate 0.402905 0.683368 -0.608830     113.449565 113.449565    0 0 aa_from_static_rotation
+	# name_hint: aa_from_static_rotation
+	TRIS	0 3
+	ANIM_end
+	ANIM_begin
+    ANIM_trans  20 0 0    20 0 0
+    ANIM_rotate_begin -0.015597  0.562171 -0.826874 aa_from_dynamic_rotation
+        ANIM_rotate_key 0 83.335944
+        ANIM_rotate_key 1 227
+    ANIM_rotate_end
+	# name_hint: aa_from_dynamic_rotation
+	TRIS	0 3
+	ANIM_end
+    ANIM_begin
+    ANIM_trans 25 0 0    25 0 0
+    ANIM_rotate 1 0 0    0 30     0 1       aa_from_mixed_euler_aa
+    ANIM_rotate 0 1 0    0 30     0 1       aa_from_mixed_euler_aa
+    ANIM_rotate 0 0 1    0 30     0 1       aa_from_mixed_euler_aa
+    ANIM_rotate 0.357407 -0.357407 0.862856    0 64.736799    0 1 aa_from_mixed_euler_aa
+    # name_hint: aa_from_mixed_euler_aa
+    TRIS    0 3
+    ANIM_end
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+101.NO_BUILD_NUMBR

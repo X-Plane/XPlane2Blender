@@ -1,0 +1,219 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1	# 0
+VT	1	0	-1	-0	-1	-0	0.625	0.75	# 1
+VT	-1	0	1	-0	-1	-0	0.375	1	# 2
+
+IDX	0
+IDX	1
+IDX	2
+
+# Unit Test Overview:
+#     Tests that Euler ordering is respected and inferred correctly. Also tests that negative Euler's
+#     signs are respected
+#     Tests:
+#     - "X", "Y", "Z"    -> "XYZ"
+#     - "YX", "ZY", "ZX" -> "ZYX"
+#     - "XY", "YZ", "XZ" -> "XYZ"
+#     - "[Any 3 Axis]" -> [That order]
+#     Naming signifies `order_{as_found_in_obj}_{Blender_rotation_mode}`.
+#     "_as_" means "X-Plane assumes this as..."
+
+# 0 ROOT
+    # Single Axis
+    ANIM_begin
+        ANIM_trans  0 0 0    0 0 0    0 0   none
+        ANIM_begin
+        ANIM_trans  0 0 0    0 0 0    0 0   order_x_pos
+        ANIM_rotate 1 0 0    0 30    0 1   order_x_pos
+        # name_hint: order_x_pos
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_trans  5 0 0     5 0 0    0 0   order_x_neg
+        ANIM_rotate -1 0 0    0 30    0 1   order_x_neg
+        # name_hint: order_x_neg
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_trans  10 0 0     10 0 0  0 0   order_y_pos
+        ANIM_rotate 0 0 -1    0 30    0 1   order_y_pos
+        # name_hint: order_y_pos
+        TRIS    0 3
+        ANIM_end
+
+        ANIM_begin
+        ANIM_trans  15 0 0    15 0 0  0 0   order_y_neg
+        ANIM_rotate 0 0 1    0 30    0 1   order_y_neg
+        # name_hint: order_y_neg
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_trans  20 0 0    20 0 0    0 0 order_z_pos
+        ANIM_rotate 0 1 0    0 30    0 1   order_z_pos
+        # name_hint: order_z_pos
+        TRIS    0 3
+        ANIM_end
+
+        ANIM_begin
+        ANIM_trans  25 0 0    25 0 0    0 0  order_z_neg
+        ANIM_rotate 0 -1 0    0 30    0 1   order_z_neg
+        # name_hint: order_z_neg
+        TRIS    0 3
+        ANIM_end
+    ANIM_end # End Single Axis
+    # Double Axis -> ZXY
+	ANIM_begin
+        ANIM_begin
+        ANIM_trans  30 0 0   30 0 0   0 0       order_yx_as_zxy_XYZ
+        ANIM_rotate 0 0 -1   0 17     0 1       order_yx_as_zxy_XYZ
+        ANIM_rotate 1 0 0    0 67     0 1       order_yx_as_zxy_XYZ
+        # name_hint: order_yx_as_zxy_XYZ
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_trans  35 0 0   35 0 0   0 0       order_zy_as_zxy_XYZ
+        ANIM_rotate 0 1 0    0 88     0 1       order_zy_as_zxy_XYZ
+        ANIM_rotate 0 0 -1   0 120    0 1       order_zy_as_zxy_XYZ
+        # name_hint: order_zy_as_zxy_XYZ
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_trans  40 0 0   40 0 0   0 0       order_zx_as_zxy_XYZ
+        ANIM_rotate 0 1 0    0 99     0 1       order_zx_as_zxy_XYZ
+        ANIM_rotate 1 0 0    0 170    0 1       order_zx_as_zxy_XYZ
+        # name_hint: order_zx_as_zxy_XYZ
+        TRIS    0 3
+        ANIM_end
+	ANIM_end # End Double Axis - > ZYX
+    # Double Axis -> XYZ
+	ANIM_begin
+        ANIM_begin
+        ANIM_trans  45 0 0   45 0 0   0 0       order_xy_as_xyz_ZYX
+        ANIM_rotate 1 0 0    0 38     0 1       order_xy_as_xyz_ZYX
+        ANIM_rotate 0 0 -1   0 78     0 1       order_xy_as_xyz_ZYX
+        # name_hint: order_xy_as_xyz_ZYX
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_trans  50 0 0   50 0 0   0 0       order_yz_as_xyz_ZYX
+        ANIM_rotate 0 0 -1   0 99     0 1       order_yz_as_xyz_ZYX
+        ANIM_rotate 0 1 0    0 130    0 1       order_yz_as_xyz_ZYX
+        # name_hint: order_yz_as_xyz_ZYX
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_trans  55 0 0   55 0 0   0 0       order_xz_as_xyz_ZYX
+        ANIM_rotate 1 0 0    0 44     0 1       order_xz_as_xyz_ZYX
+        ANIM_rotate 0 1 0    0 200    0 1       order_xz_as_xyz_ZYX
+        # name_hint: order_xz_as_xyz_ZYX
+        TRIS    0 3
+        ANIM_end
+	ANIM_end # End Double Axis -> XYZ
+    # Triple Axis, Specific Order
+    ANIM_begin
+        ANIM_begin
+        ANIM_rotate_begin	1	0	-0	order_xyz_ZYX
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	72.000166
+        ANIM_rotate_end
+        ANIM_rotate_begin	0	0	-1	order_xyz_ZYX
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	240.99981
+        ANIM_rotate_end
+        ANIM_rotate_begin	0	1	-0	order_xyz_ZYX
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	2.0001957
+        ANIM_rotate_end
+        ATTR_shiny_rat	0.5
+        # name_hint: order_xyz_ZYX
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_rotate_begin	1	0	-0	order_xzy_YZX
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	221.00014
+        ANIM_rotate_end
+        ANIM_rotate_begin	0	1	-0	order_xzy_YZX
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	196.00027
+        ANIM_rotate_end
+        ANIM_rotate_begin	0	0	-1	order_xzy_YZX
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	222.99976
+        ANIM_rotate_end
+        # name_hint: order_xzy_YZX
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_rotate_begin	0	0	-1	order_yxz_XZY
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	11.000217
+        ANIM_rotate_end
+        ANIM_rotate_begin	0	1	-0	order_yxz_XZY
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	176.99984
+        ANIM_rotate_end
+        ANIM_rotate_begin	1	0	-0	order_yxz_XZY
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	163.0002
+        ANIM_rotate_end
+        # name_hint: order_yxz_XZY
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_rotate_begin	0	0	-1	order_yxz_ZXY
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	240.99981
+        ANIM_rotate_end
+        ANIM_rotate_begin	1	0	-0	order_yxz_ZXY
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	72.000166
+        ANIM_rotate_end
+        ANIM_rotate_begin	0	1	-0	order_yxz_ZXY
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	2.0001957
+        ANIM_rotate_end
+        # name_hint: order_yxz_ZXY
+        TRIS    0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_rotate_begin	0	1	-0	order_zxy_YXZ
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	222.99976
+        ANIM_rotate_end
+        ANIM_rotate_begin	1	0	-0	order_zxy_YXZ
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	61.999765
+        ANIM_rotate_end
+        ANIM_rotate_begin	0	0	-1	order_zxy_YXZ
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	72.000166
+        ANIM_rotate_end
+        # name_hint: order_zxy_YXZ
+        TRIS	0 3
+        ANIM_end
+        ANIM_begin
+        ANIM_rotate_begin	0	1	-0	order_zyx_XYZ
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	163.0002
+        ANIM_rotate_end
+        ANIM_rotate_begin	0	0	-1	order_zyx_XYZ
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	12.000028
+        ANIM_rotate_end
+        ANIM_rotate_begin	1	0	-0	order_zyx_XYZ
+        ANIM_rotate_key	0	0
+        ANIM_rotate_key	1	111.00026
+        ANIM_rotate_end
+        # name_hint: order_zyx_XYZ
+        TRIS    0 3
+        ANIM_end
+    ANIM_end # Triple Axis, Specific Order
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+101.NO_BUILD_NUMBR

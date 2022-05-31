@@ -1,0 +1,26 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1
+VT	1	0	-1	-0	-1	-0	0.625	0.75
+VT	-1	0	1	-0	-1	-0	0.375	1
+
+IDX	0
+IDX	1
+IDX	2
+
+# Unit Test Overview
+# This tests that a basic use of 3 selective LODs works.
+# Having 3 tests we don't accidentally just select the 4th
+ATTR_LOD    0    200
+	TRIS	0 3
+ATTR_LOD    200  400
+	TRIS	0 3
+ATTR_LOD    400  600
+	TRIS	0 3
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+101.NO_BUILD_NUMBR

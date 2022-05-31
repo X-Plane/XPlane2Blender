@@ -1,7 +1,9 @@
 import array
 import collections
 import io
+import inspect
 import itertools
+import math
 import os
 import pathlib
 from pprint import pprint
@@ -10,13 +12,25 @@ import sys
 import unittest
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from collections import Iterable
+import re
+from dataclasses import dataclass
 
 import bpy
+from mathutils import Euler, Vector
 
 import io_xplane2blender
-from io_xplane2blender import xplane_config, xplane_helpers
+from io_xplane2blender import xplane_config, xplane_helpers, xplane_props
+from io_xplane2blender.importer import xplane_imp_cmd_builder, xplane_imp_parser
 from io_xplane2blender.tests import animation_file_mappings, test_creation_helpers
 from io_xplane2blender.xplane_config import getDebug, setDebug
+from io_xplane2blender.xplane_constants import (
+    ANIM_TYPE_HIDE,
+    ANIM_TYPE_SHOW,
+    ANIM_TYPE_TRANSFORM,
+    PRECISION_KEYFRAME,
+    PRECISION_OBJ_FLOAT,
+)
 from io_xplane2blender.xplane_helpers import XPlaneLogger, logger
 from io_xplane2blender.xplane_types import (
     xplane_attribute,
@@ -186,6 +200,175 @@ class XPlaneTestCase(unittest.TestCase):
                     a_pixel[3], b_pixel[3], 8, msg=f"in Alpha channel"
                 )
 
+    def assertTransformAction(
+        self,
+        bl_object: bpy.types.Object,
+        expected_inter_anim: xplane_imp_cmd_builder.IntermediateAnimation,
+    ):
+        """
+        Asserts that an object's action datablock matches the animation specified by the ImportedAnimation struct.
+
+        Assumes
+            - bl_object has an action with `location` or `rotation` (in XYZ Eulers), **exclusively**
+            - Tests 1 dataref path at a time
+        """
+        try:
+            action = bl_object.animation_data.action
+        except AttributeError:  # animation_data is None
+            assert False
+        else:
+
+            def action_as_intermediate_animation(
+                bl_object: bpy.types.Object,
+            ) -> xplane_imp_cmd_builder.IntermediateAnimation:
+                """
+                Convert a bl_object's action into an IntermediateAnimation
+                """
+
+                action_as_intermediate_animation = (
+                    xplane_imp_cmd_builder.IntermediateAnimation()
+                )
+
+                def recombine_fcurves(
+                    action: bpy.types.Action, data_path: str
+                ) -> Union[List[Vector], Euler]:
+                    """
+                    Turns an FCurve's Location and Rotation into lists of Vectors or Eulers
+
+                    TODO: Cannot handle missing channels or an object with location and rotation
+                    """
+                    try:
+                        x_comp, y_comp, z_comp = (
+                            [k.co[1] for k in f.keyframe_points]
+                            for f in action.fcurves
+                            if f.data_path == data_path
+                        )
+                    except ValueError:  # no matching fcurves found
+                        if data_path == "location":
+                            return []
+                        elif data_path == "rotation_euler":
+                            return {}
+                    else:
+                        if data_path == "location":
+                            return [
+                                Vector((x, y, z))
+                                for x, y, z in zip(x_comp, y_comp, z_comp)
+                            ]
+                        elif data_path == "rotation_euler":
+                            return Euler((x_comp, y_comp, z_comp))
+
+                action_as_intermediate_animation.locations = recombine_fcurves(
+                    bl_object.animation_data.action, "location"
+                )
+                action_as_intermediate_animation.rotations = recombine_fcurves(
+                    bl_object.animation_data.action, "rotation_euler"
+                )
+                # ---end recombine_fcurves-------------------------------------
+
+                def get_dataref_prop_from_data_path(
+                    bl_object: bpy.types.Object, expected_path: str
+                ) -> Tuple[bpy.types.FCurve, xplane_props.XPlaneDataref]:
+                    for fcurve in (
+                        fcurve
+                        for fcurve in bl_object.animation_data.action.fcurves
+                        if fcurve.data_path.startswith("xplane.datarefs[")
+                    ):
+                        try:
+                            data_path_idx = int(
+                                re.match(
+                                    "xplane\.datarefs\[(\d+)\]\.value", fcurve.data_path
+                                ).group(1)
+                            )
+                        except AttributeError:
+                            # We expect tests to be so simple that they only have 1 dataref,
+                            # but in case they have multiple...
+                            pass
+                        except IndexError:  # Is this actually impossible?
+                            assert (
+                                False
+                            ), f"{bl_object.name} has data_path as out of index: {expected_path}"
+                        else:
+                            # Unit tests are so carefuly authored
+                            # we don't need error handling here.
+                            # fcurves and datarefs will be 1:1
+                            dataref_prop = bl_object.xplane.datarefs[data_path_idx]
+                            if dataref_prop.path == expected_path:
+                                return (fcurve, dataref_prop)
+                    else:  # no early return
+                        assert (
+                            False
+                        ), f"{expected_path} was not found in {bl_object.name}"
+
+                # ----end get_dataref_prop_from_data_path----------------------
+
+                expected_path = expected_inter_anim.xp_dataref.path
+                xp_fcurve, dataref_prop = get_dataref_prop_from_data_path(
+                    bl_object, expected_path
+                )
+                xp_values: List[float] = [k.co[1] for k in xp_fcurve.keyframe_points]
+                action_as_intermediate_animation.xp_dataref = xplane_imp_cmd_builder.IntermediateDataref(
+                    anim_type=dataref_prop.anim_type,
+                    loop=dataref_prop.loop,
+                    path=dataref_prop.path,
+                    # Why? The importer tracks these seperately to make optimzations
+                    # XPlane2Blender will have the data on one "time line" only
+                    location_values=xp_values,
+                    rotation_values=xp_values,
+                )
+
+                return action_as_intermediate_animation
+
+            # fmt: off
+            real_action_struct = action_as_intermediate_animation(bl_object)
+            self.assertEqual(real_action_struct.xp_dataref.anim_type,    expected_inter_anim.xp_dataref.anim_type)
+            self.assertAlmostEqual(real_action_struct.xp_dataref.loop,   expected_inter_anim.xp_dataref.loop, places=1)
+            self.assertEqual(real_action_struct.xp_dataref.path,         expected_inter_anim.xp_dataref.path)
+            self.assertAlmostEqual(real_action_struct.xp_dataref.show_hide_v1, expected_inter_anim.xp_dataref.show_hide_v1, places=PRECISION_OBJ_FLOAT)
+            self.assertAlmostEqual(real_action_struct.xp_dataref.show_hide_v2, expected_inter_anim.xp_dataref.show_hide_v2, places=PRECISION_OBJ_FLOAT)
+            # fmt: on
+
+            for real_loc, expected_loc in zip(
+                real_action_struct.locations, expected_inter_anim.locations
+            ):
+                self.assertVectorAlmostEqual(real_loc, expected_loc, 1)
+
+            for real_rot_degrees, expected_rot_degrees in [
+                (
+                    real_action_struct.rotations[axis],
+                    expected_inter_anim.rotations[axis],
+                )
+                for axis in real_action_struct.rotations
+            ]:
+                for real_deg, exp_deg in zip(real_rot_degrees, expected_rot_degrees):
+                    self.assertAlmostEqual(real_deg, exp_deg, places=1)
+
+    def assertImportSucceeds(self, filepath: Union[str, pathlib.Path], msg: str = None):
+        """
+        Tests import succeeds without syntatic or semantic errors.
+
+        If filepath is just a file name, assume a folder called 'fixtures'
+        exists in the current directory and check there as a shortcut.
+
+        Appends '.obj' as needed.
+        """
+
+        filepath = pathlib.Path(filepath).with_suffix(".obj")
+        if len(filepath.parts) == 1:
+            filepath = pathlib.Path(
+                inspect.currentframe().f_back.f_globals["__file__"]
+            ).parent / pathlib.Path("fixtures", filepath)
+
+        try:
+            result = xplane_imp_parser.import_obj(filepath)
+        except xplane_imp_parser.UnrecoverableParserError:
+            self.fail(msg=msg if msg else f"Import of {filepath} did not succeed",)
+        else:
+            self.assertEqual(
+                result,
+                "FINISHED",
+                msg=f"Import of {filepath} finished parsing but had semantic errors",
+            )
+
     def assertMatricesEqual(self, mA, mB, tolerance=FLOAT_TOLERANCE):
         for row_a, row_b in zip(mA, mB):
             self.assertFloatVectorsEqual(row_a, row_b, tolerance)
@@ -205,6 +388,41 @@ class XPlaneTestCase(unittest.TestCase):
                 xplaneFile._bl_obj_name_to_bone[name].blenderObject,
                 bpy.data.objects[name],
             )
+
+    def assertVectorAlmostEqual(
+        self,
+        vec_a: Union[Iterable, Vector],
+        vec_b: Union[Iterable, Vector],
+        places: int,
+    ) -> None:
+        """Given two equal length vectors (or any iterable), ask if they are almost equal"""
+        for i, (comp_a, comp_b) in enumerate(zip(vec_a, vec_b)):
+            self.assertAlmostEqual(
+                comp_a,
+                comp_b,
+                places,
+                msg=f"{vec_a} != {vec_b} with {places} digits",
+            )
+
+    def assertVTTable(
+        self, object_a: bpy.types.Object, object_b: bpy.types.Object
+    ) -> None:
+        o_vt_cos = sorted(
+            set(tuple(object_a.matrix_world @ v.co) for v in object_a.data.vertices)
+        )
+        i_vt_cos = sorted(
+            set(tuple(object_b.matrix_world @ v.co) for v in object_b.data.vertices)
+        )
+        o_vt_normals = sorted(set(tuple(v.normal) for v in object_a.data.vertices))
+        i_vt_normals = sorted(set(tuple(v.normal) for v in object_b.data.vertices))
+        o_vt_uvs = sorted(set(tuple(v.uv) for v in object_a.data.uv_layers[0].data))
+        i_vt_uvs = sorted(set(tuple(v.uv) for v in object_b.data.uv_layers[0].data))
+        for i, (o_vt_co, i_vt_co) in enumerate(zip(o_vt_cos, i_vt_cos)):
+            self.assertVectorAlmostEqual(o_vt_co, i_vt_co, 1)
+        for i, (o_vt_normal, i_vt_normal) in enumerate(zip(o_vt_normals, i_vt_normals)):
+            self.assertVectorAlmostEqual(o_vt_normal, i_vt_normal, 1)
+        for i, (o_vt_uv, i_vt_uv) in enumerate(zip(o_vt_uvs, i_vt_uvs)):
+            self.assertVectorAlmostEqual(o_vt_uv, i_vt_uv, 1)
 
     def assertXPlaneBoneTreeEqual(
         self,

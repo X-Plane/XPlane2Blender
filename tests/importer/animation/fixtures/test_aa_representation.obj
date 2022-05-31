@@ -1,0 +1,49 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1	# 0
+VT	1	0	-1	-0	-1	-0	0.625	0.75	# 1
+VT	-1	0	1	-0	-1	-0	0.375	1	# 2
+
+IDX	0
+IDX	1
+IDX	2
+
+# Unit Test Overview:
+#     This tests that the use of AA in ANIM_rotate* be respected. There should be 3
+#   triangles that are rotated off axis
+#   - case_a_static_as_pure_static was (30, 30, 30)
+#   - case_d_static_as_pure_dynamic was (75, 10, 100)
+#   - dynamic was (45, 56, 78)
+#   The ANIM_trans uses the same dataref name to reduce blocks generated
+
+# 0 ROOT
+
+	ANIM_begin
+    ANIM_trans  5 0 0    5 0 0    0 0                                       case_a_static_as_pure_static
+    ANIM_rotate .4472136 .4472136 -.7745967     46.5674613 46.5674613   0 0 case_a_static_as_pure_static
+	# name_hint: case_a_static_as_pure_static
+	TRIS	0 3
+	ANIM_end
+
+	ANIM_begin
+    ANIM_trans  10 0 0    10 0 0   0 0                                       case_d_static_as_pure_dynamic
+    ANIM_rotate 0.402905 0.683368 -0.608830     113.449565 113.449565    0 1 case_d_static_as_pure_dynamic
+	# name_hint: case_d_static_as_pure_dynamic
+	TRIS	0 3
+	ANIM_end
+
+	ANIM_begin
+    ANIM_trans  15 0 0    15 0 0   0 0              dynamic
+    ANIM_rotate_begin -0.015597  0.562171 -0.826874 dynamic
+        ANIM_rotate_key 0 83.335944
+        ANIM_rotate_key 1 227
+    ANIM_rotate_end
+	# name_hint: dynamic
+	TRIS	0 3
+	ANIM_end
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+101.NO_BUILD_NUMBR

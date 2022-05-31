@@ -1,0 +1,25 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	6	0	0	6
+
+VT	1	0	-1	0	1	-0	0.74999994	0.25
+VT	1	0	1	0	1	-0	0.25	0.25000006
+VT	-1	0	1	0	1	-0	0.25000006	0.75
+VT	-1	0	-1	-0	1	-0	0.75	0.74999994
+VT	1	0	-1	-0	1	-0	0.74999994	0.25
+VT	-1	0	1	-0	1	-0	0.25000006	0.75
+
+IDX	0
+IDX	1
+IDX	2
+IDX	3
+IDX	4
+IDX	5
+
+	ATTR_shiny_rat	0.5
+	TRIS	0 6
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+101.NO_BUILD_NUMBR

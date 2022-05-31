@@ -204,7 +204,7 @@ def main(argv=None) -> int:
             if os.path.exists(blendFile):
                 blender_args.append(blendFile)
             else:
-                if not (argv.quiet or argv.print_fails):
+                if not (argv.quiet or argv.print_fails) and "importer" not in blendFile:
                     print("WARNING: Blender file " + blendFile + " does not exist")
                     printTestEnd()
 
@@ -239,7 +239,7 @@ def main(argv=None) -> int:
                         "DAG zero",
                         "found bundled python",
                         "Read new prefs",
-                        "ID user decrement error",
+                        ".*ID user decrement error",
                         "Smart Projection time",
                         "WARNING.*has no UV-Map.",
                         "ERROR.*wrong user count in old ID",

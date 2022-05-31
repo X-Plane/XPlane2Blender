@@ -7,6 +7,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 import bpy
 import mathutils
+from mathutils import Euler, Matrix, Quaternion, Vector
 
 import io_xplane2blender
 from io_xplane2blender import xplane_config, xplane_constants, xplane_props
@@ -166,6 +167,21 @@ def get_exportable_roots_in_scene(
     ]
 
 
+def is_vector_axis_aligned(
+    vector: Union[Vector, Tuple[float, float, float]],
+    ndigits: float = 5,
+) -> bool:
+    """
+    Returns true if a vector is along one of the standard cartesian axes.
+    It does not test that the magnitude is 1, however.
+    """
+    vector = Vector(map(abs, vector)).normalized()
+    return any(
+        int(round(vector.dot(Vector(v)), ndigits)) == 1
+        for v in {*itertools.permutations([1, 0, 0])}
+    )
+
+
 def is_visible_in_viewport(
     datablock: Union[bpy.types.Collection, bpy.types.Object],
     view_layer: bpy.types.ViewLayer,
@@ -197,10 +213,12 @@ def round_vec(v: mathutils.Vector, ndigits: int) -> mathutils.Vector:
 
 
 def vec_b_to_x(v) -> mathutils.Vector:
+    """Converts Vector from Blender co-ords (X, Y, Z) to X-Plane as (X, Z, -Y)"""
     return mathutils.Vector((v[0], v[2], -v[1]))
 
 
 def vec_x_to_b(v) -> mathutils.Vector:
+    """Converts Vector from X-Plane co-ords (X, Y, Z) to Blender as (X, -Z, Y)"""
     return mathutils.Vector((v[0], -v[2], v[1]))
 
 

@@ -1,0 +1,27 @@
+I
+800
+OBJ
+
+# Tests
+# - Empty lines ignored
+# - Comments at the beginning of the file (like these) are ignored
+# - Any extra arguments in a directive are ignored (warning given)
+# - Comments at the end of comments# with no space between are ignored
+# - Comments at the end of comments # with a space between are ignored
+# - Tabs, spaces, in the beginning are allowed
+# - Tabs, spaces at end are allowed
+# - Mixed tabs and spaces within are allowed
+# - Extra whitespace at the end is fine 
+
+
+
+VT 1 0 0 0 0 0 1 1 extra arguments after
+VT 1 0 0 0 0 0 1 1# No space between last arg and comment. This is a minor difference from X-Plane
+VT 1 0 0 0 0 0 1 1 # Space between last arg and comment
+    VT 1 0 0 0 0 0 1 1
+	VT 1 0 0 0 0 0 1 1
+VT 1 0 0 0 0 0 1 1        
+VT 1 0 0 0 0 0 1 1		
+VT  1    0 0	0 0 0   1 1
+           
+

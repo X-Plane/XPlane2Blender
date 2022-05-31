@@ -17,6 +17,7 @@ import os.path
 import shutil
 import typing
 from collections import namedtuple
+from dataclasses import dataclass
 from pathlib import Path
 from typing import *
 
@@ -60,6 +61,30 @@ _BONE = "BONE"
 _OBJECT = "OBJECT"
 
 
+@dataclass
+class AxisAngle:
+    """AA class with named members. angle is in radians"""
+
+    axis: Vector
+    angle: float
+
+    def to_object_rotation_axis_angle(self) -> Tuple[float, float, float, float]:
+        """For use with an object's rotation_axis_angle member"""
+        return (self.angle, *self.axis)
+
+    def to_euler(
+        self, order: str = "XYZ", euler_compat: Optional[Euler] = None
+    ) -> Euler:
+        return self.to_quaternion().to_euler(order, euler_compat)
+
+    def to_quaternion(self) -> Quaternion:
+        return Quaternion(self.axis, self.angle)
+
+
+# This API uses AA, Euler, a tuple of 3 degrees to be converted to Euler, and Quaternion
+RotationType = Union[AxisAngle, Euler, Tuple[float, float, float], Quaternion]
+
+
 class AxisDetentRangeInfo:
     def __init__(self, start: float, end: float, height: float):
         self.start = start
@@ -101,7 +126,7 @@ class DatablockInfo:
         collection: Optional[Union[str, bpy.types.Collection]] = None,
         location: Vector = Vector((0, 0, 0)),
         rotation_mode: str = "XYZ",
-        rotation: Optional[Union[bpy.types.bpy_prop_array, Euler, Quaternion]] = None,
+        rotation: Optional[RotationType] = None,
         scale: Vector = Vector((1, 1, 1)),
     ):
         self.datablock_type = datablock_type
@@ -118,13 +143,14 @@ class DatablockInfo:
         self.parent_info = parent_info
         self.location = location
         self.rotation_mode = rotation_mode
-        if rotation is None:
+        self.rotation = rotation
+        if self.rotation is None:
             if self.rotation_mode == "AXIS_ANGLE":
-                self.rotation = (0.0, Vector((0, 0, 0, 0)))
+                self.rotation = AxisAngle()
             elif self.rotation_mode == "QUATERNION":
                 self.rotation = Quaternion()
             elif set(self.rotation_mode) == {"X", "Y", "Z"}:
-                self.rotation = Vector()
+                self.rotation = Euler()
             else:
                 assert False, "Unsupported rotation mode: " + self.rotation_mode
         else:
@@ -134,13 +160,19 @@ class DatablockInfo:
             elif self.rotation_mode == "QUATERNION":
                 assert len(self.rotation) == 4
                 self.rotation_quaternion = rotation
-            elif set(self.rotation_mode) == {"x", "y", "z"}:
+            elif set(self.rotation_mode) == {"X", "Y", "Z"} and isinstance(
+                rotation, Euler
+            ):
                 assert len(self.rotation) == 3
                 self.rotation_euler = rotation
+            elif set(self.rotation_mode) == {"X", "Y", "Z"} and isinstance(
+                rotation, tuple
+            ):
+                assert len(self.rotation) == 3
+                self.rotation_euler = Euler(map(math.radians, rotation), rotation_mode)
             else:
                 assert False, "Unsupported rotation mode: " + self.rotation_mode
 
-            self.rotation = rotation
         self.scale = scale
 
 
@@ -152,24 +184,36 @@ class KeyframeInfo:
         dataref_value: Optional[float] = None,
         dataref_show_hide_v1: Optional[float] = None,
         dataref_show_hide_v2: Optional[float] = None,
+        dataref_loop: Optional[float] = None,
         dataref_anim_type: str = xplane_constants.ANIM_TYPE_TRANSFORM,  # Must be xplane_constants.ANIM_TYPE_*
         location: Optional[Vector] = None,
         rotation_mode: str = "XYZ",
-        rotation: Optional[Union[Tuple[float, Vector], Euler, Quaternion]] = None,
+        rotation: Optional[RotationType] = None,
     ):
+        """
+        Everything needed to automate setting Object Location/Rotation and
+        XPlane2Blender Dataref props, then making a keyframe.
+
+        When rotation is a tuple, it is converted to radians, then into a Euler
+        """
         self.idx = idx
         self.dataref_path = dataref_path
         self.dataref_value = dataref_value
         self.dataref_show_hide_v1 = dataref_show_hide_v1
         self.dataref_show_hide_v2 = dataref_show_hide_v2
+        self.dataref_loop = dataref_loop
         self.dataref_anim_type = dataref_anim_type
         self.location = location
         self.rotation_mode = rotation_mode
-        self.rotation = rotation
+        self.rotation = (
+            Euler(map(math.radians, rotation), rotation_mode)
+            if isinstance(rotation, tuple)
+            else rotation
+        )
 
         if self.rotation:
             if self.rotation_mode == "AXIS_ANGLE":
-                assert len(self.rotation[1]) == 3
+                assert len(self.rotation.axis) == 3
             elif self.rotation_mode == "QUATERNION":
                 assert len(self.rotation) == 4
             elif {*self.rotation_mode} == {"X", "Y", "Z"}:
@@ -178,7 +222,13 @@ class KeyframeInfo:
                 assert False, "Unsupported rotation mode: " + self.rotation_mode
 
     def __str__(self) -> str:
-        return f"({self.idx}, {self.dataref_path}, {self.dataref_value}, {self.dataref_show_hide_v1}, {self.dataref_show_hide_v2}, {self.dataref_anim_type}, {self.location}, {self.rotation_mode}, {self.rotation})"
+        """For ease of debugging, rotation is always converted to degrees"""
+        s = f"({self.idx}, {self.dataref_path}, {self.dataref_value}, {self.dataref_show_hide_v1}, {self.dataref_show_hide_v2}, {self.dataref_anim_type}, {self.location}, {self.rotation_mode}, "
+        if {*self.rotation_mode} == {"X", "Y", "Z"}:
+            s += f"{tuple(map(math.degrees, self.rotation))})"
+        else:
+            s += f"{self.rotation})"
+        return s
 
 
 # Common presets for animations
@@ -256,7 +306,7 @@ SHOW_ANIM_FAKE_T = (
 class ParentInfo:
     def __init__(
         self,
-        parent: Optional[bpy.types.Object] = None,
+        parent: Optional[Union[bpy.types.Object, str]] = None,
         parent_type: str = _OBJECT,  # Must be "ARMATURE", "BONE", or "OBJECT"
         parent_bone: Optional[str] = None,
     ):
@@ -264,13 +314,16 @@ class ParentInfo:
             parent_type == _ARMATURE or parent_type == _BONE or parent_type == _OBJECT
         )
         if parent:
-            assert isinstance(parent, bpy.types.Object)
+            assert isinstance(parent, (bpy.types.Object, str))
 
         if parent_bone:
             assert isinstance(parent_bone, str)
         self.parent = parent
         self.parent_type = parent_type
         self.parent_bone = parent_bone
+
+    def __str__(self):
+        return f"Parent: {self.parent}, Parent Type: {self.parent_type}, Parent Bone: {self.parent_bone}"
 
 
 def create_bone(armature: bpy.types.Object, bone_info: BoneInfo) -> str:
@@ -320,9 +373,12 @@ def create_datablock_collection(
         scene: bpy.types.Scene = bpy.data.scenes[scene]
     except (KeyError, TypeError):  # scene is str and not found or is None
         scene: bpy.types.Scene = bpy.context.scene
+
     try:
-        parent: bpy.types.Collection = bpy.data.collections[parent]
-    except (KeyError, TypeError):  # parent is str and not found or is Collection
+        parent: bpy.types.Collection = bpy.data.collections[
+            parent.name if isinstance(parent, bpy.types.Collection) else parent
+        ]
+    except (KeyError, TypeError):  # parent is None or not found
         parent: bpy.types.Collection = scene.collection
 
     if coll.name not in parent.children:
@@ -401,7 +457,10 @@ def create_datablock_armature(
 
 
 def create_datablock_empty(
-    info: DatablockInfo, scene: Optional[Union[bpy.types.Scene, str]] = None,
+    info: DatablockInfo,
+    scene: Optional[Union[bpy.types.Scene, str]] = None,
+    empty_display_type: str = "PLAIN_AXES",
+    empty_display_size=1,
 ) -> bpy.types.Object:
     """
     Creates a datablock empty and links it to a scene and collection.
@@ -415,7 +474,8 @@ def create_datablock_empty(
         scene = bpy.context.scene
     set_collection(ob, info.collection)
 
-    ob.empty_display_type = "PLAIN_AXES"
+    ob.empty_display_type = empty_display_type
+    ob.empty_display_size = empty_display_size
     ob.location = info.location
     ob.rotation_mode = info.rotation_mode
     set_rotation(ob, info.rotation, info.rotation_mode)
@@ -427,9 +487,16 @@ def create_datablock_empty(
     return ob
 
 
+@dataclass
+class From_PyData:
+    vertices: List[Tuple[float, float, float]]
+    edges: List[Tuple[int, int]]
+    faces: List[Tuple[int, int, int]]
+
+
 def create_datablock_mesh(
     info: DatablockInfo,
-    primitive_shape: str = "cube",
+    mesh_src: Union[str, bpy.types.Mesh, From_PyData] = "cube",
     material_name: Union[bpy.types.Material, str] = "Material",
     scene: Optional[Union[bpy.types.Scene, str]] = None,
 ) -> bpy.types.Object:
@@ -437,11 +504,17 @@ def create_datablock_mesh(
     Uses the bpy.ops.mesh.primitive_*_add ops to create an Object with given
     mesh. Location and Rotation given by info.
 
-    primitive_shape must match an existing mesh op
+    mesh_data must be (listed in evaluation order)
+    - An existing mesh datablock that will be used instead
+    - An existing mesh datablock name
+    - "tri" or "eq-tri" which makes a right or equilateral triangle
+    - primative op like "cube" or "plane"
+    - Data for `from_pydata`
     """
 
     assert info.datablock_type == "MESH"
-    assert primitive_shape in {
+
+    ops = {
         "circle",
         "cone",
         "cube",
@@ -454,34 +527,75 @@ def create_datablock_mesh(
         "uv_sphere",
     }
 
-    primitive_ops: Dict[str, bpy.types.Operator] = {
-        "circle": bpy.ops.mesh.primitive_circle_add,
-        "cone": bpy.ops.mesh.primitive_cone_add,
-        "cube": bpy.ops.mesh.primitive_cube_add,
-        "cylinder": bpy.ops.mesh.primitive_cylinder_add,
-        "grid": bpy.ops.mesh.primitive_grid_add,
-        "ico_sphere": bpy.ops.mesh.primitive_ico_sphere_add,
-        "monkey": bpy.ops.mesh.primitive_monkey_add,
-        "plane": bpy.ops.mesh.primitive_plane_add,
-        "torus": bpy.ops.mesh.primitive_torus_add,
-        "uv_sphere": bpy.ops.mesh.primitive_uv_sphere_add,
-    }
+    def create_object(name, mesh):
+        ob = bpy.data.objects.new(name, object_data=mesh)
+        return ob
 
-    try:
-        op = primitive_ops[primitive_shape]
-    except KeyError:
-        assert False, f"{primitive_shape} is not a known primitive op"
-    else:
-        op(enter_editmode=False, location=info.location, rotation=info.rotation)
+    if isinstance(mesh_src, bpy.types.Mesh):
+        me = mesh_src
+        ob = create_object(info.name, me)
+    elif isinstance(mesh_src, str) and mesh_src in bpy.data.meshes:
+        me = bpy.data.meshes[mesh_src]
+        ob = create_object(info.name, me)
+    elif isinstance(mesh_src, From_PyData) or mesh_src == "eq-tri" or mesh_src == "tri":
+        me = bpy.data.meshes.new(f"Mesh.{len(bpy.data.meshes)}:03")
+        if mesh_src == "tri":
+            verts = [(1.0, -1.0, 0.0), (1.0, 1.0, 0.0), (-1.0, -1.0, 0.0)]
+            from_data = [
+                verts,
+                [],
+                [(2, 1, 0)],
+            ]
+        elif mesh_src == "eq-tri":
+            verts = [
+                (1, -1, 0),
+                (0, 1, 0),
+                (-1, -1, 0),
+            ]
+            from_data = [
+                verts,
+                [],
+                [(2, 1, 0)],
+            ]
+        else:
+            from_data = (mesh_src.vertices, mesh_src.edges, mesh_src.faces)
 
-    ob = bpy.context.object
-    set_collection(ob, info.collection)
+        me.from_pydata(from_data[0], from_data[1], from_data[2])
+        me.validate()
+        ob = create_object(info.name, me)
+
+    elif mesh_src in ops:
+        primitive_ops: Dict[str, bpy.types.Operator] = {
+            "circle": bpy.ops.mesh.primitive_circle_add,
+            "cone": bpy.ops.mesh.primitive_cone_add,
+            "cube": bpy.ops.mesh.primitive_cube_add,
+            "cylinder": bpy.ops.mesh.primitive_cylinder_add,
+            "grid": bpy.ops.mesh.primitive_grid_add,
+            "ico_sphere": bpy.ops.mesh.primitive_ico_sphere_add,
+            "monkey": bpy.ops.mesh.primitive_monkey_add,
+            "plane": bpy.ops.mesh.primitive_plane_add,
+            "torus": bpy.ops.mesh.primitive_torus_add,
+            "uv_sphere": bpy.ops.mesh.primitive_uv_sphere_add,
+        }
+
+        try:
+            op = primitive_ops[mesh_src]
+        except KeyError:
+            assert False, f"{mesh_src} is not a known primitive op"
+        else:
+            op(enter_editmode=False, location=info.location, rotation=info.rotation)
+            ob = bpy.context.object
+
+    set_collection(ob, info.collection, unlink_others=True)
     ob.name = info.name if info.name is not None else ob.name
+    ob.location = info.location
+    set_rotation(ob, info.rotation, info.rotation_mode)
     if info.parent_info:
         set_parent(ob, info.parent_info)
     set_material(ob, material_name)
 
-    ob.data.uv_layers.new()
+    if not ob.data.uv_layers:
+        ob.data.uv_layers.new()
 
     return ob
 
@@ -527,11 +641,22 @@ def create_datablock_image_from_disk(filepath: Union[Path, str]) -> bpy.types.Im
         raise OSError(f"Cannot load image {real_path}")
 
 
-def create_material(material_name: str):
+def create_material(
+    material_name: str,
+    texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
+):
+    """
+    Create a material and optionally give it a texture
+    """
     try:
-        return bpy.data.materials[material_name]
-    except:
-        return bpy.data.materials.new(material_name)
+        mat = get_material(material_name)
+    except KeyError:
+        mat = None
+
+    if mat == None:
+        mat = bpy.data.materials.new(material_name)
+
+    return mat
 
 
 def create_material_default() -> bpy.types.Material:
@@ -552,6 +677,10 @@ def create_scene(name: str) -> bpy.types.Scene:
 def get_image(name: str) -> Optional[bpy.types.Image]:
     """
     New images will be created in //tex and will be a .png
+
+    TODO: This API is incomplete, what if None found? What should happen?
+    Creating a new image is almost never what you want, unlike creating a bland cube
+    I vote KeyError which makes this a useless wrapper
     """
     return bpy.data.images.get(name)
 
@@ -614,13 +743,19 @@ def delete_all_other_scenes():
         bpy.data.scenes.remove(scene, do_unlink=True)
 
 
-def delete_all_text_files():
-    for text in bpy.data.texts:
+def delete_all_text_files(preserve_text_files: List[Union[str, bpy.types.Text]] = []):
+    """
+    Optionally pass in the names of Text Blocks
+    to keep (for instance, the name of the script you're working on in app)
+    """
+
+    preserve_text_files = [getattr(t, "name", t) for t in preserve_text_files]
+    for text in [t for t in bpy.data.texts if t.name not in preserve_text_files]:
         text.user_clear()
         bpy.data.texts.remove(text, do_unlink=True)
 
 
-def delete_everything():
+def delete_everything(preserve_text_files: List[Union[str, bpy.types.Text]] = []):
     """
     Warning! Don't call this from a Blender script!
     You'll delete the text block you're using!
@@ -628,7 +763,7 @@ def delete_everything():
     delete_all_images()
     delete_all_materials()
     delete_all_objects()
-    delete_all_text_files()
+    delete_all_text_files(preserve_text_files)
     delete_all_collections()
     delete_all_other_scenes()
 
@@ -796,6 +931,9 @@ def set_animation_data(
             dataref_prop.show_hide_v2 = kf_info.dataref_show_hide_v2
         else:
             dataref_prop.value = kf_info.dataref_value
+            # Multiple assignment isn't harmful
+            if kf_info.dataref_loop is not None:
+                dataref_prop.loop = kf_info.dataref_loop
 
         if not kf_info.location and not kf_info.rotation:
             continue
@@ -808,20 +946,14 @@ def set_animation_data(
             )
         if kf_info.rotation:
             blender_struct.rotation_mode = kf_info.rotation_mode
-            data_path = "rotation_{}".format(kf_info.rotation_mode.lower())
 
-            if kf_info.rotation_mode == "AXIS_ANGLE":
-                blender_struct.rotation_axis_angle = (
-                    kf_info.rotation[0],
-                    *kf_info.rotation[1],
-                )
-            elif kf_info.rotation_mode == "QUATERNION":
-                blender_struct.rotation_quaternion = kf_info.rotation[:]
-            else:
+            if set(kf_info.rotation_mode) == {"X", "Y", "Z"}:
                 data_path = "rotation_euler"
-                blender_struct.rotation_euler = [
-                    math.radians(r) for r in kf_info.rotation[:]
-                ]
+            else:
+                data_path = "rotation_{}".format(kf_info.rotation_mode.lower())
+
+            set_rotation(blender_struct, kf_info.rotation, kf_info.rotation_mode)
+
             blender_struct.keyframe_insert(
                 data_path=data_path,
                 group=blender_bone.name if struct_is_bone else "Rotation",
@@ -839,16 +971,26 @@ def set_animation_data(
 
 
 def set_collection(
-    blender_object: bpy.types.Object, collection: Union[bpy.types.Collection, str]
+    blender_object: bpy.types.Object,
+    collection: Union[bpy.types.Collection, str],
+    unlink_others: bool = True,
 ) -> None:
     """
     Links a datablock in collection. If collection is a string and does not exist, one will be made.
 
-    Remember to unlink blender_objects from other collections by hand if needed
+    Use unlink_others unlinks the blender_object from all other collections (including the scene's master collection)
     """
     assert isinstance(
         blender_object, (bpy.types.Object)
     ), "collection was of type " + str(type(blender_object))
+
+    if unlink_others:
+        for coll in (
+            coll
+            for coll in xplane_helpers.get_collections_in_scene(bpy.context.scene)
+            if blender_object.name in coll.objects
+        ):
+            coll.objects.unlink(blender_object)
 
     if isinstance(collection, bpy.types.Collection):
         coll = collection
@@ -903,24 +1045,53 @@ def set_manipulator_settings(
 def set_material(
     blender_object: bpy.types.Object,
     material_name: str = "Material",
-    material_props: Optional[Dict[str, Any]] = None,
-    create_missing: bool = True,
+    texture_image: Optional[Union[bpy.types.Image, Path, str]] = None,
 ):
+    """
+    Sets blender_object's 1st material slot to 'material_name'.
+
+    Optionally a texture_image is used to  set up a basic
+    shader with Base Color set to Image Texture
+
+    Raises OSError if texture_image is a path and not a real image
+    """
 
     mat = create_material(material_name)
     try:
         blender_object.material_slots[0].material = mat
+        print("slot 0  %s to %s" % (blender_object.name, material_name))
     except IndexError:
+        print("Appended %s to %s" % (blender_object.name, material_name))
         blender_object.data.materials.append(mat)
-    if material_props:
-        for prop, value in material_props.items():
-            setattr(mat.xplane.manip, prop, value)
+
+    if texture_image:
+        mat.use_nodes = True
+        tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+        if isinstance(texture_image, bpy.types.Image):
+            tex_node.image = texture_image
+        elif isinstance(texture_image, Path) or texture_image.endswith(
+            (".png", ".dds")
+        ):
+            tex_node.image = create_datablock_image_from_disk(texture_image)
+        else:
+            tex_node.image = get_image(texture_image)
+
+        bsdf_node = mat.node_tree.nodes["Principled BSDF"]
+
+        # TODO: We should make it nice and move it so it isn't overlapping
+        mat.node_tree.links.new(
+            tex_node.outputs["Color"], bsdf_node.inputs["Base Color"]
+        )
 
 
 def set_parent(blender_object: bpy.types.Object, parent_info: ParentInfo) -> None:
     assert isinstance(blender_object, bpy.types.Object)
 
-    blender_object.parent = parent_info.parent
+    blender_object.parent = (
+        parent_info.parent
+        if isinstance(parent_info.parent, bpy.types.Object)
+        else bpy.data.objects[parent_info.parent]
+    )
     blender_object.parent_type = parent_info.parent_type
 
     if parent_info.parent_type == _BONE:
@@ -933,23 +1104,29 @@ def set_parent(blender_object: bpy.types.Object, parent_info: ParentInfo) -> Non
 
 
 def set_rotation(
-    blender_object: bpy.types.Object, rotation: Any, rotation_mode: str
+    blender_object: bpy.types.Object, rotation: RotationType, rotation_mode: str
 ) -> None:
     """
     Sets the rotation of a Blender Object and takes care of picking which
     rotation type to give the value to
     """
     if rotation_mode == "AXIS_ANGLE":
-        assert len(rotation[1]) == 3
-        blender_object.rotation_axis_angle = rotation
+        assert isinstance(
+            rotation, AxisAngle
+        ), f"type is {type(rotation)}, should be AxisAngle"
+        blender_object.rotation_axis_angle = rotation.to_object_rotation_axis_angle()
     elif rotation_mode == "QUATERNION":
         assert len(rotation) == 4
         blender_object.rotation_quaternion = rotation
-    elif set(rotation_mode) == {"X", "Y", "Z"}:
+    elif set(rotation_mode) == {"X", "Y", "Z"} and isinstance(rotation, Euler):
         assert len(rotation) == 3
         blender_object.rotation_euler = rotation
+    elif set(rotation_mode) == {"X", "Y", "Z"} and isinstance(rotation, tuple):
+        assert len(rotation) == 3
+        blender_object.rotation_euler = Euler(map(math.radians, rotation))
     else:
         assert False, "Unsupported rotation mode: " + blender_object.rotation_mode
+    blender_object.rotation_mode = rotation_mode
 
 
 def set_xplane_layer(

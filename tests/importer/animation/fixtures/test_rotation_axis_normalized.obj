@@ -1,0 +1,59 @@
+I
+800
+OBJ
+
+GLOBAL_cockpit_lit
+POINT_COUNTS	3	0	0	3
+
+VT	1	0	1	-0	-1	-0	0.625	1	# 0
+VT	1	0	-1	-0	-1	-0	0.625	0.75	# 1
+VT	-1	0	1	-0	-1	-0	0.375	1	# 2
+
+IDX	0
+IDX	1
+IDX	2
+
+# Unit Test Overview:
+#     This tests that after parsing an axis, it is normalized right away, while also respecting negative axis
+#     - anim_rotate_aa_off_axis                  - (0.706446, 0.706446, -0.043208), 9.8963823 degrees
+#     - anim_rotate_axis_aligned                 - (0, -1, 0), -5 degrees
+#     - anim_rotate_begin_aa_off_axis            - (-0.015596, 0.826873, 0.562171), 83.335944 and 227 degrees
+#     - anim_rotate_begin_axis_aligned           - (0, 0, 1), 80 and 220 degrees
+
+# 0 ROOT
+
+	ANIM_begin
+    ANIM_trans  10 0 0    10 0 0    0 0                                    anim_rotate_aa_off_axis
+    ANIM_rotate 2.825795 -0.172833 -2.825795    9.8963823 9.8963823    0 0 anim_rotate_aa_off_axis
+	# name_hint: anim_rotate_aa_off_axis
+	TRIS	0 3
+	ANIM_end
+
+	ANIM_begin
+    ANIM_trans  0 0 0    0 0 0    0 0                                      anim_rotate_axis_aligned
+    ANIM_rotate 0 0 2    5 5      0 0                                      anim_rotate_axis_aligned
+	# name_hint: anim_rotate_axis_aligned
+	TRIS	0 3
+	ANIM_end
+
+	ANIM_begin
+    ANIM_trans  15 0 0    15 0 0   0 0               anim_rotate_begin_aa_off_axis
+    ANIM_rotate_begin   -0.031194 1.124342 -1.653748 anim_rotate_begin_aa_off_axis
+        ANIM_rotate_key 0 83.335944
+        ANIM_rotate_key 1 227
+    ANIM_rotate_end
+	# name_hint: anim_rotate_begin_aa_off_axis
+	TRIS	0 3
+	ANIM_end
+
+	ANIM_begin
+    ANIM_trans  5 0 0    5 0 0   0 0                anim_rotate_begin_axis_aligned
+    ANIM_rotate_begin 0 -4 0                        anim_rotate_begin_axis_aligned
+        ANIM_rotate_key 0 80
+        ANIM_rotate_key 1 220
+    ANIM_rotate_end
+	# name_hint: anim_rotate_begin_axis_aligned
+	TRIS	0 3
+	ANIM_end
+
+# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+101.NO_BUILD_NUMBR
