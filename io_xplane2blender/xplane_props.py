@@ -1824,6 +1824,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
             (SURFACE_TYPE_SNOW,     "Snow",    "Snow"),
             (SURFACE_TYPE_SHOULDER, "Shoulder","Shoulder"),
             (SURFACE_TYPE_BLASTPAD, "Blastpad","Blastpad"),
+            (SURFACE_TYPE_SMOOTH, "Smooth","Smooth"),
         ]
     )
 

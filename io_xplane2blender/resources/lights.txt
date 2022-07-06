@@ -1452,8 +1452,8 @@ BILLBOARD_HW	srgb_test3				1.0		1.0		1.0		1		1.0		2 6	1	0		0.0		0		1		0		0		0		1
 #				Name							R	G	B	A	Size		Cell	Dx	Dy	Dz	Width	Frq		Phase	Amp		Day		Dataref
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-BILLBOARD_HW		lh_beacon_night 			1	1	1	1	8000cd		1 0 7	0	0	0	1		0.5		0		2		0
-BILLBOARD_HW		lh_beacon2_night 			1	1	1	1	5000cd		1 0 1	0	0	0	1		0.5		0		5		0
+BILLBOARD_HW		lh_beacon_night 			1	1	1	1	50000cd		1 0 7	0	0	0	1		0.5		0		2		0
+BILLBOARD_HW		lh_beacon2_night 			1	1	1	1	50000cd		1 0 1	0	0	0	1		0.5		0		5		0
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #  Tom Kyler's Lights for scenery - Updated to V12 using INTENSITY (they are in Resources/default scenery/airport scenery/Common_Elements/Lighting)
