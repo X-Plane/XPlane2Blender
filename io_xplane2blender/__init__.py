@@ -48,7 +48,7 @@ else:
     xplane_ui      = importlib.reload(xplane_ui)
     xplane_props   = importlib.reload(xplane_props)
     xplane_export  = importlib.reload(xplane_export)
-    xplane_import  = improtlib.reload(xplane_import)
+    xplane_import  = importlib.reload(xplane_import)
     xplane_ops     = importlib.reload(xplane_ops)
     xplane_ops_dev = importlib.reload(xplane_ops_dev)
     xplane_config  = importlib.reload(xplane_config)

@@ -12,7 +12,7 @@ import sys
 import unittest
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-from collections import Iterable
+from collections.abc import Iterable
 import re
 from dataclasses import dataclass
 
