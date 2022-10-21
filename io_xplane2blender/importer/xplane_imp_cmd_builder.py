@@ -284,7 +284,6 @@ class IntermediateDatablock:
             else:
                 pass
         idxes = [vertex_map_old_to_new[idx] for idx in mesh_idxes]
-        normals = [(v.nx, v.ny, v.nz) for v in vertices]
         uvs = [Vector((v.s, v.t)) for v in vertices]
 
         # Thanks senderle, https://stackoverflow.com/a/22045226
@@ -308,9 +307,6 @@ class IntermediateDatablock:
 
             for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
                 mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
-
-            for i, vertex in enumerate(me.vertices):
-                vertex.normal = normals[i]
 
             me.calc_normals()
             me.update(calc_edges=True)
