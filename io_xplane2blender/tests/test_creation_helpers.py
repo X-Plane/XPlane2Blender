@@ -922,6 +922,7 @@ def set_animation_data(
 
     for kf_info in keyframe_infos:
         bpy.context.scene.frame_current = kf_info.idx
+        bpy.context.view_layer.update()
 
         if (
             kf_info.dataref_anim_type == ANIM_TYPE_SHOW
