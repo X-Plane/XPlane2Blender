@@ -310,8 +310,8 @@ class IntermediateDatablock:
             for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
                 mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
 
-            me.normals_split_custom_set_from_vertices(normals)
             me.update(calc_edges=True)
+            me.normals_split_custom_set_from_vertices(normals)
 
             ob = test_creation_helpers.create_datablock_mesh(
                 self.datablock_info,
