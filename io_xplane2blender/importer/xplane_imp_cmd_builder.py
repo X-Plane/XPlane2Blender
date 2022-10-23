@@ -284,6 +284,7 @@ class IntermediateDatablock:
             else:
                 pass
         idxes = [vertex_map_old_to_new[idx] for idx in mesh_idxes]
+        normals = [(v.nx, v.ny, v.nz) for v in vertices]
         uvs = [Vector((v.s, v.t)) for v in vertices]
 
         # Thanks senderle, https://stackoverflow.com/a/22045226
@@ -299,6 +300,7 @@ class IntermediateDatablock:
         ]
 
         me = bpy.data.meshes.new(self.name)
+        me.use_auto_smooth = True
         me.from_pydata(py_vertices, [], py_faces)
 
         if not me.validate(verbose=True):
@@ -308,8 +310,9 @@ class IntermediateDatablock:
             for mesh_uv_loop, mesh_loop in zip(me.uv_layers[-1].data, me.loops):
                 mesh_uv_loop.uv = uvs[mesh_loop.vertex_index]
 
-            me.calc_normals()
+            me.normals_split_custom_set_from_vertices(normals)
             me.update(calc_edges=True)
+
             ob = test_creation_helpers.create_datablock_mesh(
                 self.datablock_info,
                 mesh_src=me,
