@@ -122,11 +122,7 @@ class XPlaneMesh:
                     for i in reversed(range(0, 3)):
                         index = tmp_face.indices[i]
                         vertex = xplane_helpers.vec_b_to_x(mesh.vertices[index].co)
-                        normal = xplane_helpers.vec_b_to_x(
-                            tmp_face.split_normals[i]
-                            if tmp_face.original_face.use_smooth
-                            else tmp_face.normal
-                        )
+                        normal = xplane_helpers.vec_b_to_x(tmp_face.split_normals[i])
                         uv = tmp_face.uvs[i]
                         vt_entry = tuple(vertex[:] + normal[:] + uv[:])
 
