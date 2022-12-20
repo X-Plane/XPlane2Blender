@@ -1164,8 +1164,8 @@ IDX	1025
 		# LIGHT: 02_taxi_y_sp_spot	weight: 10000
 		ANIM_begin
 		# static rotation
-		ANIM_rotate	0.52875996	-0.84555173	0.073858425	43.082959	43.082959
-		LIGHT_NAMED	taxi_y_sp 12.068752 -2.3342361 -8.5999479
+		ANIM_rotate	0.40602601	-0.91269833	-0.046095874	39.375912	39.375912
+		LIGHT_NAMED	pad_flood 12.127999 -0.5826447 -8.8110514
 		ANIM_end
 		# 2 Light: 02_taxi_y_spot
 		# LIGHT: 02_taxi_y_spot	weight: 10000
@@ -1195,4 +1195,4 @@ IDX	1025
 		LIGHT_NAMED	wigwag_y1 63.495895 10.667677 38.580723
 		ANIM_end
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.4+117.NO_BUILD_NUMBR
+# Build with Blender 2.83.6 (build b'8610c697773e'). Exported with XPlane2Blender 4.2.0-rc.2+117.NO_BUILD_NUMBR
