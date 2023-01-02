@@ -542,6 +542,10 @@ def layer_layout(
         tex_box.prop(layer_props, "texture", text="Default")
         tex_box.prop(layer_props, "texture_lit", text="Night")
         tex_box.prop(layer_props, "texture_normal", text="Normal / Specular")
+        if version >= 1200:
+            tex_box.prop(layer_props, "texture_map_normal", text='Normal')
+            tex_box.prop(layer_props, "texture_map_material_gloss", text='Material / Gloss')
+            tex_box.prop(layer_props, "texture_map_gloss", text='Gloss')
 
         if canHaveDraped:
             tex_box.prop(layer_props, "texture_draped", text="Draped")

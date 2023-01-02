@@ -93,6 +93,9 @@ class XPlaneHeader:
         self.attributes.add(XPlaneAttribute("TEXTURE", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_LIT", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_NORMAL", None))
+        self.attributes.add(XPlaneAttribute("TEXTURE_MAP normal", None))
+        self.attributes.add(XPlaneAttribute("TEXTURE_MAP material_gloss", None))
+        self.attributes.add(XPlaneAttribute("TEXTURE_MAP gloss", None))
         self.attributes.add(
             XPlaneAttribute("NORMAL_METALNESS", None)
         )  # NORMAL_METALNESS for textures
@@ -238,9 +241,42 @@ class XPlaneHeader:
                 )
             except (OSError, ValueError):
                 pass
+        
+        if xplane_version >= 1200:
+            if self.xplaneFile.options.texture_map_normal != "":
+                try:
+                    self.attributes["TEXTURE_MAP normal"].setValue(
+                        self.get_path_relative_to_dir(
+                            self.xplaneFile.options.texture_map_normal, exportdir
+                        )
+                    )
+                except (OSError, ValueError):
+                    pass
+
+            if self.xplaneFile.options.texture_map_material_gloss != "":
+                try:
+                    self.attributes["TEXTURE_MAP material_gloss"].setValue(
+                        self.get_path_relative_to_dir(
+                            self.xplaneFile.options.texture_map_material_gloss, exportdir
+                        )
+                    )
+                except (OSError, ValueError):
+                    pass
+
+            if self.xplaneFile.options.texture_map_gloss != "":
+                try:
+                    self.attributes["TEXTURE_MAP gloss"].setValue(
+                        self.get_path_relative_to_dir(
+                            self.xplaneFile.options.texture_map_gloss, exportdir
+                        )
+                    )
+                except (OSError, ValueError):
+                    pass
 
         if xplane_version >= 1100:
             texture_normal = self.attributes["TEXTURE_NORMAL"].getValue()
+            if not texture_normal and xplane_version >= 1200:
+                texture_normal = self.attributes["TEXTURE_MAP normal"].getValue()
             normal_metalness = effective_normal_metalness(self.xplaneFile)
             if texture_normal:
                 self.attributes["NORMAL_METALNESS"].setValue(normal_metalness)

@@ -676,6 +676,21 @@ class XPlaneFile:
             return False
 
         return True
+    
+    def validateOptions(self) -> bool:
+        if self.options.texture_normal and self.options.texture_map_normal:
+            logger.error(f'"Normal / Specular" and "Normal" provided in "{self.options.name}", use only one.')
+        if self.options.texture_normal and self.options.texture_map_material_gloss:
+            logger.error(f'"Normal / Specular" and "Material / Gloss" provided in "{self.options.name}", use only one.')
+        if self.options.texture_normal and self.options.texture_map_gloss:
+            logger.error(f'"Normal / Specular" and "Gloss" provided in "{self.options.name}", use only one.')
+        if self.options.texture_map_material_gloss and self.options.texture_map_gloss:
+            logger.error(f'"Material / Gloss" and "Gloss" provided in "{self.options.name}", use only one.')
+
+        if logger.hasErrors():
+            return False
+
+        return True
 
     def getMaterials(self) -> List[bpy.types.Material]:
         """
@@ -757,6 +772,8 @@ class XPlaneFile:
         # and no "reference material" can be used without all materials being consistenly correct.
         # The downside is tediousness when one material is slightly wrong
         if not self.validateMaterials():
+            return ""
+        if not self.validateOptions():
             return ""
 
         self.referenceMaterials = xplane_material_utils.getReferenceMaterials(
