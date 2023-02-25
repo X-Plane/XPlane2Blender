@@ -786,7 +786,7 @@ def set_animation_data(
             dataref_index += 1
 
     for kf_info in keyframe_infos:
-        bpy.context.scene.frame_current = kf_info.idx
+        bpy.context.scene.frame_set(kf_info.idx)
 
         if (
             kf_info.dataref_anim_type == ANIM_TYPE_SHOW
