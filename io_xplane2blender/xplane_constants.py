@@ -227,6 +227,7 @@ SURFACE_TYPE_LAKEBED = "lakebed"
 SURFACE_TYPE_SNOW = "snow"
 SURFACE_TYPE_SHOULDER = "shoulder"
 SURFACE_TYPE_BLASTPAD = "blastpad"
+SURFACE_TYPE_SMOOTH = "smooth"
 
 BLEND_OFF = "off"
 BLEND_ON = "on"
