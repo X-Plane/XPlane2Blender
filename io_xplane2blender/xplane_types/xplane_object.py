@@ -130,7 +130,9 @@ class XPlaneObject:
                 name = "ANIM_" + dataref.anim_type
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
-
+                if dataref.loop > 0:
+                    self.animAttributes.add(XPlaneAttribute(f"\tANIM_keyframe_loop", dataref.loop))
+                    
     def collectConditions(self):
         if self.blenderObject.xplane.conditions:
             self.conditions = self.blenderObject.xplane.conditions

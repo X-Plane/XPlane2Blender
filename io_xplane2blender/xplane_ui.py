@@ -1306,7 +1306,8 @@ def animation_layout(
             subrow.prop(attr, "show_hide_v1")
             subrow = subbox.row()
             subrow.prop(attr, "show_hide_v2")
-
+            subrow = subbox.row()
+            subrow.prop(attr, "loop")
 
 def cockpit_layout(
     layout: bpy.types.UILayout, active_material: bpy.types.Material
