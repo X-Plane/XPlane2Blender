@@ -1311,6 +1311,30 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = ""
     )
 
+    # v1200
+    texture_map_gloss: bpy.props.StringProperty(
+        subtype = "FILE_PATH",
+        name = "Gloss Texture",
+        description = "Gloss texture to use for objects on this layer",
+        default = ""
+    )
+
+    # v1200
+    texture_map_material_gloss: bpy.props.StringProperty(
+        subtype = "FILE_PATH",
+        name = "Material/Gloss Texture",
+        description = "Material/Gloss texture to use for objects on this layer",
+        default = ""
+    )
+
+    # v1200
+    texture_map_normal: bpy.props.StringProperty(
+        subtype = "FILE_PATH",
+        name = "Normal Texture",
+        description = "XY normal texture to use for objects on this layer",
+        default = ""
+    )
+
     # BAD NAME ALERT!
     # regions (plural) is the enum, region (singular) is the collection
     cockpit_regions: bpy.props.EnumProperty(
