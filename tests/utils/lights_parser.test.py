@@ -89,7 +89,7 @@ class TestLightsParser(XPlaneTestCase):
         xplane_lights_txt_parser.parse_lights_file()
         self.assertLoggerErrors(0)
         num_lights = len(xplane_lights_txt_parser._parsed_lights_txt_content)
-        expected_lights = 478 # You'll probably need to update this every time lights.txt is replaced
+        expected_lights = 479 # You'll probably need to update this every time lights.txt is replaced
         self.assertEqual(len(xplane_lights_txt_parser._parsed_lights_txt_content), expected_lights, msg=f"Found {num_lights}, expected {expected_lights}. Did you forget to update this after updating lights.txt?")
 
     #@unittest.skip
