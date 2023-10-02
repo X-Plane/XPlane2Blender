@@ -22,6 +22,7 @@ builds/*
 
 *.pyproj
 *.sln
+.DS_Store
 
 io_xplane2blender_build/*
 

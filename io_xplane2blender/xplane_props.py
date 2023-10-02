@@ -1801,15 +1801,28 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
         description = "GPS device name",
         default = DEVICE_GNS430_1,
         items = [
-            (DEVICE_GNS430_1,    DEVICE_GNS430_1,     DEVICE_GNS430_1),
-            (DEVICE_GNS430_2,    DEVICE_GNS430_2,     DEVICE_GNS430_2),
-            (DEVICE_GNS530_1,    DEVICE_GNS530_1,     DEVICE_GNS530_1),
-            (DEVICE_GNS530_2,    DEVICE_GNS530_2,     DEVICE_GNS530_2),
-            (DEVICE_CDU739_1,    DEVICE_CDU739_1,     DEVICE_CDU739_1),
-            (DEVICE_CDU739_2,    DEVICE_CDU739_2,     DEVICE_CDU739_2),
-            (DEVICE_G1000_PFD1,  DEVICE_G1000_PFD1,   DEVICE_G1000_PFD1),
-            (DEVICE_G1000_MFD,   DEVICE_G1000_MFD,    DEVICE_G1000_MFD),
-            (DEVICE_G1000_PFD2,  DEVICE_G1000_PFD2,   DEVICE_G1000_PFD2),
+            (DEVICE_GNS430_1,           DEVICE_GNS430_1,            DEVICE_GNS430_1),
+            (DEVICE_GNS430_2,           DEVICE_GNS430_2,            DEVICE_GNS430_2),
+            (DEVICE_GNS530_1,           DEVICE_GNS530_1,            DEVICE_GNS530_1),
+            (DEVICE_GNS530_2,           DEVICE_GNS530_2,            DEVICE_GNS530_2),
+            (DEVICE_CDU739_1,           DEVICE_CDU739_1,            DEVICE_CDU739_1),
+            (DEVICE_CDU739_2,           DEVICE_CDU739_2,            DEVICE_CDU739_2),
+            (DEVICE_G1000_PFD1,         DEVICE_G1000_PFD1,          DEVICE_G1000_PFD1),
+            (DEVICE_G1000_MFD,          DEVICE_G1000_MFD,           DEVICE_G1000_MFD),
+            (DEVICE_G1000_PFD2,         DEVICE_G1000_PFD2,          DEVICE_G1000_PFD2),
+            (DEVICE_CDU815_1,           DEVICE_CDU815_1,            DEVICE_CDU815_1),
+            (DEVICE_CDU815_2,           DEVICE_CDU815_2,            DEVICE_CDU815_2),
+            (DEVICE_Primus_PFD_1,       DEVICE_Primus_PFD_1,        DEVICE_Primus_PFD_1),
+            (DEVICE_Primus_PFD_2,       DEVICE_Primus_PFD_2,        DEVICE_Primus_PFD_2),
+            (DEVICE_Primus_MFD_1,       DEVICE_Primus_MFD_1,        DEVICE_Primus_MFD_1),
+            (DEVICE_Primus_MFD_2,       DEVICE_Primus_MFD_2,        DEVICE_Primus_MFD_2),
+            (DEVICE_Primus_MFD_3,       DEVICE_Primus_MFD_3,        DEVICE_Primus_MFD_3),
+            (DEVICE_Primus_RMU_1,       DEVICE_Primus_RMU_1,        DEVICE_Primus_RMU_1),
+            (DEVICE_Primus_RMU_2,       DEVICE_Primus_RMU_2,        DEVICE_Primus_RMU_2),
+            (DEVICE_FMGSMCDU_1,         DEVICE_FMGSMCDU_1,          DEVICE_FMGSMCDU_1),
+            (DEVICE_FMGSMCDU_2,         DEVICE_FMGSMCDU_2,          DEVICE_FMGSMCDU_2),
+            (DEVICE_PLUGIN,             DEVICE_PLUGIN,              DEVICE_PLUGIN)
+            
         ]
     )
     device_bus_0: bpy.props.BoolProperty(name="Bus 1", description="1st system bus")
@@ -1818,6 +1831,12 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     device_bus_3: bpy.props.BoolProperty(name="Bus 4", description="4th system bus")
     device_bus_4: bpy.props.BoolProperty(name="Bus 5", description="5th system bus")
     device_bus_5: bpy.props.BoolProperty(name="Bus 6", description="6th system bus")
+    
+    plugin_device: bpy.props.StringProperty(
+        name = "Device ID",
+        description = "The device ID declared by your plugin",
+        default = ""
+    )
 
     device_lighting_channel: bpy.props.IntProperty(
         name="Rheostat Lighting Channel",

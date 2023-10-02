@@ -1331,6 +1331,8 @@ def cockpit_layout(
             device_box = cockpit_box_column.box()
             device_box.label(text="Cockpit Device")
             device_box.prop(active_material.xplane, "device_name")
+            if active_material.xplane.device_name == "Plugin Device":
+                device_box.prop(active_material.xplane, "plugin_device")
             if not any(
                 getattr(active_material.xplane, f"device_bus_{bus}") for bus in range(6)
             ):
