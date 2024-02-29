@@ -17,7 +17,7 @@ from ..xplane_helpers import (
     logger,
     resolveBlenderPath,
 )
-from .xplane_attribute import XPlaneAttribute
+from .xplane_attribute import XPlaneAttribute, XPlaneAttributeName
 from .xplane_attributes import XPlaneAttributes
 
 
@@ -97,8 +97,17 @@ class XPlaneHeader:
         self.attributes.add(XPlaneAttribute("TEXTURE_MAP material_gloss", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_MAP gloss", None))
         self.attributes.add(
-            XPlaneAttribute("NORMAL_METALNESS", None)
+            XPlaneAttribute(XPlaneAttributeName("NORMAL_METALNESS", 1), None)
         )  # NORMAL_METALNESS for textures
+        
+        self.attributes.add(XPlaneAttribute(XPlaneAttributeName("DECAL_LIB", 1), None))
+        self.attributes.add(XPlaneAttribute(XPlaneAttributeName("DECAL_LIB", 2), None))
+        self.attributes.add(XPlaneAttribute("DECAL_PARAMS", None))
+        self.attributes.add(XPlaneAttribute("DECAL_PARAMS_PROJ", None))
+        self.attributes.add(XPlaneAttribute("NORMAL_DECAL_PARAMS", None))
+        self.attributes.add(XPlaneAttribute("NORMAL_DECAL_PARAMS_PROJ", None))
+        self.attributes.add(XPlaneAttribute(XPlaneAttributeName("TEXTURE_MODULATOR", 1), None))
+        self.attributes.add(XPlaneAttribute(XPlaneAttributeName("TEXTURE_MODULATOR", 2), None))
 
         # rain, thermal, wiper settings
         rain_header_attrs = [
@@ -122,14 +131,8 @@ class XPlaneHeader:
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED", None))
         self.attributes.add(XPlaneAttribute("TEXTURE_DRAPED_NORMAL", None))
 
-        # This is a hack to get around duplicate keynames!
-        # There is no NORMAL_METALNESS_draped_hack in the OBJ spec,
-        # self.write will check later for draped_hack and remove it
-        #
-        # If later on we have more duplicate keynames we'll figure something
-        # else out. -Ted, 8/9/2018
         self.attributes.add(
-            XPlaneAttribute("NORMAL_METALNESS_draped_hack", None)
+            XPlaneAttribute(XPlaneAttributeName("NORMAL_METALNESS", 2), None)
         )  # normal_metalness for draped textures
         self.attributes.add(XPlaneAttribute("BUMP_LEVEL", None))
         self.attributes.add(XPlaneAttribute("NO_BLEND", None))
@@ -279,7 +282,7 @@ class XPlaneHeader:
                 texture_normal = self.attributes["TEXTURE_MAP normal"].getValue()
             normal_metalness = effective_normal_metalness(self.xplaneFile)
             if texture_normal:
-                self.attributes["NORMAL_METALNESS"].setValue(normal_metalness)
+                self.attributes[XPlaneAttributeName("NORMAL_METALNESS", 1)].setValue(normal_metalness)
             elif not texture_normal and normal_metalness:
                 logger.warn(
                     f"{self.xplaneFile.filename}: No Normal Texture found, ignoring use of Normal Metalness"
@@ -431,7 +434,7 @@ class XPlaneHeader:
                         self.xplaneFile
                     )
                     if texture_draped_nml:
-                        self.attributes["NORMAL_METALNESS_draped_hack"].setValue(
+                        self.attributes[XPlaneAttributeName("NORMAL_METALNESS", 2)].setValue(
                             normal_metalness_draped
                         )
                     elif not texture_draped_nml and normal_metalness_draped:
@@ -769,10 +772,6 @@ class XPlaneHeader:
 
         # attributes
         for attr_name, attr in self.attributes.items():
-            if attr_name == "NORMAL_METALNESS_draped_hack":
-                # Hack: See note in __init__
-                attr.name = "NORMAL_METALNESS"
-
             values = attr.value
             if values[0] != None:
                 if len(values) > 1:
