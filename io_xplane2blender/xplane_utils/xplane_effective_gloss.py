@@ -40,4 +40,4 @@ def get_effective_gloss(file_path):
                 error = current_error
                 alpha = current_alpha
 
-    return numpy.clip(alpha, 0, 1)
+    return numpy.clip((1 - numpy.sqrt(alpha)) / 0.96875, 0, 1)
