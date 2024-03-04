@@ -542,13 +542,171 @@ def layer_layout(
         tex_box.prop(layer_props, "texture", text="Default")
         tex_box.prop(layer_props, "texture_lit", text="Night")
         tex_box.prop(layer_props, "texture_normal", text="Normal / Specular")
+        if version >= 1200:
+            tex_box.prop(layer_props, "texture_map_normal", text='Normal')
+            tex_box.prop(layer_props, "texture_map_material_gloss", text='Material / Gloss')
+            tex_box.prop(layer_props, "texture_map_gloss", text='Gloss')
 
         if canHaveDraped:
             tex_box.prop(layer_props, "texture_draped", text="Draped")
             tex_box.prop(
                 layer_props, "texture_draped_normal", text="Draped Normal / Specular"
             )
+            
+    if version >= 1210:
+        decal_box = layout.box()
+        decal_box.label(text="Decals")
+        
+        decal_box.prop(layer_props, "file_decal1", text="Decal 1")
 
+        if layer_props.file_decal1 and not layer_props.file_decal1.endswith(".dcl"):
+            decal_box.prop(layer_props, "decal1_scale", text="Scale")
+            decal1_row = decal_box.row()
+
+            decal1_column_1 = decal1_row.column()
+            
+            decal1_column_1.prop(layer_props, "rgb_decal1_red_key", text="RGB Decal Red Key")
+            decal1_column_1.prop(layer_props, "rgb_decal1_green_key", text="RGB Decal Green Key")
+            decal1_column_1.prop(layer_props, "rgb_decal1_blue_key", text="RGB Decal Blue Key")
+            decal1_column_1.prop(layer_props, "rgb_decal1_alpha_key", text="RGB Decal Alpha Key")
+            decal1_column_1.prop(layer_props, "rgb_decal1_modulator", text="RGB Decal Modulator Strength")
+            decal1_column_1.prop(layer_props, "rgb_decal1_constant", text="RGB Decal Constant Strength")
+
+            decal1_column_2 = decal1_row.column()
+        
+            decal1_column_2.prop(layer_props, "alpha_decal1_red_key", text="Alpha Decal Red Key")
+            decal1_column_2.prop(layer_props, "alpha_decal1_green_key", text="Alpha Decal Green Key")
+            decal1_column_2.prop(layer_props, "alpha_decal1_blue_key", text="Alpha Decal Blue Key")
+            decal1_column_2.prop(layer_props, "alpha_decal1_alpha_key", text="Alpha Decal Alpha Key")
+            decal1_column_2.prop(layer_props, "alpha_decal1_modulator", text="Alpha Decal Modulator Strength")
+            decal1_column_2.prop(layer_props, "alpha_decal1_constant", text="Alpha Decal Constant Strength")
+
+        decal_box.prop(layer_props, "file_decal2", text="Decal 2")
+        
+        if layer_props.file_decal2 and not layer_props.file_decal2.endswith(".dcl"):
+            decal_box.prop(layer_props, "decal2_scale", text="Scale")
+            decal2_row = decal_box.row()
+        
+            decal2_column_1 = decal2_row.column()
+        
+            decal2_column_1.prop(layer_props, "rgb_decal2_red_key", text="RGB Decal Red Key")
+            decal2_column_1.prop(layer_props, "rgb_decal2_green_key", text="RGB Decal Green Key")
+            decal2_column_1.prop(layer_props, "rgb_decal2_blue_key", text="RGB Decal Blue Key")
+            decal2_column_1.prop(layer_props, "rgb_decal2_alpha_key", text="RGB Decal Alpha Key")
+            decal2_column_1.prop(layer_props, "rgb_decal2_modulator", text="RGB Decal Modulator Strength")
+            decal2_column_1.prop(layer_props, "rgb_decal2_constant", text="RGB Decal Constant Strength")
+
+            decal2_column_2 = decal2_row.column()
+        
+            decal2_column_2.prop(layer_props, "alpha_decal2_red_key", text="Alpha Decal Red Key")
+            decal2_column_2.prop(layer_props, "alpha_decal2_green_key", text="Alpha Decal Green Key")
+            decal2_column_2.prop(layer_props, "alpha_decal2_blue_key", text="Alpha Decal Blue Key")
+            decal2_column_2.prop(layer_props, "alpha_decal2_alpha_key", text="Alpha Decal Alpha Key")
+            decal2_column_2.prop(layer_props, "alpha_decal2_modulator", text="Alpha Decal Modulator Strength")
+            decal2_column_2.prop(layer_props, "alpha_decal2_constant", text="Alpha Decal Constant Strength")
+
+        if canHaveDraped:
+            decal_box.prop(layer_props, "file_draped_decal1", text="Draped Decal 1")
+            
+            if layer_props.file_draped_decal1 and not layer_props.file_draped_decal1.endswith(".dcl"):
+
+                decal_box.prop(layer_props, "draped_decal1_x_scale", text="X Scale")
+                decal_box.prop(layer_props, "draped_decal1_y_scale", text="Y Scale")
+            
+                draped_decal1_row = decal_box.row()
+
+                draped_decal1_column_1 = draped_decal1_row.column()
+                
+                draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_red_key", text="RGB Decal Red Key")
+                draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_green_key", text="RGB Decal Green Key")
+                draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_blue_key", text="RGB Decal Blue Key")
+                draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_alpha_key", text="RGB Decal Alpha Key")
+                draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_modulator", text="RGB Decal Modulator Strength")
+                draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_constant", text="RGB Decal Constant Strength")
+
+                draped_decal1_column_2 = draped_decal1_row.column()
+                
+                draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_red_key", text="Alpha Decal Red Key")
+                draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_green_key", text="Alpha Decal Green Key")
+                draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_blue_key", text="Alpha Decal Blue Key")
+                draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_alpha_key", text="Alpha Decal Alpha Key")
+                draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_modulator", text="Alpha Decal Modulator Strength")
+                draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_constant", text="Alpha Decal Constant Strength")
+
+            decal_box.prop(layer_props, "file_draped_decal2", text="Draped Decal 2")
+            
+            if layer_props.file_draped_decal2 and not layer_props.file_draped_decal2.endswith(".dcl"):                
+                decal_box.prop(layer_props, "draped_decal2_x_scale", text="X Scale")
+                decal_box.prop(layer_props, "draped_decal2_y_scale", text="Y Scale")
+                
+                draped_decal2_row = decal_box.row()
+                
+                draped_decal2_column_1 = draped_decal2_row.column()
+
+                draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_red_key", text="RGB Decal Red Key")
+                draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_green_key", text="RGB Decal Green Key")
+                draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_blue_key", text="RGB Decal Blue Key")
+                draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_alpha_key", text="RGB Decal Alpha Key")
+                draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_modulator", text="RGB Decal Modulator Strength")
+                draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_constant", text="RGB Decal Constant Strength")
+
+                draped_decal2_column_2 = draped_decal2_row.column()
+                
+                draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_red_key", text="Alpha Decal Red Key")
+                draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_green_key", text="Alpha Decal Green Key")
+                draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_blue_key", text="Alpha Decal Blue Key")
+                draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_alpha_key", text="Alpha Decal Alpha Key")
+                draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_modulator", text="Alpha Decal Modulator Strength")
+                draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_constant", text="Alpha Decal Constant Strength")
+
+        decal_box.prop(layer_props, "file_normal_decal1", text="Normal Map Decal 1")
+
+        if layer_props.file_normal_decal1 and not layer_props.file_normal_decal1.endswith(".dcl"):
+            decal_box.prop(layer_props, "normal_decal1_scale", text="Scale")
+
+            decal_box.prop(layer_props, "normal_decal1_red_key", text="Red Key")
+            decal_box.prop(layer_props, "normal_decal1_green_key", text="Green Key")
+            decal_box.prop(layer_props, "normal_decal1_blue_key", text="Blue Key")
+            decal_box.prop(layer_props, "normal_decal1_alpha_key", text="Alpha Key")
+        
+        decal_box.prop(layer_props, "file_normal_decal2", text="Normal Map Decal 2")
+        
+        if layer_props.file_normal_decal2 and not layer_props.file_normal_decal2.endswith(".dcl"):
+            decal_box.prop(layer_props, "normal_decal2_scale", text="Scale")
+        
+            decal_box.prop(layer_props, "normal_decal2_red_key", text="Red Key")
+            decal_box.prop(layer_props, "normal_decal2_green_key", text="Green Key")
+            decal_box.prop(layer_props, "normal_decal2_blue_key", text="Blue Key")
+            decal_box.prop(layer_props, "normal_decal2_alpha_key", text="Alpha Key")
+         
+        if canHaveDraped:
+            decal_box.prop(layer_props, "file_draped_normal_decal1", text="Draped Normal Map Decal 1")
+
+            if layer_props.file_draped_normal_decal1 and not layer_props.file_draped_normal_decal1.endswith(".dcl"):
+                decal_box.prop(layer_props, "draped_normal_decal1_x_scale", text="X Scale")
+                decal_box.prop(layer_props, "draped_normal_decal1_y_scale", text="Y Scale")
+            
+                decal_box.prop(layer_props, "draped_normal_decal1_red_key", text="Red Key")
+                decal_box.prop(layer_props, "draped_normal_decal1_green_key", text="Green Key")
+                decal_box.prop(layer_props, "draped_normal_decal1_blue_key", text="Blue Key")
+                decal_box.prop(layer_props, "draped_normal_decal1_alpha_key", text="Alpha Key")
+        
+            decal_box.prop(layer_props, "file_draped_normal_decal2", text="Draped Normal Map Decal 2")
+
+            if layer_props.file_draped_normal_decal2 and not layer_props.file_draped_normal_decal2.endswith(".dcl"):
+                decal_box.prop(layer_props, "draped_normal_decal2_x_scale", text="X Scale")
+                decal_box.prop(layer_props, "draped_normal_decal2_y_scale", text="Y Scale")
+            
+                decal_box.prop(layer_props, "draped_normal_decal2_red_key", text="Red Key")
+                decal_box.prop(layer_props, "draped_normal_decal2_green_key", text="Green Key")
+                decal_box.prop(layer_props, "draped_normal_decal2_blue_key", text="Blue Key")
+                decal_box.prop(layer_props, "draped_normal_decal2_alpha_key", text="Alpha Key")
+
+        decal_box.prop(layer_props, "texture_modulator", text="Modulator Texture")
+
+        if canHaveDraped:
+            decal_box.prop(layer_props, "texture_draped_modulator", text="Draped Modulator Texture")
+            
     global_mat_box = layout.box()
     global_mat_box.label(text="Global Material Options")
     if version >= 1100:
