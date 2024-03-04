@@ -20,6 +20,8 @@ from ..xplane_helpers import (
 from .xplane_attribute import XPlaneAttribute, XPlaneAttributeName
 from .xplane_attributes import XPlaneAttributes
 
+from ..xplane_utils.xplane_effective_gloss import get_effective_gloss
+
 
 class XPlaneHeader:
     """
@@ -245,6 +247,107 @@ class XPlaneHeader:
             except (OSError, ValueError):
                 pass
         
+        if xplane_version >= 1210:
+            if self.xplaneFile.options.file_decal1 != "":
+                try:
+                    if self.xplaneFile.options.file_decal1.endswith(".dcl"):
+                        if self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].getValue() == None:
+                            self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].removeValues()
+                            
+                        self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].addValue(
+                            self.get_path_relative_to_dir(
+                                self.xplaneFile.options.file_decal1, exportdir
+                            )
+                        )
+                    else:
+                        if self.attributes["DECAL_PARAMS"].getValue() == None:
+                            self.attributes["DECAL_PARAMS"].removeValues()
+
+                        self.attributes["DECAL_PARAMS"].addValue(
+                            (
+                                self.xplaneFile.options.decal1_scale,
+                                0.5,
+                                self.xplaneFile.options.rgb_decal1_red_key, self.xplaneFile.options.rgb_decal1_green_key, self.xplaneFile.options.rgb_decal1_blue_key, self.xplaneFile.options.rgb_decal1_alpha_key,
+                                self.xplaneFile.options.rgb_decal1_modulator, self.xplaneFile.options.rgb_decal1_constant,
+                                self.xplaneFile.options.alpha_decal1_red_key, self.xplaneFile.options.alpha_decal1_green_key, self.xplaneFile.options.alpha_decal1_blue_key, self.xplaneFile.options.alpha_decal1_alpha_key,
+                                self.xplaneFile.options.alpha_decal1_modulator, self.xplaneFile.options.alpha_decal1_constant,
+                                self.get_path_relative_to_dir(
+                                    self.xplaneFile.options.file_decal1, exportdir
+                                )
+                            )
+                        )     
+                except (OSError, ValueError):
+                    pass
+                
+            if self.xplaneFile.options.file_decal2 != "":
+                try:
+                    if self.xplaneFile.options.file_decal2.endswith(".dcl"):
+                        if self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].getValue() == None:
+                            self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].removeValues()
+                            
+                        self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].addValue(
+                            self.get_path_relative_to_dir(
+                                self.xplaneFile.options.file_decal2, exportdir
+                            )
+                        )
+                    else:
+                        if self.attributes["DECAL_PARAMS"].getValue() == None:
+                            self.attributes["DECAL_PARAMS"].removeValues()
+
+                        self.attributes["DECAL_PARAMS"].addValue(
+                            (
+                                self.xplaneFile.options.decal2_scale,
+                                0.5,
+                                self.xplaneFile.options.rgb_decal2_red_key, self.xplaneFile.options.rgb_decal2_green_key, self.xplaneFile.options.rgb_decal2_blue_key, self.xplaneFile.options.rgb_decal2_alpha_key,
+                                self.xplaneFile.options.rgb_decal2_modulator, self.xplaneFile.options.rgb_decal2_constant,
+                                self.xplaneFile.options.alpha_decal2_red_key, self.xplaneFile.options.alpha_decal2_green_key, self.xplaneFile.options.alpha_decal2_blue_key, self.xplaneFile.options.alpha_decal2_alpha_key,
+                                self.xplaneFile.options.alpha_decal2_modulator, self.xplaneFile.options.alpha_decal2_modulator,
+                                self.get_path_relative_to_dir(
+                                    self.xplaneFile.options.file_decal2, exportdir
+                                )
+                            )
+                        )     
+                except (OSError, ValueError):
+                    pass
+                
+            if self.xplaneFile.options.file_normal_decal1 != "":
+                try:
+                    if self.attributes["NORMAL_DECAL_PARAMS"].getValue() == None:
+                        self.attributes["NORMAL_DECAL_PARAMS"].removeValues()
+
+                    self.attributes["NORMAL_DECAL_PARAMS"].addValue(
+                        (
+                            self.xplaneFile.options.normal_decal1_scale,
+                            self.xplaneFile.options.normal_decal1_red_key, self.xplaneFile.options.normal_decal1_green_key, self.xplaneFile.options.normal_decal1_blue_key, self.xplaneFile.options.normal_decal1_alpha_key,
+                            self.xplaneFile.options.normal_decal1_modulator, self.xplaneFile.options.normal_decal1_constant,
+                            self.get_path_relative_to_dir(
+                                self.xplaneFile.options.file_normal_decal1, exportdir
+                            ),
+                            get_effective_gloss(self.xplaneFile.options.file_normal_decal1)
+                        )
+                    )     
+                except (OSError, ValueError):
+                    pass
+
+            if self.xplaneFile.options.file_normal_decal2 != "":
+                try:
+                    if self.attributes["NORMAL_DECAL_PARAMS"].getValue() == None:
+                        self.attributes["NORMAL_DECAL_PARAMS"].removeValues()
+                        
+                    self.attributes["NORMAL_DECAL_PARAMS"].addValue(
+                        (
+                            self.xplaneFile.options.normal_decal2_scale,
+                            self.xplaneFile.options.normal_decal2_red_key, self.xplaneFile.options.normal_decal2_green_key, self.xplaneFile.options.normal_decal2_blue_key, self.xplaneFile.options.normal_decal2_alpha_key,
+                            self.xplaneFile.options.normal_decal2_modulator, self.xplaneFile.options.normal_decal2_constant,
+                            self.get_path_relative_to_dir(
+                                self.xplaneFile.options.file_normal_decal2, exportdir
+                            ),
+                            get_effective_gloss(self.xplaneFile.options.file_normal_decal2)
+                        )
+                    )     
+                except (OSError, ValueError):
+                    pass
+
         if xplane_version >= 1200:
             if self.xplaneFile.options.texture_map_normal != "":
                 try:
@@ -441,6 +544,107 @@ class XPlaneHeader:
                         logger.warn(
                             f"{self.xplaneFile.filename}: No Draped Normal Texture found, ignoring use of Normal Metalness"
                         )
+
+            if xplane_version >= 1210:
+                if self.xplaneFile.options.file_draped_decal1 != "":
+                    try:
+                        if self.xplaneFile.options.file_draped_decal1.endswith(".dcl"):
+                            if self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].getValue() == None:
+                                self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].removeValues()
+                                
+                            self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].addValue(
+                                self.get_path_relative_to_dir(
+                                    self.xplaneFile.options.file_draped_decal1, exportdir
+                                )
+                            )
+                        else:
+                            if self.attributes["DECAL_PARAMS_PROJ"].getValue() == None:
+                                self.attributes["DECAL_PARAMS_PROJ"].removeValues()
+
+                            self.attributes["DECAL_PARAMS_PROJ"].addValue(
+                                (
+                                    self.xplaneFile.options.draped_decal1_x_scale, self.xplaneFile.options.draped_decal1_y_scale,
+                                    0.5,
+                                    self.xplaneFile.options.draped_rgb_decal1_red_key, self.xplaneFile.options.draped_rgb_decal1_green_key, self.xplaneFile.options.draped_rgb_decal1_blue_key, self.xplaneFile.options.draped_rgb_decal1_alpha_key,
+                                    self.xplaneFile.options.draped_rgb_decal1_modulator, self.xplaneFile.options.draped_rgb_decal1_constant,
+                                    self.xplaneFile.options.draped_alpha_decal1_red_key, self.xplaneFile.options.draped_alpha_decal1_green_key, self.xplaneFile.options.draped_alpha_decal1_blue_key, self.xplaneFile.options.draped_alpha_decal1_alpha_key,
+                                    self.xplaneFile.options.draped_alpha_decal1_modulator, self.xplaneFile.options.draped_alpha_decal1_constant,
+                                    self.get_path_relative_to_dir(
+                                        self.xplaneFile.options.file_draped_decal1, exportdir
+                                    )
+                                )
+                            )     
+                    except (OSError, ValueError):
+                        pass
+
+                if self.xplaneFile.options.file_draped_decal2 != "":
+                    try:
+                        if self.xplaneFile.options.file_draped_decal2.endswith(".dcl"):
+                            if self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].getValue() == None:
+                                self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].removeValues()
+                                
+                            self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].addValue(
+                                self.get_path_relative_to_dir(
+                                    self.xplaneFile.options.file_draped_decal2, exportdir
+                                )
+                            )
+                        else:
+                            if self.attributes["DECAL_PARAMS_PROJ"].getValue() == None:
+                                self.attributes["DECAL_PARAMS_PROJ"].removeValues()
+
+                            self.attributes["DECAL_PARAMS_PROJ"].addValue(
+                                (
+                                    self.xplaneFile.options.draped_decal2_x_scale, self.xplaneFile.options.draped_decal2_y_scale,
+                                    0.5,
+                                    self.xplaneFile.options.draped_rgb_decal2_red_key, self.xplaneFile.options.draped_rgb_decal2_green_key, self.xplaneFile.options.draped_rgb_decal2_blue_key, self.xplaneFile.options.draped_rgb_decal2_alpha_key,
+                                    self.xplaneFile.options.draped_rgb_decal2_modulator, self.xplaneFile.options.draped_rgb_decal2_constant,
+                                    self.xplaneFile.options.draped_alpha_decal2_red_key, self.xplaneFile.options.draped_alpha_decal2_green_key, self.xplaneFile.options.draped_alpha_decal2_blue_key, self.xplaneFile.options.draped_alpha_decal2_alpha_key,
+                                    self.xplaneFile.options.draped_alpha_decal2_modulator, self.xplaneFile.options.draped_alpha_decal2_constant,
+                                    self.get_path_relative_to_dir(
+                                        self.xplaneFile.options.file_draped_decal2, exportdir
+                                    )
+                                )
+                            )     
+                    except (OSError, ValueError):
+                        pass
+
+                if self.xplaneFile.options.file_draped_normal_decal1 != "":
+                    try:
+                        if self.attributes["NORMAL_DECAL_PARAMS_PROJ"].getValue() == None:
+                            self.attributes["NORMAL_DECAL_PARAMS_PROJ"].removeValues()
+
+                        self.attributes["NORMAL_DECAL_PARAMS_PROJ"].addValue(
+                            (
+                                self.xplaneFile.options.draped_normal_decal1_x_scale, self.xplaneFile.options.draped_normal_decal1_y_scale,
+                                self.xplaneFile.options.draped_normal_decal1_red_key, self.xplaneFile.options.draped_normal_decal1_green_key, self.xplaneFile.options.draped_normal_decal1_blue_key, self.xplaneFile.options.draped_normal_decal1_alpha_key,
+                                self.xplaneFile.options.drpaed_normal_decal1_modulator, self.xplaneFile.options.draped_normal_decal1_constant,
+                                self.get_path_relative_to_dir(
+                                    self.xplaneFile.options.file_draped_normal_decal1, exportdir
+                                ),
+                                get_effective_gloss(self.xplaneFile.options.file_draped_normal_decal1)
+                            )
+                        )     
+                    except (OSError, ValueError):
+                        pass
+                    
+                if self.xplaneFile.options.file_draped_normal_decal2 != "":
+                    try:
+                        if self.attributes["NORMAL_DECAL_PARAMS_PROJ"].getValue() == None:
+                            self.attributes["NORMAL_DECAL_PARAMS_PROJ"].removeValues()
+
+                        self.attributes["NORMAL_DECAL_PARAMS_PROJ"].addValue(
+                            (
+                                self.xplaneFile.options.draped_normal_decal2_x_scale, self.xplaneFile.options.draped_normal_decal2_y_scale,
+                                self.xplaneFile.options.draped_normal_decal2_red_key, self.xplaneFile.options.draped_normal_decal2_green_key, self.xplaneFile.options.draped_normal_decal2_blue_key, self.xplaneFile.options.draped_normal_decal2_alpha_key,
+                                self.xplaneFile.options.drpaed_normal_decal2_modulator, self.xplaneFile.options.draped_normal_decal2_constant,
+                                self.get_path_relative_to_dir(
+                                    self.xplaneFile.options.file_draped_normal_decal2, exportdir
+                                ),
+                                get_effective_gloss(self.xplaneFile.options.file_draped_normal_decal2)
+                            )
+                        )     
+                    except (OSError, ValueError):
+                        pass
 
                 # draped bump level
                 if mat.options.bump_level != 1.0:

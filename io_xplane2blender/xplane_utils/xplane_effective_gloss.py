@@ -34,7 +34,7 @@ def get_effective_gloss(file_path):
             expected = ggx_distribution_cdf(bins, current_alpha)
             expected = expected[1:] - expected[:-1]
 
-            current_error = numpy.sum(numpy.abs(histogram - expected))
+            current_error = numpy.sum(numpy.abs(expected - histogram))
             
             if current_error < error:
                 error = current_error
