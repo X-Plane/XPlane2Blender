@@ -415,6 +415,8 @@ class XPlaneHeader:
             has_thermal_system = rain_props.thermal_texture and has_thermal_sources
             has_rain_system = has_wiper_system or has_thermal_system
             if xplane_version >= 1200 and (isAircraft or isCockpit):
+                if round(rain_props.rain_scale, PRECISION_OBJ_FLOAT) < 1.0:
+                    self.attributes["RAIN_scale"].setValue(rain_props.rain_scale)
                 if has_thermal_sources and not rain_props.thermal_texture:
                     logger.warn(
                         f"{filename}: Must have Thermal Texture to use Thermal Sources"
@@ -426,9 +428,6 @@ class XPlaneHeader:
                 xplane_version >= 1200 and (isAircraft or isCockpit) and has_rain_system
             ):
                 v = {
-                    "RAIN_scale": rain_props.rain_scale
-                    if round(rain_props.rain_scale, PRECISION_OBJ_FLOAT) < 1.0
-                    else None,
                     "THERMAL_texture": self.get_path_relative_to_dir(
                         rain_props.thermal_texture, exportdir
                     )
