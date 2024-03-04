@@ -129,7 +129,7 @@ class XPlaneObject:
             if dataref.anim_type in (ANIM_TYPE_SHOW, ANIM_TYPE_HIDE):
                 name = "ANIM_" + dataref.anim_type
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
-                self.animAttributes.add(XPlaneAttribute(name, value))
+                self.animAttributes.add(XPlaneAttribute(XPlaneAttributeName(name, dataref_index + 1), value))
                 if dataref.loop > 0:
                     self.animAttributes.add(XPlaneAttribute(XPlaneAttributeName("ANIM_keyframe_loop", dataref_index + 1), dataref.loop))
                     
