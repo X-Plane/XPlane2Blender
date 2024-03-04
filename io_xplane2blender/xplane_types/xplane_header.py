@@ -103,13 +103,9 @@ class XPlaneHeader:
         )  # NORMAL_METALNESS for textures
         
         self.attributes.add(XPlaneAttribute(XPlaneAttributeName("DECAL_LIB", 1), None))
-        self.attributes.add(XPlaneAttribute(XPlaneAttributeName("DECAL_LIB", 2), None))
         self.attributes.add(XPlaneAttribute("DECAL_PARAMS", None))
-        self.attributes.add(XPlaneAttribute("DECAL_PARAMS_PROJ", None))
         self.attributes.add(XPlaneAttribute("NORMAL_DECAL_PARAMS", None))
-        self.attributes.add(XPlaneAttribute("NORMAL_DECAL_PARAMS_PROJ", None))
         self.attributes.add(XPlaneAttribute(XPlaneAttributeName("TEXTURE_MODULATOR", 1), None))
-        self.attributes.add(XPlaneAttribute(XPlaneAttributeName("TEXTURE_MODULATOR", 2), None))
 
         # rain, thermal, wiper settings
         rain_header_attrs = [
@@ -139,6 +135,11 @@ class XPlaneHeader:
         self.attributes.add(XPlaneAttribute("BUMP_LEVEL", None))
         self.attributes.add(XPlaneAttribute("NO_BLEND", None))
         self.attributes.add(XPlaneAttribute("SPECULAR", None))
+
+        self.attributes.add(XPlaneAttribute(XPlaneAttributeName("DECAL_LIB", 2), None))
+        self.attributes.add(XPlaneAttribute("DECAL_PARAMS_PROJ", None))
+        self.attributes.add(XPlaneAttribute("NORMAL_DECAL_PARAMS_PROJ", None))
+        self.attributes.add(XPlaneAttribute(XPlaneAttributeName("TEXTURE_MODULATOR", 2), None))
 
         # draped general attributes
         self.attributes.add(XPlaneAttribute("ATTR_layer_group_draped", None))
@@ -348,6 +349,16 @@ class XPlaneHeader:
                 except (OSError, ValueError):
                     pass
 
+            if self.xplaneFile.options.texture_modulator != "":
+                try:
+                    self.attributes[XPlaneAttributeName("TEXTURE_MODULATOR", 1)].setValue(
+                        self.get_path_relative_to_dir(
+                            self.xplaneFile.options.texture_modulator, exportdir
+                        )
+                    )
+                except (OSError, ValueError):
+                    pass
+
         if xplane_version >= 1200:
             if self.xplaneFile.options.texture_map_normal != "":
                 try:
@@ -545,6 +556,32 @@ class XPlaneHeader:
                             f"{self.xplaneFile.filename}: No Draped Normal Texture found, ignoring use of Normal Metalness"
                         )
 
+                # draped bump level
+                if mat.options.bump_level != 1.0:
+                    self.attributes["BUMP_LEVEL"].setValue(mat.bump_level)
+
+                # draped no blend
+                self.attributes["NO_BLEND"].setValue(
+                    mat.attributes["ATTR_no_blend"].getValue()
+                )
+                # prevent of writing again in material
+                mat.attributes["ATTR_no_blend"].setValue(None)
+
+                # draped specular
+                if xplane_version >= 1100 and effective_normal_metalness_draped(
+                    self.xplaneFile
+                ):
+                    # draped specular
+                    self.attributes["SPECULAR"].setValue(1.0)
+                else:
+                    # draped specular
+                    self.attributes["SPECULAR"].setValue(
+                        mat.attributes["ATTR_shiny_rat"].getValue()
+                    )
+
+                # prevent of writing again in material
+                mat.attributes["ATTR_shiny_rat"].setValue(None)
+
             if xplane_version >= 1210:
                 if self.xplaneFile.options.file_draped_decal1 != "":
                     try:
@@ -612,12 +649,12 @@ class XPlaneHeader:
                     try:
                         if self.attributes["NORMAL_DECAL_PARAMS_PROJ"].getValue() == None:
                             self.attributes["NORMAL_DECAL_PARAMS_PROJ"].removeValues()
-
+                            
                         self.attributes["NORMAL_DECAL_PARAMS_PROJ"].addValue(
                             (
                                 self.xplaneFile.options.draped_normal_decal1_x_scale, self.xplaneFile.options.draped_normal_decal1_y_scale,
                                 self.xplaneFile.options.draped_normal_decal1_red_key, self.xplaneFile.options.draped_normal_decal1_green_key, self.xplaneFile.options.draped_normal_decal1_blue_key, self.xplaneFile.options.draped_normal_decal1_alpha_key,
-                                self.xplaneFile.options.drpaed_normal_decal1_modulator, self.xplaneFile.options.draped_normal_decal1_constant,
+                                self.xplaneFile.options.draped_normal_decal1_modulator, self.xplaneFile.options.draped_normal_decal1_constant,
                                 self.get_path_relative_to_dir(
                                     self.xplaneFile.options.file_draped_normal_decal1, exportdir
                                 ),
@@ -636,7 +673,7 @@ class XPlaneHeader:
                             (
                                 self.xplaneFile.options.draped_normal_decal2_x_scale, self.xplaneFile.options.draped_normal_decal2_y_scale,
                                 self.xplaneFile.options.draped_normal_decal2_red_key, self.xplaneFile.options.draped_normal_decal2_green_key, self.xplaneFile.options.draped_normal_decal2_blue_key, self.xplaneFile.options.draped_normal_decal2_alpha_key,
-                                self.xplaneFile.options.drpaed_normal_decal2_modulator, self.xplaneFile.options.draped_normal_decal2_constant,
+                                self.xplaneFile.options.draped_normal_decal2_modulator, self.xplaneFile.options.draped_normal_decal2_constant,
                                 self.get_path_relative_to_dir(
                                     self.xplaneFile.options.file_draped_normal_decal2, exportdir
                                 ),
@@ -645,32 +682,17 @@ class XPlaneHeader:
                         )     
                     except (OSError, ValueError):
                         pass
-
-                # draped bump level
-                if mat.options.bump_level != 1.0:
-                    self.attributes["BUMP_LEVEL"].setValue(mat.bump_level)
-
-                # draped no blend
-                self.attributes["NO_BLEND"].setValue(
-                    mat.attributes["ATTR_no_blend"].getValue()
-                )
-                # prevent of writing again in material
-                mat.attributes["ATTR_no_blend"].setValue(None)
-
-                # draped specular
-                if xplane_version >= 1100 and effective_normal_metalness_draped(
-                    self.xplaneFile
-                ):
-                    # draped specular
-                    self.attributes["SPECULAR"].setValue(1.0)
-                else:
-                    # draped specular
-                    self.attributes["SPECULAR"].setValue(
-                        mat.attributes["ATTR_shiny_rat"].getValue()
+                    
+            if self.xplaneFile.options.texture_draped_modulator != "":
+                try:
+                    self.attributes[XPlaneAttributeName("TEXTURE_MODULATOR", 2)].setValue(
+                        self.get_path_relative_to_dir(
+                            self.xplaneFile.options.texture_draped_modulator, exportdir
+                        )
                     )
-
-                # prevent of writing again in material
-                mat.attributes["ATTR_shiny_rat"].setValue(None)
+                except (OSError, ValueError):
+                    pass
+                
             # draped LOD
             if self.xplaneFile.options.lod_draped != 0.0:
                 self.attributes["ATTR_LOD_draped"].setValue(

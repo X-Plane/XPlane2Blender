@@ -9,7 +9,7 @@ def ggx_distribution_cdf(x, alpha):
 
     return sin_x_squared / (cos_x_squared * (alpha_squared - 1) + 1)
 
-def get_effective_gloss(file_path):
+def get_effective_gloss(file_path) -> float:
     alpha = 0.5
 
     try:
@@ -40,4 +40,4 @@ def get_effective_gloss(file_path):
                 error = current_error
                 alpha = current_alpha
 
-    return numpy.clip((1 - numpy.sqrt(alpha)) / 0.96875, 0, 1)
+    return float(numpy.clip((1 - numpy.sqrt(alpha)) / 0.96875, 0, 1))
