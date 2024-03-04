@@ -14,12 +14,12 @@ Lord forgive me for what I'm about to do
 @total_ordering
 class XPlaneAttributeName(str):
     def __new__(
-        cls, name: str, instance: int
+        cls, name: str, instance: int = 0
     ):
-        string = super().__new__(cls, name)
-        string.instance = instance
+        attribute_name = super().__new__(cls, name)
+        attribute_name.instance = instance
 
-        return string
+        return attribute_name
     
     def __eq__(
         self, other
