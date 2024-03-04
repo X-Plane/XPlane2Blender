@@ -9,7 +9,7 @@ from io_xplane2blender.xplane_constants import *
 from io_xplane2blender.xplane_helpers import *
 from io_xplane2blender.xplane_props import XPlaneCondition
 from io_xplane2blender.xplane_types import xplane_bone
-from io_xplane2blender.xplane_types.xplane_attribute import XPlaneAttribute
+from io_xplane2blender.xplane_types.xplane_attribute import XPlaneAttribute, XPlaneAttributeName
 from io_xplane2blender.xplane_types.xplane_attributes import XPlaneAttributes
 
 
@@ -124,13 +124,15 @@ class XPlaneObject:
             self.animAttributes.add(XPlaneAttribute(attr.name, attr.value, attr.weight))
 
         # add anim attributes from datarefs
-        for dataref in self.blenderObject.xplane.datarefs:
+        for (dataref_index, dataref) in enumerate(self.blenderObject.xplane.datarefs):
             # show/hide animation
             if dataref.anim_type in (ANIM_TYPE_SHOW, ANIM_TYPE_HIDE):
                 name = "ANIM_" + dataref.anim_type
                 value = (dataref.show_hide_v1, dataref.show_hide_v2, dataref.path)
                 self.animAttributes.add(XPlaneAttribute(name, value))
-
+                if dataref.loop > 0:
+                    self.animAttributes.add(XPlaneAttribute(XPlaneAttributeName("ANIM_keyframe_loop", dataref_index + 1), dataref.loop))
+                    
     def collectConditions(self):
         if self.blenderObject.xplane.conditions:
             self.conditions = self.blenderObject.xplane.conditions

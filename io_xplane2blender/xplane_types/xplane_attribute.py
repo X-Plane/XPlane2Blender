@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional, Union, Callable
+from functools import total_ordering
 
 from io_xplane2blender.xplane_helpers import floatToStr
 
@@ -7,6 +8,45 @@ from io_xplane2blender.xplane_helpers import floatToStr
 AttributeValueType = Union[bool, float, int, str, List["AttributeValueType"]]
 AttributeValueTypeList = List[AttributeValueType]
 
+"""
+Lord forgive me for what I'm about to do
+"""
+@total_ordering
+class XPlaneAttributeName(str):
+    def __new__(
+        cls, name: str, instance: int
+    ):
+        string = super().__new__(cls, name)
+        string.instance = instance
+
+        return string
+    
+    def __eq__(
+        self, other
+    ):
+        if type(other) == str:
+            return self.__str__() == other and self.instance == 0
+        else:
+            return self.__str__() == other.__str__() and self.instance == other.instance
+        
+    def __lt__(
+        self, other
+    ):
+        if type(other) == str:
+            return self.__str__() < other.__str__()
+        else:
+            if self.__str__() == other.__str__():
+                return self.instance < other.instance
+            else:
+                return self.__str__() < other.__str__()
+    
+    def __hash__(
+        self
+    ):
+        if self.instance == 0:
+            return hash(self.__str__())
+        else:
+            return hash((self.__str__(), self.instance))
 
 class XPlaneAttribute:
     """
@@ -15,7 +55,7 @@ class XPlaneAttribute:
     """
 
     def __init__(
-        self, name: str, value: Optional[AttributeValueType] = None, weight: int = 0
+        self, name: XPlaneAttributeName | str, value: Optional[AttributeValueType] = None, weight: int = 0
     ):
         """
         name - OBJ directive name, usually starts with 'ATTR_'
