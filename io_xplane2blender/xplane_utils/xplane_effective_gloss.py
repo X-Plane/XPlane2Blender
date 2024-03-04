@@ -13,7 +13,7 @@ def get_effective_gloss(file_path) -> float:
     alpha = 0.5
 
     try:
-        image = bpy.data.image.load(file_path)
+        image = bpy.data.images.load(file_path)
     except RuntimeError:
         image = None
 

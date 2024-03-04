@@ -882,7 +882,7 @@ class XPlaneHeader:
         """
         Returns the resource path relative to the exported OBJ
 
-        res_path   - The relative or absolute resource path (such as .png, .dds, or .pss)
+        res_path   - The relative or absolute resource path (such as .png, .dds, .pss or .dcl)
                   as found in an RNA field
         export_dir - Absolute path to directory of OBJ export
 
@@ -911,7 +911,7 @@ class XPlaneHeader:
                 f"Resource path '{res_path}' must be a supported file type, has no extension"
             )
             raise ValueError
-        elif Path(res_path).suffix.lower() not in {".png", ".dds", ".pss"}:
+        elif Path(res_path).suffix.lower() not in {".png", ".dds", ".pss", ".dcl"}:
             logger.error(
                 f"Resource path '{res_path}' must be a supported file type, is {Path(res_path).suffix}"
             )
