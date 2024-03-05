@@ -1335,20 +1335,6 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = ""
     )
 
-    texture_modulator: bpy.props.StringProperty(
-        subtype = "FILE_PATH",
-        name = "Modulator Texture",
-        description = "Modulator texture to use for objects on this layer",
-        default = ""
-    )
-    
-    texture_draped_modulator: bpy.props.StringProperty(
-        subtype = "FILE_PATH",
-        name = "Draped Modulator Texture",
-        description = "Modulator texture to use for draped objects on this layer",
-        default = ""
-    )
-
     file_decal1: bpy.props.StringProperty(
         subtype = "FILE_PATH",
         name = "Decal 1",
@@ -1405,6 +1391,20 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = ""
     )
 
+    texture_modulator: bpy.props.StringProperty(
+        subtype = "FILE_PATH",
+        name = "Modulator Texture",
+        description = "Modulator texture to use for objects on this layer",
+        default = ""
+    )
+    
+    texture_draped_modulator: bpy.props.StringProperty(
+        subtype = "FILE_PATH",
+        name = "Draped Modulator Texture",
+        description = "Modulator texture to use for draped objects on this layer",
+        default = ""
+    )
+    
     decal1_scale: bpy.props.FloatProperty(
         name = "Decal 1 Scale",
         description = "Scale of the decal",

@@ -4,6 +4,7 @@ import os
 import re
 from datetime import timezone
 from typing import Iterable, List, Optional, Tuple, Union
+from pathlib import Path
 
 import bpy
 import mathutils
@@ -75,6 +76,10 @@ def effective_normal_metalness_draped(xp_file: "xplane_file.XPlaneFile") -> bool
         int(bpy.context.scene.xplane.version) >= 1100
         and xp_file.options.normal_metalness_draped
     )
+
+
+def is_path_decal_lib(file_path: str) -> bool:
+    return Path(file_path).suffix.lower() == ".dcl"
 
 
 def get_plugin_resources_folder() -> str:
