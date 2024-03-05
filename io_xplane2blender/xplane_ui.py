@@ -14,6 +14,7 @@ from io_xplane2blender import xplane_constants, xplane_props, xplane_types, xpla
 from .xplane_constants import *
 from .xplane_ops import *
 from .xplane_props import *
+from .xplane_helpers import is_path_decal_lib
 
 
 class DATA_PT_xplane(bpy.types.Panel):
@@ -559,7 +560,7 @@ def layer_layout(
         
         decal_box.prop(layer_props, "file_decal1", text="Decal 1")
 
-        if layer_props.file_decal1 and not layer_props.file_decal1.endswith(".dcl"):
+        if layer_props.file_decal1 and not is_path_decal_lib(layer_props.file_decal1):
             decal_box.prop(layer_props, "decal1_scale", text="Scale")
             decal1_row = decal_box.row()
 
@@ -583,7 +584,7 @@ def layer_layout(
 
         decal_box.prop(layer_props, "file_decal2", text="Decal 2")
         
-        if layer_props.file_decal2 and not layer_props.file_decal2.endswith(".dcl"):
+        if layer_props.file_decal2 and not is_path_decal_lib(layer_props.file_decal2):
             decal_box.prop(layer_props, "decal2_scale", text="Scale")
             decal2_row = decal_box.row()
         
@@ -608,7 +609,7 @@ def layer_layout(
         if canHaveDraped:
             decal_box.prop(layer_props, "file_draped_decal1", text="Draped Decal 1")
             
-            if layer_props.file_draped_decal1 and not layer_props.file_draped_decal1.endswith(".dcl"):
+            if layer_props.file_draped_decal1 and not is_path_decal_lib(layer_props.file_draped_decal1):
 
                 decal_box.prop(layer_props, "draped_decal1_x_scale", text="X Scale")
                 decal_box.prop(layer_props, "draped_decal1_y_scale", text="Y Scale")
@@ -635,7 +636,7 @@ def layer_layout(
 
             decal_box.prop(layer_props, "file_draped_decal2", text="Draped Decal 2")
             
-            if layer_props.file_draped_decal2 and not layer_props.file_draped_decal2.endswith(".dcl"):                
+            if layer_props.file_draped_decal2 and not is_path_decal_lib(layer_props.file_draped_decal2):                
                 decal_box.prop(layer_props, "draped_decal2_x_scale", text="X Scale")
                 decal_box.prop(layer_props, "draped_decal2_y_scale", text="Y Scale")
                 
@@ -661,7 +662,7 @@ def layer_layout(
 
         decal_box.prop(layer_props, "file_normal_decal1", text="Normal Map Decal 1")
 
-        if layer_props.file_normal_decal1 and not layer_props.file_normal_decal1.endswith(".dcl"):
+        if layer_props.file_normal_decal1:
             decal_box.prop(layer_props, "normal_decal1_scale", text="Scale")
 
             decal_box.prop(layer_props, "normal_decal1_red_key", text="Red Key")
@@ -671,7 +672,7 @@ def layer_layout(
         
         decal_box.prop(layer_props, "file_normal_decal2", text="Normal Map Decal 2")
         
-        if layer_props.file_normal_decal2 and not layer_props.file_normal_decal2.endswith(".dcl"):
+        if layer_props.file_normal_decal2:
             decal_box.prop(layer_props, "normal_decal2_scale", text="Scale")
         
             decal_box.prop(layer_props, "normal_decal2_red_key", text="Red Key")
@@ -682,7 +683,7 @@ def layer_layout(
         if canHaveDraped:
             decal_box.prop(layer_props, "file_draped_normal_decal1", text="Draped Normal Map Decal 1")
 
-            if layer_props.file_draped_normal_decal1 and not layer_props.file_draped_normal_decal1.endswith(".dcl"):
+            if layer_props.file_draped_normal_decal1:
                 decal_box.prop(layer_props, "draped_normal_decal1_x_scale", text="X Scale")
                 decal_box.prop(layer_props, "draped_normal_decal1_y_scale", text="Y Scale")
             
@@ -693,7 +694,7 @@ def layer_layout(
         
             decal_box.prop(layer_props, "file_draped_normal_decal2", text="Draped Normal Map Decal 2")
 
-            if layer_props.file_draped_normal_decal2 and not layer_props.file_draped_normal_decal2.endswith(".dcl"):
+            if layer_props.file_draped_normal_decal2:
                 decal_box.prop(layer_props, "draped_normal_decal2_x_scale", text="X Scale")
                 decal_box.prop(layer_props, "draped_normal_decal2_y_scale", text="Y Scale")
             

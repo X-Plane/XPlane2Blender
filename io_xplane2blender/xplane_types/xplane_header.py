@@ -16,6 +16,7 @@ from ..xplane_helpers import (
     floatToStr,
     logger,
     resolveBlenderPath,
+    is_path_decal_lib
 )
 from .xplane_attribute import XPlaneAttribute, XPlaneAttributeName
 from .xplane_attributes import XPlaneAttributes
@@ -251,7 +252,7 @@ class XPlaneHeader:
         if xplane_version >= 1210:
             if self.xplaneFile.options.file_decal1 != "":
                 try:
-                    if self.xplaneFile.options.file_decal1.endswith(".dcl"):
+                    if is_path_decal_lib(self.xplaneFile.options.file_decal1):
                         if self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].getValue() == None:
                             self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].removeValues()
                             
@@ -282,7 +283,7 @@ class XPlaneHeader:
                 
             if self.xplaneFile.options.file_decal2 != "":
                 try:
-                    if self.xplaneFile.options.file_decal2.endswith(".dcl"):
+                    if is_path_decal_lib(self.xplaneFile.options.file_decal2):
                         if self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].getValue() == None:
                             self.attributes[XPlaneAttributeName("DECAL_LIB", 1)].removeValues()
                             
@@ -584,7 +585,7 @@ class XPlaneHeader:
             if xplane_version >= 1210:
                 if self.xplaneFile.options.file_draped_decal1 != "":
                     try:
-                        if self.xplaneFile.options.file_draped_decal1.endswith(".dcl"):
+                        if is_path_decal_lib(self.xplaneFile.options.file_draped_decal1):
                             if self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].getValue() == None:
                                 self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].removeValues()
                                 
@@ -615,7 +616,7 @@ class XPlaneHeader:
 
                 if self.xplaneFile.options.file_draped_decal2 != "":
                     try:
-                        if self.xplaneFile.options.file_draped_decal2.endswith(".dcl"):
+                        if is_path_decal_lib(self.xplaneFile.options.file_draped_decal2):
                             if self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].getValue() == None:
                                 self.attributes[XPlaneAttributeName("DECAL_LIB", 2)].removeValues()
                                 
