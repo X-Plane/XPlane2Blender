@@ -466,6 +466,7 @@ class XPlaneHeader:
                             self.attributes["THERMAL_source2"].removeValues()
                         self.attributes["THERMAL_source2"].addValue(
                             (
+                                i - 1,
                                 defrost_time,
                                 thermal_source.dataref_on_off
                             )

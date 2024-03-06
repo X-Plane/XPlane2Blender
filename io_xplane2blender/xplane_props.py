@@ -997,7 +997,7 @@ class XPlaneLOD(bpy.types.PropertyGroup):
 class XPlaneThermalSourceSettings(bpy.types.PropertyGroup):
     defrost_time: bpy.props.StringProperty(
             name="Defrost Time",
-            description="Deforst time in seconds (Can be a dataref)",
+            description="Defrost time in seconds (Can be a dataref)",
         )
     dataref_on_off: bpy.props.StringProperty(
             name="Thermal On/Off Dataref",
