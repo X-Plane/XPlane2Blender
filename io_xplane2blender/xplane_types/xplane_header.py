@@ -405,45 +405,39 @@ class XPlaneHeader:
 
         def rain_header_attrs():
             rain_props = self.xplaneFile.options.rain
+            
+            has_thermal_sources = any(
+                getattr(rain_props, f"thermal_source_{i}_enabled") for i in range(1, 5)
+            )
+            has_thermal_system = rain_props.thermal_texture and has_thermal_sources
+            
             has_wipers = any(
                 getattr(rain_props, f"wiper_{i}_enabled") for i in range(1, 5)
             )
             has_wiper_system = rain_props.wiper_texture and has_wipers
 
-            has_thermal_sources = any(
-                getattr(rain_props, f"thermal_source_{i}_enabled") for i in range(1, 5)
-            )
-            has_thermal_system = rain_props.thermal_texture and has_thermal_sources
-            has_rain_system = has_wiper_system or has_thermal_system
-            if xplane_version >= 1200 and (isAircraft or isCockpit):
-                if round(rain_props.rain_scale, PRECISION_OBJ_FLOAT) < 1.0:
-                    self.attributes["RAIN_scale"].setValue(rain_props.rain_scale)
+            if xplane_version >= 1210:
                 if has_thermal_sources and not rain_props.thermal_texture:
                     logger.warn(
                         f"{filename}: Must have Thermal Texture to use Thermal Sources"
                     )
+                    
+            if xplane_version >= 1200 and (isAircraft or isCockpit):
+                if round(rain_props.rain_scale, PRECISION_OBJ_FLOAT) < 1.0:
+                    self.attributes["RAIN_scale"].setValue(rain_props.rain_scale)
                 if has_wipers and not rain_props.wiper_texture:
                     logger.warn(f"{filename}: Must have Wiper Texture to use Wipers")
-
+                    
             if (
-                xplane_version >= 1200 and (isAircraft or isCockpit) and has_rain_system
+                xplane_version >= 1210 and (isAircraft or isCockpit) and has_thermal_system
             ):
-                v = {
-                    "THERMAL_texture": self.get_path_relative_to_dir(
-                        rain_props.thermal_texture, exportdir
+                if rain_props.thermal_texture:
+                    self.attributes["THERMAL_texture"].setValue(
+                        self.get_path_relative_to_dir(
+                            rain_props.thermal_texture, exportdir
+                        )
                     )
-                    if rain_props.thermal_texture
-                    else None,
-                    "WIPER_texture": self.get_path_relative_to_dir(
-                        rain_props.wiper_texture, exportdir
-                    )
-                    if rain_props.wiper_texture
-                    else None,
-                }
-
-                for attr, value in v.items():
-                    self.attributes[attr].setValue(value)
-
+                    
                 for i in range(1, 5):
                     if getattr(rain_props, f"thermal_source_{i}_enabled"):
                         thermal_source = getattr(rain_props, f"thermal_source_{i}")
@@ -472,6 +466,19 @@ class XPlaneHeader:
                             )
                         )
 
+                if not self.attributes["THERMAL_source2"].value:
+                    logger.error(f"{filename}'s Rain System must have at least 1 enabled Thermal Source")
+
+            if (
+                xplane_version >= 1200 and (isAircraft or isCockpit) and has_wiper_system
+            ):
+                if rain_props.wiper_texture:
+                    self.attributes["WIPER_texture"].setValue(
+                        self.get_path_relative_to_dir(
+                            rain_props.wiper_texture, exportdir
+                        )
+                    )
+
                 for i in range(1, 5):
                     if getattr(rain_props, f"wiper_{i}_enabled"):
                         wiper = getattr(rain_props, f"wiper_{i}")
@@ -492,10 +499,7 @@ class XPlaneHeader:
                     else:
                         break
 
-                if has_thermal_system and not self.attributes["THERMAL_source2"].value:
-                    logger.error(f"{filename}'s Rain System must have at least 1 enabled Thermal Source")
-
-                if has_rain_system and not self.attributes["WIPER_param"].value:
+                if not self.attributes["WIPER_param"].value:
                     logger.error(f"{filename}'s Rain System must have at least 1 enabled Wiper")
 
         rain_header_attrs()

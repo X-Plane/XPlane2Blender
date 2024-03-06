@@ -205,7 +205,8 @@ class OBJECT_PT_xplane(bpy.types.Panel):
                 box = self.layout.box()
                 box.label(text="Advanced")
                 box.prop(obj.xplane, "hud_glass")
-                box.prop(obj.xplane, "rain_cannot_escape")
+                if version >= 1210:
+                    box.prop(obj.xplane, "rain_cannot_escape")
             if obj.type != "EMPTY":
                 custom_layout(self.layout, obj)
 
@@ -280,19 +281,22 @@ def rain_layout(
 ):
     rain_props = layer_props.rain
     layout.prop(rain_props, "rain_scale")
-    layout.prop(rain_props, "thermal_texture")
-    thermal_grid_flow = layout.grid_flow(row_major=True)
+    
+    if version >= 1210:
+        layout.prop(rain_props, "thermal_texture")
+        thermal_grid_flow = layout.grid_flow(row_major=True)
 
-    def thermal_layout(row, idx: int):
-        row.active = getattr(rain_props, f"thermal_source_{idx}_enabled")
-        row.prop(rain_props, f"thermal_source_{idx}_enabled", text="")
-        thermal_source = getattr(rain_props, f"thermal_source_{idx}")
-        row.prop(thermal_source, "defrost_time")
-        row.prop(thermal_source, "dataref_on_off")
+        def thermal_layout(row, idx: int):
+            row.active = getattr(rain_props, f"thermal_source_{idx}_enabled")
+            row.prop(rain_props, f"thermal_source_{idx}_enabled", text="")
+            thermal_source = getattr(rain_props, f"thermal_source_{idx}")
+            row.prop(thermal_source, "defrost_time")
+            row.prop(thermal_source, "dataref_on_off")
 
-    thermal_grid_flow.active = bool(rain_props.thermal_texture)
-    for i in range(1, 5):
-        thermal_layout(thermal_grid_flow.row(), i)
+        thermal_grid_flow.active = bool(rain_props.thermal_texture)
+        for i in range(1, 5):
+            thermal_layout(thermal_grid_flow.row(), i)
+        
     layout.prop(rain_props, "wiper_texture")
     layout.prop(rain_props, "wiper_ext_glass_object")
     wiper_grid_flow = layout.grid_flow(row_major=False)

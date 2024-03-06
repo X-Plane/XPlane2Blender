@@ -55,7 +55,7 @@ class XPlaneAttribute:
     """
 
     def __init__(
-        self, name: XPlaneAttributeName | str, value: Optional[AttributeValueType] = None, weight: int = 0
+        self, name: Union[XPlaneAttributeName, str], value: Optional[AttributeValueType] = None, weight: int = 0
     ):
         """
         name - OBJ directive name, usually starts with 'ATTR_'
