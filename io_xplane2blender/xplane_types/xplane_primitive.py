@@ -104,6 +104,7 @@ class XPlanePrimitive(XPlaneObject):
         indent = self.xplaneBone.getIndent()
         o = ""
 
+        bl_obj = self.blenderObject
         xplaneFile = self.xplaneBone.xplaneFile
         commands = xplaneFile.commands
 
@@ -145,6 +146,12 @@ class XPlanePrimitive(XPlaneObject):
         if self.indices[1] > self.indices[0]:
             offset = self.indices[0]
             count = self.indices[1] - self.indices[0]
+
+            if bl_obj.xplane.rain_cannot_escape:
+                o += "TRIS_BREAK\n"
             o += "%sTRIS\t%d %d\n" % (indent, offset, count)
+            if bl_obj.xplane.rain_cannot_escape:
+                o += "TRIS_BREAK\n"
+
 
         return o

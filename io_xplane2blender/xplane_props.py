@@ -1904,6 +1904,12 @@ class XPlaneObjectSettings(bpy.types.PropertyGroup):
         description = "Object is the glass of a HUD display",
         default = False
     )
+    
+    rain_cannot_escape: bpy.props.BoolProperty(
+        name = "Rain Cannot Escape",
+        description = "Rain cannot escape from the object",
+        default = False
+    )
 
     # --- Light Level Override (Mesh Specific) -------------------------------
     lightLevel: bpy.props.BoolProperty(

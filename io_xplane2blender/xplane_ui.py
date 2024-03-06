@@ -205,6 +205,7 @@ class OBJECT_PT_xplane(bpy.types.Panel):
                 box = self.layout.box()
                 box.label(text="Advanced")
                 box.prop(obj.xplane, "hud_glass")
+                box.prop(obj.xplane, "rain_cannot_escape")
             if obj.type != "EMPTY":
                 custom_layout(self.layout, obj)
 
