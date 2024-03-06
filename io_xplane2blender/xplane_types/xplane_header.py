@@ -471,8 +471,6 @@ class XPlaneHeader:
                                 thermal_source.dataref_on_off
                             )
                         )
-                    else:
-                        break
 
                 for i in range(1, 5):
                     if getattr(rain_props, f"wiper_{i}_enabled"):
