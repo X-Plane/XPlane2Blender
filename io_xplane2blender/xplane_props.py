@@ -995,9 +995,9 @@ class XPlaneLOD(bpy.types.PropertyGroup):
         return f"({self.near}, {self.far})"
 
 class XPlaneThermalSourceSettings(bpy.types.PropertyGroup):
-    dataref_tempurature: bpy.props.StringProperty(
-            name="Thermal Source Dataref",
-            description="Dataref that controls source in Celsius",
+    defrost_time: bpy.props.StringProperty(
+            name="Defrost Time",
+            description="Deforst time in seconds (Can be a dataref)",
         )
     dataref_on_off: bpy.props.StringProperty(
             name="Thermal On/Off Dataref",
@@ -1047,35 +1047,35 @@ class XPlaneRainSettings(bpy.types.PropertyGroup):
     )
     thermal_source_1: bpy.props.PointerProperty(
         type=XPlaneThermalSourceSettings,
-        name="Thermal Source 1",
-        description="1st Thermal Source of Aircraft"
+        name="Pilot Front Windshield Thermal Source",
+        description="Thermal Source for the pilot front windshield"
     )
     thermal_source_1_enabled: bpy.props.BoolProperty(
-        name="Enable Thermal Source 1"
+        name="Enable Pilot Front Windshield Thermal Source"
     )
     thermal_source_2: bpy.props.PointerProperty(
         type=XPlaneThermalSourceSettings,
-        name="Thermal Source 2",
-        description="2nd Thermal Source of Aircraft"
+        name="Copilot Front Windshield Thermal Source",
+        description="Thermal Source for the copilot front windshield"
     )
     thermal_source_2_enabled: bpy.props.BoolProperty(
-        name="Enable Thermal Source 2",
+        name="Enable Copilot Front Windshield Thermal Source",
     )
     thermal_source_3: bpy.props.PointerProperty(
         type=XPlaneThermalSourceSettings,
-        name="Thermal Source 3",
-        description="3rd Thermal Source of Aircraft"
+        name="Pilot Side Window Thermal Source",
+        description="Thermal Source for the pilot side window"
     )
     thermal_source_3_enabled: bpy.props.BoolProperty(
-        name="Enable Thermal Source 3"
+        name="Enable Pilot Side Window Thermal Source"
     )
     thermal_source_4: bpy.props.PointerProperty(
         type=XPlaneThermalSourceSettings,
-        name="Thermal Source 4",
-        description="3rd Thermal Source of Aircraft"
+        name="Copilot Side Window Thermal Source",
+        description="Thermal Source for the copilot side window"
     )
     thermal_source_4_enabled: bpy.props.BoolProperty(
-        name="Enable Thermal Source 4"
+        name="Enable Copilot Side Window Thermal Source"
     )
     wiper_ext_glass_object: bpy.props.StringProperty(
         name = "Exterior Glass Object",

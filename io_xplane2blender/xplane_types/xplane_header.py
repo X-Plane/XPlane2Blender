@@ -116,7 +116,7 @@ class XPlaneHeader:
         ]
         for rain_header_attr in rain_header_attrs:
             self.attributes.add(XPlaneAttribute(rain_header_attr))
-        self.attributes.add(XPlaneAttribute("THERMAL_source"))
+        self.attributes.add(XPlaneAttribute("THERMAL_source2"))
         self.attributes.add(XPlaneAttribute("WIPER_param"))
 
         self.attributes.add(XPlaneAttribute("GLOBAL_no_blend", None))
@@ -447,20 +447,28 @@ class XPlaneHeader:
                 for i in range(1, 5):
                     if getattr(rain_props, f"thermal_source_{i}_enabled"):
                         thermal_source = getattr(rain_props, f"thermal_source_{i}")
-                        if not thermal_source.dataref_tempurature:
+                        if not thermal_source.defrost_time:
+                            defrost_time = 0
                             logger.error(
-                                f"{filename}'s Thermal Source #{i} has no tempurature dataref"
+                                f"{filename}'s Thermal Source #{i - 1} has no defrost time"
                             )
+                        else:
+                            try:
+                                defrost_time = float(thermal_source.defrost_time)
+                            except ValueError:
+                                defrost_time = thermal_source.defrost_time
                         if not thermal_source.dataref_on_off:
                             logger.error(
-                                f"{filename}'s Thermal Source #{i} has no on/off dataref"
+                                f"{filename}'s Thermal Source #{i - 1} has no on/off dataref"
                             )
 
-                        # STUPID HACK ALERT! The XPlaneAttribute API is stupid
-                        if self.attributes["THERMAL_source"].value[0] == None:
-                            del self.attributes["THERMAL_source"].value[0]
-                        self.attributes["THERMAL_source"].value.append(
-                            f"{thermal_source.dataref_tempurature}    {thermal_source.dataref_on_off}"
+                        if self.attributes["THERMAL_source2"].getValue() == None:
+                            self.attributes["THERMAL_source2"].removeValues()
+                        self.attributes["THERMAL_source2"].addValue(
+                            (
+                                defrost_time,
+                                thermal_source.dataref_on_off
+                            )
                         )
                     else:
                         break
@@ -485,7 +493,7 @@ class XPlaneHeader:
                     else:
                         break
 
-                if has_thermal_system and not self.attributes["THERMAL_source"].value:
+                if has_thermal_system and not self.attributes["THERMAL_source2"].value:
                     logger.error(f"{filename}'s Rain System must have at least 1 enabled Thermal Source")
 
                 if has_rain_system and not self.attributes["WIPER_param"].value:

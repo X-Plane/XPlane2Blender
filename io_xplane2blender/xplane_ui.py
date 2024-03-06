@@ -286,7 +286,7 @@ def rain_layout(
         row.active = getattr(rain_props, f"thermal_source_{idx}_enabled")
         row.prop(rain_props, f"thermal_source_{idx}_enabled", text="")
         thermal_source = getattr(rain_props, f"thermal_source_{idx}")
-        row.prop(thermal_source, "dataref_tempurature")
+        row.prop(thermal_source, "defrost_time")
         row.prop(thermal_source, "dataref_on_off")
 
     thermal_grid_flow.active = bool(rain_props.thermal_texture)
