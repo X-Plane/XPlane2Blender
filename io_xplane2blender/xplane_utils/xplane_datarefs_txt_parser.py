@@ -71,7 +71,7 @@ class DatarefInfoStruct:
                     self.type
                 )
             else:
-                match = re.match(r"\[\d+\]", match.groups()[1])
+                match = re.match(r"\[\d*\]", match.groups()[1])
                 if match is None:
                     return "Array index '{}' must be one or more digits".format(
                         self.type

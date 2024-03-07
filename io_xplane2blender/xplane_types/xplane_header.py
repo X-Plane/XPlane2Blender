@@ -416,7 +416,7 @@ class XPlaneHeader:
             )
             has_wiper_system = rain_props.wiper_texture and has_wipers
 
-            if xplane_version >= 1210:
+            if xplane_version >= 1210 and (isAircraft or isCockpit):
                 if has_thermal_sources and not rain_props.thermal_texture:
                     logger.warn(
                         f"{filename}: Must have Thermal Texture to use Thermal Sources"
