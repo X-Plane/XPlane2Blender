@@ -148,10 +148,10 @@ class XPlanePrimitive(XPlaneObject):
             count = self.indices[1] - self.indices[0]
 
             if bl_obj.xplane.rain_cannot_escape:
-                o += "TRIS_BREAK\n"
+                o += "TRIS_break\n"
             o += "%sTRIS\t%d %d\n" % (indent, offset, count)
             if bl_obj.xplane.rain_cannot_escape:
-                o += "TRIS_BREAK\n"
+                o += "TRIS_break\n"
 
 
         return o
