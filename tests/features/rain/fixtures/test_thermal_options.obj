@@ -3,15 +3,10 @@ I
 OBJ
 
 GLOBAL_cockpit_lit
-THERMAL_texture	textures/thermal_map.png
-THERMAL_source	thermal_dref1    thermal_on_off_dref1
-THERMAL_source	thermal_dref2    thermal_on_off_dref2
-THERMAL_source	thermal_dref3    thermal_on_off_dref3
-THERMAL_source	thermal_dref4    thermal_on_off_dref4
 POINT_COUNTS	0	0	0	0
 
 # 0 ROOT
 	# 1 Empty: Dummy
 	# EMPTY: Dummy	weight: 0
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+102.NO_BUILD_NUMBR
+# Build with Blender 3.3.16 (build b'd980adcac794'). Exported with XPlane2Blender 4.3.1-alpha.1+119.NO_BUILD_NUMBR

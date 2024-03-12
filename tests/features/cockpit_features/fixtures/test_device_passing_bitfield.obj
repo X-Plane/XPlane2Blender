@@ -36,19 +36,19 @@ IDX	17
 
 # 0 ROOT
 	# 1 Mesh: device_bit_bus_1
-	# MESH: device_bit_bus_1	weight: 2
+	# MESH: device_bit_bus_1	weight: 0
 	# MATERIAL: device_mat_bit_1
 	ATTR_cockpit_device	GNS430_1	1	0	1
 	TRIS	0 6
 	# 1 Mesh: device_bit_bus_110
-	# MESH: device_bit_bus_110	weight: 3
+	# MESH: device_bit_bus_110	weight: 0
 	# MATERIAL: device_mat_bit_110
-	ATTR_cockpit_device	GNS430_1	110	0	1
+	ATTR_cockpit_device	GNS430_1	6	0	1
 	TRIS	6 6
 	# 1 Mesh: device_bit_bus_111111
-	# MESH: device_bit_bus_111111	weight: 4
+	# MESH: device_bit_bus_111111	weight: 0
 	# MATERIAL: device_mat_bit_111111
-	ATTR_cockpit_device	GNS430_1	111111	0	1
+	ATTR_cockpit_device	GNS430_1	63	0	1
 	TRIS	12 6
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.1.0-beta.1+111.NO_BUILD_NUMBR
+# Build with Blender 3.3.16 (build b'd980adcac794'). Exported with XPlane2Blender 4.3.1-alpha.1+119.NO_BUILD_NUMBR

@@ -2,14 +2,15 @@ I
 800
 OBJ
 
+GLOBAL_cockpit_lit
 POINT_COUNTS	6	0	0	6
 
-VT	25	0	-1	0	1	-0	1	1	# 0
-VT	25	0	1	0	1	-0	1	0	# 1
-VT	23	0	1	0	1	-0	0	0	# 2
-VT	23	0	-1	-0	1	-0	0	1	# 3
-VT	25	0	-1	-0	1	-0	1	1	# 4
-VT	23	0	1	-0	1	-0	0	0	# 5
+VT	9	0	-1	0	1	-0	1	1	# 0
+VT	9	0	1	0	1	-0	1	0	# 1
+VT	7	0	1	0	1	-0	0	0	# 2
+VT	7	0	-1	-0	1	-0	0	1	# 3
+VT	9	0	-1	-0	1	-0	1	1	# 4
+VT	7	0	1	-0	1	-0	0	0	# 5
 
 IDX	0
 IDX	1
@@ -20,15 +21,12 @@ IDX	5
 
 # 0 ROOT
 	# 1 Mesh: Grid_n3
-	# MESH: Grid_n3	weight: 0
 		# 2 Mesh: Grid_A2
 		ANIM_begin
 		ANIM_hide	0	0.25	Grid_A2_nAn_dref
-		ANIM_hide	0.75	1	Grid_A2_nAn_dref
 		ANIM_show	0.25	0.75	Grid_A2_nAn_dref
-		# MESH: Grid_A2	weight: 0
+		ANIM_hide	0.75	1	Grid_A2_nAn_dref
 			# 3 Mesh: Grid_n1
-			# MESH: Grid_n1	weight: 0
 				# 4 Mesh: Plane_nAn
 				# MESH: Plane_nAn	weight: 0
 				# MATERIAL: Material
@@ -36,4 +34,4 @@ IDX	5
 				TRIS	0 6
 		ANIM_end
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+57.NO_BUILD_NUMBR
+# Build with Blender 3.3.16 (build b'd980adcac794'). Exported with XPlane2Blender 4.3.1-alpha.1+119.NO_BUILD_NUMBR

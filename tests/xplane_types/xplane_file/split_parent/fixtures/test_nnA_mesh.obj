@@ -2,6 +2,7 @@ I
 800
 OBJ
 
+GLOBAL_cockpit_lit
 POINT_COUNTS	6	0	0	6
 
 VT	13	0	-1	0	1	-0	1	1	# 0
@@ -22,13 +23,10 @@ IDX	5
 	# 1 Mesh: Pill_A3
 	ANIM_begin
 	ANIM_show	0	0.30000001	Pill_A3_nnA_dref
-	ANIM_show	0.60000002	1	Pill_A3_nnA_dref
 	ANIM_hide	0.30000001	0.60000002	Pill_A3_nnA_dref
-	# MESH: Pill_A3	weight: 0
+	ANIM_show	0.60000002	1	Pill_A3_nnA_dref
 		# 2 Mesh: Pill_n2
-		# MESH: Pill_n2	weight: 0
 			# 3 Mesh: Pill_n1
-			# MESH: Pill_n1	weight: 0
 				# 4 Mesh: Plane_nnA
 				# MESH: Plane_nnA	weight: 0
 				# MATERIAL: Material
@@ -36,4 +34,4 @@ IDX	5
 				TRIS	0 6
 	ANIM_end
 
-# Build with Blender 2.80 (sub 75) (build b'f6cb5f54494e'). Exported with XPlane2Blender 4.0.0-dev.0+57.NO_BUILD_NUMBR
+# Build with Blender 3.3.16 (build b'd980adcac794'). Exported with XPlane2Blender 4.3.1-alpha.1+119.NO_BUILD_NUMBR
