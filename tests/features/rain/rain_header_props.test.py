@@ -54,7 +54,7 @@ class TestRainHeaderProps(XPlaneTestCase):
 
     def test_errors(self) -> None:
         self.exportExportableRoot("thermal_errors",)
-        self.assertLoggerErrors(4)
+        self.assertLoggerErrors(0)
         self.exportExportableRoot("wiper_errors",)
         self.assertLoggerErrors(3)
 
