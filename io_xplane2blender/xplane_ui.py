@@ -674,6 +674,8 @@ def layer_layout(
             decal_box.prop(layer_props, "normal_decal1_green_key", text="Green Key")
             decal_box.prop(layer_props, "normal_decal1_blue_key", text="Blue Key")
             decal_box.prop(layer_props, "normal_decal1_alpha_key", text="Alpha Key")
+            decal_box.prop(layer_props, "normal_decal1_modulator", text="Modulator Strength")
+            decal_box.prop(layer_props, "normal_decal1_constant", text="Constant Strength")
         
         decal_box.prop(layer_props, "file_normal_decal2", text="Normal Map Decal 2")
         
@@ -684,7 +686,9 @@ def layer_layout(
             decal_box.prop(layer_props, "normal_decal2_green_key", text="Green Key")
             decal_box.prop(layer_props, "normal_decal2_blue_key", text="Blue Key")
             decal_box.prop(layer_props, "normal_decal2_alpha_key", text="Alpha Key")
-         
+            decal_box.prop(layer_props, "normal_decal2_modulator", text="Modulator Strength")
+            decal_box.prop(layer_props, "normal_decal2_constant", text="Constant Strength")
+
         if canHaveDraped:
             decal_box.prop(layer_props, "file_draped_normal_decal1", text="Draped Normal Map Decal 1")
 
@@ -696,6 +700,8 @@ def layer_layout(
                 decal_box.prop(layer_props, "draped_normal_decal1_green_key", text="Green Key")
                 decal_box.prop(layer_props, "draped_normal_decal1_blue_key", text="Blue Key")
                 decal_box.prop(layer_props, "draped_normal_decal1_alpha_key", text="Alpha Key")
+                decal_box.prop(layer_props, "draped_normal_decal1_modulator", text="Modulator Strength")
+                decal_box.prop(layer_props, "draped_normal_decal1_constant", text="Constant Strength")
         
             decal_box.prop(layer_props, "file_draped_normal_decal2", text="Draped Normal Map Decal 2")
 
@@ -707,6 +713,8 @@ def layer_layout(
                 decal_box.prop(layer_props, "draped_normal_decal2_green_key", text="Green Key")
                 decal_box.prop(layer_props, "draped_normal_decal2_blue_key", text="Blue Key")
                 decal_box.prop(layer_props, "draped_normal_decal2_alpha_key", text="Alpha Key")
+                decal_box.prop(layer_props, "draped_normal_decal2_modulator", text="Modulator Strength")
+                decal_box.prop(layer_props, "draped_normal_decal2_constant", text="Constant Strength")
 
         decal_box.prop(layer_props, "texture_modulator", text="Modulator Texture")
 
