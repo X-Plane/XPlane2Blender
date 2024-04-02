@@ -1405,9 +1405,75 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = ""
     )
     
+    decal1_projected: bpy.props.BoolProperty(
+        name = "Make Decal 1 Projected",
+        description = "If checked, the decal will be projected",
+        default = False
+    )
+
+    decal2_projected: bpy.props.BoolProperty(
+        name = "Make Decal 2 Projected",
+        description = "If checked, the decal will be projected",
+        default = False
+    )
+    
+    draped_decal1_projected: bpy.props.BoolProperty(
+        name = "Make Draped Decal 1 Projected",
+        description = "If checked, the draped decal will be projected",
+        default = True
+    )
+
+    draped_decal2_projected: bpy.props.BoolProperty(
+        name = "Make Draped Decal 2 Projected",
+        description = "If checked, the draped decal will be projected",
+        default = True
+    )
+    
+    normal_decal1_projected: bpy.props.BoolProperty(
+        name = "Make Normal Map Decal 1 Projected",
+        description = "If checked, the normal map decal will be projected",
+        default = False
+    )
+
+    normal_decal2_projected: bpy.props.BoolProperty(
+        name = "Make Normal Map Decal 2 Projected",
+        description = "If checked, the normal map decal will be projected",
+        default = False
+    )
+    
+    draped_normal_decal1_projected: bpy.props.BoolProperty(
+        name = "Make Draped Normal Map Decal 1 Projected",
+        description = "If checked, the draped normal map decal will be projected",
+        default = True
+    )
+
+    draped_normal_decal2_projected: bpy.props.BoolProperty(
+        name = "Make Draped Normal Map Decal 2 Projected",
+        description = "If checked, the draped normal map decal will be projected",
+        default = True
+    )
+    
     decal1_scale: bpy.props.FloatProperty(
         name = "Decal 1 Scale",
         description = "Scale of the decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+    
+    decal1_x_scale: bpy.props.FloatProperty(
+        name = "Decal 1 X Scale",
+        description = "X scale of the decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+    
+    decal1_y_scale: bpy.props.FloatProperty(
+        name = "Decal 1 Y Scale",
+        description = "Y scale of the decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1423,6 +1489,33 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = 1.0
     )
 
+    decal2_x_scale: bpy.props.FloatProperty(
+        name = "Decal 2 X Scale",
+        description = "X scale of the decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+    
+    decal2_y_scale: bpy.props.FloatProperty(
+        name = "Decal 2 Y Scale",
+        description = "Y scale of the decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+    
+    draped_decal1_scale: bpy.props.FloatProperty(
+        name = "Draped Decal 1 Scale",
+        description = "Scale of the draped decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+    
     draped_decal1_x_scale: bpy.props.FloatProperty(
         name = "Draped Decal 1 X Scale",
         description = "X scale of the draped decal",
@@ -1441,6 +1534,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = 1.0
     )
     
+   draped_decal2_scale: bpy.props.FloatProperty(
+        name = "Draped Decal 2 Scale",
+        description = "Scale of the draped decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+
     draped_decal2_x_scale: bpy.props.FloatProperty(
         name = "Draped Decal 2 X Scale",
         description = "X scale of the draped decal",
@@ -1467,10 +1569,55 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         precision = 2,
         default = 1.0
     )
+
+    normal_decal1_x_scale: bpy.props.FloatProperty(
+        name = "Normal Map Decal 1 X Scale",
+        description = "X scale of the draped map decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+    
+    normal_decal1_y_scale: bpy.props.FloatProperty(
+        name = "Normal Map Decal 1 Y Scale",
+        description = "Y scale of the draped map decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
     
     normal_decal2_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 2 Scale",
         description = "Scale of the normal map decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+
+    normal_decal2_x_scale: bpy.props.FloatProperty(
+        name = "Normal Map Decal 2 X Scale",
+        description = "X scale of the draped map decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+    
+    normal_decal2_y_scale: bpy.props.FloatProperty(
+        name = "Normal Map Decal 2 Y Scale",
+        description = "Y scale of the draped map decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+
+    draped_normal_decal1_scale: bpy.props.FloatProperty(
+        name = "Draped Normal Map Decal 1 Scale",
+        description = "Scale of the draped normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1495,6 +1642,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = 1.0
     )
     
+    draped_normal_decal2_scale: bpy.props.FloatProperty(
+        name = "Draped Normal Map Decal 2 Scale",
+        description = "Scale of the draped normal map decal",
+        min = 0.0,
+        step = 0.1,
+        precision = 2,
+        default = 1.0
+    )
+
     draped_normal_decal2_x_scale: bpy.props.FloatProperty(
         name = "Draped Normal Map Decal 2 X Scale",
         description = "X scale of the draped normal map decal",
@@ -2330,7 +2486,7 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         min = 0.0,
     )
 
-    param_intensity: bpy.props.IntProperty(
+    param_intensity: bpy.props.FloatProperty(
         name = "Intensity",
         description="Total light output in a specific direction, in candela",
         min=1,
