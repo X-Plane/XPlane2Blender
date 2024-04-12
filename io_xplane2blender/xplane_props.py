@@ -1534,7 +1534,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = 1.0
     )
     
-   draped_decal2_scale: bpy.props.FloatProperty(
+    draped_decal2_scale: bpy.props.FloatProperty(
         name = "Draped Decal 2 Scale",
         description = "Scale of the draped decal",
         min = 0.0,
