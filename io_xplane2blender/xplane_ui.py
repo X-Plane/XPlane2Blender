@@ -566,10 +566,19 @@ def layer_layout(
         decal_box.prop(layer_props, "file_decal1", text="Decal 1")
 
         if layer_props.file_decal1 and not is_path_decal_lib(layer_props.file_decal1):
-            decal_box.prop(layer_props, "decal1_scale", text="Scale")
-            decal1_row = decal_box.row()
+            decal1_row_1 = decal_box.row()
+            
+            decal1_row_1.prop(layer_props, "decal1_projected", text="Projected")
 
-            decal1_column_1 = decal1_row.column()
+            if layer_props.decal1_projected:
+                decal1_row_1.prop(layer_props, "decal1_x_scale", text="X Scale")
+                decal1_row_1.prop(layer_props, "decal1_y_scale", text="Y Scale")
+            else:
+                decal1_row_1.prop(layer_props, "decal1_scale", text="Scale")
+            
+            decal1_row_2 = decal_box.row()
+
+            decal1_column_1 = decal1_row_2.column()
             
             decal1_column_1.prop(layer_props, "rgb_decal1_red_key", text="RGB Decal Red Key")
             decal1_column_1.prop(layer_props, "rgb_decal1_green_key", text="RGB Decal Green Key")
@@ -578,7 +587,7 @@ def layer_layout(
             decal1_column_1.prop(layer_props, "rgb_decal1_modulator", text="RGB Decal Modulator Strength")
             decal1_column_1.prop(layer_props, "rgb_decal1_constant", text="RGB Decal Constant Strength")
 
-            decal1_column_2 = decal1_row.column()
+            decal1_column_2 = decal1_row_2.column()
         
             decal1_column_2.prop(layer_props, "alpha_decal1_red_key", text="Alpha Decal Red Key")
             decal1_column_2.prop(layer_props, "alpha_decal1_green_key", text="Alpha Decal Green Key")
@@ -590,10 +599,19 @@ def layer_layout(
         decal_box.prop(layer_props, "file_decal2", text="Decal 2")
         
         if layer_props.file_decal2 and not is_path_decal_lib(layer_props.file_decal2):
-            decal_box.prop(layer_props, "decal2_scale", text="Scale")
-            decal2_row = decal_box.row()
-        
-            decal2_column_1 = decal2_row.column()
+            decal2_row_1 = decal_box.row()
+            
+            decal2_row_1.prop(layer_props, "decal2_projected", text="Projected")
+
+            if layer_props.decal2_projected:
+                decal2_row_1.prop(layer_props, "decal2_x_scale", text="X Scale")
+                decal2_row_1.prop(layer_props, "decal2_y_scale", text="Y Scale")
+            else:
+                decal2_row_1.prop(layer_props, "decal2_scale", text="Scale")
+            
+            decal2_row_2 = decal_box.row()
+    
+            decal2_column_1 = decal2_row_2.column()
         
             decal2_column_1.prop(layer_props, "rgb_decal2_red_key", text="RGB Decal Red Key")
             decal2_column_1.prop(layer_props, "rgb_decal2_green_key", text="RGB Decal Green Key")
@@ -602,7 +620,7 @@ def layer_layout(
             decal2_column_1.prop(layer_props, "rgb_decal2_modulator", text="RGB Decal Modulator Strength")
             decal2_column_1.prop(layer_props, "rgb_decal2_constant", text="RGB Decal Constant Strength")
 
-            decal2_column_2 = decal2_row.column()
+            decal2_column_2 = decal2_row_2.column()
         
             decal2_column_2.prop(layer_props, "alpha_decal2_red_key", text="Alpha Decal Red Key")
             decal2_column_2.prop(layer_props, "alpha_decal2_green_key", text="Alpha Decal Green Key")
@@ -615,13 +633,19 @@ def layer_layout(
             decal_box.prop(layer_props, "file_draped_decal1", text="Draped Decal 1")
             
             if layer_props.file_draped_decal1 and not is_path_decal_lib(layer_props.file_draped_decal1):
-
-                decal_box.prop(layer_props, "draped_decal1_x_scale", text="X Scale")
-                decal_box.prop(layer_props, "draped_decal1_y_scale", text="Y Scale")
+                draped_decal1_row_1 = decal_box.row()
             
-                draped_decal1_row = decal_box.row()
+                draped_decal1_row_1.prop(layer_props, "draped_decal1_projected", text="Projected")
 
-                draped_decal1_column_1 = draped_decal1_row.column()
+                if layer_props.draped_decal1_projected:
+                    draped_decal1_row_1.prop(layer_props, "draped_decal1_x_scale", text="X Scale")
+                    draped_decal1_row_1.prop(layer_props, "draped_decal1_y_scale", text="Y Scale")
+                else:
+                    draped_decal1_row_1.prop(layer_props, "draped_decal1_scale", text="Scale")
+            
+                draped_decal1_row_2 = decal_box.row()
+    
+                draped_decal1_column_1 = draped_decal1_row_2.column()
                 
                 draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_red_key", text="RGB Decal Red Key")
                 draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_green_key", text="RGB Decal Green Key")
@@ -630,7 +654,7 @@ def layer_layout(
                 draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_modulator", text="RGB Decal Modulator Strength")
                 draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_constant", text="RGB Decal Constant Strength")
 
-                draped_decal1_column_2 = draped_decal1_row.column()
+                draped_decal1_column_2 = draped_decal1_row_2.column()
                 
                 draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_red_key", text="Alpha Decal Red Key")
                 draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_green_key", text="Alpha Decal Green Key")
@@ -641,13 +665,20 @@ def layer_layout(
 
             decal_box.prop(layer_props, "file_draped_decal2", text="Draped Decal 2")
             
-            if layer_props.file_draped_decal2 and not is_path_decal_lib(layer_props.file_draped_decal2):                
-                decal_box.prop(layer_props, "draped_decal2_x_scale", text="X Scale")
-                decal_box.prop(layer_props, "draped_decal2_y_scale", text="Y Scale")
-                
-                draped_decal2_row = decal_box.row()
-                
-                draped_decal2_column_1 = draped_decal2_row.column()
+            if layer_props.file_draped_decal2 and not is_path_decal_lib(layer_props.file_draped_decal2):
+                draped_decal2_row_1 = decal_box.row()
+            
+                draped_decal2_row_1.prop(layer_props, "draped_decal2_projected", text="Projected")
+
+                if layer_props.draped_decal2_projected:
+                    draped_decal2_row_1.prop(layer_props, "draped_decal2_x_scale", text="X Scale")
+                    draped_decal2_row_1.prop(layer_props, "draped_decal2_y_scale", text="Y Scale")
+                else:
+                    draped_decal2_row_1.prop(layer_props, "draped_decal2_scale", text="Scale")
+            
+                draped_decal2_row_2 = decal_box.row()
+                                
+                draped_decal2_column_1 = draped_decal2_row_2.column()
 
                 draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_red_key", text="RGB Decal Red Key")
                 draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_green_key", text="RGB Decal Green Key")
@@ -656,7 +687,7 @@ def layer_layout(
                 draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_modulator", text="RGB Decal Modulator Strength")
                 draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_constant", text="RGB Decal Constant Strength")
 
-                draped_decal2_column_2 = draped_decal2_row.column()
+                draped_decal2_column_2 = draped_decal2_row_2.column()
                 
                 draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_red_key", text="Alpha Decal Red Key")
                 draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_green_key", text="Alpha Decal Green Key")
@@ -693,8 +724,13 @@ def layer_layout(
             decal_box.prop(layer_props, "file_draped_normal_decal1", text="Draped Normal Map Decal 1")
 
             if layer_props.file_draped_normal_decal1:
-                decal_box.prop(layer_props, "draped_normal_decal1_x_scale", text="X Scale")
-                decal_box.prop(layer_props, "draped_normal_decal1_y_scale", text="Y Scale")
+                decal_box.prop(layer_props, "draped_normal_decal1_projected", text="Projected")
+
+                if layer_props.draped_normal_decal1_projected:
+                    decal_box.prop(layer_props, "draped_normal_decal1_x_scale", text="X Scale")
+                    decal_box.prop(layer_props, "draped_normal_decal1_y_scale", text="Y Scale")
+                else:
+                    decal_box.prop(layer_props, "draped_normal_decal1_scale", text="Scale")
             
                 decal_box.prop(layer_props, "draped_normal_decal1_red_key", text="Red Key")
                 decal_box.prop(layer_props, "draped_normal_decal1_green_key", text="Green Key")
