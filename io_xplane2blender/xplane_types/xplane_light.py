@@ -360,7 +360,7 @@ class XPlaneLight(xplane_object.XPlaneObject):
                     "INDEX": light_data.xplane.param_index,
                     "SIZE": light_data.xplane.param_size,
                     "LEGACY_SIZE": 0, # Another UNUSED - we don't autocorrect with it at all
-                    "INTENSITY": light_data.xplane.param_intensity,
+                    "INTENSITY": light_data.xplane.param_intensity_new,
                     "DX": dxyz_values_x[0],
                     "DY": dxyz_values_x[1],
                     "DZ": dxyz_values_x[2],

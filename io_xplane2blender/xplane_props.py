@@ -2486,7 +2486,7 @@ class XPlaneLightSettings(bpy.types.PropertyGroup):
         min = 0.0,
     )
 
-    param_intensity: bpy.props.FloatProperty(
+    param_intensity_new: bpy.props.FloatProperty(
         name = "Intensity",
         description="Total light output in a specific direction, in candela",
         min=1,

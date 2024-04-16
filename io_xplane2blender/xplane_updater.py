@@ -509,6 +509,9 @@ def _regions_change_panel_mode(logger: xplane_helpers.XPlaneLogger):
             else col.xplane.layer.cockpit_panel_mode
         )
 
+def _update_light_intensity(logger: xplane_helpers.XPlaneLogger):
+    for light in bpy.data.lights:
+        light.xplane.param_intensity_new = xplane_updater_helpers.delete_property_from_datablock(light.xplane, "param_intensity")
 
 def update(
     last_version: xplane_helpers.VerStruct, logger: xplane_helpers.XPlaneLogger
@@ -520,6 +523,9 @@ def update(
 
     Re-running the updater should result in no changes
     """
+    if last_version < xplane_helpers.VerStruct.parse_version("4.3.2"):
+        _update_light_intensity(logger)
+            
     if last_version < xplane_helpers.VerStruct.parse_version("4.0.0"):
         _layers_to_collection(logger)
 

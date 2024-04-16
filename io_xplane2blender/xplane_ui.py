@@ -1116,7 +1116,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
             elif parsed_light.light_param_def:
                 for param, prop_name in {
                     "INDEX": "param_index",
-                    "INTENSITY": "param_intensity",
+                    "INTENSITY": "param_intensity_new",
                     "FREQ": "param_freq",
                     "PHASE": "param_phase",
                     "SIZE": "param_size",
@@ -1126,7 +1126,7 @@ def light_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
                         and parsed_light.name
                         in xplane_lights_txt_parser.SIZE_AS_INTENSITY
                     ):
-                        prop_name = "param_intensity"
+                        prop_name = "param_intensity_new"
 
                     if param in parsed_light.light_param_def:
                         layout.row().prop(light_data.xplane, prop_name)
