@@ -744,7 +744,7 @@ class XPlaneHeader:
                             if self.attributes[XPlaneAttributeName("DECAL_PARAMS", 2)].getValue() == None:
                                 self.attributes[XPlaneAttributeName("DECAL_PARAMS", 2)].removeValues()
 
-                            self.attributes[XPlaneAttributeName("DECAL_PARAM", 2)].addValue(
+                            self.attributes[XPlaneAttributeName("DECAL_PARAMS", 2)].addValue(
                                 (
                                     self.xplaneFile.options.draped_decal2_scale,
                                     0.5,
