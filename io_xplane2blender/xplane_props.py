@@ -1572,7 +1572,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     normal_decal1_x_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 1 X Scale",
-        description = "X scale of the draped map decal",
+        description = "X scale of the normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1581,7 +1581,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     
     normal_decal1_y_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 1 Y Scale",
-        description = "Y scale of the draped map decal",
+        description = "Y scale of the normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1599,7 +1599,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     normal_decal2_x_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 2 X Scale",
-        description = "X scale of the draped map decal",
+        description = "X scale of the normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1608,7 +1608,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     
     normal_decal2_y_scale: bpy.props.FloatProperty(
         name = "Normal Map Decal 2 Y Scale",
-        description = "Y scale of the draped map decal",
+        description = "Y scale of the normal map decal",
         min = 0.0,
         step = 0.1,
         precision = 2,

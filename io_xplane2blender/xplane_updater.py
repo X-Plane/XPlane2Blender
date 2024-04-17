@@ -511,7 +511,10 @@ def _regions_change_panel_mode(logger: xplane_helpers.XPlaneLogger):
 
 def _update_light_intensity(logger: xplane_helpers.XPlaneLogger):
     for light in bpy.data.lights:
-        light.xplane.param_intensity_new = xplane_updater_helpers.delete_property_from_datablock(light.xplane, "param_intensity")
+        light_intensity = xplane_updater_helpers.delete_property_from_datablock(light.xplane, "param_intensity")
+        
+        if light_intensity != None:
+            light.xplane.param_intensity_new = light_intensity
 
 def update(
     last_version: xplane_helpers.VerStruct, logger: xplane_helpers.XPlaneLogger
