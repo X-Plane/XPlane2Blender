@@ -79,7 +79,8 @@ class XPlaneMesh:
                 )
                 mesh.transform(xplaneObject.bakeMatrix)
 
-                mesh.calc_normals_split()
+                if "calc_normals_split" in mesh:
+                    mesh.calc_normals_split()
                 mesh.calc_loop_triangles()
                 loop_triangles = mesh.loop_triangles
                 try:

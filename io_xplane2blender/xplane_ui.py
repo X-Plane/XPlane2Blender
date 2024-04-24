@@ -1300,7 +1300,11 @@ def material_layout(layout: UILayout, active_material: bpy.types.Material) -> No
             ):
                 is_spec_hidden = True
 
-                node_specular = surface_shader_node.inputs["Specular"].default_value
+                if "Specular" in surface_shader_node.inputs:
+                    node_specular = surface_shader_node.inputs["Specular"].default_value
+                else:
+                    node_specular = surface_shader_node.inputs["Specular IOR Level"].default_value
+                
                 # Potential default values. Hopefully we get no false positives.
                 node_specular_at_default = any(
                     (rnd_cmp_eq(node_specular, d) for d in [0.0, 0.5])
