@@ -2244,8 +2244,8 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
             (DEVICE_Primus_MFD_3,       DEVICE_Primus_MFD_3,        DEVICE_Primus_MFD_3),
             (DEVICE_Primus_RMU_1,       DEVICE_Primus_RMU_1,        DEVICE_Primus_RMU_1),
             (DEVICE_Primus_RMU_2,       DEVICE_Primus_RMU_2,        DEVICE_Primus_RMU_2),
-            (DEVICE_FMGSMCDU_1,         DEVICE_FMGSMCDU_1,          DEVICE_FMGSMCDU_1),
-            (DEVICE_FMGSMCDU_2,         DEVICE_FMGSMCDU_2,          DEVICE_FMGSMCDU_2),
+            (DEVICE_MCDU_1,             DEVICE_MCDU_1,              DEVICE_MCDU_1),
+            (DEVICE_MCDU_2,             DEVICE_MCDU_2,              DEVICE_MCDU_2),
             (DEVICE_PLUGIN,             DEVICE_PLUGIN,              DEVICE_PLUGIN)
             
         ]
