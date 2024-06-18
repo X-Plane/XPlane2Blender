@@ -1169,14 +1169,14 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     luminance_override: bpy.props.BoolProperty(
-        name = "Override Luminance",
-        description = "Override baseline luminance for LIT texture",
+        name = "Override Maximum Luminance",
+        description = "Override maximum luminance for LIT texture",
         default = False
     )
 
     luminance: bpy.props.IntProperty(
-        name = "Baseline Luminance",
-        description = "The overriden baseline luminance value for the LIT texture, in nts",
+        name = "Maximum Luminance",
+        description = "The overriden maximum luminance value for the LIT texture, in nts",
         min = 1,
         max = 60000,
         default = 1000,
@@ -2374,7 +2374,7 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
     )
 
     cockpit_feature_luminance: bpy.props.IntProperty(
-        name="Cockpit Panel Baseline Luminance",
+        name="Cockpit Panel Maximum Luminance",
         description="Real world maximum brightness of the panel, in nts",
         min=1,
         max=60000,
