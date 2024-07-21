@@ -560,7 +560,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
     )
 
     anim_type: bpy.props.EnumProperty(
-        name = "Animation Type",
+        name = "Dataref Purpose",
         description = "Type of animation this Dataref will use",
         default = ANIM_TYPE_TRANSFORM,
         items = [
@@ -1337,57 +1337,57 @@ class XPlaneLayer(bpy.types.PropertyGroup):
 
     file_decal1: bpy.props.StringProperty(
         subtype = "FILE_PATH",
-        name = "Decal 1",
-        description = "Decal to use for objects on this layer",
+        name = "Detail Texture 1",
+        description = "Detail Texture to use for objects on this layer",
         default = ""
     )
     
     file_decal2: bpy.props.StringProperty(
         subtype = "FILE_PATH",
-        name = "Decal 2",
-        description = "Decal to use for objects on this layer",
+        name = "Detail Texture 2",
+        description = "Detail Texture to use for objects on this layer",
         default = ""
     )
     
     file_draped_decal1: bpy.props.StringProperty(
         subtype = "FILE_PATH",
-        name = "Draped Decal 1",
-        description = "Decal to use for draped objects on this layer",
+        name = "Draped Detail Texture 1",
+        description = "Detail Texture to use for draped objects on this layer",
         default = ""
     )
     
     file_draped_decal2: bpy.props.StringProperty(
         subtype = "FILE_PATH",
-        name = "Draped Decal 2",
-        description = "Decal to use for draped objects on this layer",
+        name = "Draped Detail Texture 2",
+        description = "Detail Texture to use for draped objects on this layer",
         default = ""
     )
 
     file_normal_decal1: bpy.props.StringProperty(
         subtype = "FILE_PATH",
-        name = "Normal Map Decal 1",
-        description = "Normal map decal to use for objects on this layer",
+        name = "Normal Map Detail Texture 1",
+        description = "Normal map detail texture to use for objects on this layer",
         default = ""
     )
     
     file_normal_decal2: bpy.props.StringProperty(
         subtype = "FILE_PATH",
-        name = "Normal Map Decal 2",
-        description = "Normal map decal to use for objects on this layer",
+        name = "Normal Map Detail Texture 2",
+        description = "Normal map detail texture to use for objects on this layer",
         default = ""
     )
     
     file_draped_normal_decal1: bpy.props.StringProperty(
         subtype = "FILE_PATH",
-        name = "Draped Normal Map Decal 1",
-        description = "Normal map decal to use for draped objects on this layer",
+        name = "Draped Normal Map Detail Texture 1",
+        description = "Normal map detail texture to use for draped objects on this layer",
         default = ""
     )
 
     file_draped_normal_decal2: bpy.props.StringProperty(
         subtype = "FILE_PATH",
-        name = "Draped Normal Map Decal 2",
-        description = "Normal map decal to use for draped objects on this layer",
+        name = "Draped Normal Map Detail Texture 2",
+        description = "Normal map detail texture to use for draped objects on this layer",
         default = ""
     )
 
@@ -1406,56 +1406,56 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     decal1_projected: bpy.props.BoolProperty(
-        name = "Make Decal 1 Projected",
-        description = "If checked, the decal will be projected",
+        name = "Make Detail Texture 1 Projected",
+        description = "If checked, the detail texture will be projected",
         default = False
     )
 
     decal2_projected: bpy.props.BoolProperty(
-        name = "Make Decal 2 Projected",
-        description = "If checked, the decal will be projected",
+        name = "Make Detail Texture 2 Projected",
+        description = "If checked, the detail texture will be projected",
         default = False
     )
     
     draped_decal1_projected: bpy.props.BoolProperty(
-        name = "Make Draped Decal 1 Projected",
-        description = "If checked, the draped decal will be projected",
+        name = "Make Draped Detail Texture 1 Projected",
+        description = "If checked, the draped detail texture will be projected",
         default = True
     )
 
     draped_decal2_projected: bpy.props.BoolProperty(
-        name = "Make Draped Decal 2 Projected",
-        description = "If checked, the draped decal will be projected",
+        name = "Make Draped Detail Texture 2 Projected",
+        description = "If checked, the draped detail texture will be projected",
         default = True
     )
     
     normal_decal1_projected: bpy.props.BoolProperty(
-        name = "Make Normal Map Decal 1 Projected",
-        description = "If checked, the normal map decal will be projected",
+        name = "Make Normal Map Detail Texture 1 Projected",
+        description = "If checked, the normal map detail texture will be projected",
         default = False
     )
 
     normal_decal2_projected: bpy.props.BoolProperty(
-        name = "Make Normal Map Decal 2 Projected",
-        description = "If checked, the normal map decal will be projected",
+        name = "Make Normal Map Detail Texture 2 Projected",
+        description = "If checked, the normal map detail texture will be projected",
         default = False
     )
     
     draped_normal_decal1_projected: bpy.props.BoolProperty(
-        name = "Make Draped Normal Map Decal 1 Projected",
-        description = "If checked, the draped normal map decal will be projected",
+        name = "Make Draped Normal Map Detail Texture 1 Projected",
+        description = "If checked, the draped normal map detail texture will be projected",
         default = True
     )
 
     draped_normal_decal2_projected: bpy.props.BoolProperty(
-        name = "Make Draped Normal Map Decal 2 Projected",
-        description = "If checked, the draped normal map decal will be projected",
+        name = "Make Draped Normal Map Detail Texture 2 Projected",
+        description = "If checked, the draped normal map detail texture will be projected",
         default = True
     )
     
     decal1_scale: bpy.props.FloatProperty(
-        name = "Decal 1 Scale",
-        description = "Scale of the decal",
+        name = "Detail Texture 1 Scale",
+        description = "Scale of the detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1463,8 +1463,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     decal1_x_scale: bpy.props.FloatProperty(
-        name = "Decal 1 X Scale",
-        description = "X scale of the decal",
+        name = "Detail Texture 1 X Scale",
+        description = "X scale of the detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1472,8 +1472,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     decal1_y_scale: bpy.props.FloatProperty(
-        name = "Decal 1 Y Scale",
-        description = "Y scale of the decal",
+        name = "Detail Texture 1 Y Scale",
+        description = "Y scale of the detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1481,8 +1481,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     decal2_scale: bpy.props.FloatProperty(
-        name = "Decal 2 Scale",
-        description = "Scale of the decal",
+        name = "Detail Texture 2 Scale",
+        description = "Scale of the detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1490,8 +1490,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     decal2_x_scale: bpy.props.FloatProperty(
-        name = "Decal 2 X Scale",
-        description = "X scale of the decal",
+        name = "Detail Texture 2 X Scale",
+        description = "X scale of the detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1499,8 +1499,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     decal2_y_scale: bpy.props.FloatProperty(
-        name = "Decal 2 Y Scale",
-        description = "Y scale of the decal",
+        name = "Detail Texture 2 Y Scale",
+        description = "Y scale of the detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1508,8 +1508,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     draped_decal1_scale: bpy.props.FloatProperty(
-        name = "Draped Decal 1 Scale",
-        description = "Scale of the draped decal",
+        name = "Draped Detail Texture 1 Scale",
+        description = "Scale of the draped detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1517,8 +1517,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     draped_decal1_x_scale: bpy.props.FloatProperty(
-        name = "Draped Decal 1 X Scale",
-        description = "X scale of the draped decal",
+        name = "Draped Detail Texture 1 X Scale",
+        description = "X scale of the draped detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1526,8 +1526,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     draped_decal1_y_scale: bpy.props.FloatProperty(
-        name = "Draped Decal 1 Y Scale",
-        description = "Y scale of the draped decal",
+        name = "Draped Detail Texture 1 Y Scale",
+        description = "Y scale of the draped detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1535,8 +1535,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     draped_decal2_scale: bpy.props.FloatProperty(
-        name = "Draped Decal 2 Scale",
-        description = "Scale of the draped decal",
+        name = "Draped Detail Texture 2 Scale",
+        description = "Scale of the draped detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1544,8 +1544,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     draped_decal2_x_scale: bpy.props.FloatProperty(
-        name = "Draped Decal 2 X Scale",
-        description = "X scale of the draped decal",
+        name = "Draped Detail Texture 2 X Scale",
+        description = "X scale of the draped detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1553,8 +1553,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     draped_decal2_y_scale: bpy.props.FloatProperty(
-        name = "Draped Decal 2 Y Scale",
-        description = "Y scale of the draped decal",
+        name = "Draped Detail Texture 2 Y Scale",
+        description = "Y scale of the draped detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1562,8 +1562,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     normal_decal1_scale: bpy.props.FloatProperty(
-        name = "Normal Map Decal 1 Scale",
-        description = "Scale of the normal map decal",
+        name = "Normal Map Detail Texture 1 Scale",
+        description = "Scale of the normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1571,8 +1571,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     normal_decal1_x_scale: bpy.props.FloatProperty(
-        name = "Normal Map Decal 1 X Scale",
-        description = "X scale of the normal map decal",
+        name = "Normal Map Detail Texture 1 X Scale",
+        description = "X scale of the normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1580,8 +1580,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     normal_decal1_y_scale: bpy.props.FloatProperty(
-        name = "Normal Map Decal 1 Y Scale",
-        description = "Y scale of the normal map decal",
+        name = "Normal Map Detail Texture 1 Y Scale",
+        description = "Y scale of the normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1589,8 +1589,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     normal_decal2_scale: bpy.props.FloatProperty(
-        name = "Normal Map Decal 2 Scale",
-        description = "Scale of the normal map decal",
+        name = "Normal Map Detail Texture 2 Scale",
+        description = "Scale of the normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1598,8 +1598,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     normal_decal2_x_scale: bpy.props.FloatProperty(
-        name = "Normal Map Decal 2 X Scale",
-        description = "X scale of the normal map decal",
+        name = "Normal Map Detail Texture 2 X Scale",
+        description = "X scale of the normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1607,8 +1607,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     normal_decal2_y_scale: bpy.props.FloatProperty(
-        name = "Normal Map Decal 2 Y Scale",
-        description = "Y scale of the normal map decal",
+        name = "Normal Map Detail Texture 2 Y Scale",
+        description = "Y scale of the normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1616,8 +1616,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     draped_normal_decal1_scale: bpy.props.FloatProperty(
-        name = "Draped Normal Map Decal 1 Scale",
-        description = "Scale of the draped normal map decal",
+        name = "Draped Normal Map Detail Texture 1 Scale",
+        description = "Scale of the draped normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1625,8 +1625,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     draped_normal_decal1_x_scale: bpy.props.FloatProperty(
-        name = "Draped Normal Map Decal 1 X Scale",
-        description = "X scale of the draped normal map decal",
+        name = "Draped Normal Map Detail Texture 1 X Scale",
+        description = "X scale of the draped normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1634,8 +1634,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     draped_normal_decal1_y_scale: bpy.props.FloatProperty(
-        name = "Draped Normal Map Decal 1 Y Scale",
-        description = "Y scale of the draped normal map decal",
+        name = "Draped Normal Map Detail Texture 1 Y Scale",
+        description = "Y scale of the draped normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1643,8 +1643,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     draped_normal_decal2_scale: bpy.props.FloatProperty(
-        name = "Draped Normal Map Decal 2 Scale",
-        description = "Scale of the draped normal map decal",
+        name = "Draped Normal Map Detail Texture 2 Scale",
+        description = "Scale of the draped normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1652,8 +1652,8 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
 
     draped_normal_decal2_x_scale: bpy.props.FloatProperty(
-        name = "Draped Normal Map Decal 2 X Scale",
-        description = "X scale of the draped normal map decal",
+        name = "Draped Normal Map Detail Texture 2 X Scale",
+        description = "X scale of the draped normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
@@ -1661,97 +1661,97 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     )
     
     draped_normal_decal2_y_scale: bpy.props.FloatProperty(
-        name = "Draped Normal Map Decal 2 Y Scale",
-        description = "Y scale of the draped normal map decal",
+        name = "Draped Normal Map Detail Texture 2 Y Scale",
+        description = "Y scale of the draped normal map detail texture",
         min = 0.0,
         step = 0.1,
         precision = 2,
         default = 1.0
     )
 
-    rgb_decal1_red_key: bpy.props.FloatProperty(name = "RGB Decal 1 Red Key", description = "Red channel key for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal1_green_key: bpy.props.FloatProperty(name = "RGB Decal 1 Green Key", description = "Green channel key for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal1_blue_key: bpy.props.FloatProperty(name = "RGB Decal 1 Blue Key", description = "Blue channel key for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal1_alpha_key: bpy.props.FloatProperty(name = "RGB Decal 1 Alpha Key", description = "Alpha channel key for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal1_modulator: bpy.props.FloatProperty(name = "RGB Decal 1 Modulator Strength", description = "Modulator strength for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal1_constant: bpy.props.FloatProperty(name = "RGB Decal 1 Constant Strength", description = "Constant strength for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal1_red_key: bpy.props.FloatProperty(name = "RGB Detail Texture 1 Red Key", description = "Red channel key for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal1_green_key: bpy.props.FloatProperty(name = "RGB Detail Texture 1 Green Key", description = "Green channel key for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal1_blue_key: bpy.props.FloatProperty(name = "RGB Detail Texture 1 Blue Key", description = "Blue channel key for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal1_alpha_key: bpy.props.FloatProperty(name = "RGB Detail Texture 1 Alpha Key", description = "Alpha channel key for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal1_modulator: bpy.props.FloatProperty(name = "RGB Detail Texture 1 Modulator Strength", description = "Modulator strength for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal1_constant: bpy.props.FloatProperty(name = "RGB Detail Texture 1 Constant Strength", description = "Constant strength for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
     
-    alpha_decal1_red_key: bpy.props.FloatProperty(name = "Alpha Decal 1 Red Key", description = "Red channel key for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal1_green_key: bpy.props.FloatProperty(name = "Alpha Decal 1 Green Key", description = "Green channel key for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal1_blue_key: bpy.props.FloatProperty(name = "Alpha Decal 1 Blue Key", description = "Blue channel key for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal1_alpha_key: bpy.props.FloatProperty(name = "Alpha Decal 1 Alpha Key", description = "Alpha channel key for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal1_modulator: bpy.props.FloatProperty(name = "Alpha Decal 1 Modulator Strength", description = "Modulator strength for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal1_constant: bpy.props.FloatProperty(name = "Alpha Decal 1 Constant Strength", description = "Constant strength for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal1_red_key: bpy.props.FloatProperty(name = "Alpha Detail Texture 1 Red Key", description = "Red channel key for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal1_green_key: bpy.props.FloatProperty(name = "Alpha Detail Texture 1 Green Key", description = "Green channel key for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal1_blue_key: bpy.props.FloatProperty(name = "Alpha Detail Texture 1 Blue Key", description = "Blue channel key for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal1_alpha_key: bpy.props.FloatProperty(name = "Alpha Detail Texture 1 Alpha Key", description = "Alpha channel key for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal1_modulator: bpy.props.FloatProperty(name = "Alpha Detail Texture 1 Modulator Strength", description = "Modulator strength for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal1_constant: bpy.props.FloatProperty(name = "Alpha Detail Texture 1 Constant Strength", description = "Constant strength for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
     
-    rgb_decal2_red_key: bpy.props.FloatProperty(name = "RGB Decal 2 Red Key", description = "Red channel key for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal2_green_key: bpy.props.FloatProperty(name = "RGB Decal 2 Green Key", description = "Green channel key for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal2_blue_key: bpy.props.FloatProperty(name = "RGB Decal 2 Blue Key", description = "Blue channel key for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal2_alpha_key: bpy.props.FloatProperty(name = "RGB Decal 2 Alpha Key", description = "Alpha channel key for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal2_modulator: bpy.props.FloatProperty(name = "RGB Decal 2 Modulator Strength", description = "Modulator strength for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
-    rgb_decal2_constant: bpy.props.FloatProperty(name = "RGB Decal 2 Constant Strength", description = "Constant strength for the RGB part of the decal", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal2_red_key: bpy.props.FloatProperty(name = "RGB Detail Texture 2 Red Key", description = "Red channel key for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal2_green_key: bpy.props.FloatProperty(name = "RGB Detail Texture 2 Green Key", description = "Green channel key for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal2_blue_key: bpy.props.FloatProperty(name = "RGB Detail Texture 2 Blue Key", description = "Blue channel key for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal2_alpha_key: bpy.props.FloatProperty(name = "RGB Detail Texture 2 Alpha Key", description = "Alpha channel key for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal2_modulator: bpy.props.FloatProperty(name = "RGB Detail Texture 2 Modulator Strength", description = "Modulator strength for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    rgb_decal2_constant: bpy.props.FloatProperty(name = "RGB Detail Texture 2 Constant Strength", description = "Constant strength for the RGB part of the detail texture", step = 0.01, precision = 2, default = 0.0)
 
-    alpha_decal2_red_key: bpy.props.FloatProperty(name = "Alpha Decal 2 Red Key", description = "Red channel key for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal2_green_key: bpy.props.FloatProperty(name = "Alpha Decal 2 Green Key", description = "Green channel key for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal2_blue_key: bpy.props.FloatProperty(name = "Alpha Decal 2 Blue Key", description = "Blue channel key for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal2_alpha_key: bpy.props.FloatProperty(name = "Alpha Decal 2 Alpha Key", description = "Alpha channel key for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal2_modulator: bpy.props.FloatProperty(name = "Alpha Decal 2 Modulator Strength", description = "Modulator strength for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
-    alpha_decal2_constant: bpy.props.FloatProperty(name = "Alpha Decal 2 Constant Strength", description = "Constant strength for the alpha part of the decal", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal2_red_key: bpy.props.FloatProperty(name = "Alpha Detail Texture 2 Red Key", description = "Red channel key for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal2_green_key: bpy.props.FloatProperty(name = "Alpha Detail Texture 2 Green Key", description = "Green channel key for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal2_blue_key: bpy.props.FloatProperty(name = "Alpha Detail Texture 2 Blue Key", description = "Blue channel key for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal2_alpha_key: bpy.props.FloatProperty(name = "Alpha Detail Texture 2 Alpha Key", description = "Alpha channel key for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal2_modulator: bpy.props.FloatProperty(name = "Alpha Detail Texture 2 Modulator Strength", description = "Modulator strength for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
+    alpha_decal2_constant: bpy.props.FloatProperty(name = "Alpha Detail Texture 2 Constant Strength", description = "Constant strength for the alpha part of the detail texture", step = 0.01, precision = 2, default = 0.0)
 
-    draped_rgb_decal1_red_key: bpy.props.FloatProperty(name = "Draped RGB Decal 1 Red Key", description = "Red channel key for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal1_green_key: bpy.props.FloatProperty(name = "Draped RGB Decal 1 Green Key", description = "Green channel key for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal1_blue_key: bpy.props.FloatProperty(name = "Draped RGB Decal 1 Blue Key", description = "Blue channel key for the RGB part of the draped decal",step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal1_alpha_key: bpy.props.FloatProperty(name = "Draped RGB Decal 1 Alpha Key", description = "Alpha channel key for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal1_modulator: bpy.props.FloatProperty(name = "Draped RGB Decal 1 Modulator Strength", description = "Modulator strength for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal1_constant: bpy.props.FloatProperty(name = "Draped RGB Decal 1 Constant Strength", description = "Constant strength for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal1_red_key: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 1 Red Key", description = "Red channel key for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal1_green_key: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 1 Green Key", description = "Green channel key for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal1_blue_key: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 1 Blue Key", description = "Blue channel key for the RGB part of the draped detail texture",step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal1_alpha_key: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 1 Alpha Key", description = "Alpha channel key for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal1_modulator: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 1 Modulator Strength", description = "Modulator strength for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal1_constant: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 1 Constant Strength", description = "Constant strength for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
     
-    draped_alpha_decal1_red_key: bpy.props.FloatProperty(name = "Draped Alpha Decal 1 Red Key", description = "Red channel key for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal1_green_key: bpy.props.FloatProperty(name = "Draped Alpha Decal 1 Green Key", description = "Green channel key for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal1_blue_key: bpy.props.FloatProperty(name = "Draped Alpha Decal 1 Blue Key", description = "Blue channel key for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal1_alpha_key: bpy.props.FloatProperty(name = "Draped Alpha Decal 1 Alpha Key", description = "Alpha channel key for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal1_modulator: bpy.props.FloatProperty(name = "Draped Alpha Decal 1 Modulator Strength", description = "Modulator strength for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal1_constant: bpy.props.FloatProperty(name = "Draped Alpha Decal 1 Constant Strength", description = "Constant strength for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal1_red_key: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 1 Red Key", description = "Red channel key for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal1_green_key: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 1 Green Key", description = "Green channel key for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal1_blue_key: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 1 Blue Key", description = "Blue channel key for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal1_alpha_key: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 1 Alpha Key", description = "Alpha channel key for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal1_modulator: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 1 Modulator Strength", description = "Modulator strength for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal1_constant: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 1 Constant Strength", description = "Constant strength for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
 
-    draped_rgb_decal2_red_key: bpy.props.FloatProperty(name = "Draped RGB Decal 2 Red Key", description = "Red channel key for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal2_green_key: bpy.props.FloatProperty(name = "Draped RGB Decal 2 Green Key", description = "Green channel key for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal2_blue_key: bpy.props.FloatProperty(name = "Draped RGB Decal 2 Blue Key", description = "Blue channel key for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal2_alpha_key: bpy.props.FloatProperty(name = "Draped RGB Decal 2 Alpha Key", description = "Alpha channel key for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal2_modulator: bpy.props.FloatProperty(name = "Draped RGB Decal 2 Modulator Strength", description = "Modulator strength for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_rgb_decal2_constant: bpy.props.FloatProperty(name = "Draped RGB Decal 2 Constant Strength", description = "Constant strength for the RGB part of the draped decal", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal2_red_key: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 2 Red Key", description = "Red channel key for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal2_green_key: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 2 Green Key", description = "Green channel key for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal2_blue_key: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 2 Blue Key", description = "Blue channel key for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal2_alpha_key: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 2 Alpha Key", description = "Alpha channel key for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal2_modulator: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 2 Modulator Strength", description = "Modulator strength for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_rgb_decal2_constant: bpy.props.FloatProperty(name = "Draped RGB Detail Texture 2 Constant Strength", description = "Constant strength for the RGB part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
     
-    draped_alpha_decal2_red_key: bpy.props.FloatProperty(name = "Draped Alpha Decal 2 Red Key", description = "Red channel key for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal2_green_key: bpy.props.FloatProperty(name = "Draped Alpha Decal 2 Green Key", description = "Green channel key for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal2_blue_key: bpy.props.FloatProperty(name = "Draped Alpha Decal 2 Blue Key", description = "Blue channel key for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal2_alpha_key: bpy.props.FloatProperty(name = "Draped Alpha Decal 2 Alpha Key", description = "Alpha channel key for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal2_modulator: bpy.props.FloatProperty(name = "Draped Alpha Decal 2 Modulator Strength", description = "Modulator strength for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
-    draped_alpha_decal2_constant: bpy.props.FloatProperty(name = "Draped Alpha Decal 2 Constant Strength", description = "Constant strength for the alpha part of the draped decal", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal2_red_key: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 2 Red Key", description = "Red channel key for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal2_green_key: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 2 Green Key", description = "Green channel key for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal2_blue_key: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 2 Blue Key", description = "Blue channel key for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal2_alpha_key: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 2 Alpha Key", description = "Alpha channel key for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal2_modulator: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 2 Modulator Strength", description = "Modulator strength for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_alpha_decal2_constant: bpy.props.FloatProperty(name = "Draped Alpha Detail Texture 2 Constant Strength", description = "Constant strength for the alpha part of the draped detail texture", step = 0.01, precision = 2, default = 0.0)
 
-    normal_decal1_red_key: bpy.props.FloatProperty(name = "Normal Map Decal 1 Red Key", description = "Red channel key for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal1_green_key: bpy.props.FloatProperty(name = "Normal Map Decal 1 Green Key", description = "Green channel key for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal1_blue_key: bpy.props.FloatProperty(name = "Normal Map Decal 1 Blue Key", description = "Blue channel key for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal1_alpha_key: bpy.props.FloatProperty(name = "Normal Map Decal 1 Alpha Key", description = "Alpha channel key for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal1_modulator: bpy.props.FloatProperty(name = "Normal Map Decal 1 Modulator Strength", description = "Modulator strength for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal1_constant: bpy.props.FloatProperty(name = "Normal Map Decal 1 Constant Strength", description = "Constant strength for the normal map decal", step = 0.01, precision = 2, default = 0.0)
+    normal_decal1_red_key: bpy.props.FloatProperty(name = "Normal Map Detail Texture 1 Red Key", description = "Red channel key for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal1_green_key: bpy.props.FloatProperty(name = "Normal Map Detail Texture 1 Green Key", description = "Green channel key for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal1_blue_key: bpy.props.FloatProperty(name = "Normal Map Detail Texture 1 Blue Key", description = "Blue channel key for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal1_alpha_key: bpy.props.FloatProperty(name = "Normal Map Detail Texture 1 Alpha Key", description = "Alpha channel key for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal1_modulator: bpy.props.FloatProperty(name = "Normal Map Detail Texture 1 Modulator Strength", description = "Modulator strength for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal1_constant: bpy.props.FloatProperty(name = "Normal Map Detail Texture 1 Constant Strength", description = "Constant strength for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
 
-    normal_decal2_red_key: bpy.props.FloatProperty(name = "Normal Map Decal 2 Red Key", description = "Red channel key for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal2_green_key: bpy.props.FloatProperty(name = "Normal Map Decal 2 Green Key", description = "Green channel key for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal2_blue_key: bpy.props.FloatProperty(name = "Normal Map Decal 2 Blue Key", description = "Blue channel key for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal2_alpha_key: bpy.props.FloatProperty(name = "Normal Map Decal 2 Alpha Key", description = "Alpha channel key for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal2_modulator: bpy.props.FloatProperty(name = "Normal Map Decal 2 Modulator Strength", description = "Modulator strength for the normal map decal", step = 0.01, precision = 2, default = 0.0)
-    normal_decal2_constant: bpy.props.FloatProperty(name = "Normal Map Decal 2 Constant Strength", description = "Constant strength for the normal map decal", step = 0.01, precision = 2, default = 0.0)
+    normal_decal2_red_key: bpy.props.FloatProperty(name = "Normal Map Detail Texture 2 Red Key", description = "Red channel key for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal2_green_key: bpy.props.FloatProperty(name = "Normal Map Detail Texture 2 Green Key", description = "Green channel key for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal2_blue_key: bpy.props.FloatProperty(name = "Normal Map Detail Texture 2 Blue Key", description = "Blue channel key for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal2_alpha_key: bpy.props.FloatProperty(name = "Normal Map Detail Texture 2 Alpha Key", description = "Alpha channel key for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal2_modulator: bpy.props.FloatProperty(name = "Normal Map Detail Texture 2 Modulator Strength", description = "Modulator strength for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    normal_decal2_constant: bpy.props.FloatProperty(name = "Normal Map Detail Texture 2 Constant Strength", description = "Constant strength for the normal map detail texture", step = 0.01, precision = 2, default = 0.0)
 
-    draped_normal_decal1_red_key: bpy.props.FloatProperty(name = "Draped Normal Map Decal 1 Red Key", description = "Red channel key for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal1_green_key: bpy.props.FloatProperty(name = "Draped Normal Map Decal 1 Green Key", description = "Green channel key for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal1_blue_key: bpy.props.FloatProperty(name = "Draped Normal Map Decal 1 Blue Key", description = "Blue channel key for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal1_alpha_key: bpy.props.FloatProperty(name = "Draped Normal Map Decal 1 Alpha Key", description = "Alpha channel key for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal1_modulator: bpy.props.FloatProperty(name = "Draped Normal Map Decal 1 Modulator Strength", description = "Modulator strength for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal1_constant: bpy.props.FloatProperty(name = "Draped Normal Map Decal 1 Constant Strength", description = "Constant strength for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal1_red_key: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 1 Red Key", description = "Red channel key for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal1_green_key: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 1 Green Key", description = "Green channel key for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal1_blue_key: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 1 Blue Key", description = "Blue channel key for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal1_alpha_key: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 1 Alpha Key", description = "Alpha channel key for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal1_modulator: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 1 Modulator Strength", description = "Modulator strength for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal1_constant: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 1 Constant Strength", description = "Constant strength for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
 
-    draped_normal_decal2_red_key: bpy.props.FloatProperty(name = "Draped Normal Map Decal 2 Red Key", description = "Red channel key for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal2_green_key: bpy.props.FloatProperty(name = "Draped Normal Map Decal 2 Green Key", description = "Green channel key for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal2_blue_key: bpy.props.FloatProperty(name = "Draped Normal Map Decal 2 Blue Key", description = "Blue channel key for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal2_alpha_key: bpy.props.FloatProperty(name = "Draped Normal Map Decal 2 Alpha Key", description = "Alpha channel key for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal2_modulator: bpy.props.FloatProperty(name = "Draped Normal Map Decal 2 Modulator Strength", description = "Modulator strength for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
-    draped_normal_decal2_constant: bpy.props.FloatProperty(name = "Draped Normal Map Decal 2 Constant Strength", description = "Constant strength for the draped normal map decal", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal2_red_key: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 2 Red Key", description = "Red channel key for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal2_green_key: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 2 Green Key", description = "Green channel key for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal2_blue_key: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 2 Blue Key", description = "Blue channel key for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal2_alpha_key: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 2 Alpha Key", description = "Alpha channel key for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal2_modulator: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 2 Modulator Strength", description = "Modulator strength for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
+    draped_normal_decal2_constant: bpy.props.FloatProperty(name = "Draped Normal Map Detail Texture 2 Constant Strength", description = "Constant strength for the draped normal map detail texture", step = 0.01, precision = 2, default = 0.0)
 
     # BAD NAME ALERT!
     # regions (plural) is the enum, region (singular) is the collection
