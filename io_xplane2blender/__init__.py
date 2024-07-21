@@ -19,7 +19,7 @@ import bpy
 
 # Contains informations for Blender to recognize and categorize the addon.
 bl_info = {
-    "name": "Export: X-Plane (.obj)",
+    "name": "XPlane2Blender Export for X-Plane OBJs",
     "description": "Export X-Plane objects/planes (.obj format)",
     "author": "Ted Greene, Ben Supnik, Amy Parent, Maya F. Eroglu",
     "version": (4, 3, 3),

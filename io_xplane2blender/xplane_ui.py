@@ -1905,8 +1905,8 @@ def conditions_layout(
 
 def lod_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> None:
     row = layout.row()
-    #row.prop(obj.xplane, "override_lods")
-    if int(obj.xplane.layer.lods) > 0:
+    row.prop(obj.xplane, "override_lods")
+    if obj.xplane.override_lods:
         box = layout.box()
         box.row().prop(obj.xplane, "lod", text="LOD")
 
