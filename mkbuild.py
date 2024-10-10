@@ -213,7 +213,7 @@ def _change_version_info(new_version: VerData) -> Optional[VerData]:
             for line in in_config_file:
                 if re.match("^CURRENT_BUILD_TYPE ", line):
                     old_version.build_type = (
-                        re.search("\.BUILD_TYPE_([A-Z]+)$", line).group(1).lower()
+                        re.search(r"\.BUILD_TYPE_([A-Z]+)$", line).group(1).lower()
                     )  # type: str
                     if new_version.build_type:
                         line = re.sub(
@@ -233,7 +233,7 @@ def _change_version_info(new_version: VerData) -> Optional[VerData]:
                         line = re.sub(r"\d+", str(new_version.data_model_version), line)
 
                 if re.match("^CURRENT_BUILD_NUMBER ", line):
-                    search_str = 'xplane_constants.BUILD_NUMBER_NONE|"\d{14}"'
+                    search_str = r'xplane_constants.BUILD_NUMBER_NONE|"\d{14}"'
                     old_version.build_number = re.search(search_str, line).group(0)
                     line = re.sub(
                         search_str,
