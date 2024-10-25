@@ -274,7 +274,11 @@ def empty_layout(layout: bpy.types.UILayout, empty_obj: bpy.types.Object):
         sub_row.alignment = "RIGHT"
         sub_row.prop(emp.magnet_props, "magnet_type_is_xpad")
         sub_row.prop(emp.magnet_props, "magnet_type_is_flashlight")
-
+    elif emp.special_type == EMPTY_USAGE_WHEEL:
+        box = layout.box()
+        box.label(text="Wheel Settings")
+        box.prop(emp.wheel_props, "gear_index")
+        box.prop(emp.wheel_props, "wheel_index")
 
 def rain_layout(
     layout: bpy.types.UILayout, layer_props: bpy.types.Collection, version: int

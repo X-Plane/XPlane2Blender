@@ -73,6 +73,7 @@ EMPTY_USAGE_NONE = "none"
 EMPTY_USAGE_EMITTER_PARTICLE = "emitter_particle"
 EMPTY_USAGE_EMITTER_SOUND = "emitter_sound"
 EMPTY_USAGE_MAGNET = "magnet"
+EMPTY_USAGE_WHEEL = "wheel"
 
 # Kept for historical reasons for the updater
 EXPORT_MODE_LAYERS = "layers"

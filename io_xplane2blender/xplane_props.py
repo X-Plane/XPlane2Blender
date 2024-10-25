@@ -505,7 +505,19 @@ class XPlaneMagnet(bpy.types.PropertyGroup):
         description="Sets the type to include 'flashlight'"
     )
 
+class XPlaneWheel(bpy.types.PropertyGroups):
+    gear_index: bpy.props.IntProperty(
+        name="Gear Index",
+        min=0,
+        default=0
+    )
 
+    wheel_index: bpy.props.IntProperty(
+        name="Wheel Index",
+        min=0,
+        default=0
+    )
+    
 class XPlaneEmpty(bpy.types.PropertyGroup):
     emitter_props: bpy.props.PointerProperty(
         name="Emitter Settings",
@@ -519,6 +531,12 @@ class XPlaneEmpty(bpy.types.PropertyGroup):
         type=XPlaneMagnet
     )
 
+    wheel_props: bpy.props.PointerProperty(
+        name="Wheel Settings",
+        description="Settings for the wheel",
+        type=XPlaneWheel
+    )
+
     special_type: bpy.props.EnumProperty(
         name="Empty Special Type",
         description="Type XPlane2Blender item this is",
@@ -526,6 +544,7 @@ class XPlaneEmpty(bpy.types.PropertyGroup):
             (EMPTY_USAGE_NONE,             "None",             "Empty has no special use", 0),
             (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "A particle emitter", 1),
             #(EMPTY_USAGE_EMITTER_SOUND,   "Sound Emitter",    "Empty represents a sound emitter", 2), #One day...
+            (EMPTY_USAGE_WHEEL,             "Wheel",            "A wheel")
             (EMPTY_USAGE_MAGNET,           "Magnet",           "A mounting point on a yoke where a VR tablet can be attached", 3)
         ]
     )
@@ -2594,6 +2613,7 @@ _classes = (
     XPlaneDataref,
     XPlaneEmitter,
     XPlaneMagnet,
+    XPlaneWheel,
     XPlaneEmpty,
     XPlaneExportPathDirective,
     ListItemCommand,
