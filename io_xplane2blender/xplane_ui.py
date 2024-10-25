@@ -280,6 +280,7 @@ def empty_layout(layout: bpy.types.UILayout, empty_obj: bpy.types.Object):
         box.prop(emp.wheel_props, "gear_index")
         box.prop(emp.wheel_props, "wheel_index")
 
+
 def rain_layout(
     layout: bpy.types.UILayout, layer_props: bpy.types.Collection, version: int
 ):
