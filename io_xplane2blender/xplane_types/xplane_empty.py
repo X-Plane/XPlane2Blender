@@ -122,5 +122,24 @@ class XPlaneEmpty(XPlaneObject):
                 theta=floatToStr(theta),  # pitch up
                 psi=floatToStr(psi),
             )  # roll right
+        elif (
+            int(bpy.context.scene.xplane.version) >= 1210
+            and special_empty_props.special_type == EMPTY_USAGE_WHEEL
+        ):
+            bake_matrix = self.xplaneBone.getBakeMatrixForAttached()
+            em_location = xplane_helpers.vec_b_to_x(bake_matrix.to_translation())
+            # yaw,pitch,roll
+            theta, psi, phi = tuple(map(math.degrees, bake_matrix.to_euler()[:]))
 
+            o += "{indent}ATTR_landing_gear {x} {y} {z} {phi} {theta} {psi} {gear_index} {wheel_index}\n".format(
+                indent=indent,
+                x=floatToStr(em_location.x),
+                y=floatToStr(em_location.y),
+                z=floatToStr(em_location.z),
+                phi=floatToStr(-phi),  # yaw right
+                theta=floatToStr(theta),  # pitch up
+                psi=floatToStr(psi),
+                gear_index=special_empty_props.wheel_props.gear_index,
+                wheel_index=special_empty_props.wheel_props.wheel_index
+            )  # roll right
         return o
