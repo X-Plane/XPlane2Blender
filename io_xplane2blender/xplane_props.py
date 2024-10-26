@@ -505,7 +505,7 @@ class XPlaneMagnet(bpy.types.PropertyGroup):
         description="Sets the type to include 'flashlight'"
     )
 
-class XPlaneWheel(bpy.types.PropertyGroups):
+class XPlaneWheel(bpy.types.PropertyGroup):
     gear_index: bpy.props.IntProperty(
         name="Gear Index",
         min=0,
@@ -544,7 +544,7 @@ class XPlaneEmpty(bpy.types.PropertyGroup):
             (EMPTY_USAGE_NONE,             "None",             "Empty has no special use", 0),
             (EMPTY_USAGE_EMITTER_PARTICLE, "Particle Emitter", "A particle emitter", 1),
             #(EMPTY_USAGE_EMITTER_SOUND,   "Sound Emitter",    "Empty represents a sound emitter", 2), #One day...
-            (EMPTY_USAGE_WHEEL,             "Wheel",            "A wheel")
+            (EMPTY_USAGE_WHEEL,             "Wheel",            "A wheel"),
             (EMPTY_USAGE_MAGNET,           "Magnet",           "A mounting point on a yoke where a VR tablet can be attached", 3)
         ]
     )
