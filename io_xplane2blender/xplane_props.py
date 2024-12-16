@@ -574,7 +574,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
     loop: bpy.props.FloatProperty(
         name = "Loop Animation Every",
         description = "Loop amount of animation, useful for ever increasing Datarefs. A value of 0 will ignore this setting",
-        min = 0.0,
+        #min = 0.0,
         precision = 3
     )
 
