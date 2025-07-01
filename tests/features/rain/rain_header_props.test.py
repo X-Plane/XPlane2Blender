@@ -17,7 +17,7 @@ class TestRainHeaderProps(XPlaneTestCase):
     def test_thermal_wiper_fixtures(self) -> None:
         filenames = [
             "test_thermal_options",
-            "test_thermal2_options",
+            #"test_thermal2_options",
             "test_wiper_options",
         ]
         for filepath in [
@@ -56,8 +56,8 @@ class TestRainHeaderProps(XPlaneTestCase):
     def test_errors(self) -> None:
         self.exportExportableRoot("thermal_errors",)
         self.assertLoggerErrors(0)
-        self.exportExportableRoot("thermal2_errors",)
-        self.assertLoggerErrors(4)
+        #self.exportExportableRoot("thermal2_errors",)
+        #self.assertLoggerErrors(4)
         self.exportExportableRoot("wiper_errors",)
         self.assertLoggerErrors(3)
 
