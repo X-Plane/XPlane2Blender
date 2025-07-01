@@ -10,11 +10,11 @@ from io_xplane2blender import bl_info, xplane_constants
 CURRENT_ADDON_VERSION: Tuple[int, int, int] = bl_info["version"]
 
 # The current build type, must be a member of XPlane2BlenderVersion.BUILD_TYPE
-CURRENT_BUILD_TYPE = xplane_constants.BUILD_TYPE_ALPHA
+CURRENT_BUILD_TYPE = xplane_constants.BUILD_TYPE_RC
 
 # The current build type version, must be > 0
 # if not BUILD_TYPE_DEV or BULD_TYPE_LEGACY
-CURRENT_BUILD_TYPE_VERSION = 2
+CURRENT_BUILD_TYPE_VERSION = 1
 
 # The current data model version, incrementing every time xplane_constants, xplane_props, or xplane_updater
 # changes. Builds earlier than 3.4.0-beta.5 have and a version of 0.
