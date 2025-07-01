@@ -22,7 +22,7 @@ bl_info = {
     "name": "XPlane2Blender Export for X-Plane OBJs",
     "description": "Export X-Plane objects/planes (.obj format)",
     "author": "Ted Greene, Ben Supnik, Amy Parent, Maya F. Eroglu",
-    "version": (4, 3, 4),
+    "version": (4, 4, 0),
     "blender": (2, 80, 0),
     "location": "File > Import/Export > X-Plane",
     "warning": "",

@@ -123,7 +123,7 @@ class XPlaneEmpty(XPlaneObject):
                 psi=floatToStr(psi),
             )  # roll right
         elif (
-            int(bpy.context.scene.xplane.version) >= 1210
+            int(bpy.context.scene.xplane.version) >= 1220
             and special_empty_props.special_type == EMPTY_USAGE_WHEEL
         ):
             bake_matrix = self.xplaneBone.getBakeMatrixForAttached()
