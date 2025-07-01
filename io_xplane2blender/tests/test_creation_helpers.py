@@ -835,7 +835,7 @@ def set_animation_data(
             bpy.context.view_layer.objects.active = blender_struct
             with bpy.context.temp_override(object=blender_struct):
                 bpy.ops.object.add_xplane_dataref_keyframe(index=dataref_index)
-
+                
 
 def set_collection(
     blender_object: bpy.types.Object, collection: Union[bpy.types.Collection, str]
