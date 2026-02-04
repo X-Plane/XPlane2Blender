@@ -580,10 +580,14 @@ def layer_layout(
                 decal1_row_1.prop(layer_props, "decal1_y_scale", text="Y Scale")
             else:
                 decal1_row_1.prop(layer_props, "decal1_scale", text="Scale")
-            
+
             decal1_row_2 = decal_box.row()
 
-            decal1_column_1 = decal1_row_2.column()
+            decal1_row_2.prop(layer_props, "decal1_dither", text="Dither Strength")
+            
+            decal1_row_3 = decal_box.row()
+
+            decal1_column_1 = decal1_row_3.column()
             
             decal1_column_1.prop(layer_props, "rgb_decal1_red_key", text="RGB Detail Texture Red Key")
             decal1_column_1.prop(layer_props, "rgb_decal1_green_key", text="RGB Detail Texture Green Key")
@@ -592,7 +596,7 @@ def layer_layout(
             decal1_column_1.prop(layer_props, "rgb_decal1_modulator", text="RGB Detail Texture Modulator Strength")
             decal1_column_1.prop(layer_props, "rgb_decal1_constant", text="RGB Detail Texture Constant Strength")
 
-            decal1_column_2 = decal1_row_2.column()
+            decal1_column_2 = decal1_row_3.column()
         
             decal1_column_2.prop(layer_props, "alpha_decal1_red_key", text="Alpha Detail Texture Red Key")
             decal1_column_2.prop(layer_props, "alpha_decal1_green_key", text="Alpha Detail Texture Green Key")
@@ -613,10 +617,14 @@ def layer_layout(
                 decal2_row_1.prop(layer_props, "decal2_y_scale", text="Y Scale")
             else:
                 decal2_row_1.prop(layer_props, "decal2_scale", text="Scale")
-            
+
             decal2_row_2 = decal_box.row()
+
+            decal2_row_2.prop(layer_props, "decal2_dither", text="Dither Strength")
+            
+            decal2_row_3 = decal_box.row()
     
-            decal2_column_1 = decal2_row_2.column()
+            decal2_column_1 = decal2_row_3.column()
         
             decal2_column_1.prop(layer_props, "rgb_decal2_red_key", text="RGB Detail Texture Red Key")
             decal2_column_1.prop(layer_props, "rgb_decal2_green_key", text="RGB Detail Texture Green Key")
@@ -625,7 +633,7 @@ def layer_layout(
             decal2_column_1.prop(layer_props, "rgb_decal2_modulator", text="RGB Detail Texture Modulator Strength")
             decal2_column_1.prop(layer_props, "rgb_decal2_constant", text="RGB Detail Texture Constant Strength")
 
-            decal2_column_2 = decal2_row_2.column()
+            decal2_column_2 = decal2_row_3.column()
         
             decal2_column_2.prop(layer_props, "alpha_decal2_red_key", text="Alpha Detail Texture Red Key")
             decal2_column_2.prop(layer_props, "alpha_decal2_green_key", text="Alpha Detail Texture Green Key")
@@ -647,10 +655,14 @@ def layer_layout(
                     draped_decal1_row_1.prop(layer_props, "draped_decal1_y_scale", text="Y Scale")
                 else:
                     draped_decal1_row_1.prop(layer_props, "draped_decal1_scale", text="Scale")
-            
+
                 draped_decal1_row_2 = decal_box.row()
+
+                draped_decal1_row_2.prop(layer_props, "draped_decal1_dither", text="Dither Strength")
+            
+                draped_decal1_row_3 = decal_box.row()
     
-                draped_decal1_column_1 = draped_decal1_row_2.column()
+                draped_decal1_column_1 = draped_decal1_row_3.column()
                 
                 draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_red_key", text="RGB Detail Texture Red Key")
                 draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_green_key", text="RGB Detail Texture Green Key")
@@ -659,7 +671,7 @@ def layer_layout(
                 draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_modulator", text="RGB Detail Texture Modulator Strength")
                 draped_decal1_column_1.prop(layer_props, "draped_rgb_decal1_constant", text="RGB Detail Texture Constant Strength")
 
-                draped_decal1_column_2 = draped_decal1_row_2.column()
+                draped_decal1_column_2 = draped_decal1_row_3.column()
                 
                 draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_red_key", text="Alpha Detail Texture Red Key")
                 draped_decal1_column_2.prop(layer_props, "draped_alpha_decal1_green_key", text="Alpha Detail Texture Green Key")
@@ -680,10 +692,14 @@ def layer_layout(
                     draped_decal2_row_1.prop(layer_props, "draped_decal2_y_scale", text="Y Scale")
                 else:
                     draped_decal2_row_1.prop(layer_props, "draped_decal2_scale", text="Scale")
-            
+
                 draped_decal2_row_2 = decal_box.row()
+
+                draped_decal2_row_2.prop(layer_props, "draped_decal2_dither", text="Dither Strength")
+            
+                draped_decal2_row_3 = decal_box.row()
                                 
-                draped_decal2_column_1 = draped_decal2_row_2.column()
+                draped_decal2_column_1 = draped_decal2_row_3.column()
 
                 draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_red_key", text="RGB Detail Texture Red Key")
                 draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_green_key", text="RGB Detail Texture Green Key")
@@ -692,7 +708,7 @@ def layer_layout(
                 draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_modulator", text="RGB Detail Texture Modulator Strength")
                 draped_decal2_column_1.prop(layer_props, "draped_rgb_decal2_constant", text="RGB Detail Texture Constant Strength")
 
-                draped_decal2_column_2 = draped_decal2_row_2.column()
+                draped_decal2_column_2 = draped_decal2_row_3.column()
                 
                 draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_red_key", text="Alpha Detail Texture Red Key")
                 draped_decal2_column_2.prop(layer_props, "draped_alpha_decal2_green_key", text="Alpha Detail Texture Green Key")

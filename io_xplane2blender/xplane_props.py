@@ -1472,6 +1472,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = True
     )
     
+    decal1_dither: bpy.props.FloatProperty(
+        name = "Detail Texture 1 Dither",
+        description = "The dithering strength of the detail texture",
+        min = 0.0,
+        max = 1.0,
+        precision = 2,
+        default = 0.0
+    )
+    
     decal1_scale: bpy.props.FloatProperty(
         name = "Detail Texture 1 Scale",
         description = "Scale of the detail texture",
@@ -1499,6 +1508,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = 1.0
     )
     
+    decal2_dither: bpy.props.FloatProperty(
+        name = "Detail Texture 2 Dither",
+        description = "The dithering strength of the detail texture",
+        min = 0.0,
+        max = 1.0,
+        precision = 2,
+        default = 0.0
+    )
+
     decal2_scale: bpy.props.FloatProperty(
         name = "Detail Texture 2 Scale",
         description = "Scale of the detail texture",
@@ -1526,6 +1544,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = 1.0
     )
     
+    draped_decal1_dither: bpy.props.FloatProperty(
+        name = "Draped Detail Texture 1 Dither",
+        description = "The dithering strength of the detail texture",
+        min = 0.0,
+        max = 1.0,
+        precision = 2,
+        default = 0.0
+    )
+
     draped_decal1_scale: bpy.props.FloatProperty(
         name = "Draped Detail Texture 1 Scale",
         description = "Scale of the draped detail texture",
@@ -1553,6 +1580,15 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = 1.0
     )
     
+    draped_decal2_dither: bpy.props.FloatProperty(
+        name = "Draped Detail Texture 2 Dither",
+        description = "The dithering strength of the detail texture",
+        min = 0.0,
+        max = 1.0,
+        precision = 2,
+        default = 0.0
+    )
+
     draped_decal2_scale: bpy.props.FloatProperty(
         name = "Draped Detail Texture 2 Scale",
         description = "Scale of the draped detail texture",

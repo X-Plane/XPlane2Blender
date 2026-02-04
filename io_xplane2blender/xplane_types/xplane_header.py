@@ -272,7 +272,7 @@ class XPlaneHeader:
                         self.attributes[XPlaneAttributeName("DECAL_PARAMS_PROJ", 1)].addValue(
                             (
                                 self.xplaneFile.options.decal1_x_scale, self.xplaneFile.options.decal1_y_scale,
-                                0.0,
+                                self.xplaneFile.options.decal1_dither,
                                 self.xplaneFile.options.rgb_decal1_red_key, self.xplaneFile.options.rgb_decal1_green_key, self.xplaneFile.options.rgb_decal1_blue_key, self.xplaneFile.options.rgb_decal1_alpha_key,
                                 self.xplaneFile.options.rgb_decal1_modulator, self.xplaneFile.options.rgb_decal1_constant,
                                 self.xplaneFile.options.alpha_decal1_red_key, self.xplaneFile.options.alpha_decal1_green_key, self.xplaneFile.options.alpha_decal1_blue_key, self.xplaneFile.options.alpha_decal1_alpha_key,
@@ -289,7 +289,7 @@ class XPlaneHeader:
                         self.attributes[XPlaneAttributeName("DECAL_PARAMS", 1)].addValue(
                             (
                                 self.xplaneFile.options.decal1_scale,
-                                0.0,
+                                self.xplaneFile.options.decal1_dither,
                                 self.xplaneFile.options.rgb_decal1_red_key, self.xplaneFile.options.rgb_decal1_green_key, self.xplaneFile.options.rgb_decal1_blue_key, self.xplaneFile.options.rgb_decal1_alpha_key,
                                 self.xplaneFile.options.rgb_decal1_modulator, self.xplaneFile.options.rgb_decal1_constant,
                                 self.xplaneFile.options.alpha_decal1_red_key, self.xplaneFile.options.alpha_decal1_green_key, self.xplaneFile.options.alpha_decal1_blue_key, self.xplaneFile.options.alpha_decal1_alpha_key,
@@ -320,7 +320,7 @@ class XPlaneHeader:
                         self.attributes[XPlaneAttributeName("DECAL_PARAMS_PROJ", 1)].addValue(
                             (
                                 self.xplaneFile.options.decal2_x_scale, self.xplaneFile.options.decal2_y_scale,
-                                0.0,
+                                self.xplaneFile.options.decal2_dither,
                                 self.xplaneFile.options.rgb_decal2_red_key, self.xplaneFile.options.rgb_decal2_green_key, self.xplaneFile.options.rgb_decal2_blue_key, self.xplaneFile.options.rgb_decal2_alpha_key,
                                 self.xplaneFile.options.rgb_decal2_modulator, self.xplaneFile.options.rgb_decal2_constant,
                                 self.xplaneFile.options.alpha_decal2_red_key, self.xplaneFile.options.alpha_decal2_green_key, self.xplaneFile.options.alpha_decal2_blue_key, self.xplaneFile.options.alpha_decal2_alpha_key,
@@ -337,7 +337,7 @@ class XPlaneHeader:
                         self.attributes[XPlaneAttributeName("DECAL_PARAMS", 1)].addValue(
                             (
                                 self.xplaneFile.options.decal2_scale,
-                                0.0,
+                                self.xplaneFile.options.decal2_dither,
                                 self.xplaneFile.options.rgb_decal2_red_key, self.xplaneFile.options.rgb_decal2_green_key, self.xplaneFile.options.rgb_decal2_blue_key, self.xplaneFile.options.rgb_decal2_alpha_key,
                                 self.xplaneFile.options.rgb_decal2_modulator, self.xplaneFile.options.rgb_decal2_constant,
                                 self.xplaneFile.options.alpha_decal2_red_key, self.xplaneFile.options.alpha_decal2_green_key, self.xplaneFile.options.alpha_decal2_blue_key, self.xplaneFile.options.alpha_decal2_alpha_key,
@@ -682,7 +682,7 @@ class XPlaneHeader:
                             self.attributes[XPlaneAttributeName("DECAL_PARAMS_PROJ", 2)].addValue(
                                 (
                                     self.xplaneFile.options.draped_decal1_x_scale, self.xplaneFile.options.draped_decal1_y_scale,
-                                    0.0,
+                                    self.xplaneFile.options.draped_decal1_dither,
                                     self.xplaneFile.options.draped_rgb_decal1_red_key, self.xplaneFile.options.draped_rgb_decal1_green_key, self.xplaneFile.options.draped_rgb_decal1_blue_key, self.xplaneFile.options.draped_rgb_decal1_alpha_key,
                                     self.xplaneFile.options.draped_rgb_decal1_modulator, self.xplaneFile.options.draped_rgb_decal1_constant,
                                     self.xplaneFile.options.draped_alpha_decal1_red_key, self.xplaneFile.options.draped_alpha_decal1_green_key, self.xplaneFile.options.draped_alpha_decal1_blue_key, self.xplaneFile.options.draped_alpha_decal1_alpha_key,
@@ -699,7 +699,7 @@ class XPlaneHeader:
                             self.attributes[XPlaneAttributeName("DECAL_PARAMS", 2)].addValue(
                                 (
                                     self.xplaneFile.options.draped_decal1_scale,
-                                    0.0,
+                                    self.xplaneFile.options.draped_decal1_dither,
                                     self.xplaneFile.options.draped_rgb_decal1_red_key, self.xplaneFile.options.draped_rgb_decal1_green_key, self.xplaneFile.options.draped_rgb_decal1_blue_key, self.xplaneFile.options.draped_rgb_decal1_alpha_key,
                                     self.xplaneFile.options.draped_rgb_decal1_modulator, self.xplaneFile.options.draped_rgb_decal1_constant,
                                     self.xplaneFile.options.draped_alpha_decal1_red_key, self.xplaneFile.options.draped_alpha_decal1_green_key, self.xplaneFile.options.draped_alpha_decal1_blue_key, self.xplaneFile.options.draped_alpha_decal1_alpha_key,
@@ -730,7 +730,7 @@ class XPlaneHeader:
                             self.attributes[XPlaneAttributeName("DECAL_PARAMS_PROJ", 2)].addValue(
                                 (
                                     self.xplaneFile.options.draped_decal2_x_scale, self.xplaneFile.options.draped_decal2_y_scale,
-                                    0.0,
+                                    self.xplaneFile.options.draped_decal2_dither,
                                     self.xplaneFile.options.draped_rgb_decal2_red_key, self.xplaneFile.options.draped_rgb_decal2_green_key, self.xplaneFile.options.draped_rgb_decal2_blue_key, self.xplaneFile.options.draped_rgb_decal2_alpha_key,
                                     self.xplaneFile.options.draped_rgb_decal2_modulator, self.xplaneFile.options.draped_rgb_decal2_constant,
                                     self.xplaneFile.options.draped_alpha_decal2_red_key, self.xplaneFile.options.draped_alpha_decal2_green_key, self.xplaneFile.options.draped_alpha_decal2_blue_key, self.xplaneFile.options.draped_alpha_decal2_alpha_key,
@@ -747,7 +747,7 @@ class XPlaneHeader:
                             self.attributes[XPlaneAttributeName("DECAL_PARAMS", 2)].addValue(
                                 (
                                     self.xplaneFile.options.draped_decal2_scale,
-                                    0.0,
+                                    self.xplaneFile.options.draped_decal2_dither,
                                     self.xplaneFile.options.draped_rgb_decal2_red_key, self.xplaneFile.options.draped_rgb_decal2_green_key, self.xplaneFile.options.draped_rgb_decal2_blue_key, self.xplaneFile.options.draped_rgb_decal2_alpha_key,
                                     self.xplaneFile.options.draped_rgb_decal2_modulator, self.xplaneFile.options.draped_rgb_decal2_constant,
                                     self.xplaneFile.options.draped_alpha_decal2_red_key, self.xplaneFile.options.draped_alpha_decal2_green_key, self.xplaneFile.options.draped_alpha_decal2_blue_key, self.xplaneFile.options.draped_alpha_decal2_alpha_key,
