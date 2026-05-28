@@ -201,7 +201,7 @@ class XPlaneTestCase(unittest.TestCase):
                     xplane_primitive.XPlanePrimitive,
                 )
             )
-            self.assertEquals(
+            self.assertEqual(
                 xplaneFile._bl_obj_name_to_bone[name].blenderObject,
                 bpy.data.objects[name],
             )
@@ -257,7 +257,7 @@ class XPlaneTestCase(unittest.TestCase):
     def assertFloatVectorsEqual(
         self, a: int, b: int, tolerance: float = FLOAT_TOLERANCE
     ):
-        self.assertEquals(len(a), len(b))
+        self.assertEqual(len(a), len(b))
         for a_comp, b_comp in zip(a, b):
             self.assertFloatsEqual(a_comp, b_comp, tolerance)
 
@@ -322,7 +322,7 @@ class XPlaneTestCase(unittest.TestCase):
 
         # ensure same number of lines
         try:
-            self.assertEquals(len(linesA), len(linesB))
+            self.assertEqual(len(linesA), len(linesB))
         except AssertionError as e:
             only_in_a = set(linesA) - set(linesB)
             only_in_b = set(linesB) - set(linesA)
@@ -342,7 +342,7 @@ class XPlaneTestCase(unittest.TestCase):
         for lineIndex, (lineA, lineB) in enumerate(zip(linesA, linesB)):
             try:
                 # print(f"lineA:{lineA}, lineB:{lineB}")
-                self.assertEquals(len(lineA), len(lineB))
+                self.assertEqual(len(lineA), len(lineB))
             except AssertionError as e:
                 raise AssertionError(
                     f"Number of line components unequal: {e.args[0]}\n"
@@ -410,7 +410,7 @@ class XPlaneTestCase(unittest.TestCase):
                             + "\n\n".join((context_lineA, context_lineB))
                         ) from None
                 else:
-                    self.assertEquals(segmentA, segmentB)
+                    self.assertEqual(segmentA, segmentB)
 
     def assertFileOutputEqualsFixture(
         self,
@@ -534,7 +534,7 @@ class XPlaneTestCase(unittest.TestCase):
         with io.StringIO() as s_buf:
             pprint(list(attrs.keys()), s_buf)
             attrs_pp_str = s_buf.getvalue()
-        self.assertEquals(
+        self.assertEqual(
             len(expected_attrs),
             len(attrs),
             f"Attribute lists {list(expected_attrs.keys())}, {list(attrs.keys())} have different length",
@@ -550,7 +550,7 @@ class XPlaneTestCase(unittest.TestCase):
                     (list, tuple),
                     msg='Attribute value for "{value}" is a {type(value)}, not a list or tuple',
                 )
-                self.assertEquals(
+                self.assertEqual(
                     len(expected_value),
                     len(value),
                     'Attribute value list for "{name}" have different length',
@@ -560,12 +560,12 @@ class XPlaneTestCase(unittest.TestCase):
                     if isinstance(expectedV, (float, int)):
                         self.assertFloatsEqual(expectedV, v, floatTolerance)
                     else:
-                        self.assertEquals(
+                        self.assertEqual(
                             expectedV,
                             v,
                         )
             else:
-                self.assertEquals(
+                self.assertEqual(
                     expected_value,
                     value,
                 )

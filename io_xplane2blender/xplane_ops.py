@@ -6,6 +6,10 @@ from typing import Any, Dict, List, Optional, Tuple
 import bpy
 
 from io_xplane2blender import xplane_props
+from io_xplane2blender.xplane_helpers import (
+    ensure_action_group,
+    get_action_fcurves,
+)
 from io_xplane2blender.xplane_config import *
 from io_xplane2blender.xplane_constants import (
     MAX_COCKPIT_REGIONS,
@@ -17,6 +21,7 @@ from io_xplane2blender.xplane_ops_dev import *
 from io_xplane2blender.xplane_utils import (
     xplane_commands_txt_parser,
     xplane_datarefs_txt_parser,
+    xplane_scene_report,
     xplane_wiper_gradient,
 )
 
@@ -58,9 +63,9 @@ def makeKeyframesLinear(obj, path):
     if (
         obj.animation_data != None
         and obj.animation_data.action != None
-        and len(obj.animation_data.action.fcurves) > 0
+        and len(get_action_fcurves(obj.animation_data)) > 0
     ):
-        fcurve = findFCurveByPath(obj.animation_data.action.fcurves, path)
+        fcurve = findFCurveByPath(get_action_fcurves(obj.animation_data), path)
 
         if fcurve:
             # find keyframe
@@ -308,14 +313,11 @@ class OBJECT_OT_remove_xplane_dataref(bpy.types.Operator):
         path = getDatarefValuePath(self.index)
 
         # remove FCurves too
-        if (
-            obj.animation_data != None
-            and obj.animation_data.action != None
-            and len(obj.animation_data.action.fcurves) > 0
-        ):
-            fcurve = findFCurveByPath(obj.animation_data.action.fcurves, path)
+        fcurves = get_action_fcurves(obj.animation_data)
+        if fcurves:
+            fcurve = findFCurveByPath(fcurves, path)
             if fcurve:
-                obj.animation_data.action.fcurves.remove(fcurve=fcurve)
+                fcurves.remove(fcurve=fcurve)
 
         return {"FINISHED"}
 
@@ -336,8 +338,7 @@ class OBJECT_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
         path = getDatarefValuePath(self.index)
         value = obj.xplane.datarefs[self.index].value
 
-        if "XPlane Datarefs" not in obj.animation_data.action.groups:
-            obj.animation_data.action.groups.new("XPlane Datarefs")
+        ensure_action_group(obj.animation_data, "XPlane Datarefs")
 
         obj.xplane.datarefs[self.index].keyframe_insert(
             data_path="value", group="XPlane Datarefs"
@@ -449,14 +450,11 @@ class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
         path = getDatarefValuePath(self.index, bone)
 
         # remove FCurves too
-        if (
-            obj.animation_data != None
-            and obj.animation_data.action != None
-            and len(obj.animation_data.action.fcurves) > 0
-        ):
-            fcurve = findFCurveByPath(obj.animation_data.action.fcurves, path)
+        fcurves = get_action_fcurves(obj.animation_data)
+        if fcurves:
+            fcurve = findFCurveByPath(fcurves, path)
             if fcurve:
-                obj.animation_data.action.fcurves.remove(fcurve=fcurve)
+                fcurves.remove(fcurve=fcurve)
 
         return {"FINISHED"}
 
@@ -484,8 +482,7 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
 
         groupName = "XPlane Datarefs " + bone.name
 
-        if groupName not in armature.animation_data.action.groups:
-            armature.animation_data.action.groups.new(groupName)
+        ensure_action_group(armature.animation_data, groupName)
 
         armature.data.keyframe_insert(data_path=path, group=groupName)
 
@@ -1005,6 +1002,67 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         }
 
 
+class XPLANE_OT_ExportSceneReport(bpy.types.Operator):
+    """Export a CSV report of all datarefs and manipulators used in the scene"""
+
+    bl_idname = "xplane.export_scene_report"
+    bl_label = "Export Scene Report (CSV)"
+
+    filepath: bpy.props.StringProperty(
+        name="File Path",
+        description="Path to the CSV report file to write",
+        subtype="FILE_PATH",
+    )
+
+    check_existing: bpy.props.BoolProperty(
+        default=True,
+        options={"HIDDEN"},
+    )
+
+    filter_glob: bpy.props.StringProperty(
+        default="*.csv",
+        options={"HIDDEN"},
+    )
+
+    def invoke(self, context, event):
+        import os
+        blend_name = (
+            os.path.splitext(os.path.basename(bpy.data.filepath))[0]
+            if bpy.data.filepath
+            else "scene"
+        )
+        self.filepath = os.path.join(
+            os.path.dirname(bpy.data.filepath) if bpy.data.filepath else "",
+            f"{blend_name}_scene_report.csv",
+        )
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {"RUNNING_MODAL"}
+
+    def execute(self, context):
+        view_layer = context.view_layer
+        scene = context.scene
+
+        dr_rows = xplane_scene_report.collect_datarefs(scene, view_layer)
+        manip_rows = xplane_scene_report.collect_manipulators(scene, view_layer)
+
+        if not dr_rows and not manip_rows:
+            self.report({"WARNING"}, "No datarefs or manipulators found in scene")
+            return {"CANCELLED"}
+
+        csv_content = xplane_scene_report.write_combined_report(dr_rows, manip_rows)
+        out_path = bpy.path.abspath(self.filepath)
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(csv_content)
+
+        self.report(
+            {"INFO"},
+            f"Wrote {len(dr_rows)} dataref(s) and {len(manip_rows)} manipulator(s) "
+            f"to {out_path}",
+        )
+        return {"FINISHED"}
+
+
 _ops = (
     COLLECTION_OT_add_xplane_export_path_directive,
     COLLECTION_OT_remove_xplane_export_path_directive,
@@ -1041,6 +1099,7 @@ _ops = (
     XPLANE_OT_DatarefSearchToggle,
     XPLANE_OT_XPlaneMessage,
     XPLANE_OT_bake_wiper_gradient_texture,
+    XPLANE_OT_ExportSceneReport,
 )
 
 register, unregister = bpy.utils.register_classes_factory(_ops)

@@ -23,6 +23,6 @@ class TestBakeWiperTextureBadRGBOnly(XPlaneTestCase):
             "bad_wiper_image_rgb_only"
         ]
         bpy.context.view_layer.objects.active = any_object
-        self.assertEquals(bpy.ops.xplane.bake_wiper_gradient_texture(), {"CANCELLED"})
+        self.assertEqual(bpy.ops.xplane.bake_wiper_gradient_texture(), {"CANCELLED"})
 
 runTestCases([TestBakeWiperTextureBadRGBOnly])

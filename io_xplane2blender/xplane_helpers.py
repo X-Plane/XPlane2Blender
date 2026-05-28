@@ -55,6 +55,70 @@ def floatToStr(n: float) -> str:
     return s
 
 
+def get_action_fcurves(anim_data):
+    """Return the FCurves collection for the active action/slot.
+
+    Blender 4.x: action.fcurves
+    Blender 5.x: channelbag.fcurves for the bound slot
+    Returns an empty list when there is no action or no matching channelbag.
+    """
+    if anim_data is None or anim_data.action is None:
+        return []
+    action = anim_data.action
+    if hasattr(action, "fcurves"):
+        # Blender < 5.0
+        return action.fcurves
+    # Blender 5.0+
+    from bpy_extras import anim_utils
+
+    slot = anim_data.action_slot
+    if slot is None:
+        return []
+    channelbag = anim_utils.action_get_channelbag_for_slot(action, slot)
+    return channelbag.fcurves if channelbag else []
+
+
+def iter_all_action_fcurves(action):
+    """Iterate every FCurve in an action, across all slots/channelbags.
+
+    Use this when you need to scan all keyframes regardless of which object
+    is bound to the action (e.g. building a global frame-visit set).
+    """
+    if hasattr(action, "fcurves"):
+        # Blender < 5.0
+        return action.fcurves
+    # Blender 5.0+: iterate every slot's channelbag
+    from bpy_extras import anim_utils
+
+    result = []
+    for slot in action.slots:
+        channelbag = anim_utils.action_get_channelbag_for_slot(action, slot)
+        if channelbag:
+            result.extend(channelbag.fcurves)
+    return result
+
+
+def ensure_action_group(anim_data, group_name: str) -> None:
+    """Ensure an FCurve group with *group_name* exists in the right container.
+
+    Blender 4.x: action.groups
+    Blender 5.x: channelbag.groups (creates the channelbag if needed)
+    """
+    action = anim_data.action
+    if hasattr(action, "fcurves"):
+        # Blender < 5.0
+        if group_name not in action.groups:
+            action.groups.new(group_name)
+    else:
+        # Blender 5.0+
+        from bpy_extras import anim_utils
+
+        slot = anim_data.action_slot
+        channelbag = anim_utils.action_ensure_channelbag_for_slot(action, slot)
+        if group_name not in channelbag.groups:
+            channelbag.groups.new(group_name)
+
+
 def resolveBlenderPath(path: str) -> str:
     blenddir = os.path.dirname(bpy.context.blend_data.filepath)
 
