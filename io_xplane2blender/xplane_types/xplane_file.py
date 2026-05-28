@@ -34,6 +34,7 @@ from ..xplane_helpers import (
     ExportableRoot,
     PotentialRoot,
     floatToStr,
+    iter_all_action_fcurves,
     logger,
 )
 from .xplane_bone import XPlaneBone
@@ -181,7 +182,7 @@ def _pre_scan_all_keyframes():
         {
             int(kf.co[0])
             for action in bpy.data.actions
-            for fcurve in action.fcurves
+            for fcurve in iter_all_action_fcurves(action)
             for kf in fcurve.keyframe_points
             if kf.co[0].is_integer()
         }
