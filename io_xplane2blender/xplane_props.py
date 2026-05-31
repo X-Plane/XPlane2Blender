@@ -89,6 +89,21 @@ undebatable alphabetical listing.
 # DO NOT CHANGE OUTSIDE OF safe_set_version_data!
 _version_safety_off = False
 
+# Function: UpdateLayerGroupsOnVersionChange
+# This is called by the xplane.version property on update, and updates properties that are not compatible with a given version
+# My understanding is Blender SHOULD default to the first value in the enum if the prior value is invalidated, but, it doesn't. So we have this bandaid
+#
+# Properties:
+# self - The property group calling this function
+# context - The current Blender context
+def UpdateLayerGroupsOnVersionChange(self, context):
+    #Iterate over all collections to check for invalidated layer_group properties, and fix them (this happens when using BLENDED and going to pre 12.21)
+    for col in bpy.data.collections:
+        #Check if col.xplane.layer.layer_group exists
+        if col.get("xplane") is not None and col.xplane.get("layer") is not None and col.xplane.layer.get("layer_group") is not None:
+            if col.xplane.layer.layer_group == '':
+                col.xplane.layer.layer_group = LAYER_GROUP_NONE
+
 
 class XPlane2BlenderVersion(bpy.types.PropertyGroup):
     """
@@ -1882,9 +1897,38 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         default = True
     )
 
-    # v1000
-    layerGroups = [
-        (LAYER_GROUP_NONE,          "None",          "Does not draws this OBJ in any group"),
+    def get_layer_groups_for_this_version(self, context):
+        # The BLENDED layer group was added in X-Plane 12.21 #TODO: Actually add 12.21 as a version
+        if context and int(context.scene.xplane.version) >= 1221:
+            return [(LAYER_GROUP_NONE,          "None",          "Does not draws this OBJ in any group"),
+            (LAYER_GROUP_TERRAIN,       "Terrain",       "Terrain"),
+            (LAYER_GROUP_BEACHES,       "Beaches",       "Beaches"),
+            (LAYER_GROUP_SHOULDERS,     "Shoulders",     "Shoulders"),
+            (LAYER_GROUP_TAXIWAYS,      "Taxiways",      "Taxiways"),
+            (LAYER_GROUP_RUNWAYS,       "Runways",       "Runways"),
+            (LAYER_GROUP_MARKINGS,      "Markings",      "Markings"),
+            (LAYER_GROUP_AIRPORTS,      "Airports",      "Airports"),
+            (LAYER_GROUP_ROADS,         "Roads",         "Roads"),
+            (LAYER_GROUP_OBJECTS,       "Objects",       "Objects"),
+            (LAYER_GROUP_LIGHT_OBJECTS, "Light Objects", "Light Objects"),
+            (LAYER_GROUP_CARS,          "Cars",          "Cars"),
+            (LAYER_GROUP_BLENDED, "Blended", "Blended")]
+        else:
+            return [(LAYER_GROUP_NONE,          "None",          "Does not draws this OBJ in any group"),
+            (LAYER_GROUP_TERRAIN,       "Terrain",       "Terrain"),
+            (LAYER_GROUP_BEACHES,       "Beaches",       "Beaches"),
+            (LAYER_GROUP_SHOULDERS,     "Shoulders",     "Shoulders"),
+            (LAYER_GROUP_TAXIWAYS,      "Taxiways",      "Taxiways"),
+            (LAYER_GROUP_RUNWAYS,       "Runways",       "Runways"),
+            (LAYER_GROUP_MARKINGS,      "Markings",      "Markings"),
+            (LAYER_GROUP_AIRPORTS,      "Airports",      "Airports"),
+            (LAYER_GROUP_ROADS,         "Roads",         "Roads"),
+            (LAYER_GROUP_OBJECTS,       "Objects",       "Objects"),
+            (LAYER_GROUP_LIGHT_OBJECTS, "Light Objects", "Light Objects"),
+            (LAYER_GROUP_CARS,          "Cars",          "Cars")]
+        
+    def get_draped_layer_groups_for_this_version(self, context):
+        return [(LAYER_GROUP_NONE,          "None",          "Does not draws this OBJ in any group"),
         (LAYER_GROUP_TERRAIN,       "Terrain",       "Terrain"),
         (LAYER_GROUP_BEACHES,       "Beaches",       "Beaches"),
         (LAYER_GROUP_SHOULDERS,     "Shoulders",     "Shoulders"),
@@ -1895,14 +1939,12 @@ class XPlaneLayer(bpy.types.PropertyGroup):
         (LAYER_GROUP_ROADS,         "Roads",         "Roads"),
         (LAYER_GROUP_OBJECTS,       "Objects",       "Objects"),
         (LAYER_GROUP_LIGHT_OBJECTS, "Light Objects", "Light Objects"),
-        (LAYER_GROUP_CARS,          "Cars",          "Cars")
-    ]
+        (LAYER_GROUP_CARS,          "Cars",          "Cars")]
 
     layer_group: bpy.props.EnumProperty(
         name = "Layer Group",
         description = "Draw this OBJ in a special group",
-        default = "none",
-        items = layerGroups
+        items = get_layer_groups_for_this_version
     )
 
     layer_group_offset: bpy.props.IntProperty(
@@ -1916,8 +1958,7 @@ class XPlaneLayer(bpy.types.PropertyGroup):
     layer_group_draped: bpy.props.EnumProperty(
         name = "Draped Layer Group",
         description = "Draws draped geometry in a special group",
-        default = "none",
-        items = layerGroups
+        items = get_draped_layer_groups_for_this_version
     )
 
     layer_group_draped_offset: bpy.props.IntProperty(
@@ -2028,7 +2069,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
     version: bpy.props.EnumProperty(
         name = "X-Plane Version",
-        default = VERSION_1220,
+        default = VERSION_1221,
         items = [
             (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
@@ -2040,8 +2081,10 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             (VERSION_1130, "11.3x", "11.3x"),
             (VERSION_1200, "12.0x", "12.0x"),
             (VERSION_1210, "12.1.x", "12.1.x"),
-            (VERSION_1220, "12.2.x", "12.2.x")
-        ]
+            (VERSION_1220, "12.2.x", "12.2.x"),
+            (VERSION_1221, "12.2.1", "12.2.1")
+        ],
+        update=UpdateLayerGroupsOnVersionChange
     )
 
     # This list of version histories the .blend file has encountered,
