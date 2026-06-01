@@ -126,7 +126,17 @@ def createFileFromBlenderRootObject(
     # Name change, we're now confirmed exportable!
     exportable_root = potential_root
     layer_props = exportable_root.xplane.layer
-    filename = layer_props.name if layer_props.name else exportable_root.name
+
+    #If there is a name that does *not* end in a dir sep, we use that as the file name.
+    #If a name ends in a dir sep, we treat it as a relative dir, and *append* the root col/obj name to the end
+    #If no name is specified, we just use the root col/obj name
+    filename: str
+    if layer_props.name and not (layer_props.name.endswith("\\") or layer_props.name.endswith("/")):
+        filename = layer_props.name
+    elif layer_props.name:
+        filename = layer_props.name + exportable_root.name
+    else:
+        filename = exportable_root.name
 
     xplane_file = XPlaneFile(filename, layer_props)
     xplane_file.create_xplane_bone_hiearchy(exportable_root)
