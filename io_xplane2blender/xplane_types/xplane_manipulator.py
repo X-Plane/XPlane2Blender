@@ -1322,6 +1322,34 @@ class XPlaneManipulator:
                     self.manip.dataref1,
                     self.manip.tooltip,
                 )
+            elif self.type == MANIP_DEVICE:
+                # X-Plane requires the manipulator to also be tagged with ATTR_cockpit_device,
+                # so we take the device from the screen's cockpit device material
+                # (XPlaneMaterial.collect writes the matching ATTR_cockpit_device)
+                blender_object = self.xplanePrimative.blenderObject
+                mat = self.manip.get_device_material(blender_object)
+                if mat is None or mat.xplane.cockpit_feature != COCKPIT_FEATURE_DEVICE:
+                    logger.error(
+                        "{}'s Device manipulator needs a Screen Material, or its own material, with the Cockpit Device feature".format(
+                            blender_object.name
+                        )
+                    )
+                    return
+
+                if mat.xplane.device_name == DEVICE_PLUGIN:
+                    device = mat.xplane.plugin_device
+                else:
+                    device = mat.xplane.device_name
+
+                if not device:
+                    logger.error(
+                        "{}'s Device manipulator requires material {} to have a plugin Device ID".format(
+                            blender_object.name, mat.name
+                        )
+                    )
+                    return
+
+                value = (self.manip.cursor, device, self.manip.tooltip)
             elif self.type == MANIP_NOOP:
                 value = ()
             else:
