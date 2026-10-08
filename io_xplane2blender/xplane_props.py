@@ -2,7 +2,7 @@
 Defines X-Plane Properties attached to regular Blender data types.
 """
 
-from typing import Callable, List, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import bpy
 
@@ -574,7 +574,7 @@ class XPlaneDataref(bpy.types.PropertyGroup):
     loop: bpy.props.FloatProperty(
         name = "Loop Animation Every",
         description = "Loop amount of animation, useful for ever increasing Datarefs. A value of 0 will ignore this setting",
-        min = 0.0,
+        #min = 0.0,
         precision = 3
     )
 
@@ -715,8 +715,14 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
             (MANIP_DRAG_ROTATE_DETENT,         "Drag Rotate With Detents",    "Drag Rotate With Detents (requires at least v11.10)")
         ]
 
+        type_v1210_items = [
+            (MANIP_DEVICE, "Device", "Touch screen for the material's cockpit device (requires at least v12.10)")
+        ]
+
         xplane_version = int(bpy.context.scene.xplane.version)
-        if xplane_version >= int(VERSION_1110):
+        if xplane_version >= int(VERSION_1210):
+            return type_items + type_v1110_items + type_v1210_items
+        elif xplane_version >= int(VERSION_1110):
             return type_items + type_v1110_items
         else:
             return type_items
@@ -922,6 +928,25 @@ class XPlaneManipulatorSettings(bpy.types.PropertyGroup):
         default = 1.0,
         precision = 3
     )
+
+    screen_material: bpy.props.PointerProperty(
+        name = "Screen Material",
+        description = "The cockpit device material of the screen this touch screen manipulator controls. If empty, this object's own material is used",
+        type = bpy.types.Material,
+        poll = lambda self, mat: mat.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE
+    )
+
+    def get_device_material(self, blender_object: bpy.types.Object) -> Optional[bpy.types.Material]:
+        '''
+        The material a Device manipulator takes its ATTR_cockpit_device from:
+        the Screen Material if picked, otherwise the object's own material
+        '''
+        if self.screen_material:
+            return self.screen_material
+        elif blender_object.material_slots:
+            return blender_object.material_slots[0].material
+        else:
+            return None
 
     def get_effective_type_desc(self) -> str:
         '''

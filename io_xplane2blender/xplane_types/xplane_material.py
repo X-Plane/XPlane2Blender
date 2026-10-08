@@ -103,11 +103,21 @@ class XPlaneMaterial:
             self.blenderMaterial = mat
             self.options = mat.xplane  # type: xplane_props.XPlaneMaterialSettings
 
+            # A Device manipulator must be tagged with its screen's ATTR_cockpit_device,
+            # even when it is invisible
+            manip = self.blenderObject.xplane.manip
+            is_device_manip = manip.enabled and manip.type == MANIP_DEVICE
+            if is_device_manip:
+                device_mat = manip.get_device_material(self.blenderObject)
+                if device_mat:
+                    self.collectCockpitAttributes(device_mat)
+
             if mat.xplane.draw:
                 self.attributes["ATTR_draw_enable"].setValue(True)
 
                 # add cockpit attributes
-                self.collectCockpitAttributes(mat)
+                if not is_device_manip:
+                    self.collectCockpitAttributes(mat)
 
                 # add light level attritubes
                 self.collectLightLevelAttributes(mat)

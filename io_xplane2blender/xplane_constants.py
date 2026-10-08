@@ -154,6 +154,9 @@ MANIP_COMMAND_KNOB2 = "command_knob2"
 MANIP_COMMAND_SWITCH_LEFT_RIGHT2 = "command_switch_left_right2"
 MANIP_COMMAND_SWITCH_UP_DOWN2 = "command_switch_up_down2"
 
+# 12.10 and greater manips
+MANIP_DEVICE = "device"
+
 MANIPULATORS_MOUSE_WHEEL = (
     MANIP_DRAG_XY,
     MANIP_DRAG_AXIS,

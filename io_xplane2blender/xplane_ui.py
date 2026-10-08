@@ -1803,7 +1803,7 @@ def manipulator_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> Non
         # fmt: off
         props =  collections.OrderedDict() # type: Dict[str,Tuple[Callable[[str],bool],Optional[Callable[[str],bool]]]]
         props['autodetect_datarefs'] = (lambda manip_type: should_show_autodetect_dataref(manip_type), None)
-        props['dataref1'] = (lambda manip_type: manip_type in MANIPULATORS_ALL - MANIPULATORS_COMMAND - {MANIP_NOOP} and\
+        props['dataref1'] = (lambda manip_type: manip_type in MANIPULATORS_ALL - MANIPULATORS_COMMAND - {MANIP_NOOP, MANIP_DEVICE} and\
                 should_show_dataref(manip_type), lambda manip_type: get_dataref_title(manip_type,1))
         props['dataref2'] =\
             lambda manip_type: manip_type in {MANIP_DRAG_XY} | {MANIP_DRAG_AXIS_DETENT, MANIP_DRAG_ROTATE_DETENT} and should_show_dataref(manip_type),\
@@ -1874,6 +1874,22 @@ def manipulator_layout(layout: bpy.types.UILayout, obj: bpy.types.Object) -> Non
 
         if manipType == MANIP_DRAG_AXIS_DETENT or manipType == MANIP_DRAG_ROTATE_DETENT:
             axis_detent_ranges_layout(box, obj.xplane.manip)
+
+        if manipType == MANIP_DEVICE:
+            box.prop(obj.xplane.manip, "screen_material")
+            mat = obj.xplane.manip.get_device_material(obj)
+            if mat and mat.xplane.cockpit_feature == COCKPIT_FEATURE_DEVICE:
+                device = (
+                    mat.xplane.plugin_device
+                    if mat.xplane.device_name == DEVICE_PLUGIN
+                    else mat.xplane.device_name
+                )
+                box.label(text=f"Device: {device} (from material '{mat.name}')")
+            else:
+                box.label(
+                    text="Pick a Screen Material with the Cockpit Device feature",
+                    icon="ERROR",
+                )
 
 
 def conditions_layout(
