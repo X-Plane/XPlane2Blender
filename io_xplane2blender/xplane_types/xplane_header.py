@@ -762,7 +762,7 @@ class XPlaneHeader:
 
                 if self.xplaneFile.options.file_draped_normal_decal1 != "":
                     try:
-                        if self.xplaneFile.draped_normal_decal1_projected:
+                        if self.xplaneFile.options.draped_normal_decal1_projected:
                             if self.attributes[XPlaneAttributeName("NORMAL_DECAL_PARAMS_PROJ", 2)].getValue() == None:
                                 self.attributes[XPlaneAttributeName("NORMAL_DECAL_PARAMS_PROJ", 2)].removeValues()
                                 

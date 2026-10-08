@@ -2028,7 +2028,7 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
 
     version: bpy.props.EnumProperty(
         name = "X-Plane Version",
-        default = VERSION_1210,
+        default = VERSION_1220,
         items = [
             (VERSION_900,  "9.x", "9.x"),
             (VERSION_1000, "10.0x", "10.0x"),
@@ -2039,7 +2039,8 @@ class XPlaneSceneSettings(bpy.types.PropertyGroup):
             (VERSION_1110, "11.1x", "11.1x"),
             (VERSION_1130, "11.3x", "11.3x"),
             (VERSION_1200, "12.0x", "12.0x"),
-            (VERSION_1210, "12.1.x", "12.1.x")
+            (VERSION_1210, "12.1.x", "12.1.x"),
+            (VERSION_1220, "12.2.x", "12.2.x")
         ]
     )
 
