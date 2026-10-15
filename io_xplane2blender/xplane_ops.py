@@ -419,6 +419,22 @@ class OBJECT_OT_remove_xplane_export_path_directive(bpy.types.Operator):
         return {"FINISHED"}
 
 
+def getActiveBone(context) -> Optional[bpy.types.Bone]:
+    """Resolve the bpy.types.Bone the BONE_OT_* operators act on.
+
+    context.bone is only filled in by some spaces (the Bone properties tab
+    fills it, the 3D viewport and script contexts do not). context.active_bone
+    is available more widely, but is an EditBone in Edit Mode, which carries no
+    xplane settings. See also: https://blender.stackexchange.com/q/31759
+    """
+    bone = getattr(context, "bone", None)
+    if bone is None:
+        bone = getattr(context, "active_bone", None)
+    if isinstance(bone, bpy.types.Bone):
+        return bone
+    return None
+
+
 # Class: BONE_OT_add_xplane_dataref
 # Adds a <XPlaneDataref> to a Blender bone.
 class BONE_OT_add_xplane_dataref(bpy.types.Operator):
@@ -427,8 +443,10 @@ class BONE_OT_add_xplane_dataref(bpy.types.Operator):
     bl_description = "Add/Update an X-Plane Dataref"
 
     def execute(self, context):
-        bone = context.bone
-        obj = context.object
+        bone = getActiveBone(context)
+        if bone is None:
+            self.report({"ERROR"}, "No active bone")
+            return {"CANCELLED"}
         bone.xplane.datarefs.add()
         return {"FINISHED"}
 
@@ -443,20 +461,49 @@ class BONE_OT_remove_xplane_dataref(bpy.types.Operator):
     index: bpy.props.IntProperty()
 
     def execute(self, context):
-        bone = context.bone
-        obj = context.object
+        bone = getActiveBone(context)
+        if bone is None:
+            self.report({"ERROR"}, "No active bone")
+            return {"CANCELLED"}
+        armature = context.object
         bone.xplane.datarefs.remove(self.index)
         path = getDatarefValuePath(self.index, bone)
 
-        # remove FCurves too
+        # remove FCurves too.
+        #
+        # Bone dataref keyframes live on the Armature *data* block, not on the
+        # Object: the data_path is 'bones["X"].xplane.datarefs[N].value' and
+        # BONE_OT_add_xplane_dataref_keyframe inserts them through
+        # armature.data.keyframe_insert. Searching the Object's animation_data
+        # here never found them, so the F-Curve was left behind. On export,
+        # XPlaneBone.collectAnimations then hits an IndexError on the orphan
+        # (the "long standing bug" it works around by bailing out), which
+        # silently drops the rest of that bone's animations.
+        anim_data = armature.data.animation_data
         if (
-            obj.animation_data != None
-            and obj.animation_data.action != None
-            and len(obj.animation_data.action.fcurves) > 0
+            anim_data is not None
+            and anim_data.action is not None
+            and len(anim_data.action.fcurves) > 0
         ):
-            fcurve = findFCurveByPath(obj.animation_data.action.fcurves, path)
+            fcurves = anim_data.action.fcurves
+            fcurve = findFCurveByPath(fcurves, path)
             if fcurve:
-                obj.animation_data.action.fcurves.remove(fcurve=fcurve)
+                fcurves.remove(fcurve=fcurve)
+
+            # Datarefs after the removed one shift down by one, so their
+            # F-Curves now name the wrong index. Renumber them so data_path and
+            # collection index agree again.
+            prefix = f'bones["{bone.name}"].xplane.datarefs['
+            suffix = "].value"
+            for fcurve in fcurves:
+                if not fcurve.data_path.startswith(prefix):
+                    continue
+                try:
+                    old_index = int(fcurve.data_path[len(prefix) : -len(suffix)])
+                except ValueError:
+                    continue
+                if old_index > self.index:
+                    fcurve.data_path = f"{prefix}{old_index - 1}{suffix}"
 
         return {"FINISHED"}
 
@@ -474,11 +521,10 @@ class BONE_OT_add_xplane_dataref_keyframe(bpy.types.Operator):
 
     # bpy.data.objects["Armature"].data.keyframe_insert(data_path='bones["Bone"].my_prop_group.nested', group="Nested Property")
     def execute(self, context):
-        bone = (
-            context.active_bone
-        )  # context.bone is not always available, for instance, during test_creation_helpers
-        # Other uses will be replaced as needed. context.object doesn't appear to be affected
-        # See also: https://blender.stackexchange.com/q/31759
+        bone = getActiveBone(context)
+        if bone is None:
+            self.report({"ERROR"}, "No active bone")
+            return {"CANCELLED"}
         armature = context.object
         path = getDatarefValuePath(self.index, bone)
 
@@ -504,8 +550,10 @@ class BONE_OT_remove_xplane_dataref_keyframe(bpy.types.Operator):
     index: bpy.props.IntProperty()
 
     def execute(self, context):
-        bone = context.bone
-        path = getDatarefValuePath(self.index)
+        bone = getActiveBone(context)
+        if bone is None:
+            self.report({"ERROR"}, "No active bone")
+            return {"CANCELLED"}
         armature = context.object
         path = getDatarefValuePath(self.index, bone)
         armature.data.keyframe_delete(
