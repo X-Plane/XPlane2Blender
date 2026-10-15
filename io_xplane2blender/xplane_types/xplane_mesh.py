@@ -118,17 +118,36 @@ class XPlaneMesh:
                     tmp_faces.append(tmp_face)
 
                 vertices_dct = {}
+                zero_normal_corners = 0
                 for tmp_face in tmp_faces:
                     # To reverse the winding order for X-Plane from CCW to CW,
                     # we iterate backwards through the mesh data structures
                     for i in reversed(range(0, 3)):
                         index = tmp_face.indices[i]
                         vertex = xplane_helpers.vec_b_to_x(mesh.vertices[index].co)
-                        normal = xplane_helpers.vec_b_to_x(
+                        normal_b = (
                             tmp_face.split_normals[i]
                             if tmp_face.original_face.use_smooth
                             else tmp_face.normal
                         )
+                        if (
+                            normal_b[0] == 0.0
+                            and normal_b[1] == 0.0
+                            and normal_b[2] == 0.0
+                        ):
+                            # Blender gives the corners of zero-area faces a zero
+                            # corner normal (4.1+ when the corner angle is zero,
+                            # 5.x whenever the face is degenerate). A zero normal
+                            # is never valid in an OBJ, so use the vertex normal,
+                            # which is what the smooth fan around that corner
+                            # would have produced. A vertex with nothing but
+                            # zero-area faces has no normal either; a face with
+                            # no area cannot be seen, so any unit vector will do.
+                            normal_b = mesh.vertices[index].normal
+                            if normal_b.length == 0.0:
+                                normal_b = mathutils.Vector((0.0, 0.0, 1.0))
+                            zero_normal_corners += 1
+                        normal = xplane_helpers.vec_b_to_x(normal_b)
                         uv = tmp_face.uvs[i]
                         vt_entry = tuple(vertex[:] + normal[:] + uv[:])
 
@@ -154,6 +173,11 @@ class XPlaneMesh:
                     # store the faces in the prim
                     xplaneObject.indices[1] = len(self.indices)
 
+                if zero_normal_corners:
+                    xplane_helpers.logger.warn(
+                        f"{xplaneObject.name}: {zero_normal_corners} corners on zero-area"
+                        " faces had no normal, used the vertex normal instead"
+                    )
                 evaluated_obj.to_mesh_clear()
 
     def writeVertices(self) -> str:
