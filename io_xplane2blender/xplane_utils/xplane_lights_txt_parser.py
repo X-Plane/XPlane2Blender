@@ -694,11 +694,27 @@ def is_automatic_light_compatible(light_name: str) -> bool:
 _parsed_lights_txt_content = {}  # type: Dict[str, ParsedLight]
 
 
+def _ensure_lights_parsed() -> None:
+    """Parse lights.txt on first use if nothing has been parsed yet.
+
+    load_post normally does this when a .blend is opened, but enabling the
+    add-on mid-session (or exporting from a script before any file is opened)
+    skips it. With an empty table every light is "unknown", so a parameterized
+    light such as airplane_generic_sp silently exports as a bare LIGHT_NAMED,
+    losing its params and its orientation wrapper, with nothing but a warning
+    in the log. Parsing lazily closes that gap; a genuinely missing or broken
+    lights.txt still raises as it always did.
+    """
+    if not _parsed_lights_txt_content:
+        parse_lights_file()
+
+
 def get_parsed_light(light_name: str) -> ParsedLight:
     """
     Return is a copy from _parsed_lights_txt_content dict.
     Raises KeyError if light not found
     """
+    _ensure_lights_parsed()
     try:
         return copy.deepcopy(_parsed_lights_txt_content[light_name])
     except KeyError as ke:
