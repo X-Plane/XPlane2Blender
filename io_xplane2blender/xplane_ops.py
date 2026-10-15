@@ -760,8 +760,21 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
     # fmt: on
 
     def execute(self, context):
-        is_cycles = context.scene.render.engine == "CYCLES"
         scene = context.scene
+        if scene.render.engine != "CYCLES":
+            # Only Cycles can bake. The non-Cycles path used to carry on into
+            # find_baking_image and the bake loop, where it died on Blender
+            # 2.7x API (Mesh.uv_textures, object.bake_image) instead of
+            # telling the user what to change.
+            bpy.ops.xplane.msg(
+                "INVOKE_DEFAULT",
+                msg_text=(
+                    "Baking the wiper gradient requires the Cycles render engine. "
+                    f"This scene is set to {scene.render.engine}. "
+                    "Switch to Cycles in Render Properties and try again"
+                ),
+            )
+            return {"CANCELLED"}
         scene.render.bake.use_clear = True
         scene.render.bake.use_selected_to_active = True
 
@@ -818,49 +831,38 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
             img = None
 
             # find the image that's used for rendering
-            if is_cycles:
-                # XXX This tries to mimic nodeGetActiveTexture(), but we have no access to 'texture_active' state from RNA...
-                #     IMHO, this should be a func in RNA nodetree struct anyway?
-                inactive = None
-                selected = None
-                for mat_slot in bake_object.material_slots:
-                    mat = mat_slot.material
-                    if not mat or not mat.node_tree:
-                        continue
-                    trees = [mat.node_tree]
-                    while trees and not img:
-                        tree = trees.pop()
-                        node = tree.nodes.active
-                        if node and node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
-                            img = node.image
-                            break
-                        for node in tree.nodes:
-                            if (
-                                node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}
-                                and node.image
-                            ):
-                                if node.select:
-                                    if not selected:
-                                        selected = node
-                                else:
-                                    if not inactive:
-                                        inactive = node
-                            elif node.type == "GROUP":
-                                trees.add(node.node_tree)
-                    if img:
+            # XXX This tries to mimic nodeGetActiveTexture(), but we have no access to 'texture_active' state from RNA...
+            #     IMHO, this should be a func in RNA nodetree struct anyway?
+            inactive = None
+            selected = None
+            for mat_slot in bake_object.material_slots:
+                mat = mat_slot.material
+                if not mat or not mat.node_tree:
+                    continue
+                trees = [mat.node_tree]
+                while trees and not img:
+                    tree = trees.pop()
+                    node = tree.nodes.active
+                    if node and node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}:
+                        img = node.image
                         break
-                if not img:
-                    if selected:
-                        img = selected.image
-                    elif inactive:
-                        img = inactive.image
-            else:
-                for uvtex in bake_object.data.uv_textures:
-                    if uvtex.active_render == True:
-                        for uvdata in uvtex.data:
-                            if uvdata.image is not None:
-                                img = uvdata.image
-                                break
+                    for node in tree.nodes:
+                        if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"} and node.image:
+                            if node.select:
+                                if not selected:
+                                    selected = node
+                            else:
+                                if not inactive:
+                                    inactive = node
+                        elif node.type == "GROUP":
+                            trees.append(node.node_tree)
+                if img:
+                    break
+            if not img:
+                if selected:
+                    img = selected.image
+                elif inactive:
+                    img = inactive.image
             return img
 
         # --- Errors with what you're trying to bake --------------------------
@@ -908,6 +910,55 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
             return {"CANCELLED"}
         # ---------------------------------------------------------------------
 
+        def prepare_bake_target_nodes():
+            """Make the bake target Image Texture node active *and* selected.
+
+            Cycles bakes into the active Image Texture node of each material.
+            Blender 5.0 additionally requires that node to be selected, and
+            cancels with "No active and selected image texture node found in
+            material ..." otherwise, so a .blend authored on 4.x bakes nothing
+            there. Selecting it as well is harmless on 4.x. Returns a callable
+            that puts the node trees back the way the user had them.
+            """
+            saved = []
+            for mat_slot in windshield.material_slots:
+                mat = mat_slot.material
+                if not mat or not mat.node_tree:
+                    continue
+                tree = mat.node_tree
+                target = next(
+                    (
+                        node
+                        for node in tree.nodes
+                        if node.type in {"TEX_IMAGE", "TEX_ENVIRONMENT"}
+                        and node.image == img
+                    ),
+                    None,
+                )
+                if target is None:
+                    continue
+                saved.append(
+                    (tree, tree.nodes.active, [(n, n.select) for n in tree.nodes])
+                )
+                for node in tree.nodes:
+                    node.select = False
+                target.select = True
+                tree.nodes.active = target
+
+            def restore() -> None:
+                for tree, prev_active, prev_selection in saved:
+                    for node, was_selected in prev_selection:
+                        try:
+                            node.select = was_selected
+                        except ReferenceError:
+                            pass
+                    try:
+                        tree.nodes.active = prev_active
+                    except (ReferenceError, TypeError):
+                        pass
+
+            return restore
+
         def select_objects(wiper: xplane_props.XPlaneWiperSettings) -> None:
             """Select Wiper Object (already guaranteed to exist) then Windshield"""
             for obj in context.selected_objects:
@@ -920,74 +971,95 @@ class XPLANE_OT_bake_wiper_gradient_texture(bpy.types.Operator):
         original_active_object = context.active_object
         original_frame = scene.frame_current
         original_margin = scene.render.bake.margin
+        restore_bake_nodes = prepare_bake_target_nodes()
         scene.render.bake.margin = 0
-        paths = []
-        for slot, wiper in enumerate(wipers, start=1):
-            if not self.debug_slots[slot - 1]:
-                continue
-            select_objects(wiper)
+        # Every exit below has to put the scene back. Before, the restores only
+        # ran after the happy path, so any CANCELLED left the user with a bake
+        # margin of 0, a moved playhead and a different active object.
+        try:
+            paths = []
+            for slot, wiper in enumerate(wipers, start=1):
+                if not self.debug_slots[slot - 1]:
+                    continue
+                select_objects(wiper)
 
-            print(
-                "Animated baking for frames (%d - %d)" % (self.start, self.start + 255)
-            )
-
-            for cfra in range(self.start, self.start + 255):
-                assert 1 <= cfra <= 255 * 4, f"Start is {self.start}, cfra is {cfra}"
-                bake_start = time.perf_counter()
-                print("Baking frame %d" % cfra)
-
-                # update scene to new frame and bake to template image
-                scene.frame_set(cfra)
-                new_img_filepath = bake_temp_folder / Path(
-                    f"{img_filepath.stem}_slot{slot}_{cfra:03}.png"
+                print(
+                    "Animated baking for frames (%d - %d)"
+                    % (self.start, self.start + 255)
                 )
 
-                if not self.debug_reuse_temps or (
-                    self.debug_reuse_temps and not new_img_filepath.exists()
-                ):
-                    if is_cycles:
+                for cfra in range(self.start, self.start + 255):
+                    assert (
+                        1 <= cfra <= 255 * 4
+                    ), f"Start is {self.start}, cfra is {cfra}"
+                    bake_start = time.perf_counter()
+                    print("Baking frame %d" % cfra)
+
+                    # update scene to new frame and bake to template image
+                    scene.frame_set(cfra)
+                    new_img_filepath = bake_temp_folder / Path(
+                        f"{img_filepath.stem}_slot{slot}_{cfra:03}.png"
+                    )
+
+                    if not self.debug_reuse_temps or (
+                        self.debug_reuse_temps and not new_img_filepath.exists()
+                    ):
                         ret = bpy.ops.object.bake(type=scene.cycles.bake_type)
                     else:
-                        ret = bpy.ops.object.bake_image()
+                        ret = {}
+
+                    if "CANCELLED" in ret:
+                        bpy.ops.xplane.msg(
+                            "INVOKE_DEFAULT",
+                            msg_text=(
+                                f"Cycles cancelled the bake on frame {cfra}. Check that "
+                                f"'{windshield.name}' has the bake image assigned to an "
+                                "Image Texture node in every material it uses"
+                            ),
+                        )
+                        return {"CANCELLED"}
+                    print("Bake time:", time.perf_counter() - bake_start)
+
+                    # Currently the api has no img.save_as()
+                    orig = img.filepath_raw
+                    # !!! IMPORTANT! You must use filepath_raw! !!!
+                    img.filepath_raw = str(new_img_filepath)
+                    paths.append(Path(img.filepath_raw))
+                    if not self.debug_reuse_temps:
+                        img.save()
+                        print("Saved %r" % new_img_filepath)
+                    img.filepath_raw = orig
+                print("Baking done!")
+
+            try:
+                if self.debug_master_filepath:
+                    master_filepath = Path(bpy.path.abspath(self.debug_master_filepath))
                 else:
-                    ret = {}
-
-                if "CANCELLED" in ret:
-                    return {"CANCELLED"}
-                print("Bake time:", time.perf_counter() - bake_start)
-
-                # Currently the api has no img.save_as()
-                orig = img.filepath_raw
-                # !!! IMPORTANT! You must use filepath_raw! !!!
-                img.filepath_raw = str(new_img_filepath)
-                paths.append(Path(img.filepath_raw))
-                if not self.debug_reuse_temps:
-                    img.save()
-                    print("Saved %r" % new_img_filepath)
-                img.filepath_raw = orig
-            print("Baking done!")
-
-        try:
-            if self.debug_master_filepath:
-                master_filepath = Path(bpy.path.abspath(self.debug_master_filepath))
+                    master_filepath = img_filepath.parent / Path(
+                        "wiper_gradient_texture.png"
+                    )
+                xplane_wiper_gradient.make_wiper_images(
+                    paths, *img.size, master_filepath
+                )
+            except OSError as e:
+                # An Operator call only takes the context string positionally;
+                # passing the exception object raised TypeError instead of
+                # showing it.
+                bpy.ops.xplane.msg("INVOKE_DEFAULT", msg_text=str(e))
+                return {"CANCELLED"}
             else:
-                master_filepath = img_filepath.parent / Path("wiper_gradient_texture.png")
-            xplane_wiper_gradient.make_wiper_images(paths, *img.size, master_filepath)
-        except OSError as e:
-            bpy.ops.xplane.msg("INVOKE_DEFAULT", e)
-            return {"CANCELLED"}
-        else:
-            rain.wiper_texture = bpy.path.relpath(str(master_filepath)).replace(
-                "\\", "/"
-            )
-            if not self.debug_reuse_temps:
-                shutil.rmtree(bake_temp_folder, ignore_errors=True)
-
-        for obj in context.selected_objects:
-            obj.select_set(False)
-        context.view_layer.objects.active = original_active_object
-        scene.frame_set(original_frame)
-        scene.render.bake.margin = original_margin
+                rain.wiper_texture = bpy.path.relpath(str(master_filepath)).replace(
+                    "\\", "/"
+                )
+                if not self.debug_reuse_temps:
+                    shutil.rmtree(bake_temp_folder, ignore_errors=True)
+        finally:
+            for obj in context.selected_objects:
+                obj.select_set(False)
+            context.view_layer.objects.active = original_active_object
+            scene.frame_set(original_frame)
+            scene.render.bake.margin = original_margin
+            restore_bake_nodes()
         return {"FINISHED"}
 
     @classmethod
