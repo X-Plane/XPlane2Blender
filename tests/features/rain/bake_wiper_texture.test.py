@@ -105,6 +105,29 @@ class TestBakeWiperTexture(XPlaneTestCase):
         )
         # ---------------------------------------------------------------------
 
+    def test_requires_cycles(self) -> None:
+        """A non-Cycles engine cancels with a message and leaves the scene as it was"""
+        scene = bpy.context.scene
+        root = bpy.data.objects["two_slot_wiper_system"]
+        root.select_set(True)
+        bpy.context.view_layer.objects.active = root
+        original_engine = scene.render.engine
+        original_frame = scene.frame_current
+        scene.render.engine = "BLENDER_WORKBENCH"
+        try:
+            self.assertEqual(
+                bpy.ops.xplane.bake_wiper_gradient_texture(start=6), {"CANCELLED"}
+            )
+            # Before, the non-Cycles path fell into the bake loop and died on a
+            # bake operator that no longer exists, with the bake margin already
+            # zeroed and never put back
+            self.assertEqual(16, scene.render.bake.margin)
+            self.assertEqual(original_frame, scene.frame_current)
+            self.assertEqual(root, bpy.context.view_layer.objects.active)
+            self.assertEqual(root.xplane.layer.rain.wiper_texture, "")
+        finally:
+            scene.render.engine = original_engine
+
     def test_bake_systems(self) -> None:
         for slot in ["two", "four"]:
             with self.subTest(slot=slot):
