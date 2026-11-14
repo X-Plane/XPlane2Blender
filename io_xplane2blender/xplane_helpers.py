@@ -482,7 +482,7 @@ class VerStruct:
             else:
                 return None
         else:
-            if re.search("[^\d.]", version_str) is not None:
+            if re.search(r"[^\d.]", version_str) is not None:
                 return None
             else:
                 version_struct.addon_version = tuple(

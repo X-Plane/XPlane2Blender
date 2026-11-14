@@ -16,7 +16,7 @@ class TestUpdateCastShadowTableOutput(XPlaneTestCase):
         lines = list(filter(lambda line: line.startswith("ERROR") or line.startswith("test"), [line.body for line in bpy.data.texts["Updater Log"].lines]))
         self.assertIn("non_scenery", ''.join(lines))
         for mat_name in filter(lambda line: line.startswith("ERROR: Material"), lines):
-            self.assertRegex(mat_name, "ERROR: Material '\w+(shared_table|unique)")
+            self.assertRegex(mat_name, r"ERROR: Material '\w+(shared_table|unique)")
         for layer_name in filter(lambda line: line.startswith("test"), lines):
             self.assertRegex(layer_name, "test_.*mixed_(on|off|non_scenery_type)")
 
