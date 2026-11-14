@@ -421,7 +421,7 @@ class TestLayersToCollections(XPlaneTestCase):
 
     def test_layers_deleted(self) -> None:
         for scene in bpy.data.scenes:
-            self.assertNotIn("layers", scene["xplane"])
+            self.assertNotIn("layers", scene.xplane)
 
 
 runTestCases([TestLayersToCollections])
