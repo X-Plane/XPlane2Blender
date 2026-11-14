@@ -1,5 +1,4 @@
 import bpy
-import bpy_types
 import os
 from io_xplane2blender.tests import *
 
