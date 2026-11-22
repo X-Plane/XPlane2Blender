@@ -2285,9 +2285,9 @@ class XPlaneMaterialSettings(bpy.types.PropertyGroup):
 
     device_lighting_channel: bpy.props.IntProperty(
         name="Rheostat Lighting Channel",
-        description="0 based index that control's screen's brightness. Not affected by 'Light Level'",
+        description="0 based index that control's screen's brightness, or -1 for no rheostat. Not affected by 'Light Level'",
         default=0,
-        min=0,
+        min=-1,
     )
     device_auto_adjust: bpy.props.BoolProperty(
         name="Auto-adjust for daytime readability",

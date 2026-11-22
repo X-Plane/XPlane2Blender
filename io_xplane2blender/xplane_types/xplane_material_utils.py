@@ -242,10 +242,6 @@ def validateCockpit(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     errors = []  # type: List[str]
     warnings = []  # type: List[str]
 
-    if mat.options.cockpit_feature == COCKPIT_FEATURE_DEVICE:
-        if not any((mat.options.get(f"device_bus_{i}") for i in range(6))):
-            errors.append("Cockpit device must specify at least one bus")
-
     if mat.options.cockpit_feature == COCKPIT_FEATURE_PANEL:
         errors.append("Cockpit .obj Material cannot be 'Part Of Panel'.")
 
@@ -258,10 +254,6 @@ def validateCockpit(mat: XPlaneMaterial) -> MaterialValidationMsgs:
 def validateAircraft(mat: XPlaneMaterial) -> MaterialValidationMsgs:
     errors = []  # type: List[str]
     warnings = []  # type: List[str]
-
-    if mat.options.cockpit_feature == COCKPIT_FEATURE_DEVICE:
-        if not any((mat.options.get(f"device_bus_{i}") for i in range(6))):
-            errors.append("Cockpit device must specify at least one bus")
 
     if mat.options.cockpit_feature == COCKPIT_FEATURE_PANEL:
         errors.append("Aircraft .obj Material cannot be 'Part Of Panel'.")

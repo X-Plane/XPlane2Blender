@@ -1575,7 +1575,7 @@ def cockpit_layout(
             if not any(
                 getattr(active_material.xplane, f"device_bus_{bus}") for bus in range(6)
             ):
-                device_box.label(text="Select at least one bus", icon="ERROR")
+                device_box.label(text="On no bus: always powered", icon="INFO")
             column = device_box.column_flow(columns=2, align=True)
             for bus in range(6):
                 column.prop(active_material.xplane, f"device_bus_{bus}")
