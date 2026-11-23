@@ -174,7 +174,7 @@ def _layers_to_collection(logger: xplane_helpers.XPlaneLogger) -> None:
                         coll.xplane["layer"].update(layer)
 
                 copy_layer_idprop_to_property(coll)
-        xplane_updater_helpers.delete_property_from_datablock(scene["xplane"], "layers")
+        xplane_updater_helpers.delete_property_from_datablock(scene.xplane, "layers")
 
 
 def _change_pre_3_3_0_properties(logger: xplane_helpers.XPlaneLogger) -> None:
@@ -280,7 +280,7 @@ def _rollback_blend_glass(logger: XPlaneLogger) -> None:
             # v4.1.0 note - we've moved blend_glass to the header
             # but I don't want to change the rest of this function
             # So... we fake it to match later expectations!
-            mat["xplane"]["blend_glass"] = True
+            mat.xplane["blend_glass"] = True
 
             # This bit of code reachs around Blender's magic EnumProperty
             # stuff and get at the RNA behind it, all to find the name.

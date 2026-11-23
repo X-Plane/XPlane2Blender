@@ -28,9 +28,9 @@ class TestPartOfPanelToCockpitFeature(XPlaneTestCase):
             xplane_constants.COCKPIT_FEATURE_PANEL,
         )
 
-        self.assertIsNone(bpy.data.materials["MaterialDefault"]["xplane"].get("panel"))
-        self.assertEqual(bpy.data.materials["MaterialFalse"]["xplane"]["panel"], 0)
-        self.assertEqual(bpy.data.materials["MaterialTrue"]["xplane"]["panel"], 1)
+        self.assertIsNone(bpy.data.materials["MaterialDefault"].xplane.get("panel"))
+        self.assertEqual(bpy.data.materials["MaterialFalse"].xplane["panel"], 0)
+        self.assertEqual(bpy.data.materials["MaterialTrue"].xplane["panel"], 1)
 
 
 runTestCases([TestPartOfPanelToCockpitFeature])
