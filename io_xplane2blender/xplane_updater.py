@@ -68,7 +68,7 @@ def _layers_to_collection(logger: xplane_helpers.XPlaneLogger) -> None:
     # --- Copy Layers to Collections ---------------------------------------
     def prepare_collections_for_renaming():
         for coll in bpy.data.collections:
-            full_match = re.fullmatch("Collection(\.\d{3}|$)", coll.name)
+            full_match = re.fullmatch(r"Collection(\.\d{3}|$)", coll.name)
             if full_match:
                 coll.name = f"Collection 1{full_match.group(1)}"
 

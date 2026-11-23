@@ -873,7 +873,7 @@ def parse_lights_file():
                                 light_args
                             ) - 1:
                                 return True
-                            elif re.match("-?\d+(\.\d+)?", arg):
+                            elif re.match(r"-?\d+(\.\d+)?", arg):
                                 return True
                             else:
                                 return False
